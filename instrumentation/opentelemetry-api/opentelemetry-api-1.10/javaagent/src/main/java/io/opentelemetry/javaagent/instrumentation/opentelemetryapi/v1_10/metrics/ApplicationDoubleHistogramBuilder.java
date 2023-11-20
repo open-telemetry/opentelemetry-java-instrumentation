@@ -10,11 +10,11 @@ import application.io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
-final class ApplicationDoubleHistogramBuilder implements DoubleHistogramBuilder {
+public class ApplicationDoubleHistogramBuilder implements DoubleHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder;
 
-  ApplicationDoubleHistogramBuilder(
+  protected ApplicationDoubleHistogramBuilder(
       io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }

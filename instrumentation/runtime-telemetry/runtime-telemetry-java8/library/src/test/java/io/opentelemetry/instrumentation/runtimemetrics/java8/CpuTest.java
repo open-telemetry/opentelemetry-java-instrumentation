@@ -34,7 +34,7 @@ class CpuTest {
     Supplier<Double> processCpuUsage = () -> 0.05;
 
     Cpu.INSTANCE.registerObservers(
-        testing.getOpenTelemetry(), osBean, systemCpuUsage, processCpuUsage);
+        testing.getOpenTelemetry(), osBean, () -> 0, () -> null, systemCpuUsage, processCpuUsage);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

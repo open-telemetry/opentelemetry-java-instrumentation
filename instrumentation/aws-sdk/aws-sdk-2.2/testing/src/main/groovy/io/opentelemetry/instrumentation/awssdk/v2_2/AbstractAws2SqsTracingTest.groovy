@@ -431,6 +431,17 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
+        if (!xrayInjectionEnabled) {
+          // one of the 3 process spans is expected to not have a span link, sort them so that the
+          // last one is the one with missing link
+          if (spans.get(1).links.empty) {
+            spans.swap(1, 5)
+            spans.swap(2, 6)
+          } else if (spans.get(3).links.empty) {
+            spans.swap(3, 5)
+            spans.swap(4, 6)
+          }
+        }
         for (int i: 0..2) {
           span(1 + 2*i) {
             name "testSdkSqs process"

@@ -25,7 +25,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest implem
     runWithSpan("test-parent") {
       reactiveCommands.set("a", "1")
         .then(reactiveCommands.get("a"))
-        .subscribeOn(Schedulers.elastic())
+        .subscribeOn(Schedulers.boundedElastic())
         .subscribe()
     }
 

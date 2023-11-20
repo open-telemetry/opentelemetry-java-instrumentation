@@ -18,28 +18,43 @@ public final class SemconvStability {
 
   private static final boolean emitOldHttpSemconv;
   private static final boolean emitStableHttpSemconv;
+  private static final boolean emitOldJvmSemconv;
+  private static final boolean emitStableJvmSemconv;
 
   static {
-    boolean old = true;
-    boolean stable = false;
+    boolean oldHttp = true;
+    boolean stableHttp = false;
+    boolean oldJvm = true;
+    boolean stableJvm = false;
 
     String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
     if (value != null) {
       Set<String> values = new HashSet<>(asList(value.split(",")));
       if (values.contains("http")) {
-        old = false;
-        stable = true;
+        oldHttp = false;
+        stableHttp = true;
       }
       // no else -- technically it's possible to set "http,http/dup", in which case we should emit
       // both sets of attributes
       if (values.contains("http/dup")) {
-        old = true;
-        stable = true;
+        oldHttp = true;
+        stableHttp = true;
+      }
+
+      if (values.contains("jvm")) {
+        oldJvm = false;
+        stableJvm = true;
+      }
+      if (values.contains("jvm/dup")) {
+        oldJvm = true;
+        stableJvm = true;
       }
     }
 
-    emitOldHttpSemconv = old;
-    emitStableHttpSemconv = stable;
+    emitOldHttpSemconv = oldHttp;
+    emitStableHttpSemconv = stableHttp;
+    emitOldJvmSemconv = oldJvm;
+    emitStableJvmSemconv = stableJvm;
   }
 
   public static boolean emitOldHttpSemconv() {
@@ -48,6 +63,14 @@ public final class SemconvStability {
 
   public static boolean emitStableHttpSemconv() {
     return emitStableHttpSemconv;
+  }
+
+  public static boolean emitOldJvmSemconv() {
+    return emitOldJvmSemconv;
+  }
+
+  public static boolean emitStableJvmSemconv() {
+    return emitStableJvmSemconv;
   }
 
   private SemconvStability() {}
