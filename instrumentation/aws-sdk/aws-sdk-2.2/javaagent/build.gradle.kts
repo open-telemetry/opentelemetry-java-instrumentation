@@ -84,9 +84,6 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
   testLibrary("software.amazon.awssdk:sns:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
-
-  // last version that does not use json protocol
-  latestDepTestLibrary("software.amazon.awssdk:sqs:2.21.17")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -139,6 +136,7 @@ tasks {
     // TODO run tests both with and without experimental span attributes
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
   withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
