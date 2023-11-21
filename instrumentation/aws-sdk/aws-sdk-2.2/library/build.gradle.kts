@@ -19,9 +19,6 @@ dependencies {
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
-
-  // last version that does not use json protocol
-  latestDepTestLibrary("software.amazon.awssdk:sqs:2.21.17")
 }
 
 testing {
@@ -56,6 +53,6 @@ tasks {
     // NB: If you'd like to change these, there is some cleanup work to be done, as most tests ignore this and
     // set the value directly (the "library" does not normally query it, only library-autoconfigure)
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", true)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 }

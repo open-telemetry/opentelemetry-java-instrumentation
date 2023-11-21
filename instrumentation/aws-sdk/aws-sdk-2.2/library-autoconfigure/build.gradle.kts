@@ -29,7 +29,6 @@ dependencies {
 tasks {
   test {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", true)
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "test-message-header")
   }

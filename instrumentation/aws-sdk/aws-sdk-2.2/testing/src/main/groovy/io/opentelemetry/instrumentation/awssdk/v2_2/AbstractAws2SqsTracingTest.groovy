@@ -127,7 +127,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.name" "testSdkSqs"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
+            "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
             "rpc.method" "CreateQueue"
@@ -149,7 +149,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
+            "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "Sqs"
@@ -189,7 +189,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             hasNoLinks()
             attributes {
               "aws.agent" "java-aws-sdk"
-              "aws.requestId" "00000000-0000-0000-0000-000000000000"
+              "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
               "rpc.method" "ReceiveMessage"
               "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
               "rpc.system" "aws-api"
@@ -390,7 +390,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
+            "aws.requestId" { it.trim() == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.method" "SendMessageBatch"
             "rpc.service" "Sqs"
