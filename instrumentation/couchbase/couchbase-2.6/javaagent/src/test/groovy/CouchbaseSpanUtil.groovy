@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
@@ -34,9 +35,8 @@ class CouchbaseSpanUtil {
         "$SemanticAttributes.DB_OPERATION"(operation ?: spanName)
 
         // Because of caching, not all requests hit the server so these attributes may be absent
-        "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
-        "$SemanticAttributes.NET_SOCK_PEER_NAME" { it == "localhost" || it == "127.0.0.1" || it == null }
-        "$SemanticAttributes.NET_SOCK_PEER_PORT" { it == null || it instanceof Number }
+        "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
+        "$NetworkAttributes.NETWORK_PEER_PORT" { it == null || it instanceof Number }
 
         // Because of caching, not all requests hit the server so this tag may be absent
         "couchbase.local.address" { it == null || it instanceof String }

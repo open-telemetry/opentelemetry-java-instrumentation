@@ -130,7 +130,7 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
           kind SERVER
           if (!runsOnServer()) {
             attributes {
-              "$SemanticAttributes.HTTP_METHOD" method
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" method
               "$SemanticAttributes.HTTP_ROUTE" route
             }
           }

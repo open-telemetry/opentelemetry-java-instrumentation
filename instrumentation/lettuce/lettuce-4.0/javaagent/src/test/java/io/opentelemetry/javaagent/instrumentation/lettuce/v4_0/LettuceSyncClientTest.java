@@ -33,7 +33,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class LettuceSyncClientTest {
   private static final Logger logger = LoggerFactory.getLogger(LettuceSyncClientTest.class);
 
@@ -120,8 +119,8 @@ class LettuceSyncClientTest {
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, host),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
   }
 
@@ -143,8 +142,8 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasException(exception)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, host),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, incorrectPort),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
+                            equalTo(SemanticAttributes.SERVER_PORT, incorrectPort),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
   }
 

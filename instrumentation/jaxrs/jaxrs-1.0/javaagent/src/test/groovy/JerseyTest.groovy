@@ -40,7 +40,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name "GET " + expectedRoute
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }
@@ -80,7 +80,7 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name "GET " + expectedRoute
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" expectedRoute
           }
         }

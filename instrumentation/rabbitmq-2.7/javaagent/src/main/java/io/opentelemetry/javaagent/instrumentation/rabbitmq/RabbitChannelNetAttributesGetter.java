@@ -29,7 +29,7 @@ public class RabbitChannelNetAttributesGetter
   public String getNetworkType(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     InetAddress address = channelAndMethod.getChannel().getConnection().getAddress();
     if (address instanceof Inet4Address) {
-      return "ipv6";
+      return "ipv4";
     } else if (address instanceof Inet6Address) {
       return "ipv6";
     }

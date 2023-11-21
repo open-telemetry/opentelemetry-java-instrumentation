@@ -12,10 +12,10 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.Abstr
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.ssl.SslContextBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
@@ -36,7 +36,6 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.tcp.SslProvider;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ReactorNettyClientSslTest {
 
   @RegisterExtension
@@ -91,29 +90,29 @@ class ReactorNettyClientSslTest {
                         // message
                         .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort())),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.URL_FULL, uri),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort())),
+                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
-                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("SSL handshake")
@@ -124,10 +123,9 @@ class ReactorNettyClientSslTest {
                         // message
                         .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, server.httpsPort()))));
+                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, server.httpsPort()))));
   }
 
   @Test
@@ -157,49 +155,43 @@ class ReactorNettyClientSslTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort())),
+                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
-                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, server.httpsPort())),
+                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.URL_FULL, uri),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                AbstractLongAssert::isNotNegative),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpsPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(
-                                SemanticAttributes.NET_SOCK_PEER_PORT,
+                                NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(4))));

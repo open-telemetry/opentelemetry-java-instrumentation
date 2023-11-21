@@ -131,13 +131,11 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
             "rpc.method" "CreateQueue"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
           }
         }
       }
@@ -153,17 +151,15 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -194,13 +190,11 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "http.method" "POST"
-              "http.status_code" 200
-              "http.url" { it.startsWith("http://localhost:$sqsPort") }
-              "net.peer.name" "localhost"
-              "net.peer.port" sqsPort
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.SERVER_PORT" sqsPort
             }
           }
         }
@@ -218,16 +212,14 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -243,15 +235,14 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -393,16 +384,14 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.method" "SendMessageBatch"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         publishSpan = span(0)
@@ -419,16 +408,14 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         if (!xrayInjectionEnabled) {
@@ -459,15 +446,14 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "rpc.method" "ReceiveMessage"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "http.method" "POST"
-              "http.url" { it.startsWith("http://localhost:$sqsPort") }
-              "net.peer.name" "localhost"
-              "net.peer.port" sqsPort
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.SERVER_PORT" sqsPort
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$SemanticAttributes.MESSAGING_OPERATION" "process"
               "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             }
           }
           span(1 + 2*i + 1) {

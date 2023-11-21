@@ -99,9 +99,9 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
           errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "https://s3.amazonaws.com"
-            "$SemanticAttributes.HTTP_METHOD" "HEAD"
-            "$SemanticAttributes.NET_PEER_NAME" "s3.amazonaws.com"
+            "$SemanticAttributes.URL_FULL" "https://s3.amazonaws.com"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "HEAD"
+            "$SemanticAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
             "$SemanticAttributes.RPC_METHOD" "HeadBucket"

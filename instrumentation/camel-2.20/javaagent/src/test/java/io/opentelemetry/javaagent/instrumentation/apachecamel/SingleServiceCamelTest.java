@@ -56,7 +56,6 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void singleCamelServiceSpan() {
     URI requestUrl = address.resolve("/camelService");
 
@@ -69,8 +68,8 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                     span.hasName("POST /camelService")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
-                            equalTo(SemanticAttributes.HTTP_URL, requestUrl.toString()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(SemanticAttributes.URL_FULL, requestUrl.toString()),
                             equalTo(
                                 stringKey("camel.uri"),
                                 requestUrl.toString().replace("localhost", "0.0.0.0")))));

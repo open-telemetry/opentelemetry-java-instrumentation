@@ -35,7 +35,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" paramName
           }
         }
@@ -124,7 +124,7 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           name "GET"
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
           }
         }
       }

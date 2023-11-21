@@ -12,19 +12,14 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.internal.http.HttpMethod;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -93,27 +88,7 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
-
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-
-          if (SemconvStability.emitOldHttpSemconv()) {
-            // protocol is extracted from the response, and those URLs cause exceptions (= null
-            // response)
-            if ("http://localhost:61/".equals(uri.toString())
-                || "https://192.0.2.1/".equals(uri.toString())
-                || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-              attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-              attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-            }
-          }
-
-          return attributes;
-        });
   }
 }

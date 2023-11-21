@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -24,7 +25,6 @@ import org.junit.jupiter.api.Test;
 class RpcServerMetricsTest {
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -41,17 +41,18 @@ class RpcServerMetricsTest {
 
     Attributes responseAttributes1 =
         Attributes.builder()
-            .put(SemanticAttributes.NET_HOST_NAME, "example.com")
-            .put(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1")
-            .put(SemanticAttributes.NET_HOST_PORT, 8080)
-            .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
+            .put(SemanticAttributes.SERVER_ADDRESS, "example.com")
+            .put(SemanticAttributes.SERVER_PORT, 8080)
+            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
+            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
             .build();
 
     Attributes responseAttributes2 =
         Attributes.builder()
-            .put(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1")
-            .put(SemanticAttributes.NET_HOST_PORT, 8080)
-            .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
+            .put(SemanticAttributes.SERVER_PORT, 8080)
+            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
+            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
             .build();
 
     Context parent =
@@ -93,8 +94,9 @@ class RpcServerMetricsTest {
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
                                             equalTo(
-                                                SemanticAttributes.NET_HOST_NAME, "example.com"),
-                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"))
+                                                SemanticAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -122,8 +124,7 @@ class RpcServerMetricsTest {
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
                                             equalTo(
-                                                SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp")))));
+                                                SemanticAttributes.NETWORK_TRANSPORT, "tcp")))));
   }
 
   private static long nanos(int millis) {

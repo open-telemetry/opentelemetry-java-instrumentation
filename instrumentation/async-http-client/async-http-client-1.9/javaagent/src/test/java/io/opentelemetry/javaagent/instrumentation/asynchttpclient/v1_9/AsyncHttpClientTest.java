@@ -12,18 +12,13 @@ import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.Response;
 import com.ning.http.client.uri.Uri;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -69,7 +64,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
         request,
         new AsyncCompletionHandler<Void>() {
           @Override
-          public Void onCompleted(Response response) throws Exception {
+          public Void onCompleted(Response response) {
             requestResult.complete(response.getStatusCode());
             return null;
           }
@@ -82,23 +77,12 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
 
     // disable read timeout test for non latest because it is flaky with 1.9.0
     if (!Boolean.getBoolean("testLatestDeps")) {
       optionsBuilder.disableTestReadTimeout();
-    }
-    if (SemconvStability.emitOldHttpSemconv()) {
-      optionsBuilder.setHttpAttributes(
-          endpoint -> {
-            Set<AttributeKey<?>> attributes =
-                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-            return attributes;
-          });
     }
   }
 }

@@ -76,7 +76,6 @@ class ContextBridgeTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testHttpRouteHolder_SameSourceAsServerInstrumentationDoesNotOverrideRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
@@ -92,12 +91,11 @@ class ContextBridgeTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/test/server/*"))));
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testHttpRouteHolder_SourceWithHigherOrderValueOverridesRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
@@ -113,7 +111,7 @@ class ContextBridgeTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/test/controller/:id"))));
   }
 }

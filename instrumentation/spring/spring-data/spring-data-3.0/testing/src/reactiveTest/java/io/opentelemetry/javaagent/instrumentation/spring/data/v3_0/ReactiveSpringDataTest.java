@@ -13,7 +13,7 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,7 +30,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ReactiveSpringDataTest {
 
   @RegisterExtension
@@ -88,6 +87,6 @@ class ReactiveSpringDataTest {
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "CUSTOMER"),
                             equalTo(DB_CONNECTION_STRING, "h2:mem://localhost"),
-                            equalTo(NET_PEER_NAME, "localhost"))));
+                            equalTo(SERVER_ADDRESS, "localhost"))));
   }
 }

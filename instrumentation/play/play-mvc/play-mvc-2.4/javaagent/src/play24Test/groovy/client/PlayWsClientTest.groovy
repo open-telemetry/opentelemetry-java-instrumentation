@@ -79,8 +79,7 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
+    attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION)
     attributes
   }
 

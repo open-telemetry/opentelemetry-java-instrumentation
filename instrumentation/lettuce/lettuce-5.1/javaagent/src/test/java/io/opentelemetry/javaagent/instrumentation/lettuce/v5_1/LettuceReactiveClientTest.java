@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.lettuce.core.RedisClient;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -17,7 +18,6 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -51,11 +51,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"))
                             .hasEventsSatisfyingExactly(
@@ -66,11 +63,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET a"))
                             .hasEventsSatisfyingExactly(

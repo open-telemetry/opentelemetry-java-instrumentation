@@ -411,8 +411,8 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.NET_PEER_NAME" "localhost"
-        "$SemanticAttributes.NET_PEER_PORT" port
+        "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+        "$SemanticAttributes.SERVER_PORT" port
         "$SemanticAttributes.DB_STATEMENT" {
           statementEval.call(it.replaceAll(" ", ""))
         }

@@ -125,22 +125,19 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
     // unopened port or non routable address
     if ("http://localhost:61/".equals(uri.toString())
         || "https://192.0.2.1/".equals(uri.toString())) {
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+      attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
     }
 
     if (uri.toString().contains("/read-timeout")) {
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-      attributes.remove(SemanticAttributes.NET_PEER_NAME);
-      attributes.remove(SemanticAttributes.NET_PEER_PORT);
+      attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+      attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+      attributes.remove(SemanticAttributes.SERVER_PORT);
     }
     return attributes;
   }
@@ -271,7 +268,6 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldEndSpanOnMonoTimeout() {
     HttpClient httpClient = createHttpClient();
 
@@ -309,11 +305,10 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.URL_FULL, uri.toString()),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, uri.getPort())),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

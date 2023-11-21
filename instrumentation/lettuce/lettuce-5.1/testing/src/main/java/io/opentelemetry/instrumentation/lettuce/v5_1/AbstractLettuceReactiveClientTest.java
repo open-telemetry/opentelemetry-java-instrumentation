@@ -12,6 +12,7 @@ import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -21,10 +22,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({
-  "deprecation",
-  "InterruptedExceptionSwallowed"
-}) // until old http semconv are dropped in 2.0
+@SuppressWarnings({"InterruptedExceptionSwallowed"})
 public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceClientTest {
 
   protected static String expectedHostAttributeValue;
@@ -91,11 +89,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
                             .hasEventsSatisfyingExactly(
@@ -129,11 +124,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET TESTKEY"))
                             .hasEventsSatisfyingExactly(
@@ -178,11 +170,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"))
                             .hasEventsSatisfyingExactly(
@@ -215,11 +204,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                         span.hasName("RANDOMKEY")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"))
                             .hasEventsSatisfyingExactly(
@@ -239,11 +225,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                         span.hasName("COMMAND")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "COMMAND"))
                             .hasEventsSatisfyingExactly(
@@ -284,11 +267,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"))
                             .hasEventsSatisfyingExactly(
@@ -299,11 +279,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET a"))
                             .hasEventsSatisfyingExactly(
@@ -328,11 +305,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"))
                             .hasEventsSatisfyingExactly(
@@ -343,11 +317,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET a"))
                             .hasEventsSatisfyingExactly(

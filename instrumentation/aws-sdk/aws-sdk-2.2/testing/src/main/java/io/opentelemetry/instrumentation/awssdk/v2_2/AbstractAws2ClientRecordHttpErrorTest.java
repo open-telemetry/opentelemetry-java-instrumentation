@@ -163,10 +163,10 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                     span.hasAttributesSatisfying(
                         attributes -> {
                           assertThat(attributes)
-                              .containsEntry(SemanticAttributes.NET_PEER_NAME, "127.0.0.1")
-                              .containsEntry(SemanticAttributes.NET_PEER_PORT, server.httpPort())
-                              .containsEntry(SemanticAttributes.HTTP_METHOD, method)
-                              .containsEntry(SemanticAttributes.HTTP_STATUS_CODE, 200)
+                              .containsEntry(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1")
+                              .containsEntry(SemanticAttributes.SERVER_PORT, server.httpPort())
+                              .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method)
+                              .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
                               .containsEntry(SemanticAttributes.RPC_SYSTEM, "aws-api")
                               .containsEntry(SemanticAttributes.RPC_SERVICE, service)
                               .containsEntry(SemanticAttributes.RPC_METHOD, operation)

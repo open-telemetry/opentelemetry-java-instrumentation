@@ -106,14 +106,12 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -170,10 +168,10 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "http://localhost:${UNUSABLE_PORT}"
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.NET_PEER_PORT" 61
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.URL_FULL" "http://localhost:${UNUSABLE_PORT}"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.SERVER_PORT" 61
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -217,9 +215,9 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "https://s3.amazonaws.com"
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.NET_PEER_NAME" "s3.amazonaws.com"
+            "$SemanticAttributes.URL_FULL" "https://s3.amazonaws.com"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$SemanticAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
             "$SemanticAttributes.RPC_METHOD" "GetObject"
@@ -259,10 +257,10 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
             "$SemanticAttributes.RPC_METHOD" "GetObject"

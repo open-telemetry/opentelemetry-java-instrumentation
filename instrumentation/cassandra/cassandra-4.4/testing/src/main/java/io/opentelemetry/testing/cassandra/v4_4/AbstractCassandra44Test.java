@@ -18,14 +18,12 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_ADDR;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_PORT;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -36,7 +34,6 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideReactiveParameters")
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void reactiveTest(Parameter parameter) {
     CqlSession session = getSession(parameter.keyspace);
 
@@ -58,9 +55,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(NET_SOCK_PEER_NAME, "localhost"),
-                                equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),
                                 equalTo(DB_STATEMENT, parameter.expectedStatement),

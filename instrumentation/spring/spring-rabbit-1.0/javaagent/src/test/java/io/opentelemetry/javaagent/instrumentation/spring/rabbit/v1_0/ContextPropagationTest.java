@@ -13,6 +13,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -44,7 +45,6 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class ContextPropagationTest {
 
   @RegisterExtension
@@ -91,7 +91,7 @@ public class ContextPropagationTest {
   private static List<AttributeAssertion> getAssertions(
       String destination,
       String operation,
-      String sockAddr,
+      String peerAddress,
       boolean routingKey,
       boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -105,10 +105,10 @@ public class ContextPropagationTest {
     if (operation != null) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, operation));
     }
-    if (sockAddr != null) {
-      assertions.add(equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, sockAddr));
+    if (peerAddress != null) {
+      assertions.add(equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, peerAddress));
       assertions.add(
-          satisfies(SemanticAttributes.NET_SOCK_PEER_PORT, AbstractLongAssert::isNotNegative));
+          satisfies(NetworkAttributes.NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
     }
     if (routingKey) {
       assertions.add(
@@ -209,9 +209,9 @@ public class ContextPropagationTest {
                           span.hasName("basic.ack")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                   satisfies(
-                                      SemanticAttributes.NET_SOCK_PEER_PORT,
+                                      NetworkAttributes.NETWORK_PEER_PORT,
                                       AbstractLongAssert::isNotNegative),
                                   equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")));
             });

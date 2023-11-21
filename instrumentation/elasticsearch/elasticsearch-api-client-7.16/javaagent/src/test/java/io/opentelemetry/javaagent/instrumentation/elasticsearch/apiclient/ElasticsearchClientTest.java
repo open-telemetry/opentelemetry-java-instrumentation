@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
-import org.assertj.core.api.AbstractLongAssert;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -33,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class ElasticsearchClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -90,25 +87,21 @@ class ElasticsearchClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "info"),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort())),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort())),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                AbstractLongAssert::isPositive))));
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test
@@ -130,11 +123,11 @@ class ElasticsearchClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "index"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "PUT"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
                                 AttributeKey.stringKey("db.elasticsearch.path_parts.index"),
@@ -147,18 +140,14 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "PUT"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "PUT"),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 201L),
-                            satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                AbstractLongAssert::isPositive))));
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
   @Test
@@ -195,25 +184,21 @@ class ElasticsearchClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "info"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/")),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.HTTP_URL, httpHost.toURI() + "/"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                AbstractLongAssert::isPositive)),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
