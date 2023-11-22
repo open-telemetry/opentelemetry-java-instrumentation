@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -77,5 +78,15 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
     // Mono that the controller returns completes) should end before the server span (which needs
     // the result of the Mono)
     options.setVerifyServerSpanEndTime(false);
+
+    options.setResponseCodeOnNonStandardHttpMethod(404);
+  }
+
+  @Override
+  public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (HttpConstants._OTHER.equals(method)) {
+      return getContextPath() + "/**";
+    }
+    return super.expectedHttpRoute(endpoint, method);
   }
 }

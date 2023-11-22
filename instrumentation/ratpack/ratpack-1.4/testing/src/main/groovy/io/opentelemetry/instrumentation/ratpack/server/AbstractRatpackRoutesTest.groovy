@@ -105,7 +105,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.URL_SCHEME" "http"
             "$SemanticAttributes.URL_PATH" "/$path"
-            "$SemanticAttributes.URL_QUERY" ""
+            "$SemanticAttributes.URL_QUERY" { it == "" || it == null }
             "$SemanticAttributes.HTTP_ROUTE" "/$route"
           }
         }

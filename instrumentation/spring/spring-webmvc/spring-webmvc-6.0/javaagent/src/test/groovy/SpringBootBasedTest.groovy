@@ -31,4 +31,9 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
       super.handlerSpan(trace, index, parent, method, endpoint)
     }
   }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    400
+  }
 }

@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -514,7 +515,8 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
+                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
+                            equalTo(HttpAttributes.ERROR_TYPE, "500")),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -752,7 +754,8 @@ public class SpringWebfluxTest {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/slow")),
+                            equalTo(HTTP_ROUTE, "/slow"),
+                            equalTo(HttpAttributes.ERROR_TYPE, "_OTHER")),
                 span ->
                     span.hasName("SpringWebFluxTestApplication$$Lambda.handle")
                         .hasKind(SpanKind.INTERNAL)

@@ -7,14 +7,18 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static java.util.Objects.requireNonNull;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -63,8 +67,19 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
 
+    // no enum value for non standard method
+    optionsBuilder.disableTestNonStandardHttpMethod();
+
     // timeouts leak the scope
     optionsBuilder.disableTestReadTimeout();
+
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+          return attributes;
+        });
 
     optionsBuilder.setClientSpanErrorMapper(
         (uri, throwable) -> {
