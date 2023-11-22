@@ -41,6 +41,7 @@ abstract class JaxRsJettyHttpServerTest extends JaxRsHttpServerTest<Server> {
     "/rest-app"
   }
 
+  @Override
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (method == HttpConstants._OTHER) {
       return "${getContextPath()}/*"

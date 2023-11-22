@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -42,7 +43,12 @@ class WebMvcHttpServerTest extends AbstractHttpServerTest<ConfigurableApplicatio
           if (endpoint == ServerEndpoint.PATH_PARAM) {
             return CONTEXT_PATH + "/path/{id}/param";
           }
+          if (HttpConstants._OTHER.equals(method)) {
+            return CONTEXT_PATH + endpoint.getPath();
+          }
           return expectedHttpRoute(endpoint, method);
         });
+
+    options.setResponseCodeOnNonStandardHttpMethod(501);
   }
 }

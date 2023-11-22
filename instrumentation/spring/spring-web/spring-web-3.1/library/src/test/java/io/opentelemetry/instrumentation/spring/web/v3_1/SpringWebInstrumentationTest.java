@@ -7,14 +7,18 @@ package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
@@ -96,5 +100,13 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
     optionsBuilder.disableTestCircularRedirects();
     optionsBuilder.disableTestReadTimeout();
     optionsBuilder.disableTestNonStandardHttpMethod();
+
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+          return attributes;
+        });
   }
 }

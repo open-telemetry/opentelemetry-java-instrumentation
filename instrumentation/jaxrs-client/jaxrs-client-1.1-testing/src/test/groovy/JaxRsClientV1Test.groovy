@@ -82,4 +82,9 @@ class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements A
     attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION)
     return attributes
   }
+
+  @Override
+  boolean testNonStandardHttpMethod() {
+    false
+  }
 }

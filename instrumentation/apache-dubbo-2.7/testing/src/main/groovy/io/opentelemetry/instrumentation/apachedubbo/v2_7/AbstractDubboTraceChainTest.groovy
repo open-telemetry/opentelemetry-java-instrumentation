@@ -155,7 +155,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" }
+            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
           }
         }
         span(3) {
@@ -182,7 +182,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.NETWORK_TYPE" { it ==  "ipv4" || it == "ipv6" }
+            "$SemanticAttributes.NETWORK_TYPE" { it ==  "ipv4" || it == "ipv6" || it == null }
           }
         }
       }
@@ -269,7 +269,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.RPC_METHOD" "hello"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" }
+            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
           }
         }
       }

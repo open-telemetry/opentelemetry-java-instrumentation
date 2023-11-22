@@ -647,7 +647,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "other_sql"
             "$SemanticAttributes.DB_STATEMENT" "testing ?"
             "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.SERVER_PORT" "localhost"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -691,7 +691,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
             "$SemanticAttributes.DB_OPERATION" operation
             "$SemanticAttributes.DB_SQL_TABLE" table
-            "$SemanticAttributes.SERVER_PORT" "localhost"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -796,7 +796,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
             "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "table"
-            "$SemanticAttributes.SERVER_PORT" "localhost"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
