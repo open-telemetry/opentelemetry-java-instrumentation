@@ -36,41 +36,33 @@ class WicketTest extends AbstractHttpServerUsingTest<Server> {
       HttpServerInstrumentationExtension.forAgent();
 
   @Override
-  protected Server setupServer() {
+  protected Server setupServer() throws Exception {
     Server server = new Server(port);
 
-    try {
+    ServletContextHandler context = new ServletContextHandler(0);
+    context.setContextPath(getContextPath());
 
-      ServletContextHandler context = new ServletContextHandler(0);
-      context.setContextPath(getContextPath());
+    Resource resource = new FileResource(getClass().getResource("/"));
+    context.setBaseResource(resource);
+    server.setHandler(context);
 
-      Resource resource = new FileResource(getClass().getResource("/"));
-      context.setBaseResource(resource);
-      server.setHandler(context);
+    context.addServlet(DefaultServlet.class, "/");
+    FilterRegistration.Dynamic registration =
+        context.getServletContext().addFilter("WicketApplication", WicketFilter.class);
+    registration.setInitParameter("applicationClassName", HelloApplication.class.getName());
+    registration.setInitParameter("filterMappingUrlPattern", "/wicket-test/*");
+    registration.addMappingForUrlPatterns(
+        EnumSet.of(DispatcherType.REQUEST), false, "/wicket-test/*");
 
-      context.addServlet(DefaultServlet.class, "/");
-      FilterRegistration.Dynamic registration =
-          context.getServletContext().addFilter("WicketApplication", WicketFilter.class);
-      registration.setInitParameter("applicationClassName", HelloApplication.class.getName());
-      registration.setInitParameter("filterMappingUrlPattern", "/wicket-test/*");
-      registration.addMappingForUrlPatterns(
-          EnumSet.of(DispatcherType.REQUEST), false, "/wicket-test/*");
+    server.start();
 
-      server.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
     return server;
   }
 
   @Override
-  protected void stopServer(Server server) {
-    try {
-      server.stop();
-      server.destroy();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  protected void stopServer(Server server) throws Exception {
+    server.stop();
+    server.destroy();
   }
 
   @Override
