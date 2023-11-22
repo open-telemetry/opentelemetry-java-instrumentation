@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  library("com.alibaba:druid:1.1.22")
+  library("com.alibaba:druid:1.2.20")
 
   testImplementation(project(":instrumentation:druid-1.0:testing"))
 }

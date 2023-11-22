@@ -7,5 +7,5 @@ dependencies {
   api("org.mockito:mockito-core")
   api("org.mockito:mockito-junit-jupiter")
 
-  compileOnly("com.alibaba:druid:1.1.22")
+  compileOnly("com.alibaba:druid:1.2.20")
 }
