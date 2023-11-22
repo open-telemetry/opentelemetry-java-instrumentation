@@ -12,6 +12,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
@@ -127,6 +128,7 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(2) {
@@ -218,6 +220,7 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(2) {

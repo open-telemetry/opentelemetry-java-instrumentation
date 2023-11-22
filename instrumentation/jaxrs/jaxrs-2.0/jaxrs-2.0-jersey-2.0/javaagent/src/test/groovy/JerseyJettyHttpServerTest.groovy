@@ -15,4 +15,9 @@ class JerseyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
     // disables a test that jersey deems invalid
     false
   }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    500
+  }
 }

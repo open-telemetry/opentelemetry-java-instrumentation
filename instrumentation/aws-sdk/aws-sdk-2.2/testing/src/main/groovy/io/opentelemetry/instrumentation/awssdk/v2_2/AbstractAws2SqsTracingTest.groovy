@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
@@ -246,6 +247,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(2 + offset) {
@@ -454,6 +456,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$SemanticAttributes.MESSAGING_OPERATION" "process"
               "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+              "$HttpAttributes.ERROR_TYPE" "_OTHER"
             }
           }
           span(1 + 2*i + 1) {

@@ -169,6 +169,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.OK.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -330,6 +331,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.OK.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -503,6 +505,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.OK.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -646,6 +649,7 @@ public abstract class AbstractGrpcTest {
                                     (long) status.getCode().value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -792,6 +796,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.UNKNOWN.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -1042,6 +1047,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.OK.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -1161,6 +1167,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.CANCELLED.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -1279,6 +1286,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.OK.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -1380,6 +1388,7 @@ public abstract class AbstractGrpcTest {
                                     (long) Status.Code.OK.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
@@ -1637,6 +1646,7 @@ public abstract class AbstractGrpcTest {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(Arrays.asList(assertions));
     if (Boolean.getBoolean("testLatestDeps")) {
+      result.add(equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"));
       result.add(equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
       result.add(
           satisfies(NetworkAttributes.NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()));

@@ -28,6 +28,7 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
@@ -191,6 +192,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
+            "$HttpAttributes.ERROR_TYPE" SdkClientException.name
           }
         }
       }
@@ -244,6 +246,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
+            "$HttpAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
           }
         }
       }

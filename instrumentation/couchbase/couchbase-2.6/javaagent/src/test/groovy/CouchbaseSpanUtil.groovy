@@ -35,8 +35,9 @@ class CouchbaseSpanUtil {
         "$SemanticAttributes.DB_OPERATION"(operation ?: spanName)
 
         // Because of caching, not all requests hit the server so these attributes may be absent
+        "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
         "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
-        "$NetworkAttributes.NETWORK_PEER_PORT" { it == null || it instanceof Number }
+        "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Number || it == null }
 
         // Because of caching, not all requests hit the server so this tag may be absent
         "couchbase.local.address" { it == null || it instanceof String }

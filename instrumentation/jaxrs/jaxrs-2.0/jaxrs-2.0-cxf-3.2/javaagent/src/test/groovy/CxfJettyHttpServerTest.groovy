@@ -4,4 +4,9 @@
  */
 
 class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    405
+  }
 }

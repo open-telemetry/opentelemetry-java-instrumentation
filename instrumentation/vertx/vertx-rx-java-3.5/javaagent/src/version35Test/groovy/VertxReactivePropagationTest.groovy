@@ -25,7 +25,6 @@ import static VertxReactiveWebServer.TEST_REQUEST_ID_PARAMETER
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP
 
 class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   @Shared
