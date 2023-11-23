@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -99,6 +100,7 @@ class AwsSpanAssertions {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"));
         attributeAssertions.add(
             satisfies(SemanticAttributes.MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(equalTo(HttpAttributes.ERROR_TYPE, "_OTHER"));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"));
         attributeAssertions.add(

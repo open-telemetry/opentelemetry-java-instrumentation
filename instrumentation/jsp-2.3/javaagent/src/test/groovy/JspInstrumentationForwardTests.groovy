@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -94,7 +95,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -163,7 +163,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -211,7 +210,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -307,7 +305,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -389,12 +386,12 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
+            "$HttpAttributes.ERROR_TYPE" "500"
           }
         }
         span(1) {
@@ -450,7 +447,6 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 404
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" route
-            "$SemanticAttributes.NETWORK_PROTOCOL_NAME" "http"
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
