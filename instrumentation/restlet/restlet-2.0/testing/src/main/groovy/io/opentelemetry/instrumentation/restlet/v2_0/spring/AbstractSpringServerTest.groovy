@@ -36,7 +36,7 @@ abstract class AbstractSpringServerTest extends AbstractRestletServerTest {
   @Override
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (method == HttpConstants._OTHER) {
-      return getContextPath() + endpoint.path;
+      return getContextPath() + endpoint.path
     }
     return super.expectedHttpRoute(endpoint, method)
   }

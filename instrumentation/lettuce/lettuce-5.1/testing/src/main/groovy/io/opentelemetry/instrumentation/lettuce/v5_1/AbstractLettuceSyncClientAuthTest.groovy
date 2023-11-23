@@ -67,6 +67,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
           name "AUTH"
           kind CLIENT
           attributes {
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"

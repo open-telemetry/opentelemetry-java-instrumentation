@@ -178,7 +178,7 @@ abstract class AbstractRestletServerTest extends HttpServerTest<Server> {
   @Override
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (method == HttpConstants._OTHER) {
-      return getContextPath() + endpoint.path;
+      return getContextPath() + endpoint.path
     }
     switch (endpoint) {
       case PATH_PARAM:

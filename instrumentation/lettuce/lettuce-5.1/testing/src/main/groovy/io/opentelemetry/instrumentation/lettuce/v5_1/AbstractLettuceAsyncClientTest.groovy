@@ -159,6 +159,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "SET"
           kind CLIENT
           attributes {
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
@@ -208,6 +209,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "GET"
           kind CLIENT
           attributes {
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
@@ -281,6 +283,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           kind CLIENT
           childOf(span(0))
           attributes {
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
@@ -343,6 +346,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           kind CLIENT
           childOf(span(0))
           attributes {
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
@@ -408,6 +412,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "HMSET"
           kind CLIENT
           attributes {
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
@@ -426,6 +431,7 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "HGETALL"
           kind CLIENT
           attributes {
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
