@@ -65,6 +65,7 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
   }
@@ -86,6 +87,7 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))),
         trace ->
@@ -97,6 +99,7 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "GET foo"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
   }
@@ -118,6 +121,7 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))),
         trace ->
@@ -129,6 +133,7 @@ class Jedis40ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"),
                             equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
   }

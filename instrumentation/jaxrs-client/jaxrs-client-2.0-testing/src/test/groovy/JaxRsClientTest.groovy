@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -31,6 +32,11 @@ import static io.opentelemetry.api.trace.StatusCode.ERROR
 abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implements AgentTestTrait {
 
   boolean testRedirects() {
+    false
+  }
+
+  @Override
+  boolean testNonStandardHttpMethod() {
     false
   }
 
@@ -115,6 +121,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
             "$SemanticAttributes.URL_FULL" "${uri}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" method
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
+            "$HttpAttributes.ERROR_TYPE" "$statusCode"
           }
         }
         serverSpan(it, 1, span(0))
