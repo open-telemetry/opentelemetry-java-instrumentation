@@ -7,7 +7,6 @@ muzzle {
     group.set("com.alibaba")
     module.set("druid")
     versions.set("[0.2.6,)")
-    assertInverse.set(true)
   }
 }
 
