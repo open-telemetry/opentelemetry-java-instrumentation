@@ -5,9 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
+import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -33,16 +37,24 @@ public class OtlpSpanExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(OtlpExporterProperties properties) {
-    OtlpGrpcSpanExporterBuilder builder = OtlpGrpcSpanExporter.builder();
-
-    OtlpExporterUtil.applySignalProperties(
+  public SpanExporter otelOtlpGrpcSpanExporter(OtlpExporterProperties properties) {
+    return OtlpExporterUtil.applySignalProperties(
+        OtlpConfigUtil.DATA_TYPE_TRACES,
         properties,
-        properties.getTraces(),
-        builder::setEndpoint,
-        builder::addHeader,
-        builder::setTimeout);
-
-    return builder.build();
+        properties.getLogs(),
+        OtlpGrpcSpanExporter::builder,
+        OtlpHttpSpanExporter::builder,
+        OtlpGrpcSpanExporterBuilder::setEndpoint,
+        OtlpHttpSpanExporterBuilder::setEndpoint,
+        (builder, entry) -> {
+          builder.addHeader(entry.getKey(), entry.getValue());
+        },
+        (builder, entry) -> {
+          builder.addHeader(entry.getKey(), entry.getValue());
+        },
+        OtlpGrpcSpanExporterBuilder::setTimeout,
+        OtlpHttpSpanExporterBuilder::setTimeout,
+        OtlpGrpcSpanExporterBuilder::build,
+        OtlpHttpSpanExporterBuilder::build);
   }
 }

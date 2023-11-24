@@ -27,6 +27,8 @@ public final class OtlpExporterProperties {
   private boolean enabled = true;
   @Nullable private String endpoint;
 
+  @Nullable private String protocol;
+
   private final Map<String, String> headers = new HashMap<>();
 
   @Nullable private Duration timeout;
@@ -49,6 +51,15 @@ public final class OtlpExporterProperties {
 
   public void setEndpoint(String endpoint) {
     this.endpoint = endpoint;
+  }
+
+  @Nullable
+  public String getProtocol() {
+    return protocol;
+  }
+
+  public void setProtocol(@Nullable String protocol) {
+    this.protocol = protocol;
   }
 
   public Map<String, String> getHeaders() {
@@ -81,6 +92,8 @@ public final class OtlpExporterProperties {
     private boolean enabled = true;
     @Nullable private String endpoint;
 
+    @Nullable private String protocol;
+
     private final Map<String, String> headers = new HashMap<>();
 
     @Nullable private Duration timeout;
@@ -100,6 +113,15 @@ public final class OtlpExporterProperties {
 
     public void setEndpoint(@Nullable String endpoint) {
       this.endpoint = endpoint;
+    }
+
+    @Nullable
+    public String getProtocol() {
+      return protocol;
+    }
+
+    public void setProtocol(@Nullable String protocol) {
+      this.protocol = protocol;
     }
 
     public Map<String, String> getHeaders() {

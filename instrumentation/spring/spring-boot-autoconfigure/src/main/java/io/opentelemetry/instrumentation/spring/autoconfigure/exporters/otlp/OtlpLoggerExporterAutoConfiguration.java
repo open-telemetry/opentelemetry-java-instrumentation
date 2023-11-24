@@ -5,9 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
+import io.opentelemetry.exporter.otlp.http.logs.OtlpHttpLogRecordExporter;
+import io.opentelemetry.exporter.otlp.http.logs.OtlpHttpLogRecordExporterBuilder;
+import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -26,17 +30,25 @@ public class OtlpLoggerExporterAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
-  public OtlpGrpcLogRecordExporter otelOtlpGrpcLogRecordExporter(
-      OtlpExporterProperties properties) {
-    OtlpGrpcLogRecordExporterBuilder builder = OtlpGrpcLogRecordExporter.builder();
+  public LogRecordExporter otelOtlpGrpcLogRecordExporter(OtlpExporterProperties properties) {
 
-    OtlpExporterUtil.applySignalProperties(
+    return OtlpExporterUtil.applySignalProperties(
+        OtlpConfigUtil.DATA_TYPE_LOGS,
         properties,
         properties.getLogs(),
-        builder::setEndpoint,
-        builder::addHeader,
-        builder::setTimeout);
-
-    return builder.build();
+        OtlpGrpcLogRecordExporter::builder,
+        OtlpHttpLogRecordExporter::builder,
+        OtlpGrpcLogRecordExporterBuilder::setEndpoint,
+        OtlpHttpLogRecordExporterBuilder::setEndpoint,
+        (builder, entry) -> {
+          builder.addHeader(entry.getKey(), entry.getValue());
+        },
+        (builder, entry) -> {
+          builder.addHeader(entry.getKey(), entry.getValue());
+        },
+        OtlpGrpcLogRecordExporterBuilder::setTimeout,
+        OtlpHttpLogRecordExporterBuilder::setTimeout,
+        OtlpGrpcLogRecordExporterBuilder::build,
+        OtlpHttpLogRecordExporterBuilder::build);
   }
 }
