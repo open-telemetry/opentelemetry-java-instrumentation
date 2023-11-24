@@ -15,6 +15,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.ssl.SslContextBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -93,13 +94,15 @@ class ReactorNettyClientSslTest {
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.URL_FULL, uri),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(
+                                HttpAttributes.ERROR_TYPE,
+                                SSLHandshakeException.class.getCanonicalName())),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
                 span ->
@@ -108,6 +111,7 @@ class ReactorNettyClientSslTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
@@ -124,6 +128,7 @@ class ReactorNettyClientSslTest {
                         .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, server.httpsPort()))));
   }
@@ -155,7 +160,6 @@ class ReactorNettyClientSslTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
                 span ->
@@ -164,6 +168,7 @@ class ReactorNettyClientSslTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
@@ -176,6 +181,7 @@ class ReactorNettyClientSslTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, server.httpsPort())),
                 span ->
