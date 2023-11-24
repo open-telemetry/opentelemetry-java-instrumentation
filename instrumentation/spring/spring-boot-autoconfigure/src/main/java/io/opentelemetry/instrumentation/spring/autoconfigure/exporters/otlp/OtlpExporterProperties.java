@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -24,6 +26,9 @@ public final class OtlpExporterProperties {
 
   private boolean enabled = true;
   @Nullable private String endpoint;
+
+  private final Map<String, String> headers = new HashMap<>();
+
   @Nullable private Duration timeout;
   private final SignalProperties traces = new SignalProperties();
   private final SignalProperties metrics = new SignalProperties();
@@ -44,6 +49,10 @@ public final class OtlpExporterProperties {
 
   public void setEndpoint(String endpoint) {
     this.endpoint = endpoint;
+  }
+
+  public Map<String, String> getHeaders() {
+    return headers;
   }
 
   @Nullable
@@ -71,6 +80,9 @@ public final class OtlpExporterProperties {
 
     private boolean enabled = true;
     @Nullable private String endpoint;
+
+    private final Map<String, String> headers = new HashMap<>();
+
     @Nullable private Duration timeout;
 
     public boolean isEnabled() {
@@ -88,6 +100,10 @@ public final class OtlpExporterProperties {
 
     public void setEndpoint(@Nullable String endpoint) {
       this.endpoint = endpoint;
+    }
+
+    public Map<String, String> getHeaders() {
+      return headers;
     }
 
     @Nullable

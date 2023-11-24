@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.MapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -32,6 +33,7 @@ import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,6 +52,12 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
+
+  @Bean
+  @ConfigurationPropertiesBinding
+  public MapConverter mapConverter() {
+    return new MapConverter();
+  }
 
   @Configuration
   @ConditionalOnMissingBean(OpenTelemetry.class)

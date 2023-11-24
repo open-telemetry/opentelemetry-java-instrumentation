@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import java.time.Duration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,21 +36,12 @@ public class OtlpSpanExporterAutoConfiguration {
   public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(OtlpExporterProperties properties) {
     OtlpGrpcSpanExporterBuilder builder = OtlpGrpcSpanExporter.builder();
 
-    String endpoint = properties.getTraces().getEndpoint();
-    if (endpoint == null) {
-      endpoint = properties.getEndpoint();
-    }
-    if (endpoint != null) {
-      builder.setEndpoint(endpoint);
-    }
-
-    Duration timeout = properties.getTraces().getTimeout();
-    if (timeout == null) {
-      timeout = properties.getTimeout();
-    }
-    if (timeout != null) {
-      builder.setTimeout(timeout);
-    }
+    OtlpExporterUtil.applySignalProperties(
+        properties,
+        properties.getTraces(),
+        builder::setEndpoint,
+        builder::addHeader,
+        builder::setTimeout);
 
     return builder.build();
   }
