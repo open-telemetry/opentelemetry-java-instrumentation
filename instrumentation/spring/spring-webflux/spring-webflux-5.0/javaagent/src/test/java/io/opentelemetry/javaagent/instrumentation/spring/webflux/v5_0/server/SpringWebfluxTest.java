@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Named.named;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
@@ -484,26 +485,31 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName(EXCEPTION_EVENT_NAME)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            "org.springframework.web.server.ResponseStatusException"),
-                                        satisfies(
-                                            EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.containsAnyOf(
-                                                    "Response status 404", "404 NOT_FOUND")),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
+                        .hasEventsSatisfyingExactly(SpringWebfluxTest::resource404Exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("spring-webflux.handler.type"),
                                 "org.springframework.web.reactive.resource.ResourceWebHandler"))));
+  }
+
+  private static void resource404Exception(EventDataAssert event) {
+    if (Boolean.getBoolean("testLatestDeps")) {
+      event
+          .hasName(EXCEPTION_EVENT_NAME)
+          .hasAttributesSatisfyingExactly(
+              equalTo(
+                  EXCEPTION_TYPE,
+                  "org.springframework.web.reactive.resource.NoResourceFoundException"),
+              satisfies(EXCEPTION_MESSAGE, val -> val.isInstanceOf(String.class)),
+              satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
+    } else {
+      event
+          .hasName(EXCEPTION_EVENT_NAME)
+          .hasAttributesSatisfyingExactly(
+              equalTo(EXCEPTION_TYPE, "org.springframework.web.server.ResponseStatusException"),
+              equalTo(EXCEPTION_MESSAGE, "Response status 404"),
+              satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
+    }
   }
 
   @Test
