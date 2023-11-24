@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package server.base;
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
@@ -52,8 +52,9 @@ public abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxSer
                     .hasAttributesSatisfyingExactly(
                         equalTo(
                             EXCEPTION_TYPE,
-                            "org.springframework.web.server.ResponseStatusException"),
-                        equalTo(EXCEPTION_MESSAGE, "404 NOT_FOUND"),
+                            "org.springframework.web.reactive.resource.NoResourceFoundException"),
+                        equalTo(
+                            EXCEPTION_MESSAGE, "404 NOT_FOUND \"No static resource notFound.\""),
                         satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       } else {
         span.hasEventsSatisfyingExactly(
