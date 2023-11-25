@@ -66,7 +66,7 @@ class SpringSchedulingTest {
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
                               equalTo(
                                   AttributeKey.stringKey("code.namespace"),
-                                  "io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.TriggerTask"),
+                                  TriggerTask.class.getName()),
                               equalTo(AttributeKey.stringKey("code.function"), "run"))));
     }
   }
@@ -89,7 +89,7 @@ class SpringSchedulingTest {
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
                               equalTo(
                                   AttributeKey.stringKey("code.namespace"),
-                                  "io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.IntervalTask"),
+                                  IntervalTask.class.getName()),
                               equalTo(AttributeKey.stringKey("code.function"), "run"))));
     }
   }
@@ -117,7 +117,8 @@ class SpringSchedulingTest {
                                       codeNamespace
                                           .isNotBlank()
                                           .startsWith(
-                                              "io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.service.LambdaTaskConfigurer$$Lambda")))));
+                                              LambdaTaskConfigurer.class.getName()
+                                                  + "$$Lambda")))));
     }
   }
 
@@ -139,7 +140,7 @@ class SpringSchedulingTest {
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
                               equalTo(
                                   AttributeKey.stringKey("code.namespace"),
-                                  "io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.EnhancedClassTaskConfig"),
+                                  EnhancedClassTaskConfig.class.getName()),
                               equalTo(AttributeKey.stringKey("code.function"), "run"))));
     }
   }
@@ -163,7 +164,7 @@ class SpringSchedulingTest {
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
                               equalTo(
                                   AttributeKey.stringKey("code.namespace"),
-                                  "io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.component.TaskWithError"),
+                                  TaskWithError.class.getName()),
                               equalTo(AttributeKey.stringKey("code.function"), "run"))
                           .hasEventsSatisfyingExactly(
                               event ->
