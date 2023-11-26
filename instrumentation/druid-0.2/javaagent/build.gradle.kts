@@ -11,7 +11,7 @@ muzzle {
 }
 
 dependencies {
-  library("com.alibaba:druid:1.2.20")
+  library("com.alibaba:druid:0.2.6")
 
   implementation(project(":instrumentation:druid-0.2:library"))
 
