@@ -36,8 +36,8 @@ import org.springframework.context.annotation.Configuration;
 public class OtlpSpanExporterAutoConfiguration {
 
   @Bean
-  @ConditionalOnMissingBean
-  public SpanExporter otelOtlpGrpcSpanExporter(OtlpExporterProperties properties) {
+  @ConditionalOnMissingBean({OtlpGrpcSpanExporter.class, OtlpHttpSpanExporter.class})
+  public SpanExporter otelOtlpSpanExporter(OtlpExporterProperties properties) {
     return OtlpExporterUtil.applySignalProperties(
         OtlpConfigUtil.DATA_TYPE_TRACES,
         properties,

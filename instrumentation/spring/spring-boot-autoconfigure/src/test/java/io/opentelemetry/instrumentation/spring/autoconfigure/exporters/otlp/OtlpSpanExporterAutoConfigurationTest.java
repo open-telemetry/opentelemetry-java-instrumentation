@@ -30,7 +30,7 @@ class OtlpSpanExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.otlp.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
+                assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
                     .isNotNull());
   }
 
@@ -40,7 +40,7 @@ class OtlpSpanExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.otlp.traces.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
+                assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
                     .isNotNull());
   }
 
@@ -49,14 +49,14 @@ class OtlpSpanExporterAutoConfigurationTest {
   void otlpDisabled() {
     this.contextRunner
         .withPropertyValues("otel.exporter.otlp.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelOtlpGrpcSpanExporter")).isFalse());
+        .run(context -> assertThat(context.containsBean("otelOtlpSpanExporter")).isFalse());
   }
 
   @Test
   void otlpTracesDisabled() {
     this.contextRunner
         .withPropertyValues("otel.exporter.otlp.traces.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelOtlpGrpcSpanExporter")).isFalse());
+        .run(context -> assertThat(context.containsBean("otelOtlpSpanExporter")).isFalse());
   }
 
   @Test
@@ -64,7 +64,7 @@ class OtlpSpanExporterAutoConfigurationTest {
   void exporterPresentByDefault() {
     this.contextRunner.run(
         context ->
-            assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
+            assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
                 .isNotNull());
   }
 }

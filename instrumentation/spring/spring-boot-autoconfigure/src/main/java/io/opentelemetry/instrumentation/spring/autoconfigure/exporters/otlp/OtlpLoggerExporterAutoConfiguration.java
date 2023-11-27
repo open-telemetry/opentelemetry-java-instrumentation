@@ -29,8 +29,8 @@ import org.springframework.context.annotation.Bean;
 public class OtlpLoggerExporterAutoConfiguration {
 
   @Bean
-  @ConditionalOnMissingBean
-  public LogRecordExporter otelOtlpGrpcLogRecordExporter(OtlpExporterProperties properties) {
+  @ConditionalOnMissingBean({OtlpGrpcLogRecordExporter.class, OtlpHttpLogRecordExporter.class})
+  public LogRecordExporter otelOtlpLogRecordExporter(OtlpExporterProperties properties) {
 
     return OtlpExporterUtil.applySignalProperties(
         OtlpConfigUtil.DATA_TYPE_LOGS,

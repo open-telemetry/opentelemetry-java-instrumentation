@@ -28,7 +28,7 @@ class MetricExporterAutoConfigurationTest {
   void defaultConfiguration() {
     contextRunner.run(
         context -> {
-          assertThat(context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+          assertThat(context.getBean("otelOtlpMetricExporter", OtlpGrpcMetricExporter.class))
               .as("OTLP exporter is enabled by default")
               .isNotNull();
           assertThat(context.containsBean("otelLoggingMetricExporter"))
@@ -43,8 +43,7 @@ class MetricExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.logging.enabled=true")
         .run(
             context -> {
-              assertThat(
-                      context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+              assertThat(context.getBean("otelOtlpMetricExporter", OtlpGrpcMetricExporter.class))
                   .as("OTLP exporter is present even with logging enabled")
                   .isNotNull();
               assertThat(context.getBean("otelLoggingMetricExporter", LoggingMetricExporter.class))

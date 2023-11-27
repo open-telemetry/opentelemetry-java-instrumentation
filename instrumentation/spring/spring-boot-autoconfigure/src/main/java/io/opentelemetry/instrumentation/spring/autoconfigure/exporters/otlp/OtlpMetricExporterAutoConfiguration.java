@@ -31,8 +31,8 @@ import org.springframework.context.annotation.Configuration;
 public class OtlpMetricExporterAutoConfiguration {
 
   @Bean
-  @ConditionalOnMissingBean
-  public MetricExporter otelOtlpGrpcMetricExporter(OtlpExporterProperties properties) {
+  @ConditionalOnMissingBean({OtlpGrpcMetricExporter.class, OtlpHttpMetricExporter.class})
+  public MetricExporter otelOtlpMetricExporter(OtlpExporterProperties properties) {
     return OtlpExporterUtil.applySignalProperties(
         OtlpConfigUtil.DATA_TYPE_METRICS,
         properties,
