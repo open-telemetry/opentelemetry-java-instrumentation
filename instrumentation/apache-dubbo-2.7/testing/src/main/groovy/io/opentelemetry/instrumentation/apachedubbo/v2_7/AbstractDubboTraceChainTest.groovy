@@ -143,6 +143,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.SERVER_PORT" Long
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == null || it instanceof String}
             "$NetworkAttributes.NETWORK_PEER_PORT" { it == null || it instanceof Long}
+            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
           }
         }
         span(2) {
@@ -170,6 +171,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.SERVER_PORT" Long
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == null || it instanceof String }
             "$NetworkAttributes.NETWORK_PEER_PORT" { it == null || it instanceof Long }
+            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
           }
         }
         span(4) {
@@ -257,6 +259,7 @@ abstract class AbstractDubboTraceChainTest extends InstrumentationSpecification 
             "$SemanticAttributes.SERVER_PORT" Long
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == null || it instanceof String}
             "$NetworkAttributes.NETWORK_PEER_PORT" { it == null || it instanceof Long}
+            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
           }
         }
         span(2) {

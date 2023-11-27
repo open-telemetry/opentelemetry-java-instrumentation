@@ -43,6 +43,6 @@ class CxfHttpServerTest extends JaxRsHttpServerTest<Server> {
 
   @Override
   int getResponseCodeOnNonStandardHttpMethod() {
-    405
+    Boolean.getBoolean("testLatestDeps") ? 500 : 405
   }
 }
