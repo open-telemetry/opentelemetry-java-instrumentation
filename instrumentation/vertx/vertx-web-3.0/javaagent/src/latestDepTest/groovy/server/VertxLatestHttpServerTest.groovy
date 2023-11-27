@@ -15,12 +15,4 @@ class VertxLatestHttpServerTest extends AbstractVertxHttpServerTest {
   protected Class<? extends AbstractVerticle> verticle() {
     return VertxLatestWebServer
   }
-
-  @Override
-  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
-    if (method == HttpConstants._OTHER) {
-      return getContextPath() + endpoint.path
-    }
-    return super.expectedHttpRoute(endpoint, method)
-  }
 }
