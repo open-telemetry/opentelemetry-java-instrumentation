@@ -16,28 +16,28 @@ import java.util.function.Supplier;
 class OtlpExporterUtil {
   private OtlpExporterUtil() {}
 
-  static <GrpcBuilder, HttpBuilder, Exporter> Exporter applySignalProperties(
+  static <G, H, E> E applySignalProperties(
       String dataType,
       OtlpExporterProperties properties,
       OtlpExporterProperties.SignalProperties signalProperties,
-      Supplier<GrpcBuilder> newGrpcBuilder,
-      Supplier<HttpBuilder> newHttpBuilder,
-      BiConsumer<GrpcBuilder, String> setGrpcEndpoint,
-      BiConsumer<HttpBuilder, String> setHttpEndpoint,
-      BiConsumer<GrpcBuilder, Map.Entry<String, String>> addGrpcHeader,
-      BiConsumer<HttpBuilder, Map.Entry<String, String>> addHttpHeader,
-      BiConsumer<GrpcBuilder, Duration> setGrpcTimeout,
-      BiConsumer<HttpBuilder, Duration> setHttpTimeout,
-      Function<GrpcBuilder, Exporter> buildGrpcExporter,
-      Function<HttpBuilder, Exporter> buildHttpExporter) {
+      Supplier<G> newGrpcBuilder,
+      Supplier<H> newHttpBuilder,
+      BiConsumer<G, String> setGrpcEndpoint,
+      BiConsumer<H, String> setHttpEndpoint,
+      BiConsumer<G, Map.Entry<String, String>> addGrpcHeader,
+      BiConsumer<H, Map.Entry<String, String>> addHttpHeader,
+      BiConsumer<G, Duration> setGrpcTimeout,
+      BiConsumer<H, Duration> setHttpTimeout,
+      Function<G, E> buildGrpcExporter,
+      Function<H, E> buildHttpExporter) {
 
     String protocol = signalProperties.getProtocol();
     if (protocol == null) {
       protocol = properties.getProtocol();
     }
 
-    GrpcBuilder grpcBuilder = newGrpcBuilder.get();
-    HttpBuilder httpBuilder = newHttpBuilder.get();
+    G grpcBuilder = newGrpcBuilder.get();
+    H httpBuilder = newHttpBuilder.get();
 
     boolean isHttpProtobuf = Objects.equals(protocol, OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF);
 
