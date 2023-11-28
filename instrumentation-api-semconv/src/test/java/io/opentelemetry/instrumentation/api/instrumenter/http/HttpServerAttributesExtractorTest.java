@@ -401,7 +401,7 @@ class HttpServerAttributesExtractorTest {
     request.put("header.forwarded", "host=example.com:42");
     request.put("header.x-forwarded-host", "opentelemetry.io:987");
     request.put("header.host", "github.com:123");
-    request.put("header.:authority", "opentelemetry.io:42");
+    request.put("header.:authority", "opentelemetry.io:456");
 
     Map<String, String> response = new HashMap<>();
     response.put("statusCode", "200");

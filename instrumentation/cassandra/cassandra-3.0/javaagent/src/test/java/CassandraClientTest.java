@@ -4,12 +4,6 @@
  */
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_TYPE;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.driver.core.Cluster;
@@ -19,6 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.concurrent.Executor;
@@ -90,11 +85,12 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace))),
+                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(
+                                  SemanticAttributes.DB_STATEMENT, "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -102,14 +98,14 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_NAME, parameter.keyspace),
-                              equalTo(DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DB_OPERATION, parameter.operation),
-                              equalTo(DB_CASSANDRA_TABLE, parameter.table))));
+                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(SemanticAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -119,13 +115,13 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DB_OPERATION, parameter.operation),
-                              equalTo(DB_CASSANDRA_TABLE, parameter.table))));
+                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     }
 
     session.close();
@@ -156,11 +152,12 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_STATEMENT, "USE " + parameter.keyspace))),
+                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(
+                                  SemanticAttributes.DB_STATEMENT, "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -169,14 +166,14 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_NAME, parameter.keyspace),
-                              equalTo(DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DB_OPERATION, parameter.operation),
-                              equalTo(DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(SemanticAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -191,13 +188,13 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
-                              equalTo(DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DB_OPERATION, parameter.operation),
-                              equalTo(DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
