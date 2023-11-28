@@ -116,17 +116,15 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
-              "$SemanticAttributes.NET_PEER_NAME" { it == "somebucket.localhost" || it == "localhost" }
-              "$SemanticAttributes.HTTP_URL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
+              "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
             } else {
-              "$SemanticAttributes.NET_PEER_NAME" "localhost"
-              "$SemanticAttributes.HTTP_URL" { it.startsWith("http://localhost:${server.httpPort()}") }
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:${server.httpPort()}") }
             }
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -256,17 +254,15 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
-              "$SemanticAttributes.NET_PEER_NAME" { it == "somebucket.localhost" || it == "localhost" }
-              "$SemanticAttributes.HTTP_URL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
+              "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
             } else {
-              "$SemanticAttributes.NET_PEER_NAME" "localhost"
-              "$SemanticAttributes.HTTP_URL" { it == "http://localhost:${server.httpPort()}" || it == "http://localhost:${server.httpPort()}/" }
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.URL_FULL" { it == "http://localhost:${server.httpPort()}" || it == "http://localhost:${server.httpPort()}/" }
             }
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -424,10 +420,10 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
             // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
             // Our test assert both cases so that we don't need to know what version is being tested.
-            "$SemanticAttributes.NET_PEER_NAME" { it == "somebucket.localhost" || it == "localhost" }
-            "$SemanticAttributes.HTTP_URL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+            "$SemanticAttributes.URL_FULL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "S3"
             "$SemanticAttributes.RPC_METHOD" "GetObject"

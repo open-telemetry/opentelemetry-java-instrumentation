@@ -49,4 +49,9 @@ class ServletFilterTest extends AbstractServletFilterTest {
       super.responseSpan(trace, index, parent, method, endpoint)
     }
   }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    400
+  }
 }

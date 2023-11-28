@@ -9,4 +9,9 @@ class ResteasyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
   boolean shouldTestCompletableStageAsync() {
     false
   }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    500
+  }
 }

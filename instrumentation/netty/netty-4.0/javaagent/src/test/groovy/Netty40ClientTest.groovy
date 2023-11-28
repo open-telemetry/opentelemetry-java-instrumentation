@@ -128,8 +128,8 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
         return []
     }
     def attributes = super.httpAttributes(uri)
-    attributes.remove(SemanticAttributes.NET_PEER_NAME)
-    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    attributes.remove(SemanticAttributes.SERVER_ADDRESS)
+    attributes.remove(SemanticAttributes.SERVER_PORT)
     return attributes
   }
 

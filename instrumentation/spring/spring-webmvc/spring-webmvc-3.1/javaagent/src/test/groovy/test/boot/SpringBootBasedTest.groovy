@@ -12,4 +12,9 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   Class<?> securityConfigClass() {
     SecurityConfig
   }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    Boolean.getBoolean("testLatestDeps") ? 500 : 200
+  }
 }

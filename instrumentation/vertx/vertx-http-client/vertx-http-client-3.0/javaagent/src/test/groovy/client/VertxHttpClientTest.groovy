@@ -92,10 +92,9 @@ class VertxHttpClientTest extends HttpClientTest<HttpClientRequest> implements A
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
-    attributes.remove(SemanticAttributes.NET_PEER_NAME)
-    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION)
+    attributes.remove(SemanticAttributes.SERVER_ADDRESS)
+    attributes.remove(SemanticAttributes.SERVER_PORT)
     return attributes
   }
 

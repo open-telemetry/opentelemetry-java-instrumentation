@@ -23,16 +23,15 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class HttpClientTestOptions {
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION),
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_NAME),
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_PORT),
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_URL),
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.HTTP_METHOD))));
+                  SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                  SemanticAttributes.SERVER_ADDRESS,
+                  SemanticAttributes.SERVER_PORT,
+                  SemanticAttributes.URL_FULL,
+                  SemanticAttributes.HTTP_REQUEST_METHOD)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> HttpConstants._OTHER.equals(method) ? "HTTP" : method;

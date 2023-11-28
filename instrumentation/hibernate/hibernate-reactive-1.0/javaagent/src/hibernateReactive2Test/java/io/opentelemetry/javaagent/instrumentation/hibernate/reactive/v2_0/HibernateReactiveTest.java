@@ -11,8 +11,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -283,7 +283,6 @@ class HibernateReactiveTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   private static void assertTrace() {
     testing.waitAndAssertTraces(
         trace ->
@@ -301,8 +300,8 @@ class HibernateReactiveTest {
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$?"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "Value"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

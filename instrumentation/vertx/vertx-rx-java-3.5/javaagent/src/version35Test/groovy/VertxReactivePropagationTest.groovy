@@ -7,6 +7,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
@@ -24,7 +25,6 @@ import static VertxReactiveWebServer.TEST_REQUEST_ID_PARAMETER
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP
 
 class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
   @Shared
@@ -63,22 +63,17 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
-            "$SemanticAttributes.NET_HOST_NAME" "localhost"
-            "$SemanticAttributes.NET_HOST_PORT" Long
-            "$SemanticAttributes.HTTP_TARGET" "/listProducts"
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_SCHEME" "http"
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" Long
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" Long
+            "$SemanticAttributes.URL_PATH" "/listProducts"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_SCHEME" "http"
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         span(1) {
@@ -158,22 +153,18 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
-              "$SemanticAttributes.NET_TRANSPORT" { it == null || it == IP_TCP }
-              "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-              "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-              "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-              "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-              "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
-              "$SemanticAttributes.NET_SOCK_HOST_PORT" Long
-              "$SemanticAttributes.NET_HOST_NAME" "localhost"
-              "$SemanticAttributes.NET_HOST_PORT" Long
-              "$SemanticAttributes.HTTP_TARGET" "$baseUrl?$TEST_REQUEST_ID_PARAMETER=$requestId"
-              "$SemanticAttributes.HTTP_METHOD" "GET"
-              "$SemanticAttributes.HTTP_STATUS_CODE" 200
-              "$SemanticAttributes.HTTP_SCHEME" "http"
+              "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+              "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+              "$NetworkAttributes.NETWORK_PEER_PORT" Long
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.SERVER_PORT" Long
+              "$SemanticAttributes.URL_PATH" baseUrl
+              "$SemanticAttributes.URL_QUERY" "$TEST_REQUEST_ID_PARAMETER=$requestId"
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$SemanticAttributes.URL_SCHEME" "http"
               "$SemanticAttributes.USER_AGENT_ORIGINAL" String
               "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
-              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId
             }
           }

@@ -7,13 +7,13 @@ package io.opentelemetry.instrumentation.api.instrumenter.net;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
-import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,84 +117,16 @@ class NetClientAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"),
-            entry(SemanticAttributes.NET_PEER_PORT, 42L));
+            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(SemanticAttributes.SERVER_PORT, 42L));
 
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NET_TRANSPORT, IP_TCP),
-            entry(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-            entry(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-            entry(SemanticAttributes.NET_SOCK_FAMILY, "inet6"),
-            entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"),
-            entry(SemanticAttributes.NET_SOCK_PEER_PORT, 123L));
-  }
-
-  @Test
-  void empty() {
-    // given
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, emptyMap());
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, emptyMap(), emptyMap(), null);
-
-    // then
-    assertThat(startAttributes.build()).isEmpty();
-    assertThat(endAttributes.build()).isEmpty();
-  }
-
-  @Test
-  void doesNotSetNegativePortValues() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("peerName", "opentelemetry.io");
-    map.put("peerPort", "-12");
-    map.put("sockPeerAddr", "1:2:3:4::");
-    map.put("sockPeerPort", "-42");
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"));
-
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1:2:3:4::"));
-  }
-
-  @Test
-  void doesNotSetSockFamilyInet() {
-    // given
-    Map<String, String> map = new HashMap<>();
-    map.put("peerName", "opentelemetry.io");
-    map.put("sockPeerAddr", "1.2.3.4");
-    map.put("sockFamily", SemanticAttributes.NetSockFamilyValues.INET);
-
-    Context context = Context.root();
-
-    // when
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, context, map);
-
-    AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, context, map, map, null);
-
-    // then
-    assertThat(startAttributes.build())
-        .containsOnly(entry(SemanticAttributes.NET_PEER_NAME, "opentelemetry.io"));
-
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.NET_SOCK_PEER_ADDR, "1.2.3.4"));
+            entry(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+            entry(SemanticAttributes.NETWORK_TYPE, "ipv6"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1:2:3:4::"),
+            entry(NetworkAttributes.NETWORK_PEER_PORT, 123L));
   }
 }

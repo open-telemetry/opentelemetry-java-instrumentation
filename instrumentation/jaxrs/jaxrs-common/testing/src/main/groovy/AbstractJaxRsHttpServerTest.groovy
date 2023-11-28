@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.internal.SemconvStability
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -279,32 +280,26 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         spanId spanID
       }
       attributes {
-        "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-        "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-        "$SemanticAttributes.NET_HOST_NAME" fullUrl.host
-        "$SemanticAttributes.NET_HOST_PORT" fullUrl.port
-        "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-        "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-        "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
-        "$SemanticAttributes.NET_SOCK_HOST_PORT" { it instanceof Long || it == null }
-        "$SemanticAttributes.HTTP_SCHEME" fullUrl.getScheme()
-        "$SemanticAttributes.HTTP_TARGET" fullUrl.getPath() + (fullUrl.getQuery() != null ? "?" + fullUrl.getQuery() : "")
-        "$SemanticAttributes.HTTP_METHOD" method
-        "$SemanticAttributes.HTTP_STATUS_CODE" statusCode
+        "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+        "$SemanticAttributes.SERVER_ADDRESS" fullUrl.host
+        "$SemanticAttributes.SERVER_PORT" fullUrl.port
+        "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+        "$NetworkAttributes.NETWORK_PEER_PORT" Long
+        "$SemanticAttributes.URL_SCHEME" fullUrl.getScheme()
+        "$SemanticAttributes.URL_PATH" fullUrl.getPath()
+        "$SemanticAttributes.URL_QUERY" fullUrl.getQuery()
+        "$SemanticAttributes.HTTP_REQUEST_METHOD" method
+        "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
         "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-        "$SemanticAttributes.HTTP_CLIENT_IP" TEST_CLIENT_IP
+        "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
         // Optional
-        "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
         "$SemanticAttributes.HTTP_ROUTE" path
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
-          if (SemconvStability.emitOldHttpSemconv()) {
-            "http.request.header.x_test_request" { it == ["test"] }
-            "http.response.header.x_test_response" { it == ["test"] }
-          }
-          if (SemconvStability.emitStableHttpSemconv()) {
-            "http.request.header.x-test-request" { it == ["test"] }
-            "http.response.header.x-test-response" { it == ["test"] }
-          }
+          "http.request.header.x-test-request" { it == ["test"] }
+          "http.response.header.x-test-response" { it == ["test"] }
+        }
+        if (statusCode >= 500) {
+          "$HttpAttributes.ERROR_TYPE" "$statusCode"
         }
       }
     }
