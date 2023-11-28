@@ -28,12 +28,7 @@ class CpuStableSemconvTest {
     Supplier<Double> processCpuUtilization = () -> 0.05;
 
     Cpu.INSTANCE.registerObservers(
-        testing.getOpenTelemetry(),
-        null,
-        availableProcessors,
-        processCpuTime,
-        () -> null,
-        processCpuUtilization);
+        testing.getOpenTelemetry(), availableProcessors, processCpuTime, processCpuUtilization);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

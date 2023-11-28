@@ -82,10 +82,9 @@ class SpringBootSmokeTest extends SmokeTest {
 
     then: "JVM metrics are exported"
     def metrics = new MetricsInspector(waitForMetrics())
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.init")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.limit")
+    metrics.hasMetricsNamed("jvm.memory.used")
+    metrics.hasMetricsNamed("jvm.memory.committed")
+    metrics.hasMetricsNamed("jvm.memory.limit")
 
     then: "service name is autodetected"
     def serviceName = findResourceAttribute(traces, "service.name")
