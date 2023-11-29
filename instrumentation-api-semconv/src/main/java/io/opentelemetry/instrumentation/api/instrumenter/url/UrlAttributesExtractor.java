@@ -36,10 +36,7 @@ public final class UrlAttributesExtractor<REQUEST, RESPONSE>
     // the UrlAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalUrlAttributesExtractor<>(
-            getter,
-            /* alternateSchemeProvider= */ request -> null,
-            /* emitStableUrlAttributes= */ true,
-            /* emitOldHttpAttributes= */ false);
+            getter, /* alternateSchemeProvider= */ request -> null);
   }
 
   @Override

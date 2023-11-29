@@ -9,9 +9,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -38,13 +36,8 @@ public final class NetworkAttributesExtractor<REQUEST, RESPONSE>
     internalExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,
-            AddressAndPortExtractor.noop(),
             /* captureProtocolAttributes= */ true,
-            /* captureLocalSocketAttributes= */ true,
-            // capture the old net.sock.peer.name attr for backwards compatibility
-            /* captureOldPeerDomainAttribute= */ true,
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv());
+            /* captureLocalSocketAttributes= */ true);
   }
 
   @Override

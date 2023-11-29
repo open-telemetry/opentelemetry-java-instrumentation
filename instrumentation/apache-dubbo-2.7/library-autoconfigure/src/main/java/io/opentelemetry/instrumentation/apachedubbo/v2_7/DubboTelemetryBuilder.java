@@ -56,7 +56,6 @@ public final class DubboTelemetryBuilder {
   /**
    * Returns a new {@link DubboTelemetry} with the settings of this {@link DubboTelemetryBuilder}.
    */
-  @SuppressWarnings("deprecation") // using createForServerSide() for the old->stable semconv story
   public DubboTelemetry build() {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
@@ -70,8 +69,6 @@ public final class DubboTelemetryBuilder {
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(
-                ServerAttributesExtractor.createForServerSide(netServerAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(attributesExtractors);
 

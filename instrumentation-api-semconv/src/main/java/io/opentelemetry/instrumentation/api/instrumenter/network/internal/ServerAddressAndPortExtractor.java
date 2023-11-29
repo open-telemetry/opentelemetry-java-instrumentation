@@ -14,11 +14,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttribute
 public final class ServerAddressAndPortExtractor<REQUEST>
     implements AddressAndPortExtractor<REQUEST> {
 
-  private final ServerAttributesGetter<REQUEST, ?> getter;
+  private final ServerAttributesGetter<REQUEST> getter;
   private final AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor;
 
   public ServerAddressAndPortExtractor(
-      ServerAttributesGetter<REQUEST, ?> getter,
+      ServerAttributesGetter<REQUEST> getter,
       AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor) {
     this.getter = getter;
     this.fallbackAddressAndPortExtractor = fallbackAddressAndPortExtractor;

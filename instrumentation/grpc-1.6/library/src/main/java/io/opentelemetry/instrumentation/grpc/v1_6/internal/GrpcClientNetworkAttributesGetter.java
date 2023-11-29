@@ -18,8 +18,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class GrpcClientNetworkAttributesGetter
-    implements ServerAttributesGetter<GrpcRequest, Status>,
-        NetworkAttributesGetter<GrpcRequest, Status> {
+    implements ServerAttributesGetter<GrpcRequest>, NetworkAttributesGetter<GrpcRequest, Status> {
 
   @Nullable
   @Override

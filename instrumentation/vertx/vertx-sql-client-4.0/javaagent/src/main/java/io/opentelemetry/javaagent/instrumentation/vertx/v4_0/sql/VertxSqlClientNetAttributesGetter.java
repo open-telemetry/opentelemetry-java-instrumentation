@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttribute
 import javax.annotation.Nullable;
 
 public enum VertxSqlClientNetAttributesGetter
-    implements ServerAttributesGetter<VertxSqlClientRequest, Void> {
+    implements ServerAttributesGetter<VertxSqlClientRequest> {
   INSTANCE;
 
   @Nullable

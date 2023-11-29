@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class HttpClientMetricsTest {
 
   static final double[] DURATION_BUCKETS =
-      HttpMetricsUtil.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+      HttpMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @Test
   void collectsMetrics() {

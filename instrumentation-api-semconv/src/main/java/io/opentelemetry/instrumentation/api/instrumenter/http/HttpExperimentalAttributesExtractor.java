@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -46,14 +45,12 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    if (SemconvStability.emitStableHttpSemconv()) {
-      Long requestBodySize = requestBodySize(request);
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
+    Long requestBodySize = requestBodySize(request);
+    internalSet(attributes, SemanticAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
 
-      if (response != null) {
-        Long responseBodySize = responseBodySize(request, response);
-        internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
-      }
+    if (response != null) {
+      Long responseBodySize = responseBodySize(request, response);
+      internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
     }
   }
 

@@ -5,26 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 
-@SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesGetter for now
 final class OpenSearchRestNetResponseAttributesGetter
-    implements io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
-        OpenSearchRestRequest, Response> {
-
-  @Nullable
-  @Override
-  public String getSockFamily(
-      OpenSearchRestRequest elasticsearchRestRequest, @Nullable Response response) {
-    if (response != null && response.getHost().getAddress() instanceof Inet6Address) {
-      return "inet6";
-    }
-    return null;
-  }
+    implements NetworkAttributesGetter<OpenSearchRestRequest, Response> {
 
   @Nullable
   @Override
@@ -38,18 +27,6 @@ final class OpenSearchRestNetResponseAttributesGetter
     } else if (address instanceof Inet6Address) {
       return "ipv6";
     }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getServerAddress(OpenSearchRestRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Integer getServerPort(OpenSearchRestRequest request) {
     return null;
   }
 

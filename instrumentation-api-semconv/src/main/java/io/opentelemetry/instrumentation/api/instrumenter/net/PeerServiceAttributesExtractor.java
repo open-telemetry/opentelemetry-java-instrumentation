@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -21,13 +20,12 @@ import javax.annotation.Nullable;
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
+  private final ServerAttributesGetter<REQUEST> attributesGetter;
   private final PeerServiceResolver peerServiceResolver;
 
   // visible for tests
   PeerServiceAttributesExtractor(
-      ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      PeerServiceResolver peerServiceResolver) {
+      ServerAttributesGetter<REQUEST> attributesGetter, PeerServiceResolver peerServiceResolver) {
     this.attributesGetter = attributesGetter;
     this.peerServiceResolver = peerServiceResolver;
   }
@@ -37,8 +35,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
    * attributesGetter} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      ServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      PeerServiceResolver peerServiceResolver) {
+      ServerAttributesGetter<REQUEST> attributesGetter, PeerServiceResolver peerServiceResolver) {
     return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceResolver);
   }
 
@@ -62,11 +59,6 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     String serverAddress = attributesGetter.getServerAddress(request);
     Integer serverPort = attributesGetter.getServerPort(request);
     String peerService = mapToPeerService(serverAddress, serverPort);
-    if (peerService == null && SemconvStability.emitOldHttpSemconv()) {
-      String serverSocketDomain = attributesGetter.getServerSocketDomain(request, response);
-      Integer serverSocketPort = attributesGetter.getServerSocketPort(request, response);
-      peerService = mapToPeerService(serverSocketDomain, serverSocketPort);
-    }
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
     }

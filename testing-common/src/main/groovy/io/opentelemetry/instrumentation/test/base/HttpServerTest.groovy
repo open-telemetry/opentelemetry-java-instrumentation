@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.api.internal.HttpConstants
-import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
@@ -358,7 +357,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   def "non standard http method"() {
-    assumeTrue(SemconvStability.emitStableHttpSemconv())
     assumeTrue(testNonStandardHttpMethod())
     expect:
     junitTest.requestWithNonStandardHttpMethod()

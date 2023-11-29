@@ -8,13 +8,12 @@ package io.opentelemetry.instrumentation.test.base
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.instrumentation.api.internal.HttpConstants
-import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -184,7 +183,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   def "request with non-standard http method"() {
-    assumeTrue(SemconvStability.emitStableHttpSemconv())
     assumeTrue(testNonStandardHttpMethod())
     expect:
     junitTest.requestWithNonStandardHttpMethod()

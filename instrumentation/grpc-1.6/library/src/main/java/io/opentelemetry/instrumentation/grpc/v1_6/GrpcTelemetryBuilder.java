@@ -187,8 +187,7 @@ public final class GrpcTelemetryBuilder {
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.SERVER)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-        .addAttributesExtractor(
-            ServerAttributesExtractor.createForServerSide(netServerAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
             new GrpcAttributesExtractor(

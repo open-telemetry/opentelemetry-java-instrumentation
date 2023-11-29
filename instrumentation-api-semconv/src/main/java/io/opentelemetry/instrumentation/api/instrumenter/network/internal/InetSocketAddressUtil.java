@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter.net.internal;
+package io.opentelemetry.instrumentation.api.instrumenter.network.internal;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -16,22 +16,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class InetSocketAddressUtil {
-
-  @Nullable
-  public static String getSockFamily(
-      @Nullable InetSocketAddress address, @Nullable InetSocketAddress otherAddress) {
-    if (address == null) {
-      address = otherAddress;
-    }
-    if (address == null) {
-      return null;
-    }
-    InetAddress remoteAddress = address.getAddress();
-    if (remoteAddress instanceof Inet6Address) {
-      return "inet6";
-    }
-    return null;
-  }
 
   @Nullable
   public static String getNetworkType(
@@ -49,14 +33,6 @@ public final class InetSocketAddressUtil {
       return "ipv6";
     }
     return null;
-  }
-
-  @Nullable
-  public static String getDomainName(@Nullable InetSocketAddress address) {
-    if (address == null) {
-      return null;
-    }
-    return address.getHostString();
   }
 
   @Nullable

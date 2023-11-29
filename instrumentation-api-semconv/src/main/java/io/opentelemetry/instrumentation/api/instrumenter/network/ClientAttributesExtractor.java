@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ClientAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 /**
@@ -29,19 +28,17 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
    * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> ClientAttributesExtractor<REQUEST, RESPONSE> create(
-      ClientAttributesGetter<REQUEST, RESPONSE> getter) {
+      ClientAttributesGetter<REQUEST> getter) {
     return new ClientAttributesExtractor<>(getter);
   }
 
   private final InternalClientAttributesExtractor<REQUEST> internalExtractor;
 
-  ClientAttributesExtractor(ClientAttributesGetter<REQUEST, RESPONSE> getter) {
+  ClientAttributesExtractor(ClientAttributesGetter<REQUEST> getter) {
     internalExtractor =
         new InternalClientAttributesExtractor<>(
             new ClientAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop()),
-            /* capturePort= */ true,
-            SemconvStability.emitStableHttpSemconv(),
-            SemconvStability.emitOldHttpSemconv());
+            /* capturePort= */ true);
   }
 
   @Override

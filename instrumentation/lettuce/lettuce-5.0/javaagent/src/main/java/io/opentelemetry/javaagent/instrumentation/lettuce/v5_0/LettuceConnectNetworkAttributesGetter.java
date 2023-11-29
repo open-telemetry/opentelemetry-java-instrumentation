@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 
-final class LettuceConnectNetworkAttributesGetter
-    implements ServerAttributesGetter<RedisURI, Void> {
+final class LettuceConnectNetworkAttributesGetter implements ServerAttributesGetter<RedisURI> {
 
   @Override
   public String getServerAddress(RedisURI redisUri) {
