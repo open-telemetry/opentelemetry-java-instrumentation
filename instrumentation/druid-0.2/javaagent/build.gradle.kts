@@ -7,6 +7,7 @@ muzzle {
     group.set("com.alibaba")
     module.set("druid")
     versions.set("[0.2.6,)")
+    skip("1.0.30")
   }
 }
 
