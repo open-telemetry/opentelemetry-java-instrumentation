@@ -11,7 +11,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
@@ -43,49 +42,15 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Creates the HTTP server attributes extractor with default configuration.
-   *
-   * @deprecated Make sure that your {@linkplain HttpServerAttributesGetter getter} implements all
-   *     the network-related methods and use {@link #create(HttpServerAttributesGetter)} instead.
-   *     This method will be removed in the 2.0 release.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
-              REQUEST, RESPONSE>
-          netAttributesGetter) {
-    return builder(httpAttributesGetter, netAttributesGetter).build();
-  }
-
-  /**
    * Returns a new {@link HttpServerAttributesExtractorBuilder} that can be used to configure the
    * HTTP client attributes extractor.
    */
   public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, httpAttributesGetter);
-  }
-
-  /**
-   * Returns a new {@link HttpServerAttributesExtractorBuilder} that can be used to configure the
-   * HTTP client attributes extractor.
-   *
-   * @deprecated Make sure that your {@linkplain HttpServerAttributesGetter getter} implements all
-   *     the network-related methods and use {@link #builder(HttpServerAttributesGetter)} instead.
-   *     This method will be removed in the 2.0 release.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
-              REQUEST, RESPONSE>
-          netAttributesGetter) {
-    return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter, netAttributesGetter);
+    return new HttpServerAttributesExtractorBuilder<>(httpAttributesGetter);
   }
 
   private final InternalUrlAttributesExtractor<REQUEST> internalUrlExtractor;
-  private final InternalNetServerAttributesExtractor<REQUEST, RESPONSE> internalNetExtractor;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
   private final InternalClientAttributesExtractor<REQUEST> internalClientExtractor;
@@ -94,13 +59,11 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
   HttpServerAttributesExtractor(HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
     super(
         builder.httpAttributesGetter,
-        builder.netAttributesGetter,
         HttpStatusCodeConverter.SERVER,
         builder.capturedRequestHeaders,
         builder.capturedResponseHeaders,
         builder.knownMethods);
     internalUrlExtractor = builder.buildUrlExtractor();
-    internalNetExtractor = builder.buildNetExtractor();
     internalNetworkExtractor = builder.buildNetworkExtractor();
     internalServerExtractor = builder.buildServerExtractor();
     internalClientExtractor = builder.buildClientExtractor();
@@ -112,7 +75,6 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     internalUrlExtractor.onStart(attributes, request);
-    internalNetExtractor.onStart(attributes, request);
     internalServerExtractor.onStart(attributes, request);
     internalClientExtractor.onStart(attributes, request);
 

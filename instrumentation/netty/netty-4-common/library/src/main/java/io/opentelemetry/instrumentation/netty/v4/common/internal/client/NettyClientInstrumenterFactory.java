@@ -21,8 +21,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAt
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
@@ -90,7 +91,6 @@ public final class NettyClientInstrumenterFactory {
     return builder.buildClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
   }
 
-  @SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesExtractor for now
   public NettyConnectionInstrumenter createConnectionInstrumenter() {
     if (connectionTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopConnectionInstrumenter.INSTANCE;
@@ -110,9 +110,8 @@ public final class NettyClientInstrumenterFactory {
       // when the connection telemetry is fully enabled, CONNECT spans are created for every
       // request; and semantically they're not HTTP spans, they must not use the HTTP client
       // extractor
-      builder.addAttributesExtractor(
-          io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor.create(
-              getter));
+      builder.addAttributesExtractor(NetworkAttributesExtractor.create(getter));
+      builder.addAttributesExtractor(ServerAttributesExtractor.create(getter));
     } else {
       // in case the connection telemetry is emitted only on errors, the CONNECT span is a stand-in
       // for the HTTP client span
@@ -130,7 +129,6 @@ public final class NettyClientInstrumenterFactory {
         : new NettyErrorOnlyConnectionInstrumenter(instrumenter);
   }
 
-  @SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesExtractor for now
   public NettySslInstrumenter createSslInstrumenter() {
     if (sslTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopSslInstrumenter.INSTANCE;
@@ -142,11 +140,7 @@ public final class NettyClientInstrumenterFactory {
     Instrumenter<NettySslRequest, Void> instrumenter =
         Instrumenter.<NettySslRequest, Void>builder(
                 openTelemetry, instrumentationName, NettySslRequest::spanName)
-            .addAttributesExtractor(
-                io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor
-                    .create(netAttributesGetter))
-            .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(netAttributesGetter, peerServiceResolver))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .buildInstrumenter(
                 sslTelemetryFullyEnabled
                     ? SpanKindExtractor.alwaysInternal()

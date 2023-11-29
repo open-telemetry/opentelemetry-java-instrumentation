@@ -12,8 +12,7 @@ import java.net.Socket;
 import javax.annotation.Nullable;
 
 final class JedisNetworkAttributesGetter
-    implements ServerAttributesGetter<JedisRequest, Void>,
-        NetworkAttributesGetter<JedisRequest, Void> {
+    implements ServerAttributesGetter<JedisRequest>, NetworkAttributesGetter<JedisRequest, Void> {
 
   @Nullable
   @Override

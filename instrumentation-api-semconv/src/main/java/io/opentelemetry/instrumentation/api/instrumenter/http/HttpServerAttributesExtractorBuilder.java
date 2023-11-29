@@ -11,7 +11,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InternalNetServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.ClientAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalClientAttributesExtractor;
@@ -19,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.internal.Intern
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,11 +29,6 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
 
-  @SuppressWarnings("deprecation") // using the net extractor for the old->stable semconv story
-  final io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
-          REQUEST, RESPONSE>
-      netAttributesGetter;
-
   final AddressAndPortExtractor<REQUEST> clientAddressPortExtractor;
   final AddressAndPortExtractor<REQUEST> serverAddressPortExtractor;
   List<String> capturedRequestHeaders = emptyList();
@@ -44,17 +37,12 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   Function<Context, String> httpRouteGetter = HttpServerRoute::get;
 
   HttpServerAttributesExtractorBuilder(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      @SuppressWarnings("deprecation") // using the net extractor for the old->stable semconv story
-          io.opentelemetry.instrumentation.api.instrumenter.net.NetServerAttributesGetter<
-                  REQUEST, RESPONSE>
-              netAttributesGetter) {
+      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
-    this.netAttributesGetter = netAttributesGetter;
 
     clientAddressPortExtractor =
         new ClientAddressAndPortExtractor<>(
-            netAttributesGetter, new ForwardedForAddressAndPortExtractor<>(httpAttributesGetter));
+            httpAttributesGetter, new ForwardedForAddressAndPortExtractor<>(httpAttributesGetter));
     serverAddressPortExtractor = new ForwardedHostAddressAndPortExtractor<>(httpAttributesGetter);
   }
 
@@ -137,44 +125,26 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalUrlAttributesExtractor<REQUEST> buildUrlExtractor() {
     return new InternalUrlAttributesExtractor<>(
-        httpAttributesGetter,
-        new ForwardedUrlSchemeProvider<>(httpAttributesGetter),
-        SemconvStability.emitStableHttpSemconv(),
-        SemconvStability.emitOldHttpSemconv());
-  }
-
-  InternalNetServerAttributesExtractor<REQUEST, RESPONSE> buildNetExtractor() {
-    return new InternalNetServerAttributesExtractor<>(
-        netAttributesGetter, serverAddressPortExtractor, SemconvStability.emitOldHttpSemconv());
+        httpAttributesGetter, new ForwardedUrlSchemeProvider<>(httpAttributesGetter));
   }
 
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
-        netAttributesGetter,
-        clientAddressPortExtractor,
+        httpAttributesGetter,
         // network.{transport,type} are opt-in, network.protocol.* have HTTP-specific logic
         /* captureProtocolAttributes= */ false,
         // network.local.* are opt-in
-        /* captureLocalSocketAttributes= */ false,
-        /* captureOldPeerDomainAttribute= */ false,
-        SemconvStability.emitStableHttpSemconv(),
-        SemconvStability.emitOldHttpSemconv());
+        /* captureLocalSocketAttributes= */ false);
   }
 
   InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
-    return new InternalServerAttributesExtractor<>(
-        serverAddressPortExtractor,
-        SemconvStability.emitStableHttpSemconv(),
-        SemconvStability.emitOldHttpSemconv(),
-        InternalServerAttributesExtractor.Mode.HOST);
+    return new InternalServerAttributesExtractor<>(serverAddressPortExtractor);
   }
 
   InternalClientAttributesExtractor<REQUEST> buildClientExtractor() {
     return new InternalClientAttributesExtractor<>(
         clientAddressPortExtractor,
         // client.port is opt-in
-        /* capturePort= */ false,
-        SemconvStability.emitStableHttpSemconv(),
-        SemconvStability.emitOldHttpSemconv());
+        /* capturePort= */ false);
   }
 }

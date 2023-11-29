@@ -358,7 +358,6 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   }
 
   def "non standard http method"() {
-    assumeTrue(SemconvStability.emitStableHttpSemconv())
     assumeTrue(testNonStandardHttpMethod())
     expect:
     junitTest.requestWithNonStandardHttpMethod()

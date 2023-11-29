@@ -40,14 +40,6 @@ public final class SemconvStability {
     emitStableJvmSemconv = stableJvm;
   }
 
-  public static boolean emitOldHttpSemconv() {
-    return false;
-  }
-
-  public static boolean emitStableHttpSemconv() {
-    return true;
-  }
-
   public static boolean emitOldJvmSemconv() {
     return emitOldJvmSemconv;
   }

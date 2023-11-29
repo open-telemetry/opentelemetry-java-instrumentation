@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpMetricsUtil.createStableDurationHistogramBuilder;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -18,10 +17,8 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -30,7 +27,6 @@ import javax.annotation.Nullable;
  */
 public final class HttpServerMetrics implements OperationListener {
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
   private static final ContextKey<State> HTTP_SERVER_METRICS_STATE =
@@ -48,30 +44,17 @@ public final class HttpServerMetrics implements OperationListener {
     return HttpServerMetrics::new;
   }
 
-  @Nullable private final DoubleHistogram stableDuration;
-  @Nullable private final DoubleHistogram oldDuration;
+  private final DoubleHistogram duration;
 
   private HttpServerMetrics(Meter meter) {
-    if (SemconvStability.emitStableHttpSemconv()) {
-      DoubleHistogramBuilder stableDurationBuilder =
-          createStableDurationHistogramBuilder(
-              meter, "http.server.request.duration", "Duration of HTTP server requests.");
-      HttpMetricsAdvice.applyStableServerDurationAdvice(stableDurationBuilder);
-      stableDuration = stableDurationBuilder.build();
-    } else {
-      stableDuration = null;
-    }
-    if (SemconvStability.emitOldHttpSemconv()) {
-      DoubleHistogramBuilder oldDurationBuilder =
-          meter
-              .histogramBuilder("http.server.duration")
-              .setUnit("ms")
-              .setDescription("The duration of the inbound HTTP request");
-      HttpMetricsAdvice.applyOldServerDurationAdvice(oldDurationBuilder);
-      oldDuration = oldDurationBuilder.build();
-    } else {
-      oldDuration = null;
-    }
+    DoubleHistogramBuilder stableDurationBuilder =
+        meter
+            .histogramBuilder("http.server.request.duration")
+            .setUnit("s")
+            .setDescription("Duration of HTTP server requests.")
+            .setExplicitBucketBoundariesAdvice(HttpMetricsAdvice.DURATION_SECONDS_BUCKETS);
+    HttpMetricsAdvice.applyServerDurationAdvice(stableDurationBuilder);
+    duration = stableDurationBuilder.build();
   }
 
   @Override
@@ -94,13 +77,7 @@ public final class HttpServerMetrics implements OperationListener {
 
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
 
-    if (stableDuration != null) {
-      stableDuration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
-    }
-
-    if (oldDuration != null) {
-      oldDuration.record((endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
-    }
+    duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
   }
 
   @AutoValue

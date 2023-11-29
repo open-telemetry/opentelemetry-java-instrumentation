@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttribute
 import javax.annotation.Nullable;
 
 public final class PulsarNetClientAttributesGetter
-    implements ServerAttributesGetter<BasePulsarRequest, Void> {
+    implements ServerAttributesGetter<BasePulsarRequest> {
 
   @Nullable
   @Override

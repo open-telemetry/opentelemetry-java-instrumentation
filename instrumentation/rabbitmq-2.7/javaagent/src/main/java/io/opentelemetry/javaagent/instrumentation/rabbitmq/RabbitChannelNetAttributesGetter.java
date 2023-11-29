@@ -5,24 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesGetter for now
 public class RabbitChannelNetAttributesGetter
-    implements io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
-        ChannelAndMethod, Void> {
-
-  @Nullable
-  @Override
-  public String getSockFamily(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
-    if (channelAndMethod.getChannel().getConnection().getAddress() instanceof Inet6Address) {
-      return "inet6";
-    }
-    return null;
-  }
+    implements NetworkAttributesGetter<ChannelAndMethod, Void> {
 
   @Nullable
   @Override
@@ -33,18 +23,6 @@ public class RabbitChannelNetAttributesGetter
     } else if (address instanceof Inet6Address) {
       return "ipv6";
     }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getServerAddress(ChannelAndMethod channelAndMethod) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(ChannelAndMethod channelAndMethod) {
     return null;
   }
 

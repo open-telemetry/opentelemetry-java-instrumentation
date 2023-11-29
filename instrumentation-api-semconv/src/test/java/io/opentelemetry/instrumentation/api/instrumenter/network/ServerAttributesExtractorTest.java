@@ -21,8 +21,7 @@ import org.junit.jupiter.api.Test;
 
 class ServerAttributesExtractorTest {
 
-  static class TestServerAttributesGetter
-      implements ServerAttributesGetter<Map<String, String>, Void> {
+  static class TestServerAttributesGetter implements ServerAttributesGetter<Map<String, String>> {
 
     @Nullable
     @Override

@@ -184,7 +184,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   def "request with non-standard http method"() {
-    assumeTrue(SemconvStability.emitStableHttpSemconv())
     assumeTrue(testNonStandardHttpMethod())
     expect:
     junitTest.requestWithNonStandardHttpMethod()
