@@ -53,9 +53,8 @@ public final class SpringWebfluxTelemetryBuilder {
       clientExtractorConfigurer = builder -> {};
   private Consumer<HttpSpanNameExtractorBuilder<ClientRequest>> clientSpanNameExtractorConfigurer =
       builder -> {};
-  private boolean captureExperimentalSpanAttributes = false;
-  private boolean emitExperimentalHttpClientMetrics = false;
-  private boolean emitExperimentalHttpServerMetrics = false;
+  private boolean emitExperimentalHttpClientTelemetry = false;
+  private boolean emitExperimentalHttpServerTelemetry = false;
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -97,18 +96,6 @@ public final class SpringWebfluxTelemetryBuilder {
     clientExtractorConfigurer =
         clientExtractorConfigurer.andThen(
             builder -> builder.setCapturedResponseHeaders(responseHeaders));
-    return this;
-  }
-
-  /**
-   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
-   * removed in the future, so only enable this if you know you do not require attributes filled by
-   * this instrumentation to be stable across versions.
-   */
-  @CanIgnoreReturnValue
-  public SpringWebfluxTelemetryBuilder setCaptureExperimentalSpanAttributes(
-      boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
@@ -178,26 +165,26 @@ public final class SpringWebfluxTelemetryBuilder {
   /**
    * Configures the instrumentation to emit experimental HTTP client metrics.
    *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   * @param emitExperimentalHttpClientTelemetry {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
    */
   @CanIgnoreReturnValue
-  public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalHttpClientMetrics) {
-    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+  public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpClientTelemetry(
+      boolean emitExperimentalHttpClientTelemetry) {
+    this.emitExperimentalHttpClientTelemetry = emitExperimentalHttpClientTelemetry;
     return this;
   }
 
   /**
    * Configures the instrumentation to emit experimental HTTP server metrics.
    *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
+   * @param emitExperimentalHttpServerTelemetry {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
    */
   @CanIgnoreReturnValue
-  public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpServerMetrics(
-      boolean emitExperimentalHttpServerMetrics) {
-    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+  public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpServerTelemetry(
+      boolean emitExperimentalHttpServerTelemetry) {
+    this.emitExperimentalHttpServerTelemetry = emitExperimentalHttpServerTelemetry;
     return this;
   }
 
@@ -213,8 +200,7 @@ public final class SpringWebfluxTelemetryBuilder {
             clientExtractorConfigurer,
             clientSpanNameExtractorConfigurer,
             clientAdditionalExtractors,
-            captureExperimentalSpanAttributes,
-            emitExperimentalHttpClientMetrics);
+            emitExperimentalHttpClientTelemetry);
 
     Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter =
         buildServerInstrumenter();
@@ -234,7 +220,7 @@ public final class SpringWebfluxTelemetryBuilder {
             .addAttributesExtractors(serverAdditionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
-    if (emitExperimentalHttpServerMetrics) {
+    if (emitExperimentalHttpServerTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(getter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());

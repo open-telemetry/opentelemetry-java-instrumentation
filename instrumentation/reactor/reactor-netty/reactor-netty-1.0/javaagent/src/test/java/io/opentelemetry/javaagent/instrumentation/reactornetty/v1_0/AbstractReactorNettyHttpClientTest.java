@@ -310,7 +310,7 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SemanticAttributes.URL_FULL, uri.toString()),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                            equalTo(HttpAttributes.ERROR_TYPE, "_OTHER")),
+                            equalTo(HttpAttributes.ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
