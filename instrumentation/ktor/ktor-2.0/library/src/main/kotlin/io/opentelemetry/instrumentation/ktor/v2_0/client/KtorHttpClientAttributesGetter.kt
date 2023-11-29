@@ -21,9 +21,9 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
 
   override fun getHttpResponseHeader(request: HttpRequestData, response: HttpResponse, name: String) = response.headers.getAll(name).orEmpty()
 
-  override fun getNetworkProtocolName(request: HttpRequestData?, response: HttpResponse?): String? = response?.version?.name
+  override fun getNetworkProtocolName(request: HttpRequestData, response: HttpResponse?): String? = response?.version?.name
 
-  override fun getNetworkProtocolVersion(request: HttpRequestData?, response: HttpResponse?): String? {
+  override fun getNetworkProtocolVersion(request: HttpRequestData, response: HttpResponse?): String? {
     val version = response?.version ?: return null
     if (version.minor == 0) {
       return "${version.major}"

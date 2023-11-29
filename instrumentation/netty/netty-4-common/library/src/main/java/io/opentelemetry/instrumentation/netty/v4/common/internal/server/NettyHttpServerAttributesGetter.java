@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
-
-import io.netty.channel.socket.DatagramChannel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
@@ -62,11 +58,6 @@ final class NettyHttpServerAttributesGetter
     String fullPath = requestAndChannel.request().getUri();
     int separatorPos = fullPath.indexOf('?');
     return separatorPos == -1 ? null : fullPath.substring(separatorPos + 1);
-  }
-
-  @Override
-  public String getTransport(HttpRequestAndChannel requestAndChannel) {
-    return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
   @Override
