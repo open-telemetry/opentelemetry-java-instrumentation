@@ -13,29 +13,23 @@ import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_SCHEME;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_TARGET;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_HOST_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_HOST_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PROTOCOL_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_HOST_ADDR;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_HOST_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_ADDR;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_SOCK_PEER_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_TRANSPORT;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
+import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH;
+import static io.opentelemetry.semconv.SemanticAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
@@ -75,7 +69,6 @@ import server.TestController;
       SpringWebFluxTestApplication.class,
       SpringWebfluxTest.ForceNettyAutoConfiguration.class
     })
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class SpringWebfluxTest {
   @TestConfiguration
   static class ForceNettyAutoConfiguration {
@@ -119,33 +112,19 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, parameter.urlPath),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 200),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -245,33 +224,19 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, parameter.urlPath),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 200),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -366,33 +331,19 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, parameter.urlPath),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 200),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -452,58 +403,49 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, "/notfoundgreet"),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 404),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, "/notfoundgreet"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/**"),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, "/**")),
                 span ->
                     span.hasName("ResourceWebHandler.handle")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName(EXCEPTION_EVENT_NAME)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            "org.springframework.web.server.ResponseStatusException"),
-                                        satisfies(
-                                            EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.containsAnyOf(
-                                                    "Response status 404", "404 NOT_FOUND")),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
+                        .hasEventsSatisfyingExactly(SpringWebfluxTest::resource404Exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("spring-webflux.handler.type"),
                                 "org.springframework.web.reactive.resource.ResourceWebHandler"))));
+  }
+
+  private static void resource404Exception(EventDataAssert event) {
+    if (Boolean.getBoolean("testLatestDeps")) {
+      event
+          .hasName(EXCEPTION_EVENT_NAME)
+          .hasAttributesSatisfyingExactly(
+              equalTo(
+                  EXCEPTION_TYPE,
+                  "org.springframework.web.reactive.resource.NoResourceFoundException"),
+              satisfies(EXCEPTION_MESSAGE, val -> val.isInstanceOf(String.class)),
+              satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
+    } else {
+      event
+          .hasName(EXCEPTION_EVENT_NAME)
+          .hasAttributesSatisfyingExactly(
+              equalTo(EXCEPTION_TYPE, "org.springframework.web.server.ResponseStatusException"),
+              equalTo(EXCEPTION_MESSAGE, "Response status 404"),
+              satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
+    }
   }
 
   @Test
@@ -521,33 +463,19 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, "/echo"),
-                            equalTo(HTTP_METHOD, "POST"),
-                            equalTo(HTTP_STATUS_CODE, 202),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, "/echo"),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 202),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/echo"),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, "/echo")),
                 span ->
                     span.hasName(EchoHandlerFunction.class.getSimpleName() + ".handle")
                         .hasKind(SpanKind.INTERNAL)
@@ -575,33 +503,20 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, parameter.urlPath),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 500),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HttpAttributes.ERROR_TYPE, "500")),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -668,33 +583,19 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, "/double-greet-redirect"),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 307),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, "/double-greet-redirect"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 307),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/double-greet-redirect"),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, "/double-greet-redirect")),
                 span ->
                     span.hasName("RedirectComponent$$Lambda.handle")
                         .hasKind(SpanKind.INTERNAL)
@@ -710,33 +611,19 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, "/double-greet"),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 200),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, "/double-greet"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/double-greet"),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, "/double-greet")),
                 span -> {
                   assertThat(trace.getSpan(1).getName())
                       .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
@@ -775,33 +662,19 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, parameter.urlPath),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_STATUS_CODE, 200),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -870,32 +743,19 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NET_TRANSPORT, IP_TCP),
-                            equalTo(NET_PROTOCOL_NAME, "http"),
-                            equalTo(NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(NET_SOCK_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(NET_HOST_NAME, "localhost"),
-                            satisfies(NET_HOST_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_TARGET, "/slow"),
-                            equalTo(HTTP_METHOD, "GET"),
-                            equalTo(HTTP_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(URL_PATH, "/slow"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/slow"),
-                            satisfies(
-                                HTTP_REQUEST_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull())),
-                            satisfies(
-                                HTTP_RESPONSE_CONTENT_LENGTH,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isInstanceOf(Long.class),
-                                        v -> assertThat(v).isNull()))),
+                            equalTo(HttpAttributes.ERROR_TYPE, "_OTHER")),
                 span ->
                     span.hasName("SpringWebFluxTestApplication$$Lambda.handle")
                         .hasKind(SpanKind.INTERNAL)

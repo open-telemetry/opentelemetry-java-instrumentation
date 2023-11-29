@@ -44,5 +44,7 @@ public final class SpringWebfluxServerInstrumentationTest
           }
           return expectedHttpRoute(endpoint, method);
         });
+
+    options.disableTestNonStandardHttpMethod();
   }
 }

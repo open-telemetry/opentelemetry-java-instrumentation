@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_1
 
-
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.eclipse.jetty.server.Server
@@ -64,6 +64,9 @@ abstract class AbstractServletServerTest extends HttpServerTest<Server> {
 
   @Override
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return getContextPath() + endpoint.path
+    }
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
@@ -72,6 +75,11 @@ abstract class AbstractServletServerTest extends HttpServerTest<Server> {
       default:
         return super.expectedHttpRoute(endpoint, method)
     }
+  }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    405
   }
 
   static class TestApp extends Application {

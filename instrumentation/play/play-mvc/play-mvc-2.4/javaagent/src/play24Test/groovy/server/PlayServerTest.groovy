@@ -120,4 +120,9 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
     attributes
   }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    404
+  }
 }

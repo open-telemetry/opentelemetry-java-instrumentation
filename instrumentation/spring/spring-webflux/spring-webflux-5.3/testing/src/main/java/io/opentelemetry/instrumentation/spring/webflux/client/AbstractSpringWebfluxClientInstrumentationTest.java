@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.webflux.client;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -65,23 +64,22 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
+
+    // no enum value for non standard method
+    optionsBuilder.disableTestNonStandardHttpMethod();
 
     // timeouts leak the scope
     optionsBuilder.disableTestReadTimeout();
 
-    if (SemconvStability.emitOldHttpSemconv()) {
-      optionsBuilder.setHttpAttributes(
-          uri -> {
-            Set<AttributeKey<?>> attributes =
-                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-            return attributes;
-          });
-    }
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+          return attributes;
+        });
 
     optionsBuilder.setClientSpanErrorMapper(
         (uri, throwable) -> {

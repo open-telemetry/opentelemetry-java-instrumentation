@@ -33,7 +33,7 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.1",
-  "org.testcontainers:testcontainers-bom:1.19.2",
+  "org.testcontainers:testcontainers-bom:1.19.3",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
@@ -79,7 +79,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "io.r2dbc:r2dbc-proxy:1.1.2.RELEASE",
+  "io.r2dbc:r2dbc-proxy:1.1.3.RELEASE",
   "ch.qos.logback:logback-classic:1.3.8", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
@@ -108,7 +108,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.3",
   // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.17",
+  "org.springframework.boot:spring-boot-dependencies:2.7.18",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.7"
 )

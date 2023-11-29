@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -16,6 +15,8 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -25,7 +26,6 @@ import org.junit.jupiter.api.Test;
 class HttpServerExperimentalMetricsTest {
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
@@ -36,26 +36,28 @@ class HttpServerExperimentalMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put("http.method", "GET")
-            .put("http.target", "/")
-            .put("http.scheme", "https")
-            .put("net.transport", IP_TCP)
-            .put(SemanticAttributes.NET_PROTOCOL_NAME, "http")
-            .put(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0")
-            .put("net.host.name", "localhost")
-            .put("net.host.port", 1234)
-            .put("net.sock.family", "inet")
-            .put("net.sock.peer.addr", "1.2.3.4")
-            .put("net.sock.peer.port", 8080)
-            .put("net.sock.host.addr", "4.3.2.1")
-            .put("net.sock.host.port", 9090)
+            .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(SemanticAttributes.URL_SCHEME, "https")
+            .put(SemanticAttributes.URL_PATH, "/")
+            .put(SemanticAttributes.URL_QUERY, "q=a")
+            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
+            .put(SemanticAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put("http.status_code", 200)
-            .put("http.request_content_length", 100)
-            .put("http.response_content_length", 200)
+            .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(HttpAttributes.ERROR_TYPE, "500")
+            .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
+            .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
+            .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
+            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "4.3.2.1")
+            .put(NetworkAttributes.NETWORK_LOCAL_PORT, 9090)
             .build();
 
     SpanContext spanContext1 =
@@ -80,6 +82,7 @@ class HttpServerExperimentalMetricsTest {
                 assertThat(metric)
                     .hasName("http.server.active_requests")
                     .hasUnit("{requests}")
+                    .hasDescription("Number of active HTTP server requests.")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.hasPointsSatisfying(
@@ -87,10 +90,8 @@ class HttpServerExperimentalMetricsTest {
                                     point
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -112,10 +113,8 @@ class HttpServerExperimentalMetricsTest {
                                     point
                                         .hasValue(2)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -136,10 +135,8 @@ class HttpServerExperimentalMetricsTest {
                                     point
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234L))
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -149,6 +146,7 @@ class HttpServerExperimentalMetricsTest {
                 assertThat(metric)
                     .hasName("http.server.request.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP server request bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -156,13 +154,15 @@ class HttpServerExperimentalMetricsTest {
                                     point
                                         .hasSum(100 /* bytes */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(
+                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "500"),
+                                            equalTo(
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                            equalTo(
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -172,6 +172,7 @@ class HttpServerExperimentalMetricsTest {
                 assertThat(metric)
                     .hasName("http.server.response.size")
                     .hasUnit("By")
+                    .hasDescription("Size of HTTP server response bodies.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -179,13 +180,15 @@ class HttpServerExperimentalMetricsTest {
                                     point
                                         .hasSum(200 /* bytes */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(
+                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "500"),
+                                            equalTo(
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                            equalTo(
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
@@ -176,7 +177,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
       SemanticAttributes.HTTP_ROUTE,
-      SemanticAttributes.NET_SOCK_PEER_PORT
+      NetworkAttributes.NETWORK_PEER_PORT
     ] as Set
   }
 

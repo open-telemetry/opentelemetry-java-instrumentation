@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 class RpcClientMetricsTest {
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -41,15 +40,16 @@ class RpcClientMetricsTest {
 
     Attributes responseAttributes1 =
         Attributes.builder()
-            .put(SemanticAttributes.NET_PEER_NAME, "example.com")
-            .put(SemanticAttributes.NET_PEER_PORT, 8080)
-            .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
+            .put(SemanticAttributes.SERVER_ADDRESS, "example.com")
+            .put(SemanticAttributes.SERVER_PORT, 8080)
+            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
             .build();
 
     Attributes responseAttributes2 =
         Attributes.builder()
-            .put(SemanticAttributes.NET_PEER_PORT, 8080)
-            .put(SemanticAttributes.NET_TRANSPORT, "ip_tcp")
+            .put(SemanticAttributes.SERVER_PORT, 8080)
+            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
             .build();
 
     Context parent =
@@ -91,9 +91,10 @@ class RpcClientMetricsTest {
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
                                             equalTo(
-                                                SemanticAttributes.NET_PEER_NAME, "example.com"),
-                                            equalTo(SemanticAttributes.NET_PEER_PORT, 8080),
-                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp"))
+                                                SemanticAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(SemanticAttributes.SERVER_PORT, 8080),
+                                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -120,8 +121,9 @@ class RpcClientMetricsTest {
                                                 SemanticAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
-                                            equalTo(SemanticAttributes.NET_PEER_PORT, 8080),
-                                            equalTo(SemanticAttributes.NET_TRANSPORT, "ip_tcp")))));
+                                            equalTo(SemanticAttributes.SERVER_PORT, 8080),
+                                            equalTo(
+                                                SemanticAttributes.NETWORK_TRANSPORT, "tcp")))));
   }
 
   private static long nanos(int millis) {

@@ -34,7 +34,6 @@ import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class AwsLambdaApiGatewayWrapperTest {
 
   @RegisterExtension
@@ -103,12 +102,12 @@ public class AwsLambdaApiGatewayWrapperTest {
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(SemanticAttributes.FAAS_TRIGGER, "http"),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, "Test Client"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 "http://localhost:123/hello/world?a=b&c=d"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L))));
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test

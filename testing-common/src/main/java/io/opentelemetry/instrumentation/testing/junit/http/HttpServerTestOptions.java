@@ -23,13 +23,10 @@ import javax.annotation.Nullable;
 
 public final class HttpServerTestOptions {
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(
-              Arrays.asList(
-                  SemanticAttributes.HTTP_ROUTE,
-                  SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_PORT))));
+              Arrays.asList(SemanticAttributes.HTTP_ROUTE, SemanticAttributes.SERVER_PORT)));
 
   public static final SpanNameMapper DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER =
       (uri, method, route) -> {

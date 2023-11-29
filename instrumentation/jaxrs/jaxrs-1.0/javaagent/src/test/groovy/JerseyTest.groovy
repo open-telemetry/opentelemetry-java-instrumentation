@@ -4,6 +4,7 @@
  */
 
 import io.dropwizard.testing.junit.ResourceTestRule
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.junit.ClassRule
@@ -40,8 +41,9 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name "GET " + expectedRoute
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" expectedRoute
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
 
@@ -80,8 +82,9 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name "GET " + expectedRoute
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" expectedRoute
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(1) {
