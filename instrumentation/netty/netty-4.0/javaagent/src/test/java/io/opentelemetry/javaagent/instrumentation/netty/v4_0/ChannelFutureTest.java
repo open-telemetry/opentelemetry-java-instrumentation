@@ -27,6 +27,7 @@ public class ChannelFutureTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @SuppressWarnings("unchecked")
   @Test
   public void shouldCleanUpWrappedListeners() throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new EmptyChannelHandler());

@@ -23,6 +23,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.CharsetUtil;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -33,9 +36,6 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.rocketmq.shaded.io.grpc.netty.shaded.io.netty.util.CharsetUtil;
-import org.apache.rocketmq.shaded.io.grpc.netty.shaded.io.netty.util.internal.logging.InternalLoggerFactory;
-import org.apache.rocketmq.shaded.io.grpc.netty.shaded.io.netty.util.internal.logging.Slf4JLoggerFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class Netty40ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
