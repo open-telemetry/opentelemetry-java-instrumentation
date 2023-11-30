@@ -21,7 +21,8 @@ import org.springframework.context.annotation.Configuration;
     name = "spring.datasource.driver-class-name",
     havingValue = "io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver")
 @Configuration(proxyBeanMethods = false)
-@AutoConfigureAfter(name = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
+@AutoConfigureAfter(
+    name = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
 @ConditionalOnBean(name = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
 public class OpenTelemetryJdbcDriverAutoConfiguration {
   @Bean
