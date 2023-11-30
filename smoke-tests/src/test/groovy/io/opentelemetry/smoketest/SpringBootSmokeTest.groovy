@@ -85,6 +85,7 @@ class SpringBootSmokeTest extends SmokeTest {
     metrics.hasMetricsNamed("jvm.memory.used")
     metrics.hasMetricsNamed("jvm.memory.committed")
     metrics.hasMetricsNamed("jvm.memory.limit")
+    metrics.hasMetricsNamed("jvm.memory.used_after_last_gc")
 
     then: "service name is autodetected"
     def serviceName = findResourceAttribute(traces, "service.name")

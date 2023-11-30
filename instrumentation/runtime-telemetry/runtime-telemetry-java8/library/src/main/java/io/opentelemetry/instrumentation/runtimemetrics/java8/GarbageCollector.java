@@ -31,7 +31,10 @@ import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 
 /**
- * Registers instruments that generate metrics about JVM garbage collection.
+ * Registers instruments that generate metrics about JVM garbage collection. The metrics generated
+ * by this class follow <a
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">the
+ * stable JVM metrics semantic conventions</a>.
  *
  * <p>Example usage:
  *
