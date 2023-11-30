@@ -16,8 +16,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class VertxSqlClientTest {
   private static final Logger logger = LoggerFactory.getLogger(VertxSqlClientTest.class);
 
@@ -142,8 +141,8 @@ class VertxSqlClientTest {
                             equalTo(DB_STATEMENT, "select * from test"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -196,8 +195,8 @@ class VertxSqlClientTest {
                             equalTo(DB_NAME, DB),
                             equalTo(DB_USER, USER_DB),
                             equalTo(DB_STATEMENT, "invalid"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -232,8 +231,8 @@ class VertxSqlClientTest {
                             equalTo(DB_STATEMENT, "select * from test where id = $?"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port))));
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -262,8 +261,8 @@ class VertxSqlClientTest {
                             equalTo(DB_STATEMENT, "insert into test values ($?, $?) returning *"),
                             equalTo(DB_OPERATION, "INSERT"),
                             equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port))));
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -348,8 +347,8 @@ class VertxSqlClientTest {
                                 equalTo(DB_STATEMENT, "select * from test"),
                                 equalTo(DB_OPERATION, "SELECT"),
                                 equalTo(DB_SQL_TABLE, "test"),
-                                equalTo(NET_PEER_NAME, "localhost"),
-                                equalTo(NET_PEER_PORT, port)),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, port)),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -414,8 +413,8 @@ class VertxSqlClientTest {
                                 equalTo(DB_STATEMENT, "select * from test where id = $?"),
                                 equalTo(DB_OPERATION, "SELECT"),
                                 equalTo(DB_SQL_TABLE, "test"),
-                                equalTo(NET_PEER_NAME, "localhost"),
-                                equalTo(NET_PEER_PORT, port)),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, port)),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

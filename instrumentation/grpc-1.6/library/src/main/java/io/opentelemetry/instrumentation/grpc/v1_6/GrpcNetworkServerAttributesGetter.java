@@ -13,8 +13,7 @@ import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class GrpcNetworkServerAttributesGetter
-    implements ServerAttributesGetter<GrpcRequest, Status>,
-        NetworkAttributesGetter<GrpcRequest, Status> {
+    implements ServerAttributesGetter<GrpcRequest>, NetworkAttributesGetter<GrpcRequest, Status> {
 
   @Nullable
   @Override

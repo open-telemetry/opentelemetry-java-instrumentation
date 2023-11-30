@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
 
-final class JedisNetworkAttributesGetter implements ServerAttributesGetter<JedisRequest, Void> {
+final class JedisNetworkAttributesGetter implements ServerAttributesGetter<JedisRequest> {
 
   @Override
   public String getServerAddress(JedisRequest request) {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.network;
 
-import io.opentelemetry.instrumentation.api.instrumenter.net.internal.InetSocketAddressUtil;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.InetSocketAddressUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 

@@ -13,8 +13,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
@@ -126,7 +126,6 @@ public abstract class AbstractR2dbcStatementTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testQueries(Parameter parameter) {
     DbSystemProps props = SYSTEMS.get(parameter.system);
     startContainer(props);
@@ -175,8 +174,8 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_STATEMENT, parameter.expectedStatement),
                                 equalTo(DB_OPERATION, parameter.operation),
                                 equalTo(DB_SQL_TABLE, parameter.table),
-                                equalTo(NET_PEER_NAME, "localhost"),
-                                equalTo(NET_PEER_PORT, port)),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, port)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)

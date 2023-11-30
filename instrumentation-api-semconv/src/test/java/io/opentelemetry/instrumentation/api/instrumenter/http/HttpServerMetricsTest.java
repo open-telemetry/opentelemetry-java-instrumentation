@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -16,20 +15,18 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.metrics.internal.aggregator.ExplicitBucketHistogramUtils;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class HttpServerMetricsTest {
 
-  static final double[] DEFAULT_BUCKETS =
-      ExplicitBucketHistogramUtils.DEFAULT_HISTOGRAM_BUCKET_BOUNDARIES.stream()
-          .mapToDouble(d -> d)
-          .toArray();
+  static final double[] DURATION_BUCKETS =
+      HttpMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @Test
   void collectsMetrics() {
@@ -41,26 +38,28 @@ class HttpServerMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put("http.method", "GET")
-            .put("http.target", "/")
-            .put("http.scheme", "https")
-            .put("net.transport", IP_TCP)
-            .put(SemanticAttributes.NET_PROTOCOL_NAME, "http")
-            .put(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0")
-            .put("net.host.name", "localhost")
-            .put("net.host.port", 1234)
-            .put("net.sock.family", "inet")
-            .put("net.sock.peer.addr", "1.2.3.4")
-            .put("net.sock.peer.port", 8080)
-            .put("net.sock.host.addr", "4.3.2.1")
-            .put("net.sock.host.port", 9090)
+            .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(SemanticAttributes.URL_SCHEME, "https")
+            .put(SemanticAttributes.URL_PATH, "/")
+            .put(SemanticAttributes.URL_QUERY, "q=a")
+            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
+            .put(SemanticAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put("http.status_code", 200)
-            .put("http.request_content_length", 100)
-            .put("http.response_content_length", 200)
+            .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(HttpAttributes.ERROR_TYPE, "500")
+            .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
+            .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
+            .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
+            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "4.3.2.1")
+            .put(NetworkAttributes.NETWORK_LOCAL_PORT, 9090)
             .build();
 
     SpanContext spanContext1 =
@@ -88,28 +87,31 @@ class HttpServerMetricsTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.duration")
-                    .hasUnit("ms")
+                    .hasName("http.server.request.duration")
+                    .hasDescription("Duration of HTTP server requests.")
+                    .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(150 /* millis */)
+                                        .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                            equalTo(SemanticAttributes.NET_HOST_PORT, 1234))
+                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(
+                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.ERROR_TYPE, "500"),
+                                            equalTo(
+                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                            equalTo(
+                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
                                                     .hasTraceId(spanContext1.getTraceId())
                                                     .hasSpanId(spanContext1.getSpanId()))
-                                        .hasBucketBoundaries(DEFAULT_BUCKETS))));
+                                        .hasBucketBoundaries(DURATION_BUCKETS))));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -117,13 +119,13 @@ class HttpServerMetricsTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.duration")
+                    .hasName("http.server.request.duration")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(300 /* millis */)
+                                        .hasSum(0.3 /* seconds */)
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -141,9 +143,13 @@ class HttpServerMetricsTest {
     OperationListener listener = HttpServerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
-        Attributes.builder().put("net.host.name", "host").put("http.scheme", "https").build();
+        Attributes.builder()
+            .put(SemanticAttributes.SERVER_ADDRESS, "host")
+            .put(SemanticAttributes.URL_SCHEME, "https")
+            .build();
 
-    Attributes responseAttributes = Attributes.builder().put("http.route", "/test/{id}").build();
+    Attributes responseAttributes =
+        Attributes.builder().put(SemanticAttributes.HTTP_ROUTE, "/test/{id}").build();
 
     Context parentContext = Context.root();
 
@@ -156,17 +162,16 @@ class HttpServerMetricsTest {
         .anySatisfy(
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.duration")
-                    .hasUnit("ms")
+                    .hasName("http.server.request.duration")
+                    .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasSum(100 /* millis */)
+                                        .hasSum(0.100 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_SCHEME, "https"),
-                                            equalTo(SemanticAttributes.NET_HOST_NAME, "host"),
+                                            equalTo(SemanticAttributes.URL_SCHEME, "https"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_ROUTE, "/test/{id}")))));
   }

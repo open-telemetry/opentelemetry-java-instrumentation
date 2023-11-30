@@ -23,41 +23,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
-testing {
-  suites {
-    val testStableHttpSemconv by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation(project())
-        implementation(project(":testing-common"))
-        implementation("io.opentelemetry:opentelemetry-sdk")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-      }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=http")
-          }
-        }
-      }
-    }
-    val testBothHttpSemconv by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation(project())
-        implementation(project(":testing-common"))
-        implementation("io.opentelemetry:opentelemetry-sdk")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-      }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=http/dup")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
@@ -73,9 +38,5 @@ tasks {
 
   sourcesJar {
     dependsOn("generateJflex")
-  }
-
-  check {
-    dependsOn(testing.suites)
   }
 }

@@ -31,7 +31,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class BufferPoolsTest {
+class BufferPoolsTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

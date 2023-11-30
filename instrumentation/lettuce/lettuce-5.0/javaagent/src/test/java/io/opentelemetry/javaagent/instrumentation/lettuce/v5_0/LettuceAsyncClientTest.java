@@ -44,7 +44,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   private static int incorrectPort;
   private static String dbUriNonExistent;
@@ -88,6 +87,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     redisServer.stop();
   }
 
+  @SuppressWarnings("deprecation") // RedisURI constructor
   @Test
   void testConnectUsingGetOnConnectionFuture() throws ExecutionException, InterruptedException {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
@@ -109,11 +109,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, host),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
   }
 
+  @SuppressWarnings("deprecation") // RedisURI constructor
   @Test
   void testConnectExceptionInsideTheConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
@@ -139,8 +140,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PEER_NAME, host),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, incorrectPort),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
+                            equalTo(SemanticAttributes.SERVER_PORT, incorrectPort),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))
                         .hasEventsSatisfyingExactly(
                             event ->

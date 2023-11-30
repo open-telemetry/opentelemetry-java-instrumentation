@@ -17,8 +17,7 @@ import org.apache.dubbo.rpc.Result;
  * any time.
  */
 public final class DubboClientNetworkAttributesGetter
-    implements ServerAttributesGetter<DubboRequest, Result>,
-        NetworkAttributesGetter<DubboRequest, Result> {
+    implements ServerAttributesGetter<DubboRequest>, NetworkAttributesGetter<DubboRequest, Result> {
 
   @Nullable
   @Override

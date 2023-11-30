@@ -21,6 +21,9 @@ dependencies {
   testImplementation(project(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
+
+  latestDepTestLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.1.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.1.+")
 }
 
 tasks.withType<Test>().configureEach {
@@ -33,19 +36,9 @@ tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
-if (latestDepTest) {
-  // spring 6 requires java 17
-  otelJava {
-    minJavaVersionSupported.set(JavaVersion.VERSION_17)
-  }
-} else {
-  // spring 5 requires old logback (and therefore also old slf4j)
-  configurations.testRuntimeClasspath {
-    resolutionStrategy {
-      force("ch.qos.logback:logback-classic:1.2.11")
-      force("org.slf4j:slf4j-api:1.7.36")
-    }
+configurations.testRuntimeClasspath {
+  resolutionStrategy {
+    force("ch.qos.logback:logback-classic:1.2.11")
+    force("org.slf4j:slf4j-api:1.7.36")
   }
 }

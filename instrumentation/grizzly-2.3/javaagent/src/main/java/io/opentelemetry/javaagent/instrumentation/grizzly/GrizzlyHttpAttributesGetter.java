@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
@@ -68,18 +66,6 @@ final class GrizzlyHttpAttributesGetter
   @Override
   public String getUrlQuery(HttpRequestPacket request) {
     return request.getQueryString();
-  }
-
-  @Override
-  public String getTransport(HttpRequestPacket request) {
-    Transport transport = request.getConnection().getTransport();
-    if (transport instanceof TCPNIOTransport) {
-      return IP_TCP;
-    }
-    if (transport instanceof UDPNIOTransport) {
-      return IP_UDP;
-    }
-    return null;
   }
 
   @Nullable

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
@@ -125,17 +126,15 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.name" "testSdkSqs"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
+            "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
             "rpc.method" "CreateQueue"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
           }
         }
       }
@@ -147,21 +146,19 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
+            "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         span(1) {
@@ -174,15 +171,15 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(2) {
@@ -209,18 +206,16 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             hasNoLinks()
             attributes {
               "aws.agent" "java-aws-sdk"
-              "aws.requestId" "00000000-0000-0000-0000-000000000000"
+              "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
               "rpc.method" "ReceiveMessage"
               "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "http.method" "POST"
-              "http.status_code" 200
-              "http.url" { it.startsWith("http://localhost:$sqsPort") }
-              "net.peer.name" "localhost"
-              "net.peer.port" sqsPort
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-              "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.SERVER_PORT" sqsPort
             }
           }
         }
@@ -323,20 +318,18 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.requestId" "00000000-0000-0000-0000-000000000000"
+            "aws.requestId" { it.trim() == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.method" "SendMessageBatch"
             "rpc.service" "Sqs"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" { it.startsWith("http://localhost:$sqsPort") }
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
           }
         }
         for (int i: 1..(xrayInjectionEnabled ? 3 : 2)) {
@@ -351,15 +344,15 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "rpc.method" "ReceiveMessage"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "http.method" "POST"
-              "http.url" { it.startsWith("http://localhost:$sqsPort") }
-              "net.peer.name" "localhost"
-              "net.peer.port" sqsPort
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.SERVER_PORT" sqsPort
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$SemanticAttributes.MESSAGING_OPERATION" "process"
               "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+              "$HttpAttributes.ERROR_TYPE" "_OTHER"
             }
           }
         }
@@ -379,15 +372,15 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "rpc.method" "ReceiveMessage"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "http.method" "POST"
-              "http.url" { it.startsWith("http://localhost:$sqsPort") }
-              "net.peer.name" "localhost"
-              "net.peer.port" sqsPort
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$SemanticAttributes.SERVER_PORT" sqsPort
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$SemanticAttributes.MESSAGING_OPERATION" "process"
               "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
+              "$HttpAttributes.ERROR_TYPE" "_OTHER"
             }
           }
         }

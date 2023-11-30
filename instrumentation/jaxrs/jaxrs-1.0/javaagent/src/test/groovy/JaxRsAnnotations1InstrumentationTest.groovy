@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Unroll
@@ -35,8 +36,9 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_ROUTE" paramName
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(1) {
@@ -124,7 +126,8 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           name "GET"
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_METHOD" "GET"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
       }

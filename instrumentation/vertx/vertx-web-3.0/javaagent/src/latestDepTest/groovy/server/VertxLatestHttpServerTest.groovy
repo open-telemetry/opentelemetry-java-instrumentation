@@ -5,6 +5,7 @@
 
 package server
 
+
 import io.vertx.core.AbstractVerticle
 
 class VertxLatestHttpServerTest extends AbstractVertxHttpServerTest {

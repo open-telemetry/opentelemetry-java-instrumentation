@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
@@ -134,7 +133,6 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
@@ -172,8 +170,8 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
           }
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_NAME));
-          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_PORT));
+          attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+          attributes.remove(SemanticAttributes.SERVER_PORT);
           return attributes;
         });
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
@@ -15,10 +16,15 @@ import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.util.List;
 
 final class HttpMetricsAdvice {
 
-  static void applyStableClientDurationAdvice(DoubleHistogramBuilder builder) {
+  static final List<Double> DURATION_SECONDS_BUCKETS =
+      unmodifiableList(
+          asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
+
+  static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
     }
@@ -34,24 +40,6 @@ final class HttpMetricsAdvice {
                 SemanticAttributes.SERVER_PORT));
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-  static void applyOldClientDurationAdvice(DoubleHistogramBuilder builder) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      return;
-    }
-    ((ExtendedDoubleHistogramBuilder) builder)
-        .setAttributesAdvice(
-            asList(
-                SemanticAttributes.HTTP_METHOD,
-                SemanticAttributes.HTTP_STATUS_CODE,
-                SemanticAttributes.NET_PEER_NAME,
-                SemanticAttributes.NET_PEER_PORT,
-                SemanticAttributes.NET_PROTOCOL_NAME,
-                SemanticAttributes.NET_PROTOCOL_VERSION,
-                SemanticAttributes.NET_SOCK_PEER_ADDR));
-  }
-
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyClientRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
@@ -59,25 +47,16 @@ final class HttpMetricsAdvice {
     ((ExtendedLongHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                // stable attributes
                 SemanticAttributes.HTTP_REQUEST_METHOD,
                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
                 HttpAttributes.ERROR_TYPE,
                 SemanticAttributes.NETWORK_PROTOCOL_NAME,
                 SemanticAttributes.NETWORK_PROTOCOL_VERSION,
                 SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT,
-                // old attributes
-                SemanticAttributes.HTTP_METHOD,
-                SemanticAttributes.HTTP_STATUS_CODE,
-                SemanticAttributes.NET_PEER_NAME,
-                SemanticAttributes.NET_PEER_PORT,
-                SemanticAttributes.NET_PROTOCOL_NAME,
-                SemanticAttributes.NET_PROTOCOL_VERSION,
-                SemanticAttributes.NET_SOCK_PEER_ADDR));
+                SemanticAttributes.SERVER_PORT));
   }
 
-  static void applyStableServerDurationAdvice(DoubleHistogramBuilder builder) {
+  static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
     }
@@ -93,25 +72,6 @@ final class HttpMetricsAdvice {
                 SemanticAttributes.URL_SCHEME));
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
-  static void applyOldServerDurationAdvice(DoubleHistogramBuilder builder) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      return;
-    }
-    ((ExtendedDoubleHistogramBuilder) builder)
-        .setAttributesAdvice(
-            asList(
-                SemanticAttributes.HTTP_SCHEME,
-                SemanticAttributes.HTTP_ROUTE,
-                SemanticAttributes.HTTP_METHOD,
-                SemanticAttributes.HTTP_STATUS_CODE,
-                SemanticAttributes.NET_HOST_NAME,
-                SemanticAttributes.NET_HOST_PORT,
-                SemanticAttributes.NET_PROTOCOL_NAME,
-                SemanticAttributes.NET_PROTOCOL_VERSION));
-  }
-
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyServerRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
@@ -126,19 +86,9 @@ final class HttpMetricsAdvice {
                 HttpAttributes.ERROR_TYPE,
                 SemanticAttributes.NETWORK_PROTOCOL_NAME,
                 SemanticAttributes.NETWORK_PROTOCOL_VERSION,
-                SemanticAttributes.URL_SCHEME,
-                // old attributes
-                SemanticAttributes.HTTP_SCHEME,
-                SemanticAttributes.HTTP_ROUTE,
-                SemanticAttributes.HTTP_METHOD,
-                SemanticAttributes.HTTP_STATUS_CODE,
-                SemanticAttributes.NET_HOST_NAME,
-                SemanticAttributes.NET_HOST_PORT,
-                SemanticAttributes.NET_PROTOCOL_NAME,
-                SemanticAttributes.NET_PROTOCOL_VERSION));
+                SemanticAttributes.URL_SCHEME));
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   static void applyServerActiveRequestsAdvice(LongUpDownCounterBuilder builder) {
     if (!(builder instanceof ExtendedLongUpDownCounterBuilder)) {
       return;
@@ -146,14 +96,8 @@ final class HttpMetricsAdvice {
     ((ExtendedLongUpDownCounterBuilder) builder)
         .setAttributesAdvice(
             asList(
-                // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.20.0/specification/metrics/semantic_conventions/http-metrics.md#metric-httpserveractive_requests
-                SemanticAttributes.HTTP_METHOD,
-                SemanticAttributes.HTTP_SCHEME,
-                SemanticAttributes.NET_HOST_NAME,
-                SemanticAttributes.NET_HOST_PORT,
                 // https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#metric-httpserveractive_requests
-                SemanticAttributes.HTTP_REQUEST_METHOD,
-                SemanticAttributes.URL_SCHEME));
+                SemanticAttributes.HTTP_REQUEST_METHOD, SemanticAttributes.URL_SCHEME));
   }
 
   private HttpMetricsAdvice() {}

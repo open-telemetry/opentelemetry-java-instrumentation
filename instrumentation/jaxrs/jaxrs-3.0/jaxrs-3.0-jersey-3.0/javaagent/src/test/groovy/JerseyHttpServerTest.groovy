@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
@@ -41,5 +43,18 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
   boolean testInterfaceMethodWithPath() {
     // disables a test that jersey deems invalid
     false
+  }
+
+  @Override
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return "${getContextPath()}/*"
+    }
+    return super.expectedHttpRoute(endpoint, method)
+  }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    500
   }
 }

@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.HttpURLConnection;
 import java.util.Set;
@@ -38,7 +37,6 @@ public class HttpMethodAttributeExtractor<
       AttributesBuilder attributes, Context parentContext, HttpURLConnection connection) {}
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
@@ -51,17 +49,12 @@ public class HttpMethodAttributeExtractor<
     if (getOutputStreamContext.isOutputStreamMethodOfSunConnectionCalled()) {
       String method = connection.getRequestMethod();
       // The getOutputStream() has transformed "GET" into "POST"
-      if (SemconvStability.emitStableHttpSemconv()) {
-        if (knownMethods.contains(method)) {
-          internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
-          attributes.remove(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
-        } else {
-          internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
-          internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
-        }
-      }
-      if (SemconvStability.emitOldHttpSemconv()) {
-        internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
+      if (knownMethods.contains(method)) {
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+        attributes.remove(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+      } else {
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
       }
       Span span = Span.fromContext(context);
       span.updateName(method);

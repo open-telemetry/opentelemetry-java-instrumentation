@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
@@ -85,7 +86,6 @@ class TwoServicesWithDirectClientCamelTest
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void twoCamelServiceSpans() throws Exception {
     createAndStartClient();
 
@@ -107,11 +107,11 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 "http://localhost:" + portOne + "/serviceOne"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
                                 "http://localhost:" + portOne + "/serviceOne")),
@@ -120,11 +120,11 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 "http://localhost:" + portOne + "/serviceOne"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
                                 "http://0.0.0.0:" + portOne + "/serviceOne")),
@@ -133,11 +133,11 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo")),
@@ -146,37 +146,29 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.HTTP_SCHEME, "http"),
-                            equalTo(SemanticAttributes.HTTP_TARGET, "/serviceTwo"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(SemanticAttributes.URL_SCHEME, "http"),
+                            equalTo(SemanticAttributes.URL_PATH, "/serviceTwo"),
                             equalTo(
                                 SemanticAttributes.USER_AGENT_ORIGINAL,
                                 "Jakarta Commons-HttpClient/3.1"),
-                            satisfies(
-                                SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH,
-                                val -> val.isInstanceOf(Long.class)),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/serviceTwo"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.NET_HOST_NAME, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_HOST_PORT, portTwo),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SemanticAttributes.SERVER_PORT, portTwo),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
-                                SemanticAttributes.NET_SOCK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
-                            equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"),
-                            satisfies(
-                                SemanticAttributes.NET_SOCK_HOST_PORT,
+                                NetworkAttributes.NETWORK_PEER_PORT,
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("POST /serviceTwo")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(4))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "POST"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo"),
                             equalTo(
                                 stringKey("camel.uri"),
