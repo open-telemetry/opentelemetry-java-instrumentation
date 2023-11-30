@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;

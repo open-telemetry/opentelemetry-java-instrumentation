@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

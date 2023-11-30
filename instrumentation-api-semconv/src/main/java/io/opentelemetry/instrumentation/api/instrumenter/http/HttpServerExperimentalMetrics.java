@@ -59,7 +59,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
             .upDownCounterBuilder("http.server.active_requests")
             .setUnit("{requests}")
             .setDescription("Number of active HTTP server requests.");
-    HttpMetricsAdvice.applyServerActiveRequestsAdvice(activeRequestsBuilder);
+    HttpExperimentalMetricsAdvice.applyServerActiveRequestsAdvice(activeRequestsBuilder);
     activeRequests = activeRequestsBuilder.build();
     LongHistogramBuilder requestSizeBuilder =
         meter
@@ -67,7 +67,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP server request bodies.")
             .ofLongs();
-    HttpMetricsAdvice.applyServerRequestSizeAdvice(requestSizeBuilder);
+    HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(requestSizeBuilder);
     requestSize = requestSizeBuilder.build();
     LongHistogramBuilder responseSizeBuilder =
         meter
@@ -75,7 +75,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP server response bodies.")
             .ofLongs();
-    HttpMetricsAdvice.applyServerRequestSizeAdvice(responseSizeBuilder);
+    HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(responseSizeBuilder);
     responseSize = responseSizeBuilder.build();
   }
 

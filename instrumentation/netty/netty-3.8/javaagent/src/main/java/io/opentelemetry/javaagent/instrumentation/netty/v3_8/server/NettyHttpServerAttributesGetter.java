@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.ChannelUtil;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.HttpSchemeUtil;

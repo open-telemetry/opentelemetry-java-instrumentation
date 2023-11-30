@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
 import static io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHeadersGetter.getHeaders;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
