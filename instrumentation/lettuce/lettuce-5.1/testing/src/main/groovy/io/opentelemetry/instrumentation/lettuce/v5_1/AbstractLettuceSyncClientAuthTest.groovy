@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.RedisClient
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.testing;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 

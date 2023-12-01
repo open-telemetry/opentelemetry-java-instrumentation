@@ -5,13 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter.http;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpCommonAttributesExtractor.firstHeaderValue;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
@@ -63,6 +66,11 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
   private Long responseBodySize(REQUEST request, RESPONSE response) {
     return parseNumber(
         firstHeaderValue(getter.getHttpResponseHeader(request, response, "content-length")));
+  }
+
+  @Nullable
+  static String firstHeaderValue(List<String> values) {
+    return values.isEmpty() ? null : values.get(0);
   }
 
   @Nullable

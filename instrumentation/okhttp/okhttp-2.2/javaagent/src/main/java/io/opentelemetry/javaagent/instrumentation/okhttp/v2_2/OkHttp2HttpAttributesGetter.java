@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 

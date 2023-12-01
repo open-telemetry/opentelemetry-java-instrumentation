@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
 import io.netty.channel.Channel;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;

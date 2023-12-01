@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.HttpSchemeUtil;

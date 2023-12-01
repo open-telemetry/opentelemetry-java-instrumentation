@@ -11,7 +11,7 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.RequestContextAccess;
 import java.net.InetSocketAddress;
 import java.util.List;

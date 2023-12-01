@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetworkAttributesGetter;

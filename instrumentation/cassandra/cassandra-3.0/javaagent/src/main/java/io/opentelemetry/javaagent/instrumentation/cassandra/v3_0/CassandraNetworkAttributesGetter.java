@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.ExecutionInfo;
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 

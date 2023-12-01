@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportInstrumenterFactory;
 import org.elasticsearch.action.ActionResponse;

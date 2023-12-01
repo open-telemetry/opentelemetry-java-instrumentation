@@ -5,11 +5,11 @@
 
 package org.springframework.web.servlet.v3_1;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcServerSpanNaming;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;

@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.vertx.core.Future;

@@ -11,10 +11,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 
 public final class AgentSpanTestingInstrumenter {
 

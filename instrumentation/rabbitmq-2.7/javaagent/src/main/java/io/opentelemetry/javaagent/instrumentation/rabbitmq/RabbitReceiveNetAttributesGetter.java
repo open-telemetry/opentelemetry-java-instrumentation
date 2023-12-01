@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.GetResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;

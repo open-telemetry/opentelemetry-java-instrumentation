@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;

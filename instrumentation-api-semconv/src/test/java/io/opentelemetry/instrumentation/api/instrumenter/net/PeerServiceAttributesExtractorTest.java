@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;

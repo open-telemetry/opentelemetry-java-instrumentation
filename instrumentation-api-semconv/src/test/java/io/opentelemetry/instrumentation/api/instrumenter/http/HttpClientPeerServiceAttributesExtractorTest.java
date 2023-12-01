@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;

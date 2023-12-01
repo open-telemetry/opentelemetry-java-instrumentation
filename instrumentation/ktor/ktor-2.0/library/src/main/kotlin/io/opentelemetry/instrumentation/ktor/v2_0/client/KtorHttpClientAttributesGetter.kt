@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.ktor.v2_0.client
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter
 
 internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<HttpRequestData, HttpResponse> {
 

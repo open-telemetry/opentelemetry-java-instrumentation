@@ -11,12 +11,12 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
 
 class KtorClientTracingBuilder {

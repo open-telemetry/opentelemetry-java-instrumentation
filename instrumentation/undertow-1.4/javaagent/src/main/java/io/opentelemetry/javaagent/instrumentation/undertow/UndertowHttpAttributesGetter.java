@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import java.net.InetSocketAddress;
