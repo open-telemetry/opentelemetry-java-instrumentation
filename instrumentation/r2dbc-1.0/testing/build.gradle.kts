@@ -7,7 +7,7 @@ dependencies {
 
   implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
 
-  implementation(project(":instrumentation-api-semconv"))
+  implementation(project(":instrumentation-api-incubator"))
   implementation("org.testcontainers:junit-jupiter")
   compileOnly("io.projectreactor:reactor-core:3.4.12")
 

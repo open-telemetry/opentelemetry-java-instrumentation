@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class TwilioSingletons {

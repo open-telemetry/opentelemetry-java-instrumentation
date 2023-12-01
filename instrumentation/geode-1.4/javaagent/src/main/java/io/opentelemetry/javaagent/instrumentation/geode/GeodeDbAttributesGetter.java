@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
