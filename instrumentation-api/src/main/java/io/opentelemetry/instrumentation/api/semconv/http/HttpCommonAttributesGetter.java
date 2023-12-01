@@ -11,7 +11,11 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/** An interface for getting HTTP attributes common to clients and servers. */
+/**
+ * An interface for getting HTTP attributes common to clients and servers.
+ *
+ * @since 2.0.0
+ */
 public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
 
   /**

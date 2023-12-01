@@ -13,6 +13,8 @@ import javax.annotation.Nullable;
  * <p>Instrumentation authors will create implementations of this interface for their specific
  * library/framework. It will be used by the {@link ServerAttributesExtractor} (or other convention
  * specific extractors) to obtain the various server attributes in a type-generic way.
+ *
+ * @since 2.0.0
  */
 public interface ServerAttributesGetter<REQUEST> {
 

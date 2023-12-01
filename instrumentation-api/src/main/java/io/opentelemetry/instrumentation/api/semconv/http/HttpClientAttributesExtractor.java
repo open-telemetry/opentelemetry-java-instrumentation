@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
  * Extractor of <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
  * client attributes</a>.
+ *
+ * @since 2.0.0
  */
 public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
