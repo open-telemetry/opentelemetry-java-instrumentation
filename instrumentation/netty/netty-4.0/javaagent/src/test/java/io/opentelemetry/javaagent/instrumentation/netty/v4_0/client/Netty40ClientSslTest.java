@@ -19,7 +19,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslHandler;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
@@ -81,41 +80,24 @@ class Netty40ClientSslTest {
                         .hasException(thrownException),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  if (SemconvStability.emitOldHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_ADDRESS, "127.0.0.1"),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_PORT, uri.getPort()));
-                  }
-                  if (SemconvStability.emitStableHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                        equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                        equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                  }
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> {
                   span.hasName("SSL handshake")
                       .hasKind(INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasStatus(StatusData.error());
-                  if (SemconvStability.emitOldHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_PORT, uri.getPort()));
-                  }
-                  if (SemconvStability.emitStableHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                        equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                        equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                  }
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 }));
   }
 
@@ -184,43 +166,24 @@ class Netty40ClientSslTest {
                 span -> span.hasName("parent").hasStatus(StatusData.ok()),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  if (SemconvStability.emitOldHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_ADDRESS, "127.0.0.1"),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_PORT, uri.getPort()));
-                  }
-                  if (SemconvStability.emitStableHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                        equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                  }
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> {
                   span.hasName("SSL handshake")
                       .hasKind(INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasStatus(StatusData.error());
-                  if (SemconvStability.emitOldHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_PORT, uri.getPort()));
-                  }
-                  if (SemconvStability.emitStableHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                        equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                        equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                  }
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> {
                   span.hasName("GET")

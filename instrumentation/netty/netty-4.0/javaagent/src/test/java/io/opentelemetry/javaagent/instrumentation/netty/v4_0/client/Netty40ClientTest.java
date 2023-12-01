@@ -168,8 +168,8 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
         return Collections.emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(SemanticAttributes.NET_PEER_NAME);
-    attributes.remove(SemanticAttributes.NET_PEER_PORT);
+    attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+    attributes.remove(SemanticAttributes.SERVER_PORT);
     return attributes;
   }
 }

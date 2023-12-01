@@ -28,7 +28,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
@@ -102,23 +101,12 @@ class Netty40ConnectionSpanTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  if (SemconvStability.emitOldHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_ADDRESS, "127.0.0.1"),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_PORT, uri.getPort()));
-                  }
-                  if (SemconvStability.emitStableHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                        equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                  }
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span ->
@@ -141,23 +129,13 @@ class Netty40ConnectionSpanTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasException(thrown),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  if (SemconvStability.emitOldHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_ADDRESS, "127.0.0.1"),
-                        equalTo(SemanticAttributes.SERVER_SOCKET_PORT, uri.getPort()));
-                  }
-                  if (SemconvStability.emitStableHttpSemconv()) {
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                        equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                        equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                  }
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 }));
   }
 
