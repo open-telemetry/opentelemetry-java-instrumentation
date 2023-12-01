@@ -22,7 +22,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 
-/** A builder of {@link HttpClientAttributesExtractor}. */
+/**
+ * A builder of {@link HttpClientAttributesExtractor}.
+ *
+ * @since 2.0.0
+ */
 public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;

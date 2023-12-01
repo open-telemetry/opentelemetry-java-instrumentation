@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
-/** Represents the source that provided the {@code http.route} attribute. */
+/**
+ * Represents the source that provided the {@code http.route} attribute.
+ *
+ * @since 2.0.0
+ */
 public enum HttpServerRouteSource {
   /**
    * Represents a "filter" that may execute before the actual server handler. E.g. the Servlet API

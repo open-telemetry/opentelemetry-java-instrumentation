@@ -8,7 +8,11 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
-/** An interface for getting the {@code http.route} attribute. */
+/**
+ * An interface for getting the {@code http.route} attribute.
+ *
+ * @since 2.0.0
+ */
 @FunctionalInterface
 public interface HttpServerRouteBiGetter<T, U> {
 

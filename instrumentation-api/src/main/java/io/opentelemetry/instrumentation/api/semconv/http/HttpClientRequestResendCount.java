@@ -10,7 +10,11 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-/** A helper that keeps track of the count of the HTTP request resend attempts. */
+/**
+ * A helper that keeps track of the count of the HTTP request resend attempts.
+ *
+ * @since 2.0.0
+ */
 public final class HttpClientRequestResendCount {
 
   private static final ContextKey<HttpClientRequestResendCount> KEY =

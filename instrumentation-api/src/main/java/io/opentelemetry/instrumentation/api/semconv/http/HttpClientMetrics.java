@@ -24,6 +24,8 @@ import java.util.logging.Logger;
  * {@link OperationListener} which keeps track of <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#http-client">HTTP
  * client metrics</a>.
+ *
+ * @since 2.0.0
  */
 public final class HttpClientMetrics implements OperationListener {
 

@@ -18,6 +18,8 @@ import javax.annotation.Nullable;
  * Extractor of <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/general/attributes.md#server-attributes">server
  * attributes</a>.
+ *
+ * @since 2.0.0
  */
 public final class ServerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {

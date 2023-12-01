@@ -24,7 +24,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-/** A builder of {@link HttpServerAttributesExtractor}. */
+/**
+ * A builder of {@link HttpServerAttributesExtractor}.
+ *
+ * @since 2.0.0
+ */
 public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;

@@ -16,6 +16,8 @@ import javax.annotation.Nullable;
  * <p>Instrumentation authors will create implementations of this interface for their specific
  * library/framework. It will be used by the {@link HttpServerAttributesExtractor} to obtain the
  * various HTTP server attributes in a type-generic way.
+ *
+ * @since 2.0.0
  */
 public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
     extends HttpCommonAttributesGetter<REQUEST, RESPONSE>,

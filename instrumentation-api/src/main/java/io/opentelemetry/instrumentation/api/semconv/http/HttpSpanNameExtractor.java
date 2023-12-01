@@ -14,6 +14,8 @@ import java.util.Set;
  * Extractor of the <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#name">HTTP
  * span name</a>.
+ *
+ * @since 2.0.0
  */
 public final class HttpSpanNameExtractor {
 

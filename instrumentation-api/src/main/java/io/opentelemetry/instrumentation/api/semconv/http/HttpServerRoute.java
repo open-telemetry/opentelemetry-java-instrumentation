@@ -22,6 +22,8 @@ import javax.annotation.Nullable;
  * later, after the instrumented operation starts. This class provides several static methods that
  * allow the instrumentation author to provide the matching HTTP route to the instrumentation when
  * it is discovered.
+ *
+ * @since 2.0.0
  */
 public final class HttpServerRoute {
 

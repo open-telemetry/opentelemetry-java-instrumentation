@@ -15,6 +15,8 @@ import javax.annotation.Nullable;
  * Extractor of the <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#status">HTTP
  * span status</a>.
+ *
+ * @since 2.0.0
  */
 public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
     implements SpanStatusExtractor<REQUEST, RESPONSE> {

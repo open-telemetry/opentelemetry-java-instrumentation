@@ -16,7 +16,11 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-/** A builder of {@link HttpSpanNameExtractor}. */
+/**
+ * A builder of {@link HttpSpanNameExtractor}.
+ *
+ * @since 2.0.0
+ */
 public final class HttpSpanNameExtractorBuilder<REQUEST> {
 
   @Nullable final HttpClientAttributesGetter<REQUEST, ?> clientGetter;

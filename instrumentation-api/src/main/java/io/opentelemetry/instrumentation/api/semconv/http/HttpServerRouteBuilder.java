@@ -15,7 +15,11 @@ import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import java.util.HashSet;
 import java.util.Set;
 
-/** A builder of {@link HttpServerRoute}. */
+/**
+ * A builder of {@link HttpServerRoute}.
+ *
+ * @since 2.0.0
+ */
 public final class HttpServerRouteBuilder<REQUEST> {
 
   final HttpServerAttributesGetter<REQUEST, ?> getter;
