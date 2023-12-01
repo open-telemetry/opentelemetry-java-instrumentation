@@ -19,11 +19,10 @@ public class RequestWithHost extends HttpRequestWrapper implements ClassicHttpRe
 
   public RequestWithHost(HttpHost httpHost, ClassicHttpRequest httpRequest) {
     super(httpRequest);
-    if(httpHost != null) {
+    if (httpHost != null) {
       this.scheme = httpHost.getSchemeName();
       this.authority = new URIAuthority(httpHost.getHostName(), httpHost.getPort());
-    }
-    else {
+    } else {
       this.scheme = httpRequest.getScheme();
       this.authority = httpRequest.getAuthority();
     }
