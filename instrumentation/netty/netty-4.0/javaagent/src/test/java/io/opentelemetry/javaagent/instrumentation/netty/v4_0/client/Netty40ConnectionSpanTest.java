@@ -27,7 +27,7 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
@@ -52,7 +52,7 @@ class Netty40ConnectionSpanTest {
 
   private HttpClientTestServer server;
   private EventLoopGroup eventLoopGroup;
-  private Bootstrap bootstrap = buildBootstrap();
+  private final Bootstrap bootstrap = buildBootstrap();
 
   @BeforeEach
   void setupSpec() {
@@ -64,7 +64,13 @@ class Netty40ConnectionSpanTest {
   @AfterEach
   void cleanupSpec() {
     eventLoopGroup.shutdownGracefully();
-    server.stop().get(10, TimeUnit.SECONDS);
+    try {
+      server.stop().get(10, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private Bootstrap buildBootstrap() {
@@ -139,7 +145,8 @@ class Netty40ConnectionSpanTest {
                 }));
   }
 
-  private DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
+  private static DefaultFullHttpRequest buildRequest(
+      String method, URI uri, Map<String, String> headers) {
     DefaultFullHttpRequest request =
         new DefaultFullHttpRequest(
             HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), uri.getPath(), Unpooled.EMPTY_BUFFER);

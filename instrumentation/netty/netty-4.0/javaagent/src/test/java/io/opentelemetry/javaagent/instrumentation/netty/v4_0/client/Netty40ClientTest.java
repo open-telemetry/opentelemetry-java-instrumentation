@@ -9,11 +9,19 @@ import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -116,8 +124,12 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
     Channel ch;
     try {
       ch = getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
-    } catch (Exception exception) {
-      httpClientResult.complete(exception);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      httpClientResult.complete(e);
+      return;
+    } catch (Throwable th) {
+      httpClientResult.complete(th);
       return;
     }
     CompletableFuture<Integer> result = new CompletableFuture<>();
@@ -132,8 +144,8 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
 
-    optionsBuilder.setExpectedClientSpanNameMapper(this::expectedClientSpanName);
-    optionsBuilder.setHttpAttributes(this::httpAttributes);
+    optionsBuilder.setExpectedClientSpanNameMapper(Netty40ClientTest::expectedClientSpanName);
+    optionsBuilder.setHttpAttributes(Netty40ClientTest::httpAttributes);
   }
 
   private static int getPort(URI uri) {
@@ -151,7 +163,7 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
     return port;
   }
 
-  private String expectedClientSpanName(URI uri, String method) {
+  private static String expectedClientSpanName(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://192.0.2.1/": // non routable address
@@ -161,7 +173,8 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
     }
   }
 
-  private Set<AttributeKey<?>> httpAttributes(URI uri) {
+  @SuppressWarnings("MissingDefault")
+  private static Set<AttributeKey<?>> httpAttributes(URI uri) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://192.0.2.1/": // non routable address

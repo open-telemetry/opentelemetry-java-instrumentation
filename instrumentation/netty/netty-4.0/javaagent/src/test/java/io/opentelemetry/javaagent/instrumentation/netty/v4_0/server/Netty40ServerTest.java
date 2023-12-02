@@ -9,7 +9,14 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.*;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -21,7 +28,14 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -69,7 +83,8 @@ public class Netty40ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                     new SimpleChannelInboundHandler<HttpRequest>() {
 
                       @Override
-                      protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) {
+                      protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg)
+                          throws Exception {
                         URI uri = URI.create(msg.getUri());
                         ServerEndpoint endpoint = ServerEndpoint.forPath(uri.getPath());
                         ctx.write(
@@ -78,80 +93,72 @@ public class Netty40ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                                 () -> {
                                   ByteBuf content;
                                   FullHttpResponse response;
-                                  switch (endpoint) {
-                                    case SUCCESS:
-                                    case ERROR:
-                                      content =
-                                          Unpooled.copiedBuffer(
-                                              endpoint.getBody(), CharsetUtil.UTF_8);
-                                      response =
-                                          new DefaultFullHttpResponse(
-                                              HTTP_1_1,
-                                              HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                              content);
-                                      break;
-                                    case INDEXED_CHILD:
-                                      content = Unpooled.EMPTY_BUFFER;
-                                      endpoint.collectSpanAttributes(
-                                          it ->
-                                              new QueryStringDecoder(uri)
-                                                  .parameters()
-                                                  .get(it)
-                                                  .get(0));
-                                      response =
-                                          new DefaultFullHttpResponse(
-                                              HTTP_1_1,
-                                              HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                              content);
-                                      break;
-                                    case QUERY_PARAM:
-                                      content =
-                                          Unpooled.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
-                                      response =
-                                          new DefaultFullHttpResponse(
-                                              HTTP_1_1,
-                                              HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                              content);
-                                      break;
-                                    case REDIRECT:
-                                      content = Unpooled.EMPTY_BUFFER;
-                                      response =
-                                          new DefaultFullHttpResponse(
-                                              HTTP_1_1,
-                                              HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                              content);
-                                      response
-                                          .headers()
-                                          .set(HttpHeaders.Names.LOCATION, endpoint.getBody());
-                                      break;
-                                    case CAPTURE_HEADERS:
-                                      content =
-                                          Unpooled.copiedBuffer(
-                                              endpoint.getBody(), CharsetUtil.UTF_8);
-                                      response =
-                                          new DefaultFullHttpResponse(
-                                              HTTP_1_1,
-                                              HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                              content);
-                                      response
-                                          .headers()
-                                          .set(
-                                              "X-Test-Response",
-                                              msg.headers().get("X-Test-Request"));
-                                      break;
-                                    case EXCEPTION:
-                                      throw new Exception(endpoint.getBody());
-                                    default:
-                                      content =
-                                          Unpooled.copiedBuffer(
-                                              NOT_FOUND.getBody(), CharsetUtil.UTF_8);
-                                      response =
-                                          new DefaultFullHttpResponse(
-                                              HTTP_1_1,
-                                              HttpResponseStatus.valueOf(NOT_FOUND.getStatus()),
-                                              content);
-                                      break;
+                                  if (endpoint.equals(SUCCESS) || endpoint.equals(ERROR)) {
+                                    content =
+                                        Unpooled.copiedBuffer(
+                                            endpoint.getBody(), CharsetUtil.UTF_8);
+                                    response =
+                                        new DefaultFullHttpResponse(
+                                            HTTP_1_1,
+                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                            content);
+                                  } else if (endpoint.equals(INDEXED_CHILD)) {
+                                    content = Unpooled.EMPTY_BUFFER;
+                                    endpoint.collectSpanAttributes(
+                                        it ->
+                                            new QueryStringDecoder(uri)
+                                                .parameters()
+                                                .get(it)
+                                                .get(0));
+                                    response =
+                                        new DefaultFullHttpResponse(
+                                            HTTP_1_1,
+                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                            content);
+                                  } else if (endpoint.equals(QUERY_PARAM)) {
+                                    content =
+                                        Unpooled.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
+                                    response =
+                                        new DefaultFullHttpResponse(
+                                            HTTP_1_1,
+                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                            content);
+                                  } else if (endpoint.equals(REDIRECT)) {
+                                    content = Unpooled.EMPTY_BUFFER;
+                                    response =
+                                        new DefaultFullHttpResponse(
+                                            HTTP_1_1,
+                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                            content);
+                                    response
+                                        .headers()
+                                        .set(HttpHeaders.Names.LOCATION, endpoint.getBody());
+                                  } else if (endpoint.equals(CAPTURE_HEADERS)) {
+                                    content =
+                                        Unpooled.copiedBuffer(
+                                            endpoint.getBody(), CharsetUtil.UTF_8);
+                                    response =
+                                        new DefaultFullHttpResponse(
+                                            HTTP_1_1,
+                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                            content);
+                                    response
+                                        .headers()
+                                        .set(
+                                            "X-Test-Response", msg.headers().get("X-Test-Request"));
+                                  } else if (endpoint.equals(EXCEPTION)) {
+                                    throw new IllegalArgumentException(endpoint.getBody());
+                                  } else {
+                                    content =
+                                        Unpooled.copiedBuffer(
+                                            NOT_FOUND.getBody(), CharsetUtil.UTF_8);
+                                    response =
+                                        new DefaultFullHttpResponse(
+                                            HTTP_1_1,
+                                            HttpResponseStatus.valueOf(NOT_FOUND.getStatus()),
+                                            content);
                                   }
+
                                   response.headers().set(CONTENT_TYPE, "text/plain");
                                   if (content != null) {
                                     response.headers().set(CONTENT_LENGTH, content.readableBytes());
@@ -181,7 +188,7 @@ public class Netty40ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
 
   @Override
   protected void stopServer(ServerBootstrap server) {
-    server.shutdown();
+    server.group().shutdownGracefully();
   }
 
   @Override
