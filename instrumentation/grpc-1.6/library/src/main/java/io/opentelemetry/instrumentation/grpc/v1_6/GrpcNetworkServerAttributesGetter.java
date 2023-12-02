@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Status;
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;

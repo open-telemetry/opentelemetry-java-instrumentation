@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.ktor.v2_0.server
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter
 import io.opentelemetry.instrumentation.ktor.isIpAddress
 
 internal enum class KtorHttpServerAttributesGetter :

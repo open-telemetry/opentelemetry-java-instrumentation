@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
