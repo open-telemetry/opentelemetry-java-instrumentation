@@ -40,9 +40,7 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"InterruptedExceptionSwallowed"})
 public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClientTest {
-
   private static String dbUriNonExistent;
-
   private static int incorrectPort;
 
   private static final ImmutableMap<String, String> testHashMap =
