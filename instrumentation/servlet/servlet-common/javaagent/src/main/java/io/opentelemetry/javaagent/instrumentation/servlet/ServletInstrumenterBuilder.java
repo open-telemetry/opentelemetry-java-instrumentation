@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;

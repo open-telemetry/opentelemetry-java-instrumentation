@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.annotation.Nullable;
 

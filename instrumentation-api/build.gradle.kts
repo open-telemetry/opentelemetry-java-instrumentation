@@ -24,7 +24,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
   testImplementation("org.junit-pioneer:junit-pioneer")
 
-  jmhImplementation(project(":instrumentation-api-semconv"))
+  jmhImplementation(project(":instrumentation-api-incubator"))
 }
 
 tasks {

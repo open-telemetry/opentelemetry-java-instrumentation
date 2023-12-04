@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client.ClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server.ServerAttributesGetter;
 import java.lang.reflect.Method;

@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;

@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientPeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;

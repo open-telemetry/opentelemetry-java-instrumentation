@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
 
 enum GwtRpcAttributesGetter implements RpcAttributesGetter<Method> {

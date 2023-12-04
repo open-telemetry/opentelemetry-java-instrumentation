@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import java.util.List;

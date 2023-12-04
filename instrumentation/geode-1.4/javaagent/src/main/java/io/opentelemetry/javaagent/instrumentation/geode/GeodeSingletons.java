@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.geode;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 
 public final class GeodeSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.geode-1.4";

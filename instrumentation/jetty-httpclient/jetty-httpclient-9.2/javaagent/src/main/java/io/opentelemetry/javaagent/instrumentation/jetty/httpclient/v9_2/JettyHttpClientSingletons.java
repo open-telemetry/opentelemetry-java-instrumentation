@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;

@@ -50,7 +50,7 @@ dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-events is not
   bootstrapLibs("io.opentelemetry:opentelemetry-api-events")
-  bootstrapLibs(project(":instrumentation-api-semconv"))
+  bootstrapLibs(project(":instrumentation-api-incubator"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
@@ -312,7 +312,7 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
 fun ShadowJar.excludeBootstrapClasses() {
   dependencies {
     exclude(project(":instrumentation-api"))
-    exclude(project(":instrumentation-api-semconv"))
+    exclude(project(":instrumentation-api-incubator"))
     exclude(project(":instrumentation-annotations-support"))
     exclude(project(":javaagent-bootstrap"))
   }

@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.struts2;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public class StrutsSingletons {
