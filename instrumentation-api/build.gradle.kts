@@ -14,6 +14,7 @@ group = "io.opentelemetry.instrumentation"
 dependencies {
   api("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-extension-incubator")
+  implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -23,7 +24,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
   testImplementation("org.junit-pioneer:junit-pioneer")
 
-  jmhImplementation(project(":instrumentation-api-semconv"))
+  jmhImplementation(project(":instrumentation-api-incubator"))
 }
 
 tasks {

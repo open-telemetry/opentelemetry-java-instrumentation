@@ -22,6 +22,7 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -912,25 +913,22 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     return spanKind;
   }
 
-  // Ignoring deprecation warning for use of SemanticAttributes
-  @SuppressWarnings("deprecation")
   private static void verifyNetAttributes(SpanDataAssert span) {
     span.hasAttributesSatisfying(
         attributes -> {
           assertThat(attributes)
               .satisfies(
                   attrs -> {
-                    String peerAddr = attrs.get(SemanticAttributes.NET_SOCK_PEER_ADDR);
+                    String peerAddr = attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS);
                     assertTrue(
                         "127.0.0.1".equals(peerAddr)
                             || "0:0:0:0:0:0:0:1".equals(peerAddr)
                             || peerAddr == null);
 
-                    String sockFamily = attrs.get(SemanticAttributes.NET_SOCK_FAMILY);
-                    assertTrue(
-                        SemanticAttributes.NetSockFamilyValues.INET6.equals(sockFamily)
-                            || sockFamily == null);
-                    assertNotNull(attrs.get(SemanticAttributes.NET_SOCK_PEER_PORT));
+                    String networkType = attrs.get(SemanticAttributes.NETWORK_TYPE);
+                    assertThat(networkType).isIn("ipv4", "ipv6", null);
+
+                    assertNotNull(attrs.get(NetworkAttributes.NETWORK_PEER_PORT));
                   });
         });
   }

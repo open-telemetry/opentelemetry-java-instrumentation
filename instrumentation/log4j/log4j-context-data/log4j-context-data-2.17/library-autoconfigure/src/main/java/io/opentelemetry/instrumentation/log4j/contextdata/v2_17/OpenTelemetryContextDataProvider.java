@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;

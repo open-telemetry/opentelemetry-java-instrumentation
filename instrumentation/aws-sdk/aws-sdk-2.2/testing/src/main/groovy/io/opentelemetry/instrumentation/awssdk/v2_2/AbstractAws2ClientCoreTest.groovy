@@ -133,13 +133,11 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "CreateTable"
@@ -168,13 +166,11 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "Query"
@@ -202,13 +198,11 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"

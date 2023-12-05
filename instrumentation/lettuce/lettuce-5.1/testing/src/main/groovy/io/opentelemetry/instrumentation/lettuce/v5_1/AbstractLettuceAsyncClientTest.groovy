@@ -13,6 +13,7 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
@@ -158,9 +159,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "SET TESTSETKEY ?"
           }
@@ -208,9 +209,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "GET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET TESTKEY"
           }
@@ -282,9 +283,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "GET NON_EXISTENT_KEY"
           }
@@ -345,9 +346,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_STATEMENT" "RANDOMKEY"
             "$SemanticAttributes.DB_SYSTEM" "redis"
           }
@@ -411,9 +412,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "HMSET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "HMSET TESTHM firstname ? lastname ? age ?"
           }
@@ -430,9 +431,9 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
           name "HGETALL"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "HGETALL TESTHM"
           }

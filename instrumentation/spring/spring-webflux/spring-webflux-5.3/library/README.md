@@ -45,6 +45,11 @@ interface.
 a `WebFilter` and using the OpenTelemetry Reactor instrumentation to ensure context is
 passed around correctly.
 
+### Web client instrumentation
+
+The `WebClient` instrumentation will emit the `error.type` attribute with value `cancelled` whenever
+an outgoing HTTP request is cancelled.
+
 ### Setup
 
 Here is how to set up client and server instrumentation respectively:

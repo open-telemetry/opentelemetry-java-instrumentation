@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import javax.annotation.Nullable;
 
 public class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {

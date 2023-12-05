@@ -9,7 +9,7 @@ import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerBuilder;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 
 /** Entrypoint for instrumenting Lettuce or clients. */

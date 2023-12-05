@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.RedisClient
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
@@ -66,9 +67,9 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
           name "AUTH"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" port
             "$SemanticAttributes.DB_SYSTEM" "redis"
             "$SemanticAttributes.DB_STATEMENT" "AUTH ?"
           }

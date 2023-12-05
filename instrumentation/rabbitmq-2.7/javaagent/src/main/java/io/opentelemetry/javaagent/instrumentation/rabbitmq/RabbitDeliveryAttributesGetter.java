@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;

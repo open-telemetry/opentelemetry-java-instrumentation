@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -113,7 +112,6 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(21); // 1st send + 20 retries
@@ -123,15 +121,12 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
-          if (SemconvStability.emitOldHttpSemconv()) {
-            // protocol is extracted from the response, and those URLs cause exceptions (= null
-            // response)
-            if ("http://localhost:61/".equals(uri.toString())
-                || "https://192.0.2.1/".equals(uri.toString())
-                || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-              attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-              attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-            }
+          // protocol is extracted from the response, and those URLs cause exceptions (= null
+          // response)
+          if ("http://localhost:61/".equals(uri.toString())
+              || "https://192.0.2.1/".equals(uri.toString())
+              || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
+            attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
           }
 
           return attributes;

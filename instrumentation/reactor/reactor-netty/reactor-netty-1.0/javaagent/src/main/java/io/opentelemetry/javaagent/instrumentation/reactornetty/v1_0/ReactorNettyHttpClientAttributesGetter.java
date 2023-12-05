@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
@@ -72,13 +72,15 @@ final class ReactorNettyHttpClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(HttpClientRequest request) {
-    return getHost(request);
+    String resourceUrl = request.resourceUrl();
+    return resourceUrl == null ? null : UrlParser.getHost(resourceUrl);
   }
 
   @Nullable
   @Override
   public Integer getServerPort(HttpClientRequest request) {
-    return getPort(request);
+    String resourceUrl = request.resourceUrl();
+    return resourceUrl == null ? null : UrlParser.getPort(resourceUrl);
   }
 
   @Nullable
@@ -99,14 +101,14 @@ final class ReactorNettyHttpClientAttributesGetter
   }
 
   @Nullable
-  private static String getHost(HttpClientRequest request) {
-    String resourceUrl = request.resourceUrl();
-    return resourceUrl == null ? null : UrlParser.getHost(resourceUrl);
-  }
-
-  @Nullable
-  private static Integer getPort(HttpClientRequest request) {
-    String resourceUrl = request.resourceUrl();
-    return resourceUrl == null ? null : UrlParser.getPort(resourceUrl);
+  @Override
+  public String getErrorType(
+      HttpClientRequest request, @Nullable HttpClientResponse response, @Nullable Throwable error) {
+    // if both response and error are null it means the request has been cancelled -- see the
+    // ConnectionWrapper class
+    if (response == null && error == null) {
+      return "cancelled";
+    }
+    return null;
   }
 }

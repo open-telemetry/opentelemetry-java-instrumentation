@@ -4,4 +4,9 @@
  */
 
 class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    Boolean.getBoolean("testLatestDeps") ? 500 : 405
+  }
 }
