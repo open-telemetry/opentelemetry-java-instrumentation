@@ -49,21 +49,19 @@ public final class LoggingEventMapper {
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
 
-  public LoggingEventMapper(
-      boolean captureExperimentalAttributes,
-      List<String> captureMdcAttributes,
-      boolean captureCodeAttributes,
-      boolean captureMarkerAttribute,
-      boolean captureKeyValuePairAttributes,
-      boolean captureLoggerContext) {
-    this.captureExperimentalAttributes = captureExperimentalAttributes;
-    this.captureCodeAttributes = captureCodeAttributes;
-    this.captureMdcAttributes = captureMdcAttributes;
-    this.captureMarkerAttribute = captureMarkerAttribute;
-    this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
-    this.captureLoggerContext = captureLoggerContext;
+  private LoggingEventMapper(Builder builder) {
+    this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
+    this.captureCodeAttributes = builder.captureCodeAttributes;
+    this.captureMdcAttributes = builder.captureMdcAttributes;
+    this.captureMarkerAttribute = builder.captureMarkerAttribute;
+    this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
+    this.captureLoggerContext = builder.captureLoggerContext;
     this.captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+        builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   public void emit(LoggerProvider loggerProvider, ILoggingEvent event, long threadId) {
@@ -295,5 +293,48 @@ public final class LoggingEventMapper {
     }
 
     return true;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class Builder {
+    private boolean captureExperimentalAttributes;
+    private List<String> captureMdcAttributes;
+    private boolean captureCodeAttributes;
+    private boolean captureMarkerAttribute;
+    private boolean captureKeyValuePairAttributes;
+    private boolean captureLoggerContext;
+
+    Builder() {}
+
+    public void setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
+      this.captureExperimentalAttributes = captureExperimentalAttributes;
+    }
+
+    public void setCaptureMdcAttributes(List<String> captureMdcAttributes) {
+      this.captureMdcAttributes = captureMdcAttributes;
+    }
+
+    public void setCaptureCodeAttributes(boolean captureCodeAttributes) {
+      this.captureCodeAttributes = captureCodeAttributes;
+    }
+
+    public void setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
+      this.captureMarkerAttribute = captureMarkerAttribute;
+    }
+
+    public void setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
+      this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+    }
+
+    public void setCaptureLoggerContext(boolean captureLoggerContext) {
+      this.captureLoggerContext = captureLoggerContext;
+    }
+
+    public LoggingEventMapper build() {
+      return new LoggingEventMapper(this);
+    }
   }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -22,8 +21,8 @@ class LoggingEventMapperTest {
   @Test
   void testDefault() {
     // given
-    LoggingEventMapper mapper =
-        new LoggingEventMapper(false, emptyList(), false, false, false, false);
+    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
+    LoggingEventMapper mapper = builder.build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -39,8 +38,9 @@ class LoggingEventMapperTest {
   @Test
   void testSome() {
     // given
-    LoggingEventMapper mapper =
-        new LoggingEventMapper(false, singletonList("key2"), false, false, false, false);
+    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
+    builder.setCaptureMdcAttributes(singletonList("key2"));
+    LoggingEventMapper mapper = builder.build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -57,8 +57,9 @@ class LoggingEventMapperTest {
   @Test
   void testAll() {
     // given
-    LoggingEventMapper mapper =
-        new LoggingEventMapper(false, singletonList("*"), false, false, false, false);
+    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
+    builder.setCaptureMdcAttributes(singletonList("*"));
+    LoggingEventMapper mapper = builder.build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
