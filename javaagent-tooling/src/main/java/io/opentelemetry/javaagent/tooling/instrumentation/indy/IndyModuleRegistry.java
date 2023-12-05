@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,10 +23,12 @@ public class IndyModuleRegistry {
    * classloader. We only store weak references to make sure we don't prevent application
    * classloaders from being GCed. The application classloaders will strongly reference the {@link
    * InstrumentationModuleClassLoader} through the invokedynamic callsites.
+   *
+   * <p>The keys of this map are the instrumentation module group names, see {@link
+   * ExperimentalInstrumentationModule#getModuleGroup()};
    */
   private static final ConcurrentHashMap<
-          InstrumentationModule,
-          Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>>>
+          String, Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>>>
       instrumentationClassloaders = new ConcurrentHashMap<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassloader(
@@ -41,15 +44,17 @@ public class IndyModuleRegistry {
   private static synchronized InstrumentationModuleClassLoader getInstrumentationClassloader(
       InstrumentationModule module, ClassLoader instrumentedClassloader) {
 
-    Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>> cacheForModule =
-        instrumentationClassloaders.computeIfAbsent(module, (k) -> Cache.weak());
+    String groupName = getModuleGroup(module);
+    Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>> cacheForGroup =
+        instrumentationClassloaders.computeIfAbsent(groupName, (k) -> Cache.weak());
 
     instrumentedClassloader = maskNullClassLoader(instrumentedClassloader);
     WeakReference<InstrumentationModuleClassLoader> cached =
-        cacheForModule.get(instrumentedClassloader);
+        cacheForGroup.get(instrumentedClassloader);
     if (cached != null) {
       InstrumentationModuleClassLoader cachedCl = cached.get();
       if (cachedCl != null) {
+        cachedCl.installModule(module);
         return cachedCl;
       }
     }
@@ -57,7 +62,7 @@ public class IndyModuleRegistry {
     // WeakReference will point to the InstrumentationModuleCL
     InstrumentationModuleClassLoader created =
         createInstrumentationModuleClassloader(module, instrumentedClassloader);
-    cacheForModule.put(instrumentedClassloader, new WeakReference<>(created));
+    cacheForGroup.put(instrumentedClassloader, new WeakReference<>(created));
     return created;
   }
 
@@ -85,5 +90,12 @@ public class IndyModuleRegistry {
       throw new IllegalArgumentException(
           "A module with the class name " + moduleName + " has already been registered!");
     }
+  }
+
+  private static String getModuleGroup(InstrumentationModule module) {
+    if (module instanceof ExperimentalInstrumentationModule) {
+      return ((ExperimentalInstrumentationModule) module).getModuleGroup();
+    }
+    return module.getClass().getName();
   }
 }
