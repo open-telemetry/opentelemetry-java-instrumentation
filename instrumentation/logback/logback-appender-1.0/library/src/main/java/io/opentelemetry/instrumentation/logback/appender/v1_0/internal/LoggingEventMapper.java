@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static java.util.Collections.emptyList;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
@@ -301,7 +303,7 @@ public final class LoggingEventMapper {
    */
   public static final class Builder {
     private boolean captureExperimentalAttributes;
-    private List<String> captureMdcAttributes;
+    private List<String> captureMdcAttributes = emptyList();
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
