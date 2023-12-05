@@ -109,8 +109,6 @@ public final class InstrumentationModuleInstaller {
       injectedHelperClassNames = Collections.emptyList();
     }
 
-    IndyModuleRegistry.registerIndyModule(instrumentationModule);
-
     ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
       ((ExperimentalInstrumentationModule) instrumentationModule)
@@ -157,6 +155,8 @@ public final class InstrumentationModuleInstaller {
       // As a result the advices should store `VirtualFields` as static variables instead of having
       // the lookup inline
       // We need to update our documentation on that
+      extendableAgentBuilder =
+          IndyModuleRegistry.registerModuleOnMatch(instrumentationModule, extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       IndyTypeTransformerImpl typeTransformer =
           new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);

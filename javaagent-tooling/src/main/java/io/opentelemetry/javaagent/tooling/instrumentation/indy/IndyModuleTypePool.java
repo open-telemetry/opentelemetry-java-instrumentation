@@ -28,7 +28,8 @@ public class IndyModuleTypePool {
     // This could be improved by implementing a custom TypePool instead, which delegates to parent
     // TypePools and mirrors the delegation model of the InstrumentationModuleClassLoader
     InstrumentationModuleClassLoader dummyCl =
-        IndyModuleRegistry.createInstrumentationModuleClassloader(module, instrumentedCl);
+        IndyModuleRegistry.createInstrumentationClassloaderWithoutRegistration(
+            module, instrumentedCl);
     return TypePool.Default.of(AgentTooling.locationStrategy().classFileLocator(dummyCl));
   }
 }
