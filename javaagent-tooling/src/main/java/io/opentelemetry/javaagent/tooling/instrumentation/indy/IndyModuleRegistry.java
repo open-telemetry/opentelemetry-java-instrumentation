@@ -7,20 +7,8 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
-import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.matcher.ElementMatcher;
 
 public class IndyModuleRegistry {
 
@@ -81,24 +69,11 @@ public class IndyModuleRegistry {
 
   static InstrumentationModuleClassLoader createInstrumentationModuleClassloader(
       InstrumentationModule module, ClassLoader instrumentedClassloader) {
-
-    Set<String> toInject = new HashSet<>(InstrumentationModuleMuzzle.getHelperClassNames(module));
-    // TODO (Jonas): Make muzzle include advice classes as helper classes
-    // so that we don't have to include them here
-    toInject.addAll(getModuleAdviceNames(module));
-    if (module instanceof ExperimentalInstrumentationModule) {
-      toInject.removeAll(((ExperimentalInstrumentationModule) module).injectedClassNames());
-    }
-
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    Map<String, BytecodeWithUrl> injectedClasses =
-        toInject.stream()
-            .collect(
-                Collectors.toMap(
-                    name -> name, name -> BytecodeWithUrl.create(name, agentOrExtensionCl)));
-
-    return new InstrumentationModuleClassLoader(
-        instrumentedClassloader, agentOrExtensionCl, injectedClasses);
+    InstrumentationModuleClassLoader moduleCl =
+        new InstrumentationModuleClassLoader(instrumentedClassloader, agentOrExtensionCl);
+    moduleCl.installModule(module);
+    return moduleCl;
   }
 
   public static void registerIndyModule(InstrumentationModule module) {
@@ -110,24 +85,5 @@ public class IndyModuleRegistry {
       throw new IllegalArgumentException(
           "A module with the class name " + moduleName + " has already been registered!");
     }
-  }
-
-  private static Set<String> getModuleAdviceNames(InstrumentationModule module) {
-    Set<String> adviceNames = new HashSet<>();
-    TypeTransformer nameCollector =
-        new TypeTransformer() {
-          @Override
-          public void applyAdviceToMethod(
-              ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
-            adviceNames.add(adviceClassName);
-          }
-
-          @Override
-          public void applyTransformer(AgentBuilder.Transformer transformer) {}
-        };
-    for (TypeInstrumentation instr : module.typeInstrumentations()) {
-      instr.transform(nameCollector);
-    }
-    return adviceNames;
   }
 }
