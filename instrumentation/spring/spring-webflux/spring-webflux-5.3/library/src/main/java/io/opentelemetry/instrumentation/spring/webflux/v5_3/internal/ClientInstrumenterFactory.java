@@ -40,8 +40,7 @@ public final class ClientInstrumenterFactory {
           extractorConfigurer,
       Consumer<HttpSpanNameExtractorBuilder<ClientRequest>> spanNameExtractorConfigurer,
       List<AttributesExtractor<ClientRequest, ClientResponse>> additionalExtractors,
-      boolean captureExperimentalSpanAttributes,
-      boolean emitExperimentalHttpClientMetrics) {
+      boolean emitExperimentalHttpClientTelemetry) {
 
     WebClientHttpAttributesGetter httpAttributesGetter = WebClientHttpAttributesGetter.INSTANCE;
 
@@ -61,10 +60,7 @@ public final class ClientInstrumenterFactory {
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
 
-    if (captureExperimentalSpanAttributes) {
-      clientBuilder.addAttributesExtractor(new WebClientExperimentalAttributesExtractor());
-    }
-    if (emitExperimentalHttpClientMetrics) {
+    if (emitExperimentalHttpClientTelemetry) {
       clientBuilder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
