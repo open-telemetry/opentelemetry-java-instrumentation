@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -311,28 +312,40 @@ public final class LoggingEventMapper {
 
     Builder() {}
 
-    public void setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
+    @CanIgnoreReturnValue
+    public Builder setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
       this.captureExperimentalAttributes = captureExperimentalAttributes;
+      return this;
     }
 
-    public void setCaptureMdcAttributes(List<String> captureMdcAttributes) {
+    @CanIgnoreReturnValue
+    public Builder setCaptureMdcAttributes(List<String> captureMdcAttributes) {
       this.captureMdcAttributes = captureMdcAttributes;
+      return this;
     }
 
-    public void setCaptureCodeAttributes(boolean captureCodeAttributes) {
+    @CanIgnoreReturnValue
+    public Builder setCaptureCodeAttributes(boolean captureCodeAttributes) {
       this.captureCodeAttributes = captureCodeAttributes;
+      return this;
     }
 
-    public void setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
+    @CanIgnoreReturnValue
+    public Builder setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
       this.captureMarkerAttribute = captureMarkerAttribute;
+      return this;
     }
 
-    public void setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
+    @CanIgnoreReturnValue
+    public Builder setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
       this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+      return this;
     }
 
-    public void setCaptureLoggerContext(boolean captureLoggerContext) {
+    @CanIgnoreReturnValue
+    public Builder setCaptureLoggerContext(boolean captureLoggerContext) {
       this.captureLoggerContext = captureLoggerContext;
+      return this;
     }
 
     public LoggingEventMapper build() {

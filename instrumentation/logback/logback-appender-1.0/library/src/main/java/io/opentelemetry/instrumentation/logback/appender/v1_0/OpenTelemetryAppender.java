@@ -71,15 +71,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   @Override
   public void start() {
-    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
-    builder.setCaptureExperimentalAttributes(captureExperimentalAttributes);
-    builder.setCaptureMdcAttributes(captureMdcAttributes);
-    builder.setCaptureCodeAttributes(captureCodeAttributes);
-    builder.setCaptureMarkerAttribute(captureMarkerAttribute);
-    builder.setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes);
-    builder.setCaptureLoggerContext(captureLoggerContext);
-
-    mapper = builder.build();
+    mapper =
+        LoggingEventMapper.builder()
+            .setCaptureExperimentalAttributes(captureExperimentalAttributes)
+            .setCaptureMdcAttributes(captureMdcAttributes)
+            .setCaptureCodeAttributes(captureCodeAttributes)
+            .setCaptureMarkerAttribute(captureMarkerAttribute)
+            .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
+            .setCaptureLoggerContext(captureLoggerContext)
+            .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
   }

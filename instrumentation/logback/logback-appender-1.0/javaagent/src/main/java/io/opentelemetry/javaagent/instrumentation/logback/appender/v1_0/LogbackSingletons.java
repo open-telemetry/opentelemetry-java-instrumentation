@@ -40,15 +40,15 @@ public final class LogbackSingletons {
             "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
             emptyList());
 
-    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
-    builder.setCaptureExperimentalAttributes(captureExperimentalAttributes);
-    builder.setCaptureMdcAttributes(captureMdcAttributes);
-    builder.setCaptureCodeAttributes(captureCodeAttributes);
-    builder.setCaptureMarkerAttribute(captureMarkerAttribute);
-    builder.setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes);
-    builder.setCaptureLoggerContext(captureLoggerContext);
-
-    mapper = builder.build();
+    mapper =
+        LoggingEventMapper.builder()
+            .setCaptureExperimentalAttributes(captureExperimentalAttributes)
+            .setCaptureMdcAttributes(captureMdcAttributes)
+            .setCaptureCodeAttributes(captureCodeAttributes)
+            .setCaptureMarkerAttribute(captureMarkerAttribute)
+            .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
+            .setCaptureLoggerContext(captureLoggerContext)
+            .build();
   }
 
   public static LoggingEventMapper mapper() {

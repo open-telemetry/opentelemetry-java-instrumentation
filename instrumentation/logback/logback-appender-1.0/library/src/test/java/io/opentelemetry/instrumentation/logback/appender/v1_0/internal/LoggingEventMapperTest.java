@@ -21,8 +21,7 @@ class LoggingEventMapperTest {
   @Test
   void testDefault() {
     // given
-    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
-    LoggingEventMapper mapper = builder.build();
+    LoggingEventMapper mapper = LoggingEventMapper.builder().build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -38,9 +37,8 @@ class LoggingEventMapperTest {
   @Test
   void testSome() {
     // given
-    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
-    builder.setCaptureMdcAttributes(singletonList("key2"));
-    LoggingEventMapper mapper = builder.build();
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("key2")).build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -57,9 +55,8 @@ class LoggingEventMapperTest {
   @Test
   void testAll() {
     // given
-    LoggingEventMapper.Builder builder = LoggingEventMapper.builder();
-    builder.setCaptureMdcAttributes(singletonList("*"));
-    LoggingEventMapper mapper = builder.build();
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder().setCaptureMdcAttributes(singletonList("*")).build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
