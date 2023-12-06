@@ -48,7 +48,7 @@ public class IndyModuleRegistry {
           if (modulesClassloader != null) {
             InstrumentationModuleClassLoader modulesCl = modulesClassloader.get();
             if (modulesCl != null) {
-              // Classloader has already been created, at the module to it
+              // Classloader has already been created, add the module to it
               modulesCl.installModule(module);
             }
           }
@@ -187,7 +187,6 @@ public class IndyModuleRegistry {
     }
     return agentBuilder.transform(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
-          // this causes the classloader to be created and kept alive when the first class matches
           registerModuleForClassloader(module, classLoader);
           return builder;
         });
