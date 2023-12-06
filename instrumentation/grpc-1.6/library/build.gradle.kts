@@ -21,3 +21,16 @@ tasks {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 }
+
+if (!(findProperty("testLatestDeps") as Boolean)) {
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      eachDependency {
+        // early versions of grpc are not compatible with netty 4.1.101.Final
+        if (requested.group == "io.netty") {
+          useVersion("4.1.100.Final")
+        }
+      }
+    }
+  }
+}
