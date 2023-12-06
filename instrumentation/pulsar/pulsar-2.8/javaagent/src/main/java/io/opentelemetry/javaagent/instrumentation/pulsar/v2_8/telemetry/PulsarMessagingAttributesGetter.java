@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;

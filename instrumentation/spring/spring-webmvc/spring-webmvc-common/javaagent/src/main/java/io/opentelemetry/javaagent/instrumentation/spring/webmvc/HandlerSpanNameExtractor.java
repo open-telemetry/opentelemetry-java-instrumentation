@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import org.springframework.web.HttpRequestHandler;

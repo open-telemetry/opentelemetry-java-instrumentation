@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
 import java.lang.reflect.Method;
 
 public final class RmiClientSingletons {

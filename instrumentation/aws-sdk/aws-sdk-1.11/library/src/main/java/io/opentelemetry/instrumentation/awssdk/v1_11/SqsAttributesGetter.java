@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;

@@ -76,7 +76,7 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    */
   @Nullable
   default String getErrorType(
-      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable throwable) {
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
 }

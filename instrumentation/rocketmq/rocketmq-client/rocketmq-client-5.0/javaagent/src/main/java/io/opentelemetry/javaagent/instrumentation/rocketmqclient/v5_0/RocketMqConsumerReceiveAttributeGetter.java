@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import apache.rocketmq.v2.ReceiveMessageRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;

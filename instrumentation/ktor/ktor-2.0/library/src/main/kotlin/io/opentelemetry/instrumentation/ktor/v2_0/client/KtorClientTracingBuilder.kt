@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.ktor.v2_0.client
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor

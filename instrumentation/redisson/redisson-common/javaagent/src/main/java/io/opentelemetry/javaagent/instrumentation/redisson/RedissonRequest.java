@@ -10,7 +10,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
