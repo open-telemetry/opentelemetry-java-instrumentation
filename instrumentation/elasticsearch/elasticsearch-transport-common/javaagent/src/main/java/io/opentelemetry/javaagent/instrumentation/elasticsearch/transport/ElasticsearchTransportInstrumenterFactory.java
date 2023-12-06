@@ -25,15 +25,15 @@ public final class ElasticsearchTransportInstrumenterFactory {
       AttributesExtractor<ElasticTransportRequest, ActionResponse> experimentalAttributesExtractor,
       AttributesExtractor<ElasticTransportRequest, ActionResponse> netAttributesExtractor) {
 
-    ElasticsearchTransportAttributesGetter dbClientAttributesGetter =
-        new ElasticsearchTransportAttributesGetter();
+    ElasticsearchTransportAttributeGetter dbClientAttributeGetter =
+        new ElasticsearchTransportAttributeGetter();
 
     InstrumenterBuilder<ElasticTransportRequest, ActionResponse> instrumenterBuilder =
         Instrumenter.<ElasticTransportRequest, ActionResponse>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+                DbClientSpanNameExtractor.create(dbClientAttributeGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributeGetter))
             .addAttributesExtractor(netAttributesExtractor);
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

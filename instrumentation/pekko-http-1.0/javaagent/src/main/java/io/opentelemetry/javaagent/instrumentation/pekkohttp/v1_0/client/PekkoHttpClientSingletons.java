@@ -28,26 +28,26 @@ public class PekkoHttpClientSingletons {
 
   static {
     SETTER = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
-    PekkoHttpClientAttributesGetter httpAttributesGetter = new PekkoHttpClientAttributesGetter();
+    PekkoHttpClientAttributeGetter httpAttributeGetter = new PekkoHttpClientAttributeGetter();
     InstrumenterBuilder<HttpRequest, HttpResponse> builder =
         Instrumenter.<HttpRequest, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 PekkoHttpUtil.instrumentationName(),
-                HttpSpanNameExtractor.create(httpAttributesGetter))
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+                HttpSpanNameExtractor.create(httpAttributeGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
+                    httpAttributeGetter, CommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

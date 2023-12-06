@@ -14,13 +14,13 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 public final class JaxWsInstrumenterFactory {
 
   public static Instrumenter<JaxWsRequest, Void> createInstrumenter(String instrumentationName) {
-    JaxWsCodeAttributesGetter codeAttributesGetter = new JaxWsCodeAttributesGetter();
+    JaxWsCodeAttributeGetter codeAttributeGetter = new JaxWsCodeAttributeGetter();
 
     return Instrumenter.<JaxWsRequest, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
-            CodeSpanNameExtractor.create(codeAttributesGetter))
-        .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            CodeSpanNameExtractor.create(codeAttributeGetter))
+        .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributeGetter))
         .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
         .buildInstrumenter();
   }

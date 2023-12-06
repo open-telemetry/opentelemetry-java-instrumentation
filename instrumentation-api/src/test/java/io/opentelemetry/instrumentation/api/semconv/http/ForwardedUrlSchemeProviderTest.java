@@ -32,7 +32,7 @@ class ForwardedUrlSchemeProviderTest {
 
   private static final String REQUEST = "request";
 
-  @Mock HttpServerAttributesGetter<String, String> getter;
+  @Mock HttpServerAttributeGetter<String, String> getter;
 
   @InjectMocks ForwardedUrlSchemeProvider<String> underTest;
 

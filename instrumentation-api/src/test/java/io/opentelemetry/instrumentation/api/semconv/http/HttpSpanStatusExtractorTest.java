@@ -25,9 +25,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class HttpSpanStatusExtractorTest {
-  @Mock private HttpServerAttributesGetter<Map<String, String>, Map<String, String>> serverGetter;
+  @Mock private HttpServerAttributeGetter<Map<String, String>, Map<String, String>> serverGetter;
 
-  @Mock private HttpClientAttributesGetter<Map<String, String>, Map<String, String>> clientGetter;
+  @Mock private HttpClientAttributeGetter<Map<String, String>, Map<String, String>> clientGetter;
 
   @Mock private SpanStatusBuilder spanStatusBuilder;
 

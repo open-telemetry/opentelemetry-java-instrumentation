@@ -11,9 +11,9 @@ import javax.annotation.Nullable;
 
 final class ForwardedUrlSchemeProvider<REQUEST> implements Function<REQUEST, String> {
 
-  private final HttpServerAttributesGetter<REQUEST, ?> getter;
+  private final HttpServerAttributeGetter<REQUEST, ?> getter;
 
-  ForwardedUrlSchemeProvider(HttpServerAttributesGetter<REQUEST, ?> getter) {
+  ForwardedUrlSchemeProvider(HttpServerAttributeGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 

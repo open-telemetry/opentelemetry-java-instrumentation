@@ -44,7 +44,7 @@ public final class JmsInstrumenterFactory {
   }
 
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
-    JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
+    JmsMessageAttributeGetter getter = JmsMessageAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PUBLISH;
 
     return Instrumenter.<MessageWithDestination, Void>builder(
@@ -56,7 +56,7 @@ public final class JmsInstrumenterFactory {
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerReceiveInstrumenter() {
-    JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
+    JmsMessageAttributeGetter getter = JmsMessageAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.RECEIVE;
 
     // MessageConsumer does not do context propagation
@@ -74,7 +74,7 @@ public final class JmsInstrumenterFactory {
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter() {
-    JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
+    JmsMessageAttributeGetter getter = JmsMessageAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
     return Instrumenter.<MessageWithDestination, Void>builder(
@@ -87,7 +87,7 @@ public final class JmsInstrumenterFactory {
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
       MessageOperation operation) {
-    return MessagingAttributesExtractor.builder(JmsMessageAttributesGetter.INSTANCE, operation)
+    return MessagingAttributesExtractor.builder(JmsMessageAttributeGetter.INSTANCE, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

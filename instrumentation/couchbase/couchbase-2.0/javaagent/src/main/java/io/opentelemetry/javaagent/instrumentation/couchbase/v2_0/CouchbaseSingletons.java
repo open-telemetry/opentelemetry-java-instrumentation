@@ -22,16 +22,16 @@ public final class CouchbaseSingletons {
   private static final Instrumenter<CouchbaseRequestInfo, Void> INSTRUMENTER;
 
   static {
-    CouchbaseAttributesGetter couchbaseAttributesGetter = new CouchbaseAttributesGetter();
+    CouchbaseAttributeGetter couchbaseAttributeGetter = new CouchbaseAttributeGetter();
     SpanNameExtractor<CouchbaseRequestInfo> spanNameExtractor =
-        new CouchbaseSpanNameExtractor(DbClientSpanNameExtractor.create(couchbaseAttributesGetter));
-    CouchbaseNetworkAttributesGetter netAttributesGetter = new CouchbaseNetworkAttributesGetter();
+        new CouchbaseSpanNameExtractor(DbClientSpanNameExtractor.create(couchbaseAttributeGetter));
+    CouchbaseNetworkAttributeGetter netAttributeGetter = new CouchbaseNetworkAttributeGetter();
 
     InstrumenterBuilder<CouchbaseRequestInfo, Void> builder =
         Instrumenter.<CouchbaseRequestInfo, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributesGetter))
-            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributeGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributeGetter))
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
                     CouchbaseRequestInfo.init(context, couchbaseRequest));

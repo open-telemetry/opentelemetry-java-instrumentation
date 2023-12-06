@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.semconv.url.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.url.UrlAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Function;
 
@@ -18,11 +18,11 @@ import java.util.function.Function;
  */
 public final class InternalUrlAttributesExtractor<REQUEST> {
 
-  private final UrlAttributesGetter<REQUEST> getter;
+  private final UrlAttributeGetter<REQUEST> getter;
   private final Function<REQUEST, String> alternateSchemeProvider;
 
   public InternalUrlAttributesExtractor(
-      UrlAttributesGetter<REQUEST> getter, Function<REQUEST, String> alternateSchemeProvider) {
+      UrlAttributeGetter<REQUEST> getter, Function<REQUEST, String> alternateSchemeProvider) {
     this.getter = getter;
     this.alternateSchemeProvider = alternateSchemeProvider;
   }

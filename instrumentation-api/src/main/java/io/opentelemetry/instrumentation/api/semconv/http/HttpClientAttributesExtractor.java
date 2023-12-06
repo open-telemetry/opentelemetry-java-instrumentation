@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
  */
 public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
-        REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>>
+        REQUEST, RESPONSE, HttpClientAttributeGetter<REQUEST, RESPONSE>>
     implements SpanKeyProvider {
 
   /**
@@ -38,8 +38,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
    * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return builder(httpAttributesGetter).build();
+      HttpClientAttributeGetter<REQUEST, RESPONSE> httpAttributeGetter) {
+    return builder(httpAttributeGetter).build();
   }
 
   /**
@@ -47,8 +47,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
    * HTTP client attributes extractor.
    */
   public static <REQUEST, RESPONSE> HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return new HttpClientAttributesExtractorBuilder<>(httpAttributesGetter);
+      HttpClientAttributeGetter<REQUEST, RESPONSE> httpAttributeGetter) {
+    return new HttpClientAttributesExtractorBuilder<>(httpAttributeGetter);
   }
 
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
@@ -57,7 +57,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   HttpClientAttributesExtractor(HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
     super(
-        builder.httpAttributesGetter,
+        builder.httpAttributeGetter,
         HttpStatusCodeConverter.CLIENT,
         builder.capturedRequestHeaders,
         builder.capturedResponseHeaders,

@@ -18,13 +18,13 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
    * Returns a {@link SpanNameExtractor} that constructs the span name according to the following
    * pattern: {@code <class.simpleName>.<methodName>}.
    */
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(CodeAttributesGetter<REQUEST> getter) {
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(CodeAttributeGetter<REQUEST> getter) {
     return new CodeSpanNameExtractor<>(getter);
   }
 
-  private final CodeAttributesGetter<REQUEST> getter;
+  private final CodeAttributeGetter<REQUEST> getter;
 
-  private CodeSpanNameExtractor(CodeAttributesGetter<REQUEST> getter) {
+  private CodeSpanNameExtractor(CodeAttributeGetter<REQUEST> getter) {
     this.getter = getter;
   }
 

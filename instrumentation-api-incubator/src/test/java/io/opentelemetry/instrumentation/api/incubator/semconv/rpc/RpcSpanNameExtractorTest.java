@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RpcSpanNameExtractorTest {
 
-  @Mock RpcAttributesGetter<RpcRequest> getter;
+  @Mock RpcAttributeGetter<RpcRequest> getter;
 
   @Test
   void normal() {

@@ -31,7 +31,7 @@ class ForwardedHostAddressAndPortExtractorTest {
 
   private static final String REQUEST = "request";
 
-  @Mock HttpCommonAttributesGetter<String, String> getter;
+  @Mock HttpCommonAttributeGetter<String, String> getter;
 
   @InjectMocks ForwardedHostAddressAndPortExtractor<String> underTest;
 

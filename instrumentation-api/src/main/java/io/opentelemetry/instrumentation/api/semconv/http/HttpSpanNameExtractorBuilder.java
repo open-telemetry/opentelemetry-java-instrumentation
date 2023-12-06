@@ -23,13 +23,13 @@ import javax.annotation.Nullable;
  */
 public final class HttpSpanNameExtractorBuilder<REQUEST> {
 
-  @Nullable final HttpClientAttributesGetter<REQUEST, ?> clientGetter;
-  @Nullable final HttpServerAttributesGetter<REQUEST, ?> serverGetter;
+  @Nullable final HttpClientAttributeGetter<REQUEST, ?> clientGetter;
+  @Nullable final HttpServerAttributeGetter<REQUEST, ?> serverGetter;
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
 
   public HttpSpanNameExtractorBuilder(
-      @Nullable HttpClientAttributesGetter<REQUEST, ?> clientGetter,
-      @Nullable HttpServerAttributesGetter<REQUEST, ?> serverGetter) {
+      @Nullable HttpClientAttributeGetter<REQUEST, ?> clientGetter,
+      @Nullable HttpServerAttributeGetter<REQUEST, ?> serverGetter) {
     this.clientGetter = clientGetter;
     this.serverGetter = serverGetter;
   }

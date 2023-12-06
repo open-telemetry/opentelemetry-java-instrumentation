@@ -35,19 +35,19 @@ public final class RestletInstrumenterFactory {
       List<AttributesExtractor<Request, Response>> additionalExtractors,
       boolean emitExperimentalHttpServerMetrics) {
 
-    RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
+    RestletHttpAttributeGetter httpAttributeGetter = RestletHttpAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, httpServerSpanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpServerAttributesExtractor)
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRoute)
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(new RestletHeadersGetter());

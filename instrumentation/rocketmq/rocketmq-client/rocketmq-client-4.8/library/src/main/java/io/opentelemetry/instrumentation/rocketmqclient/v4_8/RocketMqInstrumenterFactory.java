@@ -11,8 +11,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributeGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -125,7 +125,7 @@ class RocketMqInstrumenterFactory {
   }
 
   private static <T> AttributesExtractor<T, Void> buildMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, Void> getter,
+      MessagingAttributeGetter<T, Void> getter,
       MessageOperation operation,
       List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)

@@ -24,9 +24,9 @@ import javax.sql.DataSource;
  */
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
-  private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-  private static final JdbcNetworkAttributesGetter netAttributesGetter =
-      new JdbcNetworkAttributesGetter();
+  private static final JdbcAttributeGetter dbAttributeGetter = new JdbcAttributeGetter();
+  private static final JdbcNetworkAttributeGetter netAttributeGetter =
+      new JdbcNetworkAttributeGetter();
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter() {
     return createStatementInstrumenter(GlobalOpenTelemetry.get());
@@ -46,19 +46,19 @@ public final class JdbcInstrumenterFactory {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(dbAttributesGetter))
+            DbClientSpanNameExtractor.create(dbAttributeGetter))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(dbAttributesGetter)
+            SqlClientAttributesExtractor.builder(dbAttributeGetter)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributeGetter))
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<DataSource, DbInfo> createDataSourceInstrumenter(
       OpenTelemetry openTelemetry, boolean enabled) {
-    DataSourceCodeAttributesGetter getter = DataSourceCodeAttributesGetter.INSTANCE;
+    DataSourceCodeAttributeGetter getter = DataSourceCodeAttributeGetter.INSTANCE;
     return Instrumenter.<DataSource, DbInfo>builder(
             openTelemetry, INSTRUMENTATION_NAME, CodeSpanNameExtractor.create(getter))
         .addAttributesExtractor(CodeAttributesExtractor.create(getter))

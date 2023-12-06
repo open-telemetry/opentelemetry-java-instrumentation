@@ -21,20 +21,20 @@ public final class JedisSingletons {
   private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
 
   static {
-    JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
-    JedisNetworkAttributesGetter netAttributesGetter = new JedisNetworkAttributesGetter();
+    JedisDbAttributeGetter dbAttributeGetter = new JedisDbAttributeGetter();
+    JedisNetworkAttributeGetter netAttributeGetter = new JedisNetworkAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
-            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+                DbClientSpanNameExtractor.create(dbAttributeGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributeGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributeGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributeGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
+                    netAttributeGetter, CommonConfig.get().getPeerServiceResolver()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

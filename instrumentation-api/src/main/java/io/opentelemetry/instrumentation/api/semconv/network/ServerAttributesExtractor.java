@@ -30,13 +30,13 @@ public final class ServerAttributesExtractor<REQUEST, RESPONSE>
    * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> ServerAttributesExtractor<REQUEST, RESPONSE> create(
-      ServerAttributesGetter<REQUEST> getter) {
+      ServerAttributeGetter<REQUEST> getter) {
     return new ServerAttributesExtractor<>(getter);
   }
 
   private final InternalServerAttributesExtractor<REQUEST> internalExtractor;
 
-  ServerAttributesExtractor(ServerAttributesGetter<REQUEST> getter) {
+  ServerAttributesExtractor(ServerAttributeGetter<REQUEST> getter) {
     internalExtractor =
         new InternalServerAttributesExtractor<>(
             new ServerAddressAndPortExtractor<>(getter, AddressAndPortExtractor.noop()));

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.net;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -20,23 +20,23 @@ import javax.annotation.Nullable;
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final ServerAttributesGetter<REQUEST> attributesGetter;
+  private final ServerAttributeGetter<REQUEST> attributeGetter;
   private final PeerServiceResolver peerServiceResolver;
 
   // visible for tests
   PeerServiceAttributesExtractor(
-      ServerAttributesGetter<REQUEST> attributesGetter, PeerServiceResolver peerServiceResolver) {
-    this.attributesGetter = attributesGetter;
+      ServerAttributeGetter<REQUEST> attributeGetter, PeerServiceResolver peerServiceResolver) {
+    this.attributeGetter = attributeGetter;
     this.peerServiceResolver = peerServiceResolver;
   }
 
   /**
    * Returns a new {@link PeerServiceAttributesExtractor} that will use the passed {@code
-   * attributesGetter} instance to determine the value of the {@code peer.service} attribute.
+   * attributeGetter} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      ServerAttributesGetter<REQUEST> attributesGetter, PeerServiceResolver peerServiceResolver) {
-    return new PeerServiceAttributesExtractor<>(attributesGetter, peerServiceResolver);
+      ServerAttributeGetter<REQUEST> attributeGetter, PeerServiceResolver peerServiceResolver) {
+    return new PeerServiceAttributesExtractor<>(attributeGetter, peerServiceResolver);
   }
 
   @Override
@@ -56,8 +56,8 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    String serverAddress = attributesGetter.getServerAddress(request);
-    Integer serverPort = attributesGetter.getServerPort(request);
+    String serverAddress = attributeGetter.getServerAddress(request);
+    Integer serverPort = attributeGetter.getServerPort(request);
     String peerService = mapToPeerService(serverAddress, serverPort);
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);

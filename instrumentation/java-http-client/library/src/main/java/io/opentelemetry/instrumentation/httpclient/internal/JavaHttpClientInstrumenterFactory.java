@@ -38,27 +38,26 @@ public final class JavaHttpClientInstrumenterFactory {
       List<AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>>> additionalExtractors,
       boolean emitExperimentalHttpClientMetrics) {
 
-    JavaHttpClientAttributesGetter httpAttributesGetter = JavaHttpClientAttributesGetter.INSTANCE;
+    JavaHttpClientAttributeGetter httpAttributeGetter = JavaHttpClientAttributeGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>
-        httpAttributesExtractorBuilder =
-            HttpClientAttributesExtractor.builder(httpAttributesGetter);
+        httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(httpAttributeGetter);
     extractorConfigurer.accept(httpAttributesExtractorBuilder);
 
     HttpSpanNameExtractorBuilder<HttpRequest> httpSpanNameExtractorBuilder =
-        HttpSpanNameExtractor.builder(httpAttributesGetter);
+        HttpSpanNameExtractor.builder(httpAttributeGetter);
     spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
 
     InstrumenterBuilder<HttpRequest, HttpResponse<?>> builder =
         Instrumenter.<HttpRequest, HttpResponse<?>>builder(
                 openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

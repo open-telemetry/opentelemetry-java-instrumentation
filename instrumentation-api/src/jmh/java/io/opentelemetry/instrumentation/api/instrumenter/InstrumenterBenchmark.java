@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributeGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -37,9 +37,9 @@ public class InstrumenterBenchmark {
       Instrumenter.<Void, Void>builder(
               OpenTelemetry.noop(),
               "benchmark",
-              HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
+              HttpSpanNameExtractor.create(ConstantHttpAttributeGetter.INSTANCE))
           .addAttributesExtractor(
-              HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
+              HttpClientAttributesExtractor.create(ConstantHttpAttributeGetter.INSTANCE))
           .buildInstrumenter();
 
   @Benchmark
@@ -54,7 +54,7 @@ public class InstrumenterBenchmark {
     return context;
   }
 
-  enum ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Void, Void> {
+  enum ConstantHttpAttributeGetter implements HttpClientAttributeGetter<Void, Void> {
     INSTANCE;
 
     private static final InetSocketAddress PEER_ADDRESS =

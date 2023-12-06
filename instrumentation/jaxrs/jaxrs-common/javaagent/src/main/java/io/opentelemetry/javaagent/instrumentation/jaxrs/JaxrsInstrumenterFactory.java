@@ -14,13 +14,13 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 public final class JaxrsInstrumenterFactory {
 
   public static Instrumenter<HandlerData, Void> createInstrumenter(String instrumentationName) {
-    JaxrsCodeAttributesGetter codeAttributesGetter = new JaxrsCodeAttributesGetter();
+    JaxrsCodeAttributeGetter codeAttributeGetter = new JaxrsCodeAttributeGetter();
 
     return Instrumenter.<HandlerData, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
-            CodeSpanNameExtractor.create(codeAttributesGetter))
-        .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            CodeSpanNameExtractor.create(codeAttributeGetter))
+        .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributeGetter))
         .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
         .buildInstrumenter();
   }

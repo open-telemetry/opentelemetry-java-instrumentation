@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributeGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.List;
@@ -32,7 +32,7 @@ public final class WebClientHelper {
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           singletonList(
               HttpClientPeerServiceAttributesExtractor.create(
-                  WebClientHttpAttributesGetter.INSTANCE,
+                  WebClientHttpAttributeGetter.INSTANCE,
                   CommonConfig.get().getPeerServiceResolver())),
           CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
 

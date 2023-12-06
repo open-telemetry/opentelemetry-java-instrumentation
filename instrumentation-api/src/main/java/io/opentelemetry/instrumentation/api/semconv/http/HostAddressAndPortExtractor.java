@@ -12,9 +12,9 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndP
 
 final class HostAddressAndPortExtractor<REQUEST> implements AddressAndPortExtractor<REQUEST> {
 
-  private final HttpCommonAttributesGetter<REQUEST, ?> getter;
+  private final HttpCommonAttributeGetter<REQUEST, ?> getter;
 
-  HostAddressAndPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+  HostAddressAndPortExtractor(HttpCommonAttributeGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 

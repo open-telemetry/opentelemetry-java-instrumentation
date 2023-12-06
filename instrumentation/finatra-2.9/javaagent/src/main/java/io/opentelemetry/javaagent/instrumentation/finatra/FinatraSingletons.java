@@ -19,13 +19,13 @@ public final class FinatraSingletons {
   private static final Instrumenter<Class<?>, Void> INSTRUMENTER;
 
   static {
-    FinatraCodeAttributesGetter codeAttributesGetter = new FinatraCodeAttributesGetter();
+    FinatraCodeAttributeGetter codeAttributeGetter = new FinatraCodeAttributeGetter();
     INSTRUMENTER =
         Instrumenter.<Class<?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.finatra-2.9",
-                CodeSpanNameExtractor.create(codeAttributesGetter))
-            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+                CodeSpanNameExtractor.create(codeAttributeGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributeGetter))
             .buildInstrumenter();
   }
 

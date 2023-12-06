@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
 final class OpenTelemetryTracing implements Tracing {
 
   private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =
-      NetworkAttributesExtractor.create(new LettuceNetworkAttributesGetter());
+      NetworkAttributesExtractor.create(new LettuceNetworkAttributeGetter());
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {

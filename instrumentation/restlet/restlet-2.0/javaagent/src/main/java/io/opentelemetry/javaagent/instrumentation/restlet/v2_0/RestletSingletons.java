@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
+import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributeGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletInstrumenterFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -24,15 +24,15 @@ public final class RestletSingletons {
   private static final Instrumenter<Request, Response> INSTRUMENTER =
       RestletInstrumenterFactory.newServerInstrumenter(
           GlobalOpenTelemetry.get(),
-          HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE)
+          HttpServerAttributesExtractor.builder(RestletHttpAttributeGetter.INSTANCE)
               .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
               .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
               .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
-          HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE)
+          HttpSpanNameExtractor.builder(RestletHttpAttributeGetter.INSTANCE)
               .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
-          HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE)
+          HttpServerRoute.builder(RestletHttpAttributeGetter.INSTANCE)
               .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           Collections.emptyList(),

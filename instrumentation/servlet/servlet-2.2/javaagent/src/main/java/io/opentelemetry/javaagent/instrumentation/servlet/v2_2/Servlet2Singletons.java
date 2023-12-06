@@ -22,8 +22,8 @@ public final class Servlet2Singletons {
   private static final Instrumenter<ClassAndMethod, Void> RESPONSE_INSTRUMENTER;
 
   static {
-    Servlet2HttpAttributesGetter httpAttributesGetter =
-        new Servlet2HttpAttributesGetter(Servlet2Accessor.INSTANCE);
+    Servlet2HttpAttributeGetter httpAttributeGetter =
+        new Servlet2HttpAttributeGetter(Servlet2Accessor.INSTANCE);
     SpanNameExtractor<ServletRequestContext<HttpServletRequest>> spanNameExtractor =
         new Servlet2SpanNameExtractor<>(Servlet2Accessor.INSTANCE);
 
@@ -35,7 +35,7 @@ public final class Servlet2Singletons {
                     INSTRUMENTATION_NAME,
                     Servlet2Accessor.INSTANCE,
                     spanNameExtractor,
-                    httpAttributesGetter);
+                    httpAttributeGetter);
 
     HELPER = new Servlet2Helper(instrumenter);
     RESPONSE_INSTRUMENTER = ResponseInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);

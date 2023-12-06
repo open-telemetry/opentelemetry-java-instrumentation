@@ -37,11 +37,11 @@ class KtorServerTracing private constructor(
 
     internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
 
-    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
+    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributeGetter.INSTANCE)
 
-    internal val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
+    internal val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpServerAttributeGetter.INSTANCE)
 
-    internal val httpServerRouteBuilder = HttpServerRoute.builder(KtorHttpServerAttributesGetter.INSTANCE)
+    internal val httpServerRouteBuilder = HttpServerRoute.builder(KtorHttpServerAttributeGetter.INSTANCE)
 
     internal var statusExtractor:
       (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
@@ -111,7 +111,7 @@ class KtorServerTracing private constructor(
         throw IllegalArgumentException("OpenTelemetry must be set")
       }
 
-      val httpAttributesGetter = KtorHttpServerAttributesGetter.INSTANCE
+      val httpAttributesGetter = KtorHttpServerAttributeGetter.INSTANCE
 
       val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
         configuration.openTelemetry,

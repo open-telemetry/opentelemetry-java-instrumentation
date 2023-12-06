@@ -11,8 +11,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributeGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -61,8 +61,7 @@ public final class PulsarSingletons {
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
-    MessagingAttributesGetter<PulsarRequest, Void> getter =
-        PulsarMessagingAttributesGetter.INSTANCE;
+    MessagingAttributeGetter<PulsarRequest, Void> getter = PulsarMessagingAttributeGetter.INSTANCE;
 
     return Instrumenter.<PulsarRequest, Void>builder(
             TELEMETRY,
@@ -71,13 +70,13 @@ public final class PulsarSingletons {
         .addAttributesExtractor(
             createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+            ServerAttributesExtractor.create(new PulsarNetClientAttributeGetter()))
         .buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
 
   private static Instrumenter<PulsarBatchRequest, Void> createConsumerBatchReceiveInstrumenter() {
-    MessagingAttributesGetter<PulsarBatchRequest, Void> getter =
-        PulsarBatchMessagingAttributesGetter.INSTANCE;
+    MessagingAttributeGetter<PulsarBatchRequest, Void> getter =
+        PulsarBatchMessagingAttributeGetter.INSTANCE;
 
     return Instrumenter.<PulsarBatchRequest, Void>builder(
             TELEMETRY,
@@ -86,7 +85,7 @@ public final class PulsarSingletons {
         .addAttributesExtractor(
             createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+            ServerAttributesExtractor.create(new PulsarNetClientAttributeGetter()))
         .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .addSpanLinksExtractor(
             new PulsarBatchRequestSpanLinksExtractor(
@@ -95,8 +94,7 @@ public final class PulsarSingletons {
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {
-    MessagingAttributesGetter<PulsarRequest, Void> getter =
-        PulsarMessagingAttributesGetter.INSTANCE;
+    MessagingAttributeGetter<PulsarRequest, Void> getter = PulsarMessagingAttributeGetter.INSTANCE;
 
     return Instrumenter.<PulsarRequest, Void>builder(
             TELEMETRY,
@@ -108,8 +106,7 @@ public final class PulsarSingletons {
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
-    MessagingAttributesGetter<PulsarRequest, Void> getter =
-        PulsarMessagingAttributesGetter.INSTANCE;
+    MessagingAttributeGetter<PulsarRequest, Void> getter = PulsarMessagingAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<PulsarRequest, Void> builder =
         Instrumenter.<PulsarRequest, Void>builder(
@@ -119,7 +116,7 @@ public final class PulsarSingletons {
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessageOperation.PUBLISH))
             .addAttributesExtractor(
-                ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
+                ServerAttributesExtractor.create(new PulsarNetClientAttributeGetter()));
 
     if (InstrumentationConfig.get()
         .getBoolean("otel.instrumentation.pulsar.experimental-span-attributes", false)) {
@@ -130,7 +127,7 @@ public final class PulsarSingletons {
   }
 
   private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, Void> getter, MessageOperation operation) {
+      MessagingAttributeGetter<T, Void> getter, MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();

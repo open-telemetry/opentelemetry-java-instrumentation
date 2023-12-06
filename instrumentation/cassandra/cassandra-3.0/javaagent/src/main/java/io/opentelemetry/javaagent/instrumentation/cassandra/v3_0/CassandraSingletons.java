@@ -23,21 +23,21 @@ public final class CassandraSingletons {
   private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
 
   static {
-    CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
+    CassandraSqlAttributeGetter attributeGetter = new CassandraSqlAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(attributesGetter))
+                DbClientSpanNameExtractor.create(attributeGetter))
             .addAttributesExtractor(
-                SqlClientAttributesExtractor.builder(attributesGetter)
+                SqlClientAttributesExtractor.builder(attributeGetter)
                     .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
                     .setStatementSanitizationEnabled(
                         CommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(
-                NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
+                NetworkAttributesExtractor.create(new CassandraNetworkAttributeGetter()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

@@ -14,9 +14,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributeGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributeGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,8 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class HttpExperimentalAttributesExtractorTest {
 
-  @Mock HttpClientAttributesGetter<String, String> clientGetter;
-  @Mock HttpServerAttributesGetter<String, String> serverGetter;
+  @Mock HttpClientAttributeGetter<String, String> clientGetter;
+  @Mock HttpServerAttributeGetter<String, String> serverGetter;
 
   @Test
   void shouldExtractRequestAndResponseSizes_client() {
@@ -40,7 +40,7 @@ class HttpExperimentalAttributesExtractorTest {
   }
 
   void runTest(
-      HttpCommonAttributesGetter<String, String> getter,
+      HttpCommonAttributeGetter<String, String> getter,
       AttributesExtractor<String, String> extractor) {
 
     doReturn(singletonList("123")).when(getter).getHttpRequestHeader("request", "content-length");

@@ -15,11 +15,11 @@ import io.opentelemetry.semconv.SemanticAttributes;
 /** A builder of {@link SqlClientAttributesExtractor}. */
 public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
-  final SqlClientAttributesGetter<REQUEST> getter;
+  final SqlClientAttributeGetter<REQUEST> getter;
   AttributeKey<String> dbTableAttribute = SemanticAttributes.DB_SQL_TABLE;
   boolean statementSanitizationEnabled = true;
 
-  SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST> getter) {
+  SqlClientAttributesExtractorBuilder(SqlClientAttributeGetter<REQUEST> getter) {
     this.getter = getter;
   }
 

@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
-import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
+import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributeGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletInstrumenterFactory;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +31,11 @@ public final class RestletTelemetryBuilder {
       new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(RestletHttpAttributeGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(RestletHttpAttributeGetter.INSTANCE);
   private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
-      HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE);
+      HttpServerRoute.builder(RestletHttpAttributeGetter.INSTANCE);
 
   private boolean emitExperimentalHttpServerMetrics = false;
 

@@ -28,26 +28,26 @@ public final class LettuceSingletons {
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
 
   static {
-    LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    LettuceDbAttributeGetter dbAttributeGetter = new LettuceDbAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(dbAttributeGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributeGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
-    LettuceConnectNetworkAttributesGetter netAttributesGetter =
-        new LettuceConnectNetworkAttributesGetter();
+    LettuceConnectNetworkAttributeGetter netAttributeGetter =
+        new LettuceConnectNetworkAttributeGetter();
 
     CONNECT_INSTRUMENTER =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
-            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributeGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
+                    netAttributeGetter, CommonConfig.get().getPeerServiceResolver()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

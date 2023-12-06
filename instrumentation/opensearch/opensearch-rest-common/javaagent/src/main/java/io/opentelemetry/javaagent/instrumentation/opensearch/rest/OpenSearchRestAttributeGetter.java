@@ -1,0 +1,49 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributeGetter;
+import io.opentelemetry.semconv.SemanticAttributes;
+import javax.annotation.Nullable;
+
+final class OpenSearchRestAttributeGetter
+    implements DbClientAttributeGetter<OpenSearchRestRequest> {
+
+  @Override
+  public String getSystem(OpenSearchRestRequest request) {
+    return SemanticAttributes.DbSystemValues.OPENSEARCH;
+  }
+
+  @Override
+  @Nullable
+  public String getUser(OpenSearchRestRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getName(OpenSearchRestRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getConnectionString(OpenSearchRestRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getStatement(OpenSearchRestRequest request) {
+    return request.getMethod() + " " + request.getOperation();
+  }
+
+  @Override
+  @Nullable
+  public String getOperation(OpenSearchRestRequest request) {
+    return request.getMethod();
+  }
+}

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 class UrlAttributesExtractorTest {
 
-  static class TestUrlAttributesGetter implements UrlAttributesGetter<Map<String, String>> {
+  static class TestUrlAttributeGetter implements UrlAttributeGetter<Map<String, String>> {
 
     @Nullable
     @Override
@@ -50,7 +50,7 @@ class UrlAttributesExtractorTest {
     request.put("query", "q=Java");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        UrlAttributesExtractor.create(new TestUrlAttributesGetter());
+        UrlAttributesExtractor.create(new TestUrlAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -68,7 +68,7 @@ class UrlAttributesExtractorTest {
   @Test
   void noAttributes() {
     AttributesExtractor<Map<String, String>, Void> extractor =
-        UrlAttributesExtractor.create(new TestUrlAttributesGetter());
+        UrlAttributesExtractor.create(new TestUrlAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), emptyMap());

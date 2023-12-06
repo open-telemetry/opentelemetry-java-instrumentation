@@ -37,26 +37,26 @@ public final class JettyClientInstrumenterFactory {
       List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors,
       boolean emitExperimentalHttpClientMetrics) {
 
-    JettyClientHttpAttributesGetter httpAttributesGetter = JettyClientHttpAttributesGetter.INSTANCE;
+    JettyClientHttpAttributeGetter httpAttributeGetter = JettyClientHttpAttributeGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<Request, Response> httpAttributesExtractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter);
+        HttpClientAttributesExtractor.builder(httpAttributeGetter);
     extractorConfigurer.accept(httpAttributesExtractorBuilder);
 
     HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
-        HttpSpanNameExtractor.builder(httpAttributesGetter);
+        HttpSpanNameExtractor.builder(httpAttributeGetter);
     spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 

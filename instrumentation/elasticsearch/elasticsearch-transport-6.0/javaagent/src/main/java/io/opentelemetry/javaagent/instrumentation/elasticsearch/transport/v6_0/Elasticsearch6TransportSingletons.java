@@ -17,7 +17,7 @@ public final class Elasticsearch6TransportSingletons {
       ElasticsearchTransportInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-transport-6.0",
           new Elasticsearch6TransportExperimentalAttributesExtractor(),
-          NetworkAttributesExtractor.create(new Elasticsearch6TransportNetworkAttributesGetter()));
+          NetworkAttributesExtractor.create(new Elasticsearch6TransportNetworkAttributeGetter()));
 
   public static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
     return INSTRUMENTER;

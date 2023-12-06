@@ -15,15 +15,15 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 public final class RedissonInstrumenterFactory {
 
   public static Instrumenter<RedissonRequest, Void> createInstrumenter(String instrumentationName) {
-    RedissonDbAttributesGetter dbAttributesGetter = new RedissonDbAttributesGetter();
-    RedissonNetAttributesGetter netAttributesGetter = new RedissonNetAttributesGetter();
+    RedissonDbAttributeGetter dbAttributeGetter = new RedissonDbAttributeGetter();
+    RedissonNetAttributeGetter netAttributeGetter = new RedissonNetAttributeGetter();
 
     return Instrumenter.<RedissonRequest, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
-            DbClientSpanNameExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+            DbClientSpanNameExtractor.create(dbAttributeGetter))
+        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributeGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributeGetter))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

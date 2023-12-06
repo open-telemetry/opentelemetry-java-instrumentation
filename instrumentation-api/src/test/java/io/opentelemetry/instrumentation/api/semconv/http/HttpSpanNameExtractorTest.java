@@ -22,9 +22,9 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class HttpSpanNameExtractorTest {
 
-  @Mock private HttpClientAttributesGetter<Map<String, String>, Map<String, String>> clientGetter;
+  @Mock private HttpClientAttributeGetter<Map<String, String>, Map<String, String>> clientGetter;
 
-  @Mock private HttpServerAttributesGetter<Map<String, String>, Map<String, String>> serverGetter;
+  @Mock private HttpServerAttributeGetter<Map<String, String>, Map<String, String>> serverGetter;
 
   @Test
   void routeAndMethod() {

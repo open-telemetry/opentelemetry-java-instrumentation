@@ -16,16 +16,16 @@ import org.opensearch.client.Response;
 public final class OpenSearchRestInstrumenterFactory {
 
   public static Instrumenter<OpenSearchRestRequest, Response> create(String instrumentationName) {
-    OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
-    OpenSearchRestNetResponseAttributesGetter netAttributesGetter =
-        new OpenSearchRestNetResponseAttributesGetter();
+    OpenSearchRestAttributeGetter dbClientAttributeGetter = new OpenSearchRestAttributeGetter();
+    OpenSearchRestNetResponseAttributeGetter netAttributeGetter =
+        new OpenSearchRestNetResponseAttributeGetter();
 
     return Instrumenter.<OpenSearchRestRequest, Response>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
-            DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+            DbClientSpanNameExtractor.create(dbClientAttributeGetter))
+        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributeGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributeGetter))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

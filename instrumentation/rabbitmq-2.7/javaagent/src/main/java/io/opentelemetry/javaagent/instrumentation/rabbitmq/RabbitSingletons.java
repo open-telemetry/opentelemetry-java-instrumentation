@@ -12,8 +12,8 @@ import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributeGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -61,9 +61,9 @@ public final class RabbitSingletons {
             GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(
-                RabbitChannelAttributesGetter.INSTANCE, publish ? MessageOperation.PUBLISH : null))
+                RabbitChannelAttributeGetter.INSTANCE, publish ? MessageOperation.PUBLISH : null))
         .addAttributesExtractor(
-            NetworkAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
+            NetworkAttributesExtractor.create(new RabbitChannelNetAttributeGetter()))
         .addContextCustomizer(
             (context, request, startAttributes) ->
                 context.with(CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()))
@@ -74,8 +74,8 @@ public final class RabbitSingletons {
     List<AttributesExtractor<ReceiveRequest, GetResponse>> extractors = new ArrayList<>();
     extractors.add(
         buildMessagingAttributesExtractor(
-            RabbitReceiveAttributesGetter.INSTANCE, MessageOperation.RECEIVE));
-    extractors.add(NetworkAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
+            RabbitReceiveAttributeGetter.INSTANCE, MessageOperation.RECEIVE));
+    extractors.add(NetworkAttributesExtractor.create(new RabbitReceiveNetAttributeGetter()));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }
@@ -95,7 +95,7 @@ public final class RabbitSingletons {
     List<AttributesExtractor<DeliveryRequest, Void>> extractors = new ArrayList<>();
     extractors.add(
         buildMessagingAttributesExtractor(
-            RabbitDeliveryAttributesGetter.INSTANCE, MessageOperation.PROCESS));
+            RabbitDeliveryAttributeGetter.INSTANCE, MessageOperation.PROCESS));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
@@ -108,7 +108,7 @@ public final class RabbitSingletons {
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, V> getter, MessageOperation operation) {
+      MessagingAttributeGetter<T, V> getter, MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
         .build();

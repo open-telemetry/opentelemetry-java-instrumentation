@@ -13,7 +13,7 @@ import org.springframework.web.method.HandlerMethod;
 public class WebfluxSpanNameExtractor implements SpanNameExtractor<Object> {
 
   private final SpanNameExtractor<Object> handlerSpanNameExtractor =
-      CodeSpanNameExtractor.create(new HandlerCodeAttributesGetter());
+      CodeSpanNameExtractor.create(new HandlerCodeAttributeGetter());
 
   @Override
   public String extract(Object handler) {

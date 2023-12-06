@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 
 class NetworkAttributesExtractorTest {
 
-  static class TestNetworkAttributesGetter
-      implements NetworkAttributesGetter<Map<String, String>, Void> {
+  static class TestNetworkAttributeGetter
+      implements NetworkAttributeGetter<Map<String, String>, Void> {
 
     @Nullable
     @Override
@@ -89,7 +89,7 @@ class NetworkAttributesExtractorTest {
     request.put("peerPort", "9090");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+        NetworkAttributesExtractor.create(new TestNetworkAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -112,7 +112,7 @@ class NetworkAttributesExtractorTest {
   @Test
   void noAttributes() {
     AttributesExtractor<Map<String, String>, Void> extractor =
-        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+        NetworkAttributesExtractor.create(new TestNetworkAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), emptyMap());
@@ -132,7 +132,7 @@ class NetworkAttributesExtractorTest {
     request.put("peerPort", "-42");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+        NetworkAttributesExtractor.create(new TestNetworkAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);

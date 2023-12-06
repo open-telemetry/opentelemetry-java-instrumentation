@@ -68,7 +68,7 @@ public final class QuartzTelemetryBuilder {
     }
     instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
     instrumenter.addAttributesExtractor(
-        CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
+        CodeAttributesExtractor.create(new QuartzCodeAttributeGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
 
     return new QuartzTelemetry(new TracingJobListener(instrumenter.buildInstrumenter()));

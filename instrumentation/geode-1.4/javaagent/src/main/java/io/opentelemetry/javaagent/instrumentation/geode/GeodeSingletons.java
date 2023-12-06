@@ -17,14 +17,14 @@ public final class GeodeSingletons {
   private static final Instrumenter<GeodeRequest, Void> INSTRUMENTER;
 
   static {
-    GeodeDbAttributesGetter dbClientAttributesGetter = new GeodeDbAttributesGetter();
+    GeodeDbAttributeGetter dbClientAttributeGetter = new GeodeDbAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.<GeodeRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+                DbClientSpanNameExtractor.create(dbClientAttributeGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributeGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

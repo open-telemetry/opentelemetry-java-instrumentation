@@ -35,8 +35,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpServerAttributesExtractorTest {
 
-  static class TestHttpServerAttributesGetter
-      implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
+  static class TestHttpServerAttributeGetter
+      implements HttpServerAttributeGetter<Map<String, String>, Map<String, String>> {
 
     @Override
     public String getHttpRequestMethod(Map<String, String> request) {
@@ -184,7 +184,7 @@ class HttpServerAttributesExtractorTest {
     Function<Context, String> routeFromContext = ctx -> "/repositories/{repoId}";
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributeGetter())
             .setCapturedRequestHeaders(singletonList("Custom-Request-Header"))
             .setCapturedResponseHeaders(singletonList("Custom-Response-Header"))
             .setHttpRouteGetter(routeFromContext)
@@ -228,7 +228,7 @@ class HttpServerAttributesExtractorTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -246,7 +246,7 @@ class HttpServerAttributesExtractorTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -264,7 +264,7 @@ class HttpServerAttributesExtractorTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
@@ -282,7 +282,7 @@ class HttpServerAttributesExtractorTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributeGetter())
             .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
             .build();
 
@@ -302,7 +302,7 @@ class HttpServerAttributesExtractorTest {
     request.put("method", requestMethod);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new TestHttpServerAttributesGetter())
+        HttpServerAttributesExtractor.builder(new TestHttpServerAttributeGetter())
             .setKnownMethods(new HashSet<>(asList("only", "custom", "methods", "allowed")))
             .build();
 
@@ -321,7 +321,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "500");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), emptyMap());
@@ -339,7 +339,7 @@ class HttpServerAttributesExtractorTest {
     request.put("errorType", "custom error type");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), emptyMap());
@@ -351,7 +351,7 @@ class HttpServerAttributesExtractorTest {
   @Test
   void shouldExtractErrorType_exceptionClassName() {
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), emptyMap());
@@ -364,7 +364,7 @@ class HttpServerAttributesExtractorTest {
   @Test
   void shouldExtractErrorType_other() {
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), emptyMap());
@@ -383,7 +383,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "202");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -407,7 +407,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "200");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -434,7 +434,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "200");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -460,7 +460,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "200");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -485,7 +485,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "200");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -512,7 +512,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "200");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -538,7 +538,7 @@ class HttpServerAttributesExtractorTest {
     response.put("statusCode", "200");
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);

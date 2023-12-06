@@ -16,7 +16,7 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 abstract class DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, GETTER extends DbClientCommonAttributesGetter<REQUEST>>
+        REQUEST, RESPONSE, GETTER extends DbClientCommonAttributeGetter<REQUEST>>
     implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   final GETTER getter;

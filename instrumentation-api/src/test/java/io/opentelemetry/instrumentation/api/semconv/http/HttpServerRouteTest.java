@@ -28,7 +28,7 @@ class HttpServerRouteTest {
 
   @RegisterExtension static final OpenTelemetryExtension testing = OpenTelemetryExtension.create();
 
-  @Mock HttpServerAttributesGetter<String, Void> getter;
+  @Mock HttpServerAttributeGetter<String, Void> getter;
   Instrumenter<String, Void> instrumenter;
 
   @BeforeEach

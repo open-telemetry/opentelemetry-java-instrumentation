@@ -30,7 +30,7 @@ public final class OkHttp2Singletons {
   private static final TracingInterceptor TRACING_INTERCEPTOR;
 
   static {
-    OkHttp2HttpAttributesGetter httpAttributesGetter = new OkHttp2HttpAttributesGetter();
+    OkHttp2HttpAttributeGetter httpAttributeGetter = new OkHttp2HttpAttributeGetter();
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
 
@@ -38,23 +38,23 @@ public final class OkHttp2Singletons {
         Instrumenter.<Request, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                HttpSpanNameExtractor.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(
                 HttpClientPeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
+                    httpAttributeGetter, CommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(HttpClientMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
     INSTRUMENTER = builder.buildInstrumenter(alwaysClient());

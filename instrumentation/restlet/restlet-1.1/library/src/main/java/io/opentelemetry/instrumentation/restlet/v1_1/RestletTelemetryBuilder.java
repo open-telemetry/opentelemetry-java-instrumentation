@@ -36,11 +36,11 @@ public final class RestletTelemetryBuilder {
       new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(RestletHttpAttributeGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(RestletHttpAttributeGetter.INSTANCE);
   private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
-      HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE);
+      HttpServerRoute.builder(RestletHttpAttributeGetter.INSTANCE);
   private boolean emitExperimentalHttpServerMetrics = false;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -119,19 +119,19 @@ public final class RestletTelemetryBuilder {
    * RestletTelemetryBuilder}.
    */
   public RestletTelemetry build() {
-    RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
+    RestletHttpAttributeGetter httpAttributeGetter = RestletHttpAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 

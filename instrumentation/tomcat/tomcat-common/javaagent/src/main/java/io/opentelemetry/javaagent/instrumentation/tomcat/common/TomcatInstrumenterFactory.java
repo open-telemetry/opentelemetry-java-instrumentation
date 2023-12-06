@@ -28,25 +28,25 @@ public final class TomcatInstrumenterFactory {
 
   public static <REQUEST, RESPONSE> Instrumenter<Request, Response> create(
       String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
-    TomcatHttpAttributesGetter httpAttributesGetter = new TomcatHttpAttributesGetter();
+    TomcatHttpAttributeGetter httpAttributeGetter = new TomcatHttpAttributeGetter();
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                HttpSpanNameExtractor.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(
-                HttpServerRoute.builder(httpAttributesGetter)
+                HttpServerRoute.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(
@@ -58,7 +58,7 @@ public final class TomcatInstrumenterFactory {
             .addOperationMetrics(HttpServerMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(TomcatRequestGetter.INSTANCE);

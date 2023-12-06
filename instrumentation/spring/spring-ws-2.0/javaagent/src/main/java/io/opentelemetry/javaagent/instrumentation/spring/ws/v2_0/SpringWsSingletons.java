@@ -17,14 +17,14 @@ public class SpringWsSingletons {
   private static final Instrumenter<SpringWsRequest, Void> INSTRUMENTER;
 
   static {
-    SpringWsCodeAttributesGetter codeAttributesGetter = new SpringWsCodeAttributesGetter();
+    SpringWsCodeAttributeGetter codeAttributeGetter = new SpringWsCodeAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.<SpringWsRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                CodeSpanNameExtractor.create(codeAttributesGetter))
-            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+                CodeSpanNameExtractor.create(codeAttributeGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributeGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
   }

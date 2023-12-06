@@ -23,13 +23,13 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the code attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      CodeAttributesGetter<REQUEST> getter) {
+      CodeAttributeGetter<REQUEST> getter) {
     return new CodeAttributesExtractor<>(getter);
   }
 
-  private final CodeAttributesGetter<REQUEST> getter;
+  private final CodeAttributeGetter<REQUEST> getter;
 
-  private CodeAttributesExtractor(CodeAttributesGetter<REQUEST> getter) {
+  private CodeAttributesExtractor(CodeAttributeGetter<REQUEST> getter) {
     this.getter = getter;
   }
 

@@ -11,8 +11,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributeGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -87,7 +87,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    SpringMessagingAttributesGetter.INSTANCE,
+                    SpringMessagingAttributeGetter.INSTANCE,
                     MessageOperation.PROCESS,
                     capturedHeaders))
             .buildConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
@@ -100,7 +100,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    SpringMessagingAttributesGetter.INSTANCE,
+                    SpringMessagingAttributeGetter.INSTANCE,
                     MessageOperation.PUBLISH,
                     capturedHeaders))
             .buildInstrumenter(SpanKindExtractor.alwaysProducer());
@@ -112,7 +112,7 @@ public final class SpringIntegrationTelemetryBuilder {
   }
 
   private static AttributesExtractor<MessageWithChannel, Void> buildMessagingAttributesExtractor(
-      MessagingAttributesGetter<MessageWithChannel, Void> getter,
+      MessagingAttributeGetter<MessageWithChannel, Void> getter,
       MessageOperation operation,
       List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)

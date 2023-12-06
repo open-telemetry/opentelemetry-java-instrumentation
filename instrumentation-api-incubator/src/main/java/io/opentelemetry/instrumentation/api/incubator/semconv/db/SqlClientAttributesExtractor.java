@@ -20,16 +20,16 @@ import io.opentelemetry.semconv.SemanticAttributes;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>{@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attribute. The raw SQL
- * statements returned by the {@link SqlClientAttributesGetter#getRawStatement(Object)} method are
+ * statements returned by the {@link SqlClientAttributeGetter#getRawStatement(Object)} method are
  * sanitized before use, all statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
+        REQUEST, RESPONSE, SqlClientAttributeGetter<REQUEST>> {
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributeGetter<REQUEST> getter) {
     return SqlClientAttributesExtractor.<REQUEST, RESPONSE>builder(getter).build();
   }
 
@@ -38,7 +38,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
    * client attributes extractor.
    */
   public static <REQUEST, RESPONSE> SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributeGetter<REQUEST> getter) {
     return new SqlClientAttributesExtractorBuilder<>(getter);
   }
 
@@ -48,7 +48,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private final SqlStatementSanitizer sanitizer;
 
   SqlClientAttributesExtractor(
-      SqlClientAttributesGetter<REQUEST> getter,
+      SqlClientAttributeGetter<REQUEST> getter,
       AttributeKey<String> dbTableAttribute,
       SqlStatementSanitizer sanitizer) {
     super(getter);

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 class RpcAttributesExtractorTest {
 
-  enum TestGetter implements RpcAttributesGetter<Map<String, String>> {
+  enum TestGetter implements RpcAttributeGetter<Map<String, String>> {
     INSTANCE;
 
     @Override

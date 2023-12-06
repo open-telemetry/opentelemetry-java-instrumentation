@@ -39,26 +39,26 @@ public final class OkHttpInstrumenterFactory {
       List<AttributesExtractor<Request, Response>> additionalAttributesExtractors,
       boolean emitExperimentalHttpClientMetrics) {
 
-    OkHttpAttributesGetter httpAttributesGetter = OkHttpAttributesGetter.INSTANCE;
+    OkHttpAttributeGetter httpAttributeGetter = OkHttpAttributeGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<Request, Response> extractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter);
+        HttpClientAttributesExtractor.builder(httpAttributeGetter);
     extractorConfigurer.accept(extractorBuilder);
 
     HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
-        HttpSpanNameExtractor.builder(httpAttributesGetter);
+        HttpSpanNameExtractor.builder(httpAttributeGetter);
     spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
                 openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractors(additionalAttributesExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 

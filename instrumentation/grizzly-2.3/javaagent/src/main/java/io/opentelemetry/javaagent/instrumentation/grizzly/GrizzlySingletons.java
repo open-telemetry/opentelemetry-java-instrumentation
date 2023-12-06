@@ -25,18 +25,18 @@ public final class GrizzlySingletons {
   private static final Instrumenter<HttpRequestPacket, HttpResponsePacket> INSTRUMENTER;
 
   static {
-    GrizzlyHttpAttributesGetter httpAttributesGetter = new GrizzlyHttpAttributesGetter();
+    GrizzlyHttpAttributeGetter httpAttributeGetter = new GrizzlyHttpAttributeGetter();
 
     InstrumenterBuilder<HttpRequestPacket, HttpResponsePacket> builder =
         Instrumenter.<HttpRequestPacket, HttpResponsePacket>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.grizzly-2.3",
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                HttpSpanNameExtractor.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
@@ -44,7 +44,7 @@ public final class GrizzlySingletons {
             .addOperationMetrics(HttpServerMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     INSTRUMENTER =
@@ -58,7 +58,7 @@ public final class GrizzlySingletons {
             .addContextCustomizer(
                 (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(context))
             .addContextCustomizer(
-                HttpServerRoute.builder(httpAttributesGetter)
+                HttpServerRoute.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .buildServerInstrumenter(HttpRequestHeadersGetter.INSTANCE);

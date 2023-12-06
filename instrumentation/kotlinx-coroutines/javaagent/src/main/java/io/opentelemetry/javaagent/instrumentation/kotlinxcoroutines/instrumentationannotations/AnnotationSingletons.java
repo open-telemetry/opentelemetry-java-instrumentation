@@ -26,7 +26,7 @@ public final class AnnotationSingletons {
             INSTRUMENTATION_NAME,
             AnnotationSingletons::spanNameFromMethodRequest)
         .addAttributesExtractor(
-            CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
+            CodeAttributesExtractor.create(MethodRequestCodeAttributeGetter.INSTANCE))
         .buildInstrumenter(MethodRequest::getSpanKind);
   }
 

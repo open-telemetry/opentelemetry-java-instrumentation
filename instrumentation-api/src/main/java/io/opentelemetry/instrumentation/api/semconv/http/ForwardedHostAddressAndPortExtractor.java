@@ -14,9 +14,9 @@ import java.util.Locale;
 final class ForwardedHostAddressAndPortExtractor<REQUEST>
     implements AddressAndPortExtractor<REQUEST> {
 
-  private final HttpCommonAttributesGetter<REQUEST, ?> getter;
+  private final HttpCommonAttributeGetter<REQUEST, ?> getter;
 
-  ForwardedHostAddressAndPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+  ForwardedHostAddressAndPortExtractor(HttpCommonAttributeGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 

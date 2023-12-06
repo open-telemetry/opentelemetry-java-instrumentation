@@ -39,11 +39,11 @@ public final class SpringWebMvcTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final HttpServerAttributesExtractorBuilder<HttpServletRequest, HttpServletResponse>
       httpAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(SpringWebMvcHttpAttributeGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<HttpServletRequest> httpSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(SpringWebMvcHttpAttributeGetter.INSTANCE);
   private final HttpServerRouteBuilder<HttpServletRequest> httpServerRouteBuilder =
-      HttpServerRoute.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
+      HttpServerRoute.builder(SpringWebMvcHttpAttributeGetter.INSTANCE);
 
   @Nullable
   private Function<
@@ -140,8 +140,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * SpringWebMvcTelemetryBuilder}.
    */
   public SpringWebMvcTelemetry build() {
-    SpringWebMvcHttpAttributesGetter httpAttributesGetter =
-        SpringWebMvcHttpAttributesGetter.INSTANCE;
+    SpringWebMvcHttpAttributeGetter httpAttributeGetter = SpringWebMvcHttpAttributeGetter.INSTANCE;
 
     SpanNameExtractor<HttpServletRequest> originalSpanNameExtractor =
         httpSpanNameExtractorBuilder.build();
@@ -153,14 +152,14 @@ public final class SpringWebMvcTelemetryBuilder {
     InstrumenterBuilder<HttpServletRequest, HttpServletResponse> builder =
         Instrumenter.<HttpServletRequest, HttpServletResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 

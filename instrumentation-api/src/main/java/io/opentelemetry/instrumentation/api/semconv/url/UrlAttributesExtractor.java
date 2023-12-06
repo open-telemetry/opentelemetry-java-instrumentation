@@ -28,13 +28,13 @@ public final class UrlAttributesExtractor<REQUEST, RESPONSE>
    * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> UrlAttributesExtractor<REQUEST, RESPONSE> create(
-      UrlAttributesGetter<REQUEST> getter) {
+      UrlAttributeGetter<REQUEST> getter) {
     return new UrlAttributesExtractor<>(getter);
   }
 
   private final InternalUrlAttributesExtractor<REQUEST> internalExtractor;
 
-  UrlAttributesExtractor(UrlAttributesGetter<REQUEST> getter) {
+  UrlAttributesExtractor(UrlAttributeGetter<REQUEST> getter) {
     // the UrlAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalUrlAttributesExtractor<>(

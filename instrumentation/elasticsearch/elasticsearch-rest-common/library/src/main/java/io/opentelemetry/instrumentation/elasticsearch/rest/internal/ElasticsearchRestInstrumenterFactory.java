@@ -28,16 +28,16 @@ public final class ElasticsearchRestInstrumenterFactory {
       List<AttributesExtractor<ElasticsearchRestRequest, Response>> attributesExtractors,
       Set<String> knownMethods,
       boolean captureSearchQuery) {
-    ElasticsearchDbAttributesGetter dbClientAttributesGetter =
-        new ElasticsearchDbAttributesGetter(captureSearchQuery);
+    ElasticsearchDbAttributeGetter dbClientAttributeGetter =
+        new ElasticsearchDbAttributeGetter(captureSearchQuery);
     ElasticsearchClientAttributeExtractor esClientAtrributesExtractor =
         new ElasticsearchClientAttributeExtractor(knownMethods);
     ElasticsearchSpanNameExtractor nameExtractor =
-        new ElasticsearchSpanNameExtractor(dbClientAttributesGetter);
+        new ElasticsearchSpanNameExtractor(dbClientAttributeGetter);
 
     return Instrumenter.<ElasticsearchRestRequest, Response>builder(
             openTelemetry, instrumentationName, nameExtractor)
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributeGetter))
         .addAttributesExtractor(esClientAtrributesExtractor)
         .addAttributesExtractors(attributesExtractors)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

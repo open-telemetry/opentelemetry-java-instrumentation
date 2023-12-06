@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -23,26 +23,26 @@ import javax.annotation.Nullable;
 public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
+  private final HttpClientAttributeGetter<REQUEST, RESPONSE> attributeGetter;
   private final PeerServiceResolver peerServiceResolver;
 
   // visible for tests
   HttpClientPeerServiceAttributesExtractor(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      HttpClientAttributeGetter<REQUEST, RESPONSE> attributeGetter,
       PeerServiceResolver peerServiceResolver) {
-    this.attributesGetter = attributesGetter;
+    this.attributeGetter = attributeGetter;
     this.peerServiceResolver = peerServiceResolver;
   }
 
   /**
    * Returns a new {@link HttpClientPeerServiceAttributesExtractor} that will use the passed {@code
-   * attributesGetter} instance to determine the value of the {@code peer.service} attribute.
+   * attributeGetter} instance to determine the value of the {@code peer.service} attribute.
    */
   public static <REQUEST, RESPONSE>
       HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-          HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+          HttpClientAttributeGetter<REQUEST, RESPONSE> attributeGetter,
           PeerServiceResolver peerServiceResolver) {
-    return new HttpClientPeerServiceAttributesExtractor<>(attributesGetter, peerServiceResolver);
+    return new HttpClientPeerServiceAttributesExtractor<>(attributeGetter, peerServiceResolver);
   }
 
   @Override
@@ -62,9 +62,9 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    String serverAddress = attributesGetter.getServerAddress(request);
-    Integer serverPort = attributesGetter.getServerPort(request);
-    Supplier<String> pathSupplier = () -> getUrlPath(attributesGetter, request);
+    String serverAddress = attributeGetter.getServerAddress(request);
+    Integer serverPort = attributeGetter.getServerPort(request);
+    Supplier<String> pathSupplier = () -> getUrlPath(attributeGetter, request);
     String peerService = mapToPeerService(serverAddress, serverPort, pathSupplier);
     if (peerService != null) {
       attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
@@ -82,8 +82,8 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   private String getUrlPath(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter, REQUEST request) {
-    String urlFull = attributesGetter.getUrlFull(request);
+      HttpClientAttributeGetter<REQUEST, RESPONSE> attributeGetter, REQUEST request) {
+    String urlFull = attributeGetter.getUrlFull(request);
     if (urlFull == null) {
       return null;
     }

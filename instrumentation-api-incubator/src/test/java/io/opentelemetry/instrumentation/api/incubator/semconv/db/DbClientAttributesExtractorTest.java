@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
 
-  static final class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>> {
+  static final class TestAttributeGetter implements DbClientAttributeGetter<Map<String, String>> {
     @Override
     public String getSystem(Map<String, String> map) {
       return map.get("db.system");
@@ -66,7 +66,7 @@ class DbClientAttributesExtractorTest {
     Context context = Context.root();
 
     AttributesExtractor<Map<String, String>, Void> underTest =
-        DbClientAttributesExtractor.create(new TestAttributesGetter());
+        DbClientAttributesExtractor.create(new TestAttributeGetter());
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -92,7 +92,7 @@ class DbClientAttributesExtractorTest {
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
     AttributesExtractor<Map<String, String>, Void> underTest =
-        DbClientAttributesExtractor.create(new TestAttributesGetter());
+        DbClientAttributesExtractor.create(new TestAttributeGetter());
 
     // when
     AttributesBuilder attributes = Attributes.builder();

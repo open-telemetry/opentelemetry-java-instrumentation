@@ -1,0 +1,69 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributeGetter;
+import java.util.List;
+import javax.annotation.Nullable;
+import org.apache.pulsar.client.api.Message;
+
+enum PulsarMessagingAttributeGetter implements MessagingAttributeGetter<PulsarRequest, Void> {
+  INSTANCE;
+
+  @Override
+  public String getSystem(PulsarRequest request) {
+    return "pulsar";
+  }
+
+  @Nullable
+  @Override
+  public String getDestination(PulsarRequest request) {
+    return request.getDestination();
+  }
+
+  @Override
+  public boolean isTemporaryDestination(PulsarRequest request) {
+    return false;
+  }
+
+  @Nullable
+  @Override
+  public String getConversationId(PulsarRequest message) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getMessagePayloadSize(PulsarRequest request) {
+    return (long) request.getMessage().size();
+  }
+
+  @Nullable
+  @Override
+  public Long getMessagePayloadCompressedSize(PulsarRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getMessageId(PulsarRequest request, @Nullable Void response) {
+    Message<?> message = request.getMessage();
+    if (message.getMessageId() != null) {
+      return message.getMessageId().toString();
+    }
+
+    return null;
+  }
+
+  @Override
+  public List<String> getMessageHeader(PulsarRequest request, String name) {
+    String value = request.getMessage().getProperty(name);
+    return value != null ? singletonList(value) : emptyList();
+  }
+}

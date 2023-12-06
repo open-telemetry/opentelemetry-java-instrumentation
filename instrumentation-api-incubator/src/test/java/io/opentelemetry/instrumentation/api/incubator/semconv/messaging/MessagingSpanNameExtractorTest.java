@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class MessagingSpanNameExtractorTest {
 
-  @Mock MessagingAttributesGetter<Message, Void> getter;
+  @Mock MessagingAttributeGetter<Message, Void> getter;
 
   @ParameterizedTest
   @MethodSource("spanNameParams")

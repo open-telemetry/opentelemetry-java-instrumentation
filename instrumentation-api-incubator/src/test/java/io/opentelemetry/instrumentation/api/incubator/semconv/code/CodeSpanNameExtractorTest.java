@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class CodeSpanNameExtractorTest {
-  @Mock CodeAttributesGetter<Object> getter;
+  @Mock CodeAttributeGetter<Object> getter;
 
   @Test
   void shouldExtractFullSpanName() {

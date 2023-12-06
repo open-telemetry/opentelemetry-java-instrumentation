@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributeGetter;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -14,11 +14,11 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGett
 public final class ServerAddressAndPortExtractor<REQUEST>
     implements AddressAndPortExtractor<REQUEST> {
 
-  private final ServerAttributesGetter<REQUEST> getter;
+  private final ServerAttributeGetter<REQUEST> getter;
   private final AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor;
 
   public ServerAddressAndPortExtractor(
-      ServerAttributesGetter<REQUEST> getter,
+      ServerAttributeGetter<REQUEST> getter,
       AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor) {
     this.getter = getter;
     this.fallbackAddressAndPortExtractor = fallbackAddressAndPortExtractor;

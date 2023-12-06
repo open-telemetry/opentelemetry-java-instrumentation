@@ -20,8 +20,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributeGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -135,7 +135,7 @@ final class TestInstrumenters {
     }
   }
 
-  private enum HttpServerGetter implements HttpServerAttributesGetter<String, Void> {
+  private enum HttpServerGetter implements HttpServerAttributeGetter<String, Void> {
     INSTANCE;
 
     @Override

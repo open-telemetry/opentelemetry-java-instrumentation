@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 
 class NetworkAttributesExtractorInetSocketAddressTest {
 
-  static class TestNetworkAttributesGetter
-      implements NetworkAttributesGetter<InetSocketAddress, InetSocketAddress> {
+  static class TestNetworkAttributeGetter
+      implements NetworkAttributeGetter<InetSocketAddress, InetSocketAddress> {
 
     @Nullable
     @Override
@@ -44,7 +44,7 @@ class NetworkAttributesExtractorInetSocketAddressTest {
     InetSocketAddress peer = new InetSocketAddress("4.3.2.1", 9090);
 
     AttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
-        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+        NetworkAttributesExtractor.create(new TestNetworkAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), local);
@@ -64,7 +64,7 @@ class NetworkAttributesExtractorInetSocketAddressTest {
   @Test
   void noAttributes() {
     AttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
-        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+        NetworkAttributesExtractor.create(new TestNetworkAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), null);

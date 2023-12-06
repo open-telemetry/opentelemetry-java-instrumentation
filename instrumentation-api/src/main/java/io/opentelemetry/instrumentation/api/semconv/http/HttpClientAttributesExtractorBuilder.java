@@ -29,7 +29,7 @@ import java.util.function.ToIntFunction;
  */
 public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
-  final HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
+  final HttpClientAttributeGetter<REQUEST, RESPONSE> httpAttributeGetter;
 
   final AddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor;
   List<String> capturedRequestHeaders = emptyList();
@@ -38,11 +38,11 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   ToIntFunction<Context> resendCountIncrementer = HttpClientRequestResendCount::getAndIncrement;
 
   HttpClientAttributesExtractorBuilder(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    this.httpAttributesGetter = httpAttributesGetter;
+      HttpClientAttributeGetter<REQUEST, RESPONSE> httpAttributeGetter) {
+    this.httpAttributeGetter = httpAttributeGetter;
     serverAddressAndPortExtractor =
         new ServerAddressAndPortExtractor<>(
-            httpAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter));
+            httpAttributeGetter, new HostAddressAndPortExtractor<>(httpAttributeGetter));
   }
 
   /**
@@ -123,7 +123,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
-        httpAttributesGetter,
+        httpAttributeGetter,
         // network.{transport,type} are opt-in, network.protocol.* have HTTP-specific logic
         /* captureProtocolAttributes= */ false,
         /* captureLocalSocketAttributes= */ false);

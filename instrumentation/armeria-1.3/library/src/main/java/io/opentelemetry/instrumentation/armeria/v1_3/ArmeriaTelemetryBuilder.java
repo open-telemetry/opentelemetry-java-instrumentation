@@ -29,7 +29,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,18 +54,18 @@ public final class ArmeriaTelemetryBuilder {
 
   private final HttpClientAttributesExtractorBuilder<RequestContext, RequestLog>
       httpClientAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(ArmeriaHttpClientAttributeGetter.INSTANCE);
   private final HttpServerAttributesExtractorBuilder<RequestContext, RequestLog>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(ArmeriaHttpServerAttributeGetter.INSTANCE);
 
   private final HttpSpanNameExtractorBuilder<RequestContext> httpClientSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(ArmeriaHttpClientAttributeGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<RequestContext> httpServerSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(ArmeriaHttpServerAttributeGetter.INSTANCE);
 
   private final HttpServerRouteBuilder<RequestContext> httpServerRouteBuilder =
-      HttpServerRoute.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
+      HttpServerRoute.builder(ArmeriaHttpServerAttributeGetter.INSTANCE);
 
   private Function<
           SpanStatusExtractor<RequestContext, RequestLog>,
@@ -211,10 +211,10 @@ public final class ArmeriaTelemetryBuilder {
   }
 
   public ArmeriaTelemetry build() {
-    ArmeriaHttpClientAttributesGetter clientAttributesGetter =
-        ArmeriaHttpClientAttributesGetter.INSTANCE;
-    ArmeriaHttpServerAttributesGetter serverAttributesGetter =
-        ArmeriaHttpServerAttributesGetter.INSTANCE;
+    ArmeriaHttpClientAttributeGetter clientAttributeGetter =
+        ArmeriaHttpClientAttributeGetter.INSTANCE;
+    ArmeriaHttpServerAttributeGetter serverAttributeGetter =
+        ArmeriaHttpServerAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
         Instrumenter.builder(
@@ -228,15 +228,13 @@ public final class ArmeriaTelemetryBuilder {
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(
-            statusExtractorTransformer.apply(
-                HttpSpanStatusExtractor.create(clientAttributesGetter)))
+            statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(clientAttributeGetter)))
         .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
         .addAttributesExtractors(additionalClientExtractors)
         .addOperationMetrics(HttpClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(
-            statusExtractorTransformer.apply(
-                HttpSpanStatusExtractor.create(serverAttributesGetter)))
+            statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(serverAttributeGetter)))
         .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
         .addOperationMetrics(HttpServerMetrics.get())
         .addContextCustomizer(httpServerRouteBuilder.build());
@@ -247,14 +245,12 @@ public final class ArmeriaTelemetryBuilder {
     }
     if (emitExperimentalHttpClientMetrics) {
       clientInstrumenterBuilder
-          .addAttributesExtractor(
-              HttpExperimentalAttributesExtractor.create(clientAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(clientAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
     if (emitExperimentalHttpServerMetrics) {
       serverInstrumenterBuilder
-          .addAttributesExtractor(
-              HttpExperimentalAttributesExtractor.create(serverAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(serverAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 

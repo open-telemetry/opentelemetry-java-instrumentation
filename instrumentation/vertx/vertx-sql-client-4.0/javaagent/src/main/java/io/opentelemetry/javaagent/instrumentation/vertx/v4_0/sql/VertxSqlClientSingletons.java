@@ -32,21 +32,21 @@ public final class VertxSqlClientSingletons {
 
   static {
     SpanNameExtractor<VertxSqlClientRequest> spanNameExtractor =
-        DbClientSpanNameExtractor.create(VertxSqlClientAttributesGetter.INSTANCE);
+        DbClientSpanNameExtractor.create(VertxSqlClientAttributeGetter.INSTANCE);
 
     InstrumenterBuilder<VertxSqlClientRequest, Void> builder =
         Instrumenter.<VertxSqlClientRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(
-                SqlClientAttributesExtractor.builder(VertxSqlClientAttributesGetter.INSTANCE)
+                SqlClientAttributesExtractor.builder(VertxSqlClientAttributeGetter.INSTANCE)
                     .setStatementSanitizationEnabled(
                         CommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(
-                ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))
+                ServerAttributesExtractor.create(VertxSqlClientNetAttributeGetter.INSTANCE))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    VertxSqlClientNetAttributesGetter.INSTANCE,
+                    VertxSqlClientNetAttributeGetter.INSTANCE,
                     CommonConfig.get().getPeerServiceResolver()));
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

@@ -43,18 +43,18 @@ public final class RatpackTelemetryBuilder {
       new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<RequestSpec, HttpResponse>
       httpClientAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(RatpackHttpClientAttributeGetter.INSTANCE);
   private final HttpServerAttributesExtractorBuilder<Request, Response>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(RatpackHttpAttributeGetter.INSTANCE);
 
   private final HttpSpanNameExtractorBuilder<RequestSpec> httpClientSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(RatpackHttpClientAttributeGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<Request> httpServerSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(RatpackHttpAttributeGetter.INSTANCE);
 
   private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
-      HttpServerRoute.builder(RatpackHttpAttributesGetter.INSTANCE);
+      HttpServerRoute.builder(RatpackHttpAttributeGetter.INSTANCE);
 
   private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
       additionalHttpClientExtractors = new ArrayList<>();
@@ -184,7 +184,7 @@ public final class RatpackTelemetryBuilder {
   }
 
   private Instrumenter<Request, Response> buildServerInstrumenter() {
-    RatpackHttpAttributesGetter httpAttributes = RatpackHttpAttributesGetter.INSTANCE;
+    RatpackHttpAttributeGetter httpAttributes = RatpackHttpAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
@@ -203,7 +203,7 @@ public final class RatpackTelemetryBuilder {
   }
 
   private Instrumenter<RequestSpec, HttpResponse> httpClientInstrumenter() {
-    RatpackHttpClientAttributesGetter httpAttributes = RatpackHttpClientAttributesGetter.INSTANCE;
+    RatpackHttpClientAttributeGetter httpAttributes = RatpackHttpClientAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<RequestSpec, HttpResponse> builder =
         Instrumenter.<RequestSpec, HttpResponse>builder(

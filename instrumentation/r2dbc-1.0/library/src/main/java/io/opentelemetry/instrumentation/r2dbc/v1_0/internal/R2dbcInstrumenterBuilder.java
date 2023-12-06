@@ -45,12 +45,12 @@ public final class R2dbcInstrumenterBuilder {
     return Instrumenter.<DbExecution, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE))
+            DbClientSpanNameExtractor.create(R2dbcSqlAttributeGetter.INSTANCE))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
+            SqlClientAttributesExtractor.builder(R2dbcSqlAttributeGetter.INSTANCE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(R2dbcNetAttributesGetter.INSTANCE))
+        .addAttributesExtractor(ServerAttributesExtractor.create(R2DbcNetAttributeGetter.INSTANCE))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

@@ -22,10 +22,10 @@ import java.util.Set;
  */
 public final class HttpServerRouteBuilder<REQUEST> {
 
-  final HttpServerAttributesGetter<REQUEST, ?> getter;
+  final HttpServerAttributeGetter<REQUEST, ?> getter;
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
 
-  HttpServerRouteBuilder(HttpServerAttributesGetter<REQUEST, ?> getter) {
+  HttpServerRouteBuilder(HttpServerAttributeGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 

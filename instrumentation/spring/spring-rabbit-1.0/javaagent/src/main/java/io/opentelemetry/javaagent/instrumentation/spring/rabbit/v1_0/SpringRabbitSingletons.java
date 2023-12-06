@@ -20,7 +20,7 @@ public final class SpringRabbitSingletons {
   private static final Instrumenter<Message, Void> INSTRUMENTER;
 
   static {
-    SpringRabbitMessageAttributesGetter getter = SpringRabbitMessageAttributesGetter.INSTANCE;
+    SpringRabbitMessageAttributeGetter getter = SpringRabbitMessageAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
     INSTRUMENTER =

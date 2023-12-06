@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 class ClientAttributesExtractorTest {
 
-  static class TestClientAttributesGetter implements ClientAttributesGetter<Map<String, String>> {
+  static class TestClientAttributeGetter implements ClientAttributeGetter<Map<String, String>> {
 
     @Nullable
     @Override
@@ -44,7 +44,7 @@ class ClientAttributesExtractorTest {
     request.put("port", "80");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        ClientAttributesExtractor.create(new TestClientAttributesGetter());
+        ClientAttributesExtractor.create(new TestClientAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -61,7 +61,7 @@ class ClientAttributesExtractorTest {
   @Test
   void noAttributes() {
     AttributesExtractor<Map<String, String>, Void> extractor =
-        ClientAttributesExtractor.create(new TestClientAttributesGetter());
+        ClientAttributesExtractor.create(new TestClientAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), emptyMap());
@@ -78,7 +78,7 @@ class ClientAttributesExtractorTest {
     request.put("port", "-12");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        ClientAttributesExtractor.create(new TestClientAttributesGetter());
+        ClientAttributesExtractor.create(new TestClientAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
@@ -95,7 +95,7 @@ class ClientAttributesExtractorTest {
     request.put("port", "80");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        ClientAttributesExtractor.create(new TestClientAttributesGetter());
+        ClientAttributesExtractor.create(new TestClientAttributeGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);

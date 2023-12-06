@@ -20,8 +20,7 @@ import org.junit.jupiter.api.Test;
 
 class SqlClientAttributesExtractorTest {
 
-  static final class TestAttributesGetter
-      implements SqlClientAttributesGetter<Map<String, String>> {
+  static final class TestAttributeGetter implements SqlClientAttributeGetter<Map<String, String>> {
 
     @Override
     public String getRawStatement(Map<String, String> map) {
@@ -62,7 +61,7 @@ class SqlClientAttributesExtractorTest {
     Context context = Context.root();
 
     AttributesExtractor<Map<String, String>, Void> underTest =
-        SqlClientAttributesExtractor.create(new TestAttributesGetter());
+        SqlClientAttributesExtractor.create(new TestAttributeGetter());
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -94,7 +93,7 @@ class SqlClientAttributesExtractorTest {
     Context context = Context.root();
 
     AttributesExtractor<Map<String, String>, Void> underTest =
-        SqlClientAttributesExtractor.create(new TestAttributesGetter());
+        SqlClientAttributesExtractor.create(new TestAttributeGetter());
 
     // when
     AttributesBuilder attributes = Attributes.builder();
@@ -116,7 +115,7 @@ class SqlClientAttributesExtractorTest {
     Context context = Context.root();
 
     AttributesExtractor<Map<String, String>, Void> underTest =
-        SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
+        SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributeGetter())
             .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
             .build();
 
@@ -136,7 +135,7 @@ class SqlClientAttributesExtractorTest {
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // when
     AttributesExtractor<Map<String, String>, Void> underTest =
-        SqlClientAttributesExtractor.create(new TestAttributesGetter());
+        SqlClientAttributesExtractor.create(new TestAttributeGetter());
 
     // when
     AttributesBuilder attributes = Attributes.builder();

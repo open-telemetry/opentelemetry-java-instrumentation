@@ -13,15 +13,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
  */
 public class ElasticsearchSpanNameExtractor implements SpanNameExtractor<ElasticsearchRestRequest> {
 
-  private final ElasticsearchDbAttributesGetter dbAttributesGetter;
+  private final ElasticsearchDbAttributeGetter dbAttributeGetter;
 
-  public ElasticsearchSpanNameExtractor(ElasticsearchDbAttributesGetter dbAttributesGetter) {
-    this.dbAttributesGetter = dbAttributesGetter;
+  public ElasticsearchSpanNameExtractor(ElasticsearchDbAttributeGetter dbAttributeGetter) {
+    this.dbAttributeGetter = dbAttributeGetter;
   }
 
   @Override
   public String extract(ElasticsearchRestRequest elasticsearchRestRequest) {
-    String name = dbAttributesGetter.getOperation(elasticsearchRestRequest);
+    String name = dbAttributeGetter.getOperation(elasticsearchRestRequest);
     return name != null ? name : elasticsearchRestRequest.getMethod();
   }
 }

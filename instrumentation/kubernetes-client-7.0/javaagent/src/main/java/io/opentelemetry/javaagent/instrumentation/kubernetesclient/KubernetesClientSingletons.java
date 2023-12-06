@@ -28,16 +28,16 @@ public class KubernetesClientSingletons {
   private static final ContextPropagators CONTEXT_PROPAGATORS;
 
   static {
-    KubernetesHttpAttributesGetter httpAttributesGetter = new KubernetesHttpAttributesGetter();
+    KubernetesHttpAttributeGetter httpAttributeGetter = new KubernetesHttpAttributeGetter();
 
     InstrumenterBuilder<Request, ApiResponse<?>> instrumenterBuilder =
         Instrumenter.<Request, ApiResponse<?>>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.kubernetes-client-7.0",
                 request -> KubernetesRequestDigest.parse(request).toString())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
+                HttpClientAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())

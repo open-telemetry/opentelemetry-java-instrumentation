@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributeGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
@@ -46,8 +46,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       ServletAccessor<REQUEST, RESPONSE> accessor,
       SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor,
-      HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-          httpAttributesGetter) {
+      HttpServerAttributeGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+          httpAttributeGetter) {
 
     ServletErrorCauseExtractor<REQUEST, RESPONSE> errorCauseExtractor =
         new ServletErrorCauseExtractor<>(accessor);
@@ -57,10 +57,10 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     InstrumenterBuilder<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> builder =
         Instrumenter.<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .setErrorCauseExtractor(errorCauseExtractor)
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
@@ -68,7 +68,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(additionalAttributesExtractor)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
-                HttpServerRoute.builder(httpAttributesGetter)
+                HttpServerRoute.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build());
     if (ServletRequestParametersExtractor.enabled()) {
@@ -82,7 +82,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     }
     if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     return builder.buildServerInstrumenter(new ServletRequestGetter<>(accessor));
@@ -90,13 +90,13 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(
       String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
-    HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-        httpAttributesGetter = new ServletHttpAttributesGetter<>(accessor);
+    HttpServerAttributeGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+        httpAttributeGetter = new ServletHttpAttributeGetter<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
-        HttpSpanNameExtractor.builder(httpAttributesGetter)
+        HttpSpanNameExtractor.builder(httpAttributeGetter)
             .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
             .build();
 
-    return build(instrumentationName, accessor, spanNameExtractor, httpAttributesGetter);
+    return build(instrumentationName, accessor, spanNameExtractor, httpAttributeGetter);
   }
 }

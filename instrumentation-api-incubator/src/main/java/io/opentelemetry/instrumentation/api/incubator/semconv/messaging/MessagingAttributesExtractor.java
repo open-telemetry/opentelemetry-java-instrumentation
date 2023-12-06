@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md">messaging
  * attributes</a>.
  *
- * <p>This class delegates to a type-specific {@link MessagingAttributesGetter} for individual
+ * <p>This class delegates to a type-specific {@link MessagingAttributeGetter} for individual
  * attribute extraction from request/response objects.
  */
 public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
@@ -34,7 +34,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * with default configuration.
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+      MessagingAttributeGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
     return builder(getter, operation).build();
   }
 
@@ -43,16 +43,16 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * operation} that can be used to configure the messaging attributes extractor.
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+      MessagingAttributeGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
     return new MessagingAttributesExtractorBuilder<>(getter, operation);
   }
 
-  private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
+  private final MessagingAttributeGetter<REQUEST, RESPONSE> getter;
   private final MessageOperation operation;
   private final List<String> capturedHeaders;
 
   MessagingAttributesExtractor(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessagingAttributeGetter<REQUEST, RESPONSE> getter,
       MessageOperation operation,
       List<String> capturedHeaders) {
     this.getter = getter;

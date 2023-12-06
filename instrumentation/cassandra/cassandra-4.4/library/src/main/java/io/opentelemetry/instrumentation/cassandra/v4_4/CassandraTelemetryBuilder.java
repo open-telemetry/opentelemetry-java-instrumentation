@@ -49,17 +49,17 @@ public class CassandraTelemetryBuilder {
 
   protected Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
       OpenTelemetry openTelemetry, boolean statementSanitizationEnabled) {
-    CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
+    CassandraSqlAttributeGetter attributeGetter = new CassandraSqlAttributeGetter();
 
     return Instrumenter.<CassandraRequest, ExecutionInfo>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
+            openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributeGetter))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(attributesGetter)
+            SqlClientAttributesExtractor.builder(attributeGetter)
                 .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(
-            NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
+            NetworkAttributesExtractor.create(new CassandraNetworkAttributeGetter()))
         .addAttributesExtractor(new CassandraAttributesExtractor())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

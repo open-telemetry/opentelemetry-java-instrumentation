@@ -10,9 +10,9 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributeGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributeGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,19 +21,18 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
+      HttpClientAttributeGetter<REQUEST, RESPONSE> getter) {
     return new HttpExperimentalAttributesExtractor<>(getter);
   }
 
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> getter) {
+      HttpServerAttributeGetter<REQUEST, RESPONSE> getter) {
     return new HttpExperimentalAttributesExtractor<>(getter);
   }
 
-  private final HttpCommonAttributesGetter<REQUEST, RESPONSE> getter;
+  private final HttpCommonAttributeGetter<REQUEST, RESPONSE> getter;
 
-  private HttpExperimentalAttributesExtractor(
-      HttpCommonAttributesGetter<REQUEST, RESPONSE> getter) {
+  private HttpExperimentalAttributesExtractor(HttpCommonAttributeGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 

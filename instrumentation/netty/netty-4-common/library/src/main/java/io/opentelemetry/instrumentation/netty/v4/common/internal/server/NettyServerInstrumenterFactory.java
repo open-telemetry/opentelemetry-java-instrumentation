@@ -38,30 +38,30 @@ public final class NettyServerInstrumenterFactory {
       Consumer<HttpServerRouteBuilder<HttpRequestAndChannel>> httpServerRouteConfigurer,
       boolean emitExperimentalHttpServerMetrics) {
 
-    NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
+    NettyHttpServerAttributeGetter httpAttributeGetter = new NettyHttpServerAttributeGetter();
 
     HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse> extractorBuilder =
-        HttpServerAttributesExtractor.builder(httpAttributesGetter);
+        HttpServerAttributesExtractor.builder(httpAttributeGetter);
     extractorConfigurer.accept(extractorBuilder);
 
     HttpSpanNameExtractorBuilder<HttpRequestAndChannel> httpSpanNameExtractorBuilder =
-        HttpSpanNameExtractor.builder(httpAttributesGetter);
+        HttpSpanNameExtractor.builder(httpAttributeGetter);
     spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
 
     InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 openTelemetry, instrumentationName, httpSpanNameExtractorBuilder.build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (emitExperimentalHttpServerMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 
     HttpServerRouteBuilder<HttpRequestAndChannel> httpServerRouteBuilder =
-        HttpServerRoute.builder(httpAttributesGetter);
+        HttpServerRoute.builder(httpAttributeGetter);
     httpServerRouteConfigurer.accept(httpServerRouteBuilder);
 
     return builder

@@ -31,7 +31,7 @@ import java.util.function.Function;
  */
 public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
-  final HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
+  final HttpServerAttributeGetter<REQUEST, RESPONSE> httpAttributeGetter;
 
   final AddressAndPortExtractor<REQUEST> clientAddressPortExtractor;
   final AddressAndPortExtractor<REQUEST> serverAddressPortExtractor;
@@ -41,13 +41,13 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   Function<Context, String> httpRouteGetter = HttpServerRoute::get;
 
   HttpServerAttributesExtractorBuilder(
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    this.httpAttributesGetter = httpAttributesGetter;
+      HttpServerAttributeGetter<REQUEST, RESPONSE> httpAttributeGetter) {
+    this.httpAttributeGetter = httpAttributeGetter;
 
     clientAddressPortExtractor =
         new ClientAddressAndPortExtractor<>(
-            httpAttributesGetter, new ForwardedForAddressAndPortExtractor<>(httpAttributesGetter));
-    serverAddressPortExtractor = new ForwardedHostAddressAndPortExtractor<>(httpAttributesGetter);
+            httpAttributeGetter, new ForwardedForAddressAndPortExtractor<>(httpAttributeGetter));
+    serverAddressPortExtractor = new ForwardedHostAddressAndPortExtractor<>(httpAttributeGetter);
   }
 
   /**
@@ -129,12 +129,12 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalUrlAttributesExtractor<REQUEST> buildUrlExtractor() {
     return new InternalUrlAttributesExtractor<>(
-        httpAttributesGetter, new ForwardedUrlSchemeProvider<>(httpAttributesGetter));
+        httpAttributeGetter, new ForwardedUrlSchemeProvider<>(httpAttributeGetter));
   }
 
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
     return new InternalNetworkAttributesExtractor<>(
-        httpAttributesGetter,
+        httpAttributeGetter,
         // network.{transport,type} are opt-in, network.protocol.* have HTTP-specific logic
         /* captureProtocolAttributes= */ false,
         // network.local.* are opt-in

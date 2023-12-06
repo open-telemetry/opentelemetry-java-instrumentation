@@ -25,7 +25,7 @@ public final class HttpSpanNameExtractor {
    * @see Instrumenter#builder(OpenTelemetry, String, SpanNameExtractor)
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      HttpClientAttributesGetter<REQUEST, ?> getter) {
+      HttpClientAttributeGetter<REQUEST, ?> getter) {
     return builder(getter).build();
   }
 
@@ -35,7 +35,7 @@ public final class HttpSpanNameExtractor {
    * @see Instrumenter#builder(OpenTelemetry, String, SpanNameExtractor)
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      HttpServerAttributesGetter<REQUEST, ?> getter) {
+      HttpServerAttributeGetter<REQUEST, ?> getter) {
     return builder(getter).build();
   }
 
@@ -44,7 +44,7 @@ public final class HttpSpanNameExtractor {
    * client span name extractor.
    */
   public static <REQUEST> HttpSpanNameExtractorBuilder<REQUEST> builder(
-      HttpClientAttributesGetter<REQUEST, ?> getter) {
+      HttpClientAttributeGetter<REQUEST, ?> getter) {
     return new HttpSpanNameExtractorBuilder<>(getter, null);
   }
 
@@ -53,16 +53,16 @@ public final class HttpSpanNameExtractor {
    * server span name extractor.
    */
   public static <REQUEST> HttpSpanNameExtractorBuilder<REQUEST> builder(
-      HttpServerAttributesGetter<REQUEST, ?> getter) {
+      HttpServerAttributeGetter<REQUEST, ?> getter) {
     return new HttpSpanNameExtractorBuilder<>(null, getter);
   }
 
   static final class Client<REQUEST> implements SpanNameExtractor<REQUEST> {
 
-    private final HttpClientAttributesGetter<REQUEST, ?> getter;
+    private final HttpClientAttributeGetter<REQUEST, ?> getter;
     private final Set<String> knownMethods;
 
-    Client(HttpClientAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
+    Client(HttpClientAttributeGetter<REQUEST, ?> getter, Set<String> knownMethods) {
       this.getter = getter;
       this.knownMethods = knownMethods;
     }
@@ -79,10 +79,10 @@ public final class HttpSpanNameExtractor {
 
   static final class Server<REQUEST> implements SpanNameExtractor<REQUEST> {
 
-    private final HttpServerAttributesGetter<REQUEST, ?> getter;
+    private final HttpServerAttributeGetter<REQUEST, ?> getter;
     private final Set<String> knownMethods;
 
-    Server(HttpServerAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
+    Server(HttpServerAttributeGetter<REQUEST, ?> getter, Set<String> knownMethods) {
       this.getter = getter;
       this.knownMethods = knownMethods;
     }

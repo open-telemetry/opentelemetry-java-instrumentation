@@ -134,7 +134,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
       HttpServerRoute.update(
           currentContext,
           HttpServerRouteSource.CONTROLLER,
-          (context, exchange) -> WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
+          (context, exchange) -> WebfluxServerHttpAttributeGetter.INSTANCE.getHttpRoute(exchange),
           exchange);
       instrumenter.end(currentContext, exchange, exchange, t);
     }

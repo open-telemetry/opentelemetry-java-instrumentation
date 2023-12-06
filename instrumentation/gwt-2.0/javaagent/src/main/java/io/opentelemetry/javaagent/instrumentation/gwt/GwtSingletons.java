@@ -23,13 +23,13 @@ public final class GwtSingletons {
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
-    GwtRpcAttributesGetter rpcAttributesGetter = GwtRpcAttributesGetter.INSTANCE;
+    GwtRpcAttributeGetter rpcAttributeGetter = GwtRpcAttributeGetter.INSTANCE;
     INSTRUMENTER =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+                RpcSpanNameExtractor.create(rpcAttributeGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributeGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 

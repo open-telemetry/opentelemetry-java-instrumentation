@@ -46,7 +46,7 @@ public final class AnnotationSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             AnnotationSingletons::spanNameFromMethod)
-        .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributesGetter.INSTANCE))
+        .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributeGetter.INSTANCE))
         .buildInstrumenter(AnnotationSingletons::spanKindFromMethod);
   }
 
@@ -56,7 +56,7 @@ public final class AnnotationSingletons {
             INSTRUMENTATION_NAME,
             AnnotationSingletons::spanNameFromMethodRequest)
         .addAttributesExtractor(
-            CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
+            CodeAttributesExtractor.create(MethodRequestCodeAttributeGetter.INSTANCE))
         .addAttributesExtractor(
             MethodSpanAttributesExtractor.create(
                 MethodRequest::method,

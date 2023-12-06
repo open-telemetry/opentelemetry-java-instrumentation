@@ -42,27 +42,27 @@ public final class ClientInstrumenterFactory {
       List<AttributesExtractor<ClientRequest, ClientResponse>> additionalExtractors,
       boolean emitExperimentalHttpClientTelemetry) {
 
-    WebClientHttpAttributesGetter httpAttributesGetter = WebClientHttpAttributesGetter.INSTANCE;
+    WebClientHttpAttributeGetter httpAttributeGetter = WebClientHttpAttributeGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse> extractorBuilder =
-        HttpClientAttributesExtractor.builder(httpAttributesGetter);
+        HttpClientAttributesExtractor.builder(httpAttributeGetter);
     extractorConfigurer.accept(extractorBuilder);
 
     HttpSpanNameExtractorBuilder<ClientRequest> httpSpanNameExtractorBuilder =
-        HttpSpanNameExtractor.builder(httpAttributesGetter);
+        HttpSpanNameExtractor.builder(httpAttributeGetter);
     spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
 
     InstrumenterBuilder<ClientRequest, ClientResponse> clientBuilder =
         Instrumenter.<ClientRequest, ClientResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
 
     if (emitExperimentalHttpClientTelemetry) {
       clientBuilder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 

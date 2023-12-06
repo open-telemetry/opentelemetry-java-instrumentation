@@ -38,7 +38,7 @@ public final class WithSpanSingletons {
   private static Instrumenter<Method, Object> createInstrumenter() {
     return Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, WithSpanSingletons::spanNameFromMethod)
-        .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributesGetter.INSTANCE))
+        .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributeGetter.INSTANCE))
         .buildInstrumenter(WithSpanSingletons::spanKindFromMethod);
   }
 
@@ -48,7 +48,7 @@ public final class WithSpanSingletons {
             INSTRUMENTATION_NAME,
             WithSpanSingletons::spanNameFromMethodRequest)
         .addAttributesExtractor(
-            CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
+            CodeAttributesExtractor.create(MethodRequestCodeAttributeGetter.INSTANCE))
         .addAttributesExtractor(
             MethodSpanAttributesExtractor.create(
                 MethodRequest::method,

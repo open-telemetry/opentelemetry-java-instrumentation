@@ -25,18 +25,18 @@ final class NettyServerSingletons {
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
 
   static {
-    NettyHttpServerAttributesGetter httpAttributesGetter = new NettyHttpServerAttributesGetter();
+    NettyHttpServerAttributeGetter httpAttributeGetter = new NettyHttpServerAttributeGetter();
 
     InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.netty-3.8",
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                HttpSpanNameExtractor.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
@@ -44,7 +44,7 @@ final class NettyServerSingletons {
             .addOperationMetrics(HttpServerMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     INSTRUMENTER =
@@ -52,7 +52,7 @@ final class NettyServerSingletons {
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .addContextCustomizer(
-                HttpServerRoute.builder(httpAttributesGetter)
+                HttpServerRoute.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .buildServerInstrumenter(NettyHeadersGetter.INSTANCE);

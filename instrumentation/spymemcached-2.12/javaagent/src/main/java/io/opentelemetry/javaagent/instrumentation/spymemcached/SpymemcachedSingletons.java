@@ -17,14 +17,14 @@ public final class SpymemcachedSingletons {
   private static final Instrumenter<SpymemcachedRequest, Object> INSTRUMENTER;
 
   static {
-    SpymemcachedAttributesGetter dbAttributesGetter = new SpymemcachedAttributesGetter();
+    SpymemcachedAttributeGetter dbAttributeGetter = new SpymemcachedAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(dbAttributeGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributeGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

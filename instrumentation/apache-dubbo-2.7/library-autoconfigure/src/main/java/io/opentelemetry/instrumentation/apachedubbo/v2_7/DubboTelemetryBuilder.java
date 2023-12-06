@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributeGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
@@ -57,27 +57,27 @@ public final class DubboTelemetryBuilder {
    * Returns a new {@link DubboTelemetry} with the settings of this {@link DubboTelemetryBuilder}.
    */
   public DubboTelemetry build() {
-    DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
+    DubboRpcAttributeGetter rpcAttributeGetter = DubboRpcAttributeGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
-        RpcSpanNameExtractor.create(rpcAttributesGetter);
-    DubboClientNetworkAttributesGetter netClientAttributesGetter =
-        new DubboClientNetworkAttributesGetter();
-    DubboNetworkServerAttributesGetter netServerAttributesGetter =
-        new DubboNetworkServerAttributesGetter();
+        RpcSpanNameExtractor.create(rpcAttributeGetter);
+    DubboClientNetworkAttributeGetter netClientAttributeGetter =
+        new DubboClientNetworkAttributeGetter();
+    DubboNetworkServerAttributeGetter netServerAttributeGetter =
+        new DubboNetworkServerAttributeGetter();
 
     InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributeGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributeGetter))
             .addAttributesExtractors(attributesExtractors);
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
-            .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
+            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributeGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributeGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributeGetter))
             .addAttributesExtractors(attributesExtractors);
 
     if (peerService != null) {

@@ -23,31 +23,31 @@ public final class LibertyDispatcherSingletons {
   private static final Instrumenter<LibertyRequest, LibertyResponse> INSTRUMENTER;
 
   static {
-    LibertyDispatcherHttpAttributesGetter httpAttributesGetter =
-        new LibertyDispatcherHttpAttributesGetter();
+    LibertyDispatcherHttpAttributeGetter httpAttributeGetter =
+        new LibertyDispatcherHttpAttributeGetter();
 
     InstrumenterBuilder<LibertyRequest, LibertyResponse> builder =
         Instrumenter.<LibertyRequest, LibertyResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
+                HttpSpanNameExtractor.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
+                HttpServerAttributesExtractor.builder(httpAttributeGetter)
                     .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
                     .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(
-                HttpServerRoute.builder(httpAttributesGetter)
+                HttpServerRoute.builder(httpAttributeGetter)
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get());
     if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     INSTRUMENTER = builder.buildServerInstrumenter(LibertyDispatcherRequestGetter.INSTANCE);

@@ -35,9 +35,9 @@ public final class ApacheHttpClientTelemetryBuilder {
       additionalExtractors = new ArrayList<>();
   private final HttpClientAttributesExtractorBuilder<ApacheHttpClientRequest, HttpResponse>
       httpAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
+          HttpClientAttributesExtractor.builder(ApacheHttpClientHttpAttributeGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<ApacheHttpClientRequest> httpSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(ApacheHttpClientHttpAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(ApacheHttpClientHttpAttributeGetter.INSTANCE);
   private boolean emitExperimentalHttpClientMetrics = false;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -116,19 +116,19 @@ public final class ApacheHttpClientTelemetryBuilder {
    * ApacheHttpClientTelemetryBuilder}.
    */
   public ApacheHttpClientTelemetry build() {
-    ApacheHttpClientHttpAttributesGetter httpAttributesGetter =
-        ApacheHttpClientHttpAttributesGetter.INSTANCE;
+    ApacheHttpClientHttpAttributeGetter httpAttributeGetter =
+        ApacheHttpClientHttpAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder =
         Instrumenter.<ApacheHttpClientRequest, HttpResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
+            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributeGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
     if (emitExperimentalHttpClientMetrics) {
       builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
+          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributeGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
 

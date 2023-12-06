@@ -23,16 +23,15 @@ class MongoInstrumenterFactory {
       boolean statementSanitizationEnabled,
       int maxNormalizedQueryLength) {
 
-    MongoDbAttributesGetter dbAttributesGetter =
-        new MongoDbAttributesGetter(statementSanitizationEnabled, maxNormalizedQueryLength);
+    MongoDbAttributeGetter dbAttributeGetter =
+        new MongoDbAttributeGetter(statementSanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
-        new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
+        new MongoSpanNameExtractor(dbAttributeGetter, attributesExtractor);
 
     return Instrumenter.<CommandStartedEvent, Void>builder(
             openTelemetry, "io.opentelemetry.mongo-3.1", spanNameExtractor)
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(
-            ServerAttributesExtractor.create(new MongoNetworkAttributesGetter()))
+        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributeGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(new MongoNetworkAttributeGetter()))
         .addAttributesExtractor(attributesExtractor)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

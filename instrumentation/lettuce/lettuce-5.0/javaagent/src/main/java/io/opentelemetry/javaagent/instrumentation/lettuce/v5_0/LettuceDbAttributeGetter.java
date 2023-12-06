@@ -1,0 +1,60 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
+
+import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributeGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.semconv.SemanticAttributes;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nullable;
+
+final class LettuceDbAttributeGetter implements DbClientAttributeGetter<RedisCommand<?, ?, ?>> {
+
+  private static final RedisCommandSanitizer sanitizer =
+      RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+
+  @Override
+  public String getSystem(RedisCommand<?, ?, ?> request) {
+    return SemanticAttributes.DbSystemValues.REDIS;
+  }
+
+  @Override
+  @Nullable
+  public String getUser(RedisCommand<?, ?, ?> request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getName(RedisCommand<?, ?, ?> request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getConnectionString(RedisCommand<?, ?, ?> request) {
+    return null;
+  }
+
+  @Override
+  public String getStatement(RedisCommand<?, ?, ?> request) {
+    String command = LettuceInstrumentationUtil.getCommandName(request);
+    List<String> args =
+        request.getArgs() == null
+            ? Collections.emptyList()
+            : LettuceArgSplitter.splitArgs(request.getArgs().toCommandString());
+    return sanitizer.sanitize(command, args);
+  }
+
+  @Override
+  public String getOperation(RedisCommand<?, ?, ?> request) {
+    return request.getType().name();
+  }
+}

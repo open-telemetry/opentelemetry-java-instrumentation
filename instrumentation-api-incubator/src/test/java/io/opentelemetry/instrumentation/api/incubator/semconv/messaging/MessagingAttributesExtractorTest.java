@@ -109,7 +109,7 @@ class MessagingAttributesExtractorTest {
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
-  enum TestGetter implements MessagingAttributesGetter<Map<String, String>, String> {
+  enum TestGetter implements MessagingAttributeGetter<Map<String, String>, String> {
     INSTANCE;
 
     @Override

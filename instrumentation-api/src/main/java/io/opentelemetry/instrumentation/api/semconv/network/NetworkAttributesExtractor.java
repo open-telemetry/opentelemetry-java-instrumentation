@@ -28,13 +28,13 @@ public final class NetworkAttributesExtractor<REQUEST, RESPONSE>
    * @see InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)
    */
   public static <REQUEST, RESPONSE> NetworkAttributesExtractor<REQUEST, RESPONSE> create(
-      NetworkAttributesGetter<REQUEST, RESPONSE> getter) {
+      NetworkAttributeGetter<REQUEST, RESPONSE> getter) {
     return new NetworkAttributesExtractor<>(getter);
   }
 
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalExtractor;
 
-  NetworkAttributesExtractor(NetworkAttributesGetter<REQUEST, RESPONSE> getter) {
+  NetworkAttributesExtractor(NetworkAttributeGetter<REQUEST, RESPONSE> getter) {
     internalExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter,

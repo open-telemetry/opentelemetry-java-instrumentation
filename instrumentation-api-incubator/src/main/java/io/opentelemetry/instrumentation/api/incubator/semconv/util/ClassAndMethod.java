@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.util;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributeGetter;
 
 @AutoValue
 public abstract class ClassAndMethod {
 
-  public static CodeAttributesGetter<ClassAndMethod> codeAttributesGetter() {
-    return ClassAndMethodAttributesGetter.INSTANCE;
+  public static CodeAttributeGetter<ClassAndMethod> codeAttributeGetter() {
+    return ClassAndMethodAttributeGetter.INSTANCE;
   }
 
   public static ClassAndMethod create(Class<?> declaringClass, String methodName) {

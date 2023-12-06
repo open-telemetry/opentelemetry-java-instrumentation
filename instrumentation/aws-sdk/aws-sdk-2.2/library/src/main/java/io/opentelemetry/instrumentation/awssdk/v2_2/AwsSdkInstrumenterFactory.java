@@ -14,8 +14,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributeGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -36,13 +36,13 @@ final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
+      RpcClientAttributesExtractor.create(AwsSdkRpcAttributeGetter.INSTANCE);
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 
-  static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
+  static final AwsSdkHttpAttributeGetter httpAttributeGetter = new AwsSdkHttpAttributeGetter();
   static final AttributesExtractor<ExecutionAttributes, Response> httpAttributesExtractor =
-      HttpClientAttributesExtractor.create(httpAttributesGetter);
+      HttpClientAttributesExtractor.create(httpAttributeGetter);
 
   private static final AttributesExtractor<ExecutionAttributes, Response>
       httpClientSuppressionAttributesExtractor =
@@ -113,7 +113,7 @@ final class AwsSdkInstrumenterFactory {
   }
 
   private <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> messagingAttributesExtractor(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+      MessagingAttributeGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();
@@ -121,7 +121,7 @@ final class AwsSdkInstrumenterFactory {
 
   Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter() {
     MessageOperation operation = MessageOperation.RECEIVE;
-    SqsReceiveRequestAttributesGetter getter = SqsReceiveRequestAttributesGetter.INSTANCE;
+    SqsReceiveRequestAttributeGetter getter = SqsReceiveRequestAttributeGetter.INSTANCE;
     AttributesExtractor<SqsReceiveRequest, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
@@ -136,7 +136,7 @@ final class AwsSdkInstrumenterFactory {
 
   Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter() {
     MessageOperation operation = MessageOperation.PROCESS;
-    SqsProcessRequestAttributesGetter getter = SqsProcessRequestAttributesGetter.INSTANCE;
+    SqsProcessRequestAttributeGetter getter = SqsProcessRequestAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<SqsProcessRequest, Void> builder =
         Instrumenter.<SqsProcessRequest, Void>builder(
@@ -196,7 +196,7 @@ final class AwsSdkInstrumenterFactory {
 
   Instrumenter<ExecutionAttributes, Response> producerInstrumenter() {
     MessageOperation operation = MessageOperation.PUBLISH;
-    SqsAttributesGetter getter = SqsAttributesGetter.INSTANCE;
+    SqsAttributeGetter getter = SqsAttributeGetter.INSTANCE;
     AttributesExtractor<ExecutionAttributes, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 

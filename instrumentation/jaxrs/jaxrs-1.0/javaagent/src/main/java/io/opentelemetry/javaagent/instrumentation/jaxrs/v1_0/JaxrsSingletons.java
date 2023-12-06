@@ -23,14 +23,14 @@ public final class JaxrsSingletons {
   private static final Instrumenter<HandlerData, Void> INSTRUMENTER;
 
   static {
-    JaxrsCodeAttributesGetter codeAttributesGetter = new JaxrsCodeAttributesGetter();
+    JaxrsCodeAttributeGetter codeAttributeGetter = new JaxrsCodeAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.<HandlerData, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                CodeSpanNameExtractor.create(codeAttributesGetter))
-            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+                CodeSpanNameExtractor.create(codeAttributeGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributeGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
   }

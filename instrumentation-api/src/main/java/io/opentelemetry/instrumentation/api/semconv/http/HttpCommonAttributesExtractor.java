@@ -15,7 +15,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.List;
@@ -32,8 +32,8 @@ abstract class HttpCommonAttributesExtractor<
         REQUEST,
         RESPONSE,
         GETTER extends
-            HttpCommonAttributesGetter<REQUEST, RESPONSE>
-                & NetworkAttributesGetter<REQUEST, RESPONSE>>
+            HttpCommonAttributeGetter<REQUEST, RESPONSE>
+                & NetworkAttributeGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   final GETTER getter;

@@ -17,14 +17,14 @@ public final class RmiClientSingletons {
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
-    RmiClientAttributesGetter rpcAttributesGetter = RmiClientAttributesGetter.INSTANCE;
+    RmiClientAttributeGetter rpcAttributeGetter = RmiClientAttributeGetter.INSTANCE;
 
     INSTRUMENTER =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
-                RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
+                RpcSpanNameExtractor.create(rpcAttributeGetter))
+            .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributeGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

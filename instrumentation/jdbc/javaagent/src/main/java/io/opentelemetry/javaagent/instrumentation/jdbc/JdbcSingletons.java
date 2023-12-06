@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetworkAttributesGetter;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributeGetter;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetworkAttributeGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -30,26 +30,26 @@ public final class JdbcSingletons {
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
 
   static {
-    JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-    JdbcNetworkAttributesGetter netAttributesGetter = new JdbcNetworkAttributesGetter();
+    JdbcAttributeGetter dbAttributeGetter = new JdbcAttributeGetter();
+    JdbcNetworkAttributeGetter netAttributeGetter = new JdbcNetworkAttributeGetter();
 
     STATEMENT_INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(dbAttributeGetter))
             .addAttributesExtractor(
-                SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                SqlClientAttributesExtractor.builder(dbAttributeGetter)
                     .setStatementSanitizationEnabled(
                         InstrumentationConfig.get()
                             .getBoolean(
                                 "otel.instrumentation.jdbc.statement-sanitizer.enabled",
                                 CommonConfig.get().isStatementSanitizationEnabled()))
                     .build())
-            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributeGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
+                    netAttributeGetter, CommonConfig.get().getPeerServiceResolver()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

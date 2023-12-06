@@ -29,15 +29,15 @@ public class VaadinSingletons {
   private static final VaadinHelper HELPER;
 
   static {
-    ClientCallableCodeAttributesGetter clientCallableAttributesGetter =
-        new ClientCallableCodeAttributesGetter();
+    ClientCallableCodeAttributeGetter clientCallableAttributeGetter =
+        new ClientCallableCodeAttributeGetter();
     CLIENT_CALLABLE_INSTRUMENTER =
         Instrumenter.<VaadinClientCallableRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                CodeSpanNameExtractor.create(clientCallableAttributesGetter))
+                CodeSpanNameExtractor.create(clientCallableAttributeGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .addAttributesExtractor(CodeAttributesExtractor.create(clientCallableAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(clientCallableAttributeGetter))
             .buildInstrumenter();
 
     REQUEST_HANDLER_INSTRUMENTER =

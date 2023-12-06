@@ -24,7 +24,7 @@ class HostAddressAndPortExtractorTest {
 
   private static final String REQUEST = "request";
 
-  @Mock HttpCommonAttributesGetter<String, String> getter;
+  @Mock HttpCommonAttributeGetter<String, String> getter;
   @Mock AddressAndPortExtractor.AddressPortSink sink;
 
   @InjectMocks HostAddressAndPortExtractor<String> underTest;

@@ -19,14 +19,14 @@ public final class RediscalaSingletons {
   private static final Instrumenter<RedisCommand<?, ?>, Void> INSTRUMENTER;
 
   static {
-    RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
+    RediscalaAttributeGetter dbAttributeGetter = new RediscalaAttributeGetter();
 
     INSTRUMENTER =
         Instrumenter.<RedisCommand<?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(dbAttributeGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributeGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

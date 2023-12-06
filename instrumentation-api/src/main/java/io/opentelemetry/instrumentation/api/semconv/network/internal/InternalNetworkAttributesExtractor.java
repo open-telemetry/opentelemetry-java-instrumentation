@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.semconv.network.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
@@ -19,12 +19,12 @@ import javax.annotation.Nullable;
  */
 public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
-  private final NetworkAttributesGetter<REQUEST, RESPONSE> getter;
+  private final NetworkAttributeGetter<REQUEST, RESPONSE> getter;
   private final boolean captureProtocolAttributes;
   private final boolean captureLocalSocketAttributes;
 
   public InternalNetworkAttributesExtractor(
-      NetworkAttributesGetter<REQUEST, RESPONSE> getter,
+      NetworkAttributeGetter<REQUEST, RESPONSE> getter,
       boolean captureProtocolAttributes,
       boolean captureLocalSocketAttributes) {
     this.getter = getter;

@@ -17,20 +17,19 @@ import io.opentelemetry.semconv.SemanticAttributes;
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md">database
  * client attributes</a>.
  *
- * <p>This class delegates to a type-specific {@link DbClientAttributesGetter} for individual
+ * <p>This class delegates to a type-specific {@link DbClientAttributeGetter} for individual
  * attribute extraction from request/response objects.
  */
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
+    extends DbClientCommonAttributesExtractor<REQUEST, RESPONSE, DbClientAttributeGetter<REQUEST>> {
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      DbClientAttributesGetter<REQUEST> getter) {
+      DbClientAttributeGetter<REQUEST> getter) {
     return new DbClientAttributesExtractor<>(getter);
   }
 
-  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST> getter) {
+  DbClientAttributesExtractor(DbClientAttributeGetter<REQUEST> getter) {
     super(getter);
   }
 

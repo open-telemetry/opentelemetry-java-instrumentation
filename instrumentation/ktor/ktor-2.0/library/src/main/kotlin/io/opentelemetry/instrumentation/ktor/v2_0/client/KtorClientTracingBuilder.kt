@@ -23,8 +23,8 @@ class KtorClientTracingBuilder {
 
   private var openTelemetry: OpenTelemetry? = null
   private val additionalExtractors = mutableListOf<AttributesExtractor<in HttpRequestData, in HttpResponse>>()
-  private val httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(KtorHttpClientAttributesGetter)
-  private val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpClientAttributesGetter)
+  private val httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(KtorHttpClientAttributeGetter)
+  private val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpClientAttributeGetter)
   private var emitExperimentalHttpClientMetrics = false
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
@@ -72,14 +72,14 @@ class KtorClientTracingBuilder {
       INSTRUMENTATION_NAME,
       httpSpanNameExtractorBuilder.build()
     )
-      .setSpanStatusExtractor(HttpSpanStatusExtractor.create(KtorHttpClientAttributesGetter))
+      .setSpanStatusExtractor(HttpSpanStatusExtractor.create(KtorHttpClientAttributeGetter))
       .addAttributesExtractor(httpAttributesExtractorBuilder.build())
       .addAttributesExtractors(additionalExtractors)
       .addOperationMetrics(HttpClientMetrics.get())
 
     if (emitExperimentalHttpClientMetrics) {
       instrumenterBuilder
-        .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(KtorHttpClientAttributesGetter))
+        .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(KtorHttpClientAttributeGetter))
         .addOperationMetrics(HttpClientExperimentalMetrics.get())
     }
 

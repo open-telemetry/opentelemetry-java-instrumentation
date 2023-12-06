@@ -17,11 +17,11 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, Status> {
-  private final GrpcRpcAttributesGetter getter;
+  private final GrpcRpcAttributeGetter getter;
   private final List<String> capturedRequestMetadata;
 
   GrpcAttributesExtractor(
-      GrpcRpcAttributesGetter getter, List<String> requestMetadataValuesToCapture) {
+      GrpcRpcAttributeGetter getter, List<String> requestMetadataValuesToCapture) {
     this.getter = getter;
     this.capturedRequestMetadata = lowercase(requestMetadataValuesToCapture);
   }

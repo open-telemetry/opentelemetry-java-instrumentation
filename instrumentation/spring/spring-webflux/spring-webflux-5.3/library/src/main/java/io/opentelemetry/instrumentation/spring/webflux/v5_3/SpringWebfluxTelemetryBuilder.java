@@ -43,11 +43,11 @@ public final class SpringWebfluxTelemetryBuilder {
 
   private final HttpServerAttributesExtractorBuilder<ServerWebExchange, ServerWebExchange>
       httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
+          HttpServerAttributesExtractor.builder(WebfluxServerHttpAttributeGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<ServerWebExchange> httpServerSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
+      HttpSpanNameExtractor.builder(WebfluxServerHttpAttributeGetter.INSTANCE);
   private final HttpServerRouteBuilder<ServerWebExchange> httpServerRouteBuilder =
-      HttpServerRoute.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
+      HttpServerRoute.builder(WebfluxServerHttpAttributeGetter.INSTANCE);
 
   private Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
       clientExtractorConfigurer = builder -> {};
@@ -210,7 +210,7 @@ public final class SpringWebfluxTelemetryBuilder {
   }
 
   private Instrumenter<ServerWebExchange, ServerWebExchange> buildServerInstrumenter() {
-    WebfluxServerHttpAttributesGetter getter = WebfluxServerHttpAttributesGetter.INSTANCE;
+    WebfluxServerHttpAttributeGetter getter = WebfluxServerHttpAttributeGetter.INSTANCE;
 
     InstrumenterBuilder<ServerWebExchange, ServerWebExchange> builder =
         Instrumenter.<ServerWebExchange, ServerWebExchange>builder(

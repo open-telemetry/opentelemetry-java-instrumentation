@@ -29,7 +29,7 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
    * @see InstrumenterBuilder#setSpanStatusExtractor(SpanStatusExtractor)
    */
   public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {
+      HttpClientAttributeGetter<? super REQUEST, ? super RESPONSE> getter) {
     return new HttpSpanStatusExtractor<>(getter, HttpStatusCodeConverter.CLIENT);
   }
 
@@ -41,15 +41,15 @@ public final class HttpSpanStatusExtractor<REQUEST, RESPONSE>
    * @see InstrumenterBuilder#setSpanStatusExtractor(SpanStatusExtractor)
    */
   public static <REQUEST, RESPONSE> SpanStatusExtractor<REQUEST, RESPONSE> create(
-      HttpServerAttributesGetter<? super REQUEST, ? super RESPONSE> getter) {
+      HttpServerAttributeGetter<? super REQUEST, ? super RESPONSE> getter) {
     return new HttpSpanStatusExtractor<>(getter, HttpStatusCodeConverter.SERVER);
   }
 
-  private final HttpCommonAttributesGetter<? super REQUEST, ? super RESPONSE> getter;
+  private final HttpCommonAttributeGetter<? super REQUEST, ? super RESPONSE> getter;
   private final HttpStatusCodeConverter statusCodeConverter;
 
   private HttpSpanStatusExtractor(
-      HttpCommonAttributesGetter<? super REQUEST, ? super RESPONSE> getter,
+      HttpCommonAttributeGetter<? super REQUEST, ? super RESPONSE> getter,
       HttpStatusCodeConverter statusCodeConverter) {
     this.getter = getter;
     this.statusCodeConverter = statusCodeConverter;

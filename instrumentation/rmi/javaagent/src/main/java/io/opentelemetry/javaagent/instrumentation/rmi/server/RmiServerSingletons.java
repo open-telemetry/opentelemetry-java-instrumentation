@@ -17,14 +17,14 @@ public final class RmiServerSingletons {
   private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 
   static {
-    RmiServerAttributesGetter rpcAttributesGetter = RmiServerAttributesGetter.INSTANCE;
+    RmiServerAttributeGetter rpcAttributeGetter = RmiServerAttributeGetter.INSTANCE;
 
     INSTRUMENTER =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
-                RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+                RpcSpanNameExtractor.create(rpcAttributeGetter))
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributeGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 

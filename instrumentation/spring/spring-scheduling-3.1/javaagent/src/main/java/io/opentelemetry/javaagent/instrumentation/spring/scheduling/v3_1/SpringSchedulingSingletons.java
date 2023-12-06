@@ -23,15 +23,15 @@ public final class SpringSchedulingSingletons {
   private static final Instrumenter<Runnable, Void> INSTRUMENTER;
 
   static {
-    SpringSchedulingCodeAttributesGetter codeAttributesGetter =
-        new SpringSchedulingCodeAttributesGetter();
+    SpringSchedulingCodeAttributeGetter codeAttributeGetter =
+        new SpringSchedulingCodeAttributeGetter();
 
     InstrumenterBuilder<Runnable, Void> builder =
         Instrumenter.<Runnable, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.spring-scheduling-3.1",
-                CodeSpanNameExtractor.create(codeAttributesGetter))
-            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter));
+                CodeSpanNameExtractor.create(codeAttributeGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributeGetter));
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       builder.addAttributesExtractor(

@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributeGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -166,32 +166,32 @@ public final class GrpcTelemetryBuilder {
     InstrumenterBuilder<GrpcRequest, Status> serverInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor);
 
-    GrpcClientNetworkAttributesGetter netClientAttributesGetter =
-        new GrpcClientNetworkAttributesGetter();
-    GrpcNetworkServerAttributesGetter netServerAttributesGetter =
-        new GrpcNetworkServerAttributesGetter();
-    GrpcRpcAttributesGetter rpcAttributesGetter = GrpcRpcAttributesGetter.INSTANCE;
+    GrpcClientNetworkAttributeGetter netClientAttributeGetter =
+        new GrpcClientNetworkAttributeGetter();
+    GrpcNetworkServerAttributeGetter netServerAttributeGetter =
+        new GrpcNetworkServerAttributeGetter();
+    GrpcRpcAttributeGetter rpcAttributeGetter = GrpcRpcAttributeGetter.INSTANCE;
 
     clientInstrumenterBuilder
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
-        .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
+        .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributeGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributeGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributeGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
             new GrpcAttributesExtractor(
-                GrpcRpcAttributesGetter.INSTANCE, capturedClientRequestMetadata))
+                GrpcRpcAttributeGetter.INSTANCE, capturedClientRequestMetadata))
         .addOperationMetrics(RpcClientMetrics.get());
     serverInstrumenterBuilder
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.SERVER)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-        .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
+        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributeGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributeGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributeGetter))
         .addAttributesExtractor(
             new GrpcAttributesExtractor(
-                GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))
+                GrpcRpcAttributeGetter.INSTANCE, capturedServerRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get());
 

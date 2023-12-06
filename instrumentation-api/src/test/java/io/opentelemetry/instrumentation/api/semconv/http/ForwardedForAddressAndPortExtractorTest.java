@@ -29,7 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ForwardedForAddressAndPortExtractorTest {
 
-  @Mock HttpServerAttributesGetter<String, String> getter;
+  @Mock HttpServerAttributeGetter<String, String> getter;
 
   @InjectMocks ForwardedForAddressAndPortExtractor<String> underTest;
 

@@ -34,7 +34,7 @@ public final class HttpServerRoute {
    * @see InstrumenterBuilder#addContextCustomizer(ContextCustomizer)
    */
   public static <REQUEST> ContextCustomizer<REQUEST> create(
-      HttpServerAttributesGetter<REQUEST, ?> getter) {
+      HttpServerAttributeGetter<REQUEST, ?> getter) {
     return builder(getter).build();
   }
 
@@ -43,7 +43,7 @@ public final class HttpServerRoute {
    * HttpServerRoute}.
    */
   public static <REQUEST> HttpServerRouteBuilder<REQUEST> builder(
-      HttpServerAttributesGetter<REQUEST, ?> getter) {
+      HttpServerAttributeGetter<REQUEST, ?> getter) {
     return new HttpServerRouteBuilder<>(getter);
   }
 
