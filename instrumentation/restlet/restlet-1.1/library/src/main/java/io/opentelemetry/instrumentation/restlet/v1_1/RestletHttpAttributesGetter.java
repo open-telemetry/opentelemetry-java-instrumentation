@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.restlet.v1_1.RestletHeadersGetter
 
 import com.noelios.restlet.http.HttpCall;
 import com.noelios.restlet.http.HttpRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

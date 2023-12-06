@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.15.1"
+  id("com.gradle.enterprise") version "3.16"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
   // this can't live in pluginManagement currently due to
@@ -20,7 +20,7 @@ plugins {
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.3.7" apply false
+  id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
 }
 
 dependencyResolutionManagement {
@@ -110,7 +110,7 @@ include(":javaagent")
 include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
-include(":instrumentation-api-semconv")
+include(":instrumentation-api-incubator")
 include(":instrumentation-annotations")
 include(":instrumentation-annotations-support")
 include(":instrumentation-annotations-support-testing")

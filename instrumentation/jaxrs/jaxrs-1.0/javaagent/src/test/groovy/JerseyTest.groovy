@@ -4,7 +4,7 @@
  */
 
 import io.dropwizard.testing.junit.ResourceTestRule
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.junit.ClassRule

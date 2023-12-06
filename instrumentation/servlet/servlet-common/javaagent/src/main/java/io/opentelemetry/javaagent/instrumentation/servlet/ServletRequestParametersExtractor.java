@@ -11,7 +11,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 import java.util.Locale;
@@ -28,10 +27,8 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
           .getList(
               "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
 
-  private static final ConcurrentMap<String, AttributeKey<List<String>>>
-      oldSemconvParameterKeysCache = new ConcurrentHashMap<>();
-  private static final ConcurrentMap<String, AttributeKey<List<String>>>
-      stableSemconvParameterKeysCache = new ConcurrentHashMap<>();
+  private static final ConcurrentMap<String, AttributeKey<List<String>>> parameterKeysCache =
+      new ConcurrentHashMap<>();
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
@@ -48,12 +45,7 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     for (String name : CAPTURE_REQUEST_PARAMETERS) {
       List<String> values = accessor.getRequestParameterValues(request, name);
       if (!values.isEmpty()) {
-        if (SemconvStability.emitOldHttpSemconv()) {
-          consumer.accept(oldSemconvParameterAttributeKey(name), values);
-        }
-        if (SemconvStability.emitStableHttpSemconv()) {
-          consumer.accept(stableSemconvParameterAttributeKey(name), values);
-        }
+        consumer.accept(parameterAttributeKey(name), values);
       }
     }
   }
@@ -77,25 +69,12 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     setAttributes(request, attributes::put);
   }
 
-  private static AttributeKey<List<String>> oldSemconvParameterAttributeKey(String headerName) {
-    return oldSemconvParameterKeysCache.computeIfAbsent(
-        headerName, ServletRequestParametersExtractor::createOldSemconvKey);
+  private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {
+    return parameterKeysCache.computeIfAbsent(
+        headerName, ServletRequestParametersExtractor::createKey);
   }
 
-  private static AttributeKey<List<String>> stableSemconvParameterAttributeKey(String headerName) {
-    return stableSemconvParameterKeysCache.computeIfAbsent(
-        headerName, ServletRequestParametersExtractor::createStableSemconvKey);
-  }
-
-  private static AttributeKey<List<String>> createOldSemconvKey(String parameterName) {
-    // normalize parameter name similarly as is done with header names when header values are
-    // captured as span attributes
-    parameterName = parameterName.toLowerCase(Locale.ROOT);
-    String key = "servlet.request.parameter." + parameterName.replace('-', '_');
-    return AttributeKey.stringArrayKey(key);
-  }
-
-  private static AttributeKey<List<String>> createStableSemconvKey(String parameterName) {
+  private static AttributeKey<List<String>> createKey(String parameterName) {
     // normalize parameter name similarly as is done with header names when header values are
     // captured as span attributes
     parameterName = parameterName.toLowerCase(Locale.ROOT);

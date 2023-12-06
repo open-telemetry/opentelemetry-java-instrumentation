@@ -26,10 +26,9 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -343,28 +342,19 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS, SUCCESS.status));
         });
 
-    String durationInstrumentName =
-        SemconvStability.emitStableHttpSemconv()
-            ? "http.server.request.duration"
-            : "http.server.duration";
-    String durationInstrumentDescription =
-        SemconvStability.emitStableHttpSemconv()
-            ? "Duration of HTTP server requests."
-            : "The duration of the inbound HTTP request";
-
     String metricsInstrumentationName = options.metricsInstrumentationName.get();
     if (metricsInstrumentationName == null) {
       metricsInstrumentationName = instrumentationName.get();
     }
     testing.waitAndAssertMetrics(
         metricsInstrumentationName,
-        durationInstrumentName,
+        "http.server.request.duration",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDescription(durationInstrumentDescription)
-                        .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
+                        .hasDescription("Duration of HTTP server requests.")
+                        .hasUnit("s")
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(
@@ -485,7 +475,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   @Test
   void requestWithNonStandardHttpMethod() throws InterruptedException {
-    assumeTrue(SemconvStability.emitStableHttpSemconv());
     assumeTrue(options.testNonStandardHttpMethod);
 
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup();

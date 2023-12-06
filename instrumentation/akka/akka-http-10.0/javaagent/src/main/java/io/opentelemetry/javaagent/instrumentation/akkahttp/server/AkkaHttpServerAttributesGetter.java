@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
 import java.util.List;
 import javax.annotation.Nullable;

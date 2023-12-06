@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.annotations;
 
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 
 enum JointPointCodeAttributesExtractor implements CodeAttributesGetter<JoinPointRequest> {
   INSTANCE;

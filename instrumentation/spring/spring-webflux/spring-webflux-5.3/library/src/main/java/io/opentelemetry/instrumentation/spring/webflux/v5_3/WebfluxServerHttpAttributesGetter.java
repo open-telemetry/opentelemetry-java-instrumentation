@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;

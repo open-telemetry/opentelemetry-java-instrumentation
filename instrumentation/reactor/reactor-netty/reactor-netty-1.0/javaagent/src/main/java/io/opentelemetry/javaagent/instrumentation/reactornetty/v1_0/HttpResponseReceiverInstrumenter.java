@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorContextKeys.CONTEXTS_HOLDER_KEY;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientRequestResendCount;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry;
 import java.util.function.BiConsumer;
 import java.util.function.Function;

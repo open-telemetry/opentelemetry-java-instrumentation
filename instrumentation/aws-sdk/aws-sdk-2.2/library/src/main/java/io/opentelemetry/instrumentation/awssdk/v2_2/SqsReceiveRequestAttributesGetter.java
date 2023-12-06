@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;

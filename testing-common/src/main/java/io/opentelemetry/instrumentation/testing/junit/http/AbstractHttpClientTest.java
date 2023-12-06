@@ -16,10 +16,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -121,7 +120,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   @Test
   void requestWithNonStandardHttpMethod() throws Exception {
-    assumeTrue(SemconvStability.emitStableHttpSemconv() && options.getTestNonStandardHttpMethod());
+    assumeTrue(options.getTestNonStandardHttpMethod());
 
     URI uri = resolveAddress("/success");
     String method = "TEST";
@@ -705,24 +704,15 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
 
-    String durationInstrumentName =
-        SemconvStability.emitStableHttpSemconv()
-            ? "http.client.request.duration"
-            : "http.client.duration";
-    String durationInstrumentDescription =
-        SemconvStability.emitStableHttpSemconv()
-            ? "Duration of HTTP client requests."
-            : "The duration of the outbound HTTP request";
-
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
-        durationInstrumentName,
+        "http.client.request.duration",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDescription(durationInstrumentDescription)
-                        .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
+                        .hasDescription("Duration of HTTP client requests.")
+                        .hasUnit("s")
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
 public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGetter<Runnable> {

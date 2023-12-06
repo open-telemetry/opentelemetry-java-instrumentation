@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.util.ClassAndMethod;
 
 public final class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";

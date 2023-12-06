@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes
-import io.opentelemetry.instrumentation.api.instrumenter.network.internal.NetworkAttributes
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
