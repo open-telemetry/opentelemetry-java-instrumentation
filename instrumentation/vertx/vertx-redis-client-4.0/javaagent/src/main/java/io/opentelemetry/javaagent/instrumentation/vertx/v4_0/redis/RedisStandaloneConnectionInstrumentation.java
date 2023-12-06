@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Future;
@@ -54,8 +53,7 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
       }
 
       String commandName = VertxRedisClientSingletons.getCommandName(request.command());
-      RedisURI redisUri =
-          VirtualField.find(RedisStandaloneConnection.class, RedisURI.class).get(connection);
+      RedisURI redisUri = VertxRedisClientSingletons.getRedisUri(connection);
       if (commandName == null || redisUri == null) {
         return;
       }

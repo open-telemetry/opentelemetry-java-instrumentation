@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;

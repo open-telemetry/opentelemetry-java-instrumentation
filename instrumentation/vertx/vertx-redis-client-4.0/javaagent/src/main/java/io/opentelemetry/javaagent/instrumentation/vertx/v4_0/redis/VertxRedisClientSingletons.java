@@ -8,15 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.vertx.core.Future;
@@ -28,6 +28,12 @@ import java.util.concurrent.CompletableFuture;
 public final class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
   private static final Instrumenter<VertxRedisClientRequest, Void> INSTRUMENTER;
+
+  private static final ThreadLocal<RedisURI> redisUriThreadLocal = new ThreadLocal<>();
+  private static final VirtualField<Command, String> commandNameField =
+      VirtualField.find(Command.class, String.class);
+  private static final VirtualField<RedisStandaloneConnection, RedisURI> redisUriField =
+      VirtualField.find(RedisStandaloneConnection.class, RedisURI.class);
 
   static {
     SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
@@ -74,8 +80,6 @@ public final class VertxRedisClientSingletons {
     return Future.fromCompletionStage(result);
   }
 
-  private static final ThreadLocal<RedisURI> redisUriThreadLocal = new ThreadLocal<>();
-
   public static RedisURI getRedisUriThreadLocal() {
     return redisUriThreadLocal.get();
   }
@@ -84,9 +88,6 @@ public final class VertxRedisClientSingletons {
     redisUriThreadLocal.set(redisUri);
   }
 
-  private static final VirtualField<Command, String> commandNameField =
-      VirtualField.find(Command.class, String.class);
-
   public static void setCommandName(Command command, String commandName) {
     commandNameField.set(command, commandName);
   }
@@ -94,9 +95,6 @@ public final class VertxRedisClientSingletons {
   public static String getCommandName(Command command) {
     return commandNameField.get(command);
   }
-
-  private static final VirtualField<RedisStandaloneConnection, RedisURI> redisUriField =
-      VirtualField.find(RedisStandaloneConnection.class, RedisURI.class);
 
   public static void setRedisUri(RedisStandaloneConnection connection, RedisURI redisUri) {
     redisUriField.set(connection, redisUri);

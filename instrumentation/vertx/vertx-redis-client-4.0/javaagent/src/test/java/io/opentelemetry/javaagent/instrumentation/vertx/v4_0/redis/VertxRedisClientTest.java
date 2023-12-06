@@ -9,8 +9,10 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
@@ -25,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class VertxRedisClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -70,14 +71,7 @@ class VertxRedisClientTest {
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
   }
 
   @Test
@@ -103,27 +97,13 @@ class VertxRedisClientTest {
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))),
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo"))));
   }
 
   @Test
@@ -163,14 +143,7 @@ class VertxRedisClientTest {
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))),
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
@@ -178,14 +151,7 @@ class VertxRedisClientTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -216,26 +182,25 @@ class VertxRedisClientTest {
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))),
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
+                            redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
+  }
+
+  private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
+    return new AttributeAssertion[] {
+      equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+      equalTo(SemanticAttributes.DB_STATEMENT, statement),
+      equalTo(SemanticAttributes.DB_OPERATION, operation),
+      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+      equalTo(SemanticAttributes.SERVER_PORT, port),
+      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")
+    };
   }
 }

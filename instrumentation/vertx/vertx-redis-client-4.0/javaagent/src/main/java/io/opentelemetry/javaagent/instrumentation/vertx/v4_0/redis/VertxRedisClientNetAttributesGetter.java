@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 public enum VertxRedisClientNetAttributesGetter
     implements
-        ServerAttributesGetter<VertxRedisClientRequest, Void>,
+        ServerAttributesGetter<VertxRedisClientRequest>,
         NetworkAttributesGetter<VertxRedisClientRequest, Void> {
   INSTANCE;
 
