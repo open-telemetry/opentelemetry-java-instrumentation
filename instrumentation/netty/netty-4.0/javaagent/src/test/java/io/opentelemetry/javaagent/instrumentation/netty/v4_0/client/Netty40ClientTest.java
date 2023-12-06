@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import spock.lang.Shared;
 
 public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
 
@@ -48,9 +49,11 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
 
   EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
-  Bootstrap bootstrap = buildBootstrap(false);
+  @Shared
+  private final Bootstrap bootstrap = buildBootstrap(false);
 
-  Bootstrap readTimeoutBootstrap = buildBootstrap(true);
+  @Shared
+  private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
 
   @AfterEach
   public void cleanupSpec() {
