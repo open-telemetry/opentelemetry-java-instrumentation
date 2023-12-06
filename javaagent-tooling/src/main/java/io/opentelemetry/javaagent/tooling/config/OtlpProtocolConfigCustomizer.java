@@ -13,6 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 public class OtlpProtocolConfigCustomizer
     implements Function<ConfigProperties, Map<String, String>> {
