@@ -36,9 +36,9 @@ public final class VertxRedisClientRequest {
     return redisUri.user();
   }
 
-  public String getDatabase() {
+  public Long getDatabaseIndex() {
     Integer select = redisUri.select();
-    return select != null ? select.toString() : null;
+    return select != null ? select.longValue() : null;
   }
 
   public String getConnectionString() {

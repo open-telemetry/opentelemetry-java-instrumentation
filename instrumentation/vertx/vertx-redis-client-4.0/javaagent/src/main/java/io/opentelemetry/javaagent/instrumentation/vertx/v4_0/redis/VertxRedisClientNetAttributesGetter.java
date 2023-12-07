@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGet
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
-public enum VertxRedisClientNetAttributesGetter
+enum VertxRedisClientNetAttributesGetter
     implements
         ServerAttributesGetter<VertxRedisClientRequest>,
         NetworkAttributesGetter<VertxRedisClientRequest, Void> {

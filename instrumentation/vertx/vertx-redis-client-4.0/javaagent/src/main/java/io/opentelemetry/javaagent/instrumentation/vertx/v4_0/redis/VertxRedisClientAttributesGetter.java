@@ -32,7 +32,7 @@ public enum VertxRedisClientAttributesGetter
   @Override
   @Nullable
   public String getName(VertxRedisClientRequest request) {
-    return request.getDatabase();
+    return null;
   }
 
   @Override

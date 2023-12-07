@@ -44,7 +44,7 @@ class VertxRedisClientTest {
     port = redisServer.getMappedPort(6379);
 
     vertx = Vertx.vertx();
-    client = Redis.createClient(vertx, "redis://localhost:" + port);
+    client = Redis.createClient(vertx, "redis://localhost:" + port + "/1");
     RedisConnection connection =
         client.connect().toCompletionStage().toCompletableFuture().get(30, TimeUnit.SECONDS);
     redis = RedisAPI.api(connection);
@@ -197,6 +197,7 @@ class VertxRedisClientTest {
       equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
       equalTo(SemanticAttributes.DB_STATEMENT, statement),
       equalTo(SemanticAttributes.DB_OPERATION, operation),
+      equalTo(SemanticAttributes.DB_REDIS_DATABASE_INDEX, 1),
       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
       equalTo(SemanticAttributes.SERVER_PORT, port),
       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
