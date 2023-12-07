@@ -40,6 +40,9 @@ public class RedisConnectionProviderInstrumentation implements TypeInstrumentati
   public static class InitAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.FieldValue("redisURI") RedisURI redisUri) {
+      // for 4.1.0 and later we set RedisURI in a ThreadLocal that is used in advice added in
+      // RedisStandaloneConnectionInstrumentation that attaches RedisURI to
+      // RedisStandaloneConnection
       VertxRedisClientSingletons.setRedisUriThreadLocal(redisUri);
     }
 
@@ -55,6 +58,8 @@ public class RedisConnectionProviderInstrumentation implements TypeInstrumentati
     public static void onEnter(
         @Advice.Argument(0) RedisConnection connection,
         @Advice.FieldValue("redisURI") RedisURI redisUri) {
+      // for 4.0.x we don't need to use ThreadLocal like in 4.1.0 because in this method we have
+      // access to both the RedisURI and RedisConnection
       if (connection instanceof RedisStandaloneConnection) {
         VertxRedisClientSingletons.setRedisUri((RedisStandaloneConnection) connection, redisUri);
       }
