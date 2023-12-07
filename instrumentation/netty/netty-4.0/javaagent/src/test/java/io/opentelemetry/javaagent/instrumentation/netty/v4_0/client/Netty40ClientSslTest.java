@@ -70,7 +70,7 @@ class Netty40ClientSslTest {
   }
 
   @Test
-  public void shouldFailSSLHandshake() {
+  public void shouldFailSslHandshake() {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, Collections.singletonList("SSLv3"));
 
     URI uri = server.resolveHttpsAddress("/success");
@@ -137,7 +137,7 @@ class Netty40ClientSslTest {
   }
 
   @Test
-  public void shouldSuccessfullyEstablishSSLHandshake() {
+  public void shouldSuccessfullyEstablishSslHandshake() {
     // given
     Bootstrap bootstrap =
         createBootstrap(eventLoopGroup, Arrays.asList("TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
