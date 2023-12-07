@@ -54,6 +54,65 @@ class ConfigurationPropertiesSupplierTest {
         .isEqualTo("42");
   }
 
+  @SetSystemProperty(key = "otel.exporter.otlp.protocol", value = "grpc") // customer sets grpc
+  @SetSystemProperty(
+      key = "otel.exporter.otlp.traces.protocol",
+      value = "grpc") // customer sets grpc
+  @SetSystemProperty(
+      key = "otel.exporter.otlp.metrics.protocol",
+      value = "grpc") // customer sets grpc
+  @SetSystemProperty(key = "otel.exporter.otlp.logs.protocol", value = "grpc") // customer sets grpc
+  @Test
+  void keepUserOtlpProtocolConfiguration() {
+    // when
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
+
+    // then
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk).getString("otel.exporter.otlp.protocol"))
+        .isEqualTo("grpc");
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk)
+                .getString("otel.exporter.otlp.traces.protocol"))
+        .isEqualTo("grpc");
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk)
+                .getString("otel.exporter.otlp.metrics.protocol"))
+        .isEqualTo("grpc");
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk)
+                .getString("otel.exporter.otlp.logs.protocol"))
+        .isEqualTo("grpc");
+  }
+
+  @Test
+  void defaultHttpProtobufOtlpProtocolConfiguration() {
+    // when
+    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
+
+    // then
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk).getString("otel.exporter.otlp.protocol"))
+        .isEqualTo("http/protobuf");
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk)
+                .getString("otel.exporter.otlp.traces.protocol"))
+        .isEqualTo("http/protobuf");
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk)
+                .getString("otel.exporter.otlp.metrics.protocol"))
+        .isEqualTo("http/protobuf");
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk)
+                .getString("otel.exporter.otlp.logs.protocol"))
+        .isEqualTo("http/protobuf");
+    assertThat(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk).getString("otel.exporter.otlp.protocol"))
+        .isEqualTo("http/protobuf");
+  }
+
   // SPI used in test
   public static class UserCustomPropertiesSupplier implements AutoConfigurationCustomizerProvider {
 
