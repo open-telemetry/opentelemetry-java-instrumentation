@@ -137,7 +137,7 @@ final class SqsImpl {
   }
 
   static String getMessageId(Response<?> response) {
-    if (response.getAwsResponse() instanceof SendMessageResult) {
+    if (response != null && response.getAwsResponse() instanceof SendMessageResult) {
       return ((SendMessageResult) response.getAwsResponse()).getMessageId();
     }
     return null;
