@@ -21,3 +21,16 @@ dependencies {
   // last version that does not use json protocol
   latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583")
 }
+
+if (!(findProperty("testLatestDeps") as Boolean)) {
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      eachDependency {
+        // early versions of aws sdk are not compatible with jackson 2.16.0
+        if (requested.group.startsWith("com.fasterxml.jackson")) {
+          useVersion("2.15.3")
+        }
+      }
+    }
+  }
+}

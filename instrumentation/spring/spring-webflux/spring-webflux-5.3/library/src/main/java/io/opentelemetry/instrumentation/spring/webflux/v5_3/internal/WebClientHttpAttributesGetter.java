@@ -59,4 +59,16 @@ public enum WebClientHttpAttributesGetter
   public Integer getServerPort(ClientRequest request) {
     return request.url().getPort();
   }
+
+  @Nullable
+  @Override
+  public String getErrorType(
+      ClientRequest request, @Nullable ClientResponse response, @Nullable Throwable error) {
+    // if both response and error are null it means the request has been cancelled -- see the
+    // WebClientTracingFilter class
+    if (response == null && error == null) {
+      return "cancelled";
+    }
+    return null;
+  }
 }

@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstr
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -35,9 +34,6 @@ public final class WebClientHelper {
               HttpClientPeerServiceAttributesExtractor.create(
                   WebClientHttpAttributesGetter.INSTANCE,
                   CommonConfig.get().getPeerServiceResolver())),
-          InstrumentationConfig.get()
-              .getBoolean(
-                  "otel.instrumentation.spring-webflux.experimental-span-attributes", false),
           CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
