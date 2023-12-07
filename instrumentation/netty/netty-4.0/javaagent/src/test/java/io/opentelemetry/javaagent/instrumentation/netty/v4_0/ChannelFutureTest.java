@@ -40,7 +40,8 @@ public class ChannelFutureTest {
     GenericFutureListener<Future<Void>> listener2 = newListener(counter);
     GenericProgressiveFutureListener<ProgressiveFuture<Void>> listener3 =
         newProgressiveListener(counter);
-    channel.closeFuture().addListeners(listener2, listener3);
+    channel.closeFuture().addListener(listener2);
+    channel.closeFuture().addListener(listener3);
     channel.closeFuture().removeListeners(listener2, listener3);
 
     channel.close().await(5, TimeUnit.SECONDS);
@@ -56,8 +57,7 @@ public class ChannelFutureTest {
       AtomicInteger counter) {
     return new GenericProgressiveFutureListener<ProgressiveFuture<Void>>() {
       @Override
-      public void operationComplete(@NotNull ProgressiveFuture<Void> voidProgressiveFuture)
-          throws Exception {
+      public void operationComplete(@NotNull ProgressiveFuture<Void> future) throws Exception {
         counter.incrementAndGet();
       }
 
