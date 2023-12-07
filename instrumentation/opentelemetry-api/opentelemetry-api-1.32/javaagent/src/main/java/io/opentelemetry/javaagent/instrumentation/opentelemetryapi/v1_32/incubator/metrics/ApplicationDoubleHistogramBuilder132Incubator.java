@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.metrics;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator.metrics;
 
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
@@ -12,12 +12,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleHistogramBuilder;
 import java.util.List;
 
-final class ApplicationDoubleHistogramBuilder131 extends ApplicationDoubleHistogramBuilder
+class ApplicationDoubleHistogramBuilder132Incubator extends ApplicationDoubleHistogramBuilder
     implements ExtendedDoubleHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder;
 
-  ApplicationDoubleHistogramBuilder131(
+  ApplicationDoubleHistogramBuilder132Incubator(
       io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
@@ -25,7 +25,7 @@ final class ApplicationDoubleHistogramBuilder131 extends ApplicationDoubleHistog
 
   @Override
   public LongHistogramBuilder ofLongs() {
-    return new ApplicationLongHistogramBuilder131(agentBuilder.ofLongs());
+    return new ApplicationLongHistogramBuilder132Incubator(agentBuilder.ofLongs());
   }
 
   @Override

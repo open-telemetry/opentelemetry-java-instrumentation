@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.metrics;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metrics;
 
 import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongHistogramBuilder;
@@ -19,7 +19,7 @@ class ApplicationLongHistogramBuilder132 extends ApplicationLongHistogramBuilder
     this.agentBuilder = agentBuilder;
   }
 
-  // return type is different from what 1.31 uses
+  @Override
   public LongHistogramBuilder setExplicitBucketBoundariesAdvice(List<Long> bucketBoundaries) {
     agentBuilder.setExplicitBucketBoundariesAdvice(bucketBoundaries);
     return this;
