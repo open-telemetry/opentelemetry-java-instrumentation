@@ -9,7 +9,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -108,7 +107,7 @@ class Netty40ConnectionSpanTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
                       equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
@@ -136,7 +135,7 @@ class Netty40ConnectionSpanTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, IP_TCP),
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
                       equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
                       equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),

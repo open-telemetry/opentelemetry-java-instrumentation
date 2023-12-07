@@ -52,7 +52,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Netty40ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
+public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -65,130 +65,143 @@ public class Netty40ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
   }
 
   @Override
-  protected ServerBootstrap setupServer() {
+  protected EventLoopGroup setupServer() throws InterruptedException {
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
-    return new ServerBootstrap()
-        .group(eventLoopGroup)
-        .handler(LOGGING_HANDLER)
-        .childHandler(
-            new ChannelInitializer<NioServerSocketChannel>() {
-              @Override
-              protected void initChannel(NioServerSocketChannel ch) throws Exception {
-                ChannelPipeline pipeline = ch.pipeline();
-                pipeline.addFirst("logger", LOGGING_HANDLER);
+    ServerBootstrap serverBootstrap =
+        new ServerBootstrap()
+            .group(eventLoopGroup)
+            .handler(LOGGING_HANDLER)
+            .childHandler(
+                new ChannelInitializer<NioServerSocketChannel>() {
+                  @Override
+                  protected void initChannel(NioServerSocketChannel ch) throws Exception {
+                    ChannelPipeline pipeline = ch.pipeline();
+                    pipeline.addFirst("logger", LOGGING_HANDLER);
 
-                pipeline.addLast(new HttpRequestDecoder(), new HttpResponseEncoder());
-                pipeline.addLast(
-                    new SimpleChannelInboundHandler<HttpRequest>() {
+                    pipeline.addLast(new HttpRequestDecoder(), new HttpResponseEncoder());
+                    pipeline.addLast(
+                        new SimpleChannelInboundHandler<HttpRequest>() {
 
-                      @Override
-                      protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg)
-                          throws Exception {
-                        URI uri = URI.create(msg.getUri());
-                        ServerEndpoint endpoint = ServerEndpoint.forPath(uri.getPath());
-                        ctx.write(
-                            controller(
-                                endpoint,
-                                () -> {
-                                  ByteBuf content;
-                                  FullHttpResponse response;
-                                  if (endpoint.equals(SUCCESS) || endpoint.equals(ERROR)) {
-                                    content =
-                                        Unpooled.copiedBuffer(
-                                            endpoint.getBody(), CharsetUtil.UTF_8);
-                                    response =
-                                        new DefaultFullHttpResponse(
-                                            HTTP_1_1,
-                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                            content);
-                                  } else if (endpoint.equals(INDEXED_CHILD)) {
-                                    content = Unpooled.EMPTY_BUFFER;
-                                    endpoint.collectSpanAttributes(
-                                        it ->
-                                            new QueryStringDecoder(uri)
-                                                .parameters()
-                                                .get(it)
-                                                .get(0));
-                                    response =
-                                        new DefaultFullHttpResponse(
-                                            HTTP_1_1,
-                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                            content);
-                                  } else if (endpoint.equals(QUERY_PARAM)) {
-                                    content =
-                                        Unpooled.copiedBuffer(uri.getQuery(), CharsetUtil.UTF_8);
-                                    response =
-                                        new DefaultFullHttpResponse(
-                                            HTTP_1_1,
-                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                            content);
-                                  } else if (endpoint.equals(REDIRECT)) {
-                                    content = Unpooled.EMPTY_BUFFER;
-                                    response =
-                                        new DefaultFullHttpResponse(
-                                            HTTP_1_1,
-                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                            content);
-                                    response
-                                        .headers()
-                                        .set(HttpHeaders.Names.LOCATION, endpoint.getBody());
-                                  } else if (endpoint.equals(CAPTURE_HEADERS)) {
-                                    content =
-                                        Unpooled.copiedBuffer(
-                                            endpoint.getBody(), CharsetUtil.UTF_8);
-                                    response =
-                                        new DefaultFullHttpResponse(
-                                            HTTP_1_1,
-                                            HttpResponseStatus.valueOf(endpoint.getStatus()),
-                                            content);
-                                    response
-                                        .headers()
-                                        .set(
-                                            "X-Test-Response", msg.headers().get("X-Test-Request"));
-                                  } else if (endpoint.equals(EXCEPTION)) {
-                                    throw new IllegalArgumentException(endpoint.getBody());
-                                  } else {
-                                    content =
-                                        Unpooled.copiedBuffer(
-                                            NOT_FOUND.getBody(), CharsetUtil.UTF_8);
-                                    response =
-                                        new DefaultFullHttpResponse(
-                                            HTTP_1_1,
-                                            HttpResponseStatus.valueOf(NOT_FOUND.getStatus()),
-                                            content);
-                                  }
+                          @Override
+                          protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg)
+                              throws Exception {
+                            URI uri = URI.create(msg.getUri());
+                            ServerEndpoint endpoint = ServerEndpoint.forPath(uri.getPath());
+                            ctx.write(
+                                controller(
+                                    endpoint,
+                                    () -> {
+                                      ByteBuf content;
+                                      FullHttpResponse response;
+                                      if (endpoint.equals(SUCCESS) || endpoint.equals(ERROR)) {
+                                        content =
+                                            Unpooled.copiedBuffer(
+                                                endpoint.getBody(), CharsetUtil.UTF_8);
+                                        response =
+                                            new DefaultFullHttpResponse(
+                                                HTTP_1_1,
+                                                HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                                content);
+                                      } else if (endpoint.equals(INDEXED_CHILD)) {
+                                        content = Unpooled.EMPTY_BUFFER;
+                                        endpoint.collectSpanAttributes(
+                                            it ->
+                                                new QueryStringDecoder(uri)
+                                                    .parameters()
+                                                    .get(it)
+                                                    .get(0));
+                                        response =
+                                            new DefaultFullHttpResponse(
+                                                HTTP_1_1,
+                                                HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                                content);
+                                      } else if (endpoint.equals(QUERY_PARAM)) {
+                                        content =
+                                            Unpooled.copiedBuffer(
+                                                uri.getQuery(), CharsetUtil.UTF_8);
+                                        response =
+                                            new DefaultFullHttpResponse(
+                                                HTTP_1_1,
+                                                HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                                content);
+                                      } else if (endpoint.equals(REDIRECT)) {
+                                        content = Unpooled.EMPTY_BUFFER;
+                                        response =
+                                            new DefaultFullHttpResponse(
+                                                HTTP_1_1,
+                                                HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                                content);
+                                        response
+                                            .headers()
+                                            .set(HttpHeaders.Names.LOCATION, endpoint.getBody());
+                                      } else if (endpoint.equals(CAPTURE_HEADERS)) {
+                                        content =
+                                            Unpooled.copiedBuffer(
+                                                endpoint.getBody(), CharsetUtil.UTF_8);
+                                        response =
+                                            new DefaultFullHttpResponse(
+                                                HTTP_1_1,
+                                                HttpResponseStatus.valueOf(endpoint.getStatus()),
+                                                content);
+                                        response
+                                            .headers()
+                                            .set(
+                                                "X-Test-Response",
+                                                msg.headers().get("X-Test-Request"));
+                                      } else if (endpoint.equals(EXCEPTION)) {
+                                        throw new IllegalArgumentException(endpoint.getBody());
+                                      } else {
+                                        content =
+                                            Unpooled.copiedBuffer(
+                                                NOT_FOUND.getBody(), CharsetUtil.UTF_8);
+                                        response =
+                                            new DefaultFullHttpResponse(
+                                                HTTP_1_1,
+                                                HttpResponseStatus.valueOf(NOT_FOUND.getStatus()),
+                                                content);
+                                      }
 
-                                  response.headers().set(CONTENT_TYPE, "text/plain");
-                                  if (content != null) {
-                                    response.headers().set(CONTENT_LENGTH, content.readableBytes());
-                                  }
-                                  return response;
-                                }));
-                      }
+                                      response.headers().set(CONTENT_TYPE, "text/plain");
+                                      if (content != null) {
+                                        response
+                                            .headers()
+                                            .set(CONTENT_LENGTH, content.readableBytes());
+                                      }
+                                      return response;
+                                    }));
+                          }
 
-                      @Override
-                      public void exceptionCaught(ChannelHandlerContext ctx, Throwable ex) {
-                        ByteBuf content = Unpooled.copiedBuffer(ex.getMessage(), CharsetUtil.UTF_8);
-                        FullHttpResponse response =
-                            new DefaultFullHttpResponse(HTTP_1_1, INTERNAL_SERVER_ERROR, content);
-                        response.headers().set(CONTENT_TYPE, "text/plain");
-                        response.headers().set(CONTENT_LENGTH, content.readableBytes());
-                        ctx.write(response);
-                      }
+                          @Override
+                          public void exceptionCaught(ChannelHandlerContext ctx, Throwable ex) {
+                            ByteBuf content =
+                                Unpooled.copiedBuffer(ex.getMessage(), CharsetUtil.UTF_8);
+                            FullHttpResponse response =
+                                new DefaultFullHttpResponse(
+                                    HTTP_1_1, INTERNAL_SERVER_ERROR, content);
+                            response.headers().set(CONTENT_TYPE, "text/plain");
+                            response.headers().set(CONTENT_LENGTH, content.readableBytes());
+                            ctx.write(response);
+                          }
 
-                      @Override
-                      public void channelReadComplete(ChannelHandlerContext ctx) {
-                        ctx.flush();
-                      }
-                    });
-              }
-            });
+                          @Override
+                          public void channelReadComplete(ChannelHandlerContext ctx) {
+                            ctx.flush();
+                          }
+                        });
+                  }
+                })
+            .channel(NioServerSocketChannel.class);
+    serverBootstrap.bind(port).sync();
+
+    return eventLoopGroup;
   }
 
   @Override
-  protected void stopServer(ServerBootstrap server) {
-    server.group().shutdownGracefully();
+  protected void stopServer(EventLoopGroup server) {
+    if (server != null) {
+      server.shutdownGracefully();
+    }
   }
 
   @Override
