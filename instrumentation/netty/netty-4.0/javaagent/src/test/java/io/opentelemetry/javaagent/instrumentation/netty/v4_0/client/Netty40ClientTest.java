@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
-import com.ning.http.client.Request;
-import com.ning.http.client.RequestBuilder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -42,18 +40,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import spock.lang.Shared;
 
-public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
+public class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
-  @Shared
-  private final Bootstrap bootstrap = buildBootstrap(false);
+  @Shared private final Bootstrap bootstrap = buildBootstrap(false);
 
-  @Shared
-  private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
+  @Shared private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
 
   @AfterEach
   public void cleanupSpec() {
@@ -91,23 +87,23 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
   }
 
   @Override
-  public Request buildRequest(String method, URI uri, Map<String, String> headers) {
+  public DefaultFullHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     String target = uri.getPath();
     if (uri.getQuery() != null) {
       target += "?" + uri.getQuery();
     }
-    DefaultFullHttpRequest defaultFullHttpRequest =
+    DefaultFullHttpRequest request =
         new DefaultFullHttpRequest(
             HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), target, Unpooled.EMPTY_BUFFER);
-    HttpHeaders.setHost(defaultFullHttpRequest, uri.getHost() + ":" + uri.getPort());
-    defaultFullHttpRequest.headers().set("user-agent", "Netty");
-    RequestBuilder requestBuilder = new RequestBuilder(method).setUrl(uri.toString());
-    headers.forEach(requestBuilder::addHeader);
-    return requestBuilder.build();
+    HttpHeaders.setHost(request, uri.getHost() + ":" + uri.getPort());
+    request.headers().set("user-agent", "Netty");
+    headers.forEach((k, v) -> request.headers().set(k, v));
+    return request;
   }
 
   @Override
-  public int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
+  public int sendRequest(
+      DefaultFullHttpRequest request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     Channel channel = getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
     CompletableFuture<Integer> result = new CompletableFuture<>();
@@ -118,7 +114,7 @@ public class Netty40ClientTest extends AbstractHttpClientTest<Request> {
 
   @Override
   public void sendRequestWithCallback(
-      Request request,
+      DefaultFullHttpRequest request,
       String method,
       URI uri,
       Map<String, String> headers,
