@@ -16,7 +16,7 @@ dependencies {
 }
 
 configurations.configureEach {
-  if (name == "testRuntimeClasspath" ||name == "testCompileClasspath") {
+  if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.31.0")
       force("io.opentelemetry:opentelemetry-extension-incubator:1.31.0-alpha")
