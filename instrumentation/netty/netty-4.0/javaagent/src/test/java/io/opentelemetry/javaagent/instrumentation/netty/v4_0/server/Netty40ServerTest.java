@@ -33,9 +33,11 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -48,9 +50,9 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
@@ -62,7 +64,7 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
   static {
     InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
-    LOGGING_HANDLER = new LoggingHandler(Netty40ServerTest.class.getName());
+    LOGGING_HANDLER = new LoggingHandler(Netty40ServerTest.class, LogLevel.DEBUG);
   }
 
   @Override
@@ -76,19 +78,23 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
             .childHandler(
                 new ChannelInitializer<SocketChannel>() {
                   @Override
-                  protected void initChannel(SocketChannel ch) throws Exception {
-                    ChannelPipeline pipeline = ch.pipeline();
+                  protected void initChannel(@NotNull SocketChannel socketChannel)
+                      throws Exception {
+                    ChannelPipeline pipeline = socketChannel.pipeline();
                     pipeline.addFirst("logger", LOGGING_HANDLER);
-
-                    Arrays.asList(new HttpResponseEncoder(), new HttpResponseEncoder())
-                        .forEach(pipeline::addLast);
+                    pipeline.addLast(new HttpRequestDecoder());
+                    pipeline.addLast(new HttpResponseEncoder());
                     pipeline.addLast(
-                        new SimpleChannelInboundHandler<HttpRequest>() {
+                        new SimpleChannelInboundHandler<Object>() {
 
                           @Override
-                          protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg)
+                          protected void channelRead0(ChannelHandlerContext ctx, Object msg)
                               throws Exception {
-                            URI uri = URI.create(msg.getUri());
+                            if (!(msg instanceof HttpRequest)) {
+                              return;
+                            }
+                            HttpRequest request = (HttpRequest) msg;
+                            URI uri = URI.create(request.getUri());
                             ServerEndpoint endpoint = ServerEndpoint.forPath(uri.getPath());
                             ctx.write(
                                 controller(
@@ -150,7 +156,7 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                                             .headers()
                                             .set(
                                                 "X-Test-Response",
-                                                msg.headers().get("X-Test-Request"));
+                                                request.headers().get("X-Test-Request"));
                                       } else if (endpoint.equals(EXCEPTION)) {
                                         throw new IllegalArgumentException(endpoint.getBody());
                                       } else {
@@ -165,11 +171,9 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                                       }
 
                                       response.headers().set(CONTENT_TYPE, "text/plain");
-                                      if (content != null) {
-                                        response
-                                            .headers()
-                                            .set(CONTENT_LENGTH, content.readableBytes());
-                                      }
+                                      response
+                                          .headers()
+                                          .set(CONTENT_LENGTH, content.readableBytes());
                                       return response;
                                     }));
                           }
