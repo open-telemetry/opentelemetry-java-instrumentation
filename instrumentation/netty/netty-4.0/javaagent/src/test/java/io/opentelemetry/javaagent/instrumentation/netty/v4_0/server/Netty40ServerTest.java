@@ -80,7 +80,8 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                     ChannelPipeline pipeline = ch.pipeline();
                     pipeline.addFirst("logger", LOGGING_HANDLER);
 
-                    Arrays.asList(new HttpResponseEncoder(), new HttpResponseEncoder()).forEach(pipeline::addLast);
+                    Arrays.asList(new HttpResponseEncoder(), new HttpResponseEncoder())
+                        .forEach(pipeline::addLast);
                     pipeline.addLast(
                         new SimpleChannelInboundHandler<HttpRequest>() {
 
