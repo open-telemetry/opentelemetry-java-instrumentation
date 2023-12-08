@@ -13,12 +13,12 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 
 @AutoService(ResourceProvider.class)
-public class AutoVersionResourceProvider implements ResourceProvider {
+public class DistroVersionResourceProvider implements ResourceProvider {
 
-  private static final AttributeKey<String> TELEMETRY_AUTO_NAME =
-      AttributeKey.stringKey("telemetry.auto.name");
-  private static final AttributeKey<String> TELEMETRY_AUTO_VERSION =
-      AttributeKey.stringKey("telemetry.auto.version");
+  private static final AttributeKey<String> TELEMETRY_DISTRO_NAME =
+      AttributeKey.stringKey("telemetry.distro.name");
+  private static final AttributeKey<String> TELEMETRY_DISTRO_VERSION =
+      AttributeKey.stringKey("telemetry.distro.version");
 
   @Override
   public Resource createResource(ConfigProperties config) {
@@ -26,9 +26,9 @@ public class AutoVersionResourceProvider implements ResourceProvider {
         ? Resource.empty()
         : Resource.create(
             Attributes.of(
-                TELEMETRY_AUTO_NAME,
-                "opentelemetry-javaagent",
-                TELEMETRY_AUTO_VERSION,
+                TELEMETRY_DISTRO_NAME,
+                "opentelemetry-java-instrumentation",
+                TELEMETRY_DISTRO_VERSION,
                 AgentVersion.VERSION));
   }
 }
