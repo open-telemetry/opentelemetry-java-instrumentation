@@ -90,6 +90,9 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   private static MinimumVisibilityFlag computeMinimumMethodAccess(Type from, Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return MinimumVisibilityFlag.PRIVATE_OR_HIGHER;
+    } else if (internalPackageName(from.getInternalName())
+        .equals(internalPackageName(to.getInternalName()))) {
+      return MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
     } else {
       // Additional references: check the type hierarchy of FROM to distinguish public from
       // protected
