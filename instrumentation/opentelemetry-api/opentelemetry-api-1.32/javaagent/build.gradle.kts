@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "v1_31"))
+  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "v1_32"))
   compileOnly("io.opentelemetry:opentelemetry-extension-incubator")
 
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
@@ -11,15 +11,21 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
-
-  testImplementation("io.opentelemetry:opentelemetry-extension-incubator")
+  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent"))
 }
 
-configurations.configureEach {
-  if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
-    resolutionStrategy {
-      force("io.opentelemetry:opentelemetry-api:1.31.0")
-      force("io.opentelemetry:opentelemetry-extension-incubator:1.31.0-alpha")
+testing {
+  suites {
+    val incubatorTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-extension-incubator")
+      }
     }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

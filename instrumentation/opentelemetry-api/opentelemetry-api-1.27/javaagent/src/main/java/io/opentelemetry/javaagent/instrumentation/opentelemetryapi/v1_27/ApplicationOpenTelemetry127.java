@@ -63,18 +63,39 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
   }
 
   private static ApplicationMeterFactory getMeterFactory() {
-    try {
+    // this class is defined in opentelemetry-api-1.32
+    ApplicationMeterFactory meterFactory =
+        getMeterFactory(
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator.metrics.ApplicationMeterFactory132Incubator");
+    if (meterFactory == null) {
+      // this class is defined in opentelemetry-api-1.32
+      meterFactory =
+          getMeterFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metrics.ApplicationMeterFactory132");
+    }
+    if (meterFactory == null) {
       // this class is defined in opentelemetry-api-1.31
-      Class<?> clazz =
-          Class.forName(
+      meterFactory =
+          getMeterFactory(
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.metrics.ApplicationMeterFactory131");
+    }
+    if (meterFactory == null) {
+      meterFactory = new ApplicationMeterFactory115();
+    }
+
+    return meterFactory;
+  }
+
+  private static ApplicationMeterFactory getMeterFactory(String className) {
+    try {
+      Class<?> clazz = Class.forName(className);
       return (ApplicationMeterFactory) clazz.getConstructor().newInstance();
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | InstantiationException
         | IllegalAccessException
         | InvocationTargetException exception) {
-      return new ApplicationMeterFactory115();
+      return null;
     }
   }
 }
