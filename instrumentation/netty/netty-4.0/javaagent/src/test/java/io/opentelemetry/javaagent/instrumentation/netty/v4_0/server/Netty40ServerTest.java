@@ -175,7 +175,8 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                           }
 
                           @Override
-                          public void exceptionCaught(ChannelHandlerContext ctx, Throwable ex) throws Exception {
+                          public void exceptionCaught(ChannelHandlerContext ctx, Throwable ex)
+                              throws Exception {
                             ByteBuf content =
                                 Unpooled.copiedBuffer(ex.getMessage(), CharsetUtil.UTF_8);
                             FullHttpResponse response =
@@ -187,7 +188,8 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                           }
 
                           @Override
-                          public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+                          public void channelReadComplete(ChannelHandlerContext ctx)
+                              throws Exception {
                             ctx.flush();
                           }
                         });
