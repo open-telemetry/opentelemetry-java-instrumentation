@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.alibaba.v1_0;
+package io.opentelemetry.instrumentation.alibabadruid.v1_0;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import io.opentelemetry.instrumentation.alibabadruid.AbstractDruidInstrumentationTest;
-import io.opentelemetry.instrumentation.alibabadruid.v1_0.DruidTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import javax.management.ObjectName;
