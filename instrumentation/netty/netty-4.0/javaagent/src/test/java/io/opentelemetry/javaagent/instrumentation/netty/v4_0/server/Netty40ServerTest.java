@@ -28,11 +28,11 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -48,6 +48,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -73,13 +74,13 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
             .group(eventLoopGroup)
             .handler(LOGGING_HANDLER)
             .childHandler(
-                new ChannelInitializer<NioServerSocketChannel>() {
+                new ChannelInitializer<NioSocketChannel>() {
                   @Override
-                  protected void initChannel(NioServerSocketChannel ch) throws Exception {
+                  protected void initChannel(NioSocketChannel ch) throws Exception {
                     ChannelPipeline pipeline = ch.pipeline();
                     pipeline.addFirst("logger", LOGGING_HANDLER);
 
-                    pipeline.addLast(new HttpRequestDecoder(), new HttpResponseEncoder());
+                    Arrays.asList(new HttpResponseEncoder(), new HttpResponseEncoder()).forEach(pipeline::addLast);
                     pipeline.addLast(
                         new SimpleChannelInboundHandler<HttpRequest>() {
 
