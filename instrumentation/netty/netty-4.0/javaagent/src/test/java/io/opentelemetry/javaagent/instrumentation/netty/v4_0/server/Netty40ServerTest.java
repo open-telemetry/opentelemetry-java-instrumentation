@@ -27,8 +27,8 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -74,9 +74,9 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
             .group(eventLoopGroup)
             .handler(LOGGING_HANDLER)
             .childHandler(
-                new ChannelInitializer<NioSocketChannel>() {
+                new ChannelInitializer<SocketChannel>() {
                   @Override
-                  protected void initChannel(NioSocketChannel ch) throws Exception {
+                  protected void initChannel(SocketChannel ch) throws Exception {
                     ChannelPipeline pipeline = ch.pipeline();
                     pipeline.addFirst("logger", LOGGING_HANDLER);
 
@@ -175,7 +175,7 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                           }
 
                           @Override
-                          public void exceptionCaught(ChannelHandlerContext ctx, Throwable ex) {
+                          public void exceptionCaught(ChannelHandlerContext ctx, Throwable ex) throws Exception {
                             ByteBuf content =
                                 Unpooled.copiedBuffer(ex.getMessage(), CharsetUtil.UTF_8);
                             FullHttpResponse response =
@@ -187,7 +187,7 @@ public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                           }
 
                           @Override
-                          public void channelReadComplete(ChannelHandlerContext ctx) {
+                          public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
                             ctx.flush();
                           }
                         });
