@@ -118,6 +118,7 @@ public class AkkaFlowWrapper
               Context parentContext = currentContext();
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
+                context = AkkaRouteHolder.init(context);
                 tracingRequest = new TracingRequest(context, request);
               }
               // event if span wasn't started we need to push TracingRequest to match response

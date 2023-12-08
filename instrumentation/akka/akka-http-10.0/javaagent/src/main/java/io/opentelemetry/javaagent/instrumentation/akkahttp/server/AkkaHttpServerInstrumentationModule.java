@@ -29,6 +29,12 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new HttpExtServerInstrumentation(), new GraphInterpreterInstrumentation());
+    return asList(
+        new HttpExtServerInstrumentation(),
+        new GraphInterpreterInstrumentation(),
+        new PathMatcherInstrumentation(),
+        new PathMatcherStaticInstrumentation(),
+        new RouteConcatenationInstrumentation(),
+        new PathConcatenationInstrumentation());
   }
 }
