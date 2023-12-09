@@ -39,7 +39,8 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
-      // store the path being matched inside a VirtualField on the given matcher, so it can be used for constructing the route
+      // store the path being matched inside a VirtualField on the given matcher, so it can be used
+      // for constructing the route
       VirtualField.find(PathMatcher.class, String.class).set(result, prefix.toString());
     }
   }
