@@ -107,6 +107,10 @@ abstract class IntegrationTest {
             .withEnv("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL", "grpc")
             .withEnv(getExtraEnv())
             .waitingFor(getTargetWaitStrategy());
+            .withEnv("OTEL.EXPORTER.OTLP.PROTOCOL", "grpc")
+            .withEnv("OTEL.EXPORTER.OTLP.TRACES.PROTOCOL", "grpc")
+            .withEnv("OTEL.EXPORTER.OTLP.METRICS.PROTOCOL", "grpc")
+            .withEnv("OTEL.EXPORTER.OTLP.LOGS.PROTOCOL", "grpc")
     // If external extensions are requested
     if (extensionLocation != null) {
       // Asks instrumentation agent to include extensions from given location into its runtime
