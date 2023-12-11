@@ -60,7 +60,7 @@ class SpringBootSmokeTest extends SmokeTest {
       .allMatch { it.attributesList.stream().map { it.key }.collect(toSet()).containsAll(["thread.id", "thread.name"]) }
 
     then: "correct agent version is captured in the resource"
-    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
+    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.distro.version")
       .map { it.stringValue }
       .collect(toSet())
 
