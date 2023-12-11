@@ -28,7 +28,7 @@ abstract class AppServerTest extends SmokeTest {
   @Shared
   boolean isWindows
 
-  private static final String TELEMETRY_DISTRO_VERSION = "telemetry.distro.version";
+  private static final String TELEMETRY_DISTRO_VERSION = "telemetry.distro.version"
 
   def setupSpec() {
     (serverVersion, jdk) = getAppServer()
