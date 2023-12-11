@@ -5,8 +5,8 @@
 
 package io.opentelemetry.smoketest
 
+
 import io.opentelemetry.proto.trace.v1.Span
-import io.opentelemetry.semconv.ResourceAttributes
 import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -27,6 +27,8 @@ abstract class AppServerTest extends SmokeTest {
   String serverVersion
   @Shared
   boolean isWindows
+
+  private static final String TELEMETRY_DISTRO_VERSION = "telemetry.distro.version";
 
   def setupSpec() {
     (serverVersion, jdk) = getAppServer()
@@ -126,7 +128,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes(ResourceAttributes.TELEMETRY_AUTO_VERSION.key, currentAgentVersion) == 3
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 3
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 3
@@ -161,7 +163,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/hello.txt") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes(ResourceAttributes.TELEMETRY_AUTO_VERSION.key, currentAgentVersion) == 1
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 1
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 1
@@ -195,7 +197,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/file-that-does-not-exist") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes(ResourceAttributes.TELEMETRY_AUTO_VERSION.key, currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -234,7 +236,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes(ResourceAttributes.TELEMETRY_AUTO_VERSION.key, currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -273,7 +275,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/exception") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes(ResourceAttributes.TELEMETRY_AUTO_VERSION.key, currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -311,7 +313,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes(ResourceAttributes.TELEMETRY_AUTO_VERSION.key, currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -358,7 +360,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes(ResourceAttributes.TELEMETRY_AUTO_VERSION.key, currentAgentVersion) == 3
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 3
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 3
