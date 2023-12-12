@@ -8,14 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.StatusCodes.Found
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.testing.junit.http.{
-  AbstractHttpServerTest,
-  ServerEndpoint
-}
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 
 import java.util.function.Supplier
@@ -27,43 +23,70 @@ object AkkaHttpTestWebServer {
   // needed for the future flatMap/onComplete in the end
   implicit val executionContext = system.dispatcher
 
-  val exceptionHandler = ExceptionHandler { case ex: Exception =>
-    complete(
-      HttpResponse(status = EXCEPTION.getStatus).withEntity(ex.getMessage)
-    )
-  }
-
-  val route = handleExceptions(exceptionHandler) {
-    extractUri { uri =>
-      val endpoint = ServerEndpoint.forPath(uri.path.toString())
-      complete {
-        AbstractHttpServerTest.controller(
-          endpoint,
-          new Supplier[HttpResponse] {
-            def get(): HttpResponse = {
-              val resp = HttpResponse(status = endpoint.getStatus)
-              endpoint match {
-                case SUCCESS => resp.withEntity(endpoint.getBody)
-                case INDEXED_CHILD =>
-                  INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
-                    override def getParameter(name: String): String =
-                      uri.query().get(name).orNull
-                  })
-                  resp.withEntity("")
-                case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
-                case REDIRECT =>
-                  resp.withHeaders(headers.Location(endpoint.getBody))
-                case ERROR     => resp.withEntity(endpoint.getBody)
-                case EXCEPTION => throw new Exception(endpoint.getBody)
-                case _ =>
-                  HttpResponse(status = NOT_FOUND.getStatus)
-                    .withEntity(NOT_FOUND.getBody)
-              }
+  var route = get {
+    concat(
+      path(SUCCESS.rawPath()) {
+        complete(
+          AbstractHttpServerTest.controller(SUCCESS, supplier(SUCCESS.getBody))
+        )
+      },
+      path(INDEXED_CHILD.rawPath()) {
+        parameterMap { map =>
+          val supplier = new Supplier[String] {
+            def get(): String = {
+              INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
+                override def getParameter(name: String): String =
+                  map.get(name).orNull
+              })
+              ""
             }
+          }
+          complete(AbstractHttpServerTest.controller(INDEXED_CHILD, supplier))
+        }
+      },
+      path(QUERY_PARAM.rawPath()) {
+        extractUri { uri =>
+          complete(
+            AbstractHttpServerTest
+              .controller(INDEXED_CHILD, supplier(uri.queryString().orNull))
+          )
+        }
+      },
+      path(REDIRECT.rawPath()) {
+        redirect(
+          AbstractHttpServerTest
+            .controller(REDIRECT, supplier(REDIRECT.getBody)),
+          Found
+        )
+      },
+      path(ERROR.rawPath()) {
+        complete(
+          500 -> AbstractHttpServerTest
+            .controller(ERROR, supplier(ERROR.getBody))
+        )
+      },
+      path("path" / LongNumber / "param") { id =>
+        complete(
+          AbstractHttpServerTest.controller(PATH_PARAM, supplier(id.toString))
+        )
+      },
+      path(
+        "test1" / IntNumber / HexIntNumber / LongNumber / HexLongNumber /
+          DoubleNumber / JavaUUID / Remaining
+      ) { (_, _, _, _, _, _, _) =>
+        complete(SUCCESS.getBody)
+      },
+      pathPrefix("test2") {
+        concat(
+          path("first") {
+            complete(SUCCESS.getBody)
+          },
+          path("second") {
+            complete(SUCCESS.getBody)
           }
         )
       }
-    }
+    )
   }
 
   private var binding: ServerBinding = null
@@ -81,6 +104,14 @@ object AkkaHttpTestWebServer {
       binding.unbind()
       system.terminate()
       binding = null
+    }
+  }
+
+  def supplier(string: String): Supplier[String] = {
+    new Supplier[String] {
+      def get(): String = {
+        string
+      }
     }
   }
 }
