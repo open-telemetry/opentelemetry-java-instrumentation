@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import spock.lang.Shared;
 
@@ -51,8 +50,7 @@ public class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpReq
 
   @Shared private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
 
-  @AfterEach
-  public void cleanupSpec() {
+  void cleanupSpec() {
     if (eventLoopGroup != null) {
       eventLoopGroup.shutdownGracefully();
     }
@@ -125,7 +123,6 @@ public class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpReq
       ch = getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      httpClientResult.complete(e);
       return;
     } catch (Throwable th) {
       httpClientResult.complete(th);
