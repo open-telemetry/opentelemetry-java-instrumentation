@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.util;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.bytebuddy.ByteBuddy;
@@ -19,18 +20,23 @@ class ClassLoaderMap {
   private static final Cache<ClassLoader, WeakReference<Map<Object, Object>>> data = Cache.weak();
 
   public static Object get(ClassLoader classLoader, Object key) {
-    return getClassLoaderData(classLoader).get(key);
+    return getClassLoaderData(classLoader, false).get(key);
   }
 
   public static void put(ClassLoader classLoader, Object key, Object value) {
-    getClassLoaderData(classLoader).put(key, value);
+    getClassLoaderData(classLoader, true).put(key, value);
   }
 
-  private static Map<Object, Object> getClassLoaderData(ClassLoader classLoader) {
+  private static Map<Object, Object> getClassLoaderData(
+      ClassLoader classLoader, boolean initialize) {
     classLoader = maskNullClassLoader(classLoader);
     WeakReference<Map<Object, Object>> weakReference = data.get(classLoader);
     Map<Object, Object> map = weakReference != null ? weakReference.get() : null;
     if (map == null) {
+      // skip setting up the map if get was called
+      if (!initialize) {
+        return Collections.emptyMap();
+      }
       map = createMap(classLoader);
       data.put(classLoader, new WeakReference<>(map));
     }
