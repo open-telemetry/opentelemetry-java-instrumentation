@@ -31,6 +31,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.MountableFile;
 
 abstract class SmokeTest {
@@ -68,7 +69,7 @@ abstract class SmokeTest {
 
   protected GenericContainer target;
 
-  void startTarget(int jdk) {
+  void startTarget(int jdk, WaitStrategy waitStrategy) {
     target =
         new GenericContainer<>(getTargetImage(jdk))
             .withExposedPorts(8080)
@@ -80,7 +81,8 @@ abstract class SmokeTest {
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
-            .withEnv(getExtraEnv());
+            .withEnv(getExtraEnv())
+            .waitingFor(waitStrategy);
     target.start();
   }
 

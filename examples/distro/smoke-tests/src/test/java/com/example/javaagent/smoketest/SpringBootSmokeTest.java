@@ -8,6 +8,7 @@ package com.example.javaagent.smoketest;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -15,6 +16,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 class SpringBootSmokeTest extends SmokeTest {
 
@@ -27,7 +29,8 @@ class SpringBootSmokeTest extends SmokeTest {
 
   @Test
   public void springBootSmokeTestOnJDK() throws IOException, InterruptedException {
-    startTarget(8);
+    startTarget(8, Wait.forLogMessage(".*Started SpringbootApplication in.*", 1)
+        .withStartupTimeout(Duration.ofMinutes(1)));
     String url = String.format("http://localhost:%d/greeting", target.getMappedPort(8080));
     Request request = new Request.Builder().url(url).get().build();
 
