@@ -7,9 +7,12 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -110,5 +113,18 @@ class OtlpSpanExporterAutoConfigurationTest {
     Mockito.verify(otlpHttpSpanExporterBuilder).addHeader("x", "1");
     Mockito.verify(otlpHttpSpanExporterBuilder).addHeader("y", "2");
     Mockito.verifyNoMoreInteractions(otlpHttpSpanExporterBuilder);
+  }
+
+  @Test
+  @DisplayName("logging exporter can still be configured")
+  void loggingExporter() {
+    this.contextRunner
+        .withBean(LoggingSpanExporter.class, LoggingSpanExporter::create)
+        .run(
+            context ->
+                assertThat(
+                        context.getBeanProvider(SpanExporter.class).stream()
+                            .collect(Collectors.toList()))
+                    .hasSize(2));
   }
 }
