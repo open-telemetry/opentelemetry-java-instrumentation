@@ -605,6 +605,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
+    if (thrown == null) {
+      return;
+    }
     Throwable ex;
     if (thrown instanceof ExecutionException) {
       ex = thrown.getCause();
