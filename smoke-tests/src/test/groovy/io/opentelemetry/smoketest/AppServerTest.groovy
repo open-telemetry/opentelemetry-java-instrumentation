@@ -5,7 +5,6 @@
 
 package io.opentelemetry.smoketest
 
-
 import io.opentelemetry.proto.trace.v1.Span
 import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
