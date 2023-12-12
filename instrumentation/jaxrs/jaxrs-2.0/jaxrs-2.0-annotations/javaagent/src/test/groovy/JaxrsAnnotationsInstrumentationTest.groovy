@@ -6,6 +6,7 @@
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import org.junitpioneer.jupiter.SetSystemProperty
 import spock.lang.Unroll
 
 import javax.ws.rs.DELETE
@@ -20,6 +21,11 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName
 
 class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
+
+  def setupSpec() {
+    System.setProperty("otel.instrumentation.common.experimental.controller-telemetry.enabled", "true")
+    System.setProperty("otel.instrumentation.common.experimental.view-telemetry.enabled", "true")
+  }
 
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {
