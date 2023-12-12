@@ -22,11 +22,6 @@ import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassNam
 
 class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecification {
 
-  def setupSpec() {
-    System.setProperty("otel.instrumentation.common.experimental.controller-telemetry.enabled", "true")
-    System.setProperty("otel.instrumentation.common.experimental.view-telemetry.enabled", "true")
-  }
-
   @Unroll
   def "span named '#paramName' from annotations on class '#className' when is not root span"() {
     setup:
