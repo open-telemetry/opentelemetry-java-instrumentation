@@ -35,14 +35,10 @@ class MicrometerBridgeAutoConfigurationTest {
   }
 
   @Test
-  void metricsEnabledByDefault() {
+  void metricsDisabledByDefault() {
     runner
         .withConfiguration(AutoConfigurations.of(MetricsAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context.getBean("otelMeterRegistry", MeterRegistry.class))
-                    .isNotNull()
-                    .isInstanceOf(OpenTelemetryMeterRegistry.class));
+        .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
   }
 
   @Test
