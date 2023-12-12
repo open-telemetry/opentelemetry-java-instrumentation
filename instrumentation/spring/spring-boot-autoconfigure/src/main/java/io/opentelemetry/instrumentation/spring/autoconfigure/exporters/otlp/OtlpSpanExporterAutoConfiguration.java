@@ -36,14 +36,22 @@ import org.springframework.context.annotation.Configuration;
 public class OtlpSpanExporterAutoConfiguration {
 
   @Bean
+  @ConditionalOnMissingBean({OtlpHttpSpanExporterBuilder.class})
+  public OtlpHttpSpanExporterBuilder otelOtlpHttpSpanExporterBuilder() {
+    // used for testing only - the builder is final
+    return OtlpHttpSpanExporter.builder();
+  }
+
+  @Bean
   @ConditionalOnMissingBean({OtlpGrpcSpanExporter.class, OtlpHttpSpanExporter.class})
-  public SpanExporter otelOtlpSpanExporter(OtlpExporterProperties properties) {
+  public SpanExporter otelOtlpSpanExporter(
+      OtlpExporterProperties properties, OtlpHttpSpanExporterBuilder otlpHttpSpanExporterBuilder) {
     return OtlpExporterUtil.applySignalProperties(
         OtlpConfigUtil.DATA_TYPE_TRACES,
         properties,
         properties.getLogs(),
         OtlpGrpcSpanExporter::builder,
-        OtlpHttpSpanExporter::builder,
+        () -> otlpHttpSpanExporterBuilder,
         OtlpGrpcSpanExporterBuilder::setEndpoint,
         OtlpHttpSpanExporterBuilder::setEndpoint,
         (builder, entry) -> {
