@@ -25,8 +25,6 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.grizzly.enabled=true")
-
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
