@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -23,6 +24,9 @@ public class ChannelPipelineTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
+  // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
   @ParameterizedTest
   @CsvSource({"by instance", "by class", "by name", "first"})
   void testRemoveOurHandler(String testName) throws Exception {
@@ -57,6 +61,8 @@ public class ChannelPipelineTest {
     assertEquals(0, channelPipeline.toMap().size());
   }
 
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
   @ParameterizedTest
   @CsvSource({"by instance", "by class", "by name"})
   void shouldReplaceHandler(String desc) {
@@ -107,35 +113,28 @@ public class ChannelPipelineTest {
     ChannelPipeline channelPipeline = channel.pipeline();
     HttpClientCodec httpHandler = new HttpClientCodec();
 
-    // default: head -> tail
     channelPipeline.removeFirst();
     channelPipeline.removeLast();
 
-    // start with no handlers initially
     assertEquals(0, channelPipeline.toMap().size());
 
     channelPipeline.addLast("http", httpHandler);
-
-    // add http and instrumentation handlers
-    // http -> instrumentation
     assertEquals(2, channelPipeline.toMap().size());
-    assertEquals(httpHandler, channelPipeline.first());
-    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
+    assertEquals(channelPipeline.first(), httpHandler);
+    assertEquals(channelPipeline.last().getClass().getSimpleName(), "HttpClientTracingHandler");
 
     NoopChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addAfter("http", "noop", noopHandler);
 
-    // http -> instrumentation -> noop
-    // instrumentation handler is between with http and noop
     assertEquals(3, channelPipeline.toMap().size());
-    assertEquals(httpHandler, channelPipeline.first());
-    assertEquals(noopHandler, channelPipeline.last());
+    assertEquals(channelPipeline.first(), httpHandler);
+    assertEquals(channelPipeline.last(), noopHandler);
 
-    // removeLast will remove everything after http
-    Object removed = channelPipeline.removeLast();
-    assertEquals(removed, httpHandler);
+    // removeLast will remove everything after httpHandler
+    ChannelHandler removed = channelPipeline.removeLast();
+    assertEquals(httpHandler, removed);
 
-    // there is no handler in pipeline
+    // there i sno handler in the pipeline
     assertEquals(0, channelPipeline.toMap().size());
   }
 
