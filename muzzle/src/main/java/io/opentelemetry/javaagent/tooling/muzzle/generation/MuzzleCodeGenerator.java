@@ -98,7 +98,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private boolean generateVirtualFieldsMethod = true;
 
     public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor, URLClassLoader classLoader) {
-      super(Opcodes.ASM7, classVisitor);
+      super(Opcodes.ASM9, classVisitor);
       this.classLoader = classLoader;
     }
 

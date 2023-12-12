@@ -126,7 +126,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   ReferenceCollectingClassVisitor(
       HelperClassPredicate helperClassPredicate, boolean isAdviceClass) {
-    super(Opcodes.ASM7);
+    super(Opcodes.ASM9);
     this.helperClassPredicate = helperClassPredicate;
     this.isAdviceClass = isAdviceClass;
   }
@@ -312,7 +312,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     private int currentLineNumber = -1;
 
     public AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
-      super(Opcodes.ASM7, methodVisitor);
+      super(Opcodes.ASM9, methodVisitor);
     }
 
     @Override
@@ -526,7 +526,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     private final EvictingQueue<Type> lastTwoClassConstants = EvictingQueue.create(2);
 
     VirtualFieldCollectingMethodVisitor(MethodVisitor methodVisitor) {
-      super(Opcodes.ASM7, methodVisitor);
+      super(Opcodes.ASM9, methodVisitor);
     }
 
     @Override

@@ -66,7 +66,7 @@ final class RealFieldInjector implements AsmVisitorWrapper {
       int writerFlags,
       int readerFlags) {
 
-    return new ClassVisitor(Opcodes.ASM7, classVisitor) {
+    return new ClassVisitor(Opcodes.ASM9, classVisitor) {
       // We are using Object class name instead of fieldTypeName here because this gets
       // injected onto the bootstrap class loader where context class may be unavailable
       private final TypeDescription fieldType = TypeDescription.ForLoadedType.of(Object.class);

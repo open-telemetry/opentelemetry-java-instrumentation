@@ -81,12 +81,12 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
       int writerFlags,
       int readerFlags) {
 
-    return new ClassVisitor(Opcodes.ASM7, classVisitor) {
+    return new ClassVisitor(Opcodes.ASM9, classVisitor) {
       @Override
       public MethodVisitor visitMethod(
           int access, String name, String descriptor, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-        return new MethodVisitor(Opcodes.ASM7, mv) {
+        return new MethodVisitor(api, mv) {
           /** The most recent objects pushed to the stack. */
           private final Object[] stack = {null, null};
 
