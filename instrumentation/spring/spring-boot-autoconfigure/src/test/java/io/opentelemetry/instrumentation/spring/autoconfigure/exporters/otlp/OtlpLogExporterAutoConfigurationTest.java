@@ -50,9 +50,16 @@ class OtlpLogExporterAutoConfigurationTest {
   }
 
   @Test
-  void otlpLogsDisabled() {
+  void otlpLogsDisabledOld() {
     runner
         .withPropertyValues("otel.exporter.otlp.logs.enabled=false")
+        .run(context -> assertThat(context.containsBean("otelOtlpLogRecordExporter")).isFalse());
+  }
+
+  @Test
+  void otlpLogsDisabled() {
+    runner
+        .withPropertyValues("otel.logs.exporter=none")
         .run(context -> assertThat(context.containsBean("otelOtlpLogRecordExporter")).isFalse());
   }
 

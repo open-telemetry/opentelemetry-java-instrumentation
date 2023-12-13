@@ -6,12 +6,14 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterUtil;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -23,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(JaegerSpanExporterProperties.class)
-@ConditionalOnProperty(prefix = "otel.exporter.jaeger", name = "enabled", matchIfMissing = true)
+@Conditional(JaegerSpanExporterAutoConfiguration.CustomCondition.class)
 @ConditionalOnClass(io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter.class)
 @Deprecated
 public class JaegerSpanExporterAutoConfiguration {
@@ -42,5 +44,20 @@ public class JaegerSpanExporterAutoConfiguration {
       builder.setTimeout(properties.getTimeout());
     }
     return builder.build();
+  }
+
+  static final class CustomCondition implements Condition {
+    @Override
+    public boolean matches(
+        org.springframework.context.annotation.ConditionContext context,
+        org.springframework.core.type.AnnotatedTypeMetadata metadata) {
+      return ExporterUtil.isExporterEnabled(
+          context.getEnvironment(),
+          null,
+          "otel.exporter.jaeger.enabled",
+          "otel.traces.exporter",
+          "jaeger",
+          true);
+    }
   }
 }

@@ -49,9 +49,16 @@ class OtlpMetricExporterAutoConfigurationTest {
   }
 
   @Test
-  void otlpMetricsDisabled() {
+  void otlpMetricsDisabledOld() {
     runner
         .withPropertyValues("otel.exporter.otlp.metrics.enabled=false")
+        .run(context -> assertThat(context.containsBean("otelOtlpMetricExporter")).isFalse());
+  }
+
+  @Test
+  void otlpMetricsDisabled() {
+    runner
+        .withPropertyValues("otel.metrics.exporter=none")
         .run(context -> assertThat(context.containsBean("otelOtlpMetricExporter")).isFalse());
   }
 

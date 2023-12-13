@@ -11,20 +11,19 @@ import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterUtil;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.Conditional;
 
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(OtlpExporterProperties.class)
-@ConditionalOnProperty(
-    prefix = "otel.exporter.otlp",
-    name = {"enabled", "logs.enabled"},
-    matchIfMissing = true)
+@Conditional(OtlpLoggerExporterAutoConfiguration.CustomCondition.class)
 @ConditionalOnClass(OtlpGrpcLogRecordExporter.class)
 public class OtlpLoggerExporterAutoConfiguration {
 
@@ -50,5 +49,20 @@ public class OtlpLoggerExporterAutoConfiguration {
         OtlpHttpLogRecordExporterBuilder::setTimeout,
         OtlpGrpcLogRecordExporterBuilder::build,
         OtlpHttpLogRecordExporterBuilder::build);
+  }
+
+  static final class CustomCondition implements Condition {
+    @Override
+    public boolean matches(
+        org.springframework.context.annotation.ConditionContext context,
+        org.springframework.core.type.AnnotatedTypeMetadata metadata) {
+      return ExporterUtil.isExporterEnabled(
+          context.getEnvironment(),
+          "otel.exporter.otlp.enabled",
+          "otel.exporter.otlp.logs.enabled",
+          "otel.logs.exporter",
+          "otlp",
+          true);
+    }
   }
 }

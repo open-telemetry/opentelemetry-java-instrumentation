@@ -66,9 +66,16 @@ class OtlpSpanExporterAutoConfigurationTest {
   }
 
   @Test
-  void otlpTracesDisabled() {
+  void otlpTracesDisabledOld() {
     this.contextRunner
         .withPropertyValues("otel.exporter.otlp.traces.enabled=false")
+        .run(context -> assertThat(context.containsBean("otelOtlpSpanExporter")).isFalse());
+  }
+
+  @Test
+  void otlpTracesDisabled() {
+    this.contextRunner
+        .withPropertyValues("otel.traces.exporter=none")
         .run(context -> assertThat(context.containsBean("otelOtlpSpanExporter")).isFalse());
   }
 
