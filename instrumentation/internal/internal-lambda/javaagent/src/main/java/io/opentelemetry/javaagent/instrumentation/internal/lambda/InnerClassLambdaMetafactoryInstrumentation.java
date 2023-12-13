@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClassContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
@@ -89,7 +90,7 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
     private final String slashClassName;
 
     MetaFactoryClassVisitor(ClassVisitor cv, String slashClassName) {
-      super(Opcodes.ASM7, cv);
+      super(AsmApi.VERSION, cv);
       this.slashClassName = slashClassName;
     }
 
