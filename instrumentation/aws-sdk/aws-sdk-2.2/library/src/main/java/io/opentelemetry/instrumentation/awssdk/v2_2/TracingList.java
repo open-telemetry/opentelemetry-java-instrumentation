@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.services.sqs.model.Message;
 
@@ -58,5 +59,12 @@ class TracingList extends ArrayList<Message> {
     }
 
     return it;
+  }
+
+  @Override
+  public void forEach(Consumer<? super Message> action) {
+    for (Message message : this) {
+      action.accept(message);
+    }
   }
 }

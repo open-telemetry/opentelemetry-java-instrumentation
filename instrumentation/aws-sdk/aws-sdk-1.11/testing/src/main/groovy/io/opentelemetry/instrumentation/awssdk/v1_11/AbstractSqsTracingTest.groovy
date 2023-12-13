@@ -68,8 +68,15 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
       receiveMessageRequest.withMessageAttributeNames("test-message-header")
     }
     def receiveMessageResult = client.receiveMessage(receiveMessageRequest)
-    receiveMessageResult.messages.each {message ->
-      runWithSpan("process child") {}
+    // test different ways of iterating the messages list
+    if (testCaptureHeaders) {
+      receiveMessageResult.messages.each { message ->
+        runWithSpan("process child") {}
+      }
+    } else {
+      receiveMessageResult.messages.forEach { message ->
+        runWithSpan("process child") {}
+      }
     }
 
     then:
