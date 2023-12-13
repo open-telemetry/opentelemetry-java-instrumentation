@@ -61,6 +61,7 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     @ConfigurationPropertiesBinding
     public MapConverter mapConverter() {
+      // needed for otlp exporter headers
       return new MapConverter();
     }
 

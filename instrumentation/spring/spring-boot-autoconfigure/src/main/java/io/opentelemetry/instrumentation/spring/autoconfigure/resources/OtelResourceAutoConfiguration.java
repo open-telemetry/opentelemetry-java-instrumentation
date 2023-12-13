@@ -35,6 +35,7 @@ public class OtelResourceAutoConfiguration {
   @Bean
   @ConfigurationPropertiesBinding
   public MapConverter mapConverter() {
+    // needed for OtelResourceProperties
     return new MapConverter();
   }
 
