@@ -33,10 +33,10 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
 
     // TODO (heya) update smoke tests to run using http/protobuf
     // in the meantime, force smoke tests to use grpc protocol for all exporters
-    environment.put("OTEL.EXPORTER.OTLP.PROTOCOL", "grpc");
-    environment.put("OTEL.EXPORTER.OTLP.TRACES.PROTOCOL", "grpc");
-    environment.put("OTEL.EXPORTER.OTLP.METRICS.PROTOCOL", "grpc");
-    environment.put("OTEL.EXPORTER.OTLP.LOGS.PROTOCOL", "grpc");
+    environment.put("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc");
+    environment.put("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL", "grpc");
+    environment.put("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL", "grpc");
+    environment.put("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL", "grpc");
 
     environment.put("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1");
     environment.put("OTEL_BSP_SCHEDULE_DELAY", "10ms");
