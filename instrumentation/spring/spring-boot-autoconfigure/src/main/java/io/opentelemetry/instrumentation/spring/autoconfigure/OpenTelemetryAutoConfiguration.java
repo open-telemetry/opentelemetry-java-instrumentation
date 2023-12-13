@@ -8,7 +8,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLoggerExporterAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -31,6 +35,7 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -60,6 +65,12 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
+    @ConditionalOnBean({
+      OtelResourceAutoConfiguration.class,
+      OtlpLoggerExporterAutoConfiguration.class,
+      OtlpSpanExporterAutoConfiguration.class,
+      OtlpMetricExporterAutoConfiguration.class
+    })
     public MapConverter mapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
       return new MapConverter();
