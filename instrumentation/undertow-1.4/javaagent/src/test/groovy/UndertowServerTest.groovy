@@ -18,7 +18,6 @@ import io.undertow.Undertow
 import io.undertow.util.Headers
 import io.undertow.util.HttpString
 import io.undertow.util.StatusCodes
-import org.junitpioneer.jupiter.SetSystemProperty
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
@@ -30,10 +29,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 //TODO make test which mixes handlers and servlets
 class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTrait {
-
-  def setupSpec() {
-    System.setProperty("otel.instrumentation.common.experimental.controller-telemetry.enabled", "true")
-  }
 
   @Override
   Undertow startServer(int port) {
