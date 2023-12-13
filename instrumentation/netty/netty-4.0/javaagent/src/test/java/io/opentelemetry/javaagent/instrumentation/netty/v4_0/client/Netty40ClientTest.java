@@ -44,7 +44,7 @@ public class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpReq
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+  @Shared EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
   @Shared private final Bootstrap bootstrap = buildBootstrap(false);
 
