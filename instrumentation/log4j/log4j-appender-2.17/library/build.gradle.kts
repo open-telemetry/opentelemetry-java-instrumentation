@@ -11,3 +11,7 @@ dependencies {
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
   }
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

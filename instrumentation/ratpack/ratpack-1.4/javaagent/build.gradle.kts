@@ -53,11 +53,13 @@ tasks {
     }
 
     jvmArgs("-Dotel.semconv-stability.opt-in=http")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-
   }
 
   check {
     dependsOn(testStableSemconv)
   }
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
