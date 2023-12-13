@@ -47,6 +47,8 @@ abstract class SmokeTest {
 
   protected abstract String getTargetImage(int jdk);
 
+  protected abstract WaitStrategy getTargetWaitStrategy();
+
   /** Subclasses can override this method to customise target application's environment */
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap();
@@ -69,7 +71,7 @@ abstract class SmokeTest {
 
   protected GenericContainer target;
 
-  void startTarget(int jdk, WaitStrategy waitStrategy) {
+  void startTarget(int jdk) {
     target =
         new GenericContainer<>(getTargetImage(jdk))
             .withExposedPorts(8080)
@@ -82,7 +84,7 @@ abstract class SmokeTest {
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
             .withEnv(getExtraEnv())
-            .waitingFor(waitStrategy);
+            .waitingFor(getTargetWaitStrategy());
     target.start();
   }
 

@@ -17,6 +17,7 @@ import okhttp3.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
 class SpringBootSmokeTest extends SmokeTest {
 
@@ -27,12 +28,15 @@ class SpringBootSmokeTest extends SmokeTest {
         + "-20211213.1570880324";
   }
 
+  @Override
+  protected WaitStrategy getTargetWaitStrategy() {
+    return Wait.forLogMessage(".*Started SpringbootApplication in.*", 1)
+        .withStartupTimeout(Duration.ofMinutes(1));
+  }
+
   @Test
   public void springBootSmokeTestOnJDK() throws IOException, InterruptedException {
-    startTarget(
-        8,
-        Wait.forLogMessage(".*Started SpringbootApplication in.*", 1)
-            .withStartupTimeout(Duration.ofMinutes(1)));
+    startTarget(8);
     String url = String.format("http://localhost:%d/greeting", target.getMappedPort(8080));
     Request request = new Request.Builder().url(url).get().build();
 
