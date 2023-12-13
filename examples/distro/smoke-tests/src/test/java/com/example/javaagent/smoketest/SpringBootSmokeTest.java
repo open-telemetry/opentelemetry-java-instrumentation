@@ -52,7 +52,7 @@ class SpringBootSmokeTest extends SmokeTest {
     Assertions.assertEquals(1, countSpansByName(traces, "WebController.withSpan"));
     Assertions.assertEquals(2, countSpansByAttributeValue(traces, "custom", "demo"));
     Assertions.assertNotEquals(
-        0, countResourcesByValue(traces, "telemetry.auto.version", currentAgentVersion));
+        0, countResourcesByValue(traces, "telemetry.distro.version", currentAgentVersion));
     Assertions.assertNotEquals(0, countResourcesByValue(traces, "custom.resource", "demo"));
 
     stopTarget();
