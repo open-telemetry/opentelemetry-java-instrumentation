@@ -404,7 +404,11 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 | Otlp Logs Exporter    | otel.exporter.otlp.logs.enabled             | `true`        | OtlpGrpcLogRecordExporter |
 | Jaeger Exporter       | otel.exporter.jaeger.enabled                | `true`        | JaegerGrpcSpanExporter    |
 | Zipkin Exporter       | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter        |
-| Logging Exporter      | otel.exporter.logging.enabled               | `true`        | LoggingSpanExporter       |
+| Logging Exporter      | otel.exporter.logging.enabled               | `false`       | LoggingSpanExporter       |
+                                                                                                                            
+All exporters can also be enabled or disabled as in the 
+[SDK auto-configuration](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#exporters).
+This is the preferred way to enable/disable exporters and takes precedence over the properties above.
 
 <!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
 
