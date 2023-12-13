@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 class TracingList extends SdkInternalList<Message> {
   private static final long serialVersionUID = 1L;
@@ -55,6 +56,13 @@ class TracingList extends SdkInternalList<Message> {
     }
 
     return it;
+  }
+
+  @Override
+  public void forEach(Consumer<? super Message> action) {
+    for (Message message : this) {
+      action.accept(message);
+    }
   }
 
   private static boolean inAwsClient() {
