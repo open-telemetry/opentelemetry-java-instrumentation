@@ -84,6 +84,8 @@ include(":custom-checks")
 include(":muzzle")
 
 // agent projects
+include(":instrumentation-native-support")
+
 include(":opentelemetry-api-shaded-for-instrumenting")
 include(":opentelemetry-ext-annotations-shaded-for-instrumenting")
 include(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting")
@@ -579,3 +581,6 @@ include(":instrumentation:zio:zio-2.0:javaagent")
 // benchmark
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
+
+// graalvm native image support
+include(":instrumentation-native-support:main")
