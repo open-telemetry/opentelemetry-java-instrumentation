@@ -27,6 +27,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
@@ -39,40 +40,34 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import spock.lang.Shared;
 
 class Netty40ConnectionSpanTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private HttpClientTestServer server;
-  private EventLoopGroup eventLoopGroup;
-  private final Bootstrap bootstrap = buildBootstrap();
+  @Shared static HttpClientTestServer server;
+  @Shared static EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+  @Shared static Bootstrap bootstrap = buildBootstrap();
 
-  @BeforeEach
-  void setupSpec() {
+  @BeforeAll
+  static void setupSpec() {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
-    eventLoopGroup = new NioEventLoopGroup();
   }
 
-  @AfterEach
-  void cleanupSpec() {
+  @AfterAll
+  static void cleanupSpec() throws InterruptedException, ExecutionException, TimeoutException {
     eventLoopGroup.shutdownGracefully();
-    try {
-      server.stop().get(10, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    } catch (ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
+    server.stop().get(10, TimeUnit.SECONDS);
   }
 
-  private Bootstrap buildBootstrap() {
+  static Bootstrap buildBootstrap() {
     Bootstrap bootstrap = new Bootstrap();
     bootstrap
         .group(eventLoopGroup)
@@ -92,7 +87,7 @@ class Netty40ConnectionSpanTest {
   @Test
   public void successfulRequest() throws Exception {
     // when
-    URI uri = URI.create("http://localhost:${server.httpPort()}/success");
+    URI uri = URI.create("http://localhost:" + server.httpPort() + "/success");
 
     DefaultFullHttpRequest request = buildRequest("GET", uri, new HashMap<>());
     int responseCode = testing.runWithSpan("parent", () -> sendRequest(request, uri));
@@ -110,6 +105,7 @@ class Netty40ConnectionSpanTest {
                       equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
                       equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
@@ -121,7 +117,7 @@ class Netty40ConnectionSpanTest {
   @Test
   public void failedRequest() throws Exception {
     // when
-    URI uri = URI.create("http://localhost:${PortUtils.UNUSABLE_PORT}");
+    URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT);
 
     DefaultFullHttpRequest request = buildRequest("GET", uri, new HashMap<>());
     Throwable thrown =
@@ -154,7 +150,7 @@ class Netty40ConnectionSpanTest {
     return request;
   }
 
-  private int sendRequest(DefaultFullHttpRequest request, URI uri)
+  private static int sendRequest(DefaultFullHttpRequest request, URI uri)
       throws InterruptedException, ExecutionException, TimeoutException {
     Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
     CompletableFuture<Integer> result = new CompletableFuture<Integer>();
