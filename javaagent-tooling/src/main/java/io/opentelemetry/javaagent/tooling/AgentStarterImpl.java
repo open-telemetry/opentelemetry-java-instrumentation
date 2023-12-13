@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
@@ -151,7 +152,7 @@ public class AgentStarterImpl implements AgentStarter {
       ClassReader cr = new ClassReader(classfileBuffer);
       ClassWriter cw = new ClassWriter(cr, 0);
       ClassVisitor cv =
-          new ClassVisitor(Opcodes.ASM7, cw) {
+          new ClassVisitor(AsmApi.VERSION, cw) {
             @Override
             public MethodVisitor visitMethod(
                 int access, String name, String descriptor, String signature, String[] exceptions) {

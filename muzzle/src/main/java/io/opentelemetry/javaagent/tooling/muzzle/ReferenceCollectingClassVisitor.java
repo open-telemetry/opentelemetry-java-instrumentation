@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.common.collect.EvictingQueue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRefBuilder;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
@@ -126,7 +127,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
   ReferenceCollectingClassVisitor(
       HelperClassPredicate helperClassPredicate, boolean isAdviceClass) {
-    super(Opcodes.ASM7);
+    super(AsmApi.VERSION);
     this.helperClassPredicate = helperClassPredicate;
     this.isAdviceClass = isAdviceClass;
   }
@@ -252,7 +253,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     MethodVisitor methodVisitor =
         super.visitMethod(access, name, descriptor, signature, exceptions);
     MethodVisitor methodNode =
-        new MethodNode(Opcodes.ASM9, access, name, descriptor, signature, exceptions) {
+        new MethodNode(AsmApi.VERSION, access, name, descriptor, signature, exceptions) {
           @Override
           public void visitEnd() {
             super.visitEnd();
@@ -312,7 +313,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     private int currentLineNumber = -1;
 
     public AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
-      super(Opcodes.ASM7, methodVisitor);
+      super(AsmApi.VERSION, methodVisitor);
     }
 
     @Override
@@ -526,7 +527,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     private final EvictingQueue<Type> lastTwoClassConstants = EvictingQueue.create(2);
 
     VirtualFieldCollectingMethodVisitor(MethodVisitor methodVisitor) {
-      super(Opcodes.ASM7, methodVisitor);
+      super(AsmApi.VERSION, methodVisitor);
     }
 
     @Override
