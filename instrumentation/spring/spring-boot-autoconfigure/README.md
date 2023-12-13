@@ -392,16 +392,19 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 ##### Enabling/Disabling Features
 
-| Feature          | Property                                    | Default Value | ConditionalOnClass     |
-|------------------|---------------------------------------------|---------------|------------------------|
-| spring-web       | otel.instrumentation.spring-webmvc.enabled  | `true`        | RestTemplate           |
-| spring-webmvc    | otel.instrumentation.spring-web.enabled     | `true`        | OncePerRequestFilter   |
-| spring-webflux   | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient              |
-| @WithSpan        | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect       |
-| Otlp Exporter    | otel.exporter.otlp.enabled                  | `true`        | OtlpGrpcSpanExporter   |
-| Jaeger Exporter  | otel.exporter.jaeger.enabled                | `true`        | JaegerGrpcSpanExporter |
-| Zipkin Exporter  | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter     |
-| Logging Exporter | otel.exporter.logging.enabled               | `true`        | LoggingSpanExporter    |
+| Feature               | Property                                    | Default Value | ConditionalOnClass        |
+|-----------------------|---------------------------------------------|---------------|---------------------------|
+| spring-web            | otel.instrumentation.spring-webmvc.enabled  | `true`        | RestTemplate              |
+| spring-webmvc         | otel.instrumentation.spring-web.enabled     | `true`        | OncePerRequestFilter      |
+| spring-webflux        | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient                 |
+| @WithSpan             | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect          |
+| Otlp Exporter         | otel.exporter.otlp.enabled                  | `true`        | -                         |
+| Otlp Span Exporter    | otel.exporter.otlp.traces.enabled           | `true`        | OtlpGrpcSpanExporter      |
+| Otlp Metrics Exporter | otel.exporter.otlp.metrics.enabled          | `true`        | OtlpGrpcMetricExporter    |
+| Otlp Logs Exporter    | otel.exporter.otlp.logs.enabled             | `true`        | OtlpGrpcLogRecordExporter |
+| Jaeger Exporter       | otel.exporter.jaeger.enabled                | `true`        | JaegerGrpcSpanExporter    |
+| Zipkin Exporter       | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter        |
+| Logging Exporter      | otel.exporter.logging.enabled               | `true`        | LoggingSpanExporter       |
 
 <!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
 
@@ -428,12 +431,30 @@ otel.springboot.resource.attributes.xyz=foo
 ##### Exporter Properties
 
 | Feature         | Property                      | Default Value                        |
-| --------------- | ----------------------------- | ------------------------------------ |
+|-----------------|-------------------------------|--------------------------------------|
 | Otlp Exporter   | otel.exporter.otlp.endpoint   | `localhost:4317`                     |
+|                 | otel.exporter.otlp.protocol   | `grpc`                               |
+|                 | otel.exporter.otlp.headers    |                                      |
 |                 | otel.exporter.otlp.timeout    | `1s`                                 |
 | Jaeger Exporter | otel.exporter.jaeger.endpoint | `localhost:14250`                    |
 |                 | otel.exporter.jaeger.timeout  | `1s`                                 |
 | Zipkin Exporter | otel.exporter.jaeger.endpoint | `http://localhost:9411/api/v2/spans` |
+
+The `otel.exporter.otlp.headers` property can be specified as a comma-separated list,
+which is compliant with the
+[specification](https://opentelemetry.io/docs/concepts/sdk-configuration/otlp-exporter-configuration/#otel_exporter_otlp_headers).
+It's also possible to specify the headers in `application.yaml`:
+
+```yaml
+otel:
+  exporter:
+    otlp:
+      headers:
+        - key: "header1"
+          value: "value1"
+        - key: "header2"
+          value: "value2"
+```
 
 ##### Tracer Properties
 
