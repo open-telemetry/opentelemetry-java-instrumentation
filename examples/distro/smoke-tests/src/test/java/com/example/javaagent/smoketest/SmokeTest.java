@@ -31,6 +31,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.MountableFile;
 
 abstract class SmokeTest {
@@ -45,6 +46,8 @@ abstract class SmokeTest {
       System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
 
   protected abstract String getTargetImage(int jdk);
+
+  protected abstract WaitStrategy getTargetWaitStrategy();
 
   /** Subclasses can override this method to customise target application's environment */
   protected Map<String, String> getExtraEnv() {
@@ -80,7 +83,8 @@ abstract class SmokeTest {
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
-            .withEnv(getExtraEnv());
+            .withEnv(getExtraEnv())
+            .waitingFor(getTargetWaitStrategy());
     target.start();
   }
 
