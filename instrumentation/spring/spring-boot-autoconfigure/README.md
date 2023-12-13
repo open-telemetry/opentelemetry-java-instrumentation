@@ -410,23 +410,46 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 ##### Resource Properties
 
-| Feature  | Property                                         | Default Value          |
-| -------- | ------------------------------------------------ | ---------------------- |
-| Resource | otel.springboot.resource.enabled                 | `true`                 |
-|          | otel.springboot.resource.attributes.service.name | `unknown_service:java` |
-|          | otel.springboot.resource.attributes              | `empty map`            |
+| Feature  | Property                                                            | Default Value          |
+| -------- |---------------------------------------------------------------------| ---------------------- |
+| Resource | otel.springboot.resource.enabled                                    | `true`                 |
+|          | otel.resource.attributes (old: otel.springboot.resource.attributes) | `empty map`            |
 
-`unknown_service:java` will be used as the service-name if no value has been specified to the
-property `spring.application.name` or `otel.springboot.resource.attributes.service.name` (which has
-the highest priority)
-
-`otel.springboot.resource.attributes` supports a pattern-based resource configuration in the
+`otel.resource.attributes` supports a pattern-based resource configuration in the
 application.properties like this:
 
 ```
-otel.springboot.resource.attributes.environment=dev
-otel.springboot.resource.attributes.xyz=foo
+otel.resource.attributes.environment=dev
+otel.resource.attributes.xyz=foo
 ```
+
+It's also possible to specify the resource attributes in `application.yaml`:
+
+```yaml
+otel:
+  resource:
+    attributes:
+      environment: dev
+      xyz: foo
+```
+
+Finally, the resource attributes can be specified as a comma-separated list, as described in the
+[specification](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_resource_attributes):
+
+```shell
+export OTEL_RESOURCE_ATTRIBUTES="key1=value1,key2=value2"
+```
+
+The service name is determined by the following precedence, in accordance with the OpenTelemetry
+[specification](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_service_name):
+
+  1. `otel.service.name` spring property or `OTEL_SERVICE_NAME` environment variable (highest
+   precedence)
+2. `service.name` in `otel.resource.attributes` system/spring property or `OTEL_RESOURCE_ATTRIBUTES`
+   environment variable
+3. `service.name` in `otel.springboot.resource.attributes` system/spring property
+4. `spring.application.name` spring property
+5. the default value `unknown_service:java` (lowest precedence)
 
 ##### Exporter Properties
 
@@ -443,7 +466,8 @@ otel.springboot.resource.attributes.xyz=foo
 The `otel.exporter.otlp.headers` property can be specified as a comma-separated list,
 which is compliant with the
 [specification](https://opentelemetry.io/docs/concepts/sdk-configuration/otlp-exporter-configuration/#otel_exporter_otlp_headers).
-It's also possible to specify the headers in `application.yaml`:
+Similar to the resource attributes, the headers can be specified in `application.properties` or
+`application.yaml`:
 
 ```yaml
 otel:

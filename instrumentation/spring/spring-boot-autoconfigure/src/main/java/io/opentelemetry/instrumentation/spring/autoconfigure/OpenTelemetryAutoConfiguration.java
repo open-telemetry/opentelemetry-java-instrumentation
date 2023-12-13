@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.SdkLoggerProviderBuilder;
 import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
@@ -30,7 +30,6 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,7 +37,6 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesBindin
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -166,19 +164,6 @@ public class OpenTelemetryAutoConfiguration {
       openTelemetryInjectors.forEach(consumer -> consumer.accept(openTelemetry));
 
       return openTelemetry;
-    }
-
-    static class MapConverter implements Converter<String, Map<String, String>> {
-
-      public static final String KEY = "key";
-
-      @Override
-      public Map<String, String> convert(String source) {
-        DefaultConfigProperties properties =
-            DefaultConfigProperties.createFromMap(Collections.singletonMap(KEY, source));
-
-        return properties.getMap(KEY);
-      }
     }
   }
 

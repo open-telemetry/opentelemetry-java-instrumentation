@@ -31,7 +31,7 @@ class SpringBootSmokeTest extends SmokeTest {
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return Collections.singletonMap("OTEL_METRICS_EXPORTER", "otlp")
+    return ImmutableMap.of("OTEL_METRICS_EXPORTER", "otlp", "OTEL_RESOURCE_ATTRIBUTES", "foo=bar")
   }
 
   @Override
@@ -86,6 +86,13 @@ class SpringBootSmokeTest extends SmokeTest {
     metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
     metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
     metrics.hasMetricsNamed("process.runtime.jvm.memory.limit")
+
+    then: "resource attributes are read from the environment"
+    def serviceName = findResourceAttribute(traces, "foo")
+      .map { it.stringValue }
+      .findAny()
+    serviceName.isPresent()
+    serviceName.get() == "bar"
 
     then: "service name is autodetected"
     def serviceName = findResourceAttribute(traces, "service.name")

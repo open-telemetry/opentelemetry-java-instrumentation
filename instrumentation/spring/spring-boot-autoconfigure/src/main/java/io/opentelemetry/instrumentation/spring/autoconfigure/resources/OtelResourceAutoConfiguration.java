@@ -16,23 +16,33 @@ import io.opentelemetry.instrumentation.resources.ProcessResourceProvider;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(OtelResourceProperties.class)
+@EnableConfigurationProperties({OtelSpringResourceProperties.class, OtelResourceProperties.class})
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.springboot.resource", name = "enabled", matchIfMissing = true)
 public class OtelResourceAutoConfiguration {
 
   @Bean
-  public ResourceProvider otelResourceProvider(OtelResourceProperties otelResourceProperties) {
-    return new SpringResourceProvider(otelResourceProperties);
+  @ConfigurationPropertiesBinding
+  public MapConverter mapConverter() {
+    return new MapConverter();
+  }
+
+  @Bean
+  public ResourceProvider otelResourceProvider(
+      OtelSpringResourceProperties otelSpringResourceProperties,
+      OtelResourceProperties otelResourceProperties) {
+    return new SpringResourceProvider(otelSpringResourceProperties, otelResourceProperties);
   }
 
   @Bean
