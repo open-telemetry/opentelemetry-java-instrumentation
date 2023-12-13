@@ -11,8 +11,14 @@ import java.util.Map;
 import org.springframework.core.convert.converter.Converter;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * The MapConverter class is used to convert a String to a Map. The String is expected to be in the
+ * format of a comma separated list of key=value pairs, e.g. key1=value1,key2=value2.
+ *
+ * <p>This is the expected format for the <code>OTEL_RESOURCE_ATTRIBUTES</code> and <code>
+ * OTEL_EXPORTER_OTLP_HEADERS</code> environment variables.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class MapConverter implements Converter<String, Map<String, String>> {
 
