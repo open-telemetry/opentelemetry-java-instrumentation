@@ -21,8 +21,6 @@ public class OtlpProtocolPropertiesSupplier implements AutoConfigurationCustomiz
   @Override
   public int order() {
     // make sure it runs after all the user-provided customizers
-    // this is a low-priority configuration customizer, and it has to run after the
-    // ConfigurationPropertiesSupplier, which is at Integer.MAX_VALUE (high-priority)
     return Integer.MIN_VALUE;
   }
 }
