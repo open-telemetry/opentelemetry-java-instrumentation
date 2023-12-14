@@ -11,7 +11,7 @@ import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterUtil;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -57,7 +57,7 @@ public class OtlpMetricExporterAutoConfiguration {
     public boolean matches(
         org.springframework.context.annotation.ConditionContext context,
         org.springframework.core.type.AnnotatedTypeMetadata metadata) {
-      return ExporterUtil.isExporterEnabled(
+      return ExporterConfigEvaluator.isExporterEnabled(
           context.getEnvironment(),
           "otel.exporter.otlp.enabled",
           "otel.exporter.otlp.metrics.enabled",

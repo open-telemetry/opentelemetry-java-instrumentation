@@ -13,9 +13,9 @@ import org.springframework.core.env.Environment;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class ExporterUtil {
+public final class ExporterConfigEvaluator {
 
-  private ExporterUtil() {}
+  private ExporterConfigEvaluator() {}
 
   public static boolean isExporterEnabled(
       Environment environment,

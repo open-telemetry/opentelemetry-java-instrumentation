@@ -390,14 +390,14 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 
 #### Configuration Properties
 
-##### Enabling/Disabling Features
+##### Enabling/Disabling Exporters
+
+All exporters can be enabled or disabled as in the
+[SDK auto-configuration](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#exporters).
+This is the preferred way to enable/disable exporters and takes precedence over the properties below.
 
 | Feature               | Property                                    | Default Value | ConditionalOnClass        |
 |-----------------------|---------------------------------------------|---------------|---------------------------|
-| spring-web            | otel.instrumentation.spring-webmvc.enabled  | `true`        | RestTemplate              |
-| spring-webmvc         | otel.instrumentation.spring-web.enabled     | `true`        | OncePerRequestFilter      |
-| spring-webflux        | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient                 |
-| @WithSpan             | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect          |
 | Otlp Exporter         | otel.exporter.otlp.enabled                  | `true`        | -                         |
 | Otlp Span Exporter    | otel.exporter.otlp.traces.enabled           | `true`        | OtlpGrpcSpanExporter      |
 | Otlp Metrics Exporter | otel.exporter.otlp.metrics.enabled          | `true`        | OtlpGrpcMetricExporter    |
@@ -406,11 +406,16 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 | Zipkin Exporter       | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter        |
 | Logging Exporter      | otel.exporter.logging.enabled               | `false`       | LoggingSpanExporter       |
 
-All exporters can also be enabled or disabled as in the
-[SDK auto-configuration](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#exporters).
-This is the preferred way to enable/disable exporters and takes precedence over the properties above.
-
 <!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
+
+##### Enabling/Disabling Features
+
+| Feature               | Property                                    | Default Value | ConditionalOnClass        |
+|-----------------------|---------------------------------------------|---------------|---------------------------|
+| spring-web            | otel.instrumentation.spring-webmvc.enabled  | `true`        | RestTemplate              |
+| spring-webmvc         | otel.instrumentation.spring-web.enabled     | `true`        | OncePerRequestFilter      |
+| spring-webflux        | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient                 |
+| @WithSpan             | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect          |
 
 ##### Resource Properties
 
