@@ -84,7 +84,7 @@ CI test logs are pretty big around 75MB. To make it easier to troubleshoot test 
 
 ## How to download the raw logs
 
-1. Click on the `Details` link in the CI job under `Some check were not sussessful` section of your PR.
+1. Click on the `Details` link in one of the failing CI jobs under `Some checks were not successful` section of your PR.
 2. Click on one of the failed tests in the left panel.
 3. Click on the `Setting` gear in the top right corner of the logs panel and select 'View raw logs'.
 4. While the page is loading, you can right click to save the page as a text file locally.
