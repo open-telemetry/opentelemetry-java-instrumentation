@@ -90,3 +90,5 @@ CI test logs are pretty big around 75MB. To make it easier to troubleshoot test 
 4. Right click on 'View raw logs' and then 'Save link as' to save the page as a text file locally.
 5. Once the file is downloaded, open it in a text editor and search for `Publishing build scan...` to find the URL.
 6. Open the URL in a browser to view the test execution breakdown.
+
+It might prompt you to "Activate your Build Scan" the very 1st time, you can use your own email address and activate it via email.
