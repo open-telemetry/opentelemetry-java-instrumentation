@@ -20,7 +20,7 @@ public class OtlpProtocolPropertiesSupplier implements AutoConfigurationCustomiz
 
   @Override
   public int order() {
-    // make sure it runs after all the user-provided customizers
+    // make sure it runs BEFORE all the user-provided customizers
     return Integer.MIN_VALUE;
   }
 }
