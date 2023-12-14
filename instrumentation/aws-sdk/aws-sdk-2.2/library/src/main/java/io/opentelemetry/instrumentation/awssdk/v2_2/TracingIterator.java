@@ -16,8 +16,9 @@ import software.amazon.awssdk.services.sqs.model.Message;
 class TracingIterator implements Iterator<Message> {
 
   private final Iterator<Message> delegateIterator;
-  private final Instrumenter<SqsProcessRequest, Void> instrumenter;
+  private final Instrumenter<SqsProcessRequest, Response> instrumenter;
   private final ExecutionAttributes request;
+  private final Response response;
   private final TracingExecutionInterceptor config;
   private final Context receiveContext;
 
@@ -31,24 +32,28 @@ class TracingIterator implements Iterator<Message> {
 
   private TracingIterator(
       Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Void> instrumenter,
+      Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
+      Response response,
       TracingExecutionInterceptor config,
       Context receiveContext) {
     this.delegateIterator = delegateIterator;
     this.instrumenter = instrumenter;
     this.request = request;
+    this.response = response;
     this.config = config;
     this.receiveContext = receiveContext;
   }
 
   public static Iterator<Message> wrap(
       Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Void> instrumenter,
+      Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
+      Response response,
       TracingExecutionInterceptor config,
       Context receiveContext) {
-    return new TracingIterator(delegateIterator, instrumenter, request, config, receiveContext);
+    return new TracingIterator(
+        delegateIterator, instrumenter, request, response, config, receiveContext);
   }
 
   @Override
@@ -85,7 +90,7 @@ class TracingIterator implements Iterator<Message> {
   private void closeScopeAndEndSpan() {
     if (currentScope != null) {
       currentScope.close();
-      instrumenter.end(currentContext, currentRequest, null, null);
+      instrumenter.end(currentContext, currentRequest, response, null);
       currentScope = null;
       currentRequest = null;
       currentContext = null;

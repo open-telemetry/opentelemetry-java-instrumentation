@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 
 enum SqsProcessRequestAttributesGetter
-    implements MessagingAttributesGetter<SqsProcessRequest, Void> {
+    implements MessagingAttributesGetter<SqsProcessRequest, Response> {
   INSTANCE;
 
   @Override
@@ -59,7 +59,7 @@ enum SqsProcessRequestAttributesGetter
 
   @Override
   @Nullable
-  public String getMessageId(SqsProcessRequest request, @Nullable Void response) {
+  public String getMessageId(SqsProcessRequest request, @Nullable Response response) {
     return request.getMessage().getMessageId();
   }
 

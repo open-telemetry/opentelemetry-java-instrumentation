@@ -12,7 +12,6 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest
 import com.amazonaws.services.sqs.model.SendMessageRequest
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
@@ -121,6 +120,7 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -128,7 +128,7 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$HttpAttributes.ERROR_TYPE" "_OTHER"
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(2) {
@@ -213,6 +213,7 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -220,7 +221,7 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$HttpAttributes.ERROR_TYPE" "_OTHER"
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(2) {
