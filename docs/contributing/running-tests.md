@@ -90,6 +90,3 @@ CI test logs are pretty big around 75MB. To make it easier to troubleshoot test 
 4. While the page is loading, you can right click to save the page as a text file locally.
 5. Once the file is downloaded, open it in a text editor and search for `Publishing build scan...` to find the URL.
 6. Open the URL in a browser to view the test execution breakdown.
-
-This helps to identify which test is failing and why. If you are still not able to figure out the issue, please reach out to the maintainers for help.
-```
