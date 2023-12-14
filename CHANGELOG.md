@@ -2,6 +2,109 @@
 
 ## Unreleased
 
+The 2.0 release contains significant breaking changes that will most likely affect all users,
+please be sure to read the migration notes below carefully.
+
+Note: 1.32.x will be security patched for at least 6 months in case some of the changes below are
+too disruptive to adopt right away.
+
+### Migration notes
+
+- Stable HTTP semantic conventions are now emitted.
+  - MANY CHANGES, see https://opentelemetry.io/blog/2023/http-conventions-declared-stable/#summary-of-changes
+- Stable JVM semantic conventions are now emitted.
+  - `process.runtime.jvm.classes.loaded` renamed to `jvm.classes.loaded`
+  - `process.runtime.jvm.classes.unloaded` renamed to `jvm.classes.unloaded`
+  - `process.runtime.jvm.classes.current_loaded` renamed to `jvm.classes.count`
+  - `process.runtime.jvm.system.cpu.load_1m` renamed to `jvm.system.cpu.load_1m` (still experimental)
+  - `process.runtime.jvm.system.cpu.utilization` renamed to `jvm.system.cpu.utilization` (still experimental)
+  - `process.runtime.jvm.cpu.utilization` renamed to `jvm.cpu.recent_utilization`
+  - `process.runtime.jvm.gc.duration` renamed to `jvm.gc.duration`
+  - `process.runtime.jvm.memory.init` renamed to `jvm.memory.init` (still experimental)
+  - `process.runtime.jvm.memory.usage` renamed to `jvm.memory.used`
+  - `process.runtime.jvm.memory.committed` renamed to `jvm.memory.committed`
+  - `process.runtime.jvm.memory.limit` renamed to `jvm.memory.limit`
+  - `process.runtime.jvm.memory.usage_after_last_gc` renamed to `jvm.memory.used_after_last_gc`
+  - `process.runtime.jvm.threads.count` renamed to `jvm.threads.count`
+  - `process.runtime.jvm.buffer.limit` renamed to `jvm.buffer.memory.limit` (still experimental)
+  - `process.runtime.jvm.buffer.count` renamed to `jvm.buffer.count` (still experimental)
+  - `process.runtime.jvm.buffer.usage` renamed to `jvm.buffer.memory.usage` (still experimental)
+- The default OTLP protocol has been changed from `grpc` to `http/protobuf` in order to align with
+  the specification. You can switch to the `grpc` protocol using `OTEL_EXPORTER_OTLP_PROTOCOL=grpc`
+  or `-Dotel.exporter.otlp.protocol=grpc`.
+- The OTLP logs exporter is now enabled by default. You can disable it using
+  `OTEL_EXPORTER_LOGS=none` or `-Dotel.exporter.logs=none`.
+- Controller spans are now disabled by default. You can enable them using
+  `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED=true`
+  or `-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true`.
+- View spans are now disabled by default. You can enable them using
+  `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_VIEW_TELEMETRY_ENABLED=true`
+  or `-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true`.
+- Micrometer metric bridge has been disabled by default. You can enable it using
+  `OTEL_INSTRUMENTATION_MICROMETER_ENABLED=true`
+  or `-Dotel.instrumentation.micrometer.enabled=true`.
+- The configuration property
+  `otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes` has been
+  renamed to `otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes`.
+- MDC attribute prefixes (`log4j.mdc.` and `logback.mdc.*`) have been removed.
+- The artifact `instrumentation-api-semconv` has been renamed to `instrumentation-api-incubator`.
+- HTTP classes have been moved from `instrumentation-api-incubator` to `instrumentation-api`
+  and as a result are now stable.
+
+### 🌟 New javaagent instrumentation
+
+- Vert.x redis client
+  ([#9838](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9838))
+
+### 📈 Enhancements
+
+- Reduce reactor stack trace depth
+  ([#9923](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9923))
+- Implement `error.type` in `spring-webflux` and `reactor-netty` instrumentations
+  ([#9967](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9967))
+- Bridge metric advice in OpenTelemetry API 1.32
+  ([#10026](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10026))
+- Capture http.route for akka-http
+  ([#10039](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10039))
+- Rename `telemetry.auto.version` to `telemetry.distro.version` and add `telemetry.distro.name`
+  ([#9065](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9065))
+- Implement forEach support for aws sqs tracing list
+  ([#10062](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10062))
+- Add http client response attributes to aws sqs process spans
+  ([#10074](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10074))
+- Add support for `OTEL_RESOURCE_ATTRIBUTES`, `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_HEADERS`,
+  and `OTEL_EXPORTER_OTLP_PROTOCOL` for spring boot starter
+  ([#9950](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9950))
+- Add elasticsearch-api-client as instrumentation name to elasticsearch-api-client-7.16
+  ([#10102](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10102))
+- Add instrumentation for druid connection pool
+  ([#9935](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9935))
+- Remove deprecated rocketmq setting
+  ([#10125](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10125))
+- JMX metrics for Tomcat with 'Tomcat' JMX domain
+  ([#10115](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10115))
+- Capture the SNS topic ARN under the 'messaging.destination.name' span attribute.
+  ([#10096](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10096))
+
+### 🛠️ Bug fixes
+
+- Fix aws propagator presence check in spring boot starter
+  ([#9924](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9924))
+- Capture authority from apache httpclient request when HttpHost is null
+  ([#9990](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9990))
+- Fix NoSuchBeanDefinitionException with the JDBC driver configuration in spring boot starter
+  ([#9978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/9978))
+- Null check for nullable response object in aws sdk 1.1 instrumentation
+  ([#10029](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10029))
+- Fix using opentelemetry-spring-boot with Java 8 and Gradle
+  ([#10066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10066))
+- Fix transforming Java record types
+  ([#10052](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10052))
+- Fix warnings from the spring boot starter
+  ([#10086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10086))
+- Resolve `ParameterNameDiscoverer` Bean Conflict in `spring-boot-autoconfigure`
+  ([#10105](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10105))
+
 ## Version 1.32.0 (2023-11-18)
 
 ### Migration notes
