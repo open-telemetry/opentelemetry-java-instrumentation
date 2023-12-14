@@ -24,7 +24,7 @@ class OtlpProtocolPropertiesSupplierTest {
     GlobalEventEmitterProvider.resetForTest();
   }
 
-  @SetSystemProperty(key = "otel.exporter.otlp.protocol", value = "grpc") // customer sets grpc
+  @SetSystemProperty(key = "otel.exporter.otlp.protocol", value = "grpc") // user explicitly sets grpc
   @Test
   void keepUserOtlpProtocolConfiguration() {
     // when
