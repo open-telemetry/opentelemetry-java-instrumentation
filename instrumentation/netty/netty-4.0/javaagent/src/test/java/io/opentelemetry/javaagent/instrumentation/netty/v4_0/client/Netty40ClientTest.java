@@ -37,18 +37,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import spock.lang.Shared;
 
 public class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  @Shared EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+  private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
-  @Shared private final Bootstrap bootstrap = buildBootstrap(false);
+  private final Bootstrap bootstrap = buildBootstrap(false);
 
-  @Shared private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
+  private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
 
   void cleanupSpec() {
     if (eventLoopGroup != null) {

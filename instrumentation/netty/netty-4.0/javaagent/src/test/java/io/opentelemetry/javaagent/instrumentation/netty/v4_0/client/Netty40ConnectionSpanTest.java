@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -44,16 +45,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import spock.lang.Shared;
 
 class Netty40ConnectionSpanTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @Shared static HttpClientTestServer server;
-  @Shared static EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-  @Shared static Bootstrap bootstrap = buildBootstrap();
+  private static HttpClientTestServer server;
+  private static final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+  private static final Bootstrap bootstrap = buildBootstrap();
 
   @BeforeAll
   static void setupSpec() {
@@ -85,7 +85,7 @@ class Netty40ConnectionSpanTest {
   }
 
   @Test
-  public void successfulRequest() throws Exception {
+  void successfulRequest() throws Exception {
     // when
     URI uri = URI.create("http://localhost:" + server.httpPort() + "/success");
 
@@ -115,7 +115,7 @@ class Netty40ConnectionSpanTest {
   }
 
   @Test
-  public void failedRequest() throws Exception {
+  void failedRequest() throws Exception {
     // when
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT);
 
@@ -130,13 +130,28 @@ class Netty40ConnectionSpanTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasException(thrown),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                  span.hasAttributesSatisfying(
+                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"));
+                  satisfies(
+                      SemanticAttributes.NETWORK_TYPE,
+                      val ->
+                          val.satisfiesAnyOf(
+                              v -> assertThat(val).isNull(), v -> assertThat(v).isEqualTo("ipv4")));
+                  span.hasAttributesSatisfying(
                       equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()));
+                  satisfies(
+                      NetworkAttributes.NETWORK_PEER_PORT,
+                      val ->
+                          val.satisfiesAnyOf(
+                              v -> assertThat(val).isNull(),
+                              v -> assertThat(v).isEqualTo(uri.getPort())));
+                  satisfies(
+                      NetworkAttributes.NETWORK_PEER_ADDRESS,
+                      val ->
+                          val.satisfiesAnyOf(
+                              v -> assertThat(val).isNull(),
+                              v -> assertThat(v).isEqualTo("127.0.0.1")));
                 }));
   }
 

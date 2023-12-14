@@ -29,7 +29,7 @@ public class ChannelFutureTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void shouldCleanUpWrappedListeners() throws Exception {
+  void shouldCleanUpWrappedListeners() throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new EmptyChannelHandler());
     AtomicInteger counter = new AtomicInteger();
 

@@ -47,15 +47,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import spock.lang.Shared;
 
 class Netty40ClientSslTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @Shared static HttpClientTestServer server;
-  @Shared static EventLoopGroup eventLoopGroup;
+  private static HttpClientTestServer server;
+  private static EventLoopGroup eventLoopGroup;
 
   @BeforeAll
   static void setupSpec() {
