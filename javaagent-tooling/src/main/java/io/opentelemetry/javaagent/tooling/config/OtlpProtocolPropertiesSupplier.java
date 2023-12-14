@@ -14,8 +14,8 @@ public class OtlpProtocolPropertiesSupplier implements AutoConfigurationCustomiz
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
-    autoConfigurationCustomizer.addPropertiesSupplier(ConfigurationFile::getProperties);
-    autoConfigurationCustomizer.addPropertiesCustomizer(new OtlpProtocolConfigCustomizer());
+    autoConfigurationCustomizer.addPropertiesSupplier(
+        new OtlpProtocolConfigCustomizer()::getProperties);
   }
 
   @Override

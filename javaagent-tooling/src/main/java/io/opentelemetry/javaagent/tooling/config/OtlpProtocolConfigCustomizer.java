@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -21,10 +22,10 @@ public class OtlpProtocolConfigCustomizer
   private static final Logger logger =
       Logger.getLogger(OtlpProtocolConfigCustomizer.class.getName());
 
-  @SuppressWarnings("SystemOut")
+  private final Map<String, String> properties = new HashMap<>();
+
   @Override
   public Map<String, String> apply(ConfigProperties config) {
-    Map<String, String> properties = new HashMap<>();
     if (config.getString(OTEL_EXPORTER_OTLP_PROTOCOL) == null) {
       properties.put(OTEL_EXPORTER_OTLP_PROTOCOL, HTTP_PROTOBUF);
     } else {
@@ -34,5 +35,9 @@ public class OtlpProtocolConfigCustomizer
           new Object[] {config.getString(OTEL_EXPORTER_OTLP_PROTOCOL), HTTP_PROTOBUF});
     }
     return properties;
+  }
+
+  public Map<String, String> getProperties() {
+    return Collections.unmodifiableMap(properties);
   }
 }
