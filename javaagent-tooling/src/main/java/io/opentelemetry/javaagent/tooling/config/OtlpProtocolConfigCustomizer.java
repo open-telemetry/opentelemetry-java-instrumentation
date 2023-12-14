@@ -5,40 +5,33 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 public class OtlpProtocolConfigCustomizer
     implements Function<ConfigProperties, Map<String, String>> {
 
   private static final String HTTP_PROTOBUF = "http/protobuf";
   private static final String OTEL_EXPORTER_OTLP_PROTOCOL = "otel.exporter.otlp.protocol";
-  private static final String OTEL_EXPORTER_OTLP_TRACES_PROTOCOL =
-      "otel.exporter.otlp.traces.protocol";
-  private static final String OTEL_EXPORTER_OTLP_METRICS_PROTOCOL =
-      "otel.exporter.otlp.metrics.protocol";
-  private static final String OTEL_EXPORTER_OTLP_LOGS_PROTOCOL = "otel.exporter.otlp.logs.protocol";
+  private static final Logger logger =
+      Logger.getLogger(OtlpProtocolConfigCustomizer.class.getName());
 
+  @SuppressWarnings("SystemOut")
   @Override
   public Map<String, String> apply(ConfigProperties config) {
     Map<String, String> properties = new HashMap<>();
-    String otelExporterOtlpProtocol = config.getString(OTEL_EXPORTER_OTLP_PROTOCOL);
-    if (otelExporterOtlpProtocol == null) {
+    if (config.getString(OTEL_EXPORTER_OTLP_PROTOCOL) == null) {
       properties.put(OTEL_EXPORTER_OTLP_PROTOCOL, HTTP_PROTOBUF);
-    }
-    String otelExporterOtlpTracesProtocol = config.getString(OTEL_EXPORTER_OTLP_TRACES_PROTOCOL);
-    if (otelExporterOtlpTracesProtocol == null) {
-      properties.put(OTEL_EXPORTER_OTLP_TRACES_PROTOCOL, HTTP_PROTOBUF);
-    }
-    String otelExporterOtlpMetricsProtocol = config.getString(OTEL_EXPORTER_OTLP_METRICS_PROTOCOL);
-    if (otelExporterOtlpMetricsProtocol == null) {
-      properties.put(OTEL_EXPORTER_OTLP_METRICS_PROTOCOL, HTTP_PROTOBUF);
-    }
-    String otelExporterOtlpLogsProtocol = config.getString(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL);
-    if (otelExporterOtlpLogsProtocol == null) {
-      properties.put(OTEL_EXPORTER_OTLP_LOGS_PROTOCOL, HTTP_PROTOBUF);
+    } else {
+      logger.log(
+          WARNING,
+          "otel.exporter.otlp.protocol is already set to {0}. Not overriding it with default value {1}.",
+          new Object[] {config.getString(OTEL_EXPORTER_OTLP_PROTOCOL), HTTP_PROTOBUF});
     }
     return properties;
   }

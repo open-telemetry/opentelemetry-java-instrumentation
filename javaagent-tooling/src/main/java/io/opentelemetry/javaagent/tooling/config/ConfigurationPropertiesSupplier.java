@@ -15,7 +15,6 @@ public final class ConfigurationPropertiesSupplier implements AutoConfigurationC
   @Override
   public void customize(AutoConfigurationCustomizer autoConfiguration) {
     autoConfiguration.addPropertiesSupplier(ConfigurationFile::getProperties);
-    autoConfiguration.addPropertiesCustomizer(new OtlpProtocolConfigCustomizer());
   }
 
   @Override
