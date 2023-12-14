@@ -83,9 +83,6 @@ abstract class SmokeTest {
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
-            .withEnv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL", "grpc")
-            .withEnv("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL", "grpc")
-            .withEnv("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL", "grpc")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
             .withEnv(getExtraEnv())
             .waitingFor(getTargetWaitStrategy());

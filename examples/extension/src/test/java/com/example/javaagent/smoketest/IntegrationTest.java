@@ -102,9 +102,6 @@ abstract class IntegrationTest {
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
             .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
-            .withEnv("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL", "grpc")
-            .withEnv("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL", "grpc")
-            .withEnv("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL", "grpc")
             .withEnv(getExtraEnv())
             .waitingFor(getTargetWaitStrategy());
     // If external extensions are requested
