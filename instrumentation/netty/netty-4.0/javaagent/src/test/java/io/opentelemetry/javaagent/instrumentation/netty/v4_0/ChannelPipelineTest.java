@@ -35,8 +35,12 @@ public class ChannelPipelineTest {
     HttpClientCodec handler = new HttpClientCodec();
 
     // remove the default head and tail handlers
-    channelPipeline.removeFirst();
-    channelPipeline.removeLast();
+    if (channelPipeline.first() != null) {
+      channelPipeline.removeFirst();
+    }
+    if (channelPipeline.last() != null) {
+      channelPipeline.removeLast();
+    }
 
     // no handlers initially
     assertEquals(0, channelPipeline.toMap().size());
@@ -71,8 +75,12 @@ public class ChannelPipelineTest {
     HttpClientCodec httpHandler = new HttpClientCodec();
 
     // remove the default head and tail handlers
-    channelPipeline.removeFirst();
-    channelPipeline.removeLast();
+    if (channelPipeline.first() != null) {
+      channelPipeline.removeFirst();
+    }
+    if (channelPipeline.last() != null) {
+      channelPipeline.removeLast();
+    }
 
     // no handlers initially
     assertEquals(0, channelPipeline.toMap().size());
@@ -113,8 +121,12 @@ public class ChannelPipelineTest {
     ChannelPipeline channelPipeline = channel.pipeline();
     HttpClientCodec httpHandler = new HttpClientCodec();
 
-    channelPipeline.removeFirst();
-    channelPipeline.removeLast();
+    if (channelPipeline.first() != null) {
+      channelPipeline.removeFirst();
+    }
+    if (channelPipeline.last() != null) {
+      channelPipeline.removeLast();
+    }
 
     assertEquals(0, channelPipeline.toMap().size());
 
