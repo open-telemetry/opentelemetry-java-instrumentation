@@ -57,7 +57,7 @@ final class SqsImpl {
 
     Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter =
         requestHandler.getConsumerReceiveInstrumenter();
-    Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter =
+    Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter =
         requestHandler.getConsumerProcessInstrumenter();
 
     Context receiveContext = null;
@@ -75,7 +75,8 @@ final class SqsImpl {
               timer.now());
     }
 
-    addTracing(receiveMessageResult, request, consumerProcessInstrumenter, receiveContext);
+    addTracing(
+        receiveMessageResult, request, response, consumerProcessInstrumenter, receiveContext);
   }
 
   private static final Field messagesField = getMessagesField();
@@ -93,7 +94,8 @@ final class SqsImpl {
   private static void addTracing(
       ReceiveMessageResult receiveMessageResult,
       Request<?> request,
-      Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter,
+      Response<?> response,
+      Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
       Context receiveContext) {
     if (messagesField == null) {
       return;
@@ -107,6 +109,7 @@ final class SqsImpl {
               receiveMessageResult.getMessages(),
               consumerProcessInstrumenter,
               request,
+              response,
               receiveContext));
     } catch (IllegalAccessException ignored) {
       // should not happen, we call setAccessible on the field

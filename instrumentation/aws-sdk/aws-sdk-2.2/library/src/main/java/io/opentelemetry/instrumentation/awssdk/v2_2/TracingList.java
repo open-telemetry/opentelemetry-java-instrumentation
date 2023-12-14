@@ -17,32 +17,36 @@ import software.amazon.awssdk.services.sqs.model.Message;
 class TracingList extends ArrayList<Message> {
   private static final long serialVersionUID = 1L;
 
-  private final Instrumenter<SqsProcessRequest, Void> instrumenter;
+  private final Instrumenter<SqsProcessRequest, Response> instrumenter;
   private final ExecutionAttributes request;
+  private final Response response;
   private final TracingExecutionInterceptor config;
   private final Context receiveContext;
   private boolean firstIterator = true;
 
   private TracingList(
       List<Message> list,
-      Instrumenter<SqsProcessRequest, Void> instrumenter,
+      Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
+      Response response,
       TracingExecutionInterceptor config,
       Context receiveContext) {
     super(list);
     this.instrumenter = instrumenter;
     this.request = request;
+    this.response = response;
     this.config = config;
     this.receiveContext = receiveContext;
   }
 
   public static TracingList wrap(
       List<Message> list,
-      Instrumenter<SqsProcessRequest, Void> instrumenter,
+      Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
+      Response response,
       TracingExecutionInterceptor config,
       Context receiveContext) {
-    return new TracingList(list, instrumenter, request, config, receiveContext);
+    return new TracingList(list, instrumenter, request, response, config, receiveContext);
   }
 
   @Override
@@ -52,7 +56,9 @@ class TracingList extends ArrayList<Message> {
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // List is performed in the same thread that called receiveMessage()
     if (firstIterator) {
-      it = TracingIterator.wrap(super.iterator(), instrumenter, request, config, receiveContext);
+      it =
+          TracingIterator.wrap(
+              super.iterator(), instrumenter, request, response, config, receiveContext);
       firstIterator = false;
     } else {
       it = super.iterator();
