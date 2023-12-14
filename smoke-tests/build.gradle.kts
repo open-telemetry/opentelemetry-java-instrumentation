@@ -87,6 +87,7 @@ tasks {
 
     doFirst {
       jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
+      jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     }
   }
 }
