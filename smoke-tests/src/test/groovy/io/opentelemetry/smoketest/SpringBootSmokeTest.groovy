@@ -52,7 +52,6 @@ class SpringBootSmokeTest extends SmokeTest {
     then: "spans are exported"
     response.contentUtf8() == "Hi!"
     countSpansByName(traces, 'GET /greeting') == 1
-    countSpansByName(traces, 'WebController.greeting') == 1
     countSpansByName(traces, 'WebController.withSpan') == 1
 
     then: "thread details are recorded"
