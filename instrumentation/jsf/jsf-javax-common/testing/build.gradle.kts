@@ -20,3 +20,7 @@ dependencies {
   implementation("org.glassfish:jakarta.el:3.0.2")
   implementation("jakarta.websocket:jakarta.websocket-api:1.1.1")
 }
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+}
