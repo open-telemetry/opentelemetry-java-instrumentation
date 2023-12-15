@@ -34,7 +34,9 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,6 +44,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesBindin
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -188,5 +191,11 @@ public class OpenTelemetryAutoConfiguration {
     public OpenTelemetry openTelemetry() {
       return OpenTelemetry.noop();
     }
+  }
+
+  @Bean
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+  public static OpenTelemetrySupplier openTelemetrySupplier(BeanFactory beanFactory) {
+    return () -> beanFactory.getBean(OpenTelemetry.class);
   }
 }
