@@ -11,6 +11,3 @@ dependencies {
   testImplementation(project(":instrumentation-api"))
   testImplementation("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
 }
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-}
