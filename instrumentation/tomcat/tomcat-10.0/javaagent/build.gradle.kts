@@ -24,15 +24,7 @@ dependencies {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }

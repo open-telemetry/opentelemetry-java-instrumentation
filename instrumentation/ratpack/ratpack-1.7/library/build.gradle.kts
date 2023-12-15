@@ -16,23 +16,9 @@ dependencies {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      excludeTestsMatching("InstrumentedHttpClientTest")
-      excludeTestsMatching("RatpackRoutesTest")
-      excludeTestsMatching("RatpackServerApplicationTest")
-      excludeTestsMatching("RatpackServerTest")
-    }
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }
