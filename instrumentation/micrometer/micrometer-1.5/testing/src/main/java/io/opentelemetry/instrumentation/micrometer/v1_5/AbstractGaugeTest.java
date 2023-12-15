@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -175,7 +176,7 @@ public abstract class AbstractGaugeTest {
     // when
     WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);
     num = null;
-    awaitGc(numWeakRef);
+    awaitGc(numWeakRef, Duration.ofSeconds(10));
     testing().clearData();
 
     // then
