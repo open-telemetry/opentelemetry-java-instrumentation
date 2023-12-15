@@ -7,6 +7,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import org.apache.commons.lang3.SystemUtils
 
 import java.lang.ref.WeakReference
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
@@ -44,7 +45,7 @@ class ResourceInjectionTest extends AgentInstrumentationSpecification {
     def ref = new WeakReference(emptyLoader.get())
     emptyLoader.set(null)
 
-    awaitGc(ref)
+    awaitGc(ref, Duration.ofSeconds(10))
 
     then: "HelperInjector doesn't prevent it from being collected"
     null == ref.get()
