@@ -68,6 +68,3 @@ afterEvaluate {
     add("testCompileProtoPath", platform(project(":dependencyManagement")))
   }
 }
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-}
