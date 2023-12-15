@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 
@@ -16,6 +17,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -154,7 +156,7 @@ public abstract class AbstractGaugeTest {
   }
 
   @Test
-  void testWeakRefGauge() throws InterruptedException {
+  void testWeakRefGauge() throws InterruptedException, TimeoutException {
     // given
     AtomicLong num = new AtomicLong(42);
     Gauge.builder("testWeakRefGauge", num, AtomicLong::get)
@@ -183,15 +185,5 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME, "testWeakRefGauge", AbstractIterableAssert::isEmpty);
-  }
-
-  private static void awaitGc(WeakReference<?> ref) throws InterruptedException {
-    while (ref.get() != null) {
-      if (Thread.interrupted()) {
-        throw new InterruptedException();
-      }
-      System.gc();
-      System.runFinalization();
-    }
   }
 }
