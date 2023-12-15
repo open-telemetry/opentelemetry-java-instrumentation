@@ -90,3 +90,6 @@ CI test logs are pretty big around 75MB. To make it easier to troubleshoot test 
 4. Right click on 'View raw logs' and then 'Save link as' to save the page as a text file locally.
 5. Once the file is downloaded, open it in a text editor and search for `Publishing build scan...` to find the URL.
 6. Open the URL in a browser to view the test execution breakdown. It might prompt you to "Activate your Build Scan" the very 1st time, you can use your own email address and activate it via email.
+
+Unfortunately, the Build Scan service hosted via Develocity has an allowed size limits of the free build scans. Once you exceed the limit, then you won't be able to view the scan anymore.
+Then you can just use the raw logs to search for "FAILED" or "Task failed with an exception" to identify the failing tests.
