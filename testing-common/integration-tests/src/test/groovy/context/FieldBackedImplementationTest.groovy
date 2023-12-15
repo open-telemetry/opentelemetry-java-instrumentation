@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 
 // this test is run using
@@ -182,7 +183,7 @@ class FieldBackedImplementationTest extends AgentInstrumentationSpecification {
     int count = keyValue.get().incrementContextCount()
     WeakReference<KeyClass> instanceRef = new WeakReference(keyValue.get())
     keyValue.set(null)
-    GcUtils.awaitGc(instanceRef)
+    GcUtils.awaitGc(instanceRef, Duration.ofSeconds(10))
 
     then:
     instanceRef.get() == null
