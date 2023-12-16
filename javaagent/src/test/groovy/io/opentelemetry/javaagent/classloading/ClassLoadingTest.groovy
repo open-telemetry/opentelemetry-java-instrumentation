@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.util.GcUtils
 import spock.lang.Specification
 
 import java.lang.ref.WeakReference
+import java.time.Duration
 
 import static io.opentelemetry.javaagent.IntegrationTestUtils.createJarWithClasses
 
@@ -43,7 +44,7 @@ class ClassLoadingTest extends Specification {
     loader.loadClass(ClassToInstrument.getName())
     loader = null
 
-    GcUtils.awaitGc(ref)
+    GcUtils.awaitGc(ref, Duration.ofSeconds(10))
 
     then:
     null == ref.get()
