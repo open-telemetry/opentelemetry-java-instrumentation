@@ -31,6 +31,8 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.sns.SnsAsyncClient
+import software.amazon.awssdk.services.sns.SnsClient
+import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
@@ -142,6 +144,8 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
+            } else if (service == "Sns") {
+              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somearn"
             }
           }
         }
@@ -156,6 +160,16 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
     "S3"      | "CreateBucket"      | "PUT"  | "UNKNOWN"                              | s3ClientBuilder()       | { c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()) }              | ""
     "S3"      | "GetObject"         | "GET"  | "UNKNOWN"                              | s3ClientBuilder()       | { c -> c.getObject(GetObjectRequest.builder().bucket("somebucket").key("somekey").build()) }     | ""
     "Kinesis" | "DeleteStream"      | "POST" | "UNKNOWN"                              | KinesisClient.builder() | { c -> c.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build()) }          | ""
+    "Sns"     | "Publish"           | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | SnsClient.builder()     | { c -> c.publish(PublishRequest.builder().message("somemessage").topicArn("somearn").build()) }  | """
+          <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
+              <PublishResult>
+                  <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>
+              </PublishResult>
+              <ResponseMetadata>
+                  <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>
+              </ResponseMetadata>
+          </PublishResponse>
+      """
     "Sqs"     | "CreateQueue"       | "POST" | "7a62c49f-347e-4fc4-9331-6e8e7a96aa73" | SqsClient.builder()     | { c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()) }              | {
       if (!Boolean.getBoolean("testLatestDeps")) {
         def content = """
@@ -280,6 +294,8 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
+            } else if (service == "Sns") {
+              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somearn"
             }
           }
         }
@@ -366,7 +382,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
         """
-    "Sns" | "Publish" | "POST" | "f187a3c1-376f-11df-8963-01868b7c937a" | SnsAsyncClient.builder() | { SnsAsyncClient c -> c.publish(r -> r.message("hello")) } | """
+    "Sns"   | "Publish"           | "POST" | "f187a3c1-376f-11df-8963-01868b7c937a" | SnsAsyncClient.builder() | { SnsAsyncClient c -> c.publish(r -> r.message("hello").topicArn("somearn")) }                                                                       | """
       <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
           <PublishResult>
               <MessageId>94f20ce6-13c5-43a0-9a9e-ca52d816e90b</MessageId>
