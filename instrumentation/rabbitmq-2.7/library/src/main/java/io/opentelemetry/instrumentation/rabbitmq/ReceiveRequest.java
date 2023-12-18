@@ -21,14 +21,18 @@ class ReceiveRequest {
     this.connection = connection;
   }
 
-  public String getQueue() {return this.queue;}
+  public String getQueue() {
+    return this.queue;
+  }
 
   @Nullable
   public GetResponse getResponse() {
     return this.response;
   }
 
-  public Connection getConnection() {return this.connection;}
+  public Connection getConnection() {
+    return this.connection;
+  }
 
   String spanName() {
     String queue = getQueue();

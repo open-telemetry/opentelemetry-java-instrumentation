@@ -35,7 +35,7 @@ public abstract class AbstractRabbitMqTest {
     connectionFactory = new ConnectionFactory();
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
-//    connectionFactory.setAutomaticRecoveryEnabled(false);
+    //    connectionFactory.setAutomaticRecoveryEnabled(false);
   }
 
   @AfterAll

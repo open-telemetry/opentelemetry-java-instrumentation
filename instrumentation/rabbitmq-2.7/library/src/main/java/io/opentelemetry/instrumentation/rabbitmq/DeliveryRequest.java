@@ -34,7 +34,6 @@ class DeliveryRequest {
     return this.properties;
   }
 
-
   public byte[] getBody() {
     return this.body;
   }

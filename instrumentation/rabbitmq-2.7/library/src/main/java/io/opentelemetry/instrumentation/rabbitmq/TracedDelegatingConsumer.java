@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rabbitmq;
 
-
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
@@ -24,7 +23,8 @@ public class TracedDelegatingConsumer implements Consumer {
   private final Consumer delegate;
   private final RabbitTelemetry rabbitTelemetry;
 
-  public TracedDelegatingConsumer(String queue, Consumer delegate, RabbitTelemetry rabbitTelemetry) {
+  public TracedDelegatingConsumer(
+      String queue, Consumer delegate, RabbitTelemetry rabbitTelemetry) {
     this.queue = queue;
     this.delegate = delegate;
     this.rabbitTelemetry = rabbitTelemetry;

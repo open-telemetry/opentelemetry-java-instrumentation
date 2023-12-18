@@ -42,16 +42,15 @@ public final class RabbitTelemetry {
   RabbitTelemetry(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
-      boolean captureExperimentalSpanAttributes
-  ) {
-    channelInstrumenter =
-        createChannelInstrumenter(
-            openTelemetry, capturedHeaders);
+      boolean captureExperimentalSpanAttributes) {
+    channelInstrumenter = createChannelInstrumenter(openTelemetry, capturedHeaders);
 
-    receiveInstrumenter = createReceiveInstrumenter(openTelemetry, capturedHeaders,
-        captureExperimentalSpanAttributes);
-    deliverInstrumenter = createDeliverInstrumenter(openTelemetry, capturedHeaders,
-        captureExperimentalSpanAttributes);
+    receiveInstrumenter =
+        createReceiveInstrumenter(
+            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
+    deliverInstrumenter =
+        createDeliverInstrumenter(
+            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
   }
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";
@@ -60,9 +59,7 @@ public final class RabbitTelemetry {
       ContextKey.named("opentelemetry-rabbitmq-message-headers-context-key");
 
   private static Instrumenter<InstrumentedChannel, Void> createChannelInstrumenter(
-      OpenTelemetry openTelemetry,
-      List<String> capturedHeaders
-  ) {
+      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     return Instrumenter.<InstrumentedChannel, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, InstrumentedChannel::spanName)
         .addAttributesExtractor(
@@ -79,13 +76,12 @@ public final class RabbitTelemetry {
   private static Instrumenter<ReceiveRequest, GetResponse> createReceiveInstrumenter(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
-      boolean captureExperimentalSpanAttributes
+      boolean captureExperimentalSpanAttributes) {
 
-  ) {
     List<AttributesExtractor<ReceiveRequest, GetResponse>> extractors = new ArrayList<>();
     extractors.add(
-        buildMessagingAttributesExtractor(RabbitReceiveAttributesGetter.INSTANCE,
-            MessageOperation.RECEIVE, capturedHeaders));
+        buildMessagingAttributesExtractor(
+            RabbitReceiveAttributesGetter.INSTANCE, MessageOperation.RECEIVE, capturedHeaders));
     extractors.add(NetworkAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
     if (captureExperimentalSpanAttributes) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
@@ -94,7 +90,7 @@ public final class RabbitTelemetry {
     return Instrumenter.<ReceiveRequest, GetResponse>builder(
             openTelemetry, INSTRUMENTATION_NAME, ReceiveRequest::spanName)
         .addAttributesExtractors(extractors)
-//        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+        //        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .addSpanLinksExtractor(
             new PropagatorBasedSpanLinksExtractor<>(
                 GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
@@ -105,14 +101,12 @@ public final class RabbitTelemetry {
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
-      boolean captureExperimentalSpanAttributes
+      boolean captureExperimentalSpanAttributes) {
 
-  ) {
     List<AttributesExtractor<DeliveryRequest, Void>> extractors = new ArrayList<>();
     extractors.add(
         buildMessagingAttributesExtractor(
-            RabbitDeliveryAttributesGetter.INSTANCE, MessageOperation.PROCESS,
-            capturedHeaders));
+            RabbitDeliveryAttributesGetter.INSTANCE, MessageOperation.PROCESS, capturedHeaders));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (captureExperimentalSpanAttributes) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
@@ -125,9 +119,9 @@ public final class RabbitTelemetry {
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, V> getter, MessageOperation operation,
-      List<String> capturedHeaders
-  ) {
+      MessagingAttributesGetter<T, V> getter,
+      MessageOperation operation,
+      List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(capturedHeaders)
         .build();
@@ -145,5 +139,3 @@ public final class RabbitTelemetry {
     return deliverInstrumenter;
   }
 }
-
-

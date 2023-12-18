@@ -45,7 +45,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
-import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,10 +60,11 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
   Connection conn;
   Channel channel;
 
-  RabbitTelemetry rabbitTelemetry = new RabbitTelemetryBuilder(testing.getOpenTelemetry())
-      .setCapturedHeaders(singletonList("test-message-header"))
-      .setCaptureExperimentalSpanAttributes(true)
-      .build();
+  RabbitTelemetry rabbitTelemetry =
+      new RabbitTelemetryBuilder(testing.getOpenTelemetry())
+          .setCapturedHeaders(singletonList("test-message-header"))
+          .setCaptureExperimentalSpanAttributes(true)
+          .build();
 
   @BeforeEach
   public void setup() throws IOException, TimeoutException {
@@ -89,9 +89,8 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
   void testRabbitPublishGet() throws IOException {
     String exchangeName = "some-exchange";
     String routingKey = "some-routing-key";
-    InstrumentedChannel instrumentedChannel = new InstrumentedChannel(rabbitTelemetry, channel,
-        exchangeName,
-        routingKey);
+    InstrumentedChannel instrumentedChannel =
+        new InstrumentedChannel(rabbitTelemetry, channel, exchangeName, routingKey);
 
     String queueName =
         testing.runWithSpan(
@@ -104,9 +103,7 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
               return internalQueueName;
             });
     GetResponse response =
-        testing.runWithSpan(
-            "consumer parent",
-            () -> instrumentedChannel.basicGet(queueName, true));
+        testing.runWithSpan("consumer parent", () -> instrumentedChannel.basicGet(queueName, true));
 
     assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
 
@@ -117,8 +114,8 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
             trace
                 .hasSize(2)
                 .hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL)
-                        .hasNoParent(),
+                    span ->
+                        span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> {
                       verifySpan(
                           trace,
@@ -131,40 +128,39 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
                           trace.getSpan(0));
                       producerSpan.set(trace.getSpan(1));
                     }),
-        trace -> trace
-            .hasSize(2)
-            .hasSpansSatisfyingExactly(
-                span -> span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> verifySpan(
-                    trace,
-                    span,
-                    1,
-                    exchangeName,
-                    routingKey,
-                    "receive",
-                    "<generated>",
-                    trace.getSpan(0),
-                    producerSpan.get(),
-                    null,
-                    null,
-                    false
-                )));
+        trace ->
+            trace
+                .hasSize(2)
+                .hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        verifySpan(
+                            trace,
+                            span,
+                            1,
+                            exchangeName,
+                            routingKey,
+                            "receive",
+                            "<generated>",
+                            trace.getSpan(0),
+                            producerSpan.get(),
+                            null,
+                            null,
+                            false)));
   }
 
   @Test
   void testRabbitPublishGetWithDefaultExchange() throws IOException {
     String queueName = channel.queueDeclare().getQueue();
-    InstrumentedChannel instrumentedChannel = new InstrumentedChannel(rabbitTelemetry, channel, "",
-        queueName
-    );
+    InstrumentedChannel instrumentedChannel =
+        new InstrumentedChannel(rabbitTelemetry, channel, "", queueName);
 
     testing.runWithSpan(
         "producer parent",
         () -> instrumentedChannel.publish("Hello, world!".getBytes(Charset.defaultCharset())));
     GetResponse response =
-        testing.runWithSpan(
-            "consumer parent",
-            () -> instrumentedChannel.basicGet(queueName, true));
+        testing.runWithSpan("consumer parent", () -> instrumentedChannel.basicGet(queueName, true));
 
     assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
 
@@ -175,8 +171,8 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
             trace
                 .hasSize(2)
                 .hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL)
-                        .hasNoParent(),
+                    span ->
+                        span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> {
                       verifySpan(
                           trace,
@@ -189,24 +185,26 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
                           trace.getSpan(0));
                       producerSpan.set(trace.getSpan(1));
                     }),
-        trace -> trace
-            .hasSize(2)
-            .hasSpansSatisfyingExactly(
-                span -> span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> verifySpan(
-                    trace,
-                    span,
-                    1,
-                    "<default>",
-                    null,
-                    "receive",
-                    "<generated>",
-                    trace.getSpan(0),
-                    producerSpan.get(),
-                    null,
-                    null,
-                    false
-                )));
+        trace ->
+            trace
+                .hasSize(2)
+                .hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        verifySpan(
+                            trace,
+                            span,
+                            1,
+                            "<default>",
+                            null,
+                            "receive",
+                            "<generated>",
+                            trace.getSpan(0),
+                            producerSpan.get(),
+                            null,
+                            null,
+                            false)));
   }
 
   @ParameterizedTest(name = "test rabbit consume {1} messages and setTimestamp={2}")
@@ -220,9 +218,8 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
             ? channel.queueDeclare().getQueue()
             : channel.queueDeclare("some-queue", false, true, true, null).getQueue();
     channel.queueBind(queueName, exchangeName, "");
-    InstrumentedChannel instrumentedChannel = new InstrumentedChannel(rabbitTelemetry, channel,
-        exchangeName, ""
-    );
+    InstrumentedChannel instrumentedChannel =
+        new InstrumentedChannel(rabbitTelemetry, channel, exchangeName, "");
 
     List<String> deliveries = new ArrayList<>();
 
@@ -236,8 +233,8 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
           }
         };
 
-    TracedDelegatingConsumer instrumentedConsumer = new TracedDelegatingConsumer(queueName,
-        callback, rabbitTelemetry);
+    TracedDelegatingConsumer instrumentedConsumer =
+        new TracedDelegatingConsumer(queueName, callback, rabbitTelemetry);
 
     channel.basicConsume(queueName, instrumentedConsumer);
 
@@ -257,24 +254,26 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
 
     for (int i = 1; i <= messageCount; i++) {
       traceAssertions.add(
-          trace -> trace
-              .hasSize(2)
-              .hasSpansSatisfyingExactly(
-                  span -> verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
-                  span -> verifySpan(
-                      trace,
-                      span,
-                      1,
-                      exchangeName,
-                      null,
-                      "process",
-                      resource,
-                      trace.getSpan(0),
-                      null,
-                      null,
-                      null,
-                      setTimestamp)
-              ));
+          trace ->
+              trace
+                  .hasSize(2)
+                  .hasSpansSatisfyingExactly(
+                      span ->
+                          verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
+                      span ->
+                          verifySpan(
+                              trace,
+                              span,
+                              1,
+                              exchangeName,
+                              null,
+                              "process",
+                              resource,
+                              trace.getSpan(0),
+                              null,
+                              null,
+                              null,
+                              setTimestamp)));
     }
 
     testing.waitAndAssertTraces(traceAssertions);
@@ -293,55 +292,55 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
     String queueName = channel.queueDeclare().getQueue();
     channel.queueBind(queueName, exchangeName, "");
 
-    InstrumentedChannel instrumentedChannel = new InstrumentedChannel(rabbitTelemetry, channel,
-        exchangeName, ""
-    );
+    InstrumentedChannel instrumentedChannel =
+        new InstrumentedChannel(rabbitTelemetry, channel, exchangeName, "");
 
-    Consumer callback = new DefaultConsumer(channel) {
-      @Override
-      public void handleDelivery(
-          String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-          throws IOException {
-        throw error;
-        // Unfortunately this doesn't seem to be observable in the test outside of the span
-        // generated.
-      }
-    };
+    Consumer callback =
+        new DefaultConsumer(channel) {
+          @Override
+          public void handleDelivery(
+              String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+              throws IOException {
+            throw error;
+            // Unfortunately this doesn't seem to be observable in the test outside of the span
+            // generated.
+          }
+        };
 
-    TracedDelegatingConsumer instrumentedConsumer = new TracedDelegatingConsumer(queueName,
-        callback, rabbitTelemetry);
-    //TODO review Consumer headers how to get custom headers in DeliveryRequest or AMQP.Properties
+    TracedDelegatingConsumer instrumentedConsumer =
+        new TracedDelegatingConsumer(queueName, callback, rabbitTelemetry);
+    // TODO review Consumer headers how to get custom headers in DeliveryRequest or AMQP.Properties
     channel.basicConsume(queueName, instrumentedConsumer);
 
     instrumentedChannel.publish("msg".getBytes(Charset.defaultCharset()));
 
     testing.waitAndAssertTraces(
-        trace -> trace
-            .hasSize(2)
-            .hasSpansSatisfyingExactly(
-                span -> verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
-                span -> verifySpan(
-                    trace,
-                    span,
-                    1,
-                    exchangeName,
-                    null,
-                    "process",
-                    "<generated>",
-                    trace.getSpan(0),
-                    null,
-                    error,
-                    error.getMessage(),
-                    false)
-            ));
+        trace ->
+            trace
+                .hasSize(2)
+                .hasSpansSatisfyingExactly(
+                    span -> verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
+                    span ->
+                        verifySpan(
+                            trace,
+                            span,
+                            1,
+                            exchangeName,
+                            null,
+                            "process",
+                            "<generated>",
+                            trace.getSpan(0),
+                            null,
+                            error,
+                            error.getMessage(),
+                            false)));
   }
 
   @Test
   void captureMessageHeaderAsSpanAttributes() throws IOException, InterruptedException {
     String queueName = channel.queueDeclare().getQueue();
-    InstrumentedChannel instrumentedChannel = new InstrumentedChannel(rabbitTelemetry, channel, "",
-        queueName
-    );
+    InstrumentedChannel instrumentedChannel =
+        new InstrumentedChannel(rabbitTelemetry, channel, "", queueName);
 
     Map<String, Object> headers = new java.util.HashMap<>();
     headers.put("test-message-header", "test");
@@ -362,8 +361,8 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
           }
         };
 
-    TracedDelegatingConsumer instrumentedConsumer = new TracedDelegatingConsumer(queueName,
-        callback, rabbitTelemetry);
+    TracedDelegatingConsumer instrumentedConsumer =
+        new TracedDelegatingConsumer(queueName, callback, rabbitTelemetry);
     channel.basicConsume(queueName, instrumentedConsumer);
     assertTrue(latch.await(10, TimeUnit.SECONDS));
 
@@ -377,16 +376,17 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
                     span -> {
                       verifySpan(trace, span, 0, "<default>", null, "publish", "<default>");
                       span.hasAttributesSatisfying(
-                          attributes -> assertThat(attributes)
-                              .satisfies(
-                                  attrs -> {
-                                    List<String> verifyHeaders =
-                                        attrs.get(
-                                            AttributeKey.stringArrayKey(
-                                                "messaging.header.test_message_header"));
-                                    assertNotNull(verifyHeaders);
-                                    assertTrue(verifyHeaders.contains("test"));
-                                  }));
+                          attributes ->
+                              assertThat(attributes)
+                                  .satisfies(
+                                      attrs -> {
+                                        List<String> verifyHeaders =
+                                            attrs.get(
+                                                AttributeKey.stringArrayKey(
+                                                    "messaging.header.test_message_header"));
+                                        assertNotNull(verifyHeaders);
+                                        assertTrue(verifyHeaders.contains("test"));
+                                      }));
                     },
                     span -> {
                       verifySpan(
@@ -411,10 +411,8 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
                                       assertTrue(verifyHeaders.contains("test"));
                                     });
                           });
-                    })
-    );
+                    }));
   }
-
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
     return Stream.of(
@@ -692,11 +690,13 @@ class RabbitMqInstrumentedTest extends AbstractRabbitMqTest {
 
     if (null != linkSpan) {
       // create from remote context
-      span.hasLinks(LinkData.create(SpanContext.createFromRemoteParent(
-          linkSpan.getSpanContext().getTraceId(),
-          linkSpan.getSpanContext().getSpanId(),
-          linkSpan.getSpanContext().getTraceFlags(),
-          linkSpan.getSpanContext().getTraceState())));
+      span.hasLinks(
+          LinkData.create(
+              SpanContext.createFromRemoteParent(
+                  linkSpan.getSpanContext().getTraceId(),
+                  linkSpan.getSpanContext().getSpanId(),
+                  linkSpan.getSpanContext().getTraceFlags(),
+                  linkSpan.getSpanContext().getTraceState())));
     } else {
       span.hasTotalRecordedLinks(0);
     }

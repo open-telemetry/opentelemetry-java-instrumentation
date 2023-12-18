@@ -1,5 +1,9 @@
-package io.opentelemetry.instrumentation.rabbitmq;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+package io.opentelemetry.instrumentation.rabbitmq;
 
 import static io.opentelemetry.instrumentation.rabbitmq.RabbitTelemetry.RABBITMQ_COMMAND;
 
@@ -17,7 +21,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class InstrumentedChannel {
 
   private final Channel delegate;
@@ -28,11 +31,7 @@ public class InstrumentedChannel {
   private final RabbitTelemetry rabbitTelemetry;
 
   public InstrumentedChannel(
-      RabbitTelemetry rabbitTelemetry,
-      Channel delegate,
-      String exchange,
-      String routingKey
-  ) {
+      RabbitTelemetry rabbitTelemetry, Channel delegate, String exchange, String routingKey) {
     this.rabbitTelemetry = rabbitTelemetry;
     this.delegate = delegate;
     this.exchange = exchange;
@@ -84,6 +83,7 @@ public class InstrumentedChannel {
       holder.setInstrumentedChannel(instrumentedChannel);
     }
   }
+
   private void onPublish(Span span) {
     String exchangeName = normalizeExchangeName(exchange);
     span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, exchangeName);
@@ -111,24 +111,26 @@ public class InstrumentedChannel {
     Map<String, Object> headers = properties.getHeaders();
     headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
-    GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
+    GlobalOpenTelemetry.getPropagators()
+        .getTextMapPropagator()
         .inject(context, headers, MapSetter.INSTANCE);
 
-    AMQP.BasicProperties props = new AMQP.BasicProperties(
-        properties.getContentType(),
-        properties.getContentEncoding(),
-        headers,
-        properties.getDeliveryMode(),
-        properties.getPriority(),
-        properties.getCorrelationId(),
-        properties.getReplyTo(),
-        properties.getExpiration(),
-        properties.getMessageId(),
-        properties.getTimestamp(),
-        properties.getType(),
-        properties.getUserId(),
-        properties.getAppId(),
-        properties.getClusterId());
+    AMQP.BasicProperties props =
+        new AMQP.BasicProperties(
+            properties.getContentType(),
+            properties.getContentEncoding(),
+            headers,
+            properties.getDeliveryMode(),
+            properties.getPriority(),
+            properties.getCorrelationId(),
+            properties.getReplyTo(),
+            properties.getExpiration(),
+            properties.getMessageId(),
+            properties.getTimestamp(),
+            properties.getType(),
+            properties.getUserId(),
+            properties.getAppId(),
+            properties.getClusterId());
 
     delegate.basicPublish(exchange, routingKey, props, body);
   }

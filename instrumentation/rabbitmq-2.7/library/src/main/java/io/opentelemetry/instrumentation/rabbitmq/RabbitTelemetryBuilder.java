@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.rabbitmq;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.List;
-
-import static java.util.Collections.emptyList;
 
 /** A builder of {@link RabbitTelemetry}. */
 public final class RabbitTelemetryBuilder {
@@ -34,6 +34,7 @@ public final class RabbitTelemetryBuilder {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
+
   /**
    * Configures the messaging headers that will be captured as span attributes.
    *
@@ -46,11 +47,9 @@ public final class RabbitTelemetryBuilder {
   }
 
   /**
-   * Returns a new {@link RabbitTelemetry} with the settings of this {@link
-   * RabbitTelemetryBuilder}.
+   * Returns a new {@link RabbitTelemetry} with the settings of this {@link RabbitTelemetryBuilder}.
    */
   public RabbitTelemetry build() {
-    return new RabbitTelemetry(
-        openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
+    return new RabbitTelemetry(openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
   }
 }

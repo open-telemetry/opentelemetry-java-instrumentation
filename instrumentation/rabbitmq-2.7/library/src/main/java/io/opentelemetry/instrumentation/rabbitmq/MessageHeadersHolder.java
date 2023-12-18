@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.rabbitmq;
 public class MessageHeadersHolder {
   private InstrumentedChannel instrumentedChannel;
 
-
   public InstrumentedChannel getInstrumentedChannel() {
     return instrumentedChannel;
   }

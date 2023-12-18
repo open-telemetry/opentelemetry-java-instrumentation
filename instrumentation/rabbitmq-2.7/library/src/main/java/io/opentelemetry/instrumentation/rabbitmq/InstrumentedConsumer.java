@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.AMQP;
@@ -44,11 +49,8 @@ public class InstrumentedConsumer implements Consumer {
 
   @Override
   public void handleDelivery(
-      String consumerTag,
-      Envelope envelope,
-      AMQP.BasicProperties properties,
-      byte[] body
-  ) throws IOException {
+      String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+      throws IOException {
     Context parentContext = Context.current();
     DeliveryRequest request = null;
 
