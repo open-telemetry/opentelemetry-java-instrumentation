@@ -16,3 +16,6 @@ io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux.Sp
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webmvc.SpringWebMvc5InstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration
+
+org.springframework.boot.logging.LoggingSystemFactory=\
+io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.logging.OpenTelemetryLogbackAppenderConfigurer.Factory
