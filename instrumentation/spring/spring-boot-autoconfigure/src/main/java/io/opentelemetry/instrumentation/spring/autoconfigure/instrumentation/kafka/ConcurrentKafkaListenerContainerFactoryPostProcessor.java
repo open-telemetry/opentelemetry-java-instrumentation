@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.kafka;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;

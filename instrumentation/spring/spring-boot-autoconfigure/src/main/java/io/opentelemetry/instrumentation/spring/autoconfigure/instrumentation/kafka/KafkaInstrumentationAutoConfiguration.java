@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.ka
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

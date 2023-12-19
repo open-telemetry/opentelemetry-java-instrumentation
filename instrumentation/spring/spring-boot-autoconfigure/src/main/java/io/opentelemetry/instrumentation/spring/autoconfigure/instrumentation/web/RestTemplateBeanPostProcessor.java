@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import java.util.List;
 import org.springframework.beans.factory.config.BeanPostProcessor;

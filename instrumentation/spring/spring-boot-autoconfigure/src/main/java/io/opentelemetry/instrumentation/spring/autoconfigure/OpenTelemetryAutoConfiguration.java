@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.Otlp
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -194,6 +195,8 @@ public class OpenTelemetryAutoConfiguration {
   }
 
   @Bean
+  // we declared this bean as an infrastructure bean to avoid warning from BeanPostProcessorChecker
+  // when it is injected into a BeanPostProcessor
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   public static OpenTelemetrySupplier openTelemetrySupplier(BeanFactory beanFactory) {
     return () -> beanFactory.getBean(OpenTelemetry.class);
