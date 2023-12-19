@@ -23,12 +23,9 @@ import io.vertx.core.http.HttpMethod;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
@@ -64,13 +61,9 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
   @Override
   public int sendRequest(
       HttpClientRequest request, String method, URI uri, Map<String, String> headers)
-      throws InterruptedException {
+      throws Exception {
     // Vertx doesn't seem to provide any synchronous API so bridge through a callback
-    try {
-      return sendRequest(request).get(30, TimeUnit.SECONDS);
-    } catch (ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
+    return sendRequest(request).get(30, TimeUnit.SECONDS);
   }
 
   @Override
@@ -103,15 +96,6 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
         });
 
     optionsBuilder.setSingleConnectionFactory(VertxHttpClientTest::createSingleConnection);
-
-    optionsBuilder.setClientSpanErrorMapper(
-        (uri, exception) ->
-            Optional.of(exception)
-                .filter(e -> RuntimeException.class.equals(e.getClass()))
-                .map(Throwable::getCause)
-                .filter(e -> ExecutionException.class.equals(e.getClass()))
-                .map(Throwable::getCause)
-                .orElse(exception));
   }
 
   private static SingleConnection createSingleConnection(String host, int port) {
