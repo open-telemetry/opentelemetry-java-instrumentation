@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -31,6 +36,10 @@ public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, R
   }
 
   @Override
-  public void onEnd(AttributesBuilder attributes, Context context, Request<?> request,
-      @Nullable Response<?> response, @Nullable Throwable error) {}
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      Request<?> request,
+      @Nullable Response<?> response,
+      @Nullable Throwable error) {}
 }
