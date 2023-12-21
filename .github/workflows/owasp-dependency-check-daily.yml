@@ -27,6 +27,8 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         with:
           arguments: ":javaagent:dependencyCheckAnalyze"
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
       - name: Upload report
         if: always()
