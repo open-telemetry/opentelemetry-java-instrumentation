@@ -32,10 +32,6 @@ dependencies {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
@@ -44,10 +40,6 @@ tasks {
     jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }
 

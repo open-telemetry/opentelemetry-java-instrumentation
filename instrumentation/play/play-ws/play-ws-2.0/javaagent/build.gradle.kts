@@ -45,13 +45,3 @@ dependencies {
 
   latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:2.0.+")
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}
