@@ -23,7 +23,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: java
           # using "latest" helps to keep up with the latest Kotlin support
@@ -36,7 +36,7 @@ jobs:
           arguments: assemble -x javadoc --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
 
   workflow-notification:
     needs:

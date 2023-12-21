@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -19,6 +20,12 @@ public class MicrometerInstrumentationModule extends InstrumentationModule {
 
   public MicrometerInstrumentationModule() {
     super("micrometer", "micrometer-1.5");
+  }
+
+  @Override
+  public boolean defaultEnabled(ConfigProperties config) {
+    // produces a lot of metrics that are already captured - e.g. JVM memory usage
+    return false;
   }
 
   @Override

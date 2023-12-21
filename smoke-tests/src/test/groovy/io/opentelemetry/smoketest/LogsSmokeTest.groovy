@@ -21,11 +21,6 @@ class LogsSmokeTest extends SmokeTest {
   }
 
   @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_LOGS_EXPORTER", "otlp")
-  }
-
-  @Override
   protected TargetWaitStrategy getWaitStrategy() {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started SpringbootApplication in.*")
   }

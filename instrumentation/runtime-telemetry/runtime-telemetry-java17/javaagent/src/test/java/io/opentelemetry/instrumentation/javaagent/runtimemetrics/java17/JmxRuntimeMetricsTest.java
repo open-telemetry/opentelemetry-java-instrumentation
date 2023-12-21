@@ -22,21 +22,17 @@ class JmxRuntimeMetricsTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        metric -> metric.hasName("process.runtime.jvm.classes.loaded"),
-        metric -> metric.hasName("process.runtime.jvm.classes.unloaded"),
-        metric -> metric.hasName("process.runtime.jvm.classes.current_loaded"),
-        metric -> metric.hasName("process.runtime.jvm.system.cpu.load_1m"),
-        metric -> metric.hasName("process.runtime.jvm.system.cpu.utilization"),
-        metric -> metric.hasName("process.runtime.jvm.cpu.utilization"),
-        metric -> metric.hasName("process.runtime.jvm.gc.duration"),
-        metric -> metric.hasName("process.runtime.jvm.memory.init"),
-        metric -> metric.hasName("process.runtime.jvm.memory.usage"),
-        metric -> metric.hasName("process.runtime.jvm.memory.committed"),
-        metric -> metric.hasName("process.runtime.jvm.memory.limit"),
-        metric -> metric.hasName("process.runtime.jvm.memory.usage_after_last_gc"),
-        metric -> metric.hasName("process.runtime.jvm.threads.count"),
-        metric -> metric.hasName("process.runtime.jvm.buffer.limit"),
-        metric -> metric.hasName("process.runtime.jvm.buffer.count"),
-        metric -> metric.hasName("process.runtime.jvm.buffer.usage"));
+        metric -> metric.hasName("jvm.class.loaded"),
+        metric -> metric.hasName("jvm.class.unloaded"),
+        metric -> metric.hasName("jvm.class.count"),
+        metric -> metric.hasName("jvm.cpu.time"),
+        metric -> metric.hasName("jvm.cpu.count"),
+        metric -> metric.hasName("jvm.cpu.recent_utilization"),
+        metric -> metric.hasName("jvm.gc.duration"),
+        metric -> metric.hasName("jvm.memory.used"),
+        metric -> metric.hasName("jvm.memory.committed"),
+        metric -> metric.hasName("jvm.memory.limit"),
+        metric -> metric.hasName("jvm.memory.used_after_last_gc"),
+        metric -> metric.hasName("jvm.thread.count"));
   }
 }

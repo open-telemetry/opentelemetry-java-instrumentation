@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
 @ConditionalOnBean({Clock.class, OpenTelemetry.class})
 @ConditionalOnClass(MeterRegistry.class)
-@ConditionalOnProperty(name = "otel.instrumentation.micrometer.enabled", matchIfMissing = true)
+@ConditionalOnProperty(name = "otel.instrumentation.micrometer.enabled")
 @Configuration
 public class MicrometerBridgeAutoConfiguration {
 

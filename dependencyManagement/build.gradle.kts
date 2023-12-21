@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.32.0"
+val otelSdkVersion = "1.33.0"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -27,8 +27,8 @@ val groovyVersion = "4.0.16"
 
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.16.0",
-  "com.squareup.okio:okio-bom:3.6.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:32.1.3-jre",
+  "com.squareup.okio:okio-bom:3.7.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.google.guava:guava-bom:33.0.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -40,7 +40,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.10.4"
 val errorProneVersion = "2.23.0"
-val byteBuddyVersion = "1.14.10"
+val byteBuddyVersion = "1.14.11"
 val asmVersion = "9.6"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-io:commons-io:2.15.1",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.0",
-  "commons-validator:commons-validator:1.7",
+  "commons-validator:commons-validator:1.8.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.28.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:1.0.0-alpha",

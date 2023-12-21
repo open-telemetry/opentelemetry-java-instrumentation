@@ -19,6 +19,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationExcludedMethods;
 import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.SpanAttributeUtil.Parameter;
 import java.util.Arrays;
@@ -136,7 +137,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     String className;
 
     WithSpanClassVisitor(ClassVisitor cv) {
-      super(Opcodes.ASM9, cv);
+      super(AsmApi.VERSION, cv);
     }
 
     @Override
@@ -213,7 +214,8 @@ class WithSpanInstrumentation implements TypeInstrumentation {
               source.signature,
               source.exceptions.toArray(new String[0]));
       GeneratorAdapter generatorAdapter =
-          new GeneratorAdapter(Opcodes.ASM9, methodNode, source.access, source.name, source.desc) {
+          new GeneratorAdapter(
+              AsmApi.VERSION, methodNode, source.access, source.name, source.desc) {
             int requestLocal;
             int ourContinuationLocal;
             int contextLocal;

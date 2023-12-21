@@ -9,9 +9,10 @@ import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
 import application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleHistogramBuilder;
 import java.util.List;
 
-final class ApplicationDoubleHistogramBuilder131 extends ApplicationDoubleHistogramBuilder132
+final class ApplicationDoubleHistogramBuilder131 extends ApplicationDoubleHistogramBuilder
     implements ExtendedDoubleHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder;

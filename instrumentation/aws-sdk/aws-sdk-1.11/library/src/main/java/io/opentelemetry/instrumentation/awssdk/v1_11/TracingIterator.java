@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
+import com.amazonaws.Response;
 import com.amazonaws.services.sqs.model.Message;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -16,8 +17,9 @@ import javax.annotation.Nullable;
 class TracingIterator implements Iterator<Message> {
 
   private final Iterator<Message> delegateIterator;
-  private final Instrumenter<SqsProcessRequest, Void> instrumenter;
+  private final Instrumenter<SqsProcessRequest, Response<?>> instrumenter;
   private final Request<?> request;
+  private final Response<?> response;
   private final Context receiveContext;
 
   /*
@@ -30,21 +32,24 @@ class TracingIterator implements Iterator<Message> {
 
   private TracingIterator(
       Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Void> instrumenter,
+      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
+      Response<?> response,
       Context receiveContext) {
     this.delegateIterator = delegateIterator;
     this.instrumenter = instrumenter;
     this.request = request;
+    this.response = response;
     this.receiveContext = receiveContext;
   }
 
   public static Iterator<Message> wrap(
       Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Void> instrumenter,
+      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
+      Response<?> response,
       Context receiveContext) {
-    return new TracingIterator(delegateIterator, instrumenter, request, receiveContext);
+    return new TracingIterator(delegateIterator, instrumenter, request, response, receiveContext);
   }
 
   @Override
@@ -80,7 +85,7 @@ class TracingIterator implements Iterator<Message> {
   private void closeScopeAndEndSpan() {
     if (currentScope != null) {
       currentScope.close();
-      instrumenter.end(currentContext, currentRequest, null, null);
+      instrumenter.end(currentContext, currentRequest, response, null);
       currentScope = null;
       currentRequest = null;
       currentContext = null;

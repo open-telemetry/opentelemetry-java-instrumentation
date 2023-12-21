@@ -51,7 +51,7 @@ class GrpcSmokeTest extends SmokeTest {
     countSpansByName(traces, 'opentelemetry.proto.collector.trace.v1.TraceService/Export') == 1
     countSpansByName(traces, 'TestService.withSpan') == 1
 
-    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
+    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.distro.version")
       .map { it.stringValue }
       .collect(toSet())
 

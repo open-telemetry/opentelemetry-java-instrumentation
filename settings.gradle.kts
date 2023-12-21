@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.16"
+  id("com.gradle.enterprise") version "3.16.1"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
   // this can't live in pluginManagement currently due to
@@ -402,6 +402,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -554,6 +555,7 @@ include(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagen
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
+include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-sql-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
