@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
+import org.awaitility.core.ConditionTimeoutException;
 
 /**
  * This interface defines a common set of operations for interaction with OpenTelemetry SDK and
@@ -80,13 +81,13 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
-    doAssertTraces(traceComparator, Arrays.asList(assertions), true);
+    waitAndAssertTraces(traceComparator, Arrays.asList(assertions), true);
   }
 
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator,
       Iterable<? extends Consumer<TraceAssert>> assertions) {
-    doAssertTraces(traceComparator, assertions, true);
+    waitAndAssertTraces(traceComparator, assertions, true);
   }
 
   @SafeVarargs
@@ -98,7 +99,7 @@ public abstract class InstrumentationTestRunner {
 
   public final <T extends Consumer<TraceAssert>>
       void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
-    doAssertTraces(null, assertions, false);
+    waitAndAssertTraces(null, assertions, false);
   }
 
   @SafeVarargs
@@ -108,15 +109,32 @@ public abstract class InstrumentationTestRunner {
   }
 
   public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
-    doAssertTraces(null, assertions, true);
+    waitAndAssertTraces(null, assertions, true);
   }
 
-  private <T extends Consumer<TraceAssert>> void doAssertTraces(
+  private <T extends Consumer<TraceAssert>> void waitAndAssertTraces(
       @Nullable Comparator<List<SpanData>> traceComparator,
       Iterable<T> assertions,
       boolean verifyScopeVersion) {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
+
+    try {
+      await()
+          .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
+    } catch (ConditionTimeoutException e) {
+      // Don't throw this failure since the stack is the awaitility thread, causing confusion.
+      // Instead, just assert one more time on the test thread, which will fail with a better stack
+      // trace.
+      // TODO(anuraaga): There is probably a better way to do this.
+      doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
+    }
+  }
+
+  private <T extends Consumer<TraceAssert>> void doAssertTraces(
+      @Nullable Comparator<List<SpanData>> traceComparator,
+      List<T> assertionsList,
+      boolean verifyScopeVersion) {
     List<List<SpanData>> traces = waitForTraces(assertionsList.size());
     if (verifyScopeVersion) {
       TelemetryDataUtil.assertScopeVersion(traces);
