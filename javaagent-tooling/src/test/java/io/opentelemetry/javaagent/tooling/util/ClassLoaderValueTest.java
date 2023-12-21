@@ -29,7 +29,12 @@ class ClassLoaderValueTest {
     ClassLoaderValue<String> value2 = new ClassLoaderValue<>();
     String value = "value";
     String ret1 = value2.computeIfAbsent(classLoader, () -> value);
-    String ret2 = value2.computeIfAbsent(classLoader, () -> { throw new IllegalStateException("Shouldn't be invoked"); });
+    String ret2 =
+        value2.computeIfAbsent(
+            classLoader,
+            () -> {
+              throw new IllegalStateException("Shouldn't be invoked");
+            });
     assertThat(ret1).isSameAs(value);
     assertThat(ret2).isSameAs(value);
     assertThat(value2.get(classLoader)).isSameAs(value);

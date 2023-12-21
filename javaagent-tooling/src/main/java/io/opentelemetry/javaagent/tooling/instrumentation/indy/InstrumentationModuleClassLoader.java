@@ -133,6 +133,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);
   }
+
   public synchronized boolean hasModuleInstalled(InstrumentationModule module) {
     return installedModules.contains(module);
   }
@@ -349,5 +350,4 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       }
     }
   }
-
 }

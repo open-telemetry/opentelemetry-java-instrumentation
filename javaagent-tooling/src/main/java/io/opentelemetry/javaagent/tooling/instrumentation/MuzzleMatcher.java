@@ -64,11 +64,14 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
       classLoader = Utils.getBootstrapProxy();
     }
     if (instrumentationModule.isIndyModule()) {
-      return matchCache.computeIfAbsent(classLoader, cl -> {
-        InstrumentationModuleClassLoader moduleCl = IndyModuleRegistry.createInstrumentationClassloaderWithoutRegistration(
-            instrumentationModule, cl);
-        return doesMatch(moduleCl);
-      });
+      return matchCache.computeIfAbsent(
+          classLoader,
+          cl -> {
+            InstrumentationModuleClassLoader moduleCl =
+                IndyModuleRegistry.createInstrumentationClassloaderWithoutRegistration(
+                    instrumentationModule, cl);
+            return doesMatch(moduleCl);
+          });
     } else {
       return matchCache.computeIfAbsent(classLoader, this::doesMatch);
     }

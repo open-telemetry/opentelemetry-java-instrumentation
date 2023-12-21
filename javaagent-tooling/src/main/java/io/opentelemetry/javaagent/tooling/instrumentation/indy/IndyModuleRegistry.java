@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 public class IndyModuleRegistry {
@@ -27,8 +27,8 @@ public class IndyModuleRegistry {
    * <p>The keys of the contained map are the instrumentation module group names, see {@link
    * ExperimentalInstrumentationModule#getModuleGroup()};
    */
-  private static final ClassLoaderValue<Map<String, InstrumentationModuleClassLoader>> instrumentationClassloaders = new ClassLoaderValue<>();
-
+  private static final ClassLoaderValue<Map<String, InstrumentationModuleClassLoader>>
+      instrumentationClassloaders = new ClassLoaderValue<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassloader(
       String moduleClassName, ClassLoader instrumentedClassloader) {
@@ -49,28 +49,31 @@ public class IndyModuleRegistry {
         instrumentationClassloaders.get(instrumentedClassloader);
 
     if (loadersByGroupName == null) {
-      throw new IllegalArgumentException(module + " has not been initialized for classloader " + instrumentedClassloader + " yet");
+      throw new IllegalArgumentException(
+          module + " has not been initialized for classloader " + instrumentedClassloader + " yet");
     }
 
     InstrumentationModuleClassLoader loader = loadersByGroupName.get(groupName);
     if (loader == null || !loader.hasModuleInstalled(module)) {
-      throw new IllegalArgumentException(module + " has not been initialized for classloader " + instrumentedClassloader + " yet");
+      throw new IllegalArgumentException(
+          module + " has not been initialized for classloader " + instrumentedClassloader + " yet");
     }
 
     return loader;
   }
 
   /**
-   * Returns a newly created classloader containing only the provided module.
-   * Note that other modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)})
-   * will not be installed in this classloader.
+   * Returns a newly created classloader containing only the provided module. Note that other
+   * modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)}) will
+   * not be installed in this classloader.
    */
   public static InstrumentationModuleClassLoader
       createInstrumentationClassloaderWithoutRegistration(
           InstrumentationModule module, ClassLoader instrumentedClassloader) {
     // TODO: remove this method and replace usages with a custom TypePool implementation instead
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    InstrumentationModuleClassLoader cl = new InstrumentationModuleClassLoader(instrumentedClassloader, agentOrExtensionCl);
+    InstrumentationModuleClassLoader cl =
+        new InstrumentationModuleClassLoader(instrumentedClassloader, agentOrExtensionCl);
     cl.installModule(module);
     return cl;
   }
@@ -100,9 +103,12 @@ public class IndyModuleRegistry {
 
     String groupName = getModuleGroup(module);
 
-    InstrumentationModuleClassLoader moduleCl = instrumentationClassloaders
-        .computeIfAbsent(classLoader, ConcurrentHashMap::new)
-        .computeIfAbsent(groupName, unused -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+    InstrumentationModuleClassLoader moduleCl =
+        instrumentationClassloaders
+            .computeIfAbsent(classLoader, ConcurrentHashMap::new)
+            .computeIfAbsent(
+                groupName,
+                unused -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
 
     moduleCl.installModule(module);
   }
