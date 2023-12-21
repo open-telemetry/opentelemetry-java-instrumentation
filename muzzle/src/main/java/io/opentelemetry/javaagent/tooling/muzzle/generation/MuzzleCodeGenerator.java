@@ -10,6 +10,7 @@ import static java.util.logging.Level.INFO;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
@@ -98,7 +99,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private boolean generateVirtualFieldsMethod = true;
 
     public GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor, URLClassLoader classLoader) {
-      super(Opcodes.ASM7, classVisitor);
+      super(AsmApi.VERSION, classVisitor);
       this.classLoader = classLoader;
     }
 

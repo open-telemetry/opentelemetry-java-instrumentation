@@ -57,4 +57,8 @@ tasks {
     dependsOn(testPrometheusMode)
     dependsOn(testHistogramGauges)
   }
+
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
+  }
 }

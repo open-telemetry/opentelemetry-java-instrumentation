@@ -173,7 +173,7 @@ jobs:
           fi
 
       - name: Upload agent jar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
 
@@ -278,7 +278,7 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
@@ -286,7 +286,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
@@ -359,7 +359,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           # we expect crash dumps either in root director or in smoke-tests

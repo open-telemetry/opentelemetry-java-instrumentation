@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -14,7 +13,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
@@ -49,10 +47,6 @@ public final class ExperimentalMemoryPools {
   // Visible for testing
   static List<AutoCloseable> registerObservers(
       OpenTelemetry openTelemetry, List<MemoryPoolMXBean> poolBeans) {
-
-    if (!SemconvStability.emitStableJvmSemconv()) {
-      return emptyList();
-    }
 
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
     return singletonList(
