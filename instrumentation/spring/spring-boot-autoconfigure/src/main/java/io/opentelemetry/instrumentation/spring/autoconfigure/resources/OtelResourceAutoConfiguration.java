@@ -25,14 +25,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(OtelResourceProperties.class)
+@EnableConfigurationProperties({OtelSpringResourceProperties.class, OtelResourceProperties.class})
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.springboot.resource", name = "enabled", matchIfMissing = true)
 public class OtelResourceAutoConfiguration {
 
   @Bean
-  public ResourceProvider otelResourceProvider(OtelResourceProperties otelResourceProperties) {
-    return new SpringResourceProvider(otelResourceProperties);
+  public ResourceProvider otelResourceProvider(
+      OtelSpringResourceProperties otelSpringResourceProperties,
+      OtelResourceProperties otelResourceProperties) {
+    return new SpringResourceProvider(otelSpringResourceProperties, otelResourceProperties);
   }
 
   @Bean
