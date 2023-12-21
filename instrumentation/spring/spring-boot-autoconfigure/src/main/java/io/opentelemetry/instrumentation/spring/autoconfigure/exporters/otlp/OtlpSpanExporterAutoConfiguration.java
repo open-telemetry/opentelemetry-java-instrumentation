@@ -5,16 +5,21 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
+import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import java.time.Duration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -25,34 +30,53 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(OtlpExporterProperties.class)
-@ConditionalOnProperty(
-    prefix = "otel.exporter.otlp",
-    name = {"enabled", "traces.enabled"},
-    matchIfMissing = true)
+@Conditional(OtlpSpanExporterAutoConfiguration.CustomCondition.class)
 @ConditionalOnClass(OtlpGrpcSpanExporter.class)
 public class OtlpSpanExporterAutoConfiguration {
 
   @Bean
-  @ConditionalOnMissingBean
-  public OtlpGrpcSpanExporter otelOtlpGrpcSpanExporter(OtlpExporterProperties properties) {
-    OtlpGrpcSpanExporterBuilder builder = OtlpGrpcSpanExporter.builder();
+  @ConditionalOnMissingBean({OtlpHttpSpanExporterBuilder.class})
+  public OtlpHttpSpanExporterBuilder otelOtlpHttpSpanExporterBuilder() {
+    // used for testing only - the builder is final
+    return OtlpHttpSpanExporter.builder();
+  }
 
-    String endpoint = properties.getTraces().getEndpoint();
-    if (endpoint == null) {
-      endpoint = properties.getEndpoint();
-    }
-    if (endpoint != null) {
-      builder.setEndpoint(endpoint);
-    }
+  @Bean
+  @ConditionalOnMissingBean({OtlpGrpcSpanExporter.class, OtlpHttpSpanExporter.class})
+  public SpanExporter otelOtlpSpanExporter(
+      OtlpExporterProperties properties, OtlpHttpSpanExporterBuilder otlpHttpSpanExporterBuilder) {
+    return OtlpExporterUtil.applySignalProperties(
+        OtlpConfigUtil.DATA_TYPE_TRACES,
+        properties,
+        properties.getLogs(),
+        OtlpGrpcSpanExporter::builder,
+        () -> otlpHttpSpanExporterBuilder,
+        OtlpGrpcSpanExporterBuilder::setEndpoint,
+        OtlpHttpSpanExporterBuilder::setEndpoint,
+        (builder, entry) -> {
+          builder.addHeader(entry.getKey(), entry.getValue());
+        },
+        (builder, entry) -> {
+          builder.addHeader(entry.getKey(), entry.getValue());
+        },
+        OtlpGrpcSpanExporterBuilder::setTimeout,
+        OtlpHttpSpanExporterBuilder::setTimeout,
+        OtlpGrpcSpanExporterBuilder::build,
+        OtlpHttpSpanExporterBuilder::build);
+  }
 
-    Duration timeout = properties.getTraces().getTimeout();
-    if (timeout == null) {
-      timeout = properties.getTimeout();
+  static final class CustomCondition implements Condition {
+    @Override
+    public boolean matches(
+        org.springframework.context.annotation.ConditionContext context,
+        org.springframework.core.type.AnnotatedTypeMetadata metadata) {
+      return ExporterConfigEvaluator.isExporterEnabled(
+          context.getEnvironment(),
+          "otel.exporter.otlp.enabled",
+          "otel.exporter.otlp.traces.enabled",
+          "otel.traces.exporter",
+          "otlp",
+          true);
     }
-    if (timeout != null) {
-      builder.setTimeout(timeout);
-    }
-
-    return builder.build();
   }
 }

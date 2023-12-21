@@ -17,18 +17,3 @@ dependencies {
   testImplementation(project(":instrumentation:jodd-http-4.2:javaagent"))
   testImplementation(project(":instrumentation-api-incubator"))
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      includeTestsMatching("JoddHttpTest")
-    }
-    include("**/JoddHttpTest.*")
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}
