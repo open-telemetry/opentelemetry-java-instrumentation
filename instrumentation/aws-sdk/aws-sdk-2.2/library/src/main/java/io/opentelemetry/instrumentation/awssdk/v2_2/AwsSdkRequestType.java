@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.semconv.SemanticAttributes;
+
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 
 import java.util.Collections;
@@ -16,7 +18,10 @@ enum AwsSdkRequestType {
   SQS(request("aws.queue.url", "QueueUrl"), request("aws.queue.name", "QueueName")),
   KINESIS(request("aws.stream.name", "StreamName")),
   DYNAMODB(request("aws.table.name", "TableName")),
-  SNS(request("messaging.destination.name", "TopicArn"));
+  SNS(
+      request(SemanticAttributes.MESSAGING_DESTINATION_NAME.getKey(), "TargetArn"),
+      request(SemanticAttributes.MESSAGING_DESTINATION_NAME.getKey(), "TopicArn")
+  );
 
   // Wrapping in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")
