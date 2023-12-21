@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -61,12 +62,16 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
       ProtectionDomain protectionDomain) {
     if (classLoader == BOOTSTRAP_LOADER) {
       classLoader = Utils.getBootstrapProxy();
-    } else if (instrumentationModule.isIndyModule()) {
-      classLoader =
-          IndyModuleRegistry.createInstrumentationClassloaderWithoutRegistration(
-              instrumentationModule, classLoader);
     }
-    return matchCache.computeIfAbsent(classLoader, this::doesMatch);
+    if (instrumentationModule.isIndyModule()) {
+      return matchCache.computeIfAbsent(classLoader, cl -> {
+        InstrumentationModuleClassLoader moduleCl = IndyModuleRegistry.createInstrumentationClassloaderWithoutRegistration(
+            instrumentationModule, cl);
+        return doesMatch(moduleCl);
+      });
+    } else {
+      return matchCache.computeIfAbsent(classLoader, this::doesMatch);
+    }
   }
 
   private boolean doesMatch(ClassLoader classLoader) {

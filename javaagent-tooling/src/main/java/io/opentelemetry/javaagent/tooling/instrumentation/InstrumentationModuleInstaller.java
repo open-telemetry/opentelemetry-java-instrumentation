@@ -156,7 +156,7 @@ public final class InstrumentationModuleInstaller {
       // the lookup inline
       // We need to update our documentation on that
       extendableAgentBuilder =
-          IndyModuleRegistry.registerModuleOnMatch(instrumentationModule, extendableAgentBuilder);
+          IndyModuleRegistry.initializeModuleLoaderOnMatch(instrumentationModule, extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       IndyTypeTransformerImpl typeTransformer =
           new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
