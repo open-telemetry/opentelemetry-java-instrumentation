@@ -23,6 +23,9 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
     expect:
     assert task != null
     assertTraces(0) {}
+
+    cleanup:
+    context.close()
   }
 
   def "schedule trigger test according to cron expression"() {
@@ -47,6 +50,9 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         }
       }
     }
+
+    cleanup:
+    context.close()
   }
 
   def "schedule interval test"() {
@@ -71,6 +77,9 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         }
       }
     }
+
+    cleanup:
+    context.close()
   }
 
   def "schedule lambda test"() {
@@ -122,6 +131,9 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         }
       }
     }
+
+    cleanup:
+    context.close()
   }
 
   def "task with error test"() {
@@ -159,5 +171,8 @@ class SpringSchedulingTest extends AgentInstrumentationSpecification {
         }
       }
     }
+
+    cleanup:
+    context.close()
   }
 }
