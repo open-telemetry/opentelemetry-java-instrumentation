@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0
 
-
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -76,6 +76,13 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
     return "/tomcat-context"
   }
 
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-3.0"
+  }
+
   protected void setupServlets(Context context) {
     def servlet = servlet()
 
@@ -100,12 +107,15 @@ class TomcatAsyncTest extends HttpServerTest<Tomcat> implements AgentTestTrait {
   }
 
   @Override
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return getContextPath() + endpoint.path
+    }
     switch (endpoint) {
       case NOT_FOUND:
         return getContextPath() + "/*"
       default:
-        return super.expectedHttpRoute(endpoint)
+        return super.expectedHttpRoute(endpoint, method)
     }
   }
 

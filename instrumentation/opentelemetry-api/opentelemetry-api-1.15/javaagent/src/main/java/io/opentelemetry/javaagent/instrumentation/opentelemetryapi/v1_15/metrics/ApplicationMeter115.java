@@ -10,11 +10,11 @@ import application.io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ObservableMeasurementWrapper;
 
-class ApplicationMeter115 extends ApplicationMeter {
+public class ApplicationMeter115 extends ApplicationMeter {
 
   private final io.opentelemetry.api.metrics.Meter agentMeter;
 
-  ApplicationMeter115(io.opentelemetry.api.metrics.Meter agentMeter) {
+  protected ApplicationMeter115(io.opentelemetry.api.metrics.Meter agentMeter) {
     super(agentMeter);
     this.agentMeter = agentMeter;
   }

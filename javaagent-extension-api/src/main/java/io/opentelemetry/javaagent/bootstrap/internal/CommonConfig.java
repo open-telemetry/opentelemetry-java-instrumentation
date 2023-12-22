@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Collections.emptyMap;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -26,18 +26,21 @@ public final class CommonConfig {
     return instance;
   }
 
-  private final Map<String, String> peerServiceMapping;
+  private final PeerServiceResolver peerServiceResolver;
   private final List<String> clientRequestHeaders;
   private final List<String> clientResponseHeaders;
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
   private final Set<String> knownHttpRequestMethods;
+  private final EnduserConfig enduserConfig;
   private final boolean statementSanitizationEnabled;
-  private final boolean emitExperimentalHttpClientMetrics;
+  private final boolean emitExperimentalHttpClientTelemetry;
+  private final boolean emitExperimentalHttpServerTelemetry;
 
   CommonConfig(InstrumentationConfig config) {
-    peerServiceMapping =
-        config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap());
+    peerServiceResolver =
+        PeerServiceResolver.create(
+            config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));
 
     // TODO (mateusz): remove the old config names in 2.0
     clientRequestHeaders =
@@ -67,12 +70,23 @@ public final class CommonConfig {
                 new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
-    emitExperimentalHttpClientMetrics =
-        config.getBoolean("otel.instrumentation.http.client.emit-experimental-metrics", false);
+    emitExperimentalHttpClientTelemetry =
+        DeprecatedConfigProperties.getBoolean(
+            config,
+            "otel.instrumentation.http.client.emit-experimental-metrics",
+            "otel.instrumentation.http.client.emit-experimental-telemetry",
+            false);
+    emitExperimentalHttpServerTelemetry =
+        DeprecatedConfigProperties.getBoolean(
+            config,
+            "otel.instrumentation.http.server.emit-experimental-metrics",
+            "otel.instrumentation.http.server.emit-experimental-telemetry",
+            false);
+    enduserConfig = new EnduserConfig(config);
   }
 
-  public Map<String, String> getPeerServiceMapping() {
-    return peerServiceMapping;
+  public PeerServiceResolver getPeerServiceResolver() {
+    return peerServiceResolver;
   }
 
   public List<String> getClientRequestHeaders() {
@@ -95,11 +109,19 @@ public final class CommonConfig {
     return knownHttpRequestMethods;
   }
 
+  public EnduserConfig getEnduserConfig() {
+    return enduserConfig;
+  }
+
   public boolean isStatementSanitizationEnabled() {
     return statementSanitizationEnabled;
   }
 
-  public boolean shouldEmitExperimentalHttpClientMetrics() {
-    return emitExperimentalHttpClientMetrics;
+  public boolean shouldEmitExperimentalHttpClientTelemetry() {
+    return emitExperimentalHttpClientTelemetry;
+  }
+
+  public boolean shouldEmitExperimentalHttpServerTelemetry() {
+    return emitExperimentalHttpServerTelemetry;
   }
 }

@@ -56,6 +56,15 @@ public final class ContextPropagationDebug {
     return THREAD_PROPAGATION_DEBUGGER;
   }
 
+  public static Context addDebugInfo(Context context, Object carrier) {
+    if (ContextPropagationDebug.isThreadPropagationDebuggerEnabled()) {
+      context =
+          ContextPropagationDebug.appendLocations(
+              context, new Exception().getStackTrace(), carrier);
+    }
+    return context;
+  }
+
   public static Context appendLocations(
       Context context, StackTraceElement[] locations, Object carrier) {
     ContextPropagationDebug propagationDebug = ContextPropagationDebug.getPropagations(context);

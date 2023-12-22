@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {

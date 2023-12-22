@@ -31,6 +31,20 @@ val v1_27Deps by configurations.creating {
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
 }
+val v1_31Deps by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  // exclude the bom added by dependencyManagement
+  exclude("io.opentelemetry", "opentelemetry-bom")
+  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
+}
+val v1_32Deps by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  // exclude the bom added by dependencyManagement
+  exclude("io.opentelemetry", "opentelemetry-bom")
+  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
+}
 
 // configuration for publishing the shadowed artifact
 val v1_10 by configurations.creating {
@@ -42,6 +56,14 @@ val v1_15 by configurations.creating {
   isCanBeResolved = false
 }
 val v1_27 by configurations.creating {
+  isCanBeConsumed = true
+  isCanBeResolved = false
+}
+val v1_31 by configurations.creating {
+  isCanBeConsumed = true
+  isCanBeResolved = false
+}
+val v1_32 by configurations.creating {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
@@ -63,6 +85,29 @@ dependencies {
     v1_27Deps("io.opentelemetry:$it") {
       version {
         strictly("1.27.0")
+      }
+    }
+    v1_31Deps("io.opentelemetry:$it") {
+      version {
+        strictly("1.31.0")
+      }
+    }
+    v1_32Deps("io.opentelemetry:$it") {
+      version {
+        strictly("1.32.0")
+      }
+    }
+  }
+
+  listOf("opentelemetry-extension-incubator").forEach {
+    v1_31Deps("io.opentelemetry:$it") {
+      version {
+        strictly("1.31.0-alpha")
+      }
+    }
+    v1_32Deps("io.opentelemetry:$it") {
+      version {
+        strictly("1.32.0-alpha")
       }
     }
   }
@@ -92,10 +137,20 @@ tasks {
     configurations = listOf(v1_27Deps)
     archiveClassifier.set("v1_27")
   }
+  val v1_31Shadow by registering(ShadowJar::class) {
+    configurations = listOf(v1_31Deps)
+    archiveClassifier.set("v1_31")
+  }
+  val v1_32Shadow by registering(ShadowJar::class) {
+    configurations = listOf(v1_32Deps)
+    archiveClassifier.set("v1_32")
+  }
 
   artifacts {
     add(v1_10.name, v1_10Shadow)
     add(v1_15.name, v1_15Shadow)
     add(v1_27.name, v1_27Shadow)
+    add(v1_31.name, v1_31Shadow)
+    add(v1_32.name, v1_32Shadow)
   }
 }

@@ -6,9 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
@@ -23,8 +25,10 @@ final class SqsAccess {
   static boolean afterReceiveMessageExecution(
       Context.AfterExecution context,
       ExecutionAttributes executionAttributes,
-      TracingExecutionInterceptor config) {
-    return enabled && SqsImpl.afterReceiveMessageExecution(context, executionAttributes, config);
+      TracingExecutionInterceptor config,
+      Timer timer) {
+    return enabled
+        && SqsImpl.afterReceiveMessageExecution(context, executionAttributes, config, timer);
   }
 
   /**
@@ -41,5 +45,25 @@ final class SqsAccess {
     return enabled
         ? SqsImpl.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator)
         : null;
+  }
+
+  @NoMuzzle
+  static boolean isSqsProducerRequest(SdkRequest request) {
+    return enabled && SqsImpl.isSqsProducerRequest(request);
+  }
+
+  @NoMuzzle
+  static String getQueueUrl(SdkRequest request) {
+    return enabled ? SqsImpl.getQueueUrl(request) : null;
+  }
+
+  @NoMuzzle
+  static String getMessageAttribute(SdkRequest request, String name) {
+    return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
+  }
+
+  @NoMuzzle
+  static String getMessageId(SdkResponse response) {
+    return enabled ? SqsImpl.getMessageId(response) : null;
   }
 }

@@ -6,12 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import java.util.Set;
 
 public class Servlet2SpanNameExtractor<REQUEST, RESPONSE>
     implements SpanNameExtractor<ServletRequestContext<REQUEST>> {
+
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
+  private final Set<String> knownMethods = CommonConfig.get().getKnownHttpRequestMethods();
 
   public Servlet2SpanNameExtractor(ServletAccessor<REQUEST, RESPONSE> accessor) {
     this.accessor = accessor;
@@ -22,16 +26,19 @@ public class Servlet2SpanNameExtractor<REQUEST, RESPONSE>
     REQUEST request = requestContext.request();
     String method = accessor.getRequestMethod(request);
     String servletPath = accessor.getRequestServletPath(request);
-    if (method != null) {
-      if (servletPath.isEmpty()) {
-        return method;
-      }
-      String contextPath = accessor.getRequestContextPath(request);
-      if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
-        return method + " " + servletPath;
-      }
-      return method + " " + contextPath + servletPath;
+    if (method == null) {
+      return "HTTP";
     }
-    return "HTTP request";
+    if (!knownMethods.contains(method)) {
+      method = "HTTP";
+    }
+    if (servletPath == null || servletPath.isEmpty()) {
+      return method;
+    }
+    String contextPath = accessor.getRequestContextPath(request);
+    if (contextPath == null || contextPath.isEmpty() || contextPath.equals("/")) {
+      return method + " " + servletPath;
+    }
+    return method + " " + contextPath + servletPath;
   }
 }

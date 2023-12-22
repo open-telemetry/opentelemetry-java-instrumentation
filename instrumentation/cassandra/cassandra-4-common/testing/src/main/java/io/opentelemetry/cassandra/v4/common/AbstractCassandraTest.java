@@ -7,20 +7,18 @@ package io.opentelemetry.cassandra.v4.common;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_PAGE_SIZE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_ADDR;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NET_SOCK_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_TABLE;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_TYPE;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -28,6 +26,7 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -91,9 +90,9 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(NET_SOCK_PEER_NAME, "localhost"),
-                                equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),
                                 equalTo(DB_STATEMENT, parameter.expectedStatement),
@@ -138,9 +137,9 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(NET_SOCK_PEER_NAME, "localhost"),
-                                equalTo(NET_SOCK_PEER_PORT, cassandraPort),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),
                                 equalTo(DB_STATEMENT, parameter.expectedStatement),

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
 import static io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHeadersGetter.getHeaders;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -82,32 +82,20 @@ public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
     return request.getProtocol().getVersion();
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(Request request) {
-    return ServerCallAccess.getHostDomain(request);
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(Request request) {
-    return ServerCallAccess.getServerPort(request);
-  }
-
   @Override
   @Nullable
-  public String getClientSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkPeerAddress(Request request, @Nullable Response response) {
     return request.getClientInfo().getAddress();
   }
 
   @Override
-  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     return request.getClientInfo().getPort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkLocalAddress(Request request, @Nullable Response response) {
     return ServerCallAccess.getServerAddress(request);
   }
 }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
@@ -133,14 +133,11 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "CreateTable"
@@ -169,14 +166,11 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "Query"
@@ -204,14 +198,11 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_URL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" { it.startsWith("aws-sdk-java/") }
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"

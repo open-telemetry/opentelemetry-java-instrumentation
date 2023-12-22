@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;

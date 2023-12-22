@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
@@ -99,16 +99,13 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-
           // protocol is extracted from the response, and those URLs cause exceptions (= null
           // response)
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
           }
-
           return attributes;
         });
   }

@@ -26,6 +26,7 @@ tasks {
     filter {
       excludeTestsMatching("Log4j27BaggageTest")
     }
+    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 
   val testAddBaggage by registering(Test::class) {

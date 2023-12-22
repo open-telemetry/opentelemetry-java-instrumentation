@@ -16,13 +16,3 @@ muzzle {
 dependencies {
   library("org.apache.httpcomponents:httpasyncclient:4.1")
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}

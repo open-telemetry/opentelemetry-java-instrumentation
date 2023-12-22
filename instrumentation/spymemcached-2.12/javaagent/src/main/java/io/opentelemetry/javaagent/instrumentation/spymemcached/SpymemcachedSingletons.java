@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
 
 public final class SpymemcachedSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spymemcached-2.12";

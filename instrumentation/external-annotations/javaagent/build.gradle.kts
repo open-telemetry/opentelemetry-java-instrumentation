@@ -39,7 +39,7 @@ tasks {
       includeTestsMatching("ConfiguredTraceAnnotationsTest")
     }
     include("**/ConfiguredTraceAnnotationsTest.*")
-    jvmArgs("-Dotel.instrumentation.external-annotations.include=package.Class\$Name;OuterClass\$InterestingMethod")
+    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass\$InterestingMethod")
   }
 
   val testExcludeMethodsProperty by registering(Test::class) {
@@ -47,7 +47,9 @@ tasks {
       includeTestsMatching("TracedMethodsExclusionTest")
     }
     include("**/TracedMethodsExclusionTest.*")
-    jvmArgs("-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]")
+    jvmArgs(
+      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.extannotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+    )
   }
 
   test {

@@ -5,19 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -97,11 +92,6 @@ class ApacheHttpAsyncClientTest {
         HttpClientResult httpClientResult) {
       getClient(uri).execute(request, responseCallback(httpClientResult));
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -136,11 +126,6 @@ class ApacheHttpAsyncClientTest {
               request,
               responseCallback(httpClientResult));
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -173,11 +158,6 @@ class ApacheHttpAsyncClientTest {
               new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
               request,
               responseCallback(httpClientResult));
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
@@ -222,18 +202,6 @@ class ApacheHttpAsyncClientTest {
         httpClientResult.complete(new CancellationException());
       }
     };
-  }
-
-  void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent("httpasyncclient");
-    optionsBuilder.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.add(SemanticAttributes.HTTP_SCHEME);
-          attributes.add(SemanticAttributes.HTTP_TARGET);
-          return attributes;
-        });
   }
 
   static String fullPathFromUri(URI uri) {

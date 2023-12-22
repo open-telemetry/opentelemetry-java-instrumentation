@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.instrumentation.api.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.function.Function;
 

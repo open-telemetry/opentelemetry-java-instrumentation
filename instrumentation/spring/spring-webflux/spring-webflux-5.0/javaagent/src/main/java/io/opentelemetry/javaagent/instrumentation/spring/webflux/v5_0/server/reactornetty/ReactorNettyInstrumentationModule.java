@@ -19,6 +19,12 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // uses classes from netty instrumentation that are now in a different class loader
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(
         new HttpTrafficHandlerInstrumentation(), new ContextHandlerInstrumentation());

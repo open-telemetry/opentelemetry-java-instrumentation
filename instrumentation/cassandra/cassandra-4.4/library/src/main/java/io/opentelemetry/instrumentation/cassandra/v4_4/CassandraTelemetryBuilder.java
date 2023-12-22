@@ -8,12 +8,12 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 /** A builder of {@link CassandraTelemetry}. */
 public class CassandraTelemetryBuilder {
@@ -59,7 +59,7 @@ public class CassandraTelemetryBuilder {
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(
-            ServerAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
+            NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
         .addAttributesExtractor(new CassandraAttributesExtractor())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

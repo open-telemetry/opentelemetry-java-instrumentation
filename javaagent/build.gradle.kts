@@ -35,7 +35,7 @@ listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("io.opentelemetry", "opentelemetry-api")
     exclude("io.opentelemetry", "opentelemetry-api-events")
-    exclude("io.opentelemetry", "opentelemetry-semconv")
+    exclude("io.opentelemetry.semconv", "opentelemetry-semconv")
     // metrics advice API
     exclude("io.opentelemetry", "opentelemetry-extension-incubator")
   }
@@ -50,7 +50,7 @@ dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-events is not
   bootstrapLibs("io.opentelemetry:opentelemetry-api-events")
-  bootstrapLibs(project(":instrumentation-api-semconv"))
+  bootstrapLibs(project(":instrumentation-api-incubator"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
@@ -238,7 +238,8 @@ tasks {
     delete(rootProject.file("licenses"))
   }
 
-  val generateLicenseReportEnabled = gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
+  val generateLicenseReportEnabled =
+    gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
     finalizedBy(":spotlessApply")
@@ -311,7 +312,7 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
 fun ShadowJar.excludeBootstrapClasses() {
   dependencies {
     exclude(project(":instrumentation-api"))
-    exclude(project(":instrumentation-api-semconv"))
+    exclude(project(":instrumentation-api-incubator"))
     exclude(project(":instrumentation-annotations-support"))
     exclude(project(":javaagent-bootstrap"))
   }

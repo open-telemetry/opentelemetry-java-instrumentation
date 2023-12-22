@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
@@ -120,18 +120,13 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          // the tests are capturing the user-agent, but since it's not possible to override it in
-          // the builder, and since it contains the okhttp library version, let's just skip
-          // verification on this attribute
-          attributes.remove(SemanticAttributes.USER_AGENT_ORIGINAL);
 
           // protocol is extracted from the response, and those URLs cause exceptions (= null
           // response)
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+            attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
           }
 
           return attributes;

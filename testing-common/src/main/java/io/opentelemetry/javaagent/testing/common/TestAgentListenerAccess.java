@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.testing.common;
 
 import static java.lang.invoke.MethodType.methodType;
 
+import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -103,6 +104,10 @@ public final class TestAgentListenerAccess {
     } catch (Throwable t) {
       throw new AssertionError("Could not invoke TestAgentListener.addSkipErrorCondition", t);
     }
+  }
+
+  public static int getAndResetAdviceFailureCount() {
+    return ExceptionLogger.getAndReset();
   }
 
   private TestAgentListenerAccess() {}

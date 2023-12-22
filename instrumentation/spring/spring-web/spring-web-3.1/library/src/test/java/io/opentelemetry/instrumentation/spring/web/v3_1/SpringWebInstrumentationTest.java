@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +36,7 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
   static RestTemplate restTemplate;
 
   @BeforeAll
+  @SuppressWarnings("PreferJavaTimeOverload")
   static void setUp() {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
     requestFactory.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
@@ -99,12 +100,12 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
     optionsBuilder.disableTestCircularRedirects();
     optionsBuilder.disableTestReadTimeout();
     optionsBuilder.disableTestNonStandardHttpMethod();
+
     optionsBuilder.setHttpAttributes(
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
   }

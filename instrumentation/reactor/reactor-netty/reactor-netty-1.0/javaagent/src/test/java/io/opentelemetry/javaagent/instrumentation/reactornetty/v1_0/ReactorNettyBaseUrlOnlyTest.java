@@ -16,10 +16,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -108,19 +109,16 @@ class ReactorNettyBaseUrlOnlyTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri + "/"),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.URL_FULL, uri + "/"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, server.httpPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
-                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
-                                AbstractLongAssert::isNotNegative),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, server.httpPort()),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1")),
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }

@@ -12,4 +12,9 @@ public class RedissonClientTest extends AbstractRedissonClientTest {
   protected boolean useRedisProtocol() {
     return true;
   }
+
+  @Override
+  protected boolean lockHas3Traces() {
+    return Boolean.getBoolean("testLatestDeps");
+  }
 }

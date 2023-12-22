@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,8 +24,8 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(super.computeHttpAttributes(uri));
     // underlying netty instrumentation does not provide these
-    attributes.remove(SemanticAttributes.NET_PEER_NAME);
-    attributes.remove(SemanticAttributes.NET_PEER_PORT);
+    attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+    attributes.remove(SemanticAttributes.SERVER_PORT);
     return attributes;
   }
 }

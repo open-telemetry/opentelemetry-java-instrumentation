@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import ratpack.error.ServerErrorHandler;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;

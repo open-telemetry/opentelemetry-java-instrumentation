@@ -12,7 +12,7 @@ import com.sun.jersey.api.client.filter.LoggingFilter
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements AgentTestTrait {
@@ -79,8 +79,12 @@ class JaxRsClientV1Test extends HttpClientTest<WebResource.Builder> implements A
   @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
+    attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION)
     return attributes
+  }
+
+  @Override
+  boolean testNonStandardHttpMethod() {
+    false
   }
 }

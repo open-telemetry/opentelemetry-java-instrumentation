@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
@@ -147,6 +147,7 @@ class Jms3InstrumentationTest {
                           equalTo(
                               SemanticAttributes.MESSAGING_DESTINATION_NAME,
                               producerDestinationName),
+                          equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                           equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -214,6 +215,7 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -297,6 +299,7 @@ class Jms3InstrumentationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(

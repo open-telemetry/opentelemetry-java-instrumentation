@@ -10,14 +10,15 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfoBuilder;
 import javax.annotation.Nullable;
 
-class ScopeUtil {
+public final class ScopeUtil {
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.runtime-telemetry-java8";
 
   @Nullable
   private static final String INSTRUMENTATION_VERSION =
       EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
 
-  static final InstrumentationScopeInfo EXPECTED_SCOPE;
+  public static final InstrumentationScopeInfo EXPECTED_SCOPE;
 
   static {
     InstrumentationScopeInfoBuilder builder =

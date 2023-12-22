@@ -11,8 +11,9 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.security.Principal;
 import javax.annotation.Nullable;
 
@@ -43,11 +44,13 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
-    Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
-    if (principal != null) {
-      String name = principal.getName();
-      if (name != null) {
-        attributes.put(SemanticAttributes.ENDUSER_ID, name);
+    if (CommonConfig.get().getEnduserConfig().isIdEnabled()) {
+      Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
+      if (principal != null) {
+        String name = principal.getName();
+        if (name != null) {
+          attributes.put(SemanticAttributes.ENDUSER_ID, name);
+        }
       }
     }
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

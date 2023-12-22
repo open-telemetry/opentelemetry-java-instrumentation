@@ -33,14 +33,16 @@ tasks {
   // that breaks deploy on embedded wildfly
   // create a copy of logback-classic jar that does not have this file
   val modifyLogbackJar by registering(Jar::class) {
-    destinationDirectory.set(file("$buildDir/tmp"))
+    destinationDirectory.set(layout.buildDirectory.dir("tmp"))
     archiveFileName.set("logback-classic-modified.jar")
     exclude("/META-INF/services/javax.servlet.ServletContainerInitializer")
     doFirst {
       configurations.configureEach {
         if (name.lowercase().endsWith("testruntimeclasspath")) {
           val logbackJar = find { it.name.contains("logback-classic") }
-          from(zipTree(logbackJar))
+          logbackJar?.let {
+            from(zipTree(logbackJar))
+          }
         }
       }
     }
@@ -63,7 +65,7 @@ tasks {
         !it.absolutePath.contains("logback-classic")
       }
       // add modified copy of logback-classic to classpath
-      classpath = classpath.plus(files("$buildDir/tmp/logback-classic-modified.jar"))
+      classpath = classpath.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
     }
   }
 }

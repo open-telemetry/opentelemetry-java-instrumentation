@@ -11,7 +11,7 @@ dependencies {
   implementation(project(":instrumentation-api"))
 
   api("io.opentelemetry:opentelemetry-api")
-  api("io.opentelemetry:opentelemetry-semconv")
+  api("io.opentelemetry.semconv:opentelemetry-semconv")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

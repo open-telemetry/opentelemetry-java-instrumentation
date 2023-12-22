@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.junit.jupiter.api.Assumptions
 import spock.lang.Unroll
 
@@ -130,8 +131,9 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
           kind SERVER
           if (!runsOnServer()) {
             attributes {
-              "$SemanticAttributes.HTTP_METHOD" method
+              "$SemanticAttributes.HTTP_REQUEST_METHOD" method
               "$SemanticAttributes.HTTP_ROUTE" route
+              "$HttpAttributes.ERROR_TYPE" "_OTHER"
             }
           }
         }

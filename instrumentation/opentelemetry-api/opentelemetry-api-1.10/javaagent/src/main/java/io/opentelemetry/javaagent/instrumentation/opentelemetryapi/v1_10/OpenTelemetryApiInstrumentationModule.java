@@ -20,6 +20,11 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isIndyModule() {
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new OpenTelemetryInstrumentation());
   }

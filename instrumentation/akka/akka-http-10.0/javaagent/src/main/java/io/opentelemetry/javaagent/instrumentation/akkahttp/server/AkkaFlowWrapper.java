@@ -24,6 +24,7 @@ import akka.stream.stage.GraphStageLogic;
 import akka.stream.stage.OutHandler;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteHolder;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -118,6 +119,7 @@ public class AkkaFlowWrapper
               Context parentContext = currentContext();
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
+                context = AkkaRouteHolder.init(context);
                 tracingRequest = new TracingRequest(context, request);
               }
               // event if span wasn't started we need to push TracingRequest to match response

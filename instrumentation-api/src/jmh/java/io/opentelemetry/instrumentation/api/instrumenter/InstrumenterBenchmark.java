@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -111,7 +111,8 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public InetSocketAddress getServerInetSocketAddress(Void request, @Nullable Void response) {
+    public InetSocketAddress getNetworkPeerInetSocketAddress(
+        Void request, @Nullable Void response) {
       return PEER_ADDRESS;
     }
   }

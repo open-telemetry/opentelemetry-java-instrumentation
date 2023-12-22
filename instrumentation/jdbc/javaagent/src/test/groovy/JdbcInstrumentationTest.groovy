@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jdbc.test.ProxyStatementFactory
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -647,7 +647,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "other_sql"
             "$SemanticAttributes.DB_STATEMENT" "testing ?"
             "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -691,7 +691,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
             "$SemanticAttributes.DB_OPERATION" operation
             "$SemanticAttributes.DB_SQL_TABLE" table
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -796,7 +796,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
             "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "table"
-            "$SemanticAttributes.NET_PEER_NAME" "localhost"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -837,6 +837,38 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     Statement proxyStatement = ProxyStatementFactory.proxyStatement(statement)
     ResultSet resultSet = runWithSpan("parent") {
       return proxyStatement.executeQuery("SELECT 3")
+    }
+
+    expect:
+    resultSet.next()
+    resultSet.getInt(1) == 3
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          name "parent"
+          kind SpanKind.INTERNAL
+          hasNoParent()
+        }
+        span(1) {
+          name "SELECT $dbNameLower"
+          kind CLIENT
+          childOf span(0)
+        }
+      }
+    }
+
+    cleanup:
+    statement.close()
+    connection.close()
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9359
+  def "test proxy prepared statement"() {
+    def connection = new Driver().connect(jdbcUrls.get("h2"), null)
+    PreparedStatement statement = connection.prepareStatement("SELECT 3")
+    PreparedStatement proxyStatement = ProxyStatementFactory.proxyPreparedStatement(statement)
+    ResultSet resultSet = runWithSpan("parent") {
+      return proxyStatement.executeQuery()
     }
 
     expect:

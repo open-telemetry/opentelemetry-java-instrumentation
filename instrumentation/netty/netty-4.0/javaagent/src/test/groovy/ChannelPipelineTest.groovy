@@ -32,7 +32,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     channelPipeline.addLast("http", handler)
     channelPipeline.first() == handler
     // our handler was also added
-    channelPipeline.last().getClass() == HttpClientTracingHandler
+    channelPipeline.last().getClass().getSimpleName() == "HttpClientTracingHandler"
 
     and:
     removeMethod.call(channelPipeline, handler)
@@ -72,7 +72,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     then: "noop handler was removed; http and instrumentation handlers were added"
     channelPipeline.size() == 2
     channelPipeline.first() == httpHandler
-    channelPipeline.last().getClass() == HttpClientTracingHandler
+    channelPipeline.last().getClass().getSimpleName() == "HttpClientTracingHandler"
 
     when:
     def anotherNoopHandler = new NoopChannelHandler()
@@ -105,7 +105,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     then: "add http and instrumentation handlers"
     channelPipeline.size() == 2
     channelPipeline.first() == httpHandler
-    channelPipeline.last().getClass() == HttpClientTracingHandler
+    channelPipeline.last().getClass().getSimpleName() == "HttpClientTracingHandler"
 
     when:
     def noopHandler = new NoopChannelHandler()
@@ -122,13 +122,15 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     then: "http and instrumentation handlers will be remained"
     channelPipeline.size() == 2
     channelPipeline.first() == httpHandler
-    channelPipeline.last().getClass() == HttpClientTracingHandler
+    channelPipeline.last().getClass().getSimpleName() == "HttpClientTracingHandler"
 
     when:
-    channelPipeline.removeLast()
+    def removed = channelPipeline.removeLast()
 
     then: "there is no handler in pipeline"
     channelPipeline.size() == 0
+    // removing tracing handler also removes the http handler and returns it
+    removed == httpHandler
   }
 
   private static class NoopChannelHandler extends ChannelHandlerAdapter {

@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import play.libs.F.Function0
 import play.mvc.Results
 import play.routing.RoutingDsl
@@ -119,5 +119,10 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
     def attributes = super.httpAttributes(endpoint)
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
     attributes
+  }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    404
   }
 }

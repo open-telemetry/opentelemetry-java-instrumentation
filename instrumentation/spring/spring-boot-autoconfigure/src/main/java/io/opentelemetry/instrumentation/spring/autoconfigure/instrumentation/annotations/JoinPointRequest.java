@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.an
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
 import java.lang.reflect.Method;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;

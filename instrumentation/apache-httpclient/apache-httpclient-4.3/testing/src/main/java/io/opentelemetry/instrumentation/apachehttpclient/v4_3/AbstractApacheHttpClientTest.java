@@ -5,18 +5,13 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -94,11 +89,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -140,11 +130,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -180,11 +165,6 @@ public abstract class AbstractApacheHttpClientTest {
       } catch (Throwable t) {
         httpClientResult.complete(t);
       }
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
@@ -227,11 +207,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
@@ -262,11 +237,6 @@ public abstract class AbstractApacheHttpClientTest {
       } catch (Throwable t) {
         httpClientResult.complete(t);
       }
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
@@ -299,11 +269,6 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   static <T extends HttpRequest> T configureRequest(T request, Map<String, String> headers) {
@@ -333,18 +298,6 @@ public abstract class AbstractApacheHttpClientTest {
       }
       return response;
     };
-  }
-
-  static void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent("apachehttpclient");
-    optionsBuilder.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.add(SemanticAttributes.HTTP_SCHEME);
-          attributes.add(SemanticAttributes.HTTP_TARGET);
-          return attributes;
-        });
   }
 
   static String fullPathFromUri(URI uri) {

@@ -7,12 +7,13 @@ package io.opentelemetry.instrumentation.test.base
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.SpanId
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -20,7 +21,6 @@ import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
@@ -129,7 +129,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       optionsBuilder.setHttpAttributes(HttpClientTest.this.&httpAttributes)
       optionsBuilder.setResponseCodeOnRedirectError(responseCodeOnRedirectError())
-      optionsBuilder.setUserAgent(HttpClientTest.this.userAgent())
       optionsBuilder.setClientSpanErrorMapper(HttpClientTest.this.&clientSpanError)
       optionsBuilder.setSingleConnectionFactory(HttpClientTest.this.&createSingleConnection)
       optionsBuilder.setExpectedClientSpanNameMapper(HttpClientTest.this.&expectedClientSpanName)
@@ -144,8 +143,8 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
       optionsBuilder.setTestHttps(HttpClientTest.this.testHttps())
       optionsBuilder.setTestCallback(HttpClientTest.this.testCallback())
       optionsBuilder.setTestCallbackWithParent(HttpClientTest.this.testCallbackWithParent())
-      optionsBuilder.setTestCallbackWithImplicitParent(HttpClientTest.this.testCallbackWithImplicitParent())
       optionsBuilder.setTestErrorWithCallback(HttpClientTest.this.testErrorWithCallback())
+      optionsBuilder.setTestNonStandardHttpMethod(HttpClientTest.this.testNonStandardHttpMethod())
     }
   }
 
@@ -181,6 +180,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
     where:
     path << ["/success", "/success?with=params"]
+  }
+
+  def "request with non-standard http method"() {
+    assumeTrue(testNonStandardHttpMethod())
+    expect:
+    junitTest.requestWithNonStandardHttpMethod()
   }
 
   def "basic #method request with parent"() {
@@ -219,19 +224,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
 
   def "trace request with callback and no parent"() {
     assumeTrue(testCallback())
-    assumeFalse(testCallbackWithImplicitParent())
     expect:
     try {
       junitTest.requestWithCallbackAndNoParent()
     } catch (Exception ignored) {
     }
-  }
-
-  def "trace request with callback and implicit parent"() {
-    assumeTrue(testCallback())
-    assumeTrue(testCallbackWithImplicitParent())
-    expect:
-    junitTest.requestWithCallbackAndImplicitParent()
   }
 
   def "basic request with 1 redirect"() {
@@ -322,6 +319,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.httpsRequest()
   }
 
+  def "http client metrics"() {
+    expect:
+    junitTest.httpClientMetrics()
+  }
+
   /**
    * This test fires a large number of concurrent requests.
    * Each request first hits a HTTP server and then makes another client request.
@@ -359,15 +361,11 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   }
 
   protected String expectedClientSpanName(URI uri, String method) {
-    return method
+    return HttpConstants._OTHER == method ? "HTTP" : method
   }
 
   Integer responseCodeOnRedirectError() {
     return 302
-  }
-
-  String userAgent() {
-    return null
   }
 
   /** A list of additional HTTP client span attributes extracted by the instrumentation per URI. */
@@ -432,15 +430,12 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     true
   }
 
-  boolean testCallbackWithImplicitParent() {
-    // depending on async behavior callback can be executed within
-    // parent span scope or outside of the scope, e.g. in reactor-netty or spring
-    // callback is correlated.
-    false
-  }
-
   boolean testErrorWithCallback() {
     return true
+  }
+
+  boolean testNonStandardHttpMethod() {
+    true
   }
 
   Throwable clientSpanError(URI uri, Throwable exception) {

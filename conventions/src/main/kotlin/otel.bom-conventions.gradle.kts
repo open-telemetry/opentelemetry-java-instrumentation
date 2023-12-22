@@ -21,7 +21,6 @@ afterEvaluate {
   val bomProjects = rootProject.subprojects
     .sortedBy { it.findProperty("archivesName") as String? }
     .filter { !it.name.startsWith("bom") }
-    .filter { !it.name.equals("javaagent") }
     .filter(otelBom.projectFilter.get()::test)
     .filter { it.plugins.hasPlugin("maven-publish") }
 
@@ -32,8 +31,16 @@ afterEvaluate {
       }
     }
   }
+  otelBom.additionalDependencies.forEach { dependency ->
+    dependencies {
+      constraints {
+        api(dependency)
+      }
+    }
+  }
 }
 
+// this applies version numbers to the SDK bom and SDK alpha bom which are dependencies of the instrumentation boms
 evaluationDependsOn(":dependencyManagement")
 val dependencyManagementConf = configurations.create("dependencyManagement") {
   isCanBeConsumed = false

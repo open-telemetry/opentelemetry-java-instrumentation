@@ -4,11 +4,12 @@
  */
 
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpData
@@ -86,20 +87,18 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
           kind SpanKind.SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.NET_HOST_NAME" "localhost"
-            "$SemanticAttributes.NET_HOST_PORT" port
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" Long
-            "$SemanticAttributes.NET_SOCK_HOST_ADDR" "127.0.0.1"
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_TARGET" "/jetty-context/" + path
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
+            "$NetworkAttributes.NETWORK_PEER_PORT" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$SemanticAttributes.URL_SCHEME" "http"
+            "$SemanticAttributes.URL_PATH" "/jetty-context/" + path
             "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_ROUTE" "/jetty-context/" + route
-            "$SemanticAttributes.HTTP_CLIENT_IP" { it == null || it == TEST_CLIENT_IP }
+            "$SemanticAttributes.CLIENT_ADDRESS" { it == null || it == TEST_CLIENT_IP }
           }
         }
       }

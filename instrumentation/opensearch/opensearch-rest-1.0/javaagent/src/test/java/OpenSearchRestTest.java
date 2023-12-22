@@ -7,7 +7,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -97,15 +97,13 @@ public class OpenSearchRestTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 415L))));
+                                SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test
@@ -165,15 +163,13 @@ public class OpenSearchRestTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                            equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(
-                                SemanticAttributes.HTTP_URL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, 415L)),
+                                SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

@@ -7,7 +7,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.glassfish.grizzly.filterchain.BaseFilter
 import org.glassfish.grizzly.filterchain.FilterChain
 import org.glassfish.grizzly.filterchain.FilterChainBuilder
@@ -68,7 +68,6 @@ class GrizzlyFilterchainServerTest extends HttpServerTest<HttpServer> implements
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
     attributes.remove(SemanticAttributes.HTTP_ROUTE)
-    attributes.remove(SemanticAttributes.NET_TRANSPORT)
     attributes
   }
 

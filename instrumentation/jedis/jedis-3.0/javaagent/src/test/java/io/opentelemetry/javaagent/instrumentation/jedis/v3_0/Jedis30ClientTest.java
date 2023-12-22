@@ -6,12 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,9 +67,13 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative))));
   }
 
   @Test
@@ -86,9 +93,13 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -98,9 +109,13 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "GET foo"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative))));
   }
 
   @Test
@@ -120,9 +135,13 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -132,8 +151,12 @@ class Jedis30ClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"),
                             equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, port),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"))));
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                AbstractLongAssert::isNotNegative))));
   }
 }

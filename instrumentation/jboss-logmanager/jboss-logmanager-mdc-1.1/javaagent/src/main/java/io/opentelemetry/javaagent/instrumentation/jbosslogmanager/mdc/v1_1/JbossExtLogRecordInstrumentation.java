@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;

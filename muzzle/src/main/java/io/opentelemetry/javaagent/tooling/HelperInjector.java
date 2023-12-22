@@ -12,6 +12,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
@@ -23,18 +24,16 @@ import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
@@ -90,14 +89,12 @@ public class HelperInjector implements Transformer {
 
   private final String requestingName;
 
-  private final Set<String> helperClassNames;
+  private final Function<ClassLoader, List<HelperClassDefinition>> helperClassesGenerator;
   private final List<HelperResource> helperResources;
   @Nullable private final ClassLoader helpersSource;
   @Nullable private final Instrumentation instrumentation;
-  private final Map<String, Supplier<byte[]>> dynamicTypeMap = new LinkedHashMap<>();
 
   private final Cache<ClassLoader, Boolean> injectedClassLoaders = Cache.weak();
-  private final Cache<ClassLoader, Boolean> resourcesInjectedClassLoaders = Cache.weak();
 
   /**
    * Construct HelperInjector.
@@ -118,23 +115,31 @@ public class HelperInjector implements Transformer {
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
-    this.helperClassNames = new LinkedHashSet<>(helperClassNames);
+    List<HelperClassDefinition> helpers =
+        helperClassNames.stream()
+            .map(
+                className ->
+                    HelperClassDefinition.create(
+                        className, helpersSource, InjectionMode.CLASS_ONLY))
+            .collect(Collectors.toList());
+
+    this.helperClassesGenerator = (cl) -> helpers;
     this.helperResources = helperResources;
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
 
-  private HelperInjector(
+  public HelperInjector(
       String requestingName,
-      Map<String, Supplier<byte[]>> helperMap,
+      Function<ClassLoader, List<HelperClassDefinition>> helperClassesGenerators,
+      List<HelperResource> helperResources,
+      ClassLoader helpersSource,
       Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
-    this.helperClassNames = helperMap.keySet();
-    this.dynamicTypeMap.putAll(helperMap);
-
-    this.helperResources = Collections.emptyList();
-    this.helpersSource = null;
+    this.helperClassesGenerator = helperClassesGenerators;
+    this.helperResources = helperResources;
+    this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
 
@@ -142,41 +147,18 @@ public class HelperInjector implements Transformer {
       String requestingName,
       Collection<DynamicType.Unloaded<?>> helpers,
       Instrumentation instrumentation) {
-    Map<String, Supplier<byte[]>> bytes = new HashMap<>(helpers.size());
-    for (DynamicType.Unloaded<?> helper : helpers) {
-      bytes.put(helper.getTypeDescription().getName(), helper::getBytes);
-    }
-    return new HelperInjector(requestingName, bytes, instrumentation);
+
+    List<HelperClassDefinition> helperDefinitions =
+        helpers.stream()
+            .map(helperType -> HelperClassDefinition.create(helperType, InjectionMode.CLASS_ONLY))
+            .collect(Collectors.toList());
+
+    return new HelperInjector(
+        requestingName, cl -> helperDefinitions, Collections.emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
     helperInjectorListener = listener;
-  }
-
-  private Map<String, Supplier<byte[]>> getHelperMap() {
-    if (dynamicTypeMap.isEmpty()) {
-      Map<String, Supplier<byte[]>> result = new LinkedHashMap<>();
-
-      for (String helperClassName : helperClassNames) {
-        result.put(
-            helperClassName,
-            () -> {
-              try (ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(helpersSource)) {
-                return locator.locate(helperClassName).resolve();
-              } catch (IOException exception) {
-                if (logger.isLoggable(SEVERE)) {
-                  logger.log(
-                      SEVERE, "Failed to read {0}", new Object[] {helperClassName}, exception);
-                }
-                throw new IllegalStateException("Failed to read " + helperClassName, exception);
-              }
-            });
-      }
-
-      return result;
-    } else {
-      return dynamicTypeMap;
-    }
   }
 
   @Override
@@ -187,114 +169,136 @@ public class HelperInjector implements Transformer {
       ClassLoader classLoader,
       JavaModule javaModule,
       ProtectionDomain protectionDomain) {
-    if (!helperClassNames.isEmpty()) {
-      injectHelperClasses(typeDescription, classLoader);
-    }
+    injectedClassLoaders.computeIfAbsent(
+        maskNullClassLoader(classLoader),
+        cl -> {
+          List<HelperClassDefinition> helpers = helperClassesGenerator.apply(cl);
 
-    if (classLoader != null && helpersSource != null && !helperResources.isEmpty()) {
-      injectHelperResources(classLoader);
-    }
+          LinkedHashMap<String, Supplier<byte[]>> classesToInject =
+              helpers.stream()
+                  .filter(helper -> helper.getInjectionMode().shouldInjectClass())
+                  .collect(
+                      Collectors.toMap(
+                          HelperClassDefinition::getClassName,
+                          helper -> () -> helper.getBytecode().getBytecode(),
+                          (a, b) -> {
+                            throw new IllegalStateException(
+                                "Duplicate classnames for helper class detected!");
+                          },
+                          LinkedHashMap::new));
 
+          Map<String, URL> classResourcesToInject =
+              helpers.stream()
+                  .filter(helper -> helper.getInjectionMode().shouldInjectResource())
+                  .collect(
+                      Collectors.toMap(
+                          helper -> helper.getClassName().replace('.', '/') + ".class",
+                          helper -> helper.getBytecode().getUrl()));
+
+          injectHelperClasses(typeDescription, cl, classesToInject);
+          if (!isBootClassLoader(cl)) {
+            injectHelperResources(cl, classResourcesToInject);
+          }
+          return true;
+        });
     return builder;
   }
 
-  private void injectHelperResources(ClassLoader classLoader) {
-    resourcesInjectedClassLoaders.computeIfAbsent(
-        classLoader,
-        cl -> {
-          for (HelperResource helperResource : helperResources) {
-            List<URL> resources;
-            try {
-              resources =
-                  Collections.list(helpersSource.getResources(helperResource.getAgentPath()));
-            } catch (IOException e) {
-              logger.log(
-                  SEVERE,
-                  "Unexpected exception occurred when loading resources {}; skipping",
-                  new Object[] {helperResource.getAgentPath()},
-                  e);
-              continue;
-            }
-            if (resources.isEmpty()) {
-              logger.log(
-                  FINE,
-                  "Helper resources {0} requested but not found.",
-                  helperResource.getAgentPath());
-              continue;
-            }
+  private void injectHelperResources(
+      ClassLoader classLoader, Map<String, URL> additionalResources) {
+    for (HelperResource helperResource : helperResources) {
+      List<URL> resources;
+      try {
+        resources = Collections.list(helpersSource.getResources(helperResource.getAgentPath()));
+      } catch (IOException e) {
+        logger.log(
+            SEVERE,
+            "Unexpected exception occurred when loading resources {}; skipping",
+            new Object[] {helperResource.getAgentPath()},
+            e);
+        continue;
+      }
+      if (resources.isEmpty()) {
+        logger.log(
+            FINE, "Helper resources {0} requested but not found.", helperResource.getAgentPath());
+        continue;
+      }
 
-            if (helperResource.allClassLoaders()) {
-              logger.log(
-                  FINE,
-                  "Injecting resources onto all classloaders: {0}",
-                  helperResource.getApplicationPath());
-              HelperResources.registerForAllClassLoaders(
-                  helperResource.getApplicationPath(), resources);
-            } else {
-              if (logger.isLoggable(FINE)) {
-                logger.log(
-                    FINE,
-                    "Injecting resources onto class loader {0} -> {1}",
-                    new Object[] {classLoader, helperResource.getApplicationPath()});
-              }
-              HelperResources.register(classLoader, helperResource.getApplicationPath(), resources);
-            }
-          }
-
-          return true;
-        });
+      if (helperResource.allClassLoaders()) {
+        logger.log(
+            FINE,
+            "Injecting resources onto all classloaders: {0}",
+            helperResource.getApplicationPath());
+        HelperResources.registerForAllClassLoaders(helperResource.getApplicationPath(), resources);
+      } else {
+        injectResourceToClassloader(classLoader, helperResource.getApplicationPath(), resources);
+      }
+    }
+    additionalResources.forEach(
+        (path, url) ->
+            injectResourceToClassloader(classLoader, path, Collections.singletonList(url)));
   }
 
-  private void injectHelperClasses(TypeDescription typeDescription, ClassLoader classLoader) {
-    classLoader = maskNullClassLoader(classLoader);
+  private static void injectResourceToClassloader(
+      ClassLoader classLoader, String path, List<URL> resources) {
+    if (logger.isLoggable(FINE)) {
+      logger.log(
+          FINE,
+          "Injecting resources onto class loader {0} -> {1}",
+          new Object[] {classLoader, path});
+    }
+    HelperResources.register(classLoader, path, resources);
+  }
+
+  @SuppressWarnings("NonApiType")
+  private void injectHelperClasses(
+      TypeDescription typeDescription,
+      ClassLoader classLoader,
+      LinkedHashMap<String, Supplier<byte[]>> classnameToBytes) {
+    if (classnameToBytes.isEmpty()) {
+      return;
+    }
     if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER && instrumentation == null) {
       logger.log(
           SEVERE,
           "Cannot inject helpers into the bootstrap class loader without an instance of Instrumentation. Programmer error!");
       return;
     }
+    try {
+      if (logger.isLoggable(FINE)) {
+        logger.log(
+            FINE,
+            "Injecting classes onto class loader {0} -> {1}",
+            new Object[] {classLoader, classnameToBytes.keySet()});
+      }
 
-    injectedClassLoaders.computeIfAbsent(
-        classLoader,
-        cl -> {
-          try {
-            if (logger.isLoggable(FINE)) {
-              logger.log(
-                  FINE,
-                  "Injecting classes onto class loader {0} -> {1}",
-                  new Object[] {cl, helperClassNames});
-            }
+      Map<String, HelperClassInjector> map =
+          helperInjectors.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
+      for (Map.Entry<String, Supplier<byte[]>> entry : classnameToBytes.entrySet()) {
+        // for boot loader we use a placeholder injector, we only need these classes to be
+        // in the injected classes map to later tell which of the classes are injected
+        HelperClassInjector injector =
+            isBootClassLoader(classLoader)
+                ? BOOT_CLASS_INJECTOR
+                : new HelperClassInjector(entry.getValue());
+        map.put(entry.getKey(), injector);
+      }
 
-            Map<String, Supplier<byte[]>> classnameToBytes = getHelperMap();
-            Map<String, HelperClassInjector> map =
-                helperInjectors.computeIfAbsent(cl, (unused) -> new ConcurrentHashMap<>());
-            for (Map.Entry<String, Supplier<byte[]>> entry : classnameToBytes.entrySet()) {
-              // for boot loader we use a placeholder injector, we only need these classes to be
-              // in the injected classes map to later tell which of the classes are injected
-              HelperClassInjector injector =
-                  isBootClassLoader(cl)
-                      ? BOOT_CLASS_INJECTOR
-                      : new HelperClassInjector(entry.getValue());
-              map.put(entry.getKey(), injector);
-            }
-
-            // For boot loader we define the classes immediately. For other loaders we load them
-            // from the loadClass method of the class loader.
-            if (isBootClassLoader(cl)) {
-              injectBootstrapClassLoader(classnameToBytes);
-            }
-          } catch (Exception e) {
-            if (logger.isLoggable(SEVERE)) {
-              logger.log(
-                  SEVERE,
-                  "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes into instance {2}",
-                  new Object[] {typeDescription, requestingName, cl},
-                  e);
-            }
-            throw new IllegalStateException(e);
-          }
-          return true;
-        });
+      // For boot loader we define the classes immediately. For other loaders we load them
+      // from the loadClass method of the class loader.
+      if (isBootClassLoader(classLoader)) {
+        injectBootstrapClassLoader(classnameToBytes);
+      }
+    } catch (Exception e) {
+      if (logger.isLoggable(SEVERE)) {
+        logger.log(
+            SEVERE,
+            "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes into instance {2}",
+            new Object[] {typeDescription, requestingName, classLoader},
+            e);
+      }
+      throw new IllegalStateException(e);
+    }
   }
 
   private static Map<String, byte[]> resolve(Map<String, Supplier<byte[]>> classes) {

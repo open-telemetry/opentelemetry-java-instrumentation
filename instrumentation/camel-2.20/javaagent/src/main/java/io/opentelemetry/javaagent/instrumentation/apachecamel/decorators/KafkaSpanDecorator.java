@@ -25,7 +25,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -64,11 +64,7 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
 
     Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
     if (partition != null) {
-      if (camelDirection == CamelDirection.OUTBOUND) {
-        attributes.put(SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, partition);
-      } else {
-        attributes.put(SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION, partition);
-      }
+      attributes.put(SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, partition);
     }
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

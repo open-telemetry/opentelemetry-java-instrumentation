@@ -45,3 +45,9 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     }
   }
 }
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+}

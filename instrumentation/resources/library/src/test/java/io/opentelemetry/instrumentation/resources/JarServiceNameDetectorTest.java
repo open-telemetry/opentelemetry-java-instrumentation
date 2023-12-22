@@ -10,7 +10,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;

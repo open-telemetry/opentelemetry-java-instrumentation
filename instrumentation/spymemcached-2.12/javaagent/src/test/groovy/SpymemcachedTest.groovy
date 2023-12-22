@@ -6,8 +6,7 @@
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.javaagent.instrumentation.spymemcached.CompletionListener
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -627,15 +626,15 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
         "$SemanticAttributes.DB_OPERATION" operation
 
         if (error == "canceled") {
-          "${CompletionListener.DB_COMMAND_CANCELLED}" true
+          "spymemcached.command.cancelled" true
         }
 
         if (result == "hit") {
-          "${CompletionListener.MEMCACHED_RESULT}" CompletionListener.HIT
+          "spymemcached.result" "hit"
         }
 
         if (result == "miss") {
-          "${CompletionListener.MEMCACHED_RESULT}" CompletionListener.MISS
+          "spymemcached.result" "miss"
         }
       }
     }

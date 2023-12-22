@@ -6,15 +6,16 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
 
 import java.util.jar.Attributes
 import java.util.jar.JarFile
 
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OS_TYPE
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.LINUX
-import static io.opentelemetry.semconv.resource.attributes.ResourceAttributes.OsTypeValues.WINDOWS
+import static io.opentelemetry.semconv.ResourceAttributes.OS_TYPE
+import static io.opentelemetry.semconv.ResourceAttributes.OsTypeValues.LINUX
+import static io.opentelemetry.semconv.ResourceAttributes.OsTypeValues.WINDOWS
 import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
@@ -25,6 +26,8 @@ abstract class AppServerTest extends SmokeTest {
   String serverVersion
   @Shared
   boolean isWindows
+
+  private static final String TELEMETRY_DISTRO_VERSION = "telemetry.distro.version"
 
   def setupSpec() {
     (serverVersion, jdk) = getAppServer()
@@ -112,20 +115,19 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/headers')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes("http.target", "/app/greeting") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/greeting") == 1
 
     and: "Client span for the remote call"
-    traces.countFilteredAttributes("http.url", "http://localhost:8080/app/headers") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_FULL.key, "http://localhost:8080/app/headers") == 1
 
     and: "Server span for the remote call"
-    traces.countFilteredAttributes("http.target", "/app/headers") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("net.protocol.name", "http") == 3
-    traces.countFilteredAttributes("net.protocol.version", "1.1") == 3
+    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 3
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 3
@@ -157,10 +159,10 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/hello.txt')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes("http.target", "/app/hello.txt") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/hello.txt") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 1
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 1
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 1
@@ -191,10 +193,10 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/file-that-does-not-exist')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes("http.target", "/app/file-that-does-not-exist") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/file-that-does-not-exist") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -227,14 +229,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/WEB-INF/web.xml')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes("http.target", "/app/WEB-INF/web.xml") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/WEB-INF/web.xml") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("net.protocol.name", "http") == 1
-    traces.countFilteredAttributes("net.protocol.version", "1.1") == 1
+    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -270,10 +271,10 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredEventAttributes('exception.message', 'This is expected') == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes("http.target", "/app/exception") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/exception") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -305,14 +306,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes("http.target", "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("net.protocol.name", "http") == 1
-    traces.countFilteredAttributes("net.protocol.version", "1.1") == 1
+    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == traces.countSpans()
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == traces.countSpans()
@@ -347,20 +347,19 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/headers')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes("http.target", "/app/asyncgreeting") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/asyncgreeting") == 1
 
     and: "Client span for the remote call"
-    traces.countFilteredAttributes("http.url", "http://localhost:8080/app/headers") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_FULL.key, "http://localhost:8080/app/headers") == 1
 
     and: "Server span for the remote call"
-    traces.countFilteredAttributes("http.target", "/app/headers") == 1
+    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes("net.protocol.name", "http") == 3
-    traces.countFilteredAttributes("net.protocol.version", "1.1") == 3
+    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
-    traces.countFilteredResourceAttributes("telemetry.auto.version", currentAgentVersion) == 3
+    traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 3
 
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 3

@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.ExecutionException
@@ -125,17 +125,19 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
     options.setTestPathParam(true)
 
     options.setHttpAttributes {
-      HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - SemanticAttributes.NET_PEER_PORT
+      HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - SemanticAttributes.SERVER_PORT
     }
 
-    options.setExpectedHttpRoute {
-      when (it) {
+    options.setExpectedHttpRoute { endpoint, method ->
+      when (endpoint) {
         ServerEndpoint.PATH_PARAM -> "/path/{id}/param"
-        else -> expectedHttpRoute(it)
+        else -> expectedHttpRoute(endpoint, method)
       }
     }
     // ktor does not have a controller lifecycle so the server span ends immediately when the
     // response is sent, which is before the controller span finishes.
     options.setVerifyServerSpanEndTime(false)
+
+    options.setResponseCodeOnNonStandardHttpMethod(404)
   }
 }

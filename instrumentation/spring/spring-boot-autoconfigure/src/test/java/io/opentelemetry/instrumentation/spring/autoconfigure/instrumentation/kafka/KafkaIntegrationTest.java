@@ -10,8 +10,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -68,6 +69,10 @@ class KafkaIntegrationTest {
                     KafkaInstrumentationAutoConfiguration.class,
                     TestConfig.class))
             .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry)
+            .withBean(
+                "openTelemetrySupplier",
+                OpenTelemetrySupplier.class,
+                () -> testing::getOpenTelemetry)
             .withPropertyValues(
                 "spring.kafka.bootstrap-servers=" + kafka.getBootstrapServers(),
                 "spring.kafka.consumer.auto-offset-reset=earliest",
@@ -109,8 +114,9 @@ class KafkaIntegrationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
@@ -131,7 +137,7 @@ class KafkaIntegrationTest {
                                 SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_SOURCE_PARTITION,
+                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
@@ -140,12 +146,8 @@ class KafkaIntegrationTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testListener"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            satisfies(
-                                SemanticAttributes.MESSAGING_CONSUMER_ID,
-                                stringAssert ->
-                                    stringAssert.startsWith("testListener - consumer"))),
+                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 

@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import ratpack.exec.Blocking
 import ratpack.registry.Registry
 import ratpack.test.embed.EmbeddedApp
@@ -56,9 +56,9 @@ class RatpackServerTest extends Specification {
 
         spanData.kind == SpanKind.SERVER
         attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-        attributes[SemanticAttributes.HTTP_METHOD] == "GET"
-        attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
+        attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -95,9 +95,9 @@ class RatpackServerTest extends Specification {
 
         def attributes = spanData.attributes.asMap()
         attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-        attributes[SemanticAttributes.HTTP_METHOD] == "GET"
-        attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
+        attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -153,9 +153,9 @@ class RatpackServerTest extends Specification {
 
         def attributes = spanData.attributes.asMap()
         attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-        attributes[SemanticAttributes.HTTP_METHOD] == "GET"
-        attributes[SemanticAttributes.HTTP_STATUS_CODE] == 200L
+        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
+        attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }

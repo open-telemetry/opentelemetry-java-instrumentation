@@ -10,10 +10,10 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,11 +25,14 @@ public final class KafkaTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<KafkaProducerRequest, RecordMetadata>>
       producerAttributesExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<KafkaProcessRequest, Void>> consumerAttributesExtractors =
-      new ArrayList<>();
+  private final List<AttributesExtractor<KafkaProcessRequest, Void>>
+      consumerProcessAttributesExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<KafkaReceiveRequest, Void>>
+      consumerReceiveAttributesExtractors = new ArrayList<>();
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
+  private boolean messagingReceiveInstrumentationEnabled = false;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = Objects.requireNonNull(openTelemetry);
@@ -42,10 +45,25 @@ public final class KafkaTelemetryBuilder {
     return this;
   }
 
+  /** Use {@link #addConsumerProcessAttributesExtractors(AttributesExtractor)} instead. */
+  @Deprecated
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerAttributesExtractors(
       AttributesExtractor<KafkaProcessRequest, Void> extractor) {
-    consumerAttributesExtractors.add(extractor);
+    return addConsumerProcessAttributesExtractors(extractor);
+  }
+
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder addConsumerProcessAttributesExtractors(
+      AttributesExtractor<KafkaProcessRequest, Void> extractor) {
+    consumerProcessAttributesExtractors.add(extractor);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder addConsumerReceiveAttributesExtractors(
+      AttributesExtractor<KafkaReceiveRequest, Void> extractor) {
+    consumerReceiveAttributesExtractors.add(extractor);
     return this;
   }
 
@@ -85,17 +103,31 @@ public final class KafkaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * <p>Note that this will cause the consumer side to start a new trace, with only a span link
+   * connecting it to the producer trace.
+   */
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
+      boolean messagingReceiveInstrumentationEnabled) {
+    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+    return this;
+  }
+
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled);
 
     return new KafkaTelemetry(
         openTelemetry,
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
-        instrumenterFactory.createConsumerOperationInstrumenter(
-            MessageOperation.RECEIVE, consumerAttributesExtractors),
+        instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
+        instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
         propagationEnabled);
   }
 }

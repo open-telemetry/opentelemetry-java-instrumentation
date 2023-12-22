@@ -12,7 +12,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
@@ -80,7 +80,9 @@ public final class LogEventMapper<T> {
       Level level,
       @Nullable Marker marker,
       @Nullable Throwable throwable,
-      T contextData) {
+      T contextData,
+      String threadName,
+      long threadId) {
 
     AttributesBuilder attributes = Attributes.builder();
 
@@ -105,9 +107,8 @@ public final class LogEventMapper<T> {
     captureContextDataAttributes(attributes, contextData);
 
     if (captureExperimentalAttributes) {
-      Thread currentThread = Thread.currentThread();
-      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+      attributes.put(SemanticAttributes.THREAD_NAME, threadName);
+      attributes.put(SemanticAttributes.THREAD_ID, threadId);
     }
 
     builder.setAllAttributes(attributes.build());

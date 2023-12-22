@@ -25,6 +25,15 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isIndyModule() {
+    //  java.lang.LinkageError: bad method type alias: (CoroutineContext)Object[] not visible from
+    // class
+    // io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.KotlinCoroutinesInstrumentation$ContextAdvice
+    // CoroutineContext is loaded from agent class loader not application
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new KotlinCoroutinesInstrumentation());
   }

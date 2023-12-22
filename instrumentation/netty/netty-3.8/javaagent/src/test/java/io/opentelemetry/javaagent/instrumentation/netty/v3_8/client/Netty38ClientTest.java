@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.URI;
@@ -37,14 +37,12 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static final String USER_AGENT = "test-user-agent";
-
   AsyncHttpClient client;
 
   @BeforeEach
   void setUp() throws Exception {
     AsyncHttpClientConfig.Builder builder =
-        new AsyncHttpClientConfig.Builder().setUserAgent(USER_AGENT);
+        new AsyncHttpClientConfig.Builder().setUserAgent("test-user-agent");
 
     Method setConnectTimeout;
     try {
@@ -140,8 +138,6 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
 
-    optionsBuilder.setUserAgent(USER_AGENT);
-
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           // unopened port or non routable address
@@ -174,8 +170,8 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
           }
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PEER_NAME);
-          attributes.remove(SemanticAttributes.NET_PEER_PORT);
+          attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+          attributes.remove(SemanticAttributes.SERVER_PORT);
           return attributes;
         });
   }

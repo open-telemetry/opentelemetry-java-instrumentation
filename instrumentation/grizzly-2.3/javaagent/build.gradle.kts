@@ -19,12 +19,12 @@ dependencies {
   testLibrary("org.glassfish.grizzly:grizzly-http-server:2.3")
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.grizzly.enabled=true")
-
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM

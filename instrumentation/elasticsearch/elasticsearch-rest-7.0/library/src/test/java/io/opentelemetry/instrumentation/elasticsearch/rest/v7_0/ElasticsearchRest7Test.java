@@ -11,7 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -83,11 +83,11 @@ class ElasticsearchRest7Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 httpHost.toURI() + "/_cluster/health"))));
   }
 
@@ -144,11 +144,11 @@ class ElasticsearchRest7Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, httpHost.getPort()),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(
-                                SemanticAttributes.HTTP_URL,
+                                SemanticAttributes.URL_FULL,
                                 httpHost.toURI() + "/_cluster/health")),
                 span ->
                     span.hasName("callback")

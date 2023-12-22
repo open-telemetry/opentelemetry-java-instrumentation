@@ -28,10 +28,10 @@ import spock.util.concurrent.PollingConditions
 
 import javax.inject.Singleton
 
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_METHOD
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_STATUS_CODE
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.HTTP_TARGET
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH
 
 class RatpackServerApplicationTest extends Specification {
 
@@ -48,9 +48,9 @@ class RatpackServerApplicationTest extends Specification {
 
         spanData.kind == SpanKind.SERVER
         attributes[HTTP_ROUTE] == "/foo"
-        attributes[HTTP_TARGET] == "/foo"
-        attributes[HTTP_METHOD] == "GET"
-        attributes[HTTP_STATUS_CODE] == 200L
+        attributes[URL_PATH] == "/foo"
+        attributes[HTTP_REQUEST_METHOD] == "GET"
+        attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -69,15 +69,15 @@ class RatpackServerApplicationTest extends Specification {
 
         spanData.kind == SpanKind.SERVER
         attributes[HTTP_ROUTE] == "/bar"
-        attributes[HTTP_TARGET] == "/bar"
-        attributes[HTTP_METHOD] == "GET"
-        attributes[HTTP_STATUS_CODE] == 200L
+        attributes[URL_PATH] == "/bar"
+        attributes[HTTP_REQUEST_METHOD] == "GET"
+        attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
 
         spanDataClient.kind == SpanKind.CLIENT
         def attributesClient = spanDataClient.attributes.asMap()
         attributesClient[HTTP_ROUTE] == "/other"
-        attributesClient[HTTP_METHOD] == "GET"
-        attributesClient[HTTP_STATUS_CODE] == 200L
+        attributesClient[HTTP_REQUEST_METHOD] == "GET"
+        attributesClient[HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }

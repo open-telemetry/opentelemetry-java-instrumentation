@@ -28,8 +28,9 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
@@ -102,15 +103,12 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           kind operation == "SendMessage" ? PRODUCER : CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -182,10 +180,10 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "http://127.0.0.1:${UNUSABLE_PORT}"
-            "$SemanticAttributes.HTTP_METHOD" "$method"
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
-            "$SemanticAttributes.NET_PEER_PORT" 61
+            "$SemanticAttributes.URL_FULL" "http://127.0.0.1:${UNUSABLE_PORT}"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$SemanticAttributes.SERVER_PORT" 61
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
             "$SemanticAttributes.RPC_METHOD" "${operation}"
@@ -194,6 +192,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
+            "$HttpAttributes.ERROR_TYPE" SdkClientException.name
           }
         }
       }
@@ -237,16 +236,17 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           }
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_URL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.NET_PEER_PORT" server.httpPort()
-            "$SemanticAttributes.NET_PEER_NAME" "127.0.0.1"
+            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
             "$SemanticAttributes.RPC_METHOD" "GetObject"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
+            "$HttpAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
           }
         }
       }

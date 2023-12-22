@@ -29,6 +29,13 @@ public class NettyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // netty instrumentation classes are used in other instrumentations which causes class cast
+    // exceptions
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new BootstrapInstrumentation(),

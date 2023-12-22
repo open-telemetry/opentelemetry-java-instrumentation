@@ -7,7 +7,7 @@ jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install markdown-link-check
         run: npm install -g markdown-link-check
@@ -18,4 +18,5 @@ jobs:
                  -name '*.md' \
                  -not -path './CHANGELOG.md' \
                  -not -path './licenses/*' \
+                 -not -path '*/build/*' \
                | xargs .github/scripts/markdown-link-check-with-retry.sh

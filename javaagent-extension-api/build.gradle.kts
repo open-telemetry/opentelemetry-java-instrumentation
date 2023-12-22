@@ -12,6 +12,7 @@ dependencies {
   api("net.bytebuddy:byte-buddy-dep")
 
   implementation(project(":instrumentation-api"))
+  implementation(project(":instrumentation-api-incubator"))
 
   // autoconfigure is unstable, do not expose as api
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")

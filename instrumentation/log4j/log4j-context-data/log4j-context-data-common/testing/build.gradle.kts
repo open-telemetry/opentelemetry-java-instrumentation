@@ -9,9 +9,7 @@ dependencies {
 
   implementation("com.google.guava:guava")
 
-  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 
   annotationProcessor("org.apache.logging.log4j:log4j-core:2.7")
 }

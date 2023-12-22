@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.List;

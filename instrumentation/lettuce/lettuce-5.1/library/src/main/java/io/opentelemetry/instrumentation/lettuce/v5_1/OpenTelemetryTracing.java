@@ -24,11 +24,11 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
+import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
 final class OpenTelemetryTracing implements Tracing {
 
   private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =
-      ServerAttributesExtractor.create(new LettuceNetworkAttributesGetter());
+      NetworkAttributesExtractor.create(new LettuceNetworkAttributesGetter());
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {

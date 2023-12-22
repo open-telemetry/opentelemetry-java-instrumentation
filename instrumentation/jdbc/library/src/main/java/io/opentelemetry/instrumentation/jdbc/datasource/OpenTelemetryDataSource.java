@@ -20,7 +20,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.DataSourceInstrumenterFactory.createDataSourceInstrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.computeDbInfo;
 
@@ -66,10 +66,27 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
    * @param delegate the DataSource to wrap
    * @param openTelemetry the OpenTelemetry instance to setup for
    */
+  @Deprecated
   public OpenTelemetryDataSource(DataSource delegate, OpenTelemetry openTelemetry) {
     this.delegate = delegate;
-    this.dataSourceInstrumenter = createDataSourceInstrumenter(openTelemetry);
+    this.dataSourceInstrumenter = createDataSourceInstrumenter(openTelemetry, true);
     this.statementInstrumenter = createStatementInstrumenter(openTelemetry);
+  }
+
+  /**
+   * Create a OpenTelemetry DataSource wrapping another DataSource.
+   *
+   * @param delegate the DataSource to wrap
+   * @param dataSourceInstrumenter the DataSource Instrumenter to use
+   * @param statementInstrumenter the Statement Instrumenter to use
+   */
+  OpenTelemetryDataSource(
+      DataSource delegate,
+      Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
+      Instrumenter<DbRequest, Void> statementInstrumenter) {
+    this.delegate = delegate;
+    this.dataSourceInstrumenter = dataSourceInstrumenter;
+    this.statementInstrumenter = statementInstrumenter;
   }
 
   @Override

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import ratpack.path.PathBinding
 import ratpack.server.RatpackServer
@@ -17,7 +18,6 @@ import spock.lang.Unroll
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 @Unroll
 abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
@@ -95,22 +95,18 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" {it == null || it == IP_TCP }
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.NET_HOST_NAME" { it == "localhost" || it == null }
-            "$SemanticAttributes.NET_HOST_PORT" { it == app.bindPort || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" { it instanceof Long || it == null }
-            "$SemanticAttributes.NET_SOCK_HOST_ADDR" { it == "127.0.0.1" || it == null }
-            "$SemanticAttributes.NET_SOCK_HOST_PORT" { it instanceof Long || it == null }
-            "$SemanticAttributes.HTTP_METHOD" "GET"
-            "$SemanticAttributes.HTTP_STATUS_CODE" 200
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_ADDRESS" { it == "localhost" || it == null }
+            "$SemanticAttributes.SERVER_PORT" { it == app.bindPort || it == null }
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
+            "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Long || it == null }
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_SCHEME" "http"
-            "$SemanticAttributes.HTTP_TARGET" "/$path"
+            "$SemanticAttributes.URL_SCHEME" "http"
+            "$SemanticAttributes.URL_PATH" "/$path"
+            "$SemanticAttributes.URL_QUERY" { it == "" || it == null }
             "$SemanticAttributes.HTTP_ROUTE" "/$route"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
         if (hasHandlerSpan()) {

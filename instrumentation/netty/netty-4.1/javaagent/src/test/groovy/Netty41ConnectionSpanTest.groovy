@@ -16,12 +16,13 @@ import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpVersion
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
@@ -31,7 +32,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Netty41ConnectionSpanTest extends InstrumentationSpecification implements AgentTestTrait {
 
@@ -108,9 +108,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -118,10 +117,12 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           kind INTERNAL
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
         }
         span(3) {
@@ -166,9 +167,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -178,10 +178,12 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           status ERROR
           errorEvent(thrownException.class, thrownException.message)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
+            "$NetworkAttributes.NETWORK_PEER_PORT" { it == uri.port || it == null }
           }
         }
       }

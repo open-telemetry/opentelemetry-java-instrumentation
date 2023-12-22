@@ -3,7 +3,7 @@
 ## Settings
 
 | System property                                                        | Type    | Default | Description                                         |
-| ---------------------------------------------------------------------- | ------- | ------- | --------------------------------------------------- |
+|------------------------------------------------------------------------| ------- | ------- |-----------------------------------------------------|
 | `otel.instrumentation.servlet.experimental-span-attributes`            | Boolean | `false` | Enable the capture of experimental span attributes. |
 | `otel.instrumentation.servlet.experimental.capture-request-parameters` | List    | Empty   | Request parameters to be captured (experimental).   |
 
@@ -79,7 +79,7 @@ In order to alleviate this problem, instrumentations for specific frameworks, su
 _update_ name of the span corresponding to the entry point.
 Each framework instrumentation can decide what is the best span name based on framework implementation details.
 Of course, still adhering to OpenTelemetry
-[semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md).
+[semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server).
 
 ### Additional instrumentations
 

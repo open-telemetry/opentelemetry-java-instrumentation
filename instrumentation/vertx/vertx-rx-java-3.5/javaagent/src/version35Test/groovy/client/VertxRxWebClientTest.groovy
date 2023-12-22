@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.client.WebClientOptions
@@ -71,11 +71,6 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
-  String userAgent() {
-    return "Vert.x-WebClient"
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }
@@ -91,12 +86,16 @@ class VertxRxWebClientTest extends HttpClientTest<HttpRequest<Buffer>> implement
   }
 
   @Override
+  boolean testNonStandardHttpMethod() {
+    false
+  }
+
+  @Override
   Set<AttributeKey<?>> httpAttributes(URI uri) {
     def attributes = super.httpAttributes(uri)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME)
-    attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION)
-    attributes.remove(SemanticAttributes.NET_PEER_NAME)
-    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION)
+    attributes.remove(SemanticAttributes.SERVER_ADDRESS)
+    attributes.remove(SemanticAttributes.SERVER_PORT)
     return attributes
   }
 

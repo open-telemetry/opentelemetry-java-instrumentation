@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8
 
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer
 import org.apache.rocketmq.client.producer.DefaultMQProducer
 import org.apache.rocketmq.client.producer.SendCallback
@@ -106,6 +106,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
@@ -160,6 +161,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String
@@ -236,6 +238,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "messaging.rocketmq.broker_address" String
             "messaging.rocketmq.send_result" "SEND_OK"
@@ -320,6 +323,7 @@ abstract class AbstractRocketMqClientTest extends InstrumentationSpecification {
           attributes {
             "$SemanticAttributes.MESSAGING_SYSTEM" "rocketmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" sharedTopic
+            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
             "$SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG" "TagA"
             "messaging.rocketmq.broker_address" String

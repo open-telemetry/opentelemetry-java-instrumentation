@@ -6,25 +6,21 @@
 package io.opentelemetry.instrumentation.spring.resources;
 
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
+import io.opentelemetry.semconv.ResourceAttributes;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -73,20 +69,26 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Override
   public Resource createResource(ConfigProperties config) {
 
-    logger.log(Level.FINER, "Performing Spring Boot service name auto-detection...");
+    logger.log(FINER, "Performing Spring Boot service name auto-detection...");
     // Note: The order should be consistent with the order of Spring matching, but noting
     // that we have "first one wins" while Spring has "last one wins".
     // The docs for Spring are here:
     // https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.external-config
+    // https://docs.spring.io/spring-cloud-commons/docs/4.0.4/reference/html/#the-bootstrap-application-context
     Stream<Supplier<String>> finders =
         Stream.of(
             this::findByCommandlineArgument,
             this::findBySystemProperties,
             this::findByEnvironmentVariable,
             this::findByCurrentDirectoryApplicationProperties,
+            this::findByCurrentDirectoryApplicationYml,
             this::findByCurrentDirectoryApplicationYaml,
             this::findByClasspathApplicationProperties,
-            this::findByClasspathApplicationYaml);
+            this::findByClasspathApplicationYml,
+            this::findByClasspathApplicationYaml,
+            this::findByClasspathBootstrapProperties,
+            this::findByClasspathBootstrapYml,
+            this::findByClasspathBootstrapYaml);
     return finders
         .map(Supplier::get)
         .filter(Objects::nonNull)
@@ -119,25 +121,25 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Nullable
   private String findByEnvironmentVariable() {
     String result = system.getenv("SPRING_APPLICATION_NAME");
-    logger.log(Level.FINER, "Checking for SPRING_APPLICATION_NAME in env: {0}", result);
+    logger.log(FINER, "Checking for SPRING_APPLICATION_NAME in env: {0}", result);
     return result;
   }
 
   @Nullable
   private String findBySystemProperties() {
     String result = system.getProperty("spring.application.name");
-    logger.log(Level.FINER, "Checking for spring.application.name system property: {0}", result);
+    logger.log(FINER, "Checking for spring.application.name system property: {0}", result);
     return result;
   }
 
   @Nullable
   private String findByClasspathApplicationProperties() {
-    String result = readNameFromAppProperties();
-    logger.log(
-        Level.FINER,
-        "Checking for spring.application.name in application.properties file: {0}",
-        result);
-    return result;
+    return findByClasspathPropertiesFile("application.properties");
+  }
+
+  @Nullable
+  private String findByClasspathBootstrapProperties() {
+    return findByClasspathPropertiesFile("bootstrap.properties");
   }
 
   @Nullable
@@ -148,27 +150,59 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     } catch (Exception e) {
       // expected to fail sometimes
     }
-    logger.log(Level.FINER, "Checking application.properties in current dir: {0}", result);
+    logger.log(FINER, "Checking application.properties in current dir: {0}", result);
     return result;
+  }
+
+  @Nullable
+  private String findByClasspathApplicationYml() {
+    return findByClasspathYamlFile("application.yml");
+  }
+
+  @Nullable
+  private String findByClasspathBootstrapYml() {
+    return findByClasspathYamlFile("bootstrap.yml");
   }
 
   @Nullable
   private String findByClasspathApplicationYaml() {
-    String result =
-        loadFromClasspath("application.yml", SpringBootServiceNameDetector::parseNameFromYaml);
-    logger.log(Level.FINER, "Checking application.yml in classpath: {0}", result);
+    return findByClasspathYamlFile("application.yaml");
+  }
+
+  @Nullable
+  private String findByClasspathBootstrapYaml() {
+    return findByClasspathYamlFile("bootstrap.yaml");
+  }
+
+  private String findByClasspathYamlFile(String fileName) {
+    String result = loadFromClasspath(fileName, SpringBootServiceNameDetector::parseNameFromYaml);
+    if (logger.isLoggable(FINER)) {
+      logger.log(FINER, "Checking {0} in classpath: {1}", new Object[] {fileName, result});
+    }
     return result;
   }
 
   @Nullable
+  private String findByCurrentDirectoryApplicationYml() {
+    return findByCurrentDirectoryYamlFile("application.yml");
+  }
+
+  @Nullable
   private String findByCurrentDirectoryApplicationYaml() {
+    return findByCurrentDirectoryYamlFile("application.yaml");
+  }
+
+  @Nullable
+  private String findByCurrentDirectoryYamlFile(String fileName) {
     String result = null;
-    try (InputStream in = system.openFile("application.yml")) {
+    try (InputStream in = system.openFile(fileName)) {
       result = parseNameFromYaml(in);
     } catch (Exception e) {
       // expected to fail sometimes
     }
-    logger.log(Level.FINER, "Checking application.yml in current dir: {0}", result);
+    if (logger.isLoggable(FINER)) {
+      logger.log(FINER, "Checking {0} in current dir: {1}", new Object[] {fileName, result});
+    }
     return result;
   }
 
@@ -203,7 +237,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
       String javaCommand = system.getProperty("sun.java.command");
       result = parseNameFromCommandLine(javaCommand);
     }
-    logger.log(Level.FINER, "Checking application commandline args: {0}", result);
+    logger.log(FINER, "Checking application commandline args: {0}", result);
     return result;
   }
 
@@ -239,9 +273,16 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
-  private String readNameFromAppProperties() {
-    return loadFromClasspath(
-        "application.properties", SpringBootServiceNameDetector::getAppNamePropertyFromStream);
+  private String findByClasspathPropertiesFile(String filename) {
+    String result =
+        loadFromClasspath(filename, SpringBootServiceNameDetector::getAppNamePropertyFromStream);
+    if (logger.isLoggable(FINER)) {
+      logger.log(
+          FINER,
+          "Checking for spring.application.name in {0} file: {1}",
+          new Object[] {filename, result});
+    }
+    return result;
   }
 
   @Nullable
@@ -259,59 +300,9 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   @Nullable
   private String loadFromClasspath(String filename, Function<InputStream, String> parser) {
     try (InputStream in = system.openClasspathResource(filename)) {
-      return parser.apply(in);
+      return in != null ? parser.apply(in) : null;
     } catch (Exception e) {
       return null;
-    }
-  }
-
-  // Exists for testing
-  static class SystemHelper {
-    private final ClassLoader classLoader;
-    private final boolean addBootInfPrefix;
-
-    SystemHelper() {
-      ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-      classLoader =
-          contextClassLoader != null ? contextClassLoader : ClassLoader.getSystemClassLoader();
-      addBootInfPrefix = classLoader.getResource("BOOT-INF/classes/") != null;
-      if (addBootInfPrefix) {
-        logger.log(Level.FINER, "Detected presence of BOOT-INF/classes/");
-      }
-    }
-
-    String getenv(String name) {
-      return System.getenv(name);
-    }
-
-    String getProperty(String key) {
-      return System.getProperty(key);
-    }
-
-    InputStream openClasspathResource(String filename) {
-      String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
-      return classLoader.getResourceAsStream(path);
-    }
-
-    InputStream openFile(String filename) throws Exception {
-      return Files.newInputStream(Paths.get(filename));
-    }
-
-    /**
-     * Attempts to use ProcessHandle to get the full commandline of the current process (including
-     * the main method arguments). Will only succeed on java 9+.
-     */
-    @SuppressWarnings("unchecked")
-    String[] attemptGetCommandLineArgsViaReflection() throws Exception {
-      Class<?> clazz = Class.forName("java.lang.ProcessHandle");
-      Method currentMethod = clazz.getDeclaredMethod("current");
-      Method infoMethod = clazz.getDeclaredMethod("info");
-      Object currentInstance = currentMethod.invoke(null);
-      Object info = infoMethod.invoke(currentInstance);
-      Class<?> infoClass = Class.forName("java.lang.ProcessHandle$Info");
-      Method argumentsMethod = infoClass.getMethod("arguments");
-      Optional<String[]> optionalArgs = (Optional<String[]>) argumentsMethod.invoke(info);
-      return optionalArgs.orElse(new String[0]);
     }
   }
 }

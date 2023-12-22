@@ -37,7 +37,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -108,11 +108,11 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       request = ChannelAndMethod.create(channel, method);
 
-      if (!channelInstrumenter().shouldStart(parentContext, request)) {
+      if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
         return;
       }
 
-      context = channelInstrumenter().start(parentContext, request);
+      context = channelInstrumenter(request).start(parentContext, request);
       CURRENT_RABBIT_CONTEXT.set(context);
       helper().setChannelAndMethod(context, request);
       scope = context.makeCurrent();
@@ -132,7 +132,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       scope.close();
 
       CURRENT_RABBIT_CONTEXT.remove();
-      channelInstrumenter().end(context, request, null, throwable);
+      channelInstrumenter(request).end(context, request, null, throwable);
     }
   }
 

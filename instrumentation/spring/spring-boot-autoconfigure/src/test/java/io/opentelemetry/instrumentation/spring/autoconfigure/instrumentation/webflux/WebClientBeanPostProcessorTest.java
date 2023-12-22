@@ -20,7 +20,7 @@ class WebClientBeanPostProcessorTest {
   @DisplayName(
       "when processed bean is NOT of type WebClient or WebClientBuilder should return Object")
   void returnsObject() {
-    BeanPostProcessor underTest = new WebClientBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new WebClientBeanPostProcessor(() -> OpenTelemetry.noop());
 
     assertThat(underTest.postProcessAfterInitialization(new Object(), "testObject"))
         .isExactlyInstanceOf(Object.class);
@@ -29,7 +29,7 @@ class WebClientBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is of type WebClient should return WebClient")
   void returnsWebClient() {
-    BeanPostProcessor underTest = new WebClientBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new WebClientBeanPostProcessor(() -> OpenTelemetry.noop());
 
     assertThat(underTest.postProcessAfterInitialization(WebClient.create(), "testWebClient"))
         .isInstanceOf(WebClient.class);
@@ -38,7 +38,7 @@ class WebClientBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is of type WebClientBuilder should return WebClientBuilder")
   void returnsWebClientBuilder() {
-    BeanPostProcessor underTest = new WebClientBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new WebClientBeanPostProcessor(() -> OpenTelemetry.noop());
 
     assertThat(
             underTest.postProcessAfterInitialization(WebClient.builder(), "testWebClientBuilder"))
@@ -48,7 +48,7 @@ class WebClientBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is of type WebClient should add exchange filter to WebClient")
   void addsExchangeFilterWebClient() {
-    BeanPostProcessor underTest = new WebClientBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new WebClientBeanPostProcessor(() -> OpenTelemetry.noop());
 
     WebClient webClient = WebClient.create();
     Object processedWebClient =
@@ -70,7 +70,7 @@ class WebClientBeanPostProcessorTest {
   @DisplayName(
       "when processed bean is of type WebClientBuilder should add ONE exchange filter to WebClientBuilder")
   void addsExchangeFilterWebClientBuilder() {
-    BeanPostProcessor underTest = new WebClientBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new WebClientBeanPostProcessor(() -> OpenTelemetry.noop());
 
     WebClient.Builder webClientBuilder = WebClient.builder();
     underTest.postProcessAfterInitialization(webClientBuilder, "testWebClientBuilder");

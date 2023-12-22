@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -68,7 +68,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
         request,
         new AsyncCompletionHandler<Void>() {
           @Override
-          public Void onCompleted(Response response) throws Exception {
+          public Void onCompleted(Response response) {
             requestResult.complete(response.getStatusCode());
             return null;
           }
@@ -88,12 +88,12 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     if (!Boolean.getBoolean("testLatestDeps")) {
       optionsBuilder.disableTestReadTimeout();
     }
+
     optionsBuilder.setHttpAttributes(
         endpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-          attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
   }

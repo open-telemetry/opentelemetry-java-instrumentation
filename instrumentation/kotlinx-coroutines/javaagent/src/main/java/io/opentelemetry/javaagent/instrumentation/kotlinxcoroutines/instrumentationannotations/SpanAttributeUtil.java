@@ -83,9 +83,9 @@ class SpanAttributeUtil {
   private static Object getAnnotationValue(AnnotationNode annotationNode) {
     if (annotationNode.values != null && !annotationNode.values.isEmpty()) {
       List<Object> values = annotationNode.values;
-      for (int j = 0; j < values.size(); j += 2) {
-        String attributeName = (String) values.get(j);
-        Object attributeValue = values.get(j + 1);
+      for (int i = 0; i < values.size(); i += 2) {
+        String attributeName = (String) values.get(i);
+        Object attributeValue = values.get(i + 1);
         if ("value".equals(attributeName)) {
           return attributeValue;
         }

@@ -6,7 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import listener.AnnotatedListenerConfig
 import listener.ManualListenerConfig
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -54,6 +54,7 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
+        "$SemanticAttributes.MESSAGING_OPERATION" "publish"
         if (destinationName == "(temporary)") {
           "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }

@@ -20,10 +20,11 @@ import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 import javax.net.ssl.SSLEngine
@@ -36,7 +37,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
 import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.NetTransportValues.IP_TCP
 
 class Netty41ClientSslTest extends AgentInstrumentationSpecification {
 
@@ -94,9 +94,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -104,10 +103,12 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
         }
         span(3) {
@@ -118,10 +119,10 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           // netty swallows the exception, it doesn't make any sense to hard-code the message
           errorEventWithAnyMessage(SSLHandshakeException)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" uri.port
+            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
         }
       }
@@ -162,9 +163,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -172,10 +172,12 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_PEER_PORT" uri.port
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
+            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$SemanticAttributes.SERVER_ADDRESS" uri.host
+            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
         }
         span(3) {
@@ -183,10 +185,10 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NET_TRANSPORT" IP_TCP
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" { it == "127.0.0.1" || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" uri.host
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" uri.port
+            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
+            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
         }
         span(4) {

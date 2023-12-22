@@ -21,7 +21,7 @@ muzzle {
 sourceSets {
   create("testapp") {
     java {
-      destinationDirectory.set(file("$buildDir/testapp/classes"))
+      destinationDirectory.set(layout.buildDirectory.dir("testapp/classes"))
     }
     resources {
       srcDirs("src/webapp")
@@ -54,7 +54,7 @@ dependencies {
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.35.v20201120")
 }
 
-val warDir = file("$buildDir/testapp/war")
+val warDir = layout.buildDirectory.dir("testapp/war")
 
 val launcher = javaToolchains.launcherFor {
   languageVersion.set(JavaLanguageVersion.of(8))
@@ -62,13 +62,15 @@ val launcher = javaToolchains.launcherFor {
 
 class CompilerArgumentsProvider : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "test.gwt.Greeting", // gwt module
-    "-war", "$buildDir/testapp/war",
+    // gwt module
+    "test.gwt.Greeting",
+    "-war", layout.buildDirectory.dir("testapp/war").get().asFile.absolutePath,
     "-logLevel", "INFO",
     "-localWorkers", "2",
     "-compileReport",
-    "-extra", "$buildDir/testapp/extra",
-    "-draftCompile", // makes compile a bit faster
+    "-extra", layout.buildDirectory.dir("testapp/extra").get().asFile.absolutePath,
+    // makes compile a bit faster
+    "-draftCompile",
   )
 }
 
@@ -94,7 +96,7 @@ tasks {
     from(file("src/testapp/webapp"))
     from(warDir)
 
-    into(file("$buildDir/testapp/web"))
+    into(file(layout.buildDirectory.dir("testapp/web")))
   }
 
   test {
@@ -102,7 +104,7 @@ tasks {
     dependsOn(copyTestWebapp)
 
     // add test app classes to classpath
-    classpath = sourceSets.test.get().runtimeClasspath.plus(files("$buildDir/testapp/classes"))
+    classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }

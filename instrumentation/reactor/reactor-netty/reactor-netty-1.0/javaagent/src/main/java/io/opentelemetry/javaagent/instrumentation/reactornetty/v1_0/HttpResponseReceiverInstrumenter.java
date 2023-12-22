@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorContextKeys.CONTEXTS_HOLDER_KEY;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -118,7 +118,7 @@ public final class HttpResponseReceiverInstrumenter {
     public void accept(HttpClientRequest request, Throwable error) {
       instrumentationContexts.endClientSpan(null, error);
 
-      if (HttpClientResendCount.get(instrumentationContexts.getParentContext()) == 0) {
+      if (HttpClientRequestResendCount.get(instrumentationContexts.getParentContext()) == 0) {
         // request is an instance of FailedHttpClientRequest, which does not implement a correct
         // resourceUrl() method -- we have to work around that
         request = FailedRequestWithUrlMaker.create(config, request);

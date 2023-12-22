@@ -74,7 +74,9 @@ spotless {
         // depends on ktlint_standard_wrapping
         "ktlint_standard_trailing-comma-on-declaration-site" to "disabled",
         // also very hard to find out where this happens
-        "ktlint_standard_wrapping" to "disabled"
+        "ktlint_standard_wrapping" to "disabled",
+        // we use variable names like v1_10Deps
+        "ktlint_standard_property-naming" to "disabled"
       )
     )
   }

@@ -7,20 +7,20 @@ package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_OPERATION;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
-import static io.opentelemetry.semconv.trace.attributes.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -418,7 +418,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                equalTo(MESSAGING_DESTINATION_NAME, topic)));
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -446,7 +447,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                equalTo(MESSAGING_DESTINATION_NAME, topic)));
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -474,7 +476,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                equalTo(MESSAGING_DESTINATION_NAME, topic)));
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)

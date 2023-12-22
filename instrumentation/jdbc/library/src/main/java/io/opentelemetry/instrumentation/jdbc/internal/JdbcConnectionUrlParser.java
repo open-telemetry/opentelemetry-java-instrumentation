@@ -11,7 +11,7 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -322,7 +322,7 @@ public enum JdbcConnectionUrlParser {
       int clusterSepLoc = jdbcUrl.indexOf(",");
       int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
       int portLoc = jdbcUrl.indexOf(":", Math.max(0, ipv6End));
-      portLoc = clusterSepLoc < portLoc ? -1 : portLoc;
+      portLoc = clusterSepLoc != -1 && clusterSepLoc < portLoc ? -1 : portLoc;
       int dbLoc = jdbcUrl.indexOf("/", Math.max(portLoc, clusterSepLoc));
 
       int paramLoc = jdbcUrl.indexOf("?", dbLoc);
@@ -863,11 +863,15 @@ public enum JdbcConnectionUrlParser {
     // Make this easier and ignore case.
     connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
 
-    if (!connectionUrl.startsWith("jdbc:")) {
+    String jdbcUrl;
+    if (connectionUrl.startsWith("jdbc:")) {
+      jdbcUrl = connectionUrl.substring("jdbc:".length());
+    } else if (connectionUrl.startsWith("jdbc-secretsmanager:")) {
+      jdbcUrl = connectionUrl.substring("jdbc-secretsmanager:".length());
+    } else {
       return DEFAULT;
     }
 
-    String jdbcUrl = connectionUrl.substring("jdbc:".length());
     int typeLoc = jdbcUrl.indexOf(':');
 
     if (typeLoc < 1) {

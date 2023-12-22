@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.executors;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import java.util.concurrent.Executor;
 
 public final class ContextPropagatingRunnable implements Runnable {
@@ -25,7 +26,7 @@ public final class ContextPropagatingRunnable implements Runnable {
 
   private ContextPropagatingRunnable(Runnable delegate, Context context) {
     this.delegate = delegate;
-    this.context = context;
+    this.context = ContextPropagationDebug.addDebugInfo(context, delegate);
   }
 
   @Override
@@ -33,5 +34,9 @@ public final class ContextPropagatingRunnable implements Runnable {
     try (Scope ignored = context.makeCurrent()) {
       delegate.run();
     }
+  }
+
+  public Runnable unwrap() {
+    return delegate;
   }
 }

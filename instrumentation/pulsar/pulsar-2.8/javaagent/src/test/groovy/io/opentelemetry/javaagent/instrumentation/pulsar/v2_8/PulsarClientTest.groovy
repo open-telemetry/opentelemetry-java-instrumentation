@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.Message
@@ -584,9 +584,10 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       childOf parentSpan
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-        "$SemanticAttributes.NET_PEER_NAME" brokerHost
-        "$SemanticAttributes.NET_PEER_PORT" brokerPort
+        "$SemanticAttributes.SERVER_ADDRESS" brokerHost
+        "$SemanticAttributes.SERVER_PORT" brokerPort
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
+        "$SemanticAttributes.MESSAGING_OPERATION" "publish"
         if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
         } else if (msgId != null) {
@@ -621,8 +622,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-        "$SemanticAttributes.NET_PEER_NAME" brokerHost
-        "$SemanticAttributes.NET_PEER_PORT" brokerPort
+        "$SemanticAttributes.SERVER_ADDRESS" brokerHost
+        "$SemanticAttributes.SERVER_PORT" brokerPort
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
         if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String

@@ -19,7 +19,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.jms.ConnectionFactory;
 import java.time.Duration;
 import java.util.HashMap;
@@ -115,6 +115,7 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank)),
@@ -195,6 +196,7 @@ class SpringJmsListenerTest {
                             equalTo(
                                 SemanticAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
                                 SemanticAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank),

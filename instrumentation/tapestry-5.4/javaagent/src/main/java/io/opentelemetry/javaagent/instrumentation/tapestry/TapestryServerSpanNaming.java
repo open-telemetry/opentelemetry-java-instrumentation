@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class TapestryServerSpanNaming {

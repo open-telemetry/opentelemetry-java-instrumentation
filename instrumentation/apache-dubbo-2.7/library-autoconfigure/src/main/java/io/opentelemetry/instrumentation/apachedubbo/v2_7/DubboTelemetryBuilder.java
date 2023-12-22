@@ -8,16 +8,16 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcSpanNameExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -56,7 +56,6 @@ public final class DubboTelemetryBuilder {
   /**
    * Returns a new {@link DubboTelemetry} with the settings of this {@link DubboTelemetryBuilder}.
    */
-  @SuppressWarnings("deprecation") // using createForServerSide() for the old->stable semconv story
   public DubboTelemetry build() {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
@@ -70,9 +69,7 @@ public final class DubboTelemetryBuilder {
         Instrumenter.<DubboRequest, Result>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(
-                ServerAttributesExtractor.createForServerSide(netServerAttributesGetter))
-            .addAttributesExtractor(ClientAttributesExtractor.create(netServerAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(attributesExtractors);
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
@@ -80,6 +77,7 @@ public final class DubboTelemetryBuilder {
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(attributesExtractors);
 
     if (peerService != null) {

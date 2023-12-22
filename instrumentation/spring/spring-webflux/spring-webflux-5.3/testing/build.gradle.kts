@@ -11,4 +11,6 @@ dependencies {
   // latest dep tests.
   compileOnly("io.projectreactor.ipc:reactor-netty:0.7.0.RELEASE")
   compileOnly("io.projectreactor.netty:reactor-netty-http:1.0.7")
+
+  compileOnly("org.springframework.boot:spring-boot:2.1.0.RELEASE")
 }

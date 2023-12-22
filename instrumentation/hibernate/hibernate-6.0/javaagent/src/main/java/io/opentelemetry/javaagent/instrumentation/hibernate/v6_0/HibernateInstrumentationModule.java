@@ -29,6 +29,13 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // shares classes with hibernate-procedure-call-4.3, these classes should be in the same class
+    // loader
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new QueryInstrumentation(),

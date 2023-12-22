@@ -7,12 +7,14 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.BufferPools;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.ExperimentalBufferPools;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.ExperimentalCpu;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.ExperimentalMemoryPools;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +30,7 @@ public final class RuntimeMetricsBuilder {
   final EnumMap<JfrFeature, Boolean> enabledFeatureMap;
 
   private boolean disableJmx = false;
+  private boolean enableExperimentalJmxTelemetry = false;
 
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -73,10 +76,17 @@ public final class RuntimeMetricsBuilder {
     return this;
   }
 
-  /** Disable telemetry collection associated with the {@link JfrFeature}. */
+  /** Disable all JMX telemetry collection. */
   @CanIgnoreReturnValue
   public RuntimeMetricsBuilder disableAllJmx() {
     disableJmx = true;
+    return this;
+  }
+
+  /** Disable telemetry collection associated with the {@link JfrFeature}. */
+  @CanIgnoreReturnValue
+  public RuntimeMetricsBuilder enableExperimentalJmxTelemetry() {
+    enableExperimentalJmxTelemetry = true;
     return this;
   }
 
@@ -95,12 +105,16 @@ public final class RuntimeMetricsBuilder {
     try {
       // Set up metrics gathered by JMX
       List<AutoCloseable> observables = new ArrayList<>();
-      observables.addAll(BufferPools.registerObservers(openTelemetry));
       observables.addAll(Classes.registerObservers(openTelemetry));
       observables.addAll(Cpu.registerObservers(openTelemetry));
+      observables.addAll(GarbageCollector.registerObservers(openTelemetry));
       observables.addAll(MemoryPools.registerObservers(openTelemetry));
       observables.addAll(Threads.registerObservers(openTelemetry));
-      observables.addAll(GarbageCollector.registerObservers(openTelemetry));
+      if (enableExperimentalJmxTelemetry) {
+        observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
+        observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
+        observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));
+      }
       return observables;
     } catch (Exception e) {
       throw new IllegalStateException("Error building RuntimeMetrics", e);

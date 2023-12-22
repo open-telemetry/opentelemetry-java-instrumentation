@@ -23,6 +23,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+  }
 }

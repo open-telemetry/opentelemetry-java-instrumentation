@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
@@ -32,10 +32,13 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
 
     when:
     awsConnector.publishSampleNotification(topicArn)
-    awsConnector.receiveMessage(queueUrl)
+    def receiveMessageResult = awsConnector.receiveMessage(queueUrl)
+    receiveMessageResult.messages.each {message ->
+      runWithSpan("process child") {}
+    }
 
     then:
-    assertTraces(7) {
+    assertTraces(6) {
       trace(0, 1) {
 
         span(0) {
@@ -49,14 +52,12 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.name" queueName
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" String
+            "$SemanticAttributes.SERVER_ADDRESS" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -73,14 +74,12 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" String
+            "$SemanticAttributes.SERVER_ADDRESS" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -97,14 +96,12 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" String
+            "$SemanticAttributes.SERVER_ADDRESS" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -120,14 +117,12 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "CreateTopic"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" String
+            "$SemanticAttributes.SERVER_ADDRESS" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -143,18 +138,16 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "Subscribe"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" String
+            "$SemanticAttributes.SERVER_ADDRESS" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
-      trace(5, 2) {
+      trace(5, 3) {
         span(0) {
           name "SNS.Publish"
           kind CLIENT
@@ -165,18 +158,16 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "Publish"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" String
+            "$SemanticAttributes.SERVER_ADDRESS" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
         span(1) {
-          name "SQS.ReceiveMessage"
+          name "snsToSqsTestQueue process"
           kind CONSUMER
           childOf span(0)
           attributes {
@@ -186,42 +177,22 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "ReceiveMessage"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" String
+            "$SemanticAttributes.SERVER_ADDRESS" String
+            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
+            "$SemanticAttributes.MESSAGING_OPERATION" "process"
+            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
-      }
-      /**
-       * This span represents HTTP "sending of receive message" operation. It's always single, while there can be multiple CONSUMER spans (one per consumed message).
-       * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then HTTP instrumentation span would appear
-       */
-      trace(6, 1) {
-        span(0) {
-          name "SQS.ReceiveMessage"
-          kind CLIENT
-          hasNoParent()
+        span(2) {
+          name "process child"
+          childOf span(1)
           attributes {
-            "aws.agent" "java-aws-sdk"
-            "aws.endpoint" String
-            "aws.queue.url" queueUrl
-            "rpc.system" "aws-api"
-            "rpc.service" "AmazonSQS"
-            "rpc.method" "ReceiveMessage"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" String
-            "net.peer.name" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "net.peer.port" { it == null || Number }
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
           }
         }
       }

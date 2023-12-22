@@ -27,7 +27,6 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
         jvmArgsEnvVarName,
         "-Xmx512m -javaagent:/"
             + TARGET_AGENT_FILENAME
-            + " -Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.okhttp3.internal.concurrent.TaskRunner=INFO"
             // Liberty20Jdk11, Payara6Jdk11 and Payara6Jdk17 fail with
             // java.util.zip.ZipException: Invalid CEN header (invalid zip64 extra data field size)
             + " -Djdk.util.zip.disableZip64ExtraFieldValidation=true");
@@ -40,6 +39,7 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     }
     environment.put("OTEL_JAVAAGENT_DEBUG", "true");
     environment.put("OTEL_EXPERIMENTAL_JAVASCRIPT_SNIPPET", "<script>console.log(hi)</script>");
+    environment.put("OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_PACKAGE_EMITTER_ENABLED", "true");
     return environment;
   }
 

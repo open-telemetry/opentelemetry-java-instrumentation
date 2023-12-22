@@ -71,7 +71,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
@@ -92,7 +94,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
@@ -114,7 +118,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
@@ -130,7 +136,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       }
     }
@@ -141,23 +149,29 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void removeHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Return(readOnly = false) ChannelHandler handler) {
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
-        pipeline.remove(ourHandler);
+        // Context is null when our handler has already been removed. This happens when calling
+        // removeLast first removed our handler and we called removeLast again to remove the http
+        // handler.
+        if (pipeline.context(ourHandler) != null) {
+          pipeline.remove(ourHandler);
+        }
         virtualField.set(handler, null);
       } else if (handler
           .getClass()
           .getName()
           .startsWith("io.opentelemetry.javaagent.instrumentation.netty.")) {
-        pipeline.removeLast();
+        handler = pipeline.removeLast();
       } else if (handler
           .getClass()
           .getName()
           .startsWith("io.opentelemetry.instrumentation.netty.")) {
-        pipeline.removeLast();
+        handler = pipeline.removeLast();
       }
     }
   }

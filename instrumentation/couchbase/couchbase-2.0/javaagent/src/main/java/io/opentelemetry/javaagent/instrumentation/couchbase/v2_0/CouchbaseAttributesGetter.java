@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter implements DbClientAttributesGetter<CouchbaseRequestInfo> {

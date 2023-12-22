@@ -23,7 +23,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,8 +40,6 @@ abstract class AbstractReactorNettyHttpClientTest
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
-
-  static final String USER_AGENT = "ReactorNetty";
 
   abstract HttpClient createHttpClient(boolean readTimeout);
 
@@ -92,7 +90,6 @@ abstract class AbstractReactorNettyHttpClientTest
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
-    optionsBuilder.setUserAgent(USER_AGENT);
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
@@ -128,8 +125,8 @@ abstract class AbstractReactorNettyHttpClientTest
 
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PEER_NAME);
-          attributes.remove(SemanticAttributes.NET_PEER_PORT);
+          attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+          attributes.remove(SemanticAttributes.SERVER_PORT);
           return attributes;
         });
   }

@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import io.opentelemetry.semconv.SemanticAttributes
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util.concurrent.Executors
@@ -39,7 +39,7 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
     implicit val ec: ExecutionContext =
       ExecutionContext.fromExecutor(startupThread)
     Future {
-      testServer.main(Array("-admin.port=:0", "-http.port=:" + port))
+      testServer.nonExitingMain(Array("-admin.port=:0", "-http.port=:" + port))
     }
     testServer.awaitReady()
   }
@@ -56,6 +56,7 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
       override def test(endpoint: ServerEndpoint): Boolean =
         endpoint != ServerEndpoint.NOT_FOUND
     })
+    options.setResponseCodeOnNonStandardHttpMethod(400)
   }
 
   override protected def assertHandlerSpan(
