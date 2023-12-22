@@ -24,7 +24,7 @@ dependencies {
   library("org.apache.pekko:pekko-http_2.12:1.0.0")
   library("org.apache.pekko:pekko-stream_2.12:1.0.1")
 
-  testInstrumentation(project(":instrumentation:pekko-actor-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
   latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:+")
