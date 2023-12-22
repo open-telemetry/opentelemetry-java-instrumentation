@@ -11,16 +11,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}
-
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 // spring 6 requires java 17

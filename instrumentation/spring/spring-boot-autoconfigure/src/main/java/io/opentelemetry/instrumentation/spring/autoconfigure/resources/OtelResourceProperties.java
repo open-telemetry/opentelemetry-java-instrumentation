@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "otel.springboot.resource")
+@ConfigurationProperties(prefix = "otel.resource")
 public class OtelResourceProperties {
   private Map<String, String> attributes = Collections.emptyMap();
 

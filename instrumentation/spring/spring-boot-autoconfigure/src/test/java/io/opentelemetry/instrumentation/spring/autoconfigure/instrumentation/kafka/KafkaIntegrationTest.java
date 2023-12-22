@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
@@ -68,6 +69,10 @@ class KafkaIntegrationTest {
                     KafkaInstrumentationAutoConfiguration.class,
                     TestConfig.class))
             .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry)
+            .withBean(
+                "openTelemetrySupplier",
+                OpenTelemetrySupplier.class,
+                () -> testing::getOpenTelemetry)
             .withPropertyValues(
                 "spring.kafka.bootstrap-servers=" + kafka.getBootstrapServers(),
                 "spring.kafka.consumer.auto-offset-reset=earliest",

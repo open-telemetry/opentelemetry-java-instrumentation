@@ -12,13 +12,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:netty:netty-4.1:testing"))
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}

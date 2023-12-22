@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.0"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
+    id("org.jetbrains.kotlin.jvm") version "1.9.22"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.9.28"
@@ -141,6 +141,9 @@ include(":smoke-tests-otel-starter")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
+include(":instrumentation:alibaba-druid-1.0:javaagent")
+include(":instrumentation:alibaba-druid-1.0:library")
+include(":instrumentation:alibaba-druid-1.0:testing")
 include(":instrumentation:apache-dbcp-2.0:javaagent")
 include(":instrumentation:apache-dbcp-2.0:library")
 include(":instrumentation:apache-dbcp-2.0:testing")
@@ -415,8 +418,8 @@ include(":instrumentation:oshi:javaagent")
 include(":instrumentation:oshi:library")
 include(":instrumentation:oshi:testing")
 include(":instrumentation:payara:javaagent")
-include(":instrumentation:pekko-actor-1.0:javaagent")
-include(":instrumentation:pekko-http-1.0:javaagent")
+include(":instrumentation:pekko:pekko-actor-1.0:javaagent")
+include(":instrumentation:pekko:pekko-http-1.0:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.6:javaagent")
 include(":instrumentation:play:play-ws:play-ws-1.0:javaagent")
