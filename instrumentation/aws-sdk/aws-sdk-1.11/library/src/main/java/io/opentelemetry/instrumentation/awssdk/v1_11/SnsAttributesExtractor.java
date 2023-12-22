@@ -19,8 +19,8 @@ public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, R
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     String destination = findMessageDestination(request.getOriginalRequest());
-    AttributesExtractorUtil.internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME,
-        destination);
+    AttributesExtractorUtil.internalSet(
+        attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME, destination);
   }
 
   /*
