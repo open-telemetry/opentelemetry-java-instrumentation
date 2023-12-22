@@ -11,6 +11,7 @@ import com.amazonaws.Response;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -18,9 +19,8 @@ public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, R
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     String destination = findMessageDestination(request.getOriginalRequest());
-    if (destination != null) {
-      attributes.put(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination);
-    }
+    AttributesExtractorUtil.internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME,
+        destination);
   }
 
   /*
