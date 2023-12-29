@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 
-
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;

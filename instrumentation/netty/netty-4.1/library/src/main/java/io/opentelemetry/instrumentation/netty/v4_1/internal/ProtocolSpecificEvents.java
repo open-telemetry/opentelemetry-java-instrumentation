@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.netty.v4_1.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
