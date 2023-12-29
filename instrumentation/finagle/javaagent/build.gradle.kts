@@ -6,49 +6,13 @@ plugins {
 muzzle {
   pass {
     group.set("com.twitter")
-    module.set("finagle-core_2.12")
+    module.set("finagle-http_2.12")
     versions.set("[23.11.0,]")
   }
 
   pass {
     group.set("com.twitter")
-    module.set("finagle-core_2.13")
-    versions.set("[23.11.0,]")
-  }
-
-  pass {
-    group.set("com.twitter")
-    module.set("finagle-http2_2.12")
-    versions.set("[23.11.0,]")
-  }
-
-  pass {
-    group.set("com.twitter")
-    module.set("finagle-http2_2.13")
-    versions.set("[23.11.0,]")
-  }
-
-  pass {
-    group.set("com.twitter")
-    module.set("finagle-netty4_2.12")
-    versions.set("[23.11.0,]")
-  }
-
-  pass {
-    group.set("com.twitter")
-    module.set("finagle-netty4_2.13")
-    versions.set("[23.11.0,]")
-  }
-
-  pass {
-    group.set("com.twitter")
-    module.set("finagle-netty4-http_2.12")
-    versions.set("[23.11.0,]")
-  }
-
-  pass {
-    group.set("com.twitter")
-    module.set("finagle-netty4-http_2.13")
+    module.set("finagle-http_2.13")
     versions.set("[23.11.0,]")
   }
 }
@@ -72,15 +36,13 @@ dependencies {
   // should wire netty contexts
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
+//  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
   implementation(project(":instrumentation:netty:netty-4.1:library"))
   implementation(project(":instrumentation:netty:netty-4-common:library"))
 
-  compileOnly("${scalified("com.twitter:finagle-core")}:$finagleVersion")
-  compileOnly("${scalified("com.twitter:finagle-http")}:$finagleVersion")
+  library("${scalified("com.twitter:finagle-http")}:$finagleVersion")
 
-  testImplementation("${scalified("com.twitter:finagle-core")}:$finagleVersion")
   testImplementation("${scalified("com.twitter:finagle-http")}:$finagleVersion")
 }

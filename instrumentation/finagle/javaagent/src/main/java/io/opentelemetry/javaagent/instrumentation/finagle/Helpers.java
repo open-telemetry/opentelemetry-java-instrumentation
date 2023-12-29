@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTra
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.lang.invoke.MethodHandle;
 import java.util.Deque;
 import java.util.concurrent.Callable;
@@ -125,7 +124,7 @@ public class Helpers {
               };
           if (ref.isDefined()) {
             // wrap the call if ContextRef contains a set Context
-            call = AgentContextStorage.toApplicationContext(ref.get()).wrap(call);
+            call = ref.get().wrap(call);
           }
           try {
             return call.call();
