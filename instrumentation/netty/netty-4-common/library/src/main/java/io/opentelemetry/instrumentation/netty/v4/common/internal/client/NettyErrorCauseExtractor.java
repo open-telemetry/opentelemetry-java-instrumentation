@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
 import io.netty.channel.AbstractChannel;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
+import java.lang.reflect.Modifier;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
@@ -29,14 +30,19 @@ class NettyErrorCauseExtractor implements ErrorCauseExtractor {
   @Override
   public Throwable extract(Throwable error) {
     Class<?> clazz = error.getClass();
-    if (ConnectException.class.isAssignableFrom(clazz) && !ConnectException.class.equals(clazz)) {
-      return new ConnectException(error.getMessage());
-    } else if (NoRouteToHostException.class.isAssignableFrom(clazz)
-        && !NoRouteToHostException.class.equals(clazz)) {
-      return new NoRouteToHostException(error.getMessage());
-    } else if (SocketException.class.isAssignableFrom(clazz)
-        && !SocketException.class.equals(clazz)) {
-      return new SocketException(error.getMessage());
+
+    // guard enumerated cases only
+    if (Modifier.isPrivate(clazz.getModifiers())
+        && clazz.getEnclosingClass() == AbstractChannel.class) {
+      if (ConnectException.class.isAssignableFrom(clazz) && !ConnectException.class.equals(clazz)) {
+        return new ConnectException(error.getMessage());
+      } else if (NoRouteToHostException.class.isAssignableFrom(clazz)
+          && !NoRouteToHostException.class.equals(clazz)) {
+        return new NoRouteToHostException(error.getMessage());
+      } else if (SocketException.class.isAssignableFrom(clazz)
+          && !SocketException.class.equals(clazz)) {
+        return new SocketException(error.getMessage());
+      }
     }
     return ErrorCauseExtractor.getDefault().extract(error);
   }

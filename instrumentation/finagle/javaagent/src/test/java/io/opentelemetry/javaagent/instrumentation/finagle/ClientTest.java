@@ -12,6 +12,7 @@ import com.twitter.util.Await;
 import com.twitter.util.Duration;
 import com.twitter.util.Future;
 import com.twitter.util.FuturePool;
+import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -147,7 +148,7 @@ public class ClientTest extends AbstractHttpClientTest<Request> {
             // counterpart with a private constructor in netty
             error = new io.netty.handler.timeout.ReadTimeoutException();
           } else if ("https://192.0.2.1/".equals(uri.toString())) {
-            error = new ConnectException();
+            error = new ConnectTimeoutException();
           }
           return error;
         });
