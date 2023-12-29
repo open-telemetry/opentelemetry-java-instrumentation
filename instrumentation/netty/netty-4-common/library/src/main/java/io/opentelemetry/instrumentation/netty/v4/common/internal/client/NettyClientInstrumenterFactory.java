@@ -77,7 +77,6 @@ public final class NettyClientInstrumenterFactory {
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
                 openTelemetry, instrumentationName, httpSpanNameExtractorBuilder.build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .setErrorCauseExtractor(NettyErrorCauseExtractor.INSTANCE)
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractor(
                 HttpClientPeerServiceAttributesExtractor.create(
@@ -105,8 +104,7 @@ public final class NettyClientInstrumenterFactory {
         Instrumenter.<NettyConnectionRequest, Channel>builder(
                 openTelemetry, instrumentationName, NettyConnectionRequest::spanName)
             .addAttributesExtractor(
-                HttpClientPeerServiceAttributesExtractor.create(getter, peerServiceResolver))
-            .setErrorCauseExtractor(NettyErrorCauseExtractor.INSTANCE);
+                HttpClientPeerServiceAttributesExtractor.create(getter, peerServiceResolver));
 
     if (connectionTelemetryFullyEnabled) {
       // when the connection telemetry is fully enabled, CONNECT spans are created for every
@@ -143,7 +141,6 @@ public final class NettyClientInstrumenterFactory {
         Instrumenter.<NettySslRequest, Void>builder(
                 openTelemetry, instrumentationName, NettySslRequest::spanName)
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
-            .setErrorCauseExtractor(NettyErrorCauseExtractor.INSTANCE)
             .buildInstrumenter(
                 sslTelemetryFullyEnabled
                     ? SpanKindExtractor.alwaysInternal()

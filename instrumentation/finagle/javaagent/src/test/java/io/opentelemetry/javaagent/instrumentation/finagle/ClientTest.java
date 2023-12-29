@@ -5,6 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.finagle;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.twitter.finagle.ConnectionFailedException;
+import com.twitter.finagle.Failure;
+import com.twitter.finagle.ReadTimedOutException;
 import com.twitter.finagle.Service;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
@@ -12,8 +17,8 @@ import com.twitter.util.Await;
 import com.twitter.util.Duration;
 import com.twitter.util.Future;
 import com.twitter.util.FuturePool;
-import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
+import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -27,6 +32,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.assertj.core.api.AbstractThrowableAssert;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
@@ -137,18 +143,33 @@ public class ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.setClientSpanErrorMapper(
         (uri, error) -> {
-          if ("http://localhost:61/".equals(uri.toString())) {
-            // slightly modified version of what one might see with netty 4.1;
-            // finagle injects its own prefix
-            error =
-                new ConnectException(
-                    "finishConnect(..) failed: Connection refused: localhost/127.0.0.1:61");
+          // all errors should be wrapped in RuntimeExceptions due to how we run things in
+          // doSendRequest()
+          AbstractThrowableAssert<?, ?> clientWrapAssert =
+              assertThat(error).isInstanceOf(RuntimeException.class);
+          if ("http://localhost:61/".equals(uri.toString())
+              || "https://192.0.2.1/".equals(uri.toString())) {
+            // finagle handles all these in com.twitter.finagle.netty4.ConnectionBuilder.build();
+            // all errors emitted by the netty Bootstrap.connect() call are mapped to
+            // twitter/finagle exceptions and handled accordingly;
+            // namely, this means wrapping the root exception in a finagle ConnectionFailedException
+            // and then with a twitter Failure.rejected() call, resulting in the multiple nestings
+            // of the root exception
+            clientWrapAssert
+                .cause()
+                .isInstanceOf(Failure.class)
+                .cause()
+                .isInstanceOf(ConnectionFailedException.class)
+                .cause()
+                .isInstanceOf(ConnectException.class);
+            error = error.getCause().getCause().getCause();
           } else if (uri.getPath().endsWith("/read-timeout")) {
-            // see the netty error exception extractor -- this is lifted from an Annotated*
-            // counterpart with a private constructor in netty
-            error = new io.netty.handler.timeout.ReadTimeoutException();
-          } else if ("https://192.0.2.1/".equals(uri.toString())) {
-            error = new ConnectTimeoutException();
+            // not a connect() exception like the above, so is not wrapped as above;
+            clientWrapAssert.cause().isInstanceOf(ReadTimedOutException.class);
+            // however, this specific case results in a mapping from netty's ReadTimeoutException
+            // to finagle's ReadTImedOutException in the finagle client code, losing all trace of
+            // the original exception; so we must construct it manually here
+            error = new ReadTimeoutException();
           }
           return error;
         });
