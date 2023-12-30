@@ -34,13 +34,13 @@ final class TracingRequestHandler extends RequestHandler2 {
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
-  private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
   TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
-      Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
       Instrumenter<Request<?>, Response<?>> producerInstrumenter) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
@@ -103,7 +103,7 @@ final class TracingRequestHandler extends RequestHandler2 {
     return consumerReceiveInstrumenter;
   }
 
-  Instrumenter<SqsProcessRequest, Void> getConsumerProcessInstrumenter() {
+  Instrumenter<SqsProcessRequest, Response<?>> getConsumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
   }
 

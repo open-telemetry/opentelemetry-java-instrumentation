@@ -6,15 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientPeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpExperimentalAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import org.apache.commons.httpclient.HttpMethod;
 

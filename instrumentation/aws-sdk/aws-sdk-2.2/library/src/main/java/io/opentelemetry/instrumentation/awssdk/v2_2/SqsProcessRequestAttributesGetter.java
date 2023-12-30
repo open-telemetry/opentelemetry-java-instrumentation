@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 
 enum SqsProcessRequestAttributesGetter
-    implements MessagingAttributesGetter<SqsProcessRequest, Void> {
+    implements MessagingAttributesGetter<SqsProcessRequest, Response> {
   INSTANCE;
 
   @Override
@@ -59,7 +59,7 @@ enum SqsProcessRequestAttributesGetter
 
   @Override
   @Nullable
-  public String getMessageId(SqsProcessRequest request, @Nullable Void response) {
+  public String getMessageId(SqsProcessRequest request, @Nullable Response response) {
     return request.getMessage().getMessageId();
   }
 

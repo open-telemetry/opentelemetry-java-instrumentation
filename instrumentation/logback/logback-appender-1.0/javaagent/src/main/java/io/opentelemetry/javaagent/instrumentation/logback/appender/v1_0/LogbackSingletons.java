@@ -41,13 +41,14 @@ public final class LogbackSingletons {
             emptyList());
 
     mapper =
-        new LoggingEventMapper(
-            captureExperimentalAttributes,
-            captureMdcAttributes,
-            captureCodeAttributes,
-            captureMarkerAttribute,
-            captureKeyValuePairAttributes,
-            captureLoggerContext);
+        LoggingEventMapper.builder()
+            .setCaptureExperimentalAttributes(captureExperimentalAttributes)
+            .setCaptureMdcAttributes(captureMdcAttributes)
+            .setCaptureCodeAttributes(captureCodeAttributes)
+            .setCaptureMarkerAttribute(captureMarkerAttribute)
+            .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
+            .setCaptureLoggerContext(captureLoggerContext)
+            .build();
   }
 
   public static LoggingEventMapper mapper() {

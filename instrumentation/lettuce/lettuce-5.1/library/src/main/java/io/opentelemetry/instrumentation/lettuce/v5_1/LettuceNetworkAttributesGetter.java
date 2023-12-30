@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.lettuce.v5_1.OpenTelemetryTracing.OpenTelemetryEndpoint;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;

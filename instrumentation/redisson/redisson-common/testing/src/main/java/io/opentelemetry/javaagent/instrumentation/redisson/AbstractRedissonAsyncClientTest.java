@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -45,7 +46,6 @@ import org.redisson.config.SingleServerConfig;
 import org.testcontainers.containers.GenericContainer;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractRedissonAsyncClientTest {
 
   @RegisterExtension
@@ -109,9 +109,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, (long) port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"))));
@@ -142,9 +142,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, (long) port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SADD set1 ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SADD"))
@@ -216,9 +216,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, (long) port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
@@ -226,9 +226,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, (long) port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET batch2 ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"))
@@ -237,9 +237,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, (long) port),
+                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "EXEC"),
                             equalTo(SemanticAttributes.DB_OPERATION, "EXEC"))

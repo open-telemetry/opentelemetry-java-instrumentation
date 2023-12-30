@@ -75,14 +75,12 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "CreateQueue"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
       }
@@ -98,18 +96,16 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(1) {
@@ -123,14 +119,16 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(2) {
@@ -170,14 +168,12 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "CreateQueue"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
       }
@@ -193,18 +189,16 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(1) {
@@ -218,14 +212,16 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(2) {
@@ -255,14 +251,12 @@ abstract class AbstractSqsSuppressReceiveSpansTest extends InstrumentationSpecif
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "http.method" "POST"
-            "http.status_code" 200
-            "http.url" "http://localhost:$sqsPort"
-            "net.peer.name" "localhost"
-            "net.peer.port" sqsPort
-            "$SemanticAttributes.NET_PROTOCOL_NAME" "http"
-            "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$SemanticAttributes.URL_FULL" "http://localhost:$sqsPort"
+            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$SemanticAttributes.SERVER_PORT" sqsPort
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
       }

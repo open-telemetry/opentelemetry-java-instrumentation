@@ -47,7 +47,7 @@ public class AwsSdkTelemetry {
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
-  private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
 
   AwsSdkTelemetry(

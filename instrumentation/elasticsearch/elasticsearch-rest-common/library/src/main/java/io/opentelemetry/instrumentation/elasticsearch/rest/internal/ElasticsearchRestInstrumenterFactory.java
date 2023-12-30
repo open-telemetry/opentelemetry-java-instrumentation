@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
 import java.util.List;
 import java.util.Set;
 import org.elasticsearch.client.Response;

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 

@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.0"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.22"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.9.28"
@@ -12,15 +12,15 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.15.1"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12"
+  id("com.gradle.enterprise") version "3.16.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.3.7" apply false
+  id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
 }
 
 dependencyResolutionManagement {
@@ -110,7 +110,7 @@ include(":javaagent")
 include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
-include(":instrumentation-api-semconv")
+include(":instrumentation-api-incubator")
 include(":instrumentation-annotations")
 include(":instrumentation-annotations-support")
 include(":instrumentation-annotations-support-testing")
@@ -143,6 +143,9 @@ include(":instrumentation:aerospike-client:aerospike-client-7.1:library")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
+include(":instrumentation:alibaba-druid-1.0:javaagent")
+include(":instrumentation:alibaba-druid-1.0:library")
+include(":instrumentation:alibaba-druid-1.0:testing")
 include(":instrumentation:apache-dbcp-2.0:javaagent")
 include(":instrumentation:apache-dbcp-2.0:library")
 include(":instrumentation:apache-dbcp-2.0:testing")
@@ -404,6 +407,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -416,8 +420,8 @@ include(":instrumentation:oshi:javaagent")
 include(":instrumentation:oshi:library")
 include(":instrumentation:oshi:testing")
 include(":instrumentation:payara:javaagent")
-include(":instrumentation:pekko-actor-1.0:javaagent")
-include(":instrumentation:pekko-http-1.0:javaagent")
+include(":instrumentation:pekko:pekko-actor-1.0:javaagent")
+include(":instrumentation:pekko:pekko-http-1.0:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.6:javaagent")
 include(":instrumentation:play:play-ws:play-ws-1.0:javaagent")
@@ -556,6 +560,7 @@ include(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagen
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
+include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-sql-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")

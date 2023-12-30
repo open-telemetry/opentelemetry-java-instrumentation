@@ -69,6 +69,7 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
     see [docs](https://docs.gradle.com/enterprise/gradle-plugin/#via_environment_variable)
 - `GRADLE_PUBLISH_KEY`
 - `GRADLE_PUBLISH_SECRET`
+- `NVD_API_KEY` - stored in OpenTelemetry-Java 1Password
 - `OPENTELEMETRYBOT_GITHUB_TOKEN` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)

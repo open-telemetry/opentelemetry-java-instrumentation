@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil.normalizePath;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.jboss.resteasy.reactive.server.mapping.RuntimeResource;

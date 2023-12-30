@@ -16,7 +16,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -27,9 +26,9 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -343,28 +342,19 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS, SUCCESS.status));
         });
 
-    String durationInstrumentName =
-        SemconvStability.emitStableHttpSemconv()
-            ? "http.server.request.duration"
-            : "http.server.duration";
-    String durationInstrumentDescription =
-        SemconvStability.emitStableHttpSemconv()
-            ? "Duration of HTTP server requests."
-            : "The duration of the inbound HTTP request";
-
     String metricsInstrumentationName = options.metricsInstrumentationName.get();
     if (metricsInstrumentationName == null) {
       metricsInstrumentationName = instrumentationName.get();
     }
     testing.waitAndAssertMetrics(
         metricsInstrumentationName,
-        durationInstrumentName,
+        "http.server.request.duration",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
-                        .hasDescription(durationInstrumentDescription)
-                        .hasUnit(SemconvStability.emitStableHttpSemconv() ? "s" : "ms")
+                        .hasDescription("Duration of HTTP server requests.")
+                        .hasUnit("s")
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(
@@ -485,7 +475,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   @Test
   void requestWithNonStandardHttpMethod() throws InterruptedException {
-    assumeTrue(SemconvStability.emitStableHttpSemconv());
     assumeTrue(options.testNonStandardHttpMethod);
 
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
@@ -719,7 +708,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @CanIgnoreReturnValue
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint, int statusCode) {
 
@@ -738,38 +726,35 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     span.hasAttributesSatisfying(
         attrs -> {
-          if (SemconvStability.emitOldHttpSemconv()
-              && attrs.get(SemanticAttributes.NET_TRANSPORT) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.NET_TRANSPORT, IP_TCP);
-          }
-          if (SemconvStability.emitStableHttpSemconv()) {
-            // we're opting out of these attributes in the new semconv
-            assertThat(attrs)
-                .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
-                .doesNotContainKey(SemanticAttributes.NETWORK_TYPE);
-          }
-
+          // we're opting out of these attributes in the new semconv
           assertThat(attrs)
-              .containsEntry(getAttributeKey(SemanticAttributes.NET_HOST_NAME), "localhost");
-          // TODO: Move to test knob rather than always treating as optional
-          // TODO: once httpAttributes test knob is used, verify default port values
-          AttributeKey<Long> netHostPortKey = getAttributeKey(SemanticAttributes.NET_HOST_PORT);
-          if (attrs.get(netHostPortKey) != null) {
-            assertThat(attrs).containsEntry(netHostPortKey, port);
-          }
+              .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
+              .doesNotContainKey(SemanticAttributes.NETWORK_TYPE)
+              .doesNotContainKey(SemanticAttributes.NETWORK_PROTOCOL_NAME);
 
-          AttributeKey<String> netSockPeerAddrKey =
-              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_ADDR);
-          if (attrs.get(netSockPeerAddrKey) != null) {
-            assertThat(attrs)
-                .containsEntry(netSockPeerAddrKey, options.sockPeerAddr.apply(endpoint));
-          }
-          AttributeKey<Long> netSockPeerPortKey =
-              getAttributeKey(SemanticAttributes.NET_SOCK_PEER_PORT);
-          if (attrs.get(netSockPeerPortKey) != null) {
+          if (attrs.get(SemanticAttributes.NETWORK_PROTOCOL_VERSION) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    netSockPeerPortKey,
+                    SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                    entry -> assertThat(entry).isIn("1.1", "2.0"));
+          }
+
+          assertThat(attrs).containsEntry(SemanticAttributes.SERVER_ADDRESS, "localhost");
+          // TODO: Move to test knob rather than always treating as optional
+          // TODO: once httpAttributes test knob is used, verify default port values
+          if (attrs.get(SemanticAttributes.SERVER_PORT) != null) {
+            assertThat(attrs).containsEntry(SemanticAttributes.SERVER_PORT, port);
+          }
+
+          if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
+            assertThat(attrs)
+                .containsEntry(
+                    NetworkAttributes.NETWORK_PEER_ADDRESS, options.sockPeerAddr.apply(endpoint));
+          }
+          if (attrs.get(NetworkAttributes.NETWORK_PEER_PORT) != null) {
+            assertThat(attrs)
+                .hasEntrySatisfying(
+                    NetworkAttributes.NETWORK_PEER_PORT,
                     value ->
                         assertThat(value)
                             .isInstanceOf(Long.class)
@@ -778,133 +763,62 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           assertThat(attrs)
               .hasEntrySatisfying(
-                  getAttributeKey(SemanticAttributes.HTTP_CLIENT_IP),
+                  SemanticAttributes.CLIENT_ADDRESS,
                   entry ->
                       assertThat(entry)
                           .satisfiesAnyOf(
                               value -> assertThat(value).isNull(),
                               value -> assertThat(value).isEqualTo(TEST_CLIENT_IP)));
-          if (SemconvStability.emitStableHttpSemconv()) {
-            // client.port is opt-in
-            assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
-          }
-          assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_METHOD), method);
+          // client.port is opt-in
+          assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
 
-          assertThat(attrs)
-              .containsEntry(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), statusCode);
-          if (statusCode >= 500 && SemconvStability.emitStableHttpSemconv()) {
+          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method);
+
+          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
+          if (statusCode >= 500) {
             assertThat(attrs).containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(statusCode));
           }
 
-          AttributeKey<String> netProtocolKey =
-              getAttributeKey(SemanticAttributes.NET_PROTOCOL_NAME);
-          if (SemconvStability.emitStableHttpSemconv()) {
-            // only protocol names different from "http" are emitted
-            assertThat(attrs).doesNotContainKey(netProtocolKey);
-          } else if (attrs.get(netProtocolKey) != null) {
-            assertThat(attrs).containsEntry(netProtocolKey, "http");
-          }
-          AttributeKey<String> netProtocolVersionKey =
-              getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION);
-          if (attrs.get(netProtocolVersionKey) != null) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    netProtocolVersionKey, entry -> assertThat(entry).isIn("1.1", "2.0"));
-          }
           assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
-          assertThat(attrs).containsEntry(getAttributeKey(SemanticAttributes.HTTP_SCHEME), "http");
+          assertThat(attrs).containsEntry(SemanticAttributes.URL_SCHEME, "http");
           if (endpoint != INDEXED_CHILD) {
-            if (SemconvStability.emitOldHttpSemconv()) {
-              assertThat(attrs)
-                  .containsEntry(
-                      SemanticAttributes.HTTP_TARGET,
-                      endpoint.resolvePath(address).getPath()
-                          + (endpoint.getQuery() != null ? "?" + endpoint.getQuery() : ""));
-            }
-            if (SemconvStability.emitStableHttpSemconv()) {
-              assertThat(attrs)
-                  .containsEntry(
-                      SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
-              if (endpoint.getQuery() != null) {
-                assertThat(attrs).containsEntry(SemanticAttributes.URL_QUERY, endpoint.getQuery());
-              }
+            assertThat(attrs)
+                .containsEntry(
+                    SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
+            if (endpoint.getQuery() != null) {
+              assertThat(attrs).containsEntry(SemanticAttributes.URL_QUERY, endpoint.getQuery());
             }
           }
 
-          AttributeKey<Long> httpRequestLengthKey =
-              getAttributeKey(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH);
-          if (attrs.get(httpRequestLengthKey) != null) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    httpRequestLengthKey, entry -> assertThat(entry).isNotNegative());
-          }
-          AttributeKey<Long> httpResponseLengthKey =
-              getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH);
-          if (attrs.get(httpResponseLengthKey) != null) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    httpResponseLengthKey, entry -> assertThat(entry).isNotNegative());
-          }
           if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
             assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
           }
 
           if (endpoint == CAPTURE_HEADERS) {
-            if (SemconvStability.emitOldHttpSemconv()) {
-              assertThat(attrs)
-                  .containsEntry("http.request.header.x_test_request", new String[] {"test"});
-              assertThat(attrs)
-                  .containsEntry("http.response.header.x_test_response", new String[] {"test"});
-            }
-            if (SemconvStability.emitStableHttpSemconv()) {
-              assertThat(attrs)
-                  .containsEntry("http.request.header.x-test-request", new String[] {"test"});
-              assertThat(attrs)
-                  .containsEntry("http.response.header.x-test-response", new String[] {"test"});
-            }
+            assertThat(attrs)
+                .containsEntry("http.request.header.x-test-request", new String[] {"test"});
+            assertThat(attrs)
+                .containsEntry("http.response.header.x-test-response", new String[] {"test"});
           }
           if (endpoint == CAPTURE_PARAMETERS) {
-            if (SemconvStability.emitOldHttpSemconv()) {
-              assertThat(attrs)
-                  .containsEntry(
-                      "servlet.request.parameter.test_parameter", new String[] {"test value õäöü"});
-            }
-            if (SemconvStability.emitStableHttpSemconv()) {
-              assertThat(attrs)
-                  .containsEntry(
-                      "servlet.request.parameter.test-parameter", new String[] {"test value õäöü"});
-            }
+            assertThat(attrs)
+                .containsEntry(
+                    "servlet.request.parameter.test-parameter", new String[] {"test value õäöü"});
           }
         });
 
     return span;
   }
 
-  protected static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
-    return SemconvStabilityUtil.getAttributeKey(oldKey);
-  }
-
   @CanIgnoreReturnValue
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected SpanDataAssert assertIndexedServerSpan(SpanDataAssert span, int requestId) {
     ServerEndpoint endpoint = INDEXED_CHILD;
     String method = "GET";
-    assertServerSpan(span, method, endpoint, endpoint.status);
-
-    if (SemconvStability.emitOldHttpSemconv()) {
-      span.hasAttributesSatisfying(
-          equalTo(
-              SemanticAttributes.HTTP_TARGET,
-              endpoint.resolvePath(address).getPath() + "?id=" + requestId));
-    }
-    if (SemconvStability.emitStableHttpSemconv()) {
-      span.hasAttributesSatisfying(
-          equalTo(SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath()));
-      span.hasAttributesSatisfying(equalTo(SemanticAttributes.URL_QUERY, "id=" + requestId));
-    }
-
-    return span;
+    return assertServerSpan(span, method, endpoint, endpoint.status)
+        .hasAttributesSatisfying(
+            equalTo(SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath()),
+            equalTo(SemanticAttributes.URL_QUERY, "id=" + requestId));
   }
 
   @CanIgnoreReturnValue

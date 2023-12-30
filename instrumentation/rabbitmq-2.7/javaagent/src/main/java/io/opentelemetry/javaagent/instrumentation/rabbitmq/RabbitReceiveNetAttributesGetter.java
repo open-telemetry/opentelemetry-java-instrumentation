@@ -6,24 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.GetResponse;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesGetter for now
 public class RabbitReceiveNetAttributesGetter
-    implements io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesGetter<
-        ReceiveRequest, GetResponse> {
-
-  @Nullable
-  @Override
-  public String getSockFamily(ReceiveRequest request, @Nullable GetResponse response) {
-    if (request.getConnection().getAddress() instanceof Inet6Address) {
-      return "inet6";
-    }
-    return null;
-  }
+    implements NetworkAttributesGetter<ReceiveRequest, GetResponse> {
 
   @Nullable
   @Override
@@ -34,18 +24,6 @@ public class RabbitReceiveNetAttributesGetter
     } else if (address instanceof Inet6Address) {
       return "ipv6";
     }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getServerAddress(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(ReceiveRequest request) {
     return null;
   }
 

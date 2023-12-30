@@ -7,14 +7,14 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.sql.DataSource;
 

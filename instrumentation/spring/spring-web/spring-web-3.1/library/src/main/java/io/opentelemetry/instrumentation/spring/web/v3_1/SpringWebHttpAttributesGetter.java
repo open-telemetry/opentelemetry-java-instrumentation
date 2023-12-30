@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;

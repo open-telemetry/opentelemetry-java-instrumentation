@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.core.ParameterNameDiscoverer;
 

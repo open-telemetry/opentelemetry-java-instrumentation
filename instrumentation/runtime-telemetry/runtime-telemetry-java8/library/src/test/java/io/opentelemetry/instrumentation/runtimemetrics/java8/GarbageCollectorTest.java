@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -18,7 +19,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.GarbageCollectorMXBean;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -37,6 +37,9 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GarbageCollectorTest {
 
+  static final double[] GC_DURATION_BUCKETS =
+      GarbageCollector.GC_DURATION_BUCKETS.stream().mapToDouble(d -> d).toArray();
+
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
@@ -49,7 +52,7 @@ class GarbageCollectorTest {
   void registerObservers() {
     GarbageCollector.registerObservers(
         testing.getOpenTelemetry(),
-        Collections.singletonList(gcBean),
+        singletonList(gcBean),
         GarbageCollectorTest::getGcNotificationInfo);
 
     NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
@@ -65,13 +68,13 @@ class GarbageCollectorTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.gc.duration",
+        "jvm.gc.duration",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Duration of JVM garbage collection actions")
+                        .hasDescription("Duration of JVM garbage collection actions.")
                         .hasUnit("s")
                         .hasHistogramSatisfying(
                             histogram ->
@@ -82,20 +85,20 @@ class GarbageCollectorTest {
                                             .hasSum(0.022)
                                             .hasAttributes(
                                                 Attributes.builder()
-                                                    .put("gc", "G1 Young Generation")
-                                                    .put("action", "end of minor GC")
+                                                    .put("jvm.gc.name", "G1 Young Generation")
+                                                    .put("jvm.gc.action", "end of minor GC")
                                                     .build())
-                                            .hasBucketBoundaries(),
+                                            .hasBucketBoundaries(GC_DURATION_BUCKETS),
                                     point ->
                                         point
                                             .hasCount(1)
                                             .hasSum(0.011)
                                             .hasAttributes(
                                                 Attributes.builder()
-                                                    .put("gc", "G1 Old Generation")
-                                                    .put("action", "end of major GC")
+                                                    .put("jvm.gc.name", "G1 Old Generation")
+                                                    .put("jvm.gc.action", "end of major GC")
                                                     .build())
-                                            .hasBucketBoundaries()))));
+                                            .hasBucketBoundaries(GC_DURATION_BUCKETS)))));
   }
 
   private static Notification createTestNotification(

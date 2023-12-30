@@ -19,7 +19,7 @@ class RestTemplateBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is not of type RestTemplate should return object")
   void returnsObject() {
-    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(() -> OpenTelemetry.noop());
 
     assertThat(underTest.postProcessAfterInitialization(new Object(), "testObject"))
         .isExactlyInstanceOf(Object.class);
@@ -28,7 +28,7 @@ class RestTemplateBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is of type RestTemplate should return RestTemplate")
   void returnsRestTemplate() {
-    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(() -> OpenTelemetry.noop());
 
     assertThat(underTest.postProcessAfterInitialization(new RestTemplate(), "testRestTemplate"))
         .isInstanceOf(RestTemplate.class);
@@ -37,7 +37,7 @@ class RestTemplateBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is of type RestTemplate should add ONE RestTemplateInterceptor")
   void addsRestTemplateInterceptor() {
-    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(OpenTelemetry.noop());
+    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(() -> OpenTelemetry.noop());
 
     RestTemplate restTemplate = new RestTemplate();
 

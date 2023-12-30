@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientRequestResendCount;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
 import java.io.IOException;
 import java.time.Instant;
 import okhttp3.Interceptor;

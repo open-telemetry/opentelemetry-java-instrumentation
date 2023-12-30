@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.undertow.Undertow
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer
 import test.JaxRsTestApplication
@@ -26,5 +28,18 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
   @Override
   void stopServer(UndertowJaxrsServer server) {
     server.stop()
+  }
+
+  @Override
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return "${getContextPath()}/*"
+    }
+    return super.expectedHttpRoute(endpoint, method)
+  }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    500
   }
 }

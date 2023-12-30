@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.CONTROLLER;
+import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static java.util.Collections.emptyList;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -49,21 +52,19 @@ public final class LoggingEventMapper {
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
 
-  public LoggingEventMapper(
-      boolean captureExperimentalAttributes,
-      List<String> captureMdcAttributes,
-      boolean captureCodeAttributes,
-      boolean captureMarkerAttribute,
-      boolean captureKeyValuePairAttributes,
-      boolean captureLoggerContext) {
-    this.captureExperimentalAttributes = captureExperimentalAttributes;
-    this.captureCodeAttributes = captureCodeAttributes;
-    this.captureMdcAttributes = captureMdcAttributes;
-    this.captureMarkerAttribute = captureMarkerAttribute;
-    this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
-    this.captureLoggerContext = captureLoggerContext;
+  private LoggingEventMapper(Builder builder) {
+    this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
+    this.captureCodeAttributes = builder.captureCodeAttributes;
+    this.captureMdcAttributes = builder.captureMdcAttributes;
+    this.captureMarkerAttribute = builder.captureMarkerAttribute;
+    this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
+    this.captureLoggerContext = builder.captureLoggerContext;
     this.captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+        builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   public void emit(LoggerProvider loggerProvider, ILoggingEvent event, long threadId) {
@@ -295,5 +296,60 @@ public final class LoggingEventMapper {
     }
 
     return true;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class Builder {
+    private boolean captureExperimentalAttributes;
+    private List<String> captureMdcAttributes = emptyList();
+    private boolean captureCodeAttributes;
+    private boolean captureMarkerAttribute;
+    private boolean captureKeyValuePairAttributes;
+    private boolean captureLoggerContext;
+
+    Builder() {}
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
+      this.captureExperimentalAttributes = captureExperimentalAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureMdcAttributes(List<String> captureMdcAttributes) {
+      this.captureMdcAttributes = captureMdcAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureCodeAttributes(boolean captureCodeAttributes) {
+      this.captureCodeAttributes = captureCodeAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureMarkerAttribute(boolean captureMarkerAttribute) {
+      this.captureMarkerAttribute = captureMarkerAttribute;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
+      this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureLoggerContext(boolean captureLoggerContext) {
+      this.captureLoggerContext = captureLoggerContext;
+      return this;
+    }
+
+    public LoggingEventMapper build() {
+      return new LoggingEventMapper(this);
+    }
   }
 }

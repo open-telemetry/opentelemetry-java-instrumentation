@@ -51,8 +51,8 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
             "$SemanticAttributes.DB_NAME" dbInfo.name
             "$SemanticAttributes.DB_USER" dbInfo.user
             "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
-            "$SemanticAttributes.NET_PEER_NAME" dbInfo.host
-            "$SemanticAttributes.NET_PEER_PORT" dbInfo.port
+            "$SemanticAttributes.SERVER_ADDRESS" dbInfo.host
+            "$SemanticAttributes.SERVER_PORT" dbInfo.port
             "$SemanticAttributes.DB_STATEMENT" query
             "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "users"
@@ -107,8 +107,8 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
             "$SemanticAttributes.DB_NAME" dbInfo.name
             "$SemanticAttributes.DB_USER" dbInfo.user
             "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
-            "$SemanticAttributes.NET_PEER_NAME" dbInfo.host
-            "$SemanticAttributes.NET_PEER_PORT" dbInfo.port
+            "$SemanticAttributes.SERVER_ADDRESS" dbInfo.host
+            "$SemanticAttributes.SERVER_PORT" dbInfo.port
             "$SemanticAttributes.DB_STATEMENT" query
             "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "users"
@@ -167,8 +167,8 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
             "$SemanticAttributes.DB_NAME" dbInfo.name
             "$SemanticAttributes.DB_USER" dbInfo.user
             "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
-            "$SemanticAttributes.NET_PEER_NAME" dbInfo.host
-            "$SemanticAttributes.NET_PEER_PORT" dbInfo.port
+            "$SemanticAttributes.SERVER_ADDRESS" dbInfo.host
+            "$SemanticAttributes.SERVER_PORT" dbInfo.port
             "$SemanticAttributes.DB_STATEMENT" query
             "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "users"

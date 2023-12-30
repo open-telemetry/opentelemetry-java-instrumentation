@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.HttpSchemeUtil.getScheme;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.ChannelUtil;
 import java.net.InetSocketAddress;
@@ -18,7 +16,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.jboss.netty.channel.socket.DatagramChannel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 
@@ -66,12 +63,6 @@ final class NettyHttpClientAttributesGetter
   public List<String> getHttpResponseHeader(
       HttpRequestAndChannel requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
-  }
-
-  @Override
-  public String getTransport(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
-    return requestAndChannel.channel() instanceof DatagramChannel ? IP_UDP : IP_TCP;
   }
 
   @Override

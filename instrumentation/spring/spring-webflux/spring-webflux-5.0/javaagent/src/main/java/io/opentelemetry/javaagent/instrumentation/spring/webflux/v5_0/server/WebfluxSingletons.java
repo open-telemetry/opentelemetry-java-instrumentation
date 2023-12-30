@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.SpringWebfluxConfig;
 import org.springframework.web.reactive.HandlerMapping;

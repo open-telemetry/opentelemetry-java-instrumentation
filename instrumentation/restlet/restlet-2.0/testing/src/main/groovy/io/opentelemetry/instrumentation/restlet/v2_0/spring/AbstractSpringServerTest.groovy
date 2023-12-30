@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.restlet.v2_0.spring
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.restlet.v2_0.AbstractRestletServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.restlet.Component
 import org.restlet.Server
 import org.restlet.routing.Router
@@ -31,4 +33,16 @@ abstract class AbstractSpringServerTest extends AbstractRestletServerTest {
     host.attach(router)
   }
 
+  @Override
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return getContextPath() + endpoint.path
+    }
+    return super.expectedHttpRoute(endpoint, method)
+  }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    405
+  }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;

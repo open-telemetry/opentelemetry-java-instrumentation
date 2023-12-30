@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.ApacheHttpClientRequest.headersToList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;

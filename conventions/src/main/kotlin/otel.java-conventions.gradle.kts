@@ -122,7 +122,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.100.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.104.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -140,7 +140,7 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:3.3.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.19"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.20"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -407,7 +407,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.12.5"
+  toolVersion = "10.12.6"
   maxWarnings = 0
 }
 
@@ -415,6 +415,7 @@ dependencyCheck {
   skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"
   failBuildOnCVSS = 7.0f // fail on high or critical CVE
+  nvd.apiKey = System.getenv("NVD_API_KEY")
 }
 
 idea {
@@ -442,7 +443,7 @@ configurations.configureEach {
     // what modules they add to reference generically.
     dependencySubstitution {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")).using(project(":instrumentation-api-incubator"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")).using(project(":instrumentation-annotations"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(
         project(":instrumentation-annotations-support")

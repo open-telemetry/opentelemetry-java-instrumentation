@@ -61,9 +61,17 @@ class JaegerSpanExporterAutoConfigurationTest {
 
   @Test
   @DisplayName("when exporters are DISABLED should NOT initialize JaegerGrpcSpanExporter bean")
-  void disabledProperty() {
+  void disabledPropertyOld() {
     this.contextRunner
         .withPropertyValues("otel.exporter.jaeger.enabled=false")
+        .run(context -> assertThat(context.containsBean("otelJaegerSpanExporter")).isFalse());
+  }
+
+  @Test
+  @DisplayName("when exporters are DISABLED should NOT initialize JaegerGrpcSpanExporter bean")
+  void disabledProperty() {
+    this.contextRunner
+        .withPropertyValues("otel.traces.exporter=none")
         .run(context -> assertThat(context.containsBean("otelJaegerSpanExporter")).isFalse());
   }
 

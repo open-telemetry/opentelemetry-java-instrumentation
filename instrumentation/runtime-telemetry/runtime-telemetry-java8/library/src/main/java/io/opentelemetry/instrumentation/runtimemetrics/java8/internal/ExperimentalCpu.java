@@ -5,11 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
@@ -41,9 +38,6 @@ public final class ExperimentalCpu {
       OperatingSystemMXBean osBean,
       @Nullable Supplier<Double> systemCpuUtilization) {
 
-    if (!SemconvStability.emitStableJvmSemconv()) {
-      return emptyList();
-    }
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
     List<AutoCloseable> observables = new ArrayList<>();
     observables.add(

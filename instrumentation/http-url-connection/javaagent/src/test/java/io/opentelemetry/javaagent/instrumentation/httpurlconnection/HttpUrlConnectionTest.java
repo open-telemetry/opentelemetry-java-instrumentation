@@ -10,13 +10,11 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.StreamUtils.readLines;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -37,7 +35,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -92,7 +89,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void traceRequest(boolean useCache) throws IOException {
     URL url = resolveAddress("/success").toURL();
 
@@ -124,18 +120,12 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
-    if (SemconvStability.emitOldHttpSemconv()) {
-      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
-      attributes.add(
-          satisfies(
-              SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
-    }
+                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(SemanticAttributes.URL_FULL, url.toString()),
+                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -159,7 +149,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void testBrokenApiUsage() throws IOException {
     URL url = resolveAddress("/success").toURL();
     HttpURLConnection connection =
@@ -176,18 +165,12 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
-    if (SemconvStability.emitOldHttpSemconv()) {
-      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
-      attributes.add(
-          satisfies(
-              SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
-    }
+                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(SemanticAttributes.URL_FULL, url.toString()),
+                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -205,7 +188,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void testPostRequest() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
@@ -234,21 +216,12 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "POST"),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
-    if (SemconvStability.emitOldHttpSemconv()) {
-      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
-      attributes.add(
-          satisfies(
-              SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
-      attributes.add(
-          satisfies(
-              SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
-    }
+                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(SemanticAttributes.URL_FULL, url.toString()),
+                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -264,7 +237,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void getOutputStreamShouldTransformGetIntoPost() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
@@ -297,21 +269,12 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), url.getPort()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), url.toString()),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "POST"),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), STATUS)));
-    if (SemconvStability.emitOldHttpSemconv()) {
-      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
-      attributes.add(
-          satisfies(
-              SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
-      attributes.add(
-          satisfies(
-              SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH, AbstractLongAssert::isNotNegative));
-    }
+                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(SemanticAttributes.URL_FULL, url.toString()),
+                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -328,7 +291,6 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(strings = {"http", "https"})
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void traceRequestWithConnectionFailure(String scheme) {
     String uri = scheme + "://localhost:" + PortUtils.UNUSABLE_PORT;
 
@@ -349,17 +311,12 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(getAttributeKey(SemanticAttributes.NET_PROTOCOL_VERSION), "1.1"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
-                equalTo(getAttributeKey(SemanticAttributes.NET_PEER_PORT), PortUtils.UNUSABLE_PORT),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri),
-                equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET")));
-    if (SemconvStability.emitOldHttpSemconv()) {
-      attributes.add(equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"));
-    }
-    if (SemconvStability.emitStableHttpSemconv()) {
-      attributes.add(equalTo(HttpAttributes.ERROR_TYPE, "java.net.ConnectException"));
-    }
+                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
+                equalTo(SemanticAttributes.URL_FULL, uri),
+                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                equalTo(HttpAttributes.ERROR_TYPE, "java.net.ConnectException")));
 
     testing.waitAndAssertTraces(
         trace ->

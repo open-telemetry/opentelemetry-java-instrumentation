@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations;
 
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,7 +23,7 @@ class ExpandFramesClassVisitor extends ClassVisitor {
   private String className;
 
   ExpandFramesClassVisitor(ClassVisitor classVisitor) {
-    super(Opcodes.ASM9, classVisitor);
+    super(AsmApi.VERSION, classVisitor);
   }
 
   @Override
@@ -50,7 +51,7 @@ class ExpandFramesClassVisitor extends ClassVisitor {
 
     ExpandFramesMethodVisitor(
         MethodVisitor mv, String className, String methodName, int access, String descriptor) {
-      super(Opcodes.ASM9, mv);
+      super(AsmApi.VERSION, mv);
       if ("<init>".equals(methodName)) {
         currentLocals.add(Opcodes.UNINITIALIZED_THIS);
       } else if (!Modifier.isStatic(access)) {

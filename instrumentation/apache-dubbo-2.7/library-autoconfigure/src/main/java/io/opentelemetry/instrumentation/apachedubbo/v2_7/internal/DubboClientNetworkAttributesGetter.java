@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
@@ -17,8 +17,7 @@ import org.apache.dubbo.rpc.Result;
  * any time.
  */
 public final class DubboClientNetworkAttributesGetter
-    implements ServerAttributesGetter<DubboRequest, Result>,
-        NetworkAttributesGetter<DubboRequest, Result> {
+    implements ServerAttributesGetter<DubboRequest>, NetworkAttributesGetter<DubboRequest, Result> {
 
   @Nullable
   @Override

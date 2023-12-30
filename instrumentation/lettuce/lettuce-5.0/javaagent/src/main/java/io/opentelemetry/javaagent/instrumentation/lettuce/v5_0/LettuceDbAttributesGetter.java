@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.semconv.SemanticAttributes;

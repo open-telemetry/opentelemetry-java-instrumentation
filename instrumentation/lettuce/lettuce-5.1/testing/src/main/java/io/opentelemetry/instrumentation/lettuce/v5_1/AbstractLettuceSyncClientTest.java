@@ -19,6 +19,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Base64;
@@ -27,12 +28,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClientTest {
 
   private static String dbUriNonExistent;
   private static String embeddedDbLocalhostUri;
-  private static String expectedHostAttributeValue;
 
   private static final ImmutableMap<String, String> testHashMap =
       ImmutableMap.of(
@@ -50,7 +49,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
     embeddedDbLocalhostUri = "redis://localhost:" + port + "/" + DB_INDEX;
-    expectedHostAttributeValue = "127.0.0.1".equals(host) ? null : host;
 
     int incorrectPort = PortUtils.findOpenPort();
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
@@ -112,11 +110,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("SET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
                             .hasEventsSatisfyingExactly(
@@ -144,11 +140,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("SET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
                             .hasEventsSatisfyingExactly(
@@ -169,11 +163,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET TESTKEY"))
                             .hasEventsSatisfyingExactly(
@@ -194,11 +186,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"))
                             .hasEventsSatisfyingExactly(
@@ -219,11 +209,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("RANDOMKEY")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"))
                             .hasEventsSatisfyingExactly(
@@ -248,13 +236,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("LPUSH")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    containerConnection.port),
+                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "LPUSH TESTLIST ?"))
                             .hasEventsSatisfyingExactly(
@@ -275,11 +260,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("HMSET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
                                     SemanticAttributes.DB_STATEMENT,
@@ -302,11 +285,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("HGETALL")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "HGETALL TESTHM"))
                             .hasEventsSatisfyingExactly(
@@ -334,11 +315,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("EVAL")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
                                     SemanticAttributes.DB_STATEMENT,
@@ -362,11 +341,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("MSET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "MSET key1 ? key2 ?"))
                             .hasEventsSatisfyingExactly(
@@ -391,13 +368,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("DEBUG")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    containerConnection.port),
+                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "DEBUG SEGFAULT")));
               } else {
@@ -406,13 +380,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                         span.hasName("DEBUG")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    containerConnection.port),
+                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "DEBUG SEGFAULT"))
                             // these are no longer recorded since Lettuce 6.1.6
@@ -442,13 +413,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             // Seems to only be treated as an error with Lettuce 6+
                             .hasException(new RedisException("Connection disconnected"))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    containerConnection.port),
+                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE")));
               } else {
@@ -458,13 +426,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(AttributeKey.stringKey("error"), "Connection disconnected"),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_NAME,
-                                    expectedHostAttributeValue),
-                                equalTo(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    containerConnection.port),
+                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE"))
                             .hasEventsSatisfyingExactly(

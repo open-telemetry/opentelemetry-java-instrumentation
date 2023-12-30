@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
 import com.opensymphony.xwork2.ActionProxy;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 public class StrutsServerSpanNaming {
