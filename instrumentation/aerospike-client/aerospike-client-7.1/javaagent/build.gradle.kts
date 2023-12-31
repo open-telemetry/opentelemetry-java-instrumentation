@@ -1,5 +1,7 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.library-instrumentation")
+  id("otel.animalsniffer-conventions")
 }
 
 muzzle {
@@ -12,12 +14,11 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:aerospike-client:aerospike-client-7.1:library"))
   library("com.aerospike:aerospike-client:7.1.0")
+  implementation("io.opentelemetry:opentelemetry-extension-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-  testImplementation(project(":instrumentation:aerospike-client:aerospike-client-7.1:library"))
 }
 
 tasks {

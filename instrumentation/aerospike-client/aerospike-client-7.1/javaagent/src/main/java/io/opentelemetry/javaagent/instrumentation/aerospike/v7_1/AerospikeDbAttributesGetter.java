@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1;
 
-import io.opentelemetry.instrumentation.aerospike.v7_1.AerospikeSemanticAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import javax.annotation.Nullable;
 
-final class DbAttributesGetter implements DbClientAttributesGetter<AerospikeRequest> {
+final class AerospikeDbAttributesGetter implements DbClientAttributesGetter<AerospikeRequest> {
 
   @Override
   public String getSystem(AerospikeRequest request) {

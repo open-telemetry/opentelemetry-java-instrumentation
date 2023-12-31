@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.aerospike.v7_1;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1.metrics;
 
-import static io.opentelemetry.instrumentation.aerospike.v7_1.AerospikeMessageSizeUtil.getMessageSize;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_1.metrics.AerospikeMessageSizeUtil.getMessageSize;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -33,11 +33,13 @@ public final class AerospikeMetrics implements OperationListener {
   private static final Logger logger = Logger.getLogger(AerospikeMetrics.class.getName());
 
   private final LongCounter requestCounter;
+
   private final LongCounter responseCounter;
+
   private final LongUpDownCounter concurrencyUpDownCounter;
+
   private final DoubleHistogram clientLatencyHistogram;
 
-  @SuppressWarnings("unused")
   private final DoubleHistogram recordSizeHistogram;
 
   private AerospikeMetrics(Meter meter) {
@@ -45,16 +47,19 @@ public final class AerospikeMetrics implements OperationListener {
         meter.counterBuilder("aerospike.requests").setDescription("Aerospike Calls");
     AerospikeMetricsAdvice.applyRequestCounterAdvice(requestCounterBuilder);
     requestCounter = requestCounterBuilder.build();
+
     LongCounterBuilder responseCounterBuilder =
         meter.counterBuilder("aerospike.response").setDescription("Aerospike Responses");
     AerospikeMetricsAdvice.applyResponseCounterAdvice(responseCounterBuilder);
     responseCounter = responseCounterBuilder.build();
+
     LongUpDownCounterBuilder concurrencyUpDownCounterBuilder =
         meter
-            .upDownCounterBuilder("aerospike.concurrreny")
+            .upDownCounterBuilder("aerospike.concurrency")
             .setDescription("Aerospike Concurrent Requests");
     AerospikeMetricsAdvice.applyConcurrencyUpDownCounterAdvice(concurrencyUpDownCounterBuilder);
     concurrencyUpDownCounter = concurrencyUpDownCounterBuilder.build();
+
     DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("aerospike.client.duration")
@@ -62,6 +67,7 @@ public final class AerospikeMetrics implements OperationListener {
             .setUnit("ms");
     AerospikeMetricsAdvice.applyClientDurationAdvice(durationBuilder);
     clientLatencyHistogram = durationBuilder.build();
+
     DoubleHistogramBuilder recordSizeHistogramBuilder =
         meter
             .histogramBuilder("aerospike.record.size")

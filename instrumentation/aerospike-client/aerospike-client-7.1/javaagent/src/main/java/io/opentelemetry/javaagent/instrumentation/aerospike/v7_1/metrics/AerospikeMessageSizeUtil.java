@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.aerospike.v7_1;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_1.metrics;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_1.AerospikeSemanticAttributes;
 import javax.annotation.Nullable;
 
 final class AerospikeMessageSizeUtil {

@@ -139,7 +139,6 @@ include(":smoke-tests:images:spring-boot")
 include(":smoke-tests-otel-starter")
 
 include(":instrumentation:aerospike-client:aerospike-client-7.1:javaagent")
-include(":instrumentation:aerospike-client:aerospike-client-7.1:library")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
