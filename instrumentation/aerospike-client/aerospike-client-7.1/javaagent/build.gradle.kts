@@ -1,7 +1,5 @@
 plugins {
   id("otel.javaagent-instrumentation")
-  id("otel.library-instrumentation")
-  id("otel.animalsniffer-conventions")
 }
 
 muzzle {
