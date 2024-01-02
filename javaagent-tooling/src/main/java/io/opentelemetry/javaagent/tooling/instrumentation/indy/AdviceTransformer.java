@@ -345,7 +345,6 @@ class AdviceTransformer {
    * }
    * }</pre>
    */
-  @SuppressWarnings("UnusedVariable")
   private static MethodVisitor instrumentWritableReturn(
       MethodVisitor target, MethodNode source, OutputArgument writableReturn, int returnIndex) {
     MethodVisitor result =
