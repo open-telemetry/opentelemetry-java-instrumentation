@@ -65,7 +65,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
-  private final Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
@@ -77,7 +77,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return consumerReceiveInstrumenter;
   }
 
-  Instrumenter<SqsProcessRequest, Void> getConsumerProcessInstrumenter() {
+  Instrumenter<SqsProcessRequest, Response> getConsumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
   }
 
@@ -98,7 +98,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
   TracingExecutionInterceptor(
       Instrumenter<ExecutionAttributes, Response> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter,
-      Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,

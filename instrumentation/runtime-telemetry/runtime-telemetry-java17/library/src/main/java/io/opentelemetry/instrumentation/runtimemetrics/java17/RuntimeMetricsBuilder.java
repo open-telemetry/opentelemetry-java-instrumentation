@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.BufferPools;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
@@ -106,7 +105,6 @@ public final class RuntimeMetricsBuilder {
     try {
       // Set up metrics gathered by JMX
       List<AutoCloseable> observables = new ArrayList<>();
-      observables.addAll(BufferPools.registerObservers(openTelemetry));
       observables.addAll(Classes.registerObservers(openTelemetry));
       observables.addAll(Cpu.registerObservers(openTelemetry));
       observables.addAll(GarbageCollector.registerObservers(openTelemetry));

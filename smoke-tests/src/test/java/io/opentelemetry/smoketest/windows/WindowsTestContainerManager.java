@@ -341,6 +341,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   // https://github.com/google/error-prone/issues/3090
   @SuppressWarnings("MethodCanBeStatic")
   private interface Waiter {
+    // errorprone 2.24.0 flags logHandler as unused
+    @SuppressWarnings("UnusedVariable")
     default void configureLogger(ContainerLogHandler logHandler) {}
 
     void waitFor(Container container);

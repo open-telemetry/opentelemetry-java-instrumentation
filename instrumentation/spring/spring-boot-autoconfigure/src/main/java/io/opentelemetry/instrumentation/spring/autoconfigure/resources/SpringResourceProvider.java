@@ -11,30 +11,32 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
-import java.util.Map;
 
 public class SpringResourceProvider implements ResourceProvider {
 
+  private final OtelSpringResourceProperties otelSpringResourceProperties;
   private final OtelResourceProperties otelResourceProperties;
 
-  public SpringResourceProvider(OtelResourceProperties otelResourceProperties) {
+  public SpringResourceProvider(
+      OtelSpringResourceProperties otelSpringResourceProperties,
+      OtelResourceProperties otelResourceProperties) {
+    this.otelSpringResourceProperties = otelSpringResourceProperties;
     this.otelResourceProperties = otelResourceProperties;
   }
 
   @Override
   public Resource createResource(ConfigProperties configProperties) {
-    String applicationName = configProperties.getString("spring.application.name");
-    Map<String, String> attributes = otelResourceProperties.getAttributes();
     AttributesBuilder attributesBuilder = Attributes.builder();
-    attributes.forEach(attributesBuilder::put);
-    return defaultResource(applicationName).merge(Resource.create(attributesBuilder.build()));
-  }
-
-  private static Resource defaultResource(String applicationName) {
-    if (applicationName == null) {
-      return Resource.getDefault();
+    String springApplicationName = configProperties.getString("spring.application.name");
+    if (springApplicationName != null) {
+      attributesBuilder.put(ResourceAttributes.SERVICE_NAME, springApplicationName);
     }
-    return Resource.getDefault()
-        .merge(Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, applicationName)));
+    otelSpringResourceProperties.getAttributes().forEach(attributesBuilder::put);
+    otelResourceProperties.getAttributes().forEach(attributesBuilder::put);
+    String applicationName = configProperties.getString("otel.service.name");
+    if (applicationName != null) {
+      attributesBuilder.put(ResourceAttributes.SERVICE_NAME, applicationName);
+    }
+    return Resource.create(attributesBuilder.build());
   }
 }

@@ -88,12 +88,4 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }

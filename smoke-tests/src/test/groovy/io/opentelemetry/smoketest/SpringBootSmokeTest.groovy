@@ -31,7 +31,7 @@ class SpringBootSmokeTest extends SmokeTest {
 
   @Override
   protected Map<String, String> getExtraEnv() {
-    return Collections.singletonMap("OTEL_METRICS_EXPORTER", "otlp")
+    return ["OTEL_METRICS_EXPORTER": "otlp", "OTEL_RESOURCE_ATTRIBUTES": "foo=bar"]
   }
 
   @Override
@@ -59,7 +59,7 @@ class SpringBootSmokeTest extends SmokeTest {
       .allMatch { it.attributesList.stream().map { it.key }.collect(toSet()).containsAll(["thread.id", "thread.name"]) }
 
     then: "correct agent version is captured in the resource"
-    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
+    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.distro.version")
       .map { it.stringValue }
       .collect(toSet())
 
@@ -81,10 +81,17 @@ class SpringBootSmokeTest extends SmokeTest {
 
     then: "JVM metrics are exported"
     def metrics = new MetricsInspector(waitForMetrics())
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.init")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.usage")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.committed")
-    metrics.hasMetricsNamed("process.runtime.jvm.memory.limit")
+    metrics.hasMetricsNamed("jvm.memory.used")
+    metrics.hasMetricsNamed("jvm.memory.committed")
+    metrics.hasMetricsNamed("jvm.memory.limit")
+    metrics.hasMetricsNamed("jvm.memory.used_after_last_gc")
+
+    then: "resource attributes are read from the environment"
+    def foo = findResourceAttribute(traces, "foo")
+      .map { it.stringValue }
+      .findAny()
+    foo.isPresent()
+    foo.get() == "bar"
 
     then: "service name is autodetected"
     def serviceName = findResourceAttribute(traces, "service.name")

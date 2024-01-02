@@ -20,13 +20,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}

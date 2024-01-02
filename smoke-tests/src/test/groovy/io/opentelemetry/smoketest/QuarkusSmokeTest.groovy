@@ -42,7 +42,7 @@ class QuarkusSmokeTest extends SmokeTest {
     then:
     countSpansByName(traces, 'GET /hello') == 1
 
-    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
+      [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.distro.version")
       .map { it.stringValue }
       .collect(toSet())
 

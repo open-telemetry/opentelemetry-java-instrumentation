@@ -13,7 +13,7 @@ muzzle {
     // which (also obviously) does not exist
     skip("3.1.15", "3.3.6")
     // these versions pass if you add the grails maven repository (https://repo.grails.org/artifactory/core)
-    skip("3.2.0", "3.3.0", "3.3.1", "3.3.2", "3.3.3", "3.3.10", "3.3.13", "3.3.14", "3.3.15", "3.3.16", "4.0.0", "4.0.1", "4.0.5", "4.0.6", "4.0.7", "4.0.8", "4.0.9", "4.0.10", "4.0.11", "4.0.12", "4.0.13")
+    skip("3.2.0", "3.3.0", "3.3.1", "3.3.2", "3.3.3", "3.3.10", "3.3.13", "3.3.14", "3.3.15", "3.3.16", "3.3.17", "4.0.0", "4.0.1", "4.0.5", "4.0.6", "4.0.7", "4.0.8", "4.0.9", "4.0.10", "4.0.11", "4.0.12", "4.0.13")
     assertInverse.set(true)
   }
 }
@@ -68,10 +68,6 @@ configurations.testRuntimeClasspath {
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", latestDepTest)
 
@@ -79,9 +75,5 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }

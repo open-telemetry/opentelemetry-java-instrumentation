@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux;
 
 import io.opentelemetry.api.OpenTelemetry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,8 +25,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {
 
+  public SpringWebfluxInstrumentationAutoConfiguration() {}
+
   @Bean
-  WebClientBeanPostProcessor otelWebClientBeanPostProcessor(OpenTelemetry openTelemetry) {
-    return new WebClientBeanPostProcessor(openTelemetry);
+  static WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    return new WebClientBeanPostProcessor(openTelemetryProvider);
   }
 }

@@ -102,6 +102,7 @@ final class SqsImpl {
             response.messages(),
             config.getConsumerProcessInstrumenter(),
             copy,
+            new Response(context.httpResponse(), response),
             config,
             receiveContext);
 
