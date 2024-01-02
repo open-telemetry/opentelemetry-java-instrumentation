@@ -16,9 +16,7 @@ public class OtlpProtocolPropertiesSupplier implements AutoConfigurationCustomiz
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
     autoConfigurationCustomizer.addPropertiesSupplier(
-        () -> {
-          return Collections.singletonMap("otel.exporter.otlp.protocol", "http/protobuf");
-        });
+        () -> Collections.singletonMap("otel.exporter.otlp.protocol", "http/protobuf"));
   }
 
   @Override
