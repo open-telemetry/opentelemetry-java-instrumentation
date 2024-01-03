@@ -68,8 +68,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private final ClassLoader agentOrExtensionCl;
   private volatile MethodHandles.Lookup cachedLookup;
 
-  @Nullable
-  private final ClassLoader instrumentedCl;
+  @Nullable private final ClassLoader instrumentedCl;
 
   /**
    * Only class names matching this matcher will be attempted to be loaded from the {@link
@@ -225,7 +224,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   private static Class<?> tryLoad(@Nullable ClassLoader cl, String name) {
     try {
-      if(cl == null) {
+      if (cl == null) {
         return BOOT_LOADER.loadClass(name);
       } else {
         return cl.loadClass(name);
@@ -252,7 +251,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       return fromAgentCl;
     }
 
-    if(instrumentedCl != null) {
+    if (instrumentedCl != null) {
       return instrumentedCl.getResource(resourceName);
     } else {
       return BOOT_LOADER.getResource(resourceName);
