@@ -56,6 +56,8 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
+  private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
+
   private static final Map<String, BytecodeWithUrl> ALWAYS_INJECTED_CLASSES =
       Collections.singletonMap(
           LookupExposer.class.getName(), BytecodeWithUrl.create(LookupExposer.class).cached());
@@ -66,6 +68,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private final ClassLoader agentOrExtensionCl;
   private volatile MethodHandles.Lookup cachedLookup;
 
+  @Nullable
   private final ClassLoader instrumentedCl;
 
   /**
@@ -86,7 +89,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   InstrumentationModuleClassLoader(
-      ClassLoader instrumentedCl,
+      @Nullable ClassLoader instrumentedCl,
       ClassLoader agentOrExtensionCl,
       ElementMatcher<String> classesToLoadFromAgentOrExtensionCl) {
     // agent/extension-classloader is "main"-parent, but class lookup is overridden
@@ -220,9 +223,13 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     return agentClassNamesMatcher.matches(dotClassName);
   }
 
-  private static Class<?> tryLoad(ClassLoader cl, String name) {
+  private static Class<?> tryLoad(@Nullable ClassLoader cl, String name) {
     try {
-      return cl.loadClass(name);
+      if(cl == null) {
+        return BOOT_LOADER.loadClass(name);
+      } else {
+        return cl.loadClass(name);
+      }
     } catch (ClassNotFoundException e) {
       return null;
     }
@@ -244,7 +251,12 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     if (fromAgentCl != null) {
       return fromAgentCl;
     }
-    return instrumentedCl.getResource(resourceName);
+
+    if(instrumentedCl != null) {
+      return instrumentedCl.getResource(resourceName);
+    } else {
+      return BOOT_LOADER.getResource(resourceName);
+    }
   }
 
   @Override
