@@ -147,8 +147,7 @@ public final class InstrumentationModuleInstaller {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
-              .transform(new PatchByteCodeVersionTransformer())
-              .transform(helperInjector);
+              .transform(new PatchByteCodeVersionTransformer());
 
       // TODO (Jonas): we are not calling
       // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
@@ -158,6 +157,7 @@ public final class InstrumentationModuleInstaller {
       extendableAgentBuilder =
           IndyModuleRegistry.initializeModuleLoaderOnMatch(
               instrumentationModule, extendableAgentBuilder);
+      extendableAgentBuilder = extendableAgentBuilder.transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       IndyTypeTransformerImpl typeTransformer =
           new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
