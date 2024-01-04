@@ -68,7 +68,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "val1"), equalTo(stringKey("key2"), "val2"));
+            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(stringKey("log4j.map_message.key2"), "val2"));
   }
 
   @Test
@@ -93,6 +94,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasBody("a message")
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "val1"), equalTo(stringKey("key2"), "val2"));
+            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(stringKey("log4j.map_message.key2"), "val2"));
   }
 }

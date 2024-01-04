@@ -163,8 +163,8 @@ class Log4j2Test {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("key1"), "val1"),
-            equalTo(AttributeKey.stringKey("key2"), "val2"),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
             equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
   }
@@ -183,7 +183,7 @@ class Log4j2Test {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("key1"), "val1"),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
             equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
   }
@@ -202,8 +202,8 @@ class Log4j2Test {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("key1"), "val1"),
-            equalTo(AttributeKey.stringKey("key2"), "val2"),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
             equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
   }

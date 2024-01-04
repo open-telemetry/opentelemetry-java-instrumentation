@@ -180,7 +180,8 @@ public final class LogEventMapper<T> {
   }
 
   public static AttributeKey<String> getMapMessageAttributeKey(String key) {
-    return mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
+    return mapMessageAttributeKeyCache.computeIfAbsent(
+        key, k -> AttributeKey.stringKey("log4j.map_message." + k));
   }
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {

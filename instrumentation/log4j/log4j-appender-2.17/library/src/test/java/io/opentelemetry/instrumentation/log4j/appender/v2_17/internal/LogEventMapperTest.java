@@ -122,7 +122,7 @@ class LogEventMapperTest {
 
     // then
     verify(logRecordBuilder).setBody("value2");
-    assertThat(attributes.build()).containsOnly(attributeEntry("key1", "value1"));
+    assertThat(attributes.build()).containsOnly(attributeEntry("log4j.map_message.key1", "value1"));
   }
 
   @Test
@@ -145,7 +145,9 @@ class LogEventMapperTest {
     // then
     verify(logRecordBuilder, never()).setBody(anyString());
     assertThat(attributes.build())
-        .containsOnly(attributeEntry("key1", "value1"), attributeEntry("key2", "value2"));
+        .containsOnly(
+            attributeEntry("log4j.map_message.key1", "value1"),
+            attributeEntry("log4j.map_message.key2", "value2"));
   }
 
   @Test
@@ -168,7 +170,9 @@ class LogEventMapperTest {
     // then
     verify(logRecordBuilder).setBody("a message");
     assertThat(attributes.build())
-        .containsOnly(attributeEntry("key1", "value1"), attributeEntry("message", "value2"));
+        .containsOnly(
+            attributeEntry("log4j.map_message.key1", "value1"),
+            attributeEntry("log4j.map_message.message", "value2"));
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
