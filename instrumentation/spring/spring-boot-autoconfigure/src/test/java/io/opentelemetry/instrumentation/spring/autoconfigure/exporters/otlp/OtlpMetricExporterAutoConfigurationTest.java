@@ -27,8 +27,7 @@ class OtlpMetricExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.otlp.enabled=true")
         .run(
             context ->
-                assertThat(
-                        context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+                assertThat(context.getBean("otelOtlpMetricExporter", OtlpGrpcMetricExporter.class))
                     .isNotNull());
   }
 
@@ -38,8 +37,7 @@ class OtlpMetricExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.otlp.metrics.enabled=true")
         .run(
             context ->
-                assertThat(
-                        context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+                assertThat(context.getBean("otelOtlpMetricExporter", OtlpGrpcMetricExporter.class))
                     .isNotNull());
   }
 
@@ -47,21 +45,28 @@ class OtlpMetricExporterAutoConfigurationTest {
   void otlpDisabled() {
     runner
         .withPropertyValues("otel.exporter.otlp.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelOtlpGrpcMetricExporter")).isFalse());
+        .run(context -> assertThat(context.containsBean("otelOtlpMetricExporter")).isFalse());
+  }
+
+  @Test
+  void otlpMetricsDisabledOld() {
+    runner
+        .withPropertyValues("otel.exporter.otlp.metrics.enabled=false")
+        .run(context -> assertThat(context.containsBean("otelOtlpMetricExporter")).isFalse());
   }
 
   @Test
   void otlpMetricsDisabled() {
     runner
-        .withPropertyValues("otel.exporter.otlp.metrics.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelOtlpGrpcMetricExporter")).isFalse());
+        .withPropertyValues("otel.metrics.exporter=none")
+        .run(context -> assertThat(context.containsBean("otelOtlpMetricExporter")).isFalse());
   }
 
   @Test
   void exporterPresentByDefault() {
     runner.run(
         context ->
-            assertThat(context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+            assertThat(context.getBean("otelOtlpMetricExporter", OtlpGrpcMetricExporter.class))
                 .isNotNull());
   }
 }

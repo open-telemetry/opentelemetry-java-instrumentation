@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2023-12-08 20:56:42 UTC_
+_2023-12-30 16:59:34 EET_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -9,40 +9,40 @@ _2023-12-08 20:56:42 UTC_
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.16.0`
+**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.16.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-annotations-2.16.0.jar/META-INF/LICENSE](jackson-annotations-2.16.0.jar/META-INF/LICENSE)
-    - [jackson-annotations-2.16.0.jar/META-INF/NOTICE](jackson-annotations-2.16.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-annotations-2.16.1.jar/META-INF/LICENSE](jackson-annotations-2.16.1.jar/META-INF/LICENSE)
+    - [jackson-annotations-2.16.1.jar/META-INF/NOTICE](jackson-annotations-2.16.1.jar/META-INF/NOTICE)
 
-**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.16.0`
+**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.16.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.16.0.jar/META-INF/LICENSE](jackson-core-2.16.0.jar/META-INF/LICENSE)
-    - [jackson-core-2.16.0.jar/META-INF/NOTICE](jackson-core-2.16.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.16.1.jar/META-INF/LICENSE](jackson-core-2.16.1.jar/META-INF/LICENSE)
+    - [jackson-core-2.16.1.jar/META-INF/NOTICE](jackson-core-2.16.1.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.16.0`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.16.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.16.0.jar/META-INF/LICENSE](jackson-databind-2.16.0.jar/META-INF/LICENSE)
-    - [jackson-databind-2.16.0.jar/META-INF/NOTICE](jackson-databind-2.16.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.16.1.jar/META-INF/LICENSE](jackson-databind-2.16.1.jar/META-INF/LICENSE)
+    - [jackson-databind-2.16.1.jar/META-INF/NOTICE](jackson-databind-2.16.1.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.16.0`
+**5** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.16.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-dataformats-text](https://github.com/FasterXML/jackson-dataformats-text)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-dataformat-yaml-2.16.0.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.16.0.jar/META-INF/LICENSE)
-    - [jackson-dataformat-yaml-2.16.0.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.16.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-dataformat-yaml-2.16.1.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.16.1.jar/META-INF/LICENSE)
+    - [jackson-dataformat-yaml-2.16.1.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.16.1.jar/META-INF/NOTICE)
 
-**6** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.16.0`
+**6** **Group:** `com.fasterxml.jackson.jr` **Name:** `jackson-jr-objects` **Version:** `2.16.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-jr](https://github.com/FasterXML/jackson-jr)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-jr-objects-2.16.0.jar/META-INF/LICENSE](jackson-jr-objects-2.16.0.jar/META-INF/LICENSE)
-    - [jackson-jr-objects-2.16.0.jar/META-INF/NOTICE](jackson-jr-objects-2.16.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-jr-objects-2.16.1.jar/META-INF/LICENSE](jackson-jr-objects-2.16.1.jar/META-INF/LICENSE)
+    - [jackson-jr-objects-2.16.1.jar/META-INF/NOTICE](jackson-jr-objects-2.16.1.jar/META-INF/NOTICE)
 
 **7** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
@@ -54,7 +54,7 @@ _2023-12-08 20:56:42 UTC_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [okhttp-4.12.0.jar/okhttp3/internal/publicsuffix/NOTICE](okhttp-4.12.0.jar/okhttp3/internal/publicsuffix/NOTICE)
 
-**9** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.6.0`
+**9** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.7.0`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -180,10 +180,10 @@ _2023-12-08 20:56:42 UTC_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.23.2.jar/META-INF/LICENSE](zipkin-2.23.2.jar/META-INF/LICENSE)
 
-**39** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.10`
+**39** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.14.11`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.14.10.jar/META-INF/LICENSE](byte-buddy-dep-1.14.10.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.14.10.jar/META-INF/NOTICE](byte-buddy-dep-1.14.10.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.14.11.jar/META-INF/LICENSE](byte-buddy-dep-1.14.11.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.14.11.jar/META-INF/NOTICE](byte-buddy-dep-1.14.11.jar/META-INF/NOTICE)
 
 **40** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
@@ -248,15 +248,15 @@ _2023-12-08 20:56:42 UTC_
 
 ## MIT License
 
-**51** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.9`
+**51** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.10`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-api-2.0.9.jar/META-INF/LICENSE.txt](slf4j-api-2.0.9.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-api-2.0.10.jar/META-INF/LICENSE.txt](slf4j-api-2.0.10.jar/META-INF/LICENSE.txt)
 
-**52** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.9`
+**52** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.10`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-simple-2.0.9.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.9.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-simple-2.0.10.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.10.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 
@@ -297,6 +297,4 @@ _2023-12-08 20:56:42 UTC_
 
 ## Unknown
 
-**58** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.6.0`
-
-**59** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib-common` **Version:** `1.9.21`
+**58** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.7.0`

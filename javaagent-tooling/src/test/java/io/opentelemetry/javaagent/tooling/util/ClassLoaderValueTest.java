@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import java.lang.ref.WeakReference;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Test;
 
 class ClassLoaderValueTest {
@@ -26,7 +28,7 @@ class ClassLoaderValueTest {
   }
 
   @Test
-  void testGc() throws InterruptedException {
+  void testGc() throws InterruptedException, TimeoutException {
     ClassLoader testClassLoader = new ClassLoader() {};
     ClassLoaderValue<Value> classLoaderValue = new ClassLoaderValue<>();
     Value value = new Value();
@@ -40,8 +42,8 @@ class ClassLoaderValueTest {
     value = null;
     testClassLoader = null;
 
-    GcUtils.awaitGc(classLoaderWeakReference);
-    GcUtils.awaitGc(valueWeakReference);
+    GcUtils.awaitGc(classLoaderWeakReference, Duration.ofSeconds(10));
+    GcUtils.awaitGc(valueWeakReference, Duration.ofSeconds(10));
 
     assertThat(classLoaderWeakReference.get()).isNull();
     assertThat(valueWeakReference.get()).isNull();

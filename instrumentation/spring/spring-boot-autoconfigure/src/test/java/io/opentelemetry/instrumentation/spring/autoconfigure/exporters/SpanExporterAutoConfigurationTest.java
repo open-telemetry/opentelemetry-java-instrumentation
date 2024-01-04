@@ -28,7 +28,7 @@ class SpanExporterAutoConfigurationTest {
   void defaultConfiguration() {
     contextRunner.run(
         context -> {
-          assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
+          assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
               .as("OTLP exporter is enabled by default")
               .isNotNull();
           assertThat(context.containsBean("otelLoggingSpanExporter"))
@@ -43,7 +43,7 @@ class SpanExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.logging.enabled=true")
         .run(
             context -> {
-              assertThat(context.getBean("otelOtlpGrpcSpanExporter", OtlpGrpcSpanExporter.class))
+              assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
                   .as("OTLP exporter is present even with logging enabled")
                   .isNotNull();
               assertThat(context.getBean("otelLoggingSpanExporter", LoggingSpanExporter.class))

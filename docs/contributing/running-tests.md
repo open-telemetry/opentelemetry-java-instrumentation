@@ -76,3 +76,20 @@ To execute all the instrumentation tests runnable as GraalVM native executables:
 Some of the instrumentation tests (and all of the smoke tests) spin up docker containers via
 [testcontainers](https://www.testcontainers.org/). If you run out of space, you may wish to prune
 old containers, images and volumes using `docker system prune --volumes`.
+
+# Troubleshooting CI Test Failures
+
+CI test logs are pretty big around 75MB. To make it easier to troubleshoot test failures, you can download the raw logs from the CI job and then look for
+`Publishing build scan...` in the logs. Copy the URL from the logs and open it in a browser. This will give you a nice view of the test execution breakdown.
+
+## How to download the raw logs
+
+1. Click on the `Details` link in one of the failing CI jobs under `Some checks were not successful` section of your PR.
+2. Click on one of the failed tests in the left panel.
+3. Click on the `Setting` gear in the top right corner of the logs panel.
+4. Right click on 'View raw logs' and then 'Save link as' to save the page as a text file locally.
+5. Once the file is downloaded, open it in a text editor and search for `Publishing build scan...` to find the URL.
+6. Open the URL in a browser to view the test execution breakdown. It might prompt you to "Activate your Build Scan" the very 1st time, you can use your own email address and activate it via email.
+
+Unfortunately, the Build Scan service hosted via Develocity has an allowed size limits of the free build scans. Once you exceed the limit, then you won't be able to view the scan anymore.
+Then you can just use the raw logs to search for "FAILED" or "Task failed with an exception" to identify the failing tests.

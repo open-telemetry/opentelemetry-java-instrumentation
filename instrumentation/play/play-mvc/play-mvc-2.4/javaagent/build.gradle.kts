@@ -64,14 +64,6 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }
 
 // play-test depends on websocket-client
@@ -92,4 +84,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
       }
     }
   }
+}
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

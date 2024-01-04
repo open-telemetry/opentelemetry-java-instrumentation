@@ -23,6 +23,17 @@ class LoggingMetricExporterAutoConfigurationTest {
                   LoggingMetricExporterAutoConfiguration.class));
 
   @Test
+  void loggingEnabledNew() {
+    runner
+        .withPropertyValues("otel.metrics.exporter=logging")
+        .run(
+            context ->
+                assertThat(
+                        context.getBean("otelLoggingMetricExporter", LoggingMetricExporter.class))
+                    .isNotNull());
+  }
+
+  @Test
   void loggingEnabled() {
     runner
         .withPropertyValues("otel.exporter.logging.enabled=true")

@@ -25,6 +25,16 @@ class LoggingSpanExporterAutoConfigurationTest {
                   LoggingSpanExporterAutoConfiguration.class));
 
   @Test
+  void loggingEnabledNew() {
+    contextRunner
+        .withPropertyValues("otel.traces.exporter=logging")
+        .run(
+            context ->
+                assertThat(context.getBean("otelLoggingSpanExporter", LoggingSpanExporter.class))
+                    .isNotNull());
+  }
+
+  @Test
   @DisplayName("when exporters are ENABLED should initialize LoggingSpanExporter bean")
   void loggingEnabled() {
     contextRunner

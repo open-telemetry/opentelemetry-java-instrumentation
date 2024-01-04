@@ -6,23 +6,32 @@
 package io.opentelemetry.instrumentation.test.utils;
 
 import java.lang.ref.WeakReference;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class GcUtils {
 
-  public static void awaitGc() throws InterruptedException {
+  public static void awaitGc(Duration timeout) throws InterruptedException, TimeoutException {
     Object obj = new Object();
     WeakReference<Object> ref = new WeakReference<>(obj);
     obj = null;
-    awaitGc(ref);
+    awaitGc(ref, timeout);
   }
 
-  public static void awaitGc(WeakReference<?> ref) throws InterruptedException {
-    while (ref.get() != null) {
+  public static void awaitGc(WeakReference<?> ref, Duration timeout)
+      throws InterruptedException, TimeoutException {
+    long start = System.currentTimeMillis();
+    while (ref.get() != null
+        && !timeout.minus(System.currentTimeMillis() - start, ChronoUnit.MILLIS).isNegative()) {
       if (Thread.interrupted()) {
         throw new InterruptedException();
       }
       System.gc();
       System.runFinalization();
+    }
+    if (ref.get() != null) {
+      throw new TimeoutException("reference was not cleared in time");
     }
   }
 
