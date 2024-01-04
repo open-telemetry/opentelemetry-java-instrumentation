@@ -27,3 +27,7 @@ dependencies {
 
   latestDepTestLibrary("org.apache.struts:struts2-core:6.0.+")
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}
