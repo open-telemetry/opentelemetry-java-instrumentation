@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -103,9 +105,7 @@ public class PulsarClientTest {
     if (admin != null) {
       admin.close();
     }
-    if (pulsar != null) {
-      pulsar.close();
-    }
+    pulsar.close();
   }
 
   @Test
@@ -146,7 +146,7 @@ public class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
+                        throw new AssertionError(e);
                       }
                       latch.countDown();
                     })
@@ -307,6 +307,77 @@ public class PulsarClientTest {
   }
 
   @Test
+  void testConsumeNonPartitionedTopicUsingBatchReceiveAsync() throws Exception {
+    String topic =
+        "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceiveAsync";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+
+    String msg = "test";
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
+
+    CompletableFuture<Messages<String>> result =
+        testing.runWithSpan(
+            "receive-parent",
+            () ->
+                consumer
+                    .batchReceiveAsync()
+                    .whenComplete(
+                        (messages, throwable) -> {
+                          if (throwable != null) {
+                            throw new AssertionError(throwable);
+                          } else {
+                            testing.runWithSpan(
+                                "callback",
+                                () -> {
+                                  try {
+                                    consumer.acknowledge(messages);
+                                  } catch (Exception ex) {
+                                    throw new AssertionError(ex);
+                                  }
+                                });
+                          }
+                        }));
+
+    assertThat(result.get(1, TimeUnit.MINUTES).size()).isEqualTo(1);
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> {
+                  span.hasName(topic + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(topic, msgId.toString(), false));
+                  producerSpan.set(trace.getSpan(1));
+                }),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(receiveAttributes(topic, null, false)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))));
+  }
+
+  @Test
   void captureMessageHeaderAsSpanAttribute() throws Exception {
     String topic = "persistent://public/default/testCaptureMessageHeaderTopic";
     CountDownLatch latch = new CountDownLatch(1);
@@ -323,7 +394,7 @@ public class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
+                        throw new AssertionError(e);
                       }
                       latch.countDown();
                     })
@@ -402,7 +473,7 @@ public class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
+                        throw new AssertionError(e);
                       }
                       latch.countDown();
                     })
@@ -463,7 +534,7 @@ public class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
+                        throw new AssertionError(e);
                       }
                       latch.countDown();
                     })
