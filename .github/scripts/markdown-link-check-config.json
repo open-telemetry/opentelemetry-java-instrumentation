@@ -19,9 +19,6 @@
     },
     {
       "pattern": "^https://micrometer\\.io"
-    },
-    {
-      "pattern": "^https://central\\.sonatype\\.com"
     }
   ]
 }
