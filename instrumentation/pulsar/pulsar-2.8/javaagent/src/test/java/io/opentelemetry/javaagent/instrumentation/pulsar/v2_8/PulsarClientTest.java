@@ -72,10 +72,11 @@ public class PulsarClientTest {
 
   @BeforeAll
   static void beforeAll() throws PulsarClientException {
-    pulsar = new PulsarContainer(DEFAULT_IMAGE_NAME)
-        .withEnv("PULSAR_MEM", "-Xmx128m")
-        .withLogConsumer(new Slf4jLogConsumer(logger))
-        .withStartupTimeout(Duration.ofMinutes(2));
+    pulsar =
+        new PulsarContainer(DEFAULT_IMAGE_NAME)
+            .withEnv("PULSAR_MEM", "-Xmx128m")
+            .withLogConsumer(new Slf4jLogConsumer(logger))
+            .withStartupTimeout(Duration.ofMinutes(2));
     pulsar.start();
 
     brokerHost = pulsar.getHost();
@@ -114,18 +115,18 @@ public class PulsarClientTest {
     producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.send(msg));
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic + " publish")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(sendAttributes(topic, msgId.toString(), false))
-        ));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false))));
   }
 
   @Test
@@ -133,143 +134,146 @@ public class PulsarClientTest {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopic";
     CountDownLatch latch = new CountDownLatch(1);
     admin.topics().createNonPartitionedTopic(topic);
-    consumer = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .messageListener((MessageListener<String>) (consumer, msg) -> {
-          try {
-            consumer.acknowledge(msg);
-          } catch (PulsarClientException e) {
-            throw new RuntimeException(e);
-          }
-          latch.countDown();
-        })
-        .subscribe();
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      try {
+                        consumer.acknowledge(msg);
+                      } catch (PulsarClientException e) {
+                        throw new RuntimeException(e);
+                      }
+                      latch.countDown();
+                    })
+            .subscribe();
 
-    producer = client.newProducer(Schema.STRING)
-        .topic(topic)
-        .enableBatching(false)
-        .create();
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.send(msg));
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
     latch.await(1, TimeUnit.MINUTES);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic + " publish")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(sendAttributes(topic, msgId.toString(), false)),
-            span -> span.hasName(topic + " receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(1))
-                .hasAttributesSatisfyingExactly(receiveAttributes(topic, msgId.toString(), false)),
-            span -> span.hasName(topic + " process")
-                .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                .hasAttributesSatisfyingExactly(processAttributes(topic, msgId.toString(), false))
-        ));
-
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
+                span ->
+                    span.hasName(topic + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic, msgId.toString(), false)),
+                span ->
+                    span.hasName(topic + " process")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic, msgId.toString(), false))));
   }
 
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveAsync() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive";
     admin.topics().createNonPartitionedTopic(topic);
-    consumer = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .subscribe();
-    producer = client.newProducer(Schema.STRING)
-        .topic(topic)
-        .enableBatching(false)
-        .create();
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.send(msg));
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
     Message<String> receivedMsg = consumer.receive();
     consumer.acknowledge(receivedMsg);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic + " publish")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(sendAttributes(topic, msgId.toString(), false)),
-            span -> span.hasName(topic + " receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(1))
-                .hasAttributesSatisfyingExactly(receiveAttributes(topic, msgId.toString(), false))
-        ));
-
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
+                span ->
+                    span.hasName(topic + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic, msgId.toString(), false))));
   }
 
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveWithTimeout() throws Exception {
-    String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveWithTimeout";
+    String topic =
+        "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveWithTimeout";
     admin.topics().createNonPartitionedTopic(topic);
-    consumer = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .subscribe();
-    producer = client.newProducer(Schema.STRING)
-        .topic(topic)
-        .enableBatching(false)
-        .create();
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.send(msg));
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
     Message<String> receivedMsg = consumer.receive(1, TimeUnit.MINUTES);
     consumer.acknowledge(receivedMsg);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic + " publish")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(sendAttributes(topic, msgId.toString(), false)),
-            span -> span.hasName(topic + " receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(1))
-                .hasAttributesSatisfyingExactly(receiveAttributes(topic, msgId.toString(), false))
-        ));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
+                span ->
+                    span.hasName(topic + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic, msgId.toString(), false))));
   }
 
   @Test
   void testConsumeNonPartitionedTopicUsingBatchReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceive";
     admin.topics().createNonPartitionedTopic(topic);
-    consumer = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .subscribe();
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
 
-    producer = client.newProducer(Schema.STRING)
-        .topic(topic)
-        .enableBatching(false)
-        .create();
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.send(msg));
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
     testing.runWithSpan(
         "receive-parent",
@@ -279,26 +283,27 @@ public class PulsarClientTest {
         });
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
-    testing.waitAndAssertTraces(trace -> {
+    testing.waitAndAssertTraces(
+        trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> span.hasName(topic + " publish")
-                  .hasKind(SpanKind.PRODUCER)
-                  .hasParent(trace.getSpan(0))
-                  .hasAttributesSatisfyingExactly(sendAttributes(topic, msgId.toString(), false))
-          );
+              span ->
+                  span.hasName(topic + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(topic, msgId.toString(), false)));
           producerSpan.set(trace.getSpan(1));
         },
-        trace -> trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic + " receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(receiveAttributes(topic, null, false))
-        )
-    );
-
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(receiveAttributes(topic, null, false))));
   }
 
   @Test
@@ -306,48 +311,56 @@ public class PulsarClientTest {
     String topic = "persistent://public/default/testCaptureMessageHeaderTopic";
     CountDownLatch latch = new CountDownLatch(1);
     admin.topics().createNonPartitionedTopic(topic);
-    consumer = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .messageListener((MessageListener<String>) (consumer, msg) -> {
-          try {
-            consumer.acknowledge(msg);
-          } catch (PulsarClientException e) {
-            throw new RuntimeException(e);
-          }
-          latch.countDown();
-        })
-        .subscribe();
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      try {
+                        consumer.acknowledge(msg);
+                      } catch (PulsarClientException e) {
+                        throw new RuntimeException(e);
+                      }
+                      latch.countDown();
+                    })
+            .subscribe();
 
-    producer = client.newProducer(Schema.STRING)
-        .topic(topic)
-        .enableBatching(false)
-        .create();
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.newMessage().value(msg).property("test-message-header", "test").send());
+    MessageId msgId =
+        testing.runWithSpan(
+            "parent",
+            () -> producer.newMessage().value(msg).property("test-message-header", "test").send());
 
     latch.await(1, TimeUnit.MINUTES);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic + " publish")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(sendAttributes(topic, msgId.toString(), true)),
-            span -> span.hasName(topic + " receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(1))
-                .hasAttributesSatisfyingExactly(receiveAttributes(topic, msgId.toString(), true)),
-            span -> span.hasName(topic + " process")
-                .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                .hasAttributesSatisfyingExactly(processAttributes(topic, msgId.toString(), true))
-        ));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), true)),
+                span ->
+                    span.hasName(topic + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic, msgId.toString(), true)),
+                span ->
+                    span.hasName(topic + " process")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic, msgId.toString(), true))));
   }
 
   @Test
@@ -357,18 +370,18 @@ public class PulsarClientTest {
     producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.send(msg));
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(
-        span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-        span -> span.hasName(topic + "-partition-0 publish")
-            .hasKind(SpanKind.PRODUCER)
-            .hasParent(trace.getSpan(0))
-            .hasAttributesSatisfyingExactly(
-                sendAttributes(topic + "-partition-0", msgId.toString(), false))
-    ));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + "-partition-0 publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic + "-partition-0", msgId.toString(), false))));
   }
 
   @Test
@@ -377,51 +390,53 @@ public class PulsarClientTest {
     admin.topics().createPartitionedTopic(topic, 1);
     CountDownLatch latch = new CountDownLatch(1);
 
-    consumer = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .topic(topic)
-        .messageListener((MessageListener<String>) (consumer, msg) -> {
-          try {
-            consumer.acknowledge(msg);
-          } catch (PulsarClientException e) {
-            throw new RuntimeException(e);
-          }
-          latch.countDown();
-        })
-        .subscribe();
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .topic(topic)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      try {
+                        consumer.acknowledge(msg);
+                      } catch (PulsarClientException e) {
+                        throw new RuntimeException(e);
+                      }
+                      latch.countDown();
+                    })
+            .subscribe();
 
-    producer = client.newProducer(Schema.STRING)
-        .topic(topic)
-        .enableBatching(false)
-        .create();
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
-    MessageId msgId = testing.runWithSpan(
-        "parent",
-        () -> producer.send(msg));
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
     latch.await(1, TimeUnit.MINUTES);
 
-    testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(
-        span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-        span -> span.hasName(topic + "-partition-0 publish")
-            .hasKind(SpanKind.PRODUCER)
-            .hasParent(trace.getSpan(0))
-            .hasAttributesSatisfyingExactly(
-                sendAttributes(topic + "-partition-0", msgId.toString(), false)),
-        span -> span.hasName(topic + "-partition-0 receive")
-            .hasKind(SpanKind.CONSUMER)
-            .hasParent(trace.getSpan(1))
-            .hasAttributesSatisfyingExactly(
-                receiveAttributes(topic + "-partition-0", msgId.toString(), false)),
-        span -> span.hasName(topic + "-partition-0 process")
-            .hasKind(SpanKind.INTERNAL)
-            .hasParent(trace.getSpan(2))
-            .hasAttributesSatisfyingExactly(
-                processAttributes(topic + "-partition-0", msgId.toString(), false))
-    ));
-
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + "-partition-0 publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic + "-partition-0", msgId.toString(), false)),
+                span ->
+                    span.hasName(topic + "-partition-0 receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic + "-partition-0", msgId.toString(), false)),
+                span ->
+                    span.hasName(topic + "-partition-0 process")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic + "-partition-0", msgId.toString(), false))));
   }
 
   @Test
@@ -430,80 +445,77 @@ public class PulsarClientTest {
     String topic1 = topicNamePrefix + "1";
     String topic2 = topicNamePrefix + "2";
     CountDownLatch latch = new CountDownLatch(2);
-    producer = client.newProducer(Schema.STRING)
-        .topic(topic1)
-        .enableBatching(false)
-        .create();
-    producer2 = client.newProducer(Schema.STRING)
-        .topic(topic2)
-        .enableBatching(false)
-        .create();
+    producer = client.newProducer(Schema.STRING).topic(topic1).enableBatching(false).create();
+    producer2 = client.newProducer(Schema.STRING).topic(topic2).enableBatching(false).create();
 
-    MessageId msgId1 = testing.runWithSpan(
-        "parent1",
-        () -> producer.send("test1"));
-    MessageId msgId2 = testing.runWithSpan(
-        "parent2",
-        () -> producer2.send("test2"));
+    MessageId msgId1 = testing.runWithSpan("parent1", () -> producer.send("test1"));
+    MessageId msgId2 = testing.runWithSpan("parent2", () -> producer2.send("test2"));
 
-    consumer = client.newConsumer(Schema.STRING)
-        .topic(topic2, topic1)
-        .subscriptionName("test_sub")
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .messageListener((MessageListener<String>) (consumer, msg) -> {
-          try {
-            consumer.acknowledge(msg);
-          } catch (PulsarClientException e) {
-            throw new RuntimeException(e);
-          }
-          latch.countDown();
-        })
-        .subscribe();
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .topic(topic2, topic1)
+            .subscriptionName("test_sub")
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      try {
+                        consumer.acknowledge(msg);
+                      } catch (PulsarClientException e) {
+                        throw new RuntimeException(e);
+                      }
+                      latch.countDown();
+                    })
+            .subscribe();
 
     latch.await(1, TimeUnit.MINUTES);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent1", "parent2"),
-        trace -> trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic1 + " publish")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(
-                    sendAttributes(topic1, msgId1.toString(), false)),
-            span -> span.hasName(topic1 + " receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(1))
-                .hasAttributesSatisfyingExactly(
-                    receiveAttributes(topic1, msgId1.toString(), false)),
-            span -> span.hasName(topic1 + " process")
-                .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                .hasAttributesSatisfyingExactly(
-                    processAttributes(topic1, msgId1.toString(), false))
-        ),
-        trace -> trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span -> span.hasName(topic2 + " publish")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(
-                    sendAttributes(topic2, msgId2.toString(), false)),
-            span -> span.hasName(topic2 + " receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasParent(trace.getSpan(1))
-                .hasAttributesSatisfyingExactly(
-                    receiveAttributes(topic2, msgId2.toString(), false)),
-            span -> span.hasName(topic2 + " process")
-                .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                .hasAttributesSatisfyingExactly(
-                    processAttributes(topic2, msgId2.toString(), false))
-        ));
-
-
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic1 + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic1, msgId1.toString(), false)),
+                span ->
+                    span.hasName(topic1 + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic1, msgId1.toString(), false)),
+                span ->
+                    span.hasName(topic1 + " process")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic1, msgId1.toString(), false))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic2 + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic2, msgId2.toString(), false)),
+                span ->
+                    span.hasName(topic2 + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic2, msgId2.toString(), false)),
+                span ->
+                    span.hasName(topic2 + " process")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic2, msgId2.toString(), false))));
   }
-
 
   private static List<AttributeAssertion> sendAttributes(
       String destination, String messageId, boolean testHeaders) {
@@ -516,7 +528,8 @@ public class PulsarClientTest {
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                satisfies(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                satisfies(
+                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                     AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGE_TYPE, "normal")));
     if (testHeaders) {
@@ -539,7 +552,8 @@ public class PulsarClientTest {
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                satisfies(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                satisfies(
+                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                     AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
@@ -559,7 +573,8 @@ public class PulsarClientTest {
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                satisfies(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                satisfies(
+                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
                     AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
@@ -569,6 +584,4 @@ public class PulsarClientTest {
     }
     return assertions;
   }
-
-
 }
