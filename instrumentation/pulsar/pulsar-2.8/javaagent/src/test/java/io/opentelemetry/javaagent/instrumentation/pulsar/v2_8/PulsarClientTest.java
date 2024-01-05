@@ -49,7 +49,7 @@ import org.testcontainers.containers.PulsarContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 
-public class PulsarClientTest {
+class PulsarClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(PulsarClientTest.class);
 
@@ -89,7 +89,6 @@ public class PulsarClientTest {
 
   @AfterAll
   static void afterAll() throws PulsarClientException {
-
     if (producer != null) {
       producer.close();
     }
