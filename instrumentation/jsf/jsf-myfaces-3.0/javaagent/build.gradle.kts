@@ -33,3 +33,9 @@ dependencies {
   // JSF 4+ requires CDI instead of BeanManager, the test should be upgraded first
   // latestDepTestLibrary("org.apache.myfaces.core:myfaces-impl:4.+")
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+}

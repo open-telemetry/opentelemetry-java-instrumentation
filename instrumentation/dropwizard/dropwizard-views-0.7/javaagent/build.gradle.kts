@@ -16,3 +16,8 @@ dependencies {
   testImplementation("io.dropwizard:dropwizard-views-freemarker:0.7.0")
   testImplementation("io.dropwizard:dropwizard-views-mustache:0.7.0")
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

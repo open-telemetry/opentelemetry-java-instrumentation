@@ -101,6 +101,9 @@ abstract class IntegrationTest {
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
+            // TODO (heya) update smoke tests to run using http/protobuf
+            // in the meantime, force smoke tests to use grpc protocol for all exporters
+            .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
             .withEnv(getExtraEnv())
             .waitingFor(getTargetWaitStrategy());
     // If external extensions are requested
