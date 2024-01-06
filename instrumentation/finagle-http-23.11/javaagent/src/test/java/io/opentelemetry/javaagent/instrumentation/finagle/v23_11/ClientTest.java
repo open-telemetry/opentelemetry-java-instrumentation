@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.finagle;
+package io.opentelemetry.javaagent.instrumentation.finagle.v23_11;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

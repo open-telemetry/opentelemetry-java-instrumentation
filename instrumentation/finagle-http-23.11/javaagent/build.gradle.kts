@@ -41,6 +41,4 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
   implementation(project(":instrumentation:netty:netty-4.1:library"))
   implementation(project(":instrumentation:netty:netty-4-common:library"))
-
-  testImplementation("${scalified("com.twitter:finagle-http")}:$finagleVersion")
 }

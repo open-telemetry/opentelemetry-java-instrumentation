@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.finagle;
+package io.opentelemetry.javaagent.instrumentation.finagle.v23_11;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvents.SWITCHING_PROTOCOLS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
@@ -19,8 +19,8 @@ import com.twitter.util.Await;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvents;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableMap;
@@ -51,10 +51,10 @@ public class ServerH2Test extends AbstractServerTest {
         .serve(address.getHost() + ":" + port, new AbstractServerTest.TestService());
   }
 
-  private static void assertSwitchingProtocolsEvent(List<? extends EventData> events) {
-    assertThat(events.get(0).getName()).isEqualTo(SWITCHING_PROTOCOLS.eventName());
-    assertThat(events.get(0).getAttributes())
-        .isEqualTo(
+  private static void assertSwitchingProtocolsEvent(EventDataAssert eventDataAssert) {
+    eventDataAssert
+        .hasName(SWITCHING_PROTOCOLS.eventName())
+        .hasAttributes(
             Attributes.of(
                 ProtocolSpecificEvents.SWITCHING_PROTOCOLS_FROM_KEY,
                 "HTTP/1.1",
@@ -77,7 +77,7 @@ public class ServerH2Test extends AbstractServerTest {
                         TEST_USER_AGENT,
                         HttpHeaderNames.X_FORWARDED_FOR.toString(),
                         TEST_CLIENT_IP))),
-            com.twitter.util.Duration.fromSeconds(200));
+            com.twitter.util.Duration.fromSeconds(20));
 
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentString()).isEqualTo(SUCCESS.getBody());
@@ -89,14 +89,11 @@ public class ServerH2Test extends AbstractServerTest {
         trace -> {
           List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
           spanAssertions.add(
-              s ->
-                  s.hasTotalRecordedEvents(1)
-                      .hasEventsSatisfying(ServerH2Test::assertSwitchingProtocolsEvent));
+              s -> s.hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
           spanAssertions.add(
               span -> {
                 assertServerSpan(span, method, endpoint, endpoint.getStatus());
-                span.hasTotalRecordedEvents(1)
-                    .hasEventsSatisfying(ServerH2Test::assertSwitchingProtocolsEvent);
+                span.hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent);
               });
 
           int parentIndex = 1;

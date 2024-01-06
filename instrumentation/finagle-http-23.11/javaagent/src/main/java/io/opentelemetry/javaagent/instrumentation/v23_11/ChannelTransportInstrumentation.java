@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.finagle;
+package io.opentelemetry.javaagent.instrumentation.v23_11;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -20,6 +21,11 @@ public class ChannelTransportInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.twitter.finagle.netty4.transport.ChannelTransport");
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.twitter.finagle.netty4.transport.ChannelTransport");
   }
 
   @Override

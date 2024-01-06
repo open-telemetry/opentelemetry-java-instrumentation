@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.finagle;
+package io.opentelemetry.javaagent.instrumentation.v23_11;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -24,17 +25,22 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   }
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.twitter.finagle.http2.transport.common.H2StreamChannelInit$");
+  }
+
+  @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(named("initServer")),
-        H2StreamChannelInitInstrumentation.class.getName() + "$InitServerHandler");
+        H2StreamChannelInitInstrumentation.class.getName() + "$InitServerAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(named("initClient")),
-        H2StreamChannelInitInstrumentation.class.getName() + "$InitClientHandler");
+        H2StreamChannelInitInstrumentation.class.getName() + "$InitClientAdvice");
   }
 
-  @SuppressWarnings({"unused", "OtelPrivateConstructorForUtilityClass"})
-  public static class InitServerHandler {
+  @SuppressWarnings("unused")
+  public static class InitServerAdvice {
 
     @Advice.OnMethodExit
     public static void handleExit(
@@ -43,8 +49,8 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings({"unused", "OtelPrivateConstructorForUtilityClass"})
-  public static class InitClientHandler {
+  @SuppressWarnings("unused")
+  public static class InitClientAdvice {
 
     @Advice.OnMethodExit
     public static void handleExit(
