@@ -145,7 +145,7 @@ class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new AssertionError(e);
+                        throw new RuntimeException(e);
                       }
                       latch.countDown();
                     })
@@ -332,7 +332,7 @@ class PulsarClientTest {
                     .whenComplete(
                         (messages, throwable) -> {
                           if (throwable != null) {
-                            throw new AssertionError(throwable);
+                            throw new RuntimeException(throwable);
                           } else {
                             testing.runWithSpan(
                                 "callback",
@@ -340,7 +340,7 @@ class PulsarClientTest {
                                   try {
                                     consumer.acknowledge(messages);
                                   } catch (Exception ex) {
-                                    throw new AssertionError(ex);
+                                    throw new RuntimeException(ex);
                                   }
                                 });
                           }
@@ -393,7 +393,7 @@ class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new AssertionError(e);
+                        throw new RuntimeException(e);
                       }
                       latch.countDown();
                     })
@@ -472,7 +472,7 @@ class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new AssertionError(e);
+                        throw new RuntimeException(e);
                       }
                       latch.countDown();
                     })
@@ -533,7 +533,7 @@ class PulsarClientTest {
                       try {
                         consumer.acknowledge(msg);
                       } catch (PulsarClientException e) {
-                        throw new AssertionError(e);
+                        throw new RuntimeException(e);
                       }
                       latch.countDown();
                     })
