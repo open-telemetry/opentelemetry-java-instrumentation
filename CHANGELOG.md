@@ -45,7 +45,7 @@ too disruptive to adopt right away.
   - `process.runtime.jvm.buffer.count` renamed to `jvm.buffer.count` (still experimental)
   - `process.runtime.jvm.buffer.usage` renamed to `jvm.buffer.memory.usage` (still experimental)
 
-# More migration notes
+### More migration notes
 
 - The configuration property
   `otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes` has been
