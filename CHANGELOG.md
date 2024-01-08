@@ -8,10 +8,25 @@ please be sure to read the migration notes below carefully.
 Note: 1.32.x will be security patched for at least 6 months in case some of the changes below are
 too disruptive to adopt right away.
 
-### Migration notes
+### ⚠️⚠️ Breaking changes ⚠️⚠️
 
+- The default OTLP protocol has been changed from `grpc` to `http/protobuf` in order to align with
+  the [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.28.0/specification/protocol/exporter.md#specify-protocol).
+  You can switch to the `grpc` protocol using `OTEL_EXPORTER_OTLP_PROTOCOL=grpc`
+  or `-Dotel.exporter.otlp.protocol=grpc`.
+- Micrometer metric bridge has been disabled by default. You can enable it using
+  `OTEL_INSTRUMENTATION_MICROMETER_ENABLED=true`
+  or `-Dotel.instrumentation.micrometer.enabled=true`.
+- The OTLP logs exporter is now enabled by default. You can disable it using
+  `OTEL_EXPORTER_LOGS=none` or `-Dotel.exporter.logs=none`.
+- Controller spans are now disabled by default. You can enable them using
+  `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED=true`
+  or `-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true`.
+- View spans are now disabled by default. You can enable them using
+  `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_VIEW_TELEMETRY_ENABLED=true`
+  or `-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true`.
 - Stable HTTP semantic conventions are now emitted.
-  - MANY CHANGES, see https://opentelemetry.io/blog/2023/http-conventions-declared-stable/#summary-of-changes
+  - ⚠️⚠️ See https://opentelemetry.io/blog/2023/http-conventions-declared-stable/#summary-of-changes
 - Stable JVM semantic conventions are now emitted.
   - `process.runtime.jvm.classes.loaded` renamed to `jvm.classes.loaded`
   - `process.runtime.jvm.classes.unloaded` renamed to `jvm.classes.unloaded`
@@ -29,22 +44,9 @@ too disruptive to adopt right away.
   - `process.runtime.jvm.buffer.limit` renamed to `jvm.buffer.memory.limit` (still experimental)
   - `process.runtime.jvm.buffer.count` renamed to `jvm.buffer.count` (still experimental)
   - `process.runtime.jvm.buffer.usage` renamed to `jvm.buffer.memory.usage` (still experimental)
-- The default OTLP protocol has been changed from `grpc` to `http/protobuf` in order to align with
-  the 
-  [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/0127b1f8f61656cc97db5a7914e6f70d4bde8273/specification/protocol/exporter.md#specify-protocol). 
-  You can switch to the `grpc` protocol using `OTEL_EXPORTER_OTLP_PROTOCOL=grpc`
-  or `-Dotel.exporter.otlp.protocol=grpc`.
-- The OTLP logs exporter is now enabled by default. You can disable it using
-  `OTEL_EXPORTER_LOGS=none` or `-Dotel.exporter.logs=none`.
-- Controller spans are now disabled by default. You can enable them using
-  `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED=true`
-  or `-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true`.
-- View spans are now disabled by default. You can enable them using
-  `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_VIEW_TELEMETRY_ENABLED=true`
-  or `-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true`.
-- Micrometer metric bridge has been disabled by default. You can enable it using
-  `OTEL_INSTRUMENTATION_MICROMETER_ENABLED=true`
-  or `-Dotel.instrumentation.micrometer.enabled=true`.
+
+# More migration notes
+
 - The configuration property
   `otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes` has been
   renamed to `otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes`.
