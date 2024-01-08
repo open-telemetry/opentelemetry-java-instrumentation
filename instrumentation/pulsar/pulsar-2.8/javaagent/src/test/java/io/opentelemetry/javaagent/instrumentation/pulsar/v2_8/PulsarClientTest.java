@@ -142,11 +142,7 @@ class PulsarClientTest {
             .messageListener(
                 (MessageListener<String>)
                     (consumer, msg) -> {
-                      try {
-                        consumer.acknowledge(msg);
-                      } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
-                      }
+                      acknowledgeMessage(consumer, msg);
                       latch.countDown();
                     })
             .subscribe();
@@ -183,7 +179,7 @@ class PulsarClientTest {
   }
 
   @Test
-  void testConsumeNonPartitionedTopicUsingReceiveAsync() throws Exception {
+  void testConsumeNonPartitionedTopicUsingReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive";
     admin.topics().createNonPartitionedTopic(topic);
     consumer =
@@ -217,6 +213,59 @@ class PulsarClientTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
+  }
+
+  @Test
+  void testConsumeNonPartitionedTopicUsingReceiveAsync() throws Exception {
+    String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveAsync";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+
+    CompletableFuture<Message<String>> result =
+        consumer
+            .receiveAsync()
+            .whenComplete(
+                (messages, throwable) -> {
+                  if (throwable != null) {
+                    throw new RuntimeException(throwable);
+                  } else {
+                    testing.runWithSpan("callback", () -> acknowledgeMessage(consumer, messages));
+                  }
+                });
+
+    String msg = "test";
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
+
+    result.get(1, TimeUnit.MINUTES);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
+                span ->
+                    span.hasName(topic + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic, msgId.toString(), false)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2))));
   }
 
   @Test
@@ -390,11 +439,7 @@ class PulsarClientTest {
             .messageListener(
                 (MessageListener<String>)
                     (consumer, msg) -> {
-                      try {
-                        consumer.acknowledge(msg);
-                      } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
-                      }
+                      acknowledgeMessage(consumer, msg);
                       latch.countDown();
                     })
             .subscribe();
@@ -469,11 +514,7 @@ class PulsarClientTest {
             .messageListener(
                 (MessageListener<String>)
                     (consumer, msg) -> {
-                      try {
-                        consumer.acknowledge(msg);
-                      } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
-                      }
+                      acknowledgeMessage(consumer, msg);
                       latch.countDown();
                     })
             .subscribe();
@@ -530,11 +571,7 @@ class PulsarClientTest {
             .messageListener(
                 (MessageListener<String>)
                     (consumer, msg) -> {
-                      try {
-                        consumer.acknowledge(msg);
-                      } catch (PulsarClientException e) {
-                        throw new RuntimeException(e);
-                      }
+                      acknowledgeMessage(consumer, msg);
                       latch.countDown();
                     })
             .subscribe();
@@ -653,5 +690,13 @@ class PulsarClientTest {
               Collections.singletonList("test")));
     }
     return assertions;
+  }
+
+  private static void acknowledgeMessage(Consumer<String> consumer, Message<String> msg) {
+    try {
+      consumer.acknowledge(msg);
+    } catch (PulsarClientException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
