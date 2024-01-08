@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-The 2.0 release contains significant breaking changes that will most likely affect all users,
+The 2.0.0 release contains significant breaking changes that will most likely affect all users,
 please be sure to read the migration notes below carefully.
 
 Note: 1.32.x will be security patched for at least 6 months in case some of the changes below are
@@ -30,7 +30,9 @@ too disruptive to adopt right away.
   - `process.runtime.jvm.buffer.count` renamed to `jvm.buffer.count` (still experimental)
   - `process.runtime.jvm.buffer.usage` renamed to `jvm.buffer.memory.usage` (still experimental)
 - The default OTLP protocol has been changed from `grpc` to `http/protobuf` in order to align with
-  the specification. You can switch to the `grpc` protocol using `OTEL_EXPORTER_OTLP_PROTOCOL=grpc`
+  the 
+  [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/0127b1f8f61656cc97db5a7914e6f70d4bde8273/specification/protocol/exporter.md#specify-protocol). 
+  You can switch to the `grpc` protocol using `OTEL_EXPORTER_OTLP_PROTOCOL=grpc`
   or `-Dotel.exporter.otlp.protocol=grpc`.
 - The OTLP logs exporter is now enabled by default. You can disable it using
   `OTEL_EXPORTER_LOGS=none` or `-Dotel.exporter.logs=none`.
