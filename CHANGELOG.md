@@ -25,25 +25,42 @@ too disruptive to adopt right away.
 - View spans are now disabled by default. You can enable them using
   `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_VIEW_TELEMETRY_ENABLED=true`
   or `-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true`.
-- Stable HTTP semantic conventions are now emitted.
-  - ⚠️⚠️ See https://opentelemetry.io/blog/2023/http-conventions-declared-stable/#summary-of-changes
+- ⚠️⚠️ Stable HTTP semantic conventions are now emitted ⚠️⚠️
+  - TOO MANY CHANGES TO LIST HERE, be sure to review the full
+    [list of changes](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/migration-guide.md#summary-of-changes).
 - Stable JVM semantic conventions are now emitted.
-  - `process.runtime.jvm.classes.loaded` renamed to `jvm.classes.loaded`
-  - `process.runtime.jvm.classes.unloaded` renamed to `jvm.classes.unloaded`
-  - `process.runtime.jvm.classes.current_loaded` renamed to `jvm.classes.count`
-  - `process.runtime.jvm.system.cpu.load_1m` renamed to `jvm.system.cpu.load_1m` (still experimental)
-  - `process.runtime.jvm.system.cpu.utilization` renamed to `jvm.system.cpu.utilization` (still experimental)
-  - `process.runtime.jvm.cpu.utilization` renamed to `jvm.cpu.recent_utilization`
-  - `process.runtime.jvm.gc.duration` renamed to `jvm.gc.duration`
-  - `process.runtime.jvm.memory.init` renamed to `jvm.memory.init` (still experimental)
-  - `process.runtime.jvm.memory.usage` renamed to `jvm.memory.used`
-  - `process.runtime.jvm.memory.committed` renamed to `jvm.memory.committed`
-  - `process.runtime.jvm.memory.limit` renamed to `jvm.memory.limit`
-  - `process.runtime.jvm.memory.usage_after_last_gc` renamed to `jvm.memory.used_after_last_gc`
-  - `process.runtime.jvm.threads.count` renamed to `jvm.threads.count`
-  - `process.runtime.jvm.buffer.limit` renamed to `jvm.buffer.memory.limit` (still experimental)
-  - `process.runtime.jvm.buffer.count` renamed to `jvm.buffer.count` (still experimental)
-  - `process.runtime.jvm.buffer.usage` renamed to `jvm.buffer.memory.usage` (still experimental)
+  - Memory metrics
+    - `process.runtime.jvm.memory.usage` renamed to `jvm.memory.used`
+    - `process.runtime.jvm.memory.committed` renamed to `jvm.memory.committed`
+    - `process.runtime.jvm.memory.limit` renamed to `jvm.memory.limit`
+    - `process.runtime.jvm.memory.usage_after_last_gc` renamed to `jvm.memory.used_after_last_gc`
+    - `process.runtime.jvm.memory.init` renamed to `jvm.memory.init` (still experimental)
+  - Memory metric attributes
+    - `type` renamed to `jvm.memory.type`
+    - `pool` renamed to `jvm.memory.pool.name`
+  - Garbage collection metrics
+    - `process.runtime.jvm.gc.duration` renamed to `jvm.gc.duration`
+  - Garbage collection metric attributes
+    - `name` renamed to `jvm.gc.name`
+    - `action` renamed to `jvm.gc.action`
+  - Thread metrics
+    - `process.runtime.jvm.threads.count` renamed to `jvm.threads.count`
+  - Thread metric attributes
+    - `daemon` renamed to `jvm.thread.daemon`
+  - Classes metrics
+    - `process.runtime.jvm.classes.loaded` renamed to `jvm.classes.loaded`
+    - `process.runtime.jvm.classes.unloaded` renamed to `jvm.classes.unloaded`
+    - `process.runtime.jvm.classes.current_loaded` renamed to `jvm.classes.count`
+  - CPU metrics
+    - `process.runtime.jvm.cpu.utilization` renamed to `jvm.cpu.recent_utilization`
+    - `process.runtime.jvm.system.cpu.load_1m` renamed to `jvm.system.cpu.load_1m` (still experimental)
+    - `process.runtime.jvm.system.cpu.utilization` renamed to `jvm.system.cpu.utilization` (still experimental)
+  - Buffer metrics
+    - `process.runtime.jvm.buffer.limit` renamed to `jvm.buffer.memory.limit` (still experimental)
+    - `process.runtime.jvm.buffer.count` renamed to `jvm.buffer.count` (still experimental)
+    - `process.runtime.jvm.buffer.usage` renamed to `jvm.buffer.memory.usage` (still experimental)
+  - Buffer metric attributes
+    - `pool` renamed to `jvm.buffer.pool.name`
 
 ### More migration notes
 
