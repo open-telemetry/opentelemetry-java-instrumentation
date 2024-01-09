@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,25 +22,19 @@ import org.springframework.core.ParameterNameDiscoverer;
 @ConditionalOnProperty(name = "otel.instrumentation.annotations.enabled", matchIfMissing = true)
 @Configuration
 public class InstrumentationAnnotationsAutoConfiguration {
-
-  @Bean
-  @ConditionalOnMissingBean
-  ParameterNameDiscoverer parameterNameDiscoverer() {
-    return new DefaultParameterNameDiscoverer();
-  }
+  private final ParameterNameDiscoverer parameterNameDiscoverer =
+      new DefaultParameterNameDiscoverer();
 
   @Bean
   @ConditionalOnClass(WithSpan.class)
-  InstrumentationWithSpanAspect otelInstrumentationWithSpanAspect(
-      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+  InstrumentationWithSpanAspect otelInstrumentationWithSpanAspect(OpenTelemetry openTelemetry) {
     return new InstrumentationWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
 
   @Bean
   @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
   @ConditionalOnClass(io.opentelemetry.extension.annotations.WithSpan.class)
-  SdkExtensionWithSpanAspect otelSdkExtensionWithSpanAspect(
-      OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
+  SdkExtensionWithSpanAspect otelSdkExtensionWithSpanAspect(OpenTelemetry openTelemetry) {
     return new SdkExtensionWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
 }

@@ -144,6 +144,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
       }
@@ -164,6 +165,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
         span(1) {

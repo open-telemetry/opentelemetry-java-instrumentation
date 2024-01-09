@@ -183,7 +183,7 @@ public final class LoggingEventMapper {
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {
-    return mdcAttributeKeys.computeIfAbsent(key, k -> AttributeKey.stringKey("logback.mdc." + k));
+    return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {

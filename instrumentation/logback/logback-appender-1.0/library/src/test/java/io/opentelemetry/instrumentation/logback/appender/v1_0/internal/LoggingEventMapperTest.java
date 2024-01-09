@@ -48,8 +48,7 @@ class LoggingEventMapperTest {
     mapper.captureMdcAttributes(attributes, contextData);
 
     // then
-    assertThat(attributes.build())
-        .containsOnly(entry(AttributeKey.stringKey("logback.mdc.key2"), "value2"));
+    assertThat(attributes.build()).containsOnly(entry(AttributeKey.stringKey("key2"), "value2"));
   }
 
   @Test
@@ -68,7 +67,7 @@ class LoggingEventMapperTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(AttributeKey.stringKey("logback.mdc.key1"), "value1"),
-            entry(AttributeKey.stringKey("logback.mdc.key2"), "value2"));
+            entry(AttributeKey.stringKey("key1"), "value1"),
+            entry(AttributeKey.stringKey("key2"), "value2"));
   }
 }

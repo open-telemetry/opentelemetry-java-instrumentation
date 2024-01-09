@@ -152,6 +152,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
 
 - [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana Labs
+- [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 

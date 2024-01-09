@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -17,10 +18,10 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
-  private final OpenTelemetrySupplier openTelemetrySupplier;
+  private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
 
-  WebClientBeanPostProcessor(OpenTelemetrySupplier openTelemetrySupplier) {
-    this.openTelemetrySupplier = openTelemetrySupplier;
+  WebClientBeanPostProcessor(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    this.openTelemetryProvider = openTelemetryProvider;
   }
 
   @Override
@@ -37,7 +38,7 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
   private WebClient.Builder wrapBuilder(WebClient.Builder webClientBuilder) {
     SpringWebfluxTelemetry instrumentation =
-        SpringWebfluxTelemetry.create(openTelemetrySupplier.get());
+        SpringWebfluxTelemetry.create(openTelemetryProvider.getObject());
     return webClientBuilder.filters(instrumentation::addClientTracingFilter);
   }
 }

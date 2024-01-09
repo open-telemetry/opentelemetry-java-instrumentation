@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.we
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -18,7 +17,6 @@ class SpringWebfluxInstrumentationAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
-          .withBean(OpenTelemetrySupplier.class, () -> OpenTelemetry::noop)
           .withConfiguration(
               AutoConfigurations.of(SpringWebfluxInstrumentationAutoConfiguration.class));
 

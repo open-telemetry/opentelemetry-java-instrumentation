@@ -20,3 +20,9 @@ dependencies {
 
   testImplementation("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+}
