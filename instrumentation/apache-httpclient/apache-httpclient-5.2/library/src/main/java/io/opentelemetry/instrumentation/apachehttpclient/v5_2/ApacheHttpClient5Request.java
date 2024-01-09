@@ -21,7 +21,7 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.ProtocolVersion;
 
-public final class ApacheHttpClient5Request {
+final class ApacheHttpClient5Request {
 
   private static final Logger logger = Logger.getLogger(ApacheHttpClient5Request.class.getName());
 

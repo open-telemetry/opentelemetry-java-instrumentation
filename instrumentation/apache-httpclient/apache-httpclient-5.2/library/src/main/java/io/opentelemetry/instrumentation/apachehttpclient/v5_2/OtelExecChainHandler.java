@@ -26,7 +26,7 @@ import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.ProtocolException;
 
-public class OtelExecChainHandler implements ExecChainHandler {
+class OtelExecChainHandler implements ExecChainHandler {
 
   private static final String REQUEST_CONTEXT_ATTRIBUTE_ID =
       OtelExecChainHandler.class.getName() + ".context";

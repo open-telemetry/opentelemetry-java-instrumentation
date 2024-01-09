@@ -18,7 +18,7 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.core5.util.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ApacheHttpClient5Test extends AbstractApacheHttpClient5Test {
+class ApacheHttpClient5Test extends AbstractApacheHttpClient5Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
