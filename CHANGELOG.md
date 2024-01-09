@@ -35,18 +35,18 @@ too disruptive to adopt right away.
     - `process.runtime.jvm.memory.limit` renamed to `jvm.memory.limit`
     - `process.runtime.jvm.memory.usage_after_last_gc` renamed to `jvm.memory.used_after_last_gc`
     - `process.runtime.jvm.memory.init` renamed to `jvm.memory.init` (still experimental)
-  - Memory metric attributes
-    - `type` renamed to `jvm.memory.type`
-    - `pool` renamed to `jvm.memory.pool.name`
+    - Metric attributes
+      - `type` renamed to `jvm.memory.type`
+      - `pool` renamed to `jvm.memory.pool.name`
   - Garbage collection metrics
     - `process.runtime.jvm.gc.duration` renamed to `jvm.gc.duration`
-  - Garbage collection metric attributes
-    - `name` renamed to `jvm.gc.name`
-    - `action` renamed to `jvm.gc.action`
+    - Metric attributes
+      - `name` renamed to `jvm.gc.name`
+      - `action` renamed to `jvm.gc.action`
   - Thread metrics
     - `process.runtime.jvm.threads.count` renamed to `jvm.threads.count`
-  - Thread metric attributes
-    - `daemon` renamed to `jvm.thread.daemon`
+    - Metric attributes
+      - `daemon` renamed to `jvm.thread.daemon`
   - Classes metrics
     - `process.runtime.jvm.classes.loaded` renamed to `jvm.classes.loaded`
     - `process.runtime.jvm.classes.unloaded` renamed to `jvm.classes.unloaded`
@@ -59,8 +59,8 @@ too disruptive to adopt right away.
     - `process.runtime.jvm.buffer.limit` renamed to `jvm.buffer.memory.limit` (still experimental)
     - `process.runtime.jvm.buffer.count` renamed to `jvm.buffer.count` (still experimental)
     - `process.runtime.jvm.buffer.usage` renamed to `jvm.buffer.memory.usage` (still experimental)
-  - Buffer metric attributes
-    - `pool` renamed to `jvm.buffer.pool.name`
+    - Metric attributes
+      - `pool` renamed to `jvm.buffer.pool.name`
 
 ### More migration notes
 
