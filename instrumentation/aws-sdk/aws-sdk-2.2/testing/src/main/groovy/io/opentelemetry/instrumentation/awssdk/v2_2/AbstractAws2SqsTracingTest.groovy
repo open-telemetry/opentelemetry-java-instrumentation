@@ -307,7 +307,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
 
     then:
     resp.messages.size() == 1
-    resp.messages.each {message -> runWithSpan("process child") {}}
+    // using forEach instead of each here to test different ways of iterating messages list
+    resp.messages.forEach {message -> runWithSpan("process child") {}}
     assertSqsTraces(false, true)
   }
 
