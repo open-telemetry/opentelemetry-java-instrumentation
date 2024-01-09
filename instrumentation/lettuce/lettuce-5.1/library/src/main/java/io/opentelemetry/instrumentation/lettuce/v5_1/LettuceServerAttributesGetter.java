@@ -14,12 +14,18 @@ class LettuceServerAttributesGetter implements ServerAttributesGetter<OpenTeleme
   @Nullable
   @Override
   public String getServerAddress(OpenTelemetryEndpoint request) {
-    return request.address.getHostName();
+    if (request.address != null) {
+      return request.address.getHostString();
+    }
+    return null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(OpenTelemetryEndpoint request) {
-    return request.address.getPort();
+    if (request.address != null) {
+      return request.address.getPort();
+    }
+    return null;
   }
 }
