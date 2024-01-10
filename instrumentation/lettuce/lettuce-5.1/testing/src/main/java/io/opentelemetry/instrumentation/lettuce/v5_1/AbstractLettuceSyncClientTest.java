@@ -19,7 +19,6 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Base64;
@@ -399,8 +398,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasException(new RedisException("Connection disconnected"))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(
-                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
+                                equalTo(SemanticAttributes.SERVER_PORT, containerConnection.port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE")));
               } else {
