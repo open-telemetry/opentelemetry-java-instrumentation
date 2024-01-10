@@ -204,7 +204,7 @@ final class OpenTelemetryTracing implements Tracing {
     private void fillEndpoint(OpenTelemetryEndpoint endpoint) {
       AttributesBuilder attributesBuilder = Attributes.builder();
       Context currentContext = span == null ? context : context.with(span);
-      serverAttributesExtractor.onEnd(attributesBuilder, currentContext, endpoint, null, null);
+      serverAttributesExtractor.onStart(attributesBuilder, currentContext, endpoint);
       if (span != null) {
         span.setAllAttributes(attributesBuilder.build());
       } else {

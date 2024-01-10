@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,9 +62,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                         span.hasName("AUTH")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(SemanticAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "AUTH ?"))
                             .hasEventsSatisfyingExactly(

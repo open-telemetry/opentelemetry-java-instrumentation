@@ -5,15 +5,11 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.InetSocketAddressUtil;
 import io.opentelemetry.instrumentation.lettuce.v5_1.OpenTelemetryTracing.OpenTelemetryEndpoint;
 import javax.annotation.Nullable;
 
-class LettuceServerAttributesGetter
-    implements ServerAttributesGetter<OpenTelemetryEndpoint>,
-        NetworkAttributesGetter<OpenTelemetryEndpoint, Void> {
+class LettuceServerAttributesGetter implements ServerAttributesGetter<OpenTelemetryEndpoint> {
 
   @Nullable
   @Override
@@ -31,13 +27,5 @@ class LettuceServerAttributesGetter
       return request.address.getPort();
     }
     return null;
-  }
-
-  @Nullable
-  @Override
-  public String getNetworkType(OpenTelemetryEndpoint request, @Nullable Void response) {
-    return request.address != null
-        ? InetSocketAddressUtil.getNetworkType(request.address, null)
-        : null;
   }
 }
