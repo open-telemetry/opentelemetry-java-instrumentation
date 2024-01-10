@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### 📈 Enhancements
+
+- Backport: update jackson packages to v2.16.1
+  ([#10198](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10198),
+   [#10199](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10199))
+- Backport: implement forEach support for aws sqs tracing list
+  ([#10195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10195))
+
 ## Version 1.32.0 (2023-11-17)
 
 ### Migration notes
