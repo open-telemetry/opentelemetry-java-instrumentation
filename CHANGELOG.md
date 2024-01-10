@@ -3,7 +3,7 @@
 ## Unreleased
 
 The 2.0.0 release contains significant breaking changes that will most likely affect all users,
-please be sure to read the migration notes below carefully.
+please be sure to read the breaking changes below carefully.
 
 Note: 1.32.x will be security patched for at least 6 months in case some of the changes below are
 too disruptive to adopt right away.
