@@ -9,8 +9,10 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,5 +35,10 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
         new DefaultRequestContextInstrumentation(),
         new JaxrsAnnotationsInstrumentation(),
         new JaxrsAsyncResponseInstrumentation());
+  }
+
+  @Override
+  public boolean defaultEnabled(ConfigProperties config) {
+    return ExperimentalConfig.get().controllerTelemetryEnabled();
   }
 }
