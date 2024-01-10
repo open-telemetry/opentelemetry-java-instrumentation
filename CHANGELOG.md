@@ -10,6 +10,11 @@
 - Backport: implement forEach support for aws sqs tracing list
   ([#10195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10195))
 
+### 🛠️ Bug fixes
+
+- Backport: Handle authority from request when HttpHost is null
+  ([#10204](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10204))
+
 ## Version 1.32.0 (2023-11-17)
 
 ### Migration notes
