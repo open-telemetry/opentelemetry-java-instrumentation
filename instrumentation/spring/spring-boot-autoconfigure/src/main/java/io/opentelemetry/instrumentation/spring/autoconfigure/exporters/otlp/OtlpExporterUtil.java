@@ -45,7 +45,7 @@ class OtlpExporterUtil {
     boolean isHttpProtobuf = !"grpc".equals(protocol);
 
     if (protocol != null
-        && !"grpc".equals(protocol)
+        && !OtlpConfigUtil.PROTOCOL_GRPC.equals(protocol)
         && !OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
       logger.warn(
           protocol
