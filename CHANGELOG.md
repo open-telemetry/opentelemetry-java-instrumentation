@@ -106,6 +106,10 @@ too disruptive to adopt right away.
   ([#10115](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10115))
 - Capture the SNS topic ARN under the 'messaging.destination.name' span attribute.
   ([#10096](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10096))
+- Add network attributes to rabbitmq process spans
+  ([#10210](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10210))
+- Add UserExcludedClassloadersConfigurer
+  ([#10134](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10134))
 
 ### 🛠️ Bug fixes
 
