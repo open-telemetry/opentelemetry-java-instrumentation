@@ -48,10 +48,11 @@ class OtlpExporterUtil {
         && !OtlpConfigUtil.PROTOCOL_GRPC.equals(protocol)
         && !OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
       logger.warn(
-          protocol
-              + " protocol is not managed. "
+          "Unknown OTLP protocol '"
+              + protocol
+              + "', using '"
               + OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF
-              + " will be used.");
+              + "'.");
     }
 
     String endpoint = signalProperties.getEndpoint();
