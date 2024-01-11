@@ -172,7 +172,8 @@ public class ContextPropagationTest {
                               .hasKind(SpanKind.CONSUMER)
                               .hasParent(trace.getSpan(1))
                               .hasAttributesSatisfyingExactly(
-                                  getAssertions("<default>", "process", null, true, testHeaders)),
+                                  getAssertions(
+                                      "<default>", "process", "127.0.0.1", true, testHeaders)),
                       // created by spring-rabbit instrumentation
                       span ->
                           span.hasName("testQueue process")
