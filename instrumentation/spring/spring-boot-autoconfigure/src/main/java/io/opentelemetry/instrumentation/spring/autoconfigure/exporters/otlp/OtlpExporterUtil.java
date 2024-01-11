@@ -8,13 +8,16 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class OtlpExporterUtil {
   private OtlpExporterUtil() {}
+
+  private static final Logger logger = LoggerFactory.getLogger(OtlpExporterUtil.class);
 
   static <G, H, E> E applySignalProperties(
       String dataType,
@@ -39,7 +42,17 @@ class OtlpExporterUtil {
     G grpcBuilder = newGrpcBuilder.get();
     H httpBuilder = newHttpBuilder.get();
 
-    boolean isHttpProtobuf = Objects.equals(protocol, OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF);
+    boolean isHttpProtobuf = !"grpc".equals(protocol);
+
+    if (protocol != null
+        && !"grpc".equals(protocol)
+        && !OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
+      logger.warn(
+          protocol
+              + " protocol is not managed. "
+              + OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF
+              + " will be used.");
+    }
 
     String endpoint = signalProperties.getEndpoint();
     if (endpoint == null) {
