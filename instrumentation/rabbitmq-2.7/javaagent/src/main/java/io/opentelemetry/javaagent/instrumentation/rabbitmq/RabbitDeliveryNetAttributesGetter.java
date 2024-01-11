@@ -19,7 +19,7 @@ public class RabbitDeliveryNetAttributesGetter
   public String getNetworkType(DeliveryRequest request, @Nullable Void response) {
     InetAddress address = request.getConnection().getAddress();
     if (address instanceof Inet4Address) {
-      return "ipv6";
+      return "ipv4";
     } else if (address instanceof Inet6Address) {
       return "ipv6";
     }
