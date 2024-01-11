@@ -74,6 +74,9 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           childOf span(3)
           kind CONSUMER
           attributes {
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
+            "$NetworkAttributes.NETWORK_PEER_PORT" Long
+            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
