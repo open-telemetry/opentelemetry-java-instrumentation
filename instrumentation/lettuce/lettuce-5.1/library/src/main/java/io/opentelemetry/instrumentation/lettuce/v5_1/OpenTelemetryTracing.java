@@ -26,6 +26,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
@@ -40,6 +41,8 @@ final class OpenTelemetryTracing implements Tracing {
 
   private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =
       ServerAttributesExtractor.create(new LettuceServerAttributesGetter());
+  private static final AttributesExtractor<OpenTelemetryEndpoint, Void> networkAttributesExtractor =
+      NetworkAttributesExtractor.create(new LettuceServerAttributesGetter());
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
@@ -205,6 +208,7 @@ final class OpenTelemetryTracing implements Tracing {
       AttributesBuilder attributesBuilder = Attributes.builder();
       Context currentContext = span == null ? context : context.with(span);
       serverAttributesExtractor.onStart(attributesBuilder, currentContext, endpoint);
+      networkAttributesExtractor.onEnd(attributesBuilder, currentContext, endpoint, null, null);
       if (span != null) {
         span.setAllAttributes(attributesBuilder.build());
       } else {
