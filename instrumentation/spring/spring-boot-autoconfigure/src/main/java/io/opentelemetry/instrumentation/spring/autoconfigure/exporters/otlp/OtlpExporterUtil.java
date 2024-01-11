@@ -44,15 +44,15 @@ class OtlpExporterUtil {
     String endpoint = signalProperties.getEndpoint();
     if (endpoint == null) {
       endpoint = properties.getEndpoint();
-    }
-    if (endpoint != null) {
-      if (isHttpProtobuf) {
+      if (endpoint != null && isHttpProtobuf) {
         if (!endpoint.endsWith("/")) {
           endpoint += "/";
         }
         endpoint += signalPath(dataType);
       }
+    }
 
+    if (endpoint != null) {
       if (isHttpProtobuf) {
         setHttpEndpoint.accept(httpBuilder, endpoint);
       } else {
