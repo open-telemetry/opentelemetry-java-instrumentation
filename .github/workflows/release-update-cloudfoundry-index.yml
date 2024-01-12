@@ -17,12 +17,12 @@ jobs:
   update-cloudfoundry-index-yml:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           ref: 'cloudfoundry'
 
