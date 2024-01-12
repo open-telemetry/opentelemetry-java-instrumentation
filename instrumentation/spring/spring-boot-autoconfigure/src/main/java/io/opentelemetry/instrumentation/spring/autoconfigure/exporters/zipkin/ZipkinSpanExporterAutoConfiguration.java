@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(ZipkinSpanExporter.class)
 public class ZipkinSpanExporterAutoConfiguration {
 
-  @Bean
+  @Bean(destroyMethod = "")
   @ConditionalOnMissingBean
   public ZipkinSpanExporter otelZipkinSpanExporter(ZipkinSpanExporterProperties properties) {
 

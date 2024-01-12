@@ -76,7 +76,7 @@ public class OpenTelemetryAutoConfiguration {
       return new MapConverter();
     }
 
-    @Bean
+    @Bean(destroyMethod = "")
     @ConditionalOnMissingBean
     public SdkTracerProvider sdkTracerProvider(
         SamplerProperties samplerProperties,
@@ -94,7 +94,7 @@ public class OpenTelemetryAutoConfiguration {
           .build();
     }
 
-    @Bean
+    @Bean(destroyMethod = "")
     @ConditionalOnMissingBean
     public SdkLoggerProvider sdkLoggerProvider(
         ObjectProvider<List<LogRecordExporter>> loggerExportersProvider, Resource otelResource) {
@@ -112,7 +112,7 @@ public class OpenTelemetryAutoConfiguration {
       return loggerProviderBuilder.build();
     }
 
-    @Bean
+    @Bean(destroyMethod = "")
     @ConditionalOnMissingBean
     public SdkMeterProvider sdkMeterProvider(
         MetricExportProperties properties,

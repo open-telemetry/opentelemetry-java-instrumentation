@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Conditional;
 @ConditionalOnClass(OtlpGrpcLogRecordExporter.class)
 public class OtlpLoggerExporterAutoConfiguration {
 
-  @Bean
+  @Bean(destroyMethod = "")
   @ConditionalOnMissingBean({OtlpGrpcLogRecordExporter.class, OtlpHttpLogRecordExporter.class})
   public LogRecordExporter otelOtlpLogRecordExporter(OtlpExporterProperties properties) {
 
