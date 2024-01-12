@@ -36,7 +36,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
     host = redisServer.getHost();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
-    expectedHostAttributeValue = Objects.equals(host, "localhost") ? null : host;
+    expectedHostAttributeValue = Objects.equals(host, "127.0.0.1") ? null : host;
 
     redisClient = createClient(embeddedDbUri);
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
