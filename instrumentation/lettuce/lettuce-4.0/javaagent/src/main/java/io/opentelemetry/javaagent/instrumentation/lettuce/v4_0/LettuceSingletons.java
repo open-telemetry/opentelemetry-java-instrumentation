@@ -52,7 +52,7 @@ public final class LettuceSingletons {
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .setEnabled(
                 InstrumentationConfig.get()
-                    .getBoolean("otel.instrumentation.lettuce.connect-telemetry.enabled", false))
+                    .getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled", false))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
