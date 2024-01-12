@@ -64,6 +64,9 @@ too disruptive to adopt right away.
 
 ### More migration notes
 
+- Lettuce CONNECT spans are now disabled by default. You can enable them using
+  `OTEL_INSTRUMENTATION_LETTUCE_CONNECTION_TELEMETRY_ENABLED=true`
+  or `-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true`.
 - The configuration property
   `otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes` has been
   renamed to `otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes`.
@@ -110,6 +113,8 @@ too disruptive to adopt right away.
   ([#10210](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10210))
 - Add UserExcludedClassloadersConfigurer
   ([#10134](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10134))
+- Apply both server attributes & network attributes to Lettuce 5.1
+  ([#10197](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10197))
 
 ### 🛠️ Bug fixes
 
