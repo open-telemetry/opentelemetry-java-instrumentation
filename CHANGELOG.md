@@ -18,7 +18,7 @@ too disruptive to adopt right away.
   `OTEL_INSTRUMENTATION_MICROMETER_ENABLED=true`
   or `-Dotel.instrumentation.micrometer.enabled=true`.
 - The OTLP logs exporter is now enabled by default. You can disable it using
-  `OTEL_EXPORTER_LOGS=none` or `-Dotel.exporter.logs=none`.
+  `OTEL_LOGS_EXPORTER=none` or `-Dotel.logs.exporter=none`.
 - Controller spans are now disabled by default. You can enable them using
   `OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED=true`
   or `-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true`.
