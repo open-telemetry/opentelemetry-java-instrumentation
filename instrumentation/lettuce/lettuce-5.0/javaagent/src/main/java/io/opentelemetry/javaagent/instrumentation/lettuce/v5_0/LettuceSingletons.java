@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -50,6 +51,9 @@ public final class LettuceSingletons {
                 PeerServiceAttributesExtractor.create(
                     connectNetworkAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
+            .setEnabled(
+                InstrumentationConfig.get()
+                    .getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled", false))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
