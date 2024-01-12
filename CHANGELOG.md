@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.0.0 (2024-01-12)
+
 The 2.0.0 release contains significant breaking changes that will most likely affect all users,
 please be sure to read the breaking changes below carefully.
 
