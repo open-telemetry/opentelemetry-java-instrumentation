@@ -235,11 +235,12 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapConsumer(
+        @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
         @Advice.Argument(value = 6, readOnly = false) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
       if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
-        consumer = new TracedDelegatingConsumer(queue, consumer);
+        consumer = new TracedDelegatingConsumer(queue, consumer, channel.getConnection());
       }
     }
   }
