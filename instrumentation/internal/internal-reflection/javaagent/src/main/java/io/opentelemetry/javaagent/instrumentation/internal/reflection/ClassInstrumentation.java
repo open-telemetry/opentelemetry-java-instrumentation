@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -65,7 +66,7 @@ public class ClassInstrumentation implements TypeInstrumentation {
   private static class ClassClassVisitor extends ClassVisitor {
 
     ClassClassVisitor(ClassVisitor cv) {
-      super(Opcodes.ASM7, cv);
+      super(AsmApi.VERSION, cv);
     }
 
     @Override

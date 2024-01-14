@@ -29,5 +29,6 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
     options.setHasResponseCustomizer(
         endpoint -> ServerEndpoint.NOT_FOUND != endpoint && ServerEndpoint.EXCEPTION != endpoint);
     options.setTestHttpPipelining(false);
+    options.setResponseCodeOnNonStandardHttpMethod(405);
   }
 }

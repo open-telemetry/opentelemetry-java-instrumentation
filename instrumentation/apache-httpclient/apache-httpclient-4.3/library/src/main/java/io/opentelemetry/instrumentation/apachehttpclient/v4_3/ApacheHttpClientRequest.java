@@ -126,7 +126,7 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public InetSocketAddress getServerSocketAddress() {
+  public InetSocketAddress getNetworkPeerAddress() {
     if (target == null) {
       return null;
     }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Scope;
@@ -32,7 +33,7 @@ class ThreadPoolExecutorTest {
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(executor.sameTaskBefore).isTrue();
-    assertThat(executor.sameTaskAfter).isTrue();
+    await().untilAsserted(() -> assertThat(executor.sameTaskAfter).isTrue());
   }
 
   // class is configured to be instrumented via otel.instrumentation.executors.include

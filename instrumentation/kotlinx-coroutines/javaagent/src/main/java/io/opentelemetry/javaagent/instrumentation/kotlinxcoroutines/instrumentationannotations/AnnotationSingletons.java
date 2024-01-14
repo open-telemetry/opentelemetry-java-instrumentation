@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.util.SpanNames;
 
 public final class AnnotationSingletons {
 

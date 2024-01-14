@@ -122,7 +122,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.97.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.104.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -140,7 +140,7 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:3.3.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.19"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.20"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -194,6 +194,41 @@ testing {
   }
 }
 
+var path = project.path
+if (path.startsWith(":instrumentation:")) {
+  // remove segments that are a prefix of the next segment
+  // for example :instrumentation:log4j:log4j-context-data:log4j-context-data-2.17 is transformed to log4j-context-data-2.17
+  var tmpPath = path
+  val suffix = tmpPath.substringAfterLast(':')
+  var prefix = ":instrumentation:"
+  if (suffix == "library") {
+    // strip ":library" suffix
+    tmpPath = tmpPath.substringBeforeLast(':')
+  } else if (suffix == "library-autoconfigure") {
+    // replace ":library-autoconfigure" with "-autoconfigure"
+    tmpPath = tmpPath.substringBeforeLast(':') + "-autoconfigure"
+  } else if (suffix == "javaagent") {
+    // strip ":javaagent" suffix and add it to prefix
+    prefix += "javaagent:"
+    tmpPath = tmpPath.substringBeforeLast(':')
+  }
+  val segments = tmpPath.substring(":instrumentation:".length).split(':')
+  var newPath = ""
+  var done = false
+  for (s in segments) {
+    if (!done && (newPath.isEmpty() || s.startsWith(newPath))) {
+      newPath = s
+    } else {
+      newPath += ":$s"
+      done = true
+    }
+  }
+  if (newPath.isNotEmpty()) {
+    path = prefix + newPath
+  }
+}
+var javaModuleName = "io.opentelemetry" + path.replace(".", "_").replace("-", "_").replace(":", ".")
+
 tasks {
   named<Jar>("jar") {
     // By default Gradle Jar task can put multiple files with the same name
@@ -210,7 +245,8 @@ tasks {
         "Implementation-Title" to project.name,
         "Implementation-Version" to project.version,
         "Implementation-Vendor" to "OpenTelemetry",
-        "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation"
+        "Implementation-URL" to "https://github.com/open-telemetry/opentelemetry-java-instrumentation",
+        "Automatic-Module-Name" to javaModuleName
       )
     }
   }
@@ -287,7 +323,12 @@ tasks.withType<Test>().configureEach {
   // propagation.
   jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
   // TODO(anuraaga): Have agent map unshaded to shaded.
-  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
+  if (project.findProperty("disableShadowRelocate") != "true") {
+    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
+  } else {
+    jvmArgs("-Dotel.instrumentation.opentelemetry-api.enabled=false")
+    jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-api.enabled=false")
+  }
 
   // Disable default resource providers since they cause lots of output we don't need.
   jvmArgs("-Dotel.java.disabled.resource.providers=$resourceClassesCsv")
@@ -366,7 +407,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.12.3"
+  toolVersion = "10.12.7"
   maxWarnings = 0
 }
 
@@ -374,6 +415,8 @@ dependencyCheck {
   skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"
   failBuildOnCVSS = 7.0f // fail on high or critical CVE
+  nvd.apiKey = System.getenv("NVD_API_KEY")
+  nvd.delay = 3500 // until next dependency check release (https://github.com/jeremylong/DependencyCheck/pull/6333)
 }
 
 idea {
@@ -401,7 +444,7 @@ configurations.configureEach {
     // what modules they add to reference generically.
     dependencySubstitution {
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")).using(project(":instrumentation-api"))
-      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")).using(project(":instrumentation-api-semconv"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")).using(project(":instrumentation-api-incubator"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")).using(project(":instrumentation-annotations"))
       substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")).using(
         project(":instrumentation-annotations-support")

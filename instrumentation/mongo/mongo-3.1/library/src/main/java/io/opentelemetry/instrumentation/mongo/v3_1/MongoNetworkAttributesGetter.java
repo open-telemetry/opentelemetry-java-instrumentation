@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
 import com.mongodb.event.CommandStartedEvent;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
-class MongoNetworkAttributesGetter implements ServerAttributesGetter<CommandStartedEvent, Void> {
+class MongoNetworkAttributesGetter implements ServerAttributesGetter<CommandStartedEvent> {
 
   @Nullable
   @Override

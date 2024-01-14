@@ -23,6 +23,12 @@ final class NoopVirtualFieldImplementationInstaller implements VirtualFieldImple
 
   @Override
   @CanIgnoreReturnValue
+  public Extendable injectHelperClasses(Extendable builder) {
+    return builder;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
   public Extendable injectFields(Extendable builder) {
     return builder;
   }

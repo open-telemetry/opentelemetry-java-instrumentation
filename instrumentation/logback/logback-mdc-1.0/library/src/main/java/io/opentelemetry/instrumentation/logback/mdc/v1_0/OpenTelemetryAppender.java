@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggerContextVO;

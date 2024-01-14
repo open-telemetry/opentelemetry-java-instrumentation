@@ -16,12 +16,14 @@ import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
@@ -30,10 +32,16 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -43,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class VertxSqlClientTest {
   private static final Logger logger = LoggerFactory.getLogger(VertxSqlClientTest.class);
 
@@ -53,6 +60,9 @@ class VertxSqlClientTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static GenericContainer<?> container;
   private static Vertx vertx;
@@ -131,8 +141,8 @@ class VertxSqlClientTest {
                             equalTo(DB_STATEMENT, "select * from test"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -185,8 +195,8 @@ class VertxSqlClientTest {
                             equalTo(DB_NAME, DB),
                             equalTo(DB_USER, USER_DB),
                             equalTo(DB_STATEMENT, "invalid"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -203,6 +213,10 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, TimeUnit.SECONDS);
 
+    assertPreparedSelect();
+  }
+
+  private static void assertPreparedSelect() {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -217,8 +231,8 @@ class VertxSqlClientTest {
                             equalTo(DB_STATEMENT, "select * from test where id = $?"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port))));
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -247,7 +261,164 @@ class VertxSqlClientTest {
                             equalTo(DB_STATEMENT, "insert into test values ($?, $?) returning *"),
                             equalTo(DB_OPERATION, "INSERT"),
                             equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port))));
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @Test
+  void testWithTransaction() throws Exception {
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                pool.withTransaction(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, TimeUnit.SECONDS);
+
+    assertPreparedSelect();
+  }
+
+  @Test
+  void testWithConnection() throws Exception {
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                pool.withConnection(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, TimeUnit.SECONDS);
+
+    assertPreparedSelect();
+  }
+
+  @Test
+  void testManyQueries() throws Exception {
+    int count = 50;
+    CountDownLatch latch = new CountDownLatch(count);
+    List<CompletableFuture<Object>> futureList = new ArrayList<>();
+    List<CompletableFuture<Object>> resultList = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      CompletableFuture<Object> future = new CompletableFuture<>();
+      futureList.add(future);
+      resultList.add(
+          future.whenComplete((rows, throwable) -> testing.runWithSpan("callback", () -> {})));
+    }
+    for (CompletableFuture<Object> future : futureList) {
+      testing.runWithSpan(
+          "parent",
+          () ->
+              pool.query("select * from test")
+                  .execute(
+                      rowSetAsyncResult -> {
+                        if (rowSetAsyncResult.succeeded()) {
+                          future.complete(rowSetAsyncResult.result());
+                        } else {
+                          future.completeExceptionally(rowSetAsyncResult.cause());
+                        }
+                        latch.countDown();
+                      }));
+    }
+    latch.await(30, TimeUnit.SECONDS);
+    for (CompletableFuture<Object> result : resultList) {
+      result.get(10, TimeUnit.SECONDS);
+    }
+
+    List<Consumer<TraceAssert>> assertions =
+        Collections.nCopies(
+            count,
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT tempdb.test")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_NAME, DB),
+                                equalTo(DB_USER, USER_DB),
+                                equalTo(DB_STATEMENT, "select * from test"),
+                                equalTo(DB_OPERATION, "SELECT"),
+                                equalTo(DB_SQL_TABLE, "test"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, port)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(assertions);
+  }
+
+  @Test
+  void testConcurrency() throws Exception {
+    int count = 50;
+    CountDownLatch latch = new CountDownLatch(count);
+    List<CompletableFuture<Object>> futureList = new ArrayList<>();
+    List<CompletableFuture<Object>> resultList = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      CompletableFuture<Object> future = new CompletableFuture<>();
+      futureList.add(future);
+      resultList.add(
+          future.whenComplete((rows, throwable) -> testing.runWithSpan("callback", () -> {})));
+    }
+    ExecutorService executorService = Executors.newFixedThreadPool(4);
+    cleanup.deferCleanup(() -> executorService.shutdown());
+    for (CompletableFuture<Object> future : futureList) {
+      executorService.submit(
+          () -> {
+            testing
+                .runWithSpan(
+                    "parent",
+                    () ->
+                        pool.withConnection(
+                            conn ->
+                                conn.preparedQuery("select * from test where id = $1")
+                                    .execute(Tuple.of(1))))
+                .onComplete(
+                    rowSetAsyncResult -> {
+                      if (rowSetAsyncResult.succeeded()) {
+                        future.complete(rowSetAsyncResult.result());
+                      } else {
+                        future.completeExceptionally(rowSetAsyncResult.cause());
+                      }
+                      latch.countDown();
+                    });
+          });
+    }
+    latch.await(30, TimeUnit.SECONDS);
+    for (CompletableFuture<Object> result : resultList) {
+      result.get(10, TimeUnit.SECONDS);
+    }
+
+    List<Consumer<TraceAssert>> assertions =
+        Collections.nCopies(
+            count,
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT tempdb.test")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_NAME, DB),
+                                equalTo(DB_USER, USER_DB),
+                                equalTo(DB_STATEMENT, "select * from test where id = $?"),
+                                equalTo(DB_OPERATION, "SELECT"),
+                                equalTo(DB_SQL_TABLE, "test"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, port)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(assertions);
   }
 }

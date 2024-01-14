@@ -57,7 +57,7 @@ public class DataSourceConfig {
     dataSource.setUrl("jdbc:postgresql://127.0.0.1:5432/example");
     dataSource.setUsername("postgres");
     dataSource.setPassword("root");
-    return new OpenTelemetryDataSource(dataSource);
+    return JdbcTelemetry.create(openTelemetry).wrap(dataSource);
   }
 
 }
@@ -68,3 +68,7 @@ public class DataSourceConfig {
 1. Activate tracing for JDBC connections by setting `jdbc:otel:` prefix to the JDBC URL, e.g. `jdbc:otel:h2:mem:test`.
 
 2. Set the driver class to `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver`.
+
+3. Inject `OpenTelemetry` into `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver` _before the initialization of the database connection pool_.
+You can do this with the `void setOpenTelemetry(OpenTelemetry openTelemetry)` method of `io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver`.
+Another way is to use `OpenTelemetryDriver.install(OpenTelemetry openTelemetry)`.

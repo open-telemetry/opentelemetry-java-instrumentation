@@ -5,18 +5,30 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
+
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.Timer;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
-import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
@@ -25,6 +37,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 // this class is only used from SqsAccess from method with @NoMuzzle annotation
 final class SqsImpl {
@@ -40,7 +53,8 @@ final class SqsImpl {
   static boolean afterReceiveMessageExecution(
       Context.AfterExecution context,
       ExecutionAttributes executionAttributes,
-      TracingExecutionInterceptor config) {
+      TracingExecutionInterceptor config,
+      Timer timer) {
 
     SdkResponse rawResponse = context.response();
     if (!(rawResponse instanceof ReceiveMessageResponse)) {
@@ -48,44 +62,74 @@ final class SqsImpl {
     }
 
     ReceiveMessageResponse response = (ReceiveMessageResponse) rawResponse;
-    SdkHttpResponse httpResponse = context.httpResponse();
-    for (Message message : response.messages()) {
-      createConsumerSpan(message, httpResponse, executionAttributes, config);
+    if (response.messages().isEmpty()) {
+      return false;
     }
+
+    io.opentelemetry.context.Context parentContext =
+        TracingExecutionInterceptor.getParentContext(executionAttributes);
+    Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
+        config.getConsumerReceiveInstrumenter();
+    io.opentelemetry.context.Context receiveContext = null;
+    SqsReceiveRequest receiveRequest =
+        SqsReceiveRequest.create(executionAttributes, SqsMessageImpl.wrap(response.messages()));
+    if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
+      receiveContext =
+          InstrumenterUtil.startAndEnd(
+              consumerReceiveInstrumenter,
+              parentContext,
+              receiveRequest,
+              new Response(context.httpResponse(), response),
+              null,
+              timer.startTime(),
+              timer.now());
+    }
+    // copy ExecutionAttributes as these will get cleared before the process spans are created
+    ExecutionAttributes copy = new ExecutionAttributes();
+    copy.putAttribute(
+        SDK_HTTP_REQUEST_ATTRIBUTE, executionAttributes.getAttribute(SDK_HTTP_REQUEST_ATTRIBUTE));
+    copy.putAttribute(
+        SDK_REQUEST_ATTRIBUTE, executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    copy.putAttribute(
+        SdkExecutionAttribute.SERVICE_NAME,
+        executionAttributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME));
+    copy.putAttribute(
+        SdkExecutionAttribute.OPERATION_NAME,
+        executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME));
+
+    TracingList tracingList =
+        TracingList.wrap(
+            response.messages(),
+            config.getConsumerProcessInstrumenter(),
+            copy,
+            new Response(context.httpResponse(), response),
+            config,
+            receiveContext);
+
+    // store tracing list in context so that our proxied SqsClient/SqsAsyncClient could pick it up
+    SqsTracingContext.set(parentContext, tracingList);
 
     return true;
   }
 
-  private static void createConsumerSpan(
-      Message message,
-      SdkHttpResponse httpResponse,
-      ExecutionAttributes executionAttributes,
-      TracingExecutionInterceptor config) {
+  private static final Field messagesField = getMessagesField();
 
-    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
-
-    TextMapPropagator messagingPropagator = config.getMessagingPropagator();
-    if (messagingPropagator != null) {
-      parentContext =
-          SqsParentContext.ofMessageAttributes(message.messageAttributes(), messagingPropagator);
+  private static Field getMessagesField() {
+    try {
+      Field field = ReceiveMessageResponse.class.getDeclaredField("messages");
+      field.setAccessible(true);
+      return field;
+    } catch (Exception e) {
+      return null;
     }
+  }
 
-    if (config.shouldUseXrayPropagator()
-        && parentContext == io.opentelemetry.context.Context.root()) {
-      parentContext = SqsParentContext.ofSystemAttributes(message.attributesAsStrings());
-    }
-
-    Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter =
-        config.getConsumerInstrumenter();
-    if (consumerInstrumenter.shouldStart(parentContext, executionAttributes)) {
-      io.opentelemetry.context.Context context =
-          consumerInstrumenter.start(parentContext, executionAttributes);
-
-      // TODO: Even if we keep HTTP attributes (see afterMarshalling), does it make sense here
-      //  per-message?
-      // TODO: Should we really create root spans if we can't extract anything, or should we attach
-      //  to the current context?
-      consumerInstrumenter.end(context, executionAttributes, httpResponse, null);
+  public static void setMessages(
+      ReceiveMessageResponse receiveMessageResponse, List<Message> messages) {
+    try {
+      messagesField.set(receiveMessageResponse, messages);
+    } catch (IllegalAccessException ignored) {
+      // should not happen, we call setAccessible on the field
     }
   }
 
@@ -199,5 +243,116 @@ final class SqsImpl {
       builder.messageAttributeNames(messageAttributeNames);
     }
     return builder.build();
+  }
+
+  static boolean isSqsProducerRequest(SdkRequest request) {
+    return request instanceof SendMessageRequest || request instanceof SendMessageBatchRequest;
+  }
+
+  static String getQueueUrl(SdkRequest request) {
+    if (request instanceof SendMessageRequest) {
+      return ((SendMessageRequest) request).queueUrl();
+    } else if (request instanceof SendMessageBatchRequest) {
+      return ((SendMessageBatchRequest) request).queueUrl();
+    } else if (request instanceof ReceiveMessageRequest) {
+      return ((ReceiveMessageRequest) request).queueUrl();
+    }
+    return null;
+  }
+
+  static String getMessageAttribute(SdkRequest request, String name) {
+    if (request instanceof SendMessageRequest) {
+      MessageAttributeValue value = ((SendMessageRequest) request).messageAttributes().get(name);
+      return value != null ? value.stringValue() : null;
+    }
+    return null;
+  }
+
+  static String getMessageId(SdkResponse response) {
+    if (response instanceof SendMessageResponse) {
+      return ((SendMessageResponse) response).messageId();
+    }
+    return null;
+  }
+
+  static SqsClient wrap(SqsClient sqsClient) {
+    // proxy SqsClient so we could replace the messages list in ReceiveMessageResponse returned from
+    // receiveMessage call
+    return (SqsClient)
+        Proxy.newProxyInstance(
+            sqsClient.getClass().getClassLoader(),
+            new Class<?>[] {SqsClient.class},
+            (proxy, method, args) -> {
+              if ("receiveMessage".equals(method.getName())) {
+                SqsTracingContext sqsTracingContext = new SqsTracingContext();
+                try (Scope ignored =
+                    io.opentelemetry.context.Context.current()
+                        .with(sqsTracingContext)
+                        .makeCurrent()) {
+                  Object result = invokeProxyMethod(method, sqsClient, args);
+                  TracingList tracingList = sqsTracingContext.get();
+                  if (tracingList != null) {
+                    ReceiveMessageResponse response = (ReceiveMessageResponse) result;
+                    SqsImpl.setMessages(response, tracingList);
+                    return response;
+                  }
+                  return result;
+                }
+              } else {
+                return invokeProxyMethod(method, sqsClient, args);
+              }
+            });
+  }
+
+  @SuppressWarnings("unchecked")
+  static SqsAsyncClient wrap(SqsAsyncClient sqsClient) {
+    // proxy SqsAsyncClient so we could replace the messages list in ReceiveMessageResponse returned
+    // from receiveMessage call
+    return (SqsAsyncClient)
+        Proxy.newProxyInstance(
+            sqsClient.getClass().getClassLoader(),
+            new Class<?>[] {SqsAsyncClient.class},
+            (proxy, method, args) -> {
+              if ("receiveMessage".equals(method.getName())) {
+                SqsTracingContext sqsTracingContext = new SqsTracingContext();
+                try (Scope ignored =
+                    io.opentelemetry.context.Context.current()
+                        .with(sqsTracingContext)
+                        .makeCurrent()) {
+                  Object result = invokeProxyMethod(method, sqsClient, args);
+                  CompletableFuture<ReceiveMessageResponse> originalFuture =
+                      (CompletableFuture<ReceiveMessageResponse>) result;
+                  CompletableFuture<ReceiveMessageResponse> resultFuture =
+                      new CompletableFuture<>();
+                  originalFuture.whenComplete(
+                      (response, throwable) -> {
+                        if (throwable != null) {
+                          resultFuture.completeExceptionally(throwable);
+                        } else {
+                          TracingList tracingList = sqsTracingContext.get();
+                          if (tracingList != null) {
+                            SqsImpl.setMessages(response, tracingList);
+                          }
+                          resultFuture.complete(response);
+                        }
+                      });
+
+                  return resultFuture;
+                } catch (InvocationTargetException exception) {
+                  throw exception.getCause();
+                }
+              } else {
+                return invokeProxyMethod(method, sqsClient, args);
+              }
+            });
+  }
+
+  private static Object invokeProxyMethod(Method method, Object target, Object[] args)
+      throws Throwable {
+    try {
+      return method.invoke(target, args);
+    } catch (InvocationTargetException exception) {
+      throw exception.getCause();
+    }
   }
 }

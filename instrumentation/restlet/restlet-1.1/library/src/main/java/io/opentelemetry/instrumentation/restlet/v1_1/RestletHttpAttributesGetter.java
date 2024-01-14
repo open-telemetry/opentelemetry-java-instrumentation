@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.restlet.v1_1.RestletHeadersGetter
 
 import com.noelios.restlet.http.HttpCall;
 import com.noelios.restlet.http.HttpRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -106,34 +106,20 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     return (String) request.getAttributes().get("org.restlet.http.version");
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(Request request) {
-    HttpCall call = httpCall(request);
-    return call == null ? null : call.getHostDomain();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(Request request) {
-    HttpCall call = httpCall(request);
-    return call == null ? null : call.getServerPort();
-  }
-
   @Override
   @Nullable
-  public String getClientSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkPeerAddress(Request request, @Nullable Response response) {
     return request.getClientInfo().getAddress();
   }
 
   @Override
-  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     return request.getClientInfo().getPort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkLocalAddress(Request request, @Nullable Response response) {
     HttpCall call = httpCall(request);
     return call == null ? null : call.getServerAddress();
   }

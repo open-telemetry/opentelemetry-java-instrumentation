@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import ratpack.handling.Context;
@@ -83,30 +83,8 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     return null;
   }
 
-  @Nullable
   @Override
-  public String getServerAddress(Request request) {
-    PublicAddress publicAddress = getPublicAddress(request);
-    return publicAddress == null ? null : publicAddress.get().getHost();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(Request request) {
-    PublicAddress publicAddress = getPublicAddress(request);
-    return publicAddress == null ? null : publicAddress.get().getPort();
-  }
-
-  private static PublicAddress getPublicAddress(Request request) {
-    Context ratpackContext = request.get(Context.class);
-    if (ratpackContext == null) {
-      return null;
-    }
-    return ratpackContext.get(PublicAddress.class);
-  }
-
-  @Override
-  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     return request.getRemoteAddress().getPort();
   }
 }

@@ -8,6 +8,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLoggerExporterAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -30,8 +35,10 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,6 +62,19 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
   public static class OpenTelemetrySdkConfig {
+
+    @Bean
+    @ConfigurationPropertiesBinding
+    @ConditionalOnBean({
+      OtelResourceAutoConfiguration.class,
+      OtlpLoggerExporterAutoConfiguration.class,
+      OtlpSpanExporterAutoConfiguration.class,
+      OtlpMetricExporterAutoConfiguration.class
+    })
+    public MapConverter mapConverter() {
+      // needed for otlp exporter headers and OtelResourceProperties
+      return new MapConverter();
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -132,20 +152,30 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
+    // If you change the bean name, also change it in the OpenTelemetryJdbcDriverAutoConfiguration
+    // class
     public OpenTelemetry openTelemetry(
         ObjectProvider<ContextPropagators> propagatorsProvider,
         SdkTracerProvider tracerProvider,
         SdkMeterProvider meterProvider,
-        SdkLoggerProvider loggerProvider) {
+        SdkLoggerProvider loggerProvider,
+        ObjectProvider<List<OpenTelemetryInjector>> openTelemetryConsumerProvider) {
 
       ContextPropagators propagators = propagatorsProvider.getIfAvailable(ContextPropagators::noop);
 
-      return OpenTelemetrySdk.builder()
-          .setTracerProvider(tracerProvider)
-          .setMeterProvider(meterProvider)
-          .setLoggerProvider(loggerProvider)
-          .setPropagators(propagators)
-          .build();
+      OpenTelemetrySdk openTelemetry =
+          OpenTelemetrySdk.builder()
+              .setTracerProvider(tracerProvider)
+              .setMeterProvider(meterProvider)
+              .setLoggerProvider(loggerProvider)
+              .setPropagators(propagators)
+              .build();
+
+      List<OpenTelemetryInjector> openTelemetryInjectors =
+          openTelemetryConsumerProvider.getIfAvailable(() -> Collections.emptyList());
+      openTelemetryInjectors.forEach(consumer -> consumer.accept(openTelemetry));
+
+      return openTelemetry;
     }
   }
 

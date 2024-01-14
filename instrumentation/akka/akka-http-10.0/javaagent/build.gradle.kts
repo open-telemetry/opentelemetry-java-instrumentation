@@ -39,14 +39,10 @@ dependencies {
   testInstrumentation(project(":instrumentation:scala-fork-join-2.8:javaagent"))
 
   latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:+")
-  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:2.8.+")
+  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:+")
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
@@ -55,10 +51,6 @@ tasks {
     jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }
 

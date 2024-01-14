@@ -10,6 +10,7 @@ import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -83,15 +84,23 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport> implements Ag
   }
 
   @Override
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return getContextPath() + "/*"
+    }
     switch (endpoint) {
       case NOT_FOUND:
         return getContextPath() + "/*"
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
       default:
-        return super.expectedHttpRoute(endpoint)
+        return super.expectedHttpRoute(endpoint, method)
     }
+  }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    405
   }
 
   @Override

@@ -68,7 +68,6 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldSendTelemetry() throws InterruptedException {
 
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.URL, String.class);
@@ -96,8 +95,8 @@ class OtelSpringStarterSmokeTest {
                     spanDataAssert ->
                         spanDataAssert
                             .hasKind(SpanKind.SERVER)
-                            .hasAttribute(SemanticAttributes.HTTP_METHOD, "GET")
-                            .hasAttribute(SemanticAttributes.HTTP_STATUS_CODE, 200L)
+                            .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
+                            .hasAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
                             .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/ping")));
 
     // Metric
@@ -115,6 +114,7 @@ class OtelSpringStarterSmokeTest {
     LogRecordData firstLog = logs.get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
-        .isEqualTo("Initializing Spring DispatcherServlet 'dispatcherServlet'");
+        .startsWith("Starting ")
+        .contains(this.getClass().getSimpleName());
   }
 }

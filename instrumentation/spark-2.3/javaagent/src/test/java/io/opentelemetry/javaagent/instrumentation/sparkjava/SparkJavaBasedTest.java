@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -43,7 +44,6 @@ public class SparkJavaBasedTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void generatesSpans() {
     AggregatedHttpResponse response = client.get("/param/asdf1234").aggregate().join();
     String content = response.contentUtf8();
@@ -60,22 +60,20 @@ public class SparkJavaBasedTest {
                             .hasKind(SpanKind.SERVER)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.HTTP_SCHEME, "http"),
-                                equalTo(SemanticAttributes.HTTP_TARGET, "/param/asdf1234"),
-                                equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                                equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                                equalTo(SemanticAttributes.URL_SCHEME, "http"),
+                                equalTo(SemanticAttributes.URL_PATH, "/param/asdf1234"),
+                                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 satisfies(
                                     SemanticAttributes.USER_AGENT_ORIGINAL,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
-                                equalTo(SemanticAttributes.NET_PROTOCOL_NAME, "http"),
-                                equalTo(SemanticAttributes.NET_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, port),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(SemanticAttributes.SERVER_PORT, port),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> val.isInstanceOf(Long.class)),
-                                equalTo(SemanticAttributes.NET_SOCK_HOST_ADDR, "127.0.0.1"))));
+                                    NetworkAttributes.NETWORK_PEER_PORT,
+                                    val -> val.isInstanceOf(Long.class)))));
   }
 }

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.exporter.logging.LoggingMetricExporter;
-import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
+import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingMetricExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class MetricExporterAutoConfigurationTest {
   void defaultConfiguration() {
     contextRunner.run(
         context -> {
-          assertThat(context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+          assertThat(context.getBean("otelOtlpMetricExporter", OtlpHttpMetricExporter.class))
               .as("OTLP exporter is enabled by default")
               .isNotNull();
           assertThat(context.containsBean("otelLoggingMetricExporter"))
@@ -43,8 +43,7 @@ class MetricExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.logging.enabled=true")
         .run(
             context -> {
-              assertThat(
-                      context.getBean("otelOtlpGrpcMetricExporter", OtlpGrpcMetricExporter.class))
+              assertThat(context.getBean("otelOtlpMetricExporter", OtlpHttpMetricExporter.class))
                   .as("OTLP exporter is present even with logging enabled")
                   .isNotNull();
               assertThat(context.getBean("otelLoggingMetricExporter", LoggingMetricExporter.class))

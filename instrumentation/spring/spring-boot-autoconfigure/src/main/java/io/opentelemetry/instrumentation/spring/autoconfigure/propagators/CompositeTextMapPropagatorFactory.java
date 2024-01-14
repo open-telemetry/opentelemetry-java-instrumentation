@@ -68,7 +68,7 @@ public final class CompositeTextMapPropagatorFactory {
           }
           break;
         case "xray":
-          if (isOnClasspath("io.opentelemetry.contrib.awsxray.AwsXrayPropagator")) {
+          if (isOnClasspath("io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator")) {
             propagators.add(
                 beanFactory
                     .getBeanProvider(AwsXrayPropagator.class)
@@ -91,7 +91,7 @@ public final class CompositeTextMapPropagatorFactory {
   }
 
   private static boolean isOnClasspath(String clazz) {
-    return ClassUtils.isPresent(clazz, null);
+    return ClassUtils.isPresent(clazz, CompositeTextMapPropagatorFactory.class.getClassLoader());
   }
 
   private CompositeTextMapPropagatorFactory() {}

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 
@@ -37,5 +39,13 @@ abstract class JaxRsJettyHttpServerTest extends JaxRsHttpServerTest<Server> {
   @Override
   String getContextPath() {
     "/rest-app"
+  }
+
+  @Override
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return "${getContextPath()}/*"
+    }
+    return super.expectedHttpRoute(endpoint, method)
   }
 }

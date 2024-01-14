@@ -24,13 +24,13 @@ tasks.withType<ShadowJar>().configureEach {
       exclude("io.opentelemetry.instrumentation.resources.*")
       exclude("io.opentelemetry.instrumentation.spring.resources.*")
     }
-  }
 
-  // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
-  relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
-  relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
-  relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
-  relocate("io.opentelemetry.extension.incubator", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.incubator")
+    // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
+    relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
+    relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
+    relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
+    relocate("io.opentelemetry.extension.incubator", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.incubator")
+  }
 
   // relocate(the OpenTelemetry extensions that are used by instrumentation modules)
   // these extensions live in the AgentClassLoader, and are injected into the user's class loader

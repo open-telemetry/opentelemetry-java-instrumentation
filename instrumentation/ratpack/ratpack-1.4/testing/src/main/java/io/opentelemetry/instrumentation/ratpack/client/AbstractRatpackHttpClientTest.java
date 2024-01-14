@@ -133,7 +133,10 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
     optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
           if (uri.toString().equals("https://192.0.2.1/")) {
-            return new ConnectTimeoutException("connection timed out: /192.0.2.1:443");
+            return new ConnectTimeoutException(
+                "connection timed out"
+                    + (Boolean.getBoolean("testLatestDeps") ? " after 2000 ms" : "")
+                    + ": /192.0.2.1:443");
           } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
             return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");
           } else if (uri.getPath().equals("/read-timeout")) {

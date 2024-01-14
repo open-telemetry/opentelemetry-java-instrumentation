@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version "3.1.3"
+  id("org.springframework.boot") version "3.2.1"
   id("org.graalvm.buildtools.native")
 }
 
@@ -58,5 +58,10 @@ graalvmNative {
     // Workaround for https://github.com/junit-team/junit5/issues/3405
     buildArgs.add("--initialize-at-build-time=org.junit.platform.launcher.core.LauncherConfig")
     buildArgs.add("--initialize-at-build-time=org.junit.jupiter.engine.config.InstantiatingConfigurationParameterConverter")
+  }
+
+  tasks.test {
+    useJUnitPlatform()
+    setForkEvery(1)
   }
 }

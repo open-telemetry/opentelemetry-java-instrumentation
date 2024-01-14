@@ -28,4 +28,13 @@ tasks {
       jvmTarget = "1.8"
     }
   }
+
+  compileKotlin {
+    kotlinOptions {
+      languageVersion = "1.4"
+    }
+  }
+}
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

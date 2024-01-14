@@ -28,11 +28,8 @@ import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
-import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.instrumenter.url.internal.UrlAttributes;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -91,7 +88,6 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void pre(
       AttributesBuilder attributes,
       Exchange exchange,
@@ -99,28 +95,14 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    String httpUrl = getHttpUrl(exchange, endpoint);
-    if (httpUrl != null) {
-      if (SemconvStability.emitStableHttpSemconv()) {
-        internalSet(attributes, UrlAttributes.URL_FULL, httpUrl);
-      }
-
-      if (SemconvStability.emitOldHttpSemconv()) {
-        internalSet(attributes, SemanticAttributes.HTTP_URL, httpUrl);
-      }
-    }
+    internalSet(attributes, SemanticAttributes.URL_FULL, getHttpUrl(exchange, endpoint));
 
     String method = getHttpMethod(exchange, endpoint);
-    if (SemconvStability.emitStableHttpSemconv()) {
-      if (method == null || knownMethods.contains(method)) {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
-      } else {
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
-      }
-    }
-    if (SemconvStability.emitOldHttpSemconv()) {
-      internalSet(attributes, SemanticAttributes.HTTP_METHOD, method);
+    if (method == null || knownMethods.contains(method)) {
+      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+    } else {
+      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
   }
 
@@ -177,19 +159,13 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   public void post(AttributesBuilder attributes, Exchange exchange, Endpoint endpoint) {
     super.post(attributes, exchange, endpoint);
 
     if (exchange.hasOut()) {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
-        if (SemconvStability.emitStableHttpSemconv()) {
-          attributes.put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
-        }
-        if (SemconvStability.emitOldHttpSemconv()) {
-          attributes.put(SemanticAttributes.HTTP_STATUS_CODE, (Integer) responseCode);
-        }
+        attributes.put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
       }
     }
   }

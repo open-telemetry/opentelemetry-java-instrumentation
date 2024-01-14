@@ -10,9 +10,9 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.ConnectionErrorSpanInterceptor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpAttributesGetter;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpInstrumenterFactory;
@@ -35,13 +35,14 @@ public final class OkHttp3Singletons {
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           singletonList(
-              PeerServiceAttributesExtractor.create(
-                  OkHttpAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceMapping())),
-          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
+              HttpClientPeerServiceAttributesExtractor.create(
+                  OkHttpAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceResolver())),
+          CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
 
   public static final Interceptor CONTEXT_INTERCEPTOR =
       chain -> {
-        try (Scope ignored = HttpClientResendCount.initialize(Context.current()).makeCurrent()) {
+        try (Scope ignored =
+            HttpClientRequestResendCount.initialize(Context.current()).makeCurrent()) {
           return chain.proceed(chain.request());
         }
       };

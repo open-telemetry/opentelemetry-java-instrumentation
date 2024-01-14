@@ -31,4 +31,8 @@ abstract class AbstractSpringServerTest extends AbstractRestletServerTest {
     host.attach(router)
   }
 
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    405
+  }
 }

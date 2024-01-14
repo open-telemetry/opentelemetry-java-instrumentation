@@ -27,13 +27,3 @@ dependencies {
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}

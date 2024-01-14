@@ -11,7 +11,7 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.RequestContextAccess;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -89,28 +89,16 @@ enum ArmeriaHttpServerAttributesGetter
     return protocol.isMultiplex() ? "2" : "1.1";
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(RequestContext ctx) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(RequestContext ctx) {
-    return null;
-  }
-
   @Override
   @Nullable
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       RequestContext ctx, @Nullable RequestLog log) {
     return RequestContextAccess.localAddress(ctx);
   }

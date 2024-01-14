@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.enhanceConfig;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.producerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -20,8 +18,6 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaPropagation;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Map;
-import java.util.Properties;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,36 +35,12 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Map.class)),
-        this.getClass().getName() + "$ConstructorMapAdvice");
-    transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Properties.class)),
-        this.getClass().getName() + "$ConstructorPropertiesAdvice");
-    transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
             .and(named("send"))
             .and(takesArgument(0, named("org.apache.kafka.clients.producer.ProducerRecord")))
             .and(takesArgument(1, named("org.apache.kafka.clients.producer.Callback"))),
         KafkaProducerInstrumentation.class.getName() + "$SendAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class ConstructorMapAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(0) Map<String, Object> config) {
-      enhanceConfig(config);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class ConstructorPropertiesAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(0) Properties config) {
-      enhanceConfig(config);
-    }
   }
 
   @SuppressWarnings("unused")

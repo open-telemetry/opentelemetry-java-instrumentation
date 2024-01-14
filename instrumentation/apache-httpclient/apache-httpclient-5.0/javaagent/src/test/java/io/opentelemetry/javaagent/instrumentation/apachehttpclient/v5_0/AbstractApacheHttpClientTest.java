@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -27,27 +26,21 @@ import org.apache.hc.core5.util.Timeout;
 
 abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     extends AbstractHttpClientTest<T> {
-  private static final String USER_AGENT = "apachehttpclient";
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent(USER_AGENT);
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    if (SemconvStability.emitOldHttpSemconv()) {
-      // unopened port or non routable address; or timeout
-      // circular redirects don't report protocol information as well
-      if ("http://localhost:61/".equals(uri.toString())
-          || "https://192.0.2.1/".equals(uri.toString())
-          || uri.toString().contains("/read-timeout")
-          || uri.toString().contains("/circular-redirect")) {
-        attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-        attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-      }
+    // unopened port or non routable address; or timeout
+    // circular redirects don't report protocol information as well
+    if ("http://localhost:61/".equals(uri.toString())
+        || "https://192.0.2.1/".equals(uri.toString())
+        || uri.toString().contains("/read-timeout")
+        || uri.toString().contains("/circular-redirect")) {
+      attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
     }
     return attributes;
   }
@@ -55,7 +48,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   @Override
   public T buildRequest(String method, URI uri, Map<String, String> headers) {
     T request = createRequest(method, uri);
-    request.addHeader("user-agent", USER_AGENT);
+    request.addHeader("user-agent", "apachehttpclient");
     headers.forEach((key, value) -> request.setHeader(new BasicHeader(key, value)));
     return request;
   }

@@ -10,15 +10,15 @@ import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessageOperation;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -31,8 +31,7 @@ class RocketMqInstrumenterFactory {
   static Instrumenter<SendMessageContext, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
-      boolean captureExperimentalSpanAttributes,
-      boolean propagationEnabled) {
+      boolean captureExperimentalSpanAttributes) {
 
     RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PUBLISH;
@@ -49,18 +48,13 @@ class RocketMqInstrumenterFactory {
           RocketMqProducerExperimentalAttributeExtractor.INSTANCE);
     }
 
-    if (propagationEnabled) {
-      return instrumenterBuilder.buildProducerInstrumenter(MapSetter.INSTANCE);
-    } else {
-      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
-    }
+    return instrumenterBuilder.buildProducerInstrumenter(MapSetter.INSTANCE);
   }
 
   static RocketMqConsumerInstrumenter createConsumerInstrumenter(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
-      boolean captureExperimentalSpanAttributes,
-      boolean propagationEnabled) {
+      boolean captureExperimentalSpanAttributes) {
 
     InstrumenterBuilder<Void, Void> batchReceiveInstrumenterBuilder =
         Instrumenter.<Void, Void>builder(
@@ -70,17 +64,9 @@ class RocketMqInstrumenterFactory {
 
     return new RocketMqConsumerInstrumenter(
         createProcessInstrumenter(
-            openTelemetry,
-            capturedHeaders,
-            captureExperimentalSpanAttributes,
-            propagationEnabled,
-            false),
+            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, false),
         createProcessInstrumenter(
-            openTelemetry,
-            capturedHeaders,
-            captureExperimentalSpanAttributes,
-            propagationEnabled,
-            true),
+            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, true),
         batchReceiveInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer()));
   }
 
@@ -88,7 +74,6 @@ class RocketMqInstrumenterFactory {
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean propagationEnabled,
       boolean batch) {
 
     RocketMqConsumerAttributeGetter getter = RocketMqConsumerAttributeGetter.INSTANCE;
@@ -104,10 +89,6 @@ class RocketMqInstrumenterFactory {
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders));
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(RocketMqConsumerExperimentalAttributeExtractor.INSTANCE);
-    }
-
-    if (!propagationEnabled) {
-      return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
 
     if (batch) {

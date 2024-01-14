@@ -13,6 +13,15 @@
     },
     {
       "pattern": "^https://kotlinlang\\.org/docs/coroutines-overview\\.html$"
+    },
+    {
+      "pattern": "^http(s)?://logback\\.qos\\.ch"
+    },
+    {
+      "pattern": "^https://micrometer\\.io"
+    },
+    {
+      "pattern": "^https://central\\.sonatype\\.com"
     }
   ]
 }

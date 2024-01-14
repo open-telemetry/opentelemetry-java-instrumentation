@@ -56,7 +56,7 @@ This repository also publishes standalone instrumentation for several libraries 
 that can be used if you prefer that over using the Java agent.
 Please see the standalone library instrumentation column
 on [Supported Libraries](docs/supported-libraries.md#libraries--frameworks).
-if you are looking for documentation on using those.
+If you are looking for documentation on using those.
 
 ## Getting Started
 
@@ -152,6 +152,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
 
 - [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana Labs
+- [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 

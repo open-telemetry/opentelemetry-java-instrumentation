@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17;
 
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.log.LoggingContextConstants.TRACE_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
+import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,8 +26,38 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  * #supplyContextData()} is called when a log entry is created.
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
+
   private static final boolean BAGGAGE_ENABLED =
       ConfigPropertiesUtil.getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+
+  private static final boolean configuredResourceAttributeAccessible =
+      isConfiguredResourceAttributeAccessible();
+
+  private static final Map<String, String> staticContextData = getStaticContextData();
+
+  private static Map<String, String> getStaticContextData() {
+    if (configuredResourceAttributeAccessible) {
+      return ConfiguredResourceAttributesHolder.getResourceAttributes();
+    }
+    return Collections.emptyMap();
+  }
+
+  /**
+   * Checks whether {@link ConfiguredResourceAttributesHolder} is available in classpath. The result
+   * is true if {@link ConfiguredResourceAttributesHolder} can be loaded, false otherwise.
+   *
+   * @return A boolean
+   */
+  private static boolean isConfiguredResourceAttributeAccessible() {
+    try {
+      Class.forName(
+          "io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder");
+      return true;
+
+    } catch (ClassNotFoundException ok) {
+      return false;
+    }
+  }
 
   /**
    * Returns context from the current span when available.
@@ -39,10 +70,12 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     Context context = Context.current();
     Span currentSpan = Span.fromContext(context);
     if (!currentSpan.getSpanContext().isValid()) {
-      return Collections.emptyMap();
+      return staticContextData;
     }
 
     Map<String, String> contextData = new HashMap<>();
+    contextData.putAll(staticContextData);
+
     SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(TRACE_ID, spanContext.getTraceId());
     contextData.put(SPAN_ID, spanContext.getSpanId());

@@ -38,11 +38,13 @@ public final class SpringWebfluxServerInstrumentationTest
     options.setExpectedException(new RuntimeException(ServerEndpoint.EXCEPTION.getBody()));
 
     options.setExpectedHttpRoute(
-        endpoint -> {
+        (endpoint, method) -> {
           if (endpoint == ServerEndpoint.PATH_PARAM) {
             return CONTEXT_PATH + "/path/{id}/param";
           }
-          return expectedHttpRoute(endpoint);
+          return expectedHttpRoute(endpoint, method);
         });
+
+    options.disableTestNonStandardHttpMethod();
   }
 }

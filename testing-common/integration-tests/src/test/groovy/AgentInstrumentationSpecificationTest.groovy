@@ -64,7 +64,7 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
   def "excluded classes are not instrumented"() {
     when:
     runWithSpan("parent") {
-      subject.run()
+      subject.getConstructor().newInstance().run()
     }
 
     then:
@@ -83,13 +83,13 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
     }
 
     where:
-    subject                                                | spanName
-    new config.SomeClass()                                 | "SomeClass.run"
-    new config.SomeClass.NestedClass()                     | "NestedClass.run"
-    new config.exclude.SomeClass()                         | null
-    new config.exclude.SomeClass.NestedClass()             | null
-    new config.exclude.packagename.SomeClass()             | null
-    new config.exclude.packagename.SomeClass.NestedClass() | null
+    subject                                          | spanName
+    config.SomeClass                                 | "SomeClass.run"
+    config.SomeClass.NestedClass                     | "NestedClass.run"
+    config.exclude.SomeClass                         | null
+    config.exclude.SomeClass.NestedClass             | null
+    config.exclude.packagename.SomeClass             | null
+    config.exclude.packagename.SomeClass.NestedClass | null
   }
 
   def "test unblocked by completed span"() {

@@ -105,4 +105,10 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     []
   }
+
+  @Override
+  boolean testNonStandardHttpMethod() {
+    // instrumentation does not create a server span at all
+    false
+  }
 }

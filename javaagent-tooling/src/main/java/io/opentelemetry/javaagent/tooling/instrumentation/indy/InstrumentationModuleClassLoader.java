@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /**
@@ -36,32 +38,43 @@ import javax.annotation.Nullable;
  * <p>In addition, this classloader ensures that the lookup of corresponding .class resources follow
  * the same delegation strategy, so that bytecode inspection tools work correctly.
  */
-class InstrumentationModuleClassLoader extends ClassLoader {
+public class InstrumentationModuleClassLoader extends ClassLoader {
 
   static {
     ClassLoader.registerAsParallelCapable();
   }
 
-  private static final Map<String, ClassCopySource> ALWAYS_INJECTED_CLASSES =
+  private static final Map<String, BytecodeWithUrl> ALWAYS_INJECTED_CLASSES =
       Collections.singletonMap(
-          LookupExposer.class.getName(), ClassCopySource.create(LookupExposer.class).cached());
+          LookupExposer.class.getName(), BytecodeWithUrl.create(LookupExposer.class).cached());
   private static final ProtectionDomain PROTECTION_DOMAIN = getProtectionDomain();
   private static final MethodHandle FIND_PACKAGE_METHOD = getFindPackageMethod();
 
-  private final Map<String, ClassCopySource> additionalInjectedClasses;
+  private final Map<String, BytecodeWithUrl> additionalInjectedClasses;
   private final ClassLoader agentOrExtensionCl;
-  private final ClassLoader instrumentedCl;
   private volatile MethodHandles.Lookup cachedLookup;
+
+  private final ClassLoader instrumentedCl;
+  private final boolean delegateAllToAgent;
 
   public InstrumentationModuleClassLoader(
       ClassLoader instrumentedCl,
       ClassLoader agentOrExtensionCl,
-      Map<String, ClassCopySource> injectedClasses) {
+      Map<String, BytecodeWithUrl> injectedClasses) {
+    this(instrumentedCl, agentOrExtensionCl, injectedClasses, false);
+  }
+
+  InstrumentationModuleClassLoader(
+      ClassLoader instrumentedCl,
+      ClassLoader agentOrExtensionCl,
+      Map<String, BytecodeWithUrl> injectedClasses,
+      boolean delegateAllToAgent) {
     // agent/extension-classloader is "main"-parent, but class lookup is overridden
     super(agentOrExtensionCl);
     additionalInjectedClasses = injectedClasses;
     this.agentOrExtensionCl = agentOrExtensionCl;
     this.instrumentedCl = instrumentedCl;
+    this.delegateAllToAgent = delegateAllToAgent;
   }
 
   /**
@@ -83,6 +96,8 @@ class InstrumentationModuleClassLoader extends ClassLoader {
     return cachedLookup;
   }
 
+  public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
+
   @Override
   @SuppressWarnings("removal") // AccessController is deprecated for removal
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
@@ -91,9 +106,12 @@ class InstrumentationModuleClassLoader extends ClassLoader {
 
       // This CL is self-first: Injected class are loaded BEFORE a parent lookup
       if (result == null) {
-        ClassCopySource injected = getInjectedClass(name);
+        BytecodeWithUrl injected = getInjectedClass(name);
         if (injected != null) {
-          byte[] bytecode = injected.getBytecode();
+          byte[] bytecode =
+              bytecodeOverride.get(name) != null
+                  ? bytecodeOverride.get(name)
+                  : injected.getBytecode();
           if (System.getSecurityManager() == null) {
             result = defineClassWithPackage(name, bytecode);
           } else {
@@ -103,7 +121,7 @@ class InstrumentationModuleClassLoader extends ClassLoader {
           }
         }
       }
-      if (result == null) {
+      if (result == null && shouldLoadFromAgent(name)) {
         result = tryLoad(agentOrExtensionCl, name);
       }
       if (result == null) {
@@ -119,6 +137,10 @@ class InstrumentationModuleClassLoader extends ClassLoader {
         throw new ClassNotFoundException(name);
       }
     }
+  }
+
+  private boolean shouldLoadFromAgent(String dotClassName) {
+    return delegateAllToAgent || dotClassName.startsWith("io.opentelemetry.javaagent");
   }
 
   private static Class<?> tryLoad(ClassLoader cl, String name) {
@@ -137,7 +159,7 @@ class InstrumentationModuleClassLoader extends ClassLoader {
       return super.getResource(resourceName);
     }
     // for classes use the same precedence as in loadClass
-    ClassCopySource injected = getInjectedClass(className);
+    BytecodeWithUrl injected = getInjectedClass(className);
     if (injected != null) {
       return injected.getUrl();
     }
@@ -175,8 +197,8 @@ class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   @Nullable
-  private ClassCopySource getInjectedClass(String name) {
-    ClassCopySource alwaysInjected = ALWAYS_INJECTED_CLASSES.get(name);
+  private BytecodeWithUrl getInjectedClass(String name) {
+    BytecodeWithUrl alwaysInjected = ALWAYS_INJECTED_CLASSES.get(name);
     if (alwaysInjected != null) {
       return alwaysInjected;
     }

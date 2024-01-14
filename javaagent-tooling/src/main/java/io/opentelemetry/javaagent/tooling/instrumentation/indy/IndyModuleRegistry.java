@@ -9,6 +9,8 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -54,6 +56,7 @@ public class IndyModuleRegistry {
     Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>> cacheForModule =
         instrumentationClassloaders.computeIfAbsent(module, (k) -> Cache.weak());
 
+    instrumentedClassloader = maskNullClassLoader(instrumentedClassloader);
     WeakReference<InstrumentationModuleClassLoader> cached =
         cacheForModule.get(instrumentedClassloader);
     if (cached != null) {
@@ -70,20 +73,29 @@ public class IndyModuleRegistry {
     return created;
   }
 
-  private static InstrumentationModuleClassLoader createInstrumentationModuleClassloader(
+  private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
+
+  private static ClassLoader maskNullClassLoader(ClassLoader classLoader) {
+    return classLoader == null ? BOOT_LOADER : classLoader;
+  }
+
+  static InstrumentationModuleClassLoader createInstrumentationModuleClassloader(
       InstrumentationModule module, ClassLoader instrumentedClassloader) {
 
     Set<String> toInject = new HashSet<>(InstrumentationModuleMuzzle.getHelperClassNames(module));
     // TODO (Jonas): Make muzzle include advice classes as helper classes
     // so that we don't have to include them here
     toInject.addAll(getModuleAdviceNames(module));
+    if (module instanceof ExperimentalInstrumentationModule) {
+      toInject.removeAll(((ExperimentalInstrumentationModule) module).injectedClassNames());
+    }
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    Map<String, ClassCopySource> injectedClasses =
+    Map<String, BytecodeWithUrl> injectedClasses =
         toInject.stream()
             .collect(
                 Collectors.toMap(
-                    name -> name, name -> ClassCopySource.create(name, agentOrExtensionCl)));
+                    name -> name, name -> BytecodeWithUrl.create(name, agentOrExtensionCl)));
 
     return new InstrumentationModuleClassLoader(
         instrumentedClassloader, agentOrExtensionCl, injectedClasses);

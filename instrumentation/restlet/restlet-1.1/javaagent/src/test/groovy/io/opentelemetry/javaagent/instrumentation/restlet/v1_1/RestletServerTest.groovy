@@ -14,12 +14,12 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 class RestletServerTest extends AbstractRestletServerTest implements AgentTestTrait {
 
   @Override
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     switch (endpoint) {
       case NOT_FOUND:
         return getContextPath() + "/"
       default:
-        return super.expectedHttpRoute(endpoint)
+        return super.expectedHttpRoute(endpoint, method)
     }
   }
 

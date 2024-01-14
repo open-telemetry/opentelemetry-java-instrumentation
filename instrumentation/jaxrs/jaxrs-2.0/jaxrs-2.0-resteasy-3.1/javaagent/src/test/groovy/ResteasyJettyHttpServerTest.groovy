@@ -5,4 +5,8 @@
 
 class ResteasyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
 
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    500
+  }
 }

@@ -35,10 +35,6 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestMethod(REQUEST request);
 
-  String getRequestServerName(REQUEST request);
-
-  Integer getRequestServerPort(REQUEST request);
-
   String getRequestRemoteAddr(REQUEST request);
 
   Integer getRequestRemotePort(REQUEST request);

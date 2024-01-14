@@ -15,6 +15,8 @@ import application.io.opentelemetry.api.trace.SpanKind;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.api.trace.TraceState;
 import application.io.opentelemetry.api.trace.TraceStateBuilder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -141,6 +143,16 @@ public class Bridging {
     }
     logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
     return null;
+  }
+
+  public static List<io.opentelemetry.api.common.AttributeKey<?>> toAgent(
+      List<AttributeKey<?>> attributeKeys) {
+    List<io.opentelemetry.api.common.AttributeKey<?>> result =
+        new ArrayList<>(attributeKeys.size());
+    for (AttributeKey<?> attributeKey : attributeKeys) {
+      result.add(toAgent(attributeKey));
+    }
+    return result;
   }
 
   public static io.opentelemetry.api.trace.StatusCode toAgent(StatusCode applicationStatus) {

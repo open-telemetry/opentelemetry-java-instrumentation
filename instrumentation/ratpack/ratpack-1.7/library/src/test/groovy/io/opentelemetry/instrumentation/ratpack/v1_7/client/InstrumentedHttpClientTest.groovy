@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_METHOD
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_STATUS_CODE
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE
 
 class InstrumentedHttpClientTest extends Specification {
 
@@ -100,20 +100,20 @@ class InstrumentedHttpClientTest extends Specification {
         spanClientData.kind == CLIENT
         def atts = spanClientData.attributes.asMap()
         atts[HTTP_ROUTE] == "/bar"
-        atts[HTTP_METHOD] == "GET"
-        atts[HTTP_STATUS_CODE] == 200L
+        atts[HTTP_REQUEST_METHOD] == "GET"
+        atts[HTTP_RESPONSE_STATUS_CODE] == 200L
 
         def attributes = spanData.attributes.asMap()
         attributes[HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.HTTP_TARGET] == "/foo"
-        attributes[HTTP_METHOD] == "GET"
-        attributes[HTTP_STATUS_CODE] == 200L
+        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[HTTP_REQUEST_METHOD] == "GET"
+        attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
 
         def attsApi = spanDataApi.attributes.asMap()
         attsApi[HTTP_ROUTE] == "/bar"
-        attsApi[SemanticAttributes.HTTP_TARGET] == "/bar"
-        attsApi[HTTP_METHOD] == "GET"
-        attsApi[HTTP_STATUS_CODE] == 200L
+        attsApi[SemanticAttributes.URL_PATH] == "/bar"
+        attsApi[HTTP_REQUEST_METHOD] == "GET"
+        attsApi[HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -165,20 +165,20 @@ class InstrumentedHttpClientTest extends Specification {
         spanClientData1.kind == CLIENT
         def atts = spanClientData1.attributes.asMap()
         atts[HTTP_ROUTE] == "/foo"
-        atts[HTTP_METHOD] == "GET"
-        atts[HTTP_STATUS_CODE] == 200L
+        atts[HTTP_REQUEST_METHOD] == "GET"
+        atts[HTTP_RESPONSE_STATUS_CODE] == 200L
 
         spanClientData2.kind == CLIENT
         def atts2 = spanClientData2.attributes.asMap()
         atts2[HTTP_ROUTE] == "/bar"
-        atts2[HTTP_METHOD] == "GET"
-        atts2[HTTP_STATUS_CODE] == 200L
+        atts2[HTTP_REQUEST_METHOD] == "GET"
+        atts2[HTTP_RESPONSE_STATUS_CODE] == 200L
 
         def attributes = spanData.attributes.asMap()
         attributes[HTTP_ROUTE] == "/path-name"
-        attributes[SemanticAttributes.HTTP_TARGET] == "/path-name"
-        attributes[HTTP_METHOD] == "GET"
-        attributes[HTTP_STATUS_CODE] == 200L
+        attributes[SemanticAttributes.URL_PATH] == "/path-name"
+        attributes[HTTP_REQUEST_METHOD] == "GET"
+        attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -227,16 +227,16 @@ class InstrumentedHttpClientTest extends Specification {
         spanClientData.kind == CLIENT
         def atts = spanClientData.attributes.asMap()
         atts[HTTP_ROUTE] == "/foo"
-        atts[HTTP_METHOD] == "GET"
-        atts[HTTP_STATUS_CODE] == null
+        atts[HTTP_REQUEST_METHOD] == "GET"
+        atts[HTTP_RESPONSE_STATUS_CODE] == null
         spanClientData.status.statusCode == StatusCode.ERROR
         spanClientData.events.first().name == "exception"
 
         def attributes = spanData.attributes.asMap()
         attributes[HTTP_ROUTE] == "/path-name"
-        attributes[SemanticAttributes.HTTP_TARGET] == "/path-name"
-        attributes[HTTP_METHOD] == "GET"
-        attributes[HTTP_STATUS_CODE] == 200L
+        attributes[SemanticAttributes.URL_PATH] == "/path-name"
+        attributes[HTTP_REQUEST_METHOD] == "GET"
+        attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -311,15 +311,15 @@ class InstrumentedHttpClientTest extends Specification {
 class BarService implements Service {
   private final String url
   private final CountDownLatch latch
-  private final OpenTelemetry opentelemetry
+  private final OpenTelemetry openTelemetry
 
-  BarService(CountDownLatch latch, String url, OpenTelemetry opentelemetry) {
+  BarService(CountDownLatch latch, String url, OpenTelemetry openTelemetry) {
     this.latch = latch
     this.url = url
-    this.opentelemetry = opentelemetry
+    this.openTelemetry = openTelemetry
   }
 
-  private Tracer tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+  private Tracer tracer = openTelemetry.tracerProvider.tracerBuilder("testing").build()
 
   void onStart(StartEvent event) {
     def parentContext = Context.current()
@@ -345,15 +345,15 @@ class BarService implements Service {
 class BarForkService implements Service {
   private final String url
   private final CountDownLatch latch
-  private final OpenTelemetry opentelemetry
+  private final OpenTelemetry openTelemetry
 
-  BarForkService(CountDownLatch latch, String url, OpenTelemetry opentelemetry) {
+  BarForkService(CountDownLatch latch, String url, OpenTelemetry openTelemetry) {
     this.latch = latch
     this.url = url
-    this.opentelemetry = opentelemetry
+    this.openTelemetry = openTelemetry
   }
 
-  private Tracer tracer = opentelemetry.tracerProvider.tracerBuilder("testing").build()
+  private Tracer tracer = openTelemetry.tracerProvider.tracerBuilder("testing").build()
 
   void onStart(StartEvent event) {
     Execution.fork().start {

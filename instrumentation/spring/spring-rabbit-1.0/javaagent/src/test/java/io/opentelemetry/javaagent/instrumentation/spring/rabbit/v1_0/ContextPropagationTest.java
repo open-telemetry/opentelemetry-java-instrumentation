@@ -13,10 +13,12 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -43,7 +45,6 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public class ContextPropagationTest {
 
   @RegisterExtension
@@ -90,7 +91,7 @@ public class ContextPropagationTest {
   private static List<AttributeAssertion> getAssertions(
       String destination,
       String operation,
-      String sockAddr,
+      String peerAddress,
       boolean routingKey,
       boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -104,10 +105,11 @@ public class ContextPropagationTest {
     if (operation != null) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, operation));
     }
-    if (sockAddr != null) {
-      assertions.add(equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, sockAddr));
+    if (peerAddress != null) {
+      assertions.add(equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"));
+      assertions.add(equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, peerAddress));
       assertions.add(
-          satisfies(SemanticAttributes.NET_SOCK_PEER_PORT, AbstractLongAssert::isNotNegative));
+          satisfies(NetworkAttributes.NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
     }
     if (routingKey) {
       assertions.add(
@@ -152,14 +154,15 @@ public class ContextPropagationTest {
             trace -> {
               trace
                   .hasSize(5)
-                  .hasSpansSatisfyingExactly(
+                  .hasSpansSatisfyingExactlyInAnyOrder(
                       span -> span.hasName("parent"),
                       span ->
                           span.hasName("<default> publish")
                               .hasKind(SpanKind.PRODUCER)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  getAssertions("<default>", null, "127.0.0.1", true, testHeaders)),
+                                  getAssertions(
+                                      "<default>", "publish", "127.0.0.1", true, testHeaders)),
                       // spring-cloud-stream-binder-rabbit listener puts all messages into a
                       // BlockingQueue immediately after receiving
                       // that's why the rabbitmq CONSUMER span will never have any child span (and
@@ -169,7 +172,8 @@ public class ContextPropagationTest {
                               .hasKind(SpanKind.CONSUMER)
                               .hasParent(trace.getSpan(1))
                               .hasAttributesSatisfyingExactly(
-                                  getAssertions("<default>", "process", null, true, testHeaders)),
+                                  getAssertions(
+                                      "<default>", "process", "127.0.0.1", true, testHeaders)),
                       // created by spring-rabbit instrumentation
                       span ->
                           span.hasName("testQueue process")
@@ -177,7 +181,27 @@ public class ContextPropagationTest {
                               .hasParent(trace.getSpan(1))
                               .hasAttributesSatisfyingExactly(
                                   getAssertions("testQueue", "process", null, false, testHeaders)),
-                      span -> span.hasName("consumer").hasParent(trace.getSpan(3)));
+                      span -> {
+                        // occasionally "testQueue process" spans have their order swapped, usually
+                        // it would be
+                        // 0 - parent
+                        // 1 - <default> publish
+                        // 2 - testQueue process (<default>)
+                        // 3 - testQueue process (testQueue)
+                        // 4 - consumer
+                        // but it could also be
+                        // 0 - parent
+                        // 1 - <default> publish
+                        // 2 - testQueue process (testQueue)
+                        // 3 - consumer
+                        // 4 - testQueue process (<default>)
+                        // determine the correct parent span based on the span name
+                        SpanData parentSpan = trace.getSpan(3);
+                        if (!"testQueue process".equals(parentSpan.getName())) {
+                          parentSpan = trace.getSpan(2);
+                        }
+                        span.hasName("consumer").hasParent(parentSpan);
+                      });
             },
             trace -> {
               trace
@@ -187,9 +211,10 @@ public class ContextPropagationTest {
                           span.hasName("basic.ack")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                  equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                   satisfies(
-                                      SemanticAttributes.NET_SOCK_PEER_PORT,
+                                      NetworkAttributes.NETWORK_PEER_PORT,
                                       AbstractLongAssert::isNotNegative),
                                   equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")));
             });

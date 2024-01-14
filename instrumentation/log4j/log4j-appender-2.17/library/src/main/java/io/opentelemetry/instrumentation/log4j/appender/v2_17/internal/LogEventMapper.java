@@ -80,7 +80,9 @@ public final class LogEventMapper<T> {
       Level level,
       @Nullable Marker marker,
       @Nullable Throwable throwable,
-      T contextData) {
+      T contextData,
+      String threadName,
+      long threadId) {
 
     AttributesBuilder attributes = Attributes.builder();
 
@@ -105,9 +107,8 @@ public final class LogEventMapper<T> {
     captureContextDataAttributes(attributes, contextData);
 
     if (captureExperimentalAttributes) {
-      Thread currentThread = Thread.currentThread();
-      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+      attributes.put(SemanticAttributes.THREAD_NAME, threadName);
+      attributes.put(SemanticAttributes.THREAD_ID, threadId);
     }
 
     builder.setAllAttributes(attributes.build());
@@ -175,8 +176,7 @@ public final class LogEventMapper<T> {
   }
 
   public static AttributeKey<String> getContextDataAttributeKey(String key) {
-    return contextDataAttributeKeyCache.computeIfAbsent(
-        key, k -> AttributeKey.stringKey("log4j.context_data." + k));
+    return contextDataAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   public static AttributeKey<String> getMapMessageAttributeKey(String key) {

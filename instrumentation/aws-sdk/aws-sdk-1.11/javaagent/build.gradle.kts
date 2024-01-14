@@ -61,6 +61,9 @@ dependencies {
 
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
+
+  // last version that does not use json protocol
+  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583")
 }
 
 testing {
@@ -94,7 +97,33 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        if (findProperty("testLatestDeps") as Boolean) {
+          // last version that does not use json protocol
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
+        } else {
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        }
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+          }
+        }
+      }
+    }
+
+    val testSqsNoReceiveTelemetry by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+
+        if (findProperty("testLatestDeps") as Boolean) {
+          // last version that does not use json protocol
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
+        } else {
+          implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+        }
       }
     }
   }
@@ -105,14 +134,32 @@ tasks {
     check {
       dependsOn(testing.suites)
     }
+  } else {
+    check {
+      dependsOn(testing.suites.named("testSqs"), testing.suites.named("testSqsNoReceiveTelemetry"))
+    }
   }
 
   test {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+}
+
+if (!(findProperty("testLatestDeps") as Boolean)) {
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      eachDependency {
+        // early versions of aws sdk are not compatible with jackson 2.16.0
+        if (requested.group.startsWith("com.fasterxml.jackson")) {
+          useVersion("2.15.3")
+        }
+      }
+    }
   }
 }

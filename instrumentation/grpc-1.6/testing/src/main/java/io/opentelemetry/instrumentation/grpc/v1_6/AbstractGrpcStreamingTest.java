@@ -20,6 +20,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
@@ -37,7 +38,6 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractGrpcStreamingTest {
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
@@ -184,9 +184,9 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                     equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0])),
                     span ->
                         span.hasName("example.Greeter/Conversation")
@@ -199,11 +199,12 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
+                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
+                                    NetworkAttributes.NETWORK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0]))));
     testing()
@@ -221,7 +222,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
+                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_METHOD, "Conversation"),
                                                 equalTo(
@@ -246,9 +247,9 @@ public abstract class AbstractGrpcStreamingTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
+                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_PEER_PORT,
+                                                    SemanticAttributes.SERVER_PORT,
                                                     server.getPort()),
                                                 equalTo(
                                                     SemanticAttributes.RPC_METHOD, "Conversation"),

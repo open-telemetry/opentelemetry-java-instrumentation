@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.semconv.SemanticAttributes
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
@@ -125,10 +126,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "ClusterHealthAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" tcpPublishAddress.address
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" tcpPublishAddress.host
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" tcpPublishAddress.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
+            "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
@@ -243,10 +242,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" tcpPublishAddress.address
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" tcpPublishAddress.host
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" tcpPublishAddress.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
+            "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
@@ -260,10 +257,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" tcpPublishAddress.address
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" tcpPublishAddress.host
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" tcpPublishAddress.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
+            "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
@@ -292,10 +287,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "IndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" tcpPublishAddress.address
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" tcpPublishAddress.host
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" tcpPublishAddress.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
+            "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "IndexAction"
             "elasticsearch.action" "IndexAction"
@@ -314,10 +307,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NET_SOCK_FAMILY" { it == SemanticAttributes.NetSockFamilyValues.INET6 || it == null }
-            "$SemanticAttributes.NET_SOCK_PEER_ADDR" tcpPublishAddress.address
-            "$SemanticAttributes.NET_SOCK_PEER_NAME" tcpPublishAddress.host
-            "$SemanticAttributes.NET_SOCK_PEER_PORT" tcpPublishAddress.port
+            "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
+            "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
             "$SemanticAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"

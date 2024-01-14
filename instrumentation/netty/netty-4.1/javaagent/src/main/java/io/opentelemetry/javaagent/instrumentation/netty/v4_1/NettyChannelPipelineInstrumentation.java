@@ -50,8 +50,7 @@ public class NettyChannelPipelineInstrumentation
 
   /**
    * When certain handlers are added to the pipeline, we want to add our corresponding tracing
-   * handlers. If those handlers are later removed, we also remove our handlers. Support for
-   * replacing handlers and removeFirst/removeLast is currently not implemented.
+   * handlers. If those handlers are later removed, we also remove our handlers.
    */
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {

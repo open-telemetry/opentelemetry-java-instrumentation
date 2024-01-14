@@ -22,8 +22,6 @@ import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Request> {
 
-  private static final String USER_AGENT = "Jetty";
-
   private HttpClient client;
   private HttpClient httpsClient;
 
@@ -48,18 +46,17 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.disableTestRedirects().setUserAgent(USER_AGENT);
+    optionsBuilder.disableTestRedirects();
   }
 
   @Override
-  public Request buildRequest(String method, URI uri, Map<String, String> headers)
-      throws Exception {
+  public Request buildRequest(String method, URI uri, Map<String, String> headers) {
     HttpClient theClient = uri.getScheme().equalsIgnoreCase("https") ? httpsClient : client;
     Request request =
         theClient
             .newRequest(uri)
             .method(method)
-            .agent(USER_AGENT)
+            .agent("Jetty")
             .timeout(5000L, TimeUnit.MILLISECONDS);
     headers.forEach(request::header);
     return request;
@@ -77,8 +74,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
       String method,
       URI uri,
       Map<String, String> headers,
-      HttpClientResult httpClientResult)
-      throws Exception {
+      HttpClientResult httpClientResult) {
     JettyClientListener jcl = new JettyClientListener();
     request.onRequestFailure(jcl);
     request.onResponseFailure(jcl);

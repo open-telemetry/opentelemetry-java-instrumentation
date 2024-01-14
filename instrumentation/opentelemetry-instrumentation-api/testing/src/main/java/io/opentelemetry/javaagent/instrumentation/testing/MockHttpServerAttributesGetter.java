@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.testing;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -52,18 +52,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
   @Nullable
   @Override
   public String getUrlQuery(String s) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getServerAddress(String s) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(String s) {
     return null;
   }
 }

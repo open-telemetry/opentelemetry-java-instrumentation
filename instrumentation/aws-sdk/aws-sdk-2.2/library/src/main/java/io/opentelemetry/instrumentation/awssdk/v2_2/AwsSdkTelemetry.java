@@ -8,11 +8,14 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
-import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsClient;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
@@ -41,27 +44,42 @@ public class AwsSdkTelemetry {
     return new AwsSdkTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> requestInstrumenter;
-  private final Instrumenter<ExecutionAttributes, SdkHttpResponse> consumerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
+  private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
+  private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
+  private final boolean recordIndividualHttpError;
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
+      List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
       boolean useMessagingPropagator,
-      boolean useXrayPropagator) {
+      boolean useXrayPropagator,
+      boolean recordIndividualHttpError,
+      boolean messagingReceiveInstrumentationEnabled) {
     this.useXrayPropagator = useXrayPropagator;
-    this.requestInstrumenter =
-        AwsSdkInstrumenterFactory.requestInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
-    this.consumerInstrumenter =
-        AwsSdkInstrumenterFactory.consumerInstrumenter(
-            openTelemetry, captureExperimentalSpanAttributes);
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator =
         useMessagingPropagator ? openTelemetry.getPropagators().getTextMapPropagator() : null;
+
+    AwsSdkInstrumenterFactory instrumenterFactory =
+        new AwsSdkInstrumenterFactory(
+            openTelemetry,
+            messagingPropagator,
+            capturedHeaders,
+            captureExperimentalSpanAttributes,
+            messagingReceiveInstrumentationEnabled,
+            useXrayPropagator);
+
+    this.requestInstrumenter = instrumenterFactory.requestInstrumenter();
+    this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
+    this.consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
+    this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.recordIndividualHttpError = recordIndividualHttpError;
   }
 
   /**
@@ -71,9 +89,29 @@ public class AwsSdkTelemetry {
   public ExecutionInterceptor newExecutionInterceptor() {
     return new TracingExecutionInterceptor(
         requestInstrumenter,
-        consumerInstrumenter,
+        consumerReceiveInstrumenter,
+        consumerProcessInstrumenter,
+        producerInstrumenter,
         captureExperimentalSpanAttributes,
         messagingPropagator,
-        useXrayPropagator);
+        useXrayPropagator,
+        recordIndividualHttpError);
+  }
+
+  /**
+   * Construct a new tracing-enable {@link SqsClient} using the provided {@link SqsClient} instance.
+   */
+  @NoMuzzle
+  public SqsClient wrap(SqsClient sqsClient) {
+    return SqsImpl.wrap(sqsClient);
+  }
+
+  /**
+   * Construct a new tracing-enable {@link SqsAsyncClient} using the provided {@link SqsAsyncClient}
+   * instance.
+   */
+  @NoMuzzle
+  public SqsAsyncClient wrap(SqsAsyncClient sqsClient) {
+    return SqsImpl.wrap(sqsClient);
   }
 }

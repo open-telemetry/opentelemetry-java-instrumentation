@@ -78,7 +78,7 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
     }
     def request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.valueOf(method), target, Unpooled.EMPTY_BUFFER)
     HttpHeaders.setHost(request, uri.host + ":" + uri.port)
-    request.headers().set("user-agent", userAgent())
+    request.headers().set("user-agent", "Netty")
     headers.each { k, v -> request.headers().set(k, v) }
     return request
   }
@@ -128,14 +128,9 @@ class Netty40ClientTest extends HttpClientTest<DefaultFullHttpRequest> implement
         return []
     }
     def attributes = super.httpAttributes(uri)
-    attributes.remove(SemanticAttributes.NET_PEER_NAME)
-    attributes.remove(SemanticAttributes.NET_PEER_PORT)
+    attributes.remove(SemanticAttributes.SERVER_ADDRESS)
+    attributes.remove(SemanticAttributes.SERVER_PORT)
     return attributes
-  }
-
-  @Override
-  String userAgent() {
-    return "Netty"
   }
 
   @Override

@@ -108,11 +108,11 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       request = ChannelAndMethod.create(channel, method);
 
-      if (!channelInstrumenter().shouldStart(parentContext, request)) {
+      if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
         return;
       }
 
-      context = channelInstrumenter().start(parentContext, request);
+      context = channelInstrumenter(request).start(parentContext, request);
       CURRENT_RABBIT_CONTEXT.set(context);
       helper().setChannelAndMethod(context, request);
       scope = context.makeCurrent();
@@ -132,7 +132,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       scope.close();
 
       CURRENT_RABBIT_CONTEXT.remove();
-      channelInstrumenter().end(context, request, null, throwable);
+      channelInstrumenter(request).end(context, request, null, throwable);
     }
   }
 
@@ -235,11 +235,12 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapConsumer(
+        @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
         @Advice.Argument(value = 6, readOnly = false) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
       if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
-        consumer = new TracedDelegatingConsumer(queue, consumer);
+        consumer = new TracedDelegatingConsumer(queue, consumer, channel.getConnection());
       }
     }
   }

@@ -5,12 +5,11 @@
 
 package client
 
-import io.opentelemetry.api.common.AttributeKey
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import io.opentelemetry.semconv.SemanticAttributes
 import play.libs.ws.WS
 import play.libs.ws.WSRequest
 import play.libs.ws.WSResponse
@@ -54,11 +53,6 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   }
 
   @Override
-  String userAgent() {
-    return "AHC"
-  }
-
-  @Override
   boolean testRedirects() {
     false
   }
@@ -66,15 +60,6 @@ class PlayWsClientTest extends HttpClientTest<WSRequest> implements AgentTestTra
   @Override
   boolean testReadTimeout() {
     return false
-  }
-
-  @Override
-  Set<AttributeKey<?>> httpAttributes(URI uri) {
-    Set<AttributeKey<?>> extra = [
-      SemanticAttributes.HTTP_SCHEME,
-      SemanticAttributes.HTTP_TARGET
-    ]
-    super.httpAttributes(uri) + extra
   }
 
   @Override

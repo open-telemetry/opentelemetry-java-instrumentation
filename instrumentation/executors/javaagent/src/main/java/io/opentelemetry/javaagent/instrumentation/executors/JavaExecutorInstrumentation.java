@@ -114,8 +114,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
   public static class SetJavaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) ForkJoinTask<?> task) {
+    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
@@ -165,8 +164,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
   public static class SetCallableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
+    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Callable<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<Callable<?>, PropagatedContext> virtualField =
@@ -195,7 +193,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> submitEnter(
-        @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
+        @Advice.Argument(0) Collection<? extends Callable<?>> tasks) {
       if (tasks == null) {
         return Collections.emptyList();
       }

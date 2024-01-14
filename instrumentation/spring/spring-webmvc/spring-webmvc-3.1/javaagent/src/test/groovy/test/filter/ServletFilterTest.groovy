@@ -17,4 +17,9 @@ class ServletFilterTest extends AbstractServletFilterTest {
   Class<?> filterConfigClass() {
     ServletFilterConfig
   }
+
+  @Override
+  int getResponseCodeOnNonStandardHttpMethod() {
+    Boolean.getBoolean("testLatestDeps") ? 500 : 200
+  }
 }

@@ -85,18 +85,20 @@ tasks.withType<ShadowJar>().configureEach {
   // rewrite dependencies calling Logger.getLogger
   relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 
-  // prevents conflict with library instrumentation, since these classes live in the bootstrap class loader
-  relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
-    // Exclude resource providers since they live in the agent class loader
-    exclude("io.opentelemetry.instrumentation.resources.*")
-    exclude("io.opentelemetry.instrumentation.spring.resources.*")
-  }
+  if (project.findProperty("disableShadowRelocate") != "true") {
+    // prevents conflict with library instrumentation, since these classes live in the bootstrap class loader
+    relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
+      // Exclude resource providers since they live in the agent class loader
+      exclude("io.opentelemetry.instrumentation.resources.*")
+      exclude("io.opentelemetry.instrumentation.spring.resources.*")
+    }
 
-  // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
-  relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
-  relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
-  relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
-  relocate("io.opentelemetry.extension.incubator", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.incubator")
+    // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
+    relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
+    relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
+    relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
+    relocate("io.opentelemetry.extension.incubator", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.incubator")
+  }
 
   // relocate(the OpenTelemetry extensions that are used by instrumentation modules)
   // these extensions live in the AgentClassLoader, and are injected into the user's class loader
@@ -230,8 +232,8 @@ fun newRepositorySystem(): RepositorySystem {
 }
 
 fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSession {
-  val muzzleRepo = file("${buildDir}/muzzleRepo")
-  val localRepo = LocalRepository(muzzleRepo)
+  val muzzleRepo = layout.buildDirectory.dir("muzzleRepo")
+  val localRepo = LocalRepository(muzzleRepo.get().asFile)
   return MavenRepositorySystemUtils.newSession().apply {
     localRepositoryManager = system.newLocalRepositoryManager(this, localRepo)
   }

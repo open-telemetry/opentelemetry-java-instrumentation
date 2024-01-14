@@ -34,17 +34,21 @@ public final class ExperimentalConfig {
 
   public boolean controllerTelemetryEnabled() {
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.controller-telemetry.enabled", true);
+        "otel.instrumentation.common.experimental.controller-telemetry.enabled", false);
   }
 
   public boolean viewTelemetryEnabled() {
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.view-telemetry.enabled", true);
+        "otel.instrumentation.common.experimental.view-telemetry.enabled", false);
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {
     return config.getBoolean(
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
+  }
+
+  public boolean indyEnabled() {
+    return config.getBoolean("otel.javaagent.experimental.indy", false);
   }
 
   public List<String> getMessagingHeaders() {

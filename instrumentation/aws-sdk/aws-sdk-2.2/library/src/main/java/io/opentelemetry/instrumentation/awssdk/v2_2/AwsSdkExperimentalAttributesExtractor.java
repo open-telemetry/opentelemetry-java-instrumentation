@@ -11,10 +11,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
-import software.amazon.awssdk.http.SdkHttpResponse;
 
 class AwsSdkExperimentalAttributesExtractor
-    implements AttributesExtractor<ExecutionAttributes, SdkHttpResponse> {
+    implements AttributesExtractor<ExecutionAttributes, Response> {
 
   private static final String COMPONENT_NAME = "java-aws-sdk";
   private static final AttributeKey<String> AWS_AGENT = AttributeKey.stringKey("aws.agent");
@@ -32,6 +31,6 @@ class AwsSdkExperimentalAttributesExtractor
       AttributesBuilder attributes,
       Context context,
       ExecutionAttributes executionAttributes,
-      @Nullable SdkHttpResponse sdkHttpResponse,
+      @Nullable Response response,
       @Nullable Throwable error) {}
 }

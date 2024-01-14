@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;

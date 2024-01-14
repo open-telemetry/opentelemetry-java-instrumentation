@@ -92,6 +92,12 @@ class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
     false
   }
 
+  // play does not emit a span at all when a non standard HTTP method is used
+  @Override
+  boolean testNonStandardHttpMethod() {
+    false
+  }
+
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {

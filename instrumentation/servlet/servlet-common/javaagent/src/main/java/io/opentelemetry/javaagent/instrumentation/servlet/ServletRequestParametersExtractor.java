@@ -70,14 +70,15 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   }
 
   private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {
-    return parameterKeysCache.computeIfAbsent(headerName, n -> createKey(n));
+    return parameterKeysCache.computeIfAbsent(
+        headerName, ServletRequestParametersExtractor::createKey);
   }
 
   private static AttributeKey<List<String>> createKey(String parameterName) {
     // normalize parameter name similarly as is done with header names when header values are
     // captured as span attributes
     parameterName = parameterName.toLowerCase(Locale.ROOT);
-    String key = "servlet.request.parameter." + parameterName.replace('-', '_');
+    String key = "servlet.request.parameter." + parameterName;
     return AttributeKey.stringArrayKey(key);
   }
 }

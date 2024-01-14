@@ -11,8 +11,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.NET_PEER_PORT;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Vertx;
 import java.time.Duration;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -45,6 +45,7 @@ class HibernateReactiveTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  private static final Vertx vertx = Vertx.vertx();
   private static GenericContainer<?> container;
   private static int port;
   private static EntityManagerFactory entityManagerFactory;
@@ -52,7 +53,7 @@ class HibernateReactiveTest {
   private static Stage.SessionFactory stageSessionFactory;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws Exception {
     container =
         new GenericContainer<>("postgres:9.6.8")
             .withEnv("POSTGRES_USER", USER_DB)
@@ -66,7 +67,14 @@ class HibernateReactiveTest {
     port = container.getMappedPort(5432);
     System.setProperty("db.port", String.valueOf(port));
 
-    entityManagerFactory = Persistence.createEntityManagerFactory("test-pu");
+    entityManagerFactory =
+        vertx
+            .getOrCreateContext()
+            .<EntityManagerFactory>executeBlocking(
+                promise -> promise.complete(Persistence.createEntityManagerFactory("test-pu")))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(30, TimeUnit.SECONDS);
 
     Value value = new Value("name");
     value.setId(1L);
@@ -91,6 +99,7 @@ class HibernateReactiveTest {
     if (stageSessionFactory != null) {
       stageSessionFactory.close();
     }
+    vertx.close();
     container.stop();
   }
 
@@ -119,33 +128,169 @@ class HibernateReactiveTest {
 
   @Test
   void testStage() throws Exception {
-    CountDownLatch latch = new CountDownLatch(1);
+    CompletableFuture<Object> result = new CompletableFuture<>();
     testing.runWithSpan(
         "parent",
         () ->
-            Vertx.vertx()
-                .getOrCreateContext()
-                .runOnContext(
-                    event ->
-                        stageSessionFactory
-                            .withSession(
-                                session -> {
-                                  if (!Span.current().getSpanContext().isValid()) {
-                                    throw new IllegalStateException("missing parent span");
-                                  }
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
 
-                                  return session
-                                      .find(Value.class, 1L)
-                                      .thenAccept(
-                                          value -> testing.runWithSpan("callback", () -> {}));
-                                })
-                            .thenAccept(unused -> latch.countDown())));
-    latch.await(30, TimeUnit.SECONDS);
+                              return session
+                                  .find(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
+  @Test
+  void testStageWithStatelessSession() throws Exception {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withStatelessSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .get(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageSessionWithTransaction() throws Exception {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .withTransaction(transaction -> session.find(Value.class, 1L))
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageStatelessSessionWithTransaction() throws Exception {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .withStatelessSession(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .withTransaction(transaction -> session.get(Value.class, 1L))
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageOpenSession() throws Exception {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .openSession()
+                        .thenApply(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .find(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  @Test
+  void testStageOpenStatelessSession() throws Exception {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    testing.runWithSpan(
+        "parent",
+        () ->
+            runWithVertx(
+                () ->
+                    stageSessionFactory
+                        .openStatelessSession()
+                        .thenApply(
+                            session -> {
+                              if (!Span.current().getSpanContext().isValid()) {
+                                throw new IllegalStateException("missing parent span");
+                              }
+
+                              return session
+                                  .get(Value.class, 1L)
+                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                            })
+                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+    result.get(30, TimeUnit.SECONDS);
+
+    assertTrace();
+  }
+
+  private static void runWithVertx(Runnable runnable) {
+    vertx.getOrCreateContext().runOnContext(event -> runnable.run());
+  }
+
+  private static void complete(
+      CompletableFuture<Object> completableFuture, Object result, Throwable throwable) {
+    if (throwable != null) {
+      completableFuture.completeExceptionally(throwable);
+    } else {
+      completableFuture.complete(result);
+    }
+  }
+
   private static void assertTrace() {
     testing.waitAndAssertTraces(
         trace ->
@@ -163,8 +308,8 @@ class HibernateReactiveTest {
                                 "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$?"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "Value"),
-                            equalTo(NET_PEER_NAME, "localhost"),
-                            equalTo(NET_PEER_PORT, port)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

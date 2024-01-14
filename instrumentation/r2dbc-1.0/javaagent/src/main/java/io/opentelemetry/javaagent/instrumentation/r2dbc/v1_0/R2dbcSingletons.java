@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.R2dbcTelemetry;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -18,7 +18,7 @@ public final class R2dbcSingletons {
           .setStatementSanitizationEnabled(CommonConfig.get().isStatementSanitizationEnabled())
           .addAttributeExtractor(
               PeerServiceAttributesExtractor.create(
-                  R2dbcNetAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceMapping()))
+                  R2dbcNetAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceResolver()))
           .build();
 
   public static R2dbcTelemetry telemetry() {

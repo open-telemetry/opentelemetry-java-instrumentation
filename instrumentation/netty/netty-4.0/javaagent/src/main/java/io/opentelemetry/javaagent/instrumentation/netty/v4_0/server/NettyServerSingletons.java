@@ -24,7 +24,8 @@ public final class NettyServerSingletons {
                   .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          CommonConfig.get().shouldEmitExperimentalHttpServerMetrics());
+          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry());
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
     return INSTRUMENTER;

@@ -201,6 +201,7 @@ public abstract class AbstractVertxKafkaTest {
             Arrays.asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
+                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),

@@ -43,11 +43,15 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 }
 
 configurations.testRuntimeClasspath {

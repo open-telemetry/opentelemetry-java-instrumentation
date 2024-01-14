@@ -630,9 +630,10 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       childOf parentSpan
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-        "$SemanticAttributes.NET_PEER_NAME" brokerHost
-        "$SemanticAttributes.NET_PEER_PORT" brokerPort
+        "$SemanticAttributes.SERVER_ADDRESS" brokerHost
+        "$SemanticAttributes.SERVER_PORT" brokerPort
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
+        "$SemanticAttributes.MESSAGING_OPERATION" "publish"
         if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
         } else if (msgId != null) {
@@ -671,8 +672,8 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "pulsar"
-        "$SemanticAttributes.NET_PEER_NAME" brokerHost
-        "$SemanticAttributes.NET_PEER_PORT" brokerPort
+        "$SemanticAttributes.SERVER_ADDRESS" brokerHost
+        "$SemanticAttributes.SERVER_PORT" brokerPort
         "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destination
         if (msgId == String) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" String

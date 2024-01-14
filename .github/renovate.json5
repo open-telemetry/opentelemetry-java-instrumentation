@@ -14,7 +14,7 @@
       "groupName": "guava packages"
     },
     {
-      "matchPackageNames": ["io.quarkus", "io.quarkus:quarkus-bom"],
+      "matchPackagePrefixes": ["io.quarkus"],
       "groupName": "quarkus packages"
     },
     {
@@ -28,6 +28,18 @@
     {
       "matchPackagePrefixes": ["com.linecorp.armeria:"],
       "groupName": "armeria packages"
+    },
+    {
+      "matchPackagePrefixes": ["com.diffplug.spotless"],
+      "groupName": "spotless packages"
+    },
+    {
+      "matchPackagePrefixes": ["net.bytebuddy:"],
+      "groupName": "byte buddy packages"
+    },
+    {
+      "matchPackagePrefixes": ["com.fasterxml.jackson"],
+      "groupName": "jackson packages"
     },
     {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT

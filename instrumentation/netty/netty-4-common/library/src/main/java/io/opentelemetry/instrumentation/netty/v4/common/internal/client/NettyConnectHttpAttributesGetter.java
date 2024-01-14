@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
-
 import io.netty.channel.Channel;
-import io.netty.channel.socket.DatagramChannel;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
 import java.net.InetSocketAddress;
@@ -55,11 +51,6 @@ enum NettyConnectHttpAttributesGetter
   }
 
   @Override
-  public String getTransport(NettyConnectionRequest request, @Nullable Channel channel) {
-    return channel instanceof DatagramChannel ? IP_UDP : IP_TCP;
-  }
-
-  @Override
   public String getNetworkTransport(NettyConnectionRequest request, @Nullable Channel channel) {
     return ChannelUtil.getNetworkTransport(channel);
   }
@@ -86,7 +77,7 @@ enum NettyConnectHttpAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       NettyConnectionRequest request, @Nullable Channel channel) {
     if (channel == null) {
       return null;

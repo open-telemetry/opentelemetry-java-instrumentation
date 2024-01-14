@@ -21,12 +21,11 @@ class RatpackPooledHttpClientTest extends AbstractRatpackPooledHttpClientTest {
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(super.computeHttpAttributes(uri));
     // underlying netty instrumentation does not provide these
-    attributes.remove(SemanticAttributes.NET_PEER_NAME);
-    attributes.remove(SemanticAttributes.NET_PEER_PORT);
+    attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+    attributes.remove(SemanticAttributes.SERVER_PORT);
     return attributes;
   }
 }

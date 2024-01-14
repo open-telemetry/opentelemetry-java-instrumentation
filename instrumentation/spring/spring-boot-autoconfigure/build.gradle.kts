@@ -29,6 +29,7 @@ dependencies {
   compileOnly("org.apache.logging.log4j:log4j-core:2.17.0")
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
+  implementation(project(":instrumentation:jdbc:library"))
 
   library("org.springframework.kafka:spring-kafka:2.9.0")
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
@@ -89,6 +90,7 @@ testing {
         implementation(project(":testing-common"))
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.mockito:mockito-inline")
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))

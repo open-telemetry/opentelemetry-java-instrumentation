@@ -41,8 +41,6 @@ abstract class AbstractReactorNettyHttpClientTest
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static final String USER_AGENT = "ReactorNetty";
-
   abstract HttpClient createHttpClient(boolean readTimeout);
 
   @Override
@@ -90,10 +88,8 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
-    optionsBuilder.setUserAgent(USER_AGENT);
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
@@ -129,8 +125,8 @@ abstract class AbstractReactorNettyHttpClientTest
 
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NET_PEER_NAME);
-          attributes.remove(SemanticAttributes.NET_PEER_PORT);
+          attributes.remove(SemanticAttributes.SERVER_ADDRESS);
+          attributes.remove(SemanticAttributes.SERVER_PORT);
           return attributes;
         });
   }

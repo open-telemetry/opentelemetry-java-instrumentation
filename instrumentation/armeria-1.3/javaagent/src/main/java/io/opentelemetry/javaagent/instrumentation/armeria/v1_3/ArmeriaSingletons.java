@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetry;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -28,17 +28,21 @@ public final class ArmeriaSingletons {
             .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
             .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
             .addClientAttributeExtractor(
-                PeerServiceAttributesExtractor.create(
+                HttpClientPeerServiceAttributesExtractor.create(
                     ArmeriaHttpClientAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceMapping()))
+                    CommonConfig.get().getPeerServiceResolver()))
             .setEmitExperimentalHttpClientMetrics(
-                CommonConfig.get().shouldEmitExperimentalHttpClientMetrics())
+                CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry())
             .setEmitExperimentalHttpServerMetrics(
-                CommonConfig.get().shouldEmitExperimentalHttpServerMetrics())
+                CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
             .build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();
-    SERVER_DECORATOR = service -> new ServerDecorator(service);
+    Function<? super HttpService, ? extends HttpService> libraryDecorator =
+        telemetry
+            .newServiceDecorator()
+            .compose(service -> new ResponseCustomizingDecorator(service));
+    SERVER_DECORATOR = service -> new ServerDecorator(service, libraryDecorator.apply(service));
   }
 
   private ArmeriaSingletons() {}

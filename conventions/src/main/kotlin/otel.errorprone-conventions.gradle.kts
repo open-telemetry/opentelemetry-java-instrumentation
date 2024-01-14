@@ -122,6 +122,8 @@ tasks {
         // cognitive load is dubious.
         disable("YodaCondition")
 
+        disable("NonFinalStaticField")
+
         if (name.contains("Jmh") || name.contains("Test")) {
           // Allow underscore in test-type method names
           disable("MemberName")

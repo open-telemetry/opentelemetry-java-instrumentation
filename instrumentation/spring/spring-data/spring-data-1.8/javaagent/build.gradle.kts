@@ -26,6 +26,7 @@ muzzle {
 dependencies {
   library("org.springframework.data:spring-data-commons:1.8.0.RELEASE")
   compileOnly("org.springframework:spring-aop:1.2")
+  compileOnly(project(":instrumentation-annotations-support"))
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 
@@ -49,5 +50,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 }

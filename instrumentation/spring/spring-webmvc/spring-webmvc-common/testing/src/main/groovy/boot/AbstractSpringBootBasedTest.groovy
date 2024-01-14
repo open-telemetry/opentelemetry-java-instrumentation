@@ -6,6 +6,7 @@
 package boot
 
 import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
@@ -85,7 +86,10 @@ abstract class AbstractSpringBootBasedTest extends HttpServerTest<ConfigurableAp
   }
 
   @Override
-  String expectedHttpRoute(ServerEndpoint endpoint) {
+  String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (method == HttpConstants._OTHER) {
+      return getContextPath() + endpoint.path
+    }
     switch (endpoint) {
       case PATH_PARAM:
         return getContextPath() + "/path/{id}/param"
@@ -94,7 +98,7 @@ abstract class AbstractSpringBootBasedTest extends HttpServerTest<ConfigurableAp
       case LOGIN:
         return getContextPath() + "/*"
       default:
-        return super.expectedHttpRoute(endpoint)
+        return super.expectedHttpRoute(endpoint, method)
     }
   }
 
@@ -113,7 +117,7 @@ abstract class AbstractSpringBootBasedTest extends HttpServerTest<ConfigurableAp
     and:
     assertTraces(1) {
       trace(0, 3) {
-        serverSpan(it, 0, null, null, "GET", null, AUTH_ERROR)
+        serverSpan(it, 0, null, null, "GET", AUTH_ERROR)
         sendErrorSpan(it, 1, span(0))
         errorPageSpans(it, 2, null)
       }
@@ -140,7 +144,7 @@ abstract class AbstractSpringBootBasedTest extends HttpServerTest<ConfigurableAp
     and:
     assertTraces(1) {
       trace(0, 2) {
-        serverSpan(it, 0, null, null, "POST", response.contentUtf8().length(), LOGIN)
+        serverSpan(it, 0, null, null, "POST", LOGIN)
         redirectSpan(it, 1, span(0))
       }
     }

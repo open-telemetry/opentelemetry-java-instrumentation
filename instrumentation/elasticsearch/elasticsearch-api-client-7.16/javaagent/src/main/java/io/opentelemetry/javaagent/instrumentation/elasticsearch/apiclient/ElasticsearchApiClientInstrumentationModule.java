@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
-    super("elasticsearch-api-client-7.16", "elasticsearch");
+    super("elasticsearch-api-client", "elasticsearch-api-client-7.16", "elasticsearch");
   }
 
   @Override
@@ -28,6 +28,13 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
     // that introduced the class `co.elastic.clients.transport.instrumentation.Instrumentation`.
     // Disabling agent instrumentation for those cases.
     return not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation"));
+  }
+
+  @Override
+  public boolean isIndyModule() {
+    // java.lang.ClassCastException: class
+    // io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition cannot be cast to class io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition (io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition is in unnamed module of loader io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader @6baee63b; io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition is in unnamed module of loader 'app')
+    return false;
   }
 
   @Override

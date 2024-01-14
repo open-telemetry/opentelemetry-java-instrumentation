@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import java.net.InetSocketAddress;
@@ -83,28 +83,16 @@ public class UndertowHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(HttpServerExchange exchange) {
-    return exchange.getHostName();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(HttpServerExchange exchange) {
-    return exchange.getHostPort();
-  }
-
   @Override
   @Nullable
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
   }
