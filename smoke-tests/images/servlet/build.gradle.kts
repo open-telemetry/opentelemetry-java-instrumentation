@@ -24,10 +24,10 @@ val extraTag = findProperty("extraTag")
 // Dockerfile name, args key passes raw arguments to docker build
 val targets = mapOf(
   "jetty" to listOf(
-    ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("sourceVersion" to "9.4.51.v20230217")),
-    ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "10.0.7")),
-    ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "11.0.7"), "servlet-5.0"),
-    ImageTarget(listOf("12.0.5"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "12.0.5")),
+    ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("sourceVersion" to "9.4.53.v20231009")),
+    ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "10.0.19")),
+    ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "11.0.19"), "servlet-5.0"),
+//    ImageTarget(listOf("12.0.5"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "12.0.5")), //enable once Jetty 12 is supported
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
@@ -35,11 +35,11 @@ val targets = mapOf(
     // Java 19 is not supported until 22.0.0.10
     ImageTarget(listOf("22.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
     // Java 21 is not supported until 23.0.0.3
-    ImageTarget(listOf("23.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("release" to "23.0.0.3")),
+    ImageTarget(listOf("23.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("release" to "23.0.0.12")),
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
-    ImageTarget(listOf("6.2024.1"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
+    ImageTarget(listOf("6.2023.12"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
@@ -158,7 +158,13 @@ fun configureImage(
       // ibm-semeru-runtimes doesn't publish windows images
       throw GradleException("Unexpected vm: $vm")
     } else {
-      "ibm-semeru-runtimes:open-$jdk-jdk"
+      // looks like 21 is coming soon https://github.com/ibmruntimes/semeru-containers/commit/03eeaa90a3e9ae742bbdeeb9bf893b8d506f9e32#diff-e91d84b927d0b95d9682c441b44a7ed83afc726e8a31840955cc4a0fd97de17c
+      // remove this workaround once it's published
+      if (jdk == "21") {
+        "ibm-semeru-runtimes:open-20-jdk"
+      } else {
+        "ibm-semeru-runtimes:open-$jdk-jdk"
+      }
     }
   } else {
     throw GradleException("Unexpected vm: $vm")
