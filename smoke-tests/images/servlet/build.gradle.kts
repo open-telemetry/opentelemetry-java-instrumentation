@@ -60,7 +60,9 @@ val targets = mapOf(
     ImageTarget(
       listOf("17.0.1.Final", "21.0.0.Final", "28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21"), war = "servlet-5.0"),
+      listOf("11", "17", "21"),
+      war = "servlet-5.0"
+    ),
   ),
 )
 
@@ -158,13 +160,7 @@ fun configureImage(
       // ibm-semeru-runtimes doesn't publish windows images
       throw GradleException("Unexpected vm: $vm")
     } else {
-      // looks like 21 is coming soon https://github.com/ibmruntimes/semeru-containers/commit/03eeaa90a3e9ae742bbdeeb9bf893b8d506f9e32#diff-e91d84b927d0b95d9682c441b44a7ed83afc726e8a31840955cc4a0fd97de17c
-      // remove this workaround once it's published
-      if (jdk == "21") {
-        "ibm-semeru-runtimes:open-20-jdk"
-      } else {
-        "ibm-semeru-runtimes:open-$jdk-jdk"
-      }
+      "ibm-semeru-runtimes:open-$jdk-jdk"
     }
   } else {
     throw GradleException("Unexpected vm: $vm")
