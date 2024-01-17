@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.mybatis;
 
 import static org.mockito.Mockito.when;
@@ -18,17 +23,16 @@ import org.junit.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
 
-public class MybatisTest {
+class MybatisTest {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final String SPAN_NAME = "io.opentelemetry.javaagent.instrumentation.mybatis.RecordMapper.updateRecord";
+  private static final String SPAN_NAME =
+      "io.opentelemetry.javaagent.instrumentation.mybatis.RecordMapper.updateRecord";
 
-  
-  
   @Test
-  public void mybatis() throws Exception {
+  void mybatis() throws Exception {
     DefaultSqlSession sqlSession = Mockito.mock(DefaultSqlSession.class);
     Configuration configuration = Mockito.mock(Configuration.class);
     DefaultObjectFactory defaultObjectFactory = Mockito.mock(DefaultObjectFactory.class);
@@ -50,21 +54,19 @@ public class MybatisTest {
     Class<?> mapper = Class.forName(RecordMapper.class.getName());
     Method method = mapper.getMethod("updateRecord");
     MapperMethod mapperMethod = new MapperMethod(mapper, method, configuration);
-    try {
-      mapperMethod.execute(sqlSession, null);
-      testSpan(SPAN_NAME);
-    } catch (RuntimeException e) {
-      throw new RuntimeException(e);
-    }
+    mapperMethod.execute(sqlSession, null);
+    span(SPAN_NAME);
   }
 
-  public void testSpan(String spanName) {
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
-      trace.hasSize(1)
-          .hasSpansSatisfyingExactly(span -> {
-            span.hasKind(SpanKind.INTERNAL)
-                .hasName(spanName);
-          });
-    });
+  private void span(String spanName) {
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace -> {
+          trace
+              .hasSize(1)
+              .hasSpansSatisfyingExactly(
+                  span -> {
+                    span.hasKind(SpanKind.INTERNAL).hasName(spanName);
+                  });
+        });
   }
 }

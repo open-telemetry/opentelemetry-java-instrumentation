@@ -1,5 +1,9 @@
-package io.opentelemetry.javaagent.instrumentation.mybatis;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+package io.opentelemetry.javaagent.instrumentation.mybatis;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.mybatis.MybatisSingletons.mapperInstrumenter;
@@ -24,7 +28,7 @@ public class MybatisExecuteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute"),MybatisExecuteInstrumentation.class.getName() + "$ExecuteAdvice");
+        named("execute"), MybatisExecuteInstrumentation.class.getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
