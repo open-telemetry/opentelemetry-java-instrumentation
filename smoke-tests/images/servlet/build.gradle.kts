@@ -34,7 +34,7 @@ val targets = mapOf(
     ImageTarget(listOf("21.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
     // Java 19 is not supported until 22.0.0.10
     ImageTarget(listOf("22.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
-    // Java 21 is not supported until 23.0.0.3
+    // Java 21 is not supported until 23.0.0.3 - despite that only 20 seems to work
     ImageTarget(listOf("23.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "20"), mapOf("release" to "23.0.0.12")),
   ),
   "payara" to listOf(
