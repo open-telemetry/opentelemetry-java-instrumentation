@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
+import org.apache.hc.client5.http.CircularRedirectException;
 import org.apache.hc.client5.http.ClientProtocolException;
 import org.apache.hc.client5.http.classic.ExecChain;
 import org.apache.hc.client5.http.classic.ExecChain.Scope;
@@ -105,7 +106,8 @@ class OtelExecChainHandler implements ExecChainHandler {
       HttpClientContext httpContext,
       HttpRequest request,
       ApacheHttpClient5Request instrumenterRequest,
-      @Nullable ClassicHttpResponse response) {
+      @Nullable ClassicHttpResponse response)
+      throws HttpException {
     if (response == null) {
       return false;
     }
@@ -130,17 +132,18 @@ class OtelExecChainHandler implements ExecChainHandler {
     // a circular redirect, which happens before exec decorators run.
     RedirectLocations redirectLocations =
         (RedirectLocations) httpContext.getAttribute(HttpClientContext.REDIRECT_LOCATIONS);
-    if (redirectLocations != null) {
+    if (!redirectLocations.getAll().isEmpty()) {
       RedirectLocations copy = new RedirectLocations();
       for (URI uri : redirectLocations.getAll()) {
         copy.add(uri);
       }
 
       try {
-        DefaultRedirectStrategy.INSTANCE.getLocationURI(request, response, httpContext);
-      } catch (HttpException e) {
+        getLocationUri(request, response, httpContext, copy);
+      } catch (ProtocolException e) {
         // We will not be returning to the Exec, finish the span.
-        instrumenter.end(context, instrumenterRequest, response, new ClientProtocolException(e));
+        instrumenter.end(
+            context, instrumenterRequest, response, new ClientProtocolException(e.getMessage(), e));
         return true;
       } finally {
         httpContext.setAttribute(HttpClientContext.REDIRECT_LOCATIONS, copy);
@@ -154,6 +157,21 @@ class OtelExecChainHandler implements ExecChainHandler {
 
     httpContext.setAttribute(REDIRECT_COUNT_ATTRIBUTE_ID, redirectCount);
     return true;
+  }
+
+  private static URI getLocationUri(
+      HttpRequest request,
+      HttpResponse response,
+      HttpClientContext httpContext,
+      RedirectLocations redirectLocations)
+      throws HttpException {
+    URI redirectUri =
+        DefaultRedirectStrategy.INSTANCE.getLocationURI(request, response, httpContext);
+    if (!httpContext.getRequestConfig().isCircularRedirectsAllowed()
+        && redirectLocations.contains(redirectUri)) {
+      throw new CircularRedirectException("Circular redirect to '" + redirectUri + "'");
+    }
+    return DefaultRedirectStrategy.INSTANCE.getLocationURI(request, response, httpContext);
   }
 
   private static ApacheHttpClient5Request getApacheHttpClient5Request(
