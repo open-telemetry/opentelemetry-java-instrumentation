@@ -18,7 +18,7 @@ on:
       skip-java-17:
         type: boolean
         required: false
-      skip-java-19:
+      skip-java-21:
         type: boolean
         required: false
 
@@ -67,6 +67,6 @@ jobs:
         if: "!inputs.skip-java-17"
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
 
-      - name: Build Java 19 Docker image
-        if: "!inputs.skip-java-19"
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=19 -Djib.httpTimeout=120000 -Djib.console=plain
+      - name: Build Java 21 Docker image
+        if: "!inputs.skip-java-21"
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
