@@ -82,6 +82,8 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
       for (int i = 0; i < listeners.length; ++i) {
         if (FutureListenerWrappers.shouldWrap(listeners[i])) {
           wrappedListeners[i] = FutureListenerWrappers.wrap(context, listeners[i]);
+        } else {
+          wrappedListeners[i] = listeners[i];
         }
       }
       listeners = wrappedListeners;
