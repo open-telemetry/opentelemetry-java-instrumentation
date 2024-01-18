@@ -6,7 +6,10 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -79,10 +82,21 @@ class OtlpExporterUtil {
       headers = properties.getHeaders();
     }
     for (Map.Entry<String, String> entry : headers.entrySet()) {
-      if (isHttpProtobuf) {
-        addHttpHeader.accept(httpBuilder, entry);
-      } else {
-        addGrpcHeader.accept(grpcBuilder, entry);
+      String value = entry.getValue();
+      try {
+        // headers are encoded as URL - see
+        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#specifying-headers-via-environment-variables
+        Map.Entry<String, String> decoded =
+            new AbstractMap.SimpleEntry<>(
+                entry.getKey(), URLDecoder.decode(value, StandardCharsets.UTF_8.displayName()));
+
+        if (isHttpProtobuf) {
+          addHttpHeader.accept(httpBuilder, decoded);
+        } else {
+          addGrpcHeader.accept(grpcBuilder, decoded);
+        }
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Cannot decode header value: " + value, e);
       }
     }
 

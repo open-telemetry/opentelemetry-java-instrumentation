@@ -17,11 +17,15 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 /** Spring Boot auto configuration test for {@link OtlpSpanExporterAutoConfiguration}. */
+@ExtendWith(OutputCaptureExtension.class)
 class OtlpSpanExporterAutoConfigurationTest {
 
   private final OtlpHttpSpanExporterBuilder otlpHttpSpanExporterBuilder =
@@ -118,13 +122,25 @@ class OtlpSpanExporterAutoConfigurationTest {
         .withPropertyValues(
             "otel.exporter.otlp.enabled=true", "otel.exporter.otlp.protocol=http/protobuf")
         // are similar to environment variables in that they use the same converters
-        .withSystemProperties("otel.exporter.otlp.headers=x=1,y=2")
+        .withSystemProperties("otel.exporter.otlp.headers=x=1,y=2%203")
         .run(context -> {});
 
     Mockito.verify(otlpHttpSpanExporterBuilder).build();
     Mockito.verify(otlpHttpSpanExporterBuilder).addHeader("x", "1");
-    Mockito.verify(otlpHttpSpanExporterBuilder).addHeader("y", "2");
+    Mockito.verify(otlpHttpSpanExporterBuilder).addHeader("y", "2 3");
     Mockito.verifyNoMoreInteractions(otlpHttpSpanExporterBuilder);
+  }
+
+  @Test
+  @DisplayName("OTLP header with illegal % encoding causes an exception")
+  void decodingError(CapturedOutput output) {
+    this.contextRunner
+        .withBean(OtlpHttpSpanExporterBuilder.class, () -> otlpHttpSpanExporterBuilder)
+        .withSystemProperties("otel.exporter.otlp.headers=x=%-1")
+        .run(context -> {});
+
+    // spring catches the exception and logs it
+    assertThat(output).contains("Cannot decode header value: %-1");
   }
 
   @Test
