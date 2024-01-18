@@ -58,7 +58,7 @@ class MybatisTest {
     span(SPAN_NAME);
   }
 
-  private void span(String spanName) {
+  private static void span(String spanName) {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
           trace

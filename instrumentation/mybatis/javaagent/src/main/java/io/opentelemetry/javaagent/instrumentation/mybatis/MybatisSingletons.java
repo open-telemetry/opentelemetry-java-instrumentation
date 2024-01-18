@@ -20,9 +20,7 @@ public final class MybatisSingletons {
 
     MAPPER_INSTRUMENTER =
         Instrumenter.<MapperMethodRequest, Void>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                spanNameExtractor)
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(new MybatisAttributesExtractor())
             .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
@@ -30,5 +28,6 @@ public final class MybatisSingletons {
   public static Instrumenter<MapperMethodRequest, Void> mapperInstrumenter() {
     return MAPPER_INSTRUMENTER;
   }
+
   private MybatisSingletons() {}
 }
