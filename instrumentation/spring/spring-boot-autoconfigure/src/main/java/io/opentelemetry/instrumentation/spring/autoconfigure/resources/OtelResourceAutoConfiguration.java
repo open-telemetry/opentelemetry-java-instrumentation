@@ -38,6 +38,11 @@ public class OtelResourceAutoConfiguration {
   }
 
   @Bean
+  public ResourceProvider otelDistroVersionResourceProvider() {
+    return new DistroVersionResourceProvider();
+  }
+
+  @Bean
   @ConditionalOnClass(OsResource.class)
   public ResourceProvider otelOsResourceProvider() {
     return new OsResourceProvider();
