@@ -325,7 +325,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        receiveSpan(it, 1, span(0), topic, null, producer)
+        receiveBatchSpan(it, 1, span(0), topic, null, producer)
       }
     }
   }
@@ -378,7 +378,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           hasNoParent()
         }
-        receiveSpan(it, 1, span(0), topic, null, producer)
+        receiveBatchSpan(it, 1, span(0), topic, null, producer)
         span(2) {
           name "callback"
           kind INTERNAL
@@ -593,7 +593,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         } else if (msgId != null) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         }
-        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
         "messaging.pulsar.message.type" "normal"
         if (headers) {
           "messaging.header.test_message_header" { it == ["test"] }
@@ -602,11 +602,18 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
     }
   }
 
-  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId, Object linkedSpan = null, boolean headers = false) {
-    receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, linkedSpan, headers)
+  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId,
+                  Object linkedSpan = null, boolean headers = false) {
+    receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, linkedSpan, headers, false)
   }
 
-  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination, Object msgId, Object linkedSpan = null, boolean headers = false) {
+  def receiveBatchSpan(TraceAssert trace, int index, Object parentSpan, String topic, Object msgId,
+                  Object linkedSpan = null, boolean headers = false) {
+    receiveSpan(trace, index, parentSpan, topic, null, { it == topic }, msgId, linkedSpan, headers, true)
+  }
+
+  def receiveSpan(TraceAssert trace, int index, Object parentSpan, String topic, Pattern namePattern, Closure destination,
+                  Object msgId, Object linkedSpan = null, boolean headers = false, boolean batch = false) {
     trace.span(index) {
       if (namePattern != null) {
         name namePattern
@@ -630,8 +637,11 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
         } else if (msgId != null) {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         }
-        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
         "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+        if (batch) {
+          "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" Long
+        }
         if (headers) {
           "messaging.header.test_message_header" { it == ["test"] }
         }
@@ -661,7 +671,7 @@ class PulsarClientTest extends AgentInstrumentationSpecification {
           "$SemanticAttributes.MESSAGING_MESSAGE_ID" msgId.toString()
         }
         "$SemanticAttributes.MESSAGING_OPERATION" "process"
-        "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+        "$SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
         if (headers) {
           "messaging.header.test_message_header" { it == ["test"] }
         }

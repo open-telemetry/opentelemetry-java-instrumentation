@@ -27,9 +27,6 @@ final class KafkaProducerAttributesExtractor
     if (request.getRecord().value() == null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
-    if (request.getClientId() != null) {
-      attributes.put(SemanticAttributes.MESSAGING_CLIENT_ID, request.getClientId());
-    }
   }
 
   private static boolean canSerialize(Class<?> keyClass) {

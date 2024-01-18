@@ -15,7 +15,7 @@ import com.twilio.http.TwilioRestClient
 import com.twilio.rest.api.v2010.account.Call
 import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
+
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.http.HttpEntity
@@ -320,7 +320,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$SemanticAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
-            "$HttpAttributes.ERROR_TYPE" "500"
+            "$SemanticAttributes.ERROR_TYPE" "500"
           }
         }
         span(3) {
@@ -406,7 +406,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$SemanticAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
-            "$HttpAttributes.ERROR_TYPE" "500"
+            "$SemanticAttributes.ERROR_TYPE" "500"
           }
         }
         span(3) {

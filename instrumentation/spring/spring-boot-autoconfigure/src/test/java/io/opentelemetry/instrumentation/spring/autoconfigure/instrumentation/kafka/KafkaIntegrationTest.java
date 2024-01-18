@@ -129,7 +129,7 @@ class KafkaIntegrationTest {
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testTopic"),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                                SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,

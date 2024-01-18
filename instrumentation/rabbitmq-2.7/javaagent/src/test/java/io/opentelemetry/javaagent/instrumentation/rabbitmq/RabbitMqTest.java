@@ -801,8 +801,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                               assertTrue(deliveryMode == null || deliveryMode == 2);
 
                               assertNotNull(
-                                  attrs.get(
-                                      SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES));
+                                  attrs.get(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE));
                             });
                   });
           break;
@@ -822,7 +821,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                                       || queue.equals("some-routing-queue")
                                       || queue.startsWith("amq.gen-"));
 
-                              attrs.get(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
+                              attrs.get(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE);
                             });
                   });
           break;
@@ -833,7 +832,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     assertThat(attributes)
                         .satisfies(
                             attrs -> {
-                              attrs.get(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES);
+                              attrs.get(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE);
                             });
                   });
           break;

@@ -151,8 +151,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (span.getSpanContext().isValid()) {
         helper().onPublish(span, exchange, routingKey);
         if (body != null) {
-          span.setAttribute(
-              SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
+          span.setAttribute(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
