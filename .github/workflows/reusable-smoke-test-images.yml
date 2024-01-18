@@ -1,3 +1,10 @@
+# Every workflow that includes this must also include the following to make sure that it
+# is triggered when a new JDK is added to the matrix:
+#on:
+#  push:
+#    paths:
+#      - ".github/workflows/reusable-smoke-test-images.yml"
+
 name: PR build fake backend images for smoke tests
 
 on:
