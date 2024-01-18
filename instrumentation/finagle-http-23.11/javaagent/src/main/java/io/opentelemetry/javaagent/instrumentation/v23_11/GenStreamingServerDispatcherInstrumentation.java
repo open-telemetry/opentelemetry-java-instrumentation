@@ -10,10 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.twitter.util.Future;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.invoke.MethodHandle;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,17 +38,22 @@ public class GenStreamingServerDispatcherInstrumentation implements TypeInstrume
   @SuppressWarnings("unused")
   public static class LoopAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnDefaultValue.class)
-    public static boolean methodEnter() {
-      // only call when we've effectively wrapped the method (hence: isRecursed)
-      return Helpers.LOOP_GUARD.isRecursed();
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter() {
+      // this works bc at this point in the server evaluation, the netty
+      // instrumentation has already gone to work and assigned the context to the
+      // local thread;
+      //
+      // this works specifically in finagle's netty stack bc at this point the loop()
+      // method is running on a netty thread with the necessary access to the
+      // java-native ThreadLocal where the Context is stored
+      Helpers.CONTEXT_LOCAL.update(Context.current());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.SelfCallHandle MethodHandle handle,
-        @Advice.Return(readOnly = false) Future<?> ret) {
-      ret = Helpers.loopAdviceExit(handle, ret);
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void methodExit(@Advice.Thrown Throwable thrown) {
+      // always clear this
+      Helpers.CONTEXT_LOCAL.clear();
     }
   }
 }

@@ -9,13 +9,14 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.twitter.util.Future;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.invoke.MethodHandle;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import scala.Option;
 
 public class ChannelTransportInstrumentation implements TypeInstrumentation {
   @Override
@@ -38,17 +39,20 @@ public class ChannelTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WriteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnDefaultValue.class)
-    public static boolean methodEnter() {
-      // only call when we've effectively wrapped the method (hence: isRecursed)
-      return Helpers.WRITE_GUARD.isRecursed();
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(@Advice.Local("otelScope") Scope scope) {
+      Option<Context> ref = Helpers.CONTEXT_LOCAL.apply();
+      if (ref.isDefined()) {
+        scope = ref.get().makeCurrent();
+      }
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void methodExit(
-        @Advice.SelfCallHandle MethodHandle handle,
-        @Advice.Return(readOnly = false) Future<?> ret) {
-      ret = Helpers.callWrite(handle, ret);
+        @Advice.Local("otelScope") Scope scope, @Advice.Thrown Throwable thrown) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

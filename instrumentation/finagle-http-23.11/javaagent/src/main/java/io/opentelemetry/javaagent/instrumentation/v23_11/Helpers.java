@@ -7,9 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.v23_11;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 
-import com.twitter.finagle.context.Contexts;
-import com.twitter.finagle.context.LocalContext;
-import com.twitter.util.Future;
 import com.twitter.util.Local;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -25,115 +22,13 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTra
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
-import java.lang.invoke.MethodHandle;
 import java.util.Deque;
-import java.util.concurrent.Callable;
-import scala.Function0;
-import scala.Option;
 
 public class Helpers {
 
   private Helpers() {}
 
-  public static final LocalCallGuard LOOP_GUARD = new LocalCallGuard();
-
-  public static final LocalCallGuard WRITE_GUARD = new LocalCallGuard();
-
-  // used for finagle's LocalContext: carries a reference to the Context observed at the start
-  // of the server request processing or the client Service call
-  static class ContextRef {
-
-    private final LocalContext.Key<Context> key;
-    public static final ContextRef INSTANCE = new ContextRef(Contexts.local().newKey());
-
-    private ContextRef(LocalContext.Key<Context> var1) {
-      this.key = var1;
-    }
-
-    public LocalContext.Key<Context> getKey() {
-      return this.key;
-    }
-  }
-
-  // uses twitter util's Local bc the finagle/twitter stack is essentially incompatible with
-  // java-native TLVs;
-  // as these are referenced across twitter Future compositions, no assumptions are made and they
-  // are used to adhere strictly to the interface, allowing the guard test to succeed at execution
-  // time
-  public static class LocalCallGuard {
-
-    private final Local<Object> guard = new Local<>();
-
-    // is the current thread presently inside a call guarded by this LocalCallGuard?
-    public boolean isRecursed() {
-      return guard.apply().isDefined();
-    }
-
-    // safely guard the Function0 call;
-    // (Function0 -> Java Supplier, in our cases -- it wraps existing calls)
-    public <T> T guardedCall(Function0<T> f, T defaultVal) {
-      if (isRecursed()) {
-        return defaultVal;
-      }
-      return guard.let(null, f);
-    }
-  }
-
-  @SuppressWarnings({"ThrowSpecificExceptions", "CheckedExceptionNotThrown"})
-  public static Future<?> loopAdviceExit(MethodHandle handle, Future<?> ret) {
-    return LOOP_GUARD.guardedCall(
-        () ->
-            Contexts.local()
-                .let(
-                    ContextRef.INSTANCE.getKey(),
-                    // this works bc at this point in the server evaluation, the netty
-                    // instrumentation has already gone to work and assigned the context to the
-                    // local thread;
-                    //
-                    // this works specifically in finagle's netty stack bc at this point the loop()
-                    // method is running on a netty thread with the necessary access to the
-                    // java-native ThreadLocal where the Context is stored
-                    Context.current(),
-                    () -> {
-                      try {
-                        // all access to Context.current() from this point forward should now
-                        // succeed as expected
-                        return (Future<?>) handle.invoke();
-                      } catch (Throwable e) {
-                        throw new RuntimeException(e);
-                      }
-                    }),
-        ret);
-  }
-
-  @SuppressWarnings("ThrowSpecificExceptions")
-  public static Future<?> callWrite(MethodHandle handle, Future<?> ret) {
-    return WRITE_GUARD.guardedCall(
-        () -> {
-          Option<Context> ref = Contexts.local().get(ContextRef.INSTANCE.getKey());
-          Callable<Future<?>> call =
-              () -> {
-                try {
-                  return (Future<?>) handle.invoke();
-                } catch (Exception e) {
-                  // don't wrap needlessly
-                  throw e;
-                } catch (Throwable e) {
-                  throw new RuntimeException(e);
-                }
-              };
-          if (ref.isDefined()) {
-            // wrap the call if ContextRef contains a set Context
-            call = ref.get().wrap(call);
-          }
-          try {
-            return call.call();
-          } catch (Exception e) {
-            throw new RuntimeException(e);
-          }
-        },
-        ret);
-  }
+  public static final Local<Context> CONTEXT_LOCAL = new Local<>();
 
   public static <C extends Channel> ChannelInitializer<C> wrapServer(ChannelInitializer<C> inner) {
     return new ChannelInitializerDelegate<C>(inner) {
