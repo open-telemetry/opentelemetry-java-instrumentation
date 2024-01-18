@@ -75,13 +75,18 @@ class OpenTelemetryAutoConfigurationTest {
         .withBean(
             "customTracerProvider",
             SdkTracerProvider.class,
-            () -> SdkTracerProvider.builder().build())
+            () -> SdkTracerProvider.builder().build(),
+            bd -> bd.setDestroyMethodName(""))
         .withBean(
-            "customMeterProvider", SdkMeterProvider.class, () -> SdkMeterProvider.builder().build())
+            "customMeterProvider",
+            SdkMeterProvider.class,
+            () -> SdkMeterProvider.builder().build(),
+            bd -> bd.setDestroyMethodName(""))
         .withBean(
             "customLoggerProvider",
             SdkLoggerProvider.class,
-            () -> SdkLoggerProvider.builder().build())
+            () -> SdkLoggerProvider.builder().build(),
+            bd -> bd.setDestroyMethodName(""))
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(
             context ->
