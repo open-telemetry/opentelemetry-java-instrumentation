@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(ZipkinSpanExporter.class)
 public class ZipkinSpanExporterAutoConfiguration {
 
-  @Bean(destroyMethod = "")
+  @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
   @ConditionalOnMissingBean
   public ZipkinSpanExporter otelZipkinSpanExporter(ZipkinSpanExporterProperties properties) {
 

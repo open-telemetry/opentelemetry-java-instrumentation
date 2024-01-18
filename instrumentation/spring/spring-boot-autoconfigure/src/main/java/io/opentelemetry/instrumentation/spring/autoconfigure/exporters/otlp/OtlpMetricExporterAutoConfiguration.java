@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(OtlpGrpcMetricExporter.class)
 public class OtlpMetricExporterAutoConfiguration {
 
-  @Bean(destroyMethod = "")
+  @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
   @ConditionalOnMissingBean({OtlpGrpcMetricExporter.class, OtlpHttpMetricExporter.class})
   public MetricExporter otelOtlpMetricExporter(OtlpExporterProperties properties) {
     return OtlpExporterUtil.applySignalProperties(
