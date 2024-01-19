@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.LocalRootServerSpan;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -203,6 +204,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
+      if (spanKind == SpanKind.SERVER) {
+        context = LocalRootServerSpan.store(context, span);
+      }
     }
 
     return spanSuppressor.storeInContext(context, spanKind, span);

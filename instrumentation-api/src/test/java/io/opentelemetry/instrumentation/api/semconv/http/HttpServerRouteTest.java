@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
@@ -39,7 +40,7 @@ class HttpServerRouteTest {
                 HttpServerRoute.builder(getter)
                     .setKnownMethods(new HashSet<>(singletonList("GET")))
                     .build())
-            .buildInstrumenter();
+            .buildInstrumenter(s -> SpanKind.SERVER);
   }
 
   @Test
@@ -59,6 +60,27 @@ class HttpServerRouteTest {
     assertThat(testing.getSpans())
         .satisfiesExactly(
             span -> assertThat(span).hasName("parent"), span -> assertThat(span).hasName("test"));
+  }
+
+  @Test
+  void nonServerRootSpan() {
+    Instrumenter<String, Void> testInstrumenter =
+        Instrumenter.<String, Void>builder(testing.getOpenTelemetry(), "test", s -> s)
+            .addContextCustomizer(
+                HttpServerRoute.builder(getter)
+                    .setKnownMethods(new HashSet<>(singletonList("GET")))
+                    .build())
+            .buildInstrumenter(s -> SpanKind.INTERNAL);
+
+    Context context = testInstrumenter.start(Context.root(), "test");
+    assertNull(HttpServerRoute.get(context));
+
+    HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
+
+    testInstrumenter.end(context, "test", null, null);
+
+    assertNull(HttpServerRoute.get(context));
+    assertThat(testing.getSpans()).satisfiesExactly(span -> assertThat(span).hasName("test"));
   }
 
   @Test

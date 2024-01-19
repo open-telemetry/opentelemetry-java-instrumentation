@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
-import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.LocalRootServerSpan;
 import javax.annotation.Nullable;
 
 /**
@@ -97,7 +97,7 @@ public final class HttpServerRoute {
       HttpServerRouteBiGetter<T, U> httpRouteGetter,
       T arg1,
       U arg2) {
-    Span serverSpan = SpanKey.HTTP_SERVER.fromContextOrNull(context);
+    Span serverSpan = LocalRootServerSpan.fromContextOrNull(context);
     // even if the server span is not sampled, we have to continue - we need to compute the
     // http.route properly so that it can be captured by the server metrics
     if (serverSpan == null) {
