@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass(LoggingMetricExporter.class)
 public class LoggingMetricExporterAutoConfiguration {
 
-  @Bean
+  @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
   @ConditionalOnMissingBean
   public LoggingMetricExporter otelLoggingMetricExporter() {
     return LoggingMetricExporter.create();
