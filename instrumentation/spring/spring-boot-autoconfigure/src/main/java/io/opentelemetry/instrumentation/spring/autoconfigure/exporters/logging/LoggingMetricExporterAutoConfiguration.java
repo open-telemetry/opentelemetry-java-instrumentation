@@ -6,18 +6,18 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
 import io.opentelemetry.exporter.logging.LoggingMetricExporter;
-import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-/** Configures {@link LoggingSpanExporter} bean for tracing. */
+/** Configures {@link LoggingMetricExporter} bean for tracing. */
 @Configuration
 @EnableConfigurationProperties(LoggingExporterProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 public class LoggingMetricExporterAutoConfiguration {
 
   @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
+  @ConditionalOnMissingBean
   public LoggingMetricExporter otelLoggingMetricExporter() {
     return LoggingMetricExporter.create();
   }
