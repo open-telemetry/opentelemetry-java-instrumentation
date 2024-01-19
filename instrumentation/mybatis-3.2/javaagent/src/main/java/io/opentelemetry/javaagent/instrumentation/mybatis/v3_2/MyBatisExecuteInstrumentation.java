@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mybatis;
+package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.mybatis.MybatisSingletons.mapperInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.mybatis.v3_2.MyBatisSingletons.mapperInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public class MybatisExecuteInstrumentation implements TypeInstrumentation {
+public class MyBatisExecuteInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,7 +28,7 @@ public class MybatisExecuteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute"), MybatisExecuteInstrumentation.class.getName() + "$ExecuteAdvice");
+        named("execute"), MyBatisExecuteInstrumentation.class.getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mybatis;
+package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
 import static org.mockito.Mockito.when;
 
@@ -23,21 +23,21 @@ import org.junit.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
 
-class MybatisTest {
+public class MyBatisTest {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String SPAN_NAME =
-      "io.opentelemetry.javaagent.instrumentation.mybatis.RecordMapper.updateRecord";
+      "io.opentelemetry.javaagent.instrumentation.mybatis.v3_2.RecordMapper.updateRecord";
 
   @Test
-  void mybatis() throws Exception {
+  public void mybatis() throws Exception {
     DefaultSqlSession sqlSession = Mockito.mock(DefaultSqlSession.class);
     Configuration configuration = Mockito.mock(Configuration.class);
     DefaultObjectFactory defaultObjectFactory = Mockito.mock(DefaultObjectFactory.class);
     when(sqlSession.update(SPAN_NAME, null)).thenReturn(1);
-    Class<?> mappedStatementClass = Class.forName(MappedStatement.class.getName());
+    Class<?> mappedStatementClass = MappedStatement.class;
     Constructor<?> constructor = mappedStatementClass.getDeclaredConstructor();
     constructor.setAccessible(true);
     MappedStatement mappedStatement = (MappedStatement) constructor.newInstance();
@@ -51,7 +51,7 @@ class MybatisTest {
     when(configuration.getMappedStatement(SPAN_NAME)).thenReturn(mappedStatement);
     when(configuration.getObjectFactory()).thenReturn(defaultObjectFactory);
     when(defaultObjectFactory.isCollection(Void.class)).thenReturn(false);
-    Class<?> mapper = Class.forName(RecordMapper.class.getName());
+    Class<?> mapper = RecordMapper.class;
     Method method = mapper.getMethod("updateRecord");
     MapperMethod mapperMethod = new MapperMethod(mapper, method, configuration);
     mapperMethod.execute(sqlSession, null);

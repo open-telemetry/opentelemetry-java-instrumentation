@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mybatis;
+package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
 import org.apache.ibatis.annotations.Update;
 
