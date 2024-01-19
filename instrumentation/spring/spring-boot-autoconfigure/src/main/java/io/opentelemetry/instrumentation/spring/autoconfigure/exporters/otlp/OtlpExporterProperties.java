@@ -20,6 +20,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>Get Exporter Endpoint
  *
  * <p>Get max wait time for Collector to process Span Batches
+ *
+ * <p>Note that this class mostly exists to support auto-completion in IDEs. The actual properties
+ * are read using the {@link io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties}
  */
 @ConfigurationProperties(prefix = "otel.exporter.otlp")
 public final class OtlpExporterProperties {

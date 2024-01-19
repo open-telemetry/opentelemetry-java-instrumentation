@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLoggerExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration;
@@ -55,7 +56,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
-@EnableConfigurationProperties({MetricExportProperties.class, SamplerProperties.class})
+@EnableConfigurationProperties({
+  MetricExportProperties.class,
+  SamplerProperties.class,
+  OtlpExporterProperties.class
+})
 public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
@@ -89,6 +94,14 @@ public class OpenTelemetryAutoConfiguration {
 
       @ConditionalOnBean(OtlpMetricExporterAutoConfiguration.class)
       static class Metric {}
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    ConfigProperties configProperties(
+        Environment env, OtlpExporterProperties otlpExporterProperties) {
+      return new SpringResourceConfigProperties(
+          env, new SpelExpressionParser(), otlpExporterProperties);
     }
 
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
@@ -156,8 +169,7 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public Resource otelResource(
-        Environment env, ObjectProvider<List<ResourceProvider>> resourceProviders) {
-      ConfigProperties config = new SpringResourceConfigProperties(env, new SpelExpressionParser());
+        ConfigProperties config, ObjectProvider<List<ResourceProvider>> resourceProviders) {
       Resource resource = Resource.getDefault();
       for (ResourceProvider resourceProvider :
           resourceProviders.getIfAvailable(Collections::emptyList)) {
