@@ -32,6 +32,17 @@ final class InstrumentationApiContextBridging {
     }
 
     try {
+      bridges.add(
+          new ContextKeyBridge<Span, io.opentelemetry.api.trace.Span>(
+              "application.io.opentelemetry.instrumentation.api.internal.LocalRootServerSpan",
+              "io.opentelemetry.instrumentation.api.internal.LocalRootServerSpan",
+              Bridging::toApplication,
+              Bridging::toAgentOrNull));
+    } catch (Throwable e) {
+      // no instrumentation-api on classpath
+    }
+
+    try {
       // old SERVER_KEY bridge - needed to make legacy ServerSpan work, for users who're using old
       // instrumentation-api version with the newest agent version
       bridges.add(
