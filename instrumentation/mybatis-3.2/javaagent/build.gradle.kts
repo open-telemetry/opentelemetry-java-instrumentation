@@ -17,6 +17,7 @@ dependencies {
   library("org.mybatis:mybatis:3.2.0")
   testImplementation("org.mockito:mockito-core")
   testImplementation("org.mockito:mockito-junit-jupiter")
+  testImplementation("com.h2database:h2:1.4.191")
 }
 
 tasks.withType<Test>().configureEach {

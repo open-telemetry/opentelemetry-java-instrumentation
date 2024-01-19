@@ -9,6 +9,6 @@ import org.apache.ibatis.annotations.Update;
 
 public interface RecordMapper {
 
-  @Update("update dummy_record set content = '3131223'")
+  @Update("CREATE TABLE dummy_record (id INT PRIMARY KEY, content VARCHAR(255))")
   void updateRecord();
 }
