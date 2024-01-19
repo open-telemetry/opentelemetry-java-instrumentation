@@ -38,6 +38,13 @@ val v1_31Deps by configurations.creating {
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
+val v1_32Deps by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  // exclude the bom added by dependencyManagement
+  exclude("io.opentelemetry", "opentelemetry-bom")
+  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
+}
 
 // configuration for publishing the shadowed artifact
 val v1_10 by configurations.creating {
