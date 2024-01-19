@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
@@ -20,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.redisson.client.protocol.CommandData;
 import org.redisson.client.protocol.CommandsData;
@@ -48,6 +44,8 @@ public abstract class RedissonRequest {
       CommandsData commandsData = (CommandsData) command;
       if (commandsData.getCommands().size() == 1) {
         return commandsData.getCommands().get(0).getCommand().getName();
+      } else {
+        return "BATCH EXECUTE";
       }
     }
     return null;
@@ -55,30 +53,21 @@ public abstract class RedissonRequest {
 
   @Nullable
   public String getStatement() {
-    List<String> sanitizedStatements = sanitizeStatement();
-    switch (sanitizedStatements.size()) {
-      case 0:
-        return null;
-        // optimize for the most common case
-      case 1:
-        return sanitizedStatements.get(0);
-      default:
-        return String.join(";", sanitizedStatements);
-    }
+    return sanitizeStatement();
   }
 
-  private List<String> sanitizeStatement() {
+  private String sanitizeStatement() {
     Object command = getCommand();
     // get command
     if (command instanceof CommandsData) {
       List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
-      return commands.stream()
-          .map(RedissonRequest::normalizeSingleCommand)
-          .collect(Collectors.toList());
+      if (commands.size() == 1) {
+        return normalizeSingleCommand(commands.get(0));
+      }
     } else if (command instanceof CommandData) {
-      return singletonList(normalizeSingleCommand((CommandData<?, ?>) command));
+      return normalizeSingleCommand((CommandData<?, ?>) command);
     }
-    return emptyList();
+    return null;
   }
 
   private static String normalizeSingleCommand(CommandData<?, ?> command) {
