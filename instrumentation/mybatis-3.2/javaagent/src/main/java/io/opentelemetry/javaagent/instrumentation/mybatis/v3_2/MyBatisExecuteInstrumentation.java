@@ -49,7 +49,7 @@ public class MyBatisExecuteInstrumentation implements TypeInstrumentation {
       scope = context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = true)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelRequest") MapperMethodRequest request,
