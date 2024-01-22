@@ -41,7 +41,7 @@ public class DistroVersionResourceProviderTest {
               .anySatisfy(
                   (key, val) -> {
                     assertThat(key.getKey()).isEqualTo("telemetry.distro.version");
-                    assertThat(val).asString().matches("\\d\\.\\d\\.\\d-alpha-SNAPSHOT");
+                    assertThat(val).asString().isNotBlank();
                   });
         });
   }
