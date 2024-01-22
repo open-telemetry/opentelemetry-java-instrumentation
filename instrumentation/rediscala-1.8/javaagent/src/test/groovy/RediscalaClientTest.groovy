@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import akka.actor.ActorSystem
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
@@ -26,7 +25,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
   int port
 
   @Shared
-  ActorSystem system
+  def system
 
   @Shared
   RedisClient redisClient
@@ -34,15 +33,36 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
   def setupSpec() {
     redisServer.start()
     port = redisServer.getMappedPort(6379)
-    system = ActorSystem.create()
-    redisClient = new RedisClient("localhost",
-      port,
-      Option.apply(null),
-      Option.apply(null),
-      "RedisClient",
-      Option.apply(null),
-      system,
-      new RedisDispatcher("rediscala.rediscala-client-worker-dispatcher"))
+    // latest has separate artifacts for akka an pekko, currently latestDepTestLibrary picks the
+    // pekko one
+    try {
+      def clazz = Class.forName("akka.actor.ActorSystem")
+      system = clazz.getMethod("create").invoke(null)
+    } catch (ClassNotFoundException exception) {
+      def clazz = Class.forName("org.apache.pekko.actor.ActorSystem")
+      system = clazz.getMethod("create").invoke(null)
+    }
+    // latest RedisClient constructor takes username as argument
+    if (RedisClient.metaClass.getMetaMethod("username") != null) {
+      redisClient = new RedisClient("localhost",
+        port,
+        Option.apply(null),
+        Option.apply(null),
+        Option.apply(null),
+        "RedisClient",
+        Option.apply(null),
+        system,
+        new RedisDispatcher("rediscala.rediscala-client-worker-dispatcher"))
+    } else {
+      redisClient = new RedisClient("localhost",
+        port,
+        Option.apply(null),
+        Option.apply(null),
+        "RedisClient",
+        Option.apply(null),
+        system,
+        new RedisDispatcher("rediscala.rediscala-client-worker-dispatcher"))
+    }
   }
 
   def cleanupSpec() {
