@@ -35,14 +35,13 @@ class MyBatisTest {
     SqlSession sqlSession = new SqlSessionFactoryBuilder().build(configuration).openSession();
     RecordMapper recordMapper = sqlSession.getMapper(RecordMapper.class);
     recordMapper.updateRecord();
-    span(SPAN_NAME);
+    assertMyBatisTraces(SPAN_NAME);
   }
 
-  static void span(String spanName) {
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+  private static void assertMyBatisTraces(String spanName) {
+    testing.waitAndAssertTraces(
         trace -> {
           trace
-              .hasSize(1)
               .hasSpansSatisfyingExactly(
                   span -> {
                     span.hasKind(SpanKind.INTERNAL).hasName(spanName);
