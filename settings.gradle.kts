@@ -14,7 +14,7 @@ pluginManagement {
 plugins {
   id("com.gradle.enterprise") version "3.16.1"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.7.0"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
@@ -539,7 +539,6 @@ include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library")
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
 include(":instrumentation:spring:spring-boot-autoconfigure")
 include(":instrumentation:spring:starters:spring-boot-starter")
-include(":instrumentation:spring:starters:jaeger-spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
 include(":instrumentation:struts-2.3:javaagent")

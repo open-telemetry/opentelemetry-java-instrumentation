@@ -41,7 +41,7 @@ public class OtlpSpanExporterAutoConfiguration {
     return OtlpHttpSpanExporter.builder();
   }
 
-  @Bean
+  @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
   @ConditionalOnMissingBean({OtlpGrpcSpanExporter.class, OtlpHttpSpanExporter.class})
   public SpanExporter otelOtlpSpanExporter(
       OtlpExporterProperties properties, OtlpHttpSpanExporterBuilder otlpHttpSpanExporterBuilder) {

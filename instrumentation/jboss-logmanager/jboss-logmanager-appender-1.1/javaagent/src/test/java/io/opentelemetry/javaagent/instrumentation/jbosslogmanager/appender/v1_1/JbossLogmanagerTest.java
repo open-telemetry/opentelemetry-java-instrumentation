@@ -205,8 +205,8 @@ class JbossLogmanagerTest {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("jboss-logmanager.mdc.key1"), "val1"),
-            equalTo(AttributeKey.stringKey("jboss-logmanager.mdc.key2"), "val2"),
+            equalTo(AttributeKey.stringKey("key1"), "val1"),
+            equalTo(AttributeKey.stringKey("key2"), "val2"),
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
             equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
   }

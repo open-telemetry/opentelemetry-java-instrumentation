@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.33.0"
+val otelSdkVersion = "1.34.1"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -44,7 +44,7 @@ val byteBuddyVersion = "1.14.11"
 val asmVersion = "9.6"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.10"
+val slf4jVersion = "2.0.11"
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:1.21.0-alpha",
@@ -79,12 +79,12 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "io.r2dbc:r2dbc-proxy:1.1.3.RELEASE",
+  "io.r2dbc:r2dbc-proxy:1.1.4.RELEASE",
   "ch.qos.logback:logback-classic:1.3.8", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.10.19",
+  "com.uber.nullaway:nullaway:0.10.21",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.6.0",
   "commons-codec:commons-codec:1.16.0",

@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
-import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
 import io.opentelemetry.extension.trace.propagation.OtTracePropagator;
 import java.util.HashSet;
 import java.util.List;
@@ -49,14 +48,6 @@ public final class CompositeTextMapPropagatorFactory {
                 beanFactory
                     .getBeanProvider(B3Propagator.class)
                     .getIfAvailable(B3Propagator::injectingMultiHeaders));
-          }
-          break;
-        case "jaeger":
-          if (isOnClasspath("io.opentelemetry.extension.trace.propagation.JaegerPropagator")) {
-            propagators.add(
-                beanFactory
-                    .getBeanProvider(JaegerPropagator.class)
-                    .getIfAvailable(JaegerPropagator::getInstance));
           }
           break;
         case "ottrace":

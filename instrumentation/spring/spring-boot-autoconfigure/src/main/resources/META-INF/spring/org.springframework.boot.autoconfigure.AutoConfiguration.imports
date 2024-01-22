@@ -1,5 +1,4 @@
 io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration
-io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingSpanExporterAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLoggerExporterAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration

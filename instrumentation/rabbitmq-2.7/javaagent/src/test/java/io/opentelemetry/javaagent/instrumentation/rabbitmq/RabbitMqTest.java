@@ -760,11 +760,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       verifyException(span, exception, errorMsg);
     }
 
-    // listener does not have access to net attributes
-    if (!"basic.deliver".equals(rabbitCommand)) {
-      verifyNetAttributes(span);
-    }
-
+    verifyNetAttributes(span);
     verifyMessagingAttributes(span, exchange, routingKey, operation);
 
     if (expectTimestamp) {

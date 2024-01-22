@@ -166,8 +166,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasBody("log message 1")
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("log4j.context_data.key1"), "val1"),
-            equalTo(stringKey("log4j.context_data.key2"), "val2"));
+            equalTo(stringKey("key1"), "val1"), equalTo(stringKey("key2"), "val2"));
   }
 
   @Test
