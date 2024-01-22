@@ -14,10 +14,10 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.h2.jdbcx.JdbcDataSource;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MyBatisTest {
+class MyBatisTest {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -26,7 +26,7 @@ public class MyBatisTest {
       "io.opentelemetry.javaagent.instrumentation.mybatis.v3_2.RecordMapper.updateRecord";
 
   @Test
-  public void mybatis() {
+  void mybatis() {
     JdbcDataSource dataSource = new JdbcDataSource();
     dataSource.setURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
     Configuration configuration = new Configuration();
