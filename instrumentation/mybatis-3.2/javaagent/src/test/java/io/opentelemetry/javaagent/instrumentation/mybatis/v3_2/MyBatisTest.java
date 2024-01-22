@@ -41,11 +41,10 @@ class MyBatisTest {
   private static void assertMyBatisTraces(String spanName) {
     testing.waitAndAssertTraces(
         trace -> {
-          trace
-              .hasSpansSatisfyingExactly(
-                  span -> {
-                    span.hasKind(SpanKind.INTERNAL).hasName(spanName);
-                  });
+          trace.hasSpansSatisfyingExactly(
+              span -> {
+                span.hasKind(SpanKind.INTERNAL).hasName(spanName);
+              });
         });
   }
 }
