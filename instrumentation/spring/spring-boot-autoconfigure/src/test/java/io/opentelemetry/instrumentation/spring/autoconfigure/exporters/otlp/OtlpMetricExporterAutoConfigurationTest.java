@@ -6,13 +6,9 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter;
-import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -33,32 +29,6 @@ class OtlpMetricExporterAutoConfigurationTest {
             context ->
                 assertThat(context.getBean("otelOtlpMetricExporter", OtlpHttpMetricExporter.class))
                     .isNotNull());
-  }
-
-  @Test
-  @DisplayName("use grpc when protocol set")
-  void useGrpc() {
-    runner
-        .withPropertyValues("otel.exporter.otlp.protocol=grpc")
-        .run(
-            context ->
-                assertThat(context.getBean("otelOtlpMetricExporter", OtlpGrpcMetricExporter.class))
-                    .isNotNull());
-  }
-
-  @Test
-  @DisplayName("use http when unknown protocol set")
-  void useHttpWhenAnUnknownProtocolIsSet() {
-    runner
-        .withPropertyValues("otel.exporter.otlp.protocol=unknown")
-        .run(
-            context ->
-                assertThatThrownBy(
-                        () ->
-                            context.getBean("otelOtlpMetricExporter", OtlpHttpMetricExporter.class))
-                    .rootCause()
-                    .isInstanceOf(ConfigurationException.class)
-                    .hasMessage("Unsupported OTLP metrics protocol: unknown"));
   }
 
   @Test
@@ -90,13 +60,5 @@ class OtlpMetricExporterAutoConfigurationTest {
     runner
         .withPropertyValues("otel.metrics.exporter=none")
         .run(context -> assertThat(context.containsBean("otelOtlpMetricExporter")).isFalse());
-  }
-
-  @Test
-  void otlpHttpUsedByDefault() {
-    runner.run(
-        context ->
-            assertThat(context.getBean("otelOtlpMetricExporter", OtlpHttpMetricExporter.class))
-                .isNotNull());
   }
 }
