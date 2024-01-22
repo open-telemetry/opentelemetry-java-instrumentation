@@ -233,11 +233,9 @@ class PulsarClientTest {
         consumer
             .receiveAsync()
             .whenComplete(
-                (messages, throwable) -> {
-                  if (throwable != null) {
-                    throw new RuntimeException(throwable);
-                  } else {
-                    testing.runWithSpan("callback", () -> acknowledgeMessage(consumer, messages));
+                (message, throwable) -> {
+                  if (message != null) {
+                    testing.runWithSpan("callback", () -> acknowledgeMessage(consumer, message));
                   }
                 });
 
@@ -380,18 +378,9 @@ class PulsarClientTest {
                     .batchReceiveAsync()
                     .whenComplete(
                         (messages, throwable) -> {
-                          if (throwable != null) {
-                            throw new RuntimeException(throwable);
-                          } else {
+                          if (messages != null) {
                             testing.runWithSpan(
-                                "callback",
-                                () -> {
-                                  try {
-                                    consumer.acknowledge(messages);
-                                  } catch (Exception ex) {
-                                    throw new RuntimeException(ex);
-                                  }
-                                });
+                                "callback", () -> acknowledgeMessages(consumer, messages));
                           }
                         }));
 
@@ -692,11 +681,19 @@ class PulsarClientTest {
     return assertions;
   }
 
-  private static void acknowledgeMessage(Consumer<String> consumer, Message<String> msg) {
+  private static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {
     try {
-      consumer.acknowledge(msg);
-    } catch (PulsarClientException e) {
-      throw new RuntimeException(e);
+      consumer.acknowledge(message);
+    } catch (PulsarClientException exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
+  private static void acknowledgeMessages(Consumer<String> consumer, Messages<String> messages) {
+    try {
+      consumer.acknowledge(messages);
+    } catch (PulsarClientException exception) {
+      throw new RuntimeException(exception);
     }
   }
 }
