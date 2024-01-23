@@ -12,6 +12,9 @@ public class MyBatisSpanNameExtractor implements SpanNameExtractor<MapperMethodR
   @Override
   public String extract(MapperMethodRequest request) {
     String mapperName = request.getMapperName();
+    if (mapperName == null) {
+      return "MyBatis execute";
+    }
     // filter the package name in mapperName
     int lastDotIndex = mapperName.lastIndexOf('.');
     int secondLastDotIndex = mapperName.lastIndexOf('.', lastDotIndex - 1);
