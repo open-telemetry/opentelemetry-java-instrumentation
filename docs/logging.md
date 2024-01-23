@@ -37,4 +37,4 @@ public class LoggingExample{
     }
 }
 
-This example sets up both console and file handlers, each with different log levels. You can customize the file name, log levels, and other settings based on your requirements.
+This example sets up both console and file handlers, each with different log levels then You can customize the file name, log levels, and other settings based on your requirements.
