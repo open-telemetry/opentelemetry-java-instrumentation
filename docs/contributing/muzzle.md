@@ -144,8 +144,8 @@ instrumented application.
 The easiest way it can be done is by adding `assertInverse.set(true)` to the `pass` muzzle
 directive. The plugin will add an implicit `fail` directive that contains all other versions of the
 instrumented library.
-**It is worth using `assertInverse.set(true)` by default when writing instrumentation modules, even for
-very old library versions**. The muzzle plugin will ensure that those old versions won't be
+You should use `assertInverse.set(true)` when writing instrumentation modules, even for
+very old library versions. The muzzle plugin will ensure that those old versions won't be
 accidentally instrumented when we know that the instrumentation will not work properly for them.
 Having a `fail` directive forces the authors of the instrumentation module to properly specify
 `classLoaderMatcher()` so that only the desired version range is instrumented.
