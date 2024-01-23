@@ -47,6 +47,10 @@ fun findArtifact(version: String): File {
   }
 }
 
+fun getMajorVersion(version: String): Int {
+  return version.substringBefore('.').toInt()
+}
+
 // generate the api diff report for any module that is stable
 if (project.findProperty("otel.stable") == "true") {
   afterEvaluate {
@@ -66,6 +70,14 @@ if (project.findProperty("otel.stable") == "true") {
         // the japicmp "old" version is either the user-specified one, or the latest release.
         val apiBaseVersion: String? by project
         val baselineVersion = apiBaseVersion ?: latestReleasedVersion
+        if (apiBaseVersion == null && apiNewVersion == null) {
+          val baseMajor = getMajorVersion(baselineVersion)
+          val projectMajor = getMajorVersion(project.version as String)
+          // disable japicmp when project major version is behind major version of latest release,
+          // if that is the case we are building a patch for the previous release
+          enabled = projectMajor >= baseMajor
+        }
+
         oldClasspath.from(
           try {
             files(findArtifact(baselineVersion))
