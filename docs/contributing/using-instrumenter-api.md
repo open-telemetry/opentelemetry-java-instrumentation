@@ -427,7 +427,7 @@ methods:
   spans and will extract the parent span context from the incoming request.
 - `buildProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
   spans and will propagate operation context into the outgoing request.
-- `buildConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
+- `buildConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `CONSUMER`
   spans and will extract the parent span context from the incoming request.
 
 The last four variants that create non-`INTERNAL` spans accept either `TextMapSetter`
