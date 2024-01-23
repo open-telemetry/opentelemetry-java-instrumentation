@@ -44,12 +44,19 @@ muzzle {
     versions.set("[1.9.0,)")
     assertInverse.set(true)
   }
+
+  pass {
+    group.set("io.github.rediscala")
+    module.set("rediscala_2.13")
+    versions.set("[1.10.0,)")
+    assertInverse.set(true)
+  }
 }
 
 dependencies {
   library("com.github.etaty:rediscala_2.11:1.8.0")
 
-  latestDepTestLibrary("com.github.etaty:rediscala_2.13:+")
+  latestDepTestLibrary("io.github.rediscala:rediscala_2.13:+")
 }
 
 tasks {
