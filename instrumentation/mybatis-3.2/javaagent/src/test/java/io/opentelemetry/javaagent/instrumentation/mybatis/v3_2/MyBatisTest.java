@@ -22,9 +22,6 @@ class MyBatisTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final String SPAN_NAME =
-      "io.opentelemetry.javaagent.instrumentation.mybatis.v3_2.RecordMapper.updateRecord";
-
   @Test
   void mybatis() {
     JdbcDataSource dataSource = new JdbcDataSource();
@@ -35,7 +32,7 @@ class MyBatisTest {
     SqlSession sqlSession = new SqlSessionFactoryBuilder().build(configuration).openSession();
     RecordMapper recordMapper = sqlSession.getMapper(RecordMapper.class);
     recordMapper.updateRecord();
-    assertMyBatisTraces(SPAN_NAME);
+    assertMyBatisTraces("RecordMapper.updateRecord");
   }
 
   private static void assertMyBatisTraces(String spanName) {
