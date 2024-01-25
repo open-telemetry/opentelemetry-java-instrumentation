@@ -29,9 +29,9 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-apache-httpclient
 
 ### Usage
 
-The instrumentation library provides a builder class `ApacheHttpClient5Telemetry` that wraps
-an instance of the `HttpClientBuilder` to provide OpenTelemetry-based spans and context
-propagation.
+The instrumentation library provides the class `ApacheHttpClient5Telemetry` that has a builder
+method and allows the creation of an instance of the `HttpClientBuilder` to provide
+OpenTelemetry-based spans and context propagation:
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
@@ -47,12 +47,12 @@ public class ApacheHttpClient5Configuration {
     this.openTelemetry = openTelemetry;
   }
 
-  // your configuration of the HttpClient goes here:
+  // creates a new http client builder for constructing http clients with open telemetry instrumentation
   protected HttpClientBuilder createBuilder() {
     return ApacheHttpClient5Telemetry.builder(openTelemetry).build().newHttpClientBuilder();
   }
 
-  // creates a new httpClient with openTelemetry instrumentation
+  // creates a new http client with open telemetry instrumentation
   public HttpClient newHttpClient() {
     return ApacheHttpClient5Telemetry.builder(openTelemetry).build().newHttpClient();
   }
