@@ -118,11 +118,7 @@ final class InstrumentationApiContextBridging {
                 applicationHttpRouteState,
                 "create",
                 MethodType.methodType(
-                    applicationHttpRouteState,
-                    String.class,
-                    String.class,
-                    int.class,
-                    io.opentelemetry.api.trace.Span.class));
+                    applicationHttpRouteState, String.class, String.class, int.class, Span.class));
       } catch (NoSuchMethodException exception) {
         // older instrumentation-api has only the variant that does not take span
         applicationCreate =
