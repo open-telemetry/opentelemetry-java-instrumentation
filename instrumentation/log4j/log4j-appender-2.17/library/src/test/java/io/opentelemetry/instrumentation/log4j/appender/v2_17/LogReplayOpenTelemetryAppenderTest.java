@@ -14,6 +14,7 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.util.List;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +23,10 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   @BeforeEach
   void setup() {
     generalBeforeEachSetup();
+  }
+
+  @AfterEach
+  void resetOpenTelemetry() {
     OpenTelemetryAppender.install(null);
   }
 

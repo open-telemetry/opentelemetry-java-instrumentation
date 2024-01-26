@@ -155,7 +155,10 @@ class OtlpSpanExporterAutoConfigurationTest {
   @DisplayName("logging exporter can still be configured")
   void loggingExporter() {
     this.contextRunner
-        .withBean(LoggingSpanExporter.class, LoggingSpanExporter::create)
+        .withBean(
+            LoggingSpanExporter.class,
+            LoggingSpanExporter::create,
+            bd -> bd.setDestroyMethodName(""))
         .run(
             context ->
                 assertThat(
