@@ -32,9 +32,6 @@ val scalified = fun(pack: String): String {
 dependencies {
   library("${scalified("com.twitter:finagle-http")}:$finagleVersion")
 
-  // needed for direct access to shaded classes
-  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
-
   // should wire netty contexts
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 

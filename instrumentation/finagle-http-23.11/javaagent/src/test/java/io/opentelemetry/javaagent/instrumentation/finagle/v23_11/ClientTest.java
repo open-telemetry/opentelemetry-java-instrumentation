@@ -167,7 +167,7 @@ public class ClientTest extends AbstractHttpClientTest<Request> {
             // not a connect() exception like the above, so is not wrapped as above;
             clientWrapAssert.cause().isInstanceOf(ReadTimedOutException.class);
             // however, this specific case results in a mapping from netty's ReadTimeoutException
-            // to finagle's ReadTImedOutException in the finagle client code, losing all trace of
+            // to finagle's ReadTimedOutException in the finagle client code, losing all trace of
             // the original exception; so we must construct it manually here
             error = new ReadTimeoutException();
           }

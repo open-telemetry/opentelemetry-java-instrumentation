@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.v23_11;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -25,17 +23,16 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.twitter.finagle.http2.transport.common.H2StreamChannelInit$");
-  }
-
-  @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("initServer")),
+        isMethod()
+            .and(named("initServer"))
+            .and(returns(named("io.netty.channel.ChannelInitializer"))),
         H2StreamChannelInitInstrumentation.class.getName() + "$InitServerAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("initClient")),
+        isMethod()
+            .and(named("initClient"))
+            .and(returns(named("io.netty.channel.ChannelInitializer"))),
         H2StreamChannelInitInstrumentation.class.getName() + "$InitClientAdvice");
   }
 
