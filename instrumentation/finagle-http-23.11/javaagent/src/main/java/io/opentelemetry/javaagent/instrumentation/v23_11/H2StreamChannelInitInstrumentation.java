@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
