@@ -63,6 +63,11 @@ public class TestController {
     return Mono.just(id).delayElement(Duration.ofMillis(100)).map(TestController::tracedMethod);
   }
 
+  @GetMapping("/foo-no-mono")
+  FooModel getFooModelNoMono() {
+    return new FooModel(0L, "DEFAULT");
+  }
+
   private static FooModel tracedMethod(long id) {
     tracer.spanBuilder("tracedMethod").startSpan().end();
     return new FooModel(id, "tracedMethod");

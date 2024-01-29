@@ -12,7 +12,7 @@ val otelSdkVersion = "1.34.1"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.17"
+val groovyVersion = "4.0.18"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -33,7 +33,7 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.1",
-  "org.testcontainers:testcontainers-bom:1.19.3",
+  "org.testcontainers:testcontainers-bom:1.19.4",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
 
@@ -98,7 +98,7 @@ val DEPENDENCIES = listOf(
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.28.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:1.0.0-alpha",
-  "org.assertj:assertj-core:3.25.1",
+  "org.assertj:assertj-core:3.25.2",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",

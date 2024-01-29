@@ -206,7 +206,15 @@ public class SpringWebfluxTest {
                     "/foo-delayed",
                     "/foo-delayed",
                     "getFooDelayed",
-                    new FooModel(3L, "delayed").toString()))));
+                    new FooModel(3L, "delayed").toString()))),
+        Arguments.of(
+            named(
+                "annotation API without parameters no mono",
+                new Parameter(
+                    "/foo-no-mono",
+                    "/foo-no-mono",
+                    "getFooModelNoMono",
+                    new FooModel(0L, "DEFAULT").toString()))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")

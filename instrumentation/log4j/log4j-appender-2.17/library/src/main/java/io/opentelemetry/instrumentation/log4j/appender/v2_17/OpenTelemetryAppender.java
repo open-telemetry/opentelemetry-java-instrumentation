@@ -157,9 +157,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @Override
     public OpenTelemetryAppender build() {
       OpenTelemetry openTelemetry = this.openTelemetry;
-      if (openTelemetry == null) {
-        openTelemetry = OpenTelemetry.noop();
-      }
       return new OpenTelemetryAppender(
           getName(),
           getLayout(),

@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "6.24.0"
+  id("com.diffplug.spotless") version "6.25.0"
 }
 
 spotless {
@@ -54,13 +54,13 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.24.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.25.0")
   implementation("com.google.guava:guava:33.0.0-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.github.johnrengelman:shadow:8.1.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.16.1")
-  implementation("org.owasp:dependency-check-gradle:9.0.8")
+  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.16.2")
+  implementation("org.owasp:dependency-check-gradle:9.0.9")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.11")
@@ -73,5 +73,5 @@ dependencies {
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testImplementation("org.assertj:assertj-core:3.25.1")
+  testImplementation("org.assertj:assertj-core:3.25.2")
 }
