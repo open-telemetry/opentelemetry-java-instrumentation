@@ -122,7 +122,6 @@ public abstract class InstrumentationConfig {
   public List<String> getList(String name) {
     return getList(name, emptyList());
   }
-  ;
 
   /**
    * Returns a list-valued configuration property or {@code defaultValue} if a property with name
