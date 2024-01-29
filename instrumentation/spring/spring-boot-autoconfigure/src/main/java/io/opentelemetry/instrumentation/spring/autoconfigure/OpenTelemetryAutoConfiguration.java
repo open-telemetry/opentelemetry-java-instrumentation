@@ -32,15 +32,17 @@ import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -65,15 +67,29 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    @ConditionalOnBean({
-      OtelResourceAutoConfiguration.class,
-      OtlpLoggerExporterAutoConfiguration.class,
-      OtlpSpanExporterAutoConfiguration.class,
-      OtlpMetricExporterAutoConfiguration.class
-    })
+    @Conditional(MapConverterCondition.class)
     public MapConverter mapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
       return new MapConverter();
+    }
+
+    static final class MapConverterCondition implements Condition {
+
+      private static final List<Class<?>> ANY_REQUIRED_BEANS =
+          Arrays.asList(
+              OtelResourceAutoConfiguration.class,
+              OtlpLoggerExporterAutoConfiguration.class,
+              OtlpSpanExporterAutoConfiguration.class,
+              OtlpMetricExporterAutoConfiguration.class);
+
+      @Override
+      public boolean matches(
+          org.springframework.context.annotation.ConditionContext context,
+          org.springframework.core.type.AnnotatedTypeMetadata metadata) {
+
+        return ANY_REQUIRED_BEANS.stream()
+            .anyMatch(s -> context.getBeanFactory().containsBean(s.getName()));
+      }
     }
 
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
