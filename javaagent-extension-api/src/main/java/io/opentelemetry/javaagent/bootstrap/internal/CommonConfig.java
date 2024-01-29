@@ -42,27 +42,14 @@ public final class CommonConfig {
         PeerServiceResolver.create(
             config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));
 
-    // TODO (mateusz): remove the old config names in 2.0
     clientRequestHeaders =
-        DeprecatedConfigProperties.getList(
-            config,
-            "otel.instrumentation.http.capture-headers.client.request",
-            "otel.instrumentation.http.client.capture-request-headers");
+        config.getList("otel.instrumentation.http.client.capture-request-headers");
     clientResponseHeaders =
-        DeprecatedConfigProperties.getList(
-            config,
-            "otel.instrumentation.http.capture-headers.client.response",
-            "otel.instrumentation.http.client.capture-response-headers");
+        config.getList("otel.instrumentation.http.client.capture-response-headers");
     serverRequestHeaders =
-        DeprecatedConfigProperties.getList(
-            config,
-            "otel.instrumentation.http.capture-headers.server.request",
-            "otel.instrumentation.http.server.capture-request-headers");
+        config.getList("otel.instrumentation.http.server.capture-request-headers");
     serverResponseHeaders =
-        DeprecatedConfigProperties.getList(
-            config,
-            "otel.instrumentation.http.capture-headers.server.response",
-            "otel.instrumentation.http.server.capture-response-headers");
+        config.getList("otel.instrumentation.http.server.capture-response-headers");
     knownHttpRequestMethods =
         new HashSet<>(
             config.getList(
@@ -71,17 +58,9 @@ public final class CommonConfig {
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
     emitExperimentalHttpClientTelemetry =
-        DeprecatedConfigProperties.getBoolean(
-            config,
-            "otel.instrumentation.http.client.emit-experimental-metrics",
-            "otel.instrumentation.http.client.emit-experimental-telemetry",
-            false);
+        config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
     emitExperimentalHttpServerTelemetry =
-        DeprecatedConfigProperties.getBoolean(
-            config,
-            "otel.instrumentation.http.server.emit-experimental-metrics",
-            "otel.instrumentation.http.server.emit-experimental-telemetry",
-            false);
+        config.getBoolean("otel.instrumentation.http.server.emit-experimental-telemetry", false);
     enduserConfig = new EnduserConfig(config);
   }
 
