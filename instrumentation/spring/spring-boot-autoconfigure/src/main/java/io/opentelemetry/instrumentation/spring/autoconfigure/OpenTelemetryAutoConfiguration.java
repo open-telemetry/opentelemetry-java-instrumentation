@@ -88,7 +88,7 @@ public class OpenTelemetryAutoConfiguration {
           org.springframework.core.type.AnnotatedTypeMetadata metadata) {
 
         return ANY_REQUIRED_BEANS.stream()
-            .anyMatch(s -> context.getBeanFactory().containsBean(s.getName()));
+            .anyMatch(s -> context.getBeanFactory().getBeanProvider(s).getIfAvailable() != null);
       }
     }
 
