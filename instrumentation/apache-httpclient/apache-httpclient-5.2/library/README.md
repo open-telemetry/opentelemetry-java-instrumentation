@@ -48,7 +48,7 @@ public class ApacheHttpClient5Configuration {
   }
 
   // creates a new http client builder for constructing http clients with open telemetry instrumentation
-  protected HttpClientBuilder createBuilder() {
+  public HttpClientBuilder createBuilder() {
     return ApacheHttpClient5Telemetry.builder(openTelemetry).build().newHttpClientBuilder();
   }
 
