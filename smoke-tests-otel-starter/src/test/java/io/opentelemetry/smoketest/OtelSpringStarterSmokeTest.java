@@ -116,5 +116,9 @@ class OtelSpringStarterSmokeTest {
         .as("Should instrument logs")
         .startsWith("Starting ")
         .contains(this.getClass().getSimpleName());
+    String codeNamespace = firstLog.getAttributes().get(SemanticAttributes.CODE_NAMESPACE);
+    assertThat(codeNamespace)
+        .as("Should capture code attributes")
+        .isEqualTo("org.springframework.boot.StartupInfoLogger");
   }
 }
