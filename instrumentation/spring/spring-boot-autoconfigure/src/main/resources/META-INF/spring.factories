@@ -1,9 +1,10 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingMetricExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingSpanExporterAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLoggerExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration,\
-io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLoggerExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.zipkin.ZipkinSpanExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.annotations.InstrumentationAnnotationsAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.kafka.KafkaInstrumentationAutoConfiguration,\
