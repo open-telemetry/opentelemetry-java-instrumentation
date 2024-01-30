@@ -24,7 +24,7 @@ sourceSets {
 dependencies {
   compileOnly(project(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded", configuration = "shadow"))
 
-  library("com.azure:azure-core:1.36.0")
+  library("com.azure:azure-core:1.45.1")
 
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
