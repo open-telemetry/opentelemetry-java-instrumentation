@@ -58,21 +58,28 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
     // initializes logging
     ) {
       Optional<OpenTelemetryAppender> existingOpenTelemetryAppender = findOpenTelemetryAppender();
-      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent = (ApplicationEnvironmentPreparedEvent) event;
+      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent =
+          (ApplicationEnvironmentPreparedEvent) event;
       if (existingOpenTelemetryAppender.isPresent()) {
-        reInitializeOpenTelemetryAppender(existingOpenTelemetryAppender, applicationEnvironmentPreparedEvent);
+        reInitializeOpenTelemetryAppender(
+            existingOpenTelemetryAppender, applicationEnvironmentPreparedEvent);
       } else {
         addOpenTelemetryAppender(applicationEnvironmentPreparedEvent);
       }
     }
   }
 
-  private static void reInitializeOpenTelemetryAppender(Optional<OpenTelemetryAppender> existingOpenTelemetryAppender,
+  private static void reInitializeOpenTelemetryAppender(
+      Optional<OpenTelemetryAppender> existingOpenTelemetryAppender,
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     OpenTelemetryAppender openTelemetryAppender = existingOpenTelemetryAppender.get();
-    openTelemetryAppender.stop(); // The OpenTelemetry appender is stopped and restarted from the org.springframework.boot.context.logging.LoggingApplicationListener.initialize method
-    // The OpenTelemetryAppender initializes the LoggingEventMapper in the start() method. So, here we stop the OpenTelemetry appender before its re-initialization and its restart.
-    initializeOpenTelemetryAppenderFromProperties(applicationEnvironmentPreparedEvent, openTelemetryAppender);
+    openTelemetryAppender.stop(); // The OpenTelemetry appender is stopped and restarted from the
+    // org.springframework.boot.context.logging.LoggingApplicationListener.initialize
+    // method
+    // The OpenTelemetryAppender initializes the LoggingEventMapper in the start() method. So, here
+    // we stop the OpenTelemetry appender before its re-initialization and its restart.
+    initializeOpenTelemetryAppenderFromProperties(
+        applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
   }
 
@@ -82,7 +89,8 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
         (ch.qos.logback.classic.Logger)
             LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
     OpenTelemetryAppender openTelemetryAppender = new OpenTelemetryAppender();
-    initializeOpenTelemetryAppenderFromProperties(applicationEnvironmentPreparedEvent, openTelemetryAppender);
+    initializeOpenTelemetryAppenderFromProperties(
+        applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
     logger.addAppender(openTelemetryAppender);
   }
@@ -91,8 +99,10 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
       OpenTelemetryAppender openTelemetryAppender) {
 
-    Boolean codeAttribute = evaluateBooleanProperty(applicationEnvironmentPreparedEvent,
-        "otel.instrumentation.logback-appender.experimental.capture-code-attributes");
+    Boolean codeAttribute =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-code-attributes");
     if (codeAttribute != null) {
       openTelemetryAppender.setCaptureCodeAttributes(codeAttribute.booleanValue());
     }
@@ -105,40 +115,46 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
       openTelemetryAppender.setCaptureMarkerAttribute(markerAttribute.booleanValue());
     }
 
-    Boolean keyValuePairAttributes = evaluateBooleanProperty(applicationEnvironmentPreparedEvent,
-        "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
-    if (keyValuePairAttributes!= null) {
+    Boolean keyValuePairAttributes =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
+    if (keyValuePairAttributes != null) {
       openTelemetryAppender.setCaptureKeyValuePairAttributes(keyValuePairAttributes.booleanValue());
     }
 
-    Boolean logAttributes = evaluateBooleanProperty(applicationEnvironmentPreparedEvent,
-        "otel.instrumentation.logback-appender.experimental-log-attributes");
+    Boolean logAttributes =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental-log-attributes");
     if (logAttributes != null) {
       openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes.booleanValue());
     }
 
-    Boolean loggerContextAttributes = evaluateBooleanProperty(applicationEnvironmentPreparedEvent,
-        "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes");
+    Boolean loggerContextAttributes =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes");
     if (loggerContextAttributes != null) {
       openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes.booleanValue());
     }
 
-    String mdcAttributeProperty = applicationEnvironmentPreparedEvent
-        .getEnvironment()
-        .getProperty(
-            "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-            String.class);
-    if(mdcAttributeProperty != null) {
+    String mdcAttributeProperty =
+        applicationEnvironmentPreparedEvent
+            .getEnvironment()
+            .getProperty(
+                "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
+                String.class);
+    if (mdcAttributeProperty != null) {
       openTelemetryAppender.setCaptureMdcAttributes(mdcAttributeProperty);
     }
   }
+
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     return applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty(
-                property,
-                Boolean.class);
+        .getEnvironment()
+        .getProperty(property, Boolean.class);
   }
 
   private static Optional<OpenTelemetryAppender> findOpenTelemetryAppender() {

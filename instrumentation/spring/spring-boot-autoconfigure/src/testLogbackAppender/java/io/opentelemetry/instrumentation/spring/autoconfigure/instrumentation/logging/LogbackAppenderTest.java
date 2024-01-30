@@ -54,8 +54,10 @@ class LogbackAppenderTest {
   void shouldInitializeAppender() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");
-    properties.put("otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
-    properties.put("otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
 
     SpringApplication app =
         new SpringApplication(
@@ -82,7 +84,10 @@ class LogbackAppenderTest {
               assertThat(logRecord.getBody().asString()).contains("test log message");
 
               Attributes attributes = logRecord.getAttributes();
-              assertThat(attributes.size()).isEqualTo(2); //key1 and key2, the code attributes should not be present because they are enabled in the logback.xml file but are disabled with a property
+              assertThat(attributes.size())
+                  .isEqualTo(
+                      2); // key1 and key2, the code attributes should not be present because they
+              // are enabled in the logback.xml file but are disabled with a property
               assertThat(attributes.get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
               assertThat(attributes.get(AttributeKey.stringKey("key2"))).isEqualTo("val2");
             });
