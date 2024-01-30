@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import jakarta.annotation.Nullable;
+import javax.annotation.Nullable;
 import org.apache.hc.core5.http.HttpRequest;
 
 enum HttpHeaderSetter implements TextMapSetter<HttpRequest> {

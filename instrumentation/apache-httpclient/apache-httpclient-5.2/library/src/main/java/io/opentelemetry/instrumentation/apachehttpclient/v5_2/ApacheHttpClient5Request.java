@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
 import static java.util.logging.Level.FINE;
 
-import jakarta.annotation.Nullable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -16,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;

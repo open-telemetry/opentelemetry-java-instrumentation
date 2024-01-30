@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
