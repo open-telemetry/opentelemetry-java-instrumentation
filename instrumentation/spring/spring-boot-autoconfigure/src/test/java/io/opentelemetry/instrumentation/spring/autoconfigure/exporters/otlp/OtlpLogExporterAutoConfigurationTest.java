@@ -19,7 +19,8 @@ class OtlpLogExporterAutoConfigurationTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, OtlpLoggerExporterAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class,
+                  OtlpLogRecordExporterAutoConfiguration.class));
 
   @Test
   void otlpEnabled() {

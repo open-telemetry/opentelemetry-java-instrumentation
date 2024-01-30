@@ -20,9 +20,9 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.Conditional;
 
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(OtlpLoggerExporterAutoConfiguration.CustomCondition.class)
+@Conditional(OtlpLogRecordExporterAutoConfiguration.CustomCondition.class)
 @ConditionalOnClass(OtlpGrpcLogRecordExporter.class)
-public class OtlpLoggerExporterAutoConfiguration {
+public class OtlpLogRecordExporterAutoConfiguration {
 
   @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
   @ConditionalOnMissingBean({OtlpGrpcLogRecordExporter.class, OtlpHttpLogRecordExporter.class})
