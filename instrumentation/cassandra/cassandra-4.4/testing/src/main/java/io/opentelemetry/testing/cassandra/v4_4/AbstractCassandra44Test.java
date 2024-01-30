@@ -19,6 +19,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -57,6 +59,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
