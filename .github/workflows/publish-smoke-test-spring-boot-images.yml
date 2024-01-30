@@ -5,9 +5,9 @@ on:
     paths:
       - "smoke-tests/images/spring-boot/**"
       - ".github/workflows/publish-smoke-test-spring-boot-images.yml"
+      - ".github/workflows/reusable-smoke-test-images.yml"
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   publish:

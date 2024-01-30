@@ -5,6 +5,9 @@ on:
     paths:
       - "smoke-tests/images/play/**"
       - ".github/workflows/pr-smoke-test-play-images.yml"
+      - ".github/workflows/reusable-smoke-test-images.yml"
+    branches:
+      - main
 
 jobs:
   build:
