@@ -196,7 +196,7 @@ public abstract class KafkaClientBaseTest {
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
                     SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
-                    AbstractLongAssert::isNotNegative)));
+                    AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));

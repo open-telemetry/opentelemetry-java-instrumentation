@@ -671,7 +671,7 @@ class PulsarClientTest {
     if (isBatch) {
       assertions.add(
           satisfies(
-              SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative));
+              SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
     }
     return assertions;
   }
