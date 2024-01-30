@@ -235,7 +235,10 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, operation),
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(
+                    SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+                    AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
@@ -278,7 +281,7 @@ public abstract class AbstractVertxKafkaTest {
     if (messageValue != null) {
       assertions.add(
           equalTo(
-              SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+              SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
               messageValue.getBytes(StandardCharsets.UTF_8).length));
     }
     return assertions;

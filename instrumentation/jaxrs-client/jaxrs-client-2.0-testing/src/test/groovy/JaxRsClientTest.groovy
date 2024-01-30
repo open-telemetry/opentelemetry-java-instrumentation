@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
@@ -121,7 +120,7 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
             "$SemanticAttributes.URL_FULL" "${uri}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" method
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
-            "$HttpAttributes.ERROR_TYPE" "$statusCode"
+            "$SemanticAttributes.ERROR_TYPE" "$statusCode"
           }
         }
         serverSpan(it, 1, span(0))

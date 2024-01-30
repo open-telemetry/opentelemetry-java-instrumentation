@@ -27,8 +27,19 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
     return request.getDestination();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(PulsarRequest request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(PulsarRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(PulsarRequest request) {
     return false;
   }
 
@@ -38,15 +49,14 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
     return null;
   }
 
-  @Nullable
   @Override
-  public Long getMessagePayloadSize(PulsarRequest request) {
+  public Long getMessageBodySize(PulsarRequest request) {
     return (long) request.getMessage().size();
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(PulsarRequest request) {
+  public Long getMessageEnvelopeSize(PulsarRequest request) {
     return null;
   }
 
@@ -58,6 +68,18 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
       return message.getMessageId().toString();
     }
 
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(PulsarRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(PulsarRequest request, @Nullable Void unused) {
     return null;
   }
 

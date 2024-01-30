@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.SemanticAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
@@ -25,7 +26,6 @@ import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -524,7 +524,7 @@ public class SpringWebfluxTest {
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            equalTo(HttpAttributes.ERROR_TYPE, "500")),
+                            equalTo(ERROR_TYPE, "500")),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -763,7 +763,7 @@ public class SpringWebfluxTest {
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/slow"),
-                            equalTo(HttpAttributes.ERROR_TYPE, "_OTHER")),
+                            equalTo(ERROR_TYPE, "_OTHER")),
                 span ->
                     span.hasName("SpringWebFluxTestApplication$$Lambda.handle")
                         .hasKind(SpanKind.INTERNAL)

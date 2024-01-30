@@ -100,7 +100,7 @@ public class ContextPropagationTest {
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (operation != null) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, operation));

@@ -349,7 +349,8 @@ class PulsarClientTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(receiveAttributes(topic, null, false))));
+                        .hasAttributesSatisfyingExactly(
+                            batchReceiveAttributes(topic, null, false))));
   }
 
   @Test
@@ -407,7 +408,7 @@ class PulsarClientTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes(topic, null, false)),
+                        .hasAttributesSatisfyingExactly(batchReceiveAttributes(topic, null, false)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -625,7 +626,7 @@ class PulsarClientTest {
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGE_TYPE, "normal")));
     if (testHeaders) {
@@ -637,8 +638,18 @@ class PulsarClientTest {
     return assertions;
   }
 
+  private static List<AttributeAssertion> batchReceiveAttributes(
+      String destination, String messageId, boolean testHeaders) {
+    return receiveAttributes(destination, messageId, testHeaders, true);
+  }
+
   private static List<AttributeAssertion> receiveAttributes(
       String destination, String messageId, boolean testHeaders) {
+    return receiveAttributes(destination, messageId, testHeaders, false);
+  }
+
+  private static List<AttributeAssertion> receiveAttributes(
+      String destination, String messageId, boolean testHeaders, boolean isBatch) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
@@ -649,13 +660,18 @@ class PulsarClientTest {
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.test_message_header"),
               Collections.singletonList("test")));
+    }
+    if (isBatch) {
+      assertions.add(
+          satisfies(
+              SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
     }
     return assertions;
   }
@@ -670,7 +686,7 @@ class PulsarClientTest {
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(

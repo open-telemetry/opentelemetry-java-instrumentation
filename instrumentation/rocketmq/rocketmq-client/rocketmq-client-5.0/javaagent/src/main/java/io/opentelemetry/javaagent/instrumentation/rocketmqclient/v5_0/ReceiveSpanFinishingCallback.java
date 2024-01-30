@@ -27,6 +27,7 @@ public final class ReceiveSpanFinishingCallback implements FutureCallback<Receiv
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void onSuccess(ReceiveMessageResult receiveMessageResult) {
     List<MessageViewImpl> messageViews = receiveMessageResult.getMessageViewImpls();
     // Don't create spans when no messages were received.
@@ -46,7 +47,7 @@ public final class ReceiveSpanFinishingCallback implements FutureCallback<Receiv
               receiveInstrumenter,
               parentContext,
               request,
-              null,
+              (List<MessageView>) (List) messageViews,
               null,
               timer.startTime(),
               timer.now());

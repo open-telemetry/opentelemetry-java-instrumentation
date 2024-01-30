@@ -29,8 +29,19 @@ enum SqsReceiveRequestAttributesGetter
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(SqsReceiveRequest request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(SqsReceiveRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(SqsReceiveRequest request) {
     return false;
   }
 
@@ -40,15 +51,15 @@ enum SqsReceiveRequestAttributesGetter
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadSize(SqsReceiveRequest request) {
+  @Override
+  public Long getMessageBodySize(SqsReceiveRequest request) {
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(SqsReceiveRequest request) {
+  @Override
+  public Long getMessageEnvelopeSize(SqsReceiveRequest request) {
     return null;
   }
 
@@ -56,6 +67,18 @@ enum SqsReceiveRequestAttributesGetter
   @Nullable
   public String getMessageId(SqsReceiveRequest request, @Nullable Response<?> response) {
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(SqsReceiveRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(SqsReceiveRequest request, @Nullable Response<?> response) {
+    return (long) request.getMessages().size();
   }
 
   @Override

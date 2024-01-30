@@ -72,6 +72,14 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
           attributes,
           SemanticAttributes.MESSAGING_DESTINATION_NAME,
           getter.getDestination(request));
+      internalSet(
+          attributes,
+          SemanticAttributes.MESSAGING_DESTINATION_TEMPLATE,
+          getter.getDestinationTemplate(request));
+    }
+    boolean isAnonymousDestination = getter.isAnonymousDestination(request);
+    if (isAnonymousDestination) {
+      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_ANONYMOUS, true);
     }
     internalSet(
         attributes,
@@ -79,12 +87,13 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         getter.getConversationId(request));
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-        getter.getMessagePayloadSize(request));
+        SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+        getter.getMessageBodySize(request));
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
-        getter.getMessagePayloadCompressedSize(request));
+        SemanticAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE,
+        getter.getMessageEnvelopeSize(request));
+    internalSet(attributes, SemanticAttributes.MESSAGING_CLIENT_ID, getter.getClientId(request));
     if (operation != null) {
       internalSet(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
     }
@@ -101,6 +110,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         attributes,
         SemanticAttributes.MESSAGING_MESSAGE_ID,
         getter.getMessageId(request, response));
+    internalSet(
+        attributes,
+        SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+        getter.getBatchMessageCount(request, response));
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);

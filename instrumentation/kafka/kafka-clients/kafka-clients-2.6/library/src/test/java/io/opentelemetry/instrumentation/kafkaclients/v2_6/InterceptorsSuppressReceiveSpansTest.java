@@ -41,7 +41,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(
-                                SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                                SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 greeting.getBytes(StandardCharsets.UTF_8).length),
                             satisfies(
                                 SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
