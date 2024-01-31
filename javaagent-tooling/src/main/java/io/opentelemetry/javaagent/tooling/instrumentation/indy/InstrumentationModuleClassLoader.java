@@ -33,22 +33,22 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.StringMatcher;
 
 /**
- * Classloader used to load the helper classes from {@link
+ * Class loader used to load the helper classes from {@link
  * io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule}s, so that those
  * classes have access to both the agent/extension classes and the instrumented application classes.
  *
- * <p>This classloader implements the following classloading delegation strategy:
+ * <p>This class loader implements the following classloading delegation strategy:
  *
  * <ul>
  *   <li>First, injected classes are considered (usually the helper classes from the
  *       InstrumentationModule)
- *   <li>Next, the classloader looks in the agent or extension classloader, depending on where the
+ *   <li>Next, the class loader looks in the agent or extension class loader, depending on where the
  *       InstrumentationModule comes from
- *   <li>Finally, the instrumented application classloader is checked for the class
+ *   <li>Finally, the instrumented application class loader is checked for the class
  * </ul>
  *
- * <p>In addition, this classloader ensures that the lookup of corresponding .class resources follow
- * the same delegation strategy, so that bytecode inspection tools work correctly.
+ * <p>In addition, this class loader ensures that the lookup of corresponding .class resources
+ * follow the same delegation strategy, so that bytecode inspection tools work correctly.
  */
 public class InstrumentationModuleClassLoader extends ClassLoader {
 
@@ -91,7 +91,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       @Nullable ClassLoader instrumentedCl,
       ClassLoader agentOrExtensionCl,
       ElementMatcher<String> classesToLoadFromAgentOrExtensionCl) {
-    // agent/extension-classloader is "main"-parent, but class lookup is overridden
+    // agent/extension-class loader is "main"-parent, but class lookup is overridden
     super(agentOrExtensionCl);
     additionalInjectedClasses = new ConcurrentHashMap<>();
     installedModules = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -101,9 +101,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   /**
-   * Provides a Lookup within this classloader. See {@link LookupExposer} for the details.
+   * Provides a Lookup within this class loader. See {@link LookupExposer} for the details.
    *
-   * @return a lookup capable of accessing public types in this classloader
+   * @return a lookup capable of accessing public types in this class loader
    */
   public MethodHandles.Lookup getLookup() {
     if (cachedLookup == null) {
@@ -224,11 +224,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   private static Class<?> tryLoad(@Nullable ClassLoader cl, String name) {
     try {
-      if (cl == null) {
-        return BOOT_LOADER.loadClass(name);
-      } else {
-        return cl.loadClass(name);
-      }
+      return Class.forName(name, false, cl);
     } catch (ClassNotFoundException e) {
       return null;
     }
@@ -238,7 +234,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   public URL getResource(String resourceName) {
     String className = resourceToClassName(resourceName);
     if (className == null) {
-      // delegate to just the default parent (the agent classloader)
+      // delegate to just the default parent (the agent class loader)
       return super.getResource(resourceName);
     }
     // for classes use the same precedence as in loadClass

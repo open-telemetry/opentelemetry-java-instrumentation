@@ -59,7 +59,7 @@ public class ClassInjectorImpl implements ClassInjector {
       classesToInject.add(
           cl -> {
             InstrumentationModuleClassLoader moduleCl =
-                IndyModuleRegistry.getInstrumentationClassloader(instrumentationModule, cl);
+                IndyModuleRegistry.getInstrumentationClassLoader(instrumentationModule, cl);
             TypePool typePool =
                 AgentTooling.poolStrategy()
                     .typePool(AgentTooling.locationStrategy().classFileLocator(moduleCl), moduleCl);

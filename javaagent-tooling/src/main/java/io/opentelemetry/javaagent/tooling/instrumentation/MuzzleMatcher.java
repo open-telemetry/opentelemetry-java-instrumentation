@@ -68,7 +68,7 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
           classLoader,
           cl -> {
             InstrumentationModuleClassLoader moduleCl =
-                IndyModuleRegistry.createInstrumentationClassloaderWithoutRegistration(
+                IndyModuleRegistry.createInstrumentationClassLoaderWithoutRegistration(
                     instrumentationModule, cl);
             return doesMatch(moduleCl);
           });

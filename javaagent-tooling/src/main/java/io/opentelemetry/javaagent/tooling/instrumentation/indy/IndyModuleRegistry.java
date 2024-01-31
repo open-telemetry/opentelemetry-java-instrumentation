@@ -20,60 +20,66 @@ public class IndyModuleRegistry {
       new ConcurrentHashMap<>();
 
   /**
-   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application
-   * classloader. The {@link InstrumentationModuleClassLoader} are kept alive by a strong reference
-   * from the instrumented classloader realized via {@link ClassLoaderValue}.
+   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application class
+   * loader. The {@link InstrumentationModuleClassLoader} are kept alive by a strong reference from
+   * the instrumented class loader realized via {@link ClassLoaderValue}.
    *
    * <p>The keys of the contained map are the instrumentation module group names, see {@link
    * ExperimentalInstrumentationModule#getModuleGroup()};
    */
   private static final ClassLoaderValue<Map<String, InstrumentationModuleClassLoader>>
-      instrumentationClassloaders = new ClassLoaderValue<>();
+      instrumentationClassLoaders = new ClassLoaderValue<>();
 
-  public static InstrumentationModuleClassLoader getInstrumentationClassloader(
-      String moduleClassName, ClassLoader instrumentedClassloader) {
+  public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
+      String moduleClassName, ClassLoader instrumentedClassLoader) {
     InstrumentationModule instrumentationModule = modulesByClassName.get(moduleClassName);
     if (instrumentationModule == null) {
       throw new IllegalArgumentException(
           "No module with the class name " + modulesByClassName + " has been registered!");
     }
-    return getInstrumentationClassloader(instrumentationModule, instrumentedClassloader);
+    return getInstrumentationClassLoader(instrumentationModule, instrumentedClassLoader);
   }
 
-  public static InstrumentationModuleClassLoader getInstrumentationClassloader(
-      InstrumentationModule module, ClassLoader instrumentedClassloader) {
+  public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
+      InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
     String groupName = getModuleGroup(module);
 
     Map<String, InstrumentationModuleClassLoader> loadersByGroupName =
-        instrumentationClassloaders.get(instrumentedClassloader);
+        instrumentationClassLoaders.get(instrumentedClassLoader);
 
     if (loadersByGroupName == null) {
       throw new IllegalArgumentException(
-          module + " has not been initialized for classloader " + instrumentedClassloader + " yet");
+          module
+              + " has not been initialized for class loader "
+              + instrumentedClassLoader
+              + " yet");
     }
 
     InstrumentationModuleClassLoader loader = loadersByGroupName.get(groupName);
     if (loader == null || !loader.hasModuleInstalled(module)) {
       throw new IllegalArgumentException(
-          module + " has not been initialized for classloader " + instrumentedClassloader + " yet");
+          module
+              + " has not been initialized for class loader "
+              + instrumentedClassLoader
+              + " yet");
     }
 
     return loader;
   }
 
   /**
-   * Returns a newly created classloader containing only the provided module. Note that other
+   * Returns a newly created class loader containing only the provided module. Note that other
    * modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)}) will
-   * not be installed in this classloader.
+   * not be installed in this class loader.
    */
   public static InstrumentationModuleClassLoader
-      createInstrumentationClassloaderWithoutRegistration(
-          InstrumentationModule module, ClassLoader instrumentedClassloader) {
+      createInstrumentationClassLoaderWithoutRegistration(
+          InstrumentationModule module, ClassLoader instrumentedClassLoader) {
     // TODO: remove this method and replace usages with a custom TypePool implementation instead
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
     InstrumentationModuleClassLoader cl =
-        new InstrumentationModuleClassLoader(instrumentedClassloader, agentOrExtensionCl);
+        new InstrumentationModuleClassLoader(instrumentedClassLoader, agentOrExtensionCl);
     cl.installModule(module);
     return cl;
   }
@@ -91,12 +97,12 @@ public class IndyModuleRegistry {
     }
     return agentBuilder.transform(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
-          initializeModuleLoaderForClassloader(module, classLoader);
+          initializeModuleLoaderForClassLoader(module, classLoader);
           return builder;
         });
   }
 
-  private static void initializeModuleLoaderForClassloader(
+  private static void initializeModuleLoaderForClassLoader(
       InstrumentationModule module, ClassLoader classLoader) {
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
@@ -104,7 +110,7 @@ public class IndyModuleRegistry {
     String groupName = getModuleGroup(module);
 
     InstrumentationModuleClassLoader moduleCl =
-        instrumentationClassloaders
+        instrumentationClassLoaders
             .computeIfAbsent(classLoader, ConcurrentHashMap::new)
             .computeIfAbsent(
                 groupName,
