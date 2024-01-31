@@ -53,7 +53,7 @@ public class HandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context attachedContext = helper().getServerContext(exchange);
       if (attachedContext != null) {
-        if (!Java8BytecodeBridge.currentContext().equals(attachedContext)) {
+        if (!helper().sameTrace(Java8BytecodeBridge.currentContext(), attachedContext)) {
           // request processing is dispatched to another thread
           scope = attachedContext.makeCurrent();
           context = attachedContext;

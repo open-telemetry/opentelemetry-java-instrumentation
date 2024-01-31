@@ -193,8 +193,8 @@ class LogbackTest {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("logback.mdc.key1"), "val1"),
-            equalTo(AttributeKey.stringKey("logback.mdc.key2"), "val2"),
+            equalTo(AttributeKey.stringKey("key1"), "val1"),
+            equalTo(AttributeKey.stringKey("key2"), "val2"),
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
             equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
             equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),

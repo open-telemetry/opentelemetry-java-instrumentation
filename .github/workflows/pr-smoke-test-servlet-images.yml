@@ -43,7 +43,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Set up Gradle cache
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         with:
           cache-read-only: true
 

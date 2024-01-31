@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.MapConverterTestAutoConfiguration;
@@ -31,17 +32,16 @@ class OtlpSpanExporterAutoConfigurationTest {
               AutoConfigurations.of(
                   OpenTelemetryAutoConfiguration.class,
                   OtlpSpanExporterAutoConfiguration.class,
-                  MapConverterTestAutoConfiguration.class))
-          .withBean(OtlpHttpSpanExporterBuilder.class, () -> otlpHttpSpanExporterBuilder);
+                  MapConverterTestAutoConfiguration.class));
 
   @Test
-  @DisplayName("when exporters are ENABLED should initialize OtlpGrpcSpanExporter bean")
+  @DisplayName("when exporters are ENABLED should initialize OtlpHttpSpanExporter bean")
   void otlpEnabled() {
     this.contextRunner
         .withPropertyValues("otel.exporter.otlp.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
+                assertThat(context.getBean("otelOtlpSpanExporter", OtlpHttpSpanExporter.class))
                     .isNotNull());
 
     Mockito.verifyNoMoreInteractions(otlpHttpSpanExporterBuilder);
@@ -53,7 +53,7 @@ class OtlpSpanExporterAutoConfigurationTest {
         .withPropertyValues("otel.exporter.otlp.traces.enabled=true")
         .run(
             context ->
-                assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
+                assertThat(context.getBean("otelOtlpSpanExporter", OtlpHttpSpanExporter.class))
                     .isNotNull());
   }
 
@@ -80,11 +80,11 @@ class OtlpSpanExporterAutoConfigurationTest {
   }
 
   @Test
-  @DisplayName("when otlp enabled property is MISSING should initialize OtlpGrpcSpanExporter bean")
+  @DisplayName("when otlp enabled property is MISSING should initialize OtlpHttpSpanExporter bean")
   void exporterPresentByDefault() {
     this.contextRunner.run(
         context ->
-            assertThat(context.getBean("otelOtlpSpanExporter", OtlpGrpcSpanExporter.class))
+            assertThat(context.getBean("otelOtlpSpanExporter", OtlpHttpSpanExporter.class))
                 .isNotNull());
   }
 
@@ -92,6 +92,7 @@ class OtlpSpanExporterAutoConfigurationTest {
   @DisplayName("use http/protobuf when protocol set")
   void useHttp() {
     this.contextRunner
+        .withBean(OtlpHttpSpanExporterBuilder.class, () -> otlpHttpSpanExporterBuilder)
         .withPropertyValues(
             "otel.exporter.otlp.enabled=true",
             "otel.exporter.otlp.protocol=http/protobuf",
@@ -113,6 +114,7 @@ class OtlpSpanExporterAutoConfigurationTest {
   @DisplayName("use http/protobuf with environment variables for headers using the MapConverter")
   void useHttpWithEnv() {
     this.contextRunner
+        .withBean(OtlpHttpSpanExporterBuilder.class, () -> otlpHttpSpanExporterBuilder)
         .withPropertyValues(
             "otel.exporter.otlp.enabled=true", "otel.exporter.otlp.protocol=http/protobuf")
         // are similar to environment variables in that they use the same converters
@@ -126,10 +128,37 @@ class OtlpSpanExporterAutoConfigurationTest {
   }
 
   @Test
+  @DisplayName("use grpc when protocol set")
+  void useGrpc() {
+    this.contextRunner
+        .withPropertyValues("otel.exporter.otlp.protocol=grpc")
+        .run(
+            context ->
+                assertThat(context.getBean(OtlpGrpcSpanExporter.class))
+                    .as("Should contain the gRPC span exporter when grpc is set")
+                    .isNotNull());
+  }
+
+  @Test
+  @DisplayName("use http when unknown protocol set")
+  void useHttpWhenAnUnknownProtocolIsSet() {
+    this.contextRunner
+        .withPropertyValues("otel.exporter.otlp.protocol=unknown")
+        .run(
+            context ->
+                assertThat(context.getBean(OtlpHttpSpanExporter.class))
+                    .as("Should contain the http span exporter when an unknown is set")
+                    .isNotNull());
+  }
+
+  @Test
   @DisplayName("logging exporter can still be configured")
   void loggingExporter() {
     this.contextRunner
-        .withBean(LoggingSpanExporter.class, LoggingSpanExporter::create)
+        .withBean(
+            LoggingSpanExporter.class,
+            LoggingSpanExporter::create,
+            bd -> bd.setDestroyMethodName(""))
         .run(
             context ->
                 assertThat(

@@ -60,7 +60,9 @@ class LogbackAppenderTest {
     LoggerFactory.getLogger("test").info("test log message");
 
     assertThat(testing.logRecords())
-        .anySatisfy(
+        .satisfiesOnlyOnce(
+            // OTel appender automatically added or from an XML file, it should not
+            // be added a second time by LogbackAppenderApplicationListener
             logRecord -> {
               assertThat(logRecord.getInstrumentationScopeInfo().getName()).isEqualTo("test");
               assertThat(logRecord.getBody().asString()).contains("test log message");

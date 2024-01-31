@@ -1,0 +1,261 @@
+Comparing source compatibility of  against 
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.internal.SpanKeyProvider
+	+++  NEW SUPERCLASS: io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesExtractor
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder<REQUEST,RESPONSE> builder(io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter<REQUEST,RESPONSE>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter<REQUEST,RESPONSE>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.internal.SpanKey internalGetSpanKey()
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object, java.lang.Object, java.lang.Throwable)
+	+++  NEW METHOD: PUBLIC(+) void onStart(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<REQUEST,RESPONSE> build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedRequestHeaders(java.util.List<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedResponseHeaders(java.util.List<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder<REQUEST,RESPONSE> setKnownMethods(java.util.Set<java.lang.String>)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String getServerAddress(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.Integer getServerPort(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String getUrlFull(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.OperationListener
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics get()
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.context.Context onStart(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) int get(io.opentelemetry.context.Context)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.context.Context initialize(io.opentelemetry.context.Context)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getErrorType(java.lang.Object, java.lang.Object, java.lang.Throwable)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> getHttpRequestHeader(java.lang.Object, java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String getHttpRequestMethod(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> getHttpResponseHeader(java.lang.Object, java.lang.Object, java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.Integer getHttpResponseStatusCode(java.lang.Object, java.lang.Object, java.lang.Throwable)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.internal.SpanKeyProvider
+	+++  NEW SUPERCLASS: io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesExtractor
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder<REQUEST,RESPONSE> builder(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,RESPONSE>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,RESPONSE>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.internal.SpanKey internalGetSpanKey()
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object, java.lang.Object, java.lang.Throwable)
+	+++  NEW METHOD: PUBLIC(+) void onStart(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<REQUEST,RESPONSE> build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedRequestHeaders(java.util.List<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedResponseHeaders(java.util.List<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder<REQUEST,RESPONSE> setKnownMethods(java.util.Set<java.lang.String>)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.network.ClientAttributesGetter
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getHttpRoute(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String getUrlPath(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String getUrlQuery(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String getUrlScheme(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.OperationListener
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics get()
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.context.Context onStart(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long)
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder<REQUEST> builder(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,?>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer<REQUEST> create(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,?>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) void update(io.opentelemetry.context.Context, io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource, java.lang.String)
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) void update(io.opentelemetry.context.Context, io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource, io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter<T>, java.lang.Object)
+		GENERIC TEMPLATES: +++ T:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) void update(io.opentelemetry.context.Context, io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource, io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBiGetter<T,U>, java.lang.Object, java.lang.Object)
+		GENERIC TEMPLATES: +++ T:java.lang.Object, +++ U:java.lang.Object
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBiGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ T:java.lang.Object, +++ U:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String get(io.opentelemetry.context.Context, java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW ANNOTATION: java.lang.FunctionalInterface
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer<REQUEST> build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder<REQUEST> setKnownMethods(java.util.Set<java.lang.String>)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ T:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.lang.String get(io.opentelemetry.context.Context, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW ANNOTATION: java.lang.FunctionalInterface
++++  NEW ENUM: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource  (compatible)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: java.lang.constant.Constable
+	+++  NEW INTERFACE: java.lang.Comparable
+	+++  NEW INTERFACE: java.io.Serializable
+	+++  NEW SUPERCLASS: java.lang.Enum
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource SERVER_FILTER
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource CONTROLLER
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource SERVER
+	+++  NEW FIELD: PUBLIC(+) STATIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource NESTED_CONTROLLER
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource valueOf(java.lang.String)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource[] values()
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder<REQUEST> builder(io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter<REQUEST,?>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder<REQUEST> builder(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,?>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<REQUEST> create(io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter<REQUEST,?>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<REQUEST> create(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,?>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) HttpSpanNameExtractorBuilder(io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter<REQUEST,?>, io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,?>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<REQUEST> build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder<REQUEST> setKnownMethods(java.util.Set<java.lang.String>)
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter<? super REQUEST,? super RESPONSE>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<? super REQUEST,? super RESPONSE>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) void extract(io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder, java.lang.Object, java.lang.Object, java.lang.Throwable)
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.network.ClientAttributesExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.network.ClientAttributesExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.network.ClientAttributesGetter<REQUEST>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object, java.lang.Object, java.lang.Throwable)
+	+++  NEW METHOD: PUBLIC(+) void onStart(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.network.ClientAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getClientAddress(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.Integer getClientPort(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter<REQUEST,RESPONSE>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object, java.lang.Object, java.lang.Throwable)
+	+++  NEW METHOD: PUBLIC(+) void onStart(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getNetworkLocalAddress(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.net.InetSocketAddress getNetworkLocalInetSocketAddress(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.Integer getNetworkLocalPort(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getNetworkPeerAddress(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.net.InetSocketAddress getNetworkPeerInetSocketAddress(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.Integer getNetworkPeerPort(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getNetworkProtocolName(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getNetworkProtocolVersion(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getNetworkTransport(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getNetworkType(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter<REQUEST>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object, java.lang.Object, java.lang.Throwable)
+	+++  NEW METHOD: PUBLIC(+) void onStart(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getServerAddress(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.Integer getServerPort(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++* NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesExtractor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++* NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesExtractor<REQUEST,RESPONSE> create(io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter<REQUEST>)
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object, java.lang.Object, java.lang.Throwable)
+	+++  NEW METHOD: PUBLIC(+) void onStart(io.opentelemetry.api.common.AttributesBuilder, io.opentelemetry.context.Context, java.lang.Object)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getUrlPath(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getUrlQuery(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getUrlScheme(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable

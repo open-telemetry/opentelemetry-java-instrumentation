@@ -8,13 +8,16 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class OtlpExporterUtil {
   private OtlpExporterUtil() {}
+
+  private static final Logger logger = LoggerFactory.getLogger(OtlpExporterUtil.class);
 
   static <G, H, E> E applySignalProperties(
       String dataType,
@@ -39,20 +42,31 @@ class OtlpExporterUtil {
     G grpcBuilder = newGrpcBuilder.get();
     H httpBuilder = newHttpBuilder.get();
 
-    boolean isHttpProtobuf = Objects.equals(protocol, OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF);
+    boolean isHttpProtobuf = !"grpc".equals(protocol);
+
+    if (protocol != null
+        && !OtlpConfigUtil.PROTOCOL_GRPC.equals(protocol)
+        && !OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF.equals(protocol)) {
+      logger.warn(
+          "Unknown OTLP protocol '"
+              + protocol
+              + "', using '"
+              + OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF
+              + "'.");
+    }
 
     String endpoint = signalProperties.getEndpoint();
     if (endpoint == null) {
       endpoint = properties.getEndpoint();
-    }
-    if (endpoint != null) {
-      if (isHttpProtobuf) {
+      if (endpoint != null && isHttpProtobuf) {
         if (!endpoint.endsWith("/")) {
           endpoint += "/";
         }
         endpoint += signalPath(dataType);
       }
+    }
 
+    if (endpoint != null) {
       if (isHttpProtobuf) {
         setHttpEndpoint.accept(httpBuilder, endpoint);
       } else {

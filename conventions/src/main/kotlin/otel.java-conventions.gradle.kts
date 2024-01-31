@@ -122,7 +122,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.104.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.106.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -139,7 +139,7 @@ dependencies {
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
 
-  codenarc("org.codenarc:CodeNarc:3.3.0")
+  codenarc("org.codenarc:CodeNarc:3.4.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.20"))
 
   modules {
@@ -407,7 +407,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.12.7"
+  toolVersion = "10.13.0"
   maxWarnings = 0
 }
 

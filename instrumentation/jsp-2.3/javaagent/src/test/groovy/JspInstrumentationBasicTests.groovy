@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -272,7 +271,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.SERVER_PORT" port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$HttpAttributes.ERROR_TYPE" "500"
+            "$SemanticAttributes.ERROR_TYPE" "500"
           }
         }
         span(1) {
@@ -465,7 +464,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.SERVER_PORT" port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$HttpAttributes.ERROR_TYPE" "500"
+            "$SemanticAttributes.ERROR_TYPE" "500"
           }
         }
         span(1) {

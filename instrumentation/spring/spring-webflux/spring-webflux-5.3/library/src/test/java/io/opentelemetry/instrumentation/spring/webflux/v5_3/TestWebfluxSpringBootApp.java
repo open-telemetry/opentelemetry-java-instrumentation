@@ -57,7 +57,7 @@ class TestWebfluxSpringBootApp {
         .setCapturedServerResponseHeaders(
             singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
         .build()
-        .createWebFilter();
+        .createWebFilterAndRegisterReactorHook();
   }
 
   @Controller
@@ -67,6 +67,12 @@ class TestWebfluxSpringBootApp {
     @ResponseBody
     Flux<String> success() {
       return Flux.defer(() -> Flux.just(controller(SUCCESS, SUCCESS::getBody)));
+    }
+
+    @RequestMapping("/no-mono")
+    @ResponseBody
+    String noMono() {
+      return controller(SUCCESS, SUCCESS::getBody);
     }
 
     @RequestMapping("/query")

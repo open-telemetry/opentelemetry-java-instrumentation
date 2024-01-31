@@ -100,7 +100,7 @@ public class ContextPropagationTest {
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (operation != null) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, operation));
@@ -172,7 +172,8 @@ public class ContextPropagationTest {
                               .hasKind(SpanKind.CONSUMER)
                               .hasParent(trace.getSpan(1))
                               .hasAttributesSatisfyingExactly(
-                                  getAssertions("<default>", "process", null, true, testHeaders)),
+                                  getAssertions(
+                                      "<default>", "process", "127.0.0.1", true, testHeaders)),
                       // created by spring-rabbit instrumentation
                       span ->
                           span.hasName("testQueue process")
