@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Remove deprecated config properties in favor of the new names (#10349):
+  - `otel.instrumentation.kafka.client-propagation.enabled` ->
+    `otel.instrumentation.kafka.producer-propagation.enabled`
+  - `otel.instrumentation.netty.always-create-connect-span` ->
+    `otel.instrumentation.netty.connection-telemetry.enabled`
+  - `otel.instrumentation.http.capture-headers.client.request` ->
+    `otel.instrumentation.http.client.capture-request-headers`
+  - `otel.instrumentation.http.capture-headers.client.response` ->
+    `otel.instrumentation.http.client.capture-response-headers`
+  - `otel.instrumentation.http.capture-headers.server.request` ->
+    `otel.instrumentation.http.server.capture-request-headers`
+  - `otel.instrumentation.http.capture-headers.server.response` ->
+    `otel.instrumentation.http.server.capture-response-headers`
+  - `otel.instrumentation.http.client.emit-experimental-metrics` ->
+    `otel.instrumentation.http.client.emit-experimental-telemetry`
+  - `otel.instrumentation.http.server.emit-experimental-metrics` ->
+    `otel.instrumentation.http.server.emit-experimental-telemetry`
+
 ## Version 2.0.0 (2024-01-12)
 
 The 2.0.0 release contains significant breaking changes that will most likely affect all users,

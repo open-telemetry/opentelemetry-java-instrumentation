@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Duration;
@@ -113,6 +114,14 @@ public abstract class InstrumentationConfig {
    * <p>Examples: 10s, 20ms, 5000
    */
   public abstract Duration getDuration(String name, Duration defaultValue);
+
+  /**
+   * This is the same as calling {@code getList(String, List)} with the defaultValue equal to the
+   * emptyList()/
+   */
+  public List<String> getList(String name) {
+    return getList(name, emptyList());
+  }
 
   /**
    * Returns a list-valued configuration property or {@code defaultValue} if a property with name
