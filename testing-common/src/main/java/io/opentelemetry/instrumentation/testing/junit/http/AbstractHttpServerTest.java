@@ -760,14 +760,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs)
-              .hasEntrySatisfying(
-                  SemanticAttributes.CLIENT_ADDRESS,
-                  entry ->
-                      assertThat(entry)
-                          .satisfiesAnyOf(
-                              value -> assertThat(value).isNull(),
-                              value -> assertThat(value).isEqualTo(TEST_CLIENT_IP)));
+          assertThat(attrs).containsEntry(SemanticAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP);
           // client.port is opt-in
           assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
 
