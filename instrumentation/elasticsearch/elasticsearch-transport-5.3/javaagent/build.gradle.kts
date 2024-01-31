@@ -59,6 +59,8 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
 
