@@ -36,7 +36,10 @@ final class HttpServerAddressAndPortExtractor<REQUEST> implements AddressAndPort
 
     // use network.peer.address and network.peer.port
     sink.setAddress(getter.getNetworkPeerAddress(request, null));
-    sink.setPort(getter.getNetworkPeerPort(request, null));
+    Integer port = getter.getNetworkPeerPort(request, null);
+    if (port != null && port > 0) {
+      sink.setPort(port);
+    }
   }
 
   private static boolean extractFromForwardedHeader(AddressPortSink sink, String forwarded) {
