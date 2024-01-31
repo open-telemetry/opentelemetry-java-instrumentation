@@ -18,7 +18,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class CassandraServerAttributesExtractor
+final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   @Override

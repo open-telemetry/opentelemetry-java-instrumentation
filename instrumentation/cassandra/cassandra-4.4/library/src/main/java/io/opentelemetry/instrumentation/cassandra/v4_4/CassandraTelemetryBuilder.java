@@ -60,7 +60,7 @@ public class CassandraTelemetryBuilder {
                 .build())
         .addAttributesExtractor(
             NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
-        .addAttributesExtractor(new CassandraServerAttributesExtractor())
+        .addAttributesExtractor(new CassandraAttributesExtractor())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

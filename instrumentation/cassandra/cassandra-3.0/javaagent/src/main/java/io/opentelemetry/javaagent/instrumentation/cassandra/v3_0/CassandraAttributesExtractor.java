@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
-public class CassandraServerAttributesExtractor
+public class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
   @Override
   public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {}
