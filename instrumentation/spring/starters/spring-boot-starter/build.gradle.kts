@@ -12,6 +12,7 @@ dependencies {
   api("org.springframework.boot:spring-boot-starter:$springBootVersion")
   api("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   api(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  implementation(project(":instrumentation:resources:library"))
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api("io.opentelemetry:opentelemetry-api")
   api("io.opentelemetry:opentelemetry-exporter-logging")
