@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.oshi;
 import io.opentelemetry.instrumentation.oshi.AbstractProcessMetricsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -18,7 +19,7 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
 
   @Override
   protected List<AutoCloseable> registerMetrics() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
