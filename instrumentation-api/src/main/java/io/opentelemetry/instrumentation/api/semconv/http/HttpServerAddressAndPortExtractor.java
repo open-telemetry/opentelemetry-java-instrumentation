@@ -10,12 +10,11 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HeaderParsingHel
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import java.util.Locale;
 
-final class ForwardedForAddressAndPortExtractor<REQUEST>
-    implements AddressAndPortExtractor<REQUEST> {
+final class HttpServerAddressAndPortExtractor<REQUEST> implements AddressAndPortExtractor<REQUEST> {
 
   private final HttpServerAttributesGetter<REQUEST, ?> getter;
 
-  ForwardedForAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
+  HttpServerAddressAndPortExtractor(HttpServerAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 
@@ -34,6 +33,10 @@ final class ForwardedForAddressAndPortExtractor<REQUEST>
         return;
       }
     }
+
+    // use network.peer.address and network.peer.port
+    sink.setAddress(getter.getNetworkPeerAddress(request, null));
+    sink.setPort(getter.getNetworkPeerPort(request, null));
   }
 
   private static boolean extractFromForwardedHeader(AddressPortSink sink, String forwarded) {
