@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 /** A builder of {@link CassandraTelemetry}. */
@@ -61,8 +60,7 @@ public class CassandraTelemetryBuilder {
                 .build())
         .addAttributesExtractor(
             NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
-        .addAttributesExtractor(
-            ServerAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
+        .addAttributesExtractor(new ExperimentalAttributesExtractor())
         .addAttributesExtractor(new CassandraAttributesExtractor())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
