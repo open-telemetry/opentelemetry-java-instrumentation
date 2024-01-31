@@ -86,6 +86,8 @@ public class CassandraClientTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
@@ -99,6 +101,8 @@ public class CassandraClientTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
@@ -116,6 +120,8 @@ public class CassandraClientTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
@@ -153,6 +159,8 @@ public class CassandraClientTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
@@ -167,6 +175,8 @@ public class CassandraClientTest {
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
@@ -189,6 +199,8 @@ public class CassandraClientTest {
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),

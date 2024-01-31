@@ -7,13 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class CassandraNetworkAttributesGetter
-    implements ServerAttributesGetter<CassandraRequest>,
-        NetworkAttributesGetter<CassandraRequest, ExecutionInfo> {
+    implements NetworkAttributesGetter<CassandraRequest, ExecutionInfo> {
 
   @Override
   @Nullable
