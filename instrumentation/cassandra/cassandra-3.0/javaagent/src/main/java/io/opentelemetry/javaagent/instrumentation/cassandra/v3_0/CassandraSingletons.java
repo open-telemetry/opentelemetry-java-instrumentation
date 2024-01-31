@@ -38,7 +38,7 @@ public final class CassandraSingletons {
                     .build())
             .addAttributesExtractor(
                 NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
-            .addAttributesExtractor(new ExperimentalAttributesExtractor())
+            .addAttributesExtractor(new CassandraServerAttributesExtractor())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
