@@ -37,6 +37,8 @@ public class SpringResourceConfigProperties implements ConfigProperties {
   public String getString(String name) {
     String value = environment.getProperty(name, String.class);
     if (value == null && name.equals("otel.exporter.otlp.protocol")) {
+      // SDK autoconfigure module defaults to `grpc`, but this module aligns with recommendation
+      // in specification to default to `http/protobuf`
       return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
     }
     return value;
