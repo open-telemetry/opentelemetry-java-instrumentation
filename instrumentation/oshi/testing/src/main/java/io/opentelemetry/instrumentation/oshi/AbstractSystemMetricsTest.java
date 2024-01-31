@@ -8,11 +8,12 @@ package io.opentelemetry.instrumentation.oshi;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractSystemMetricsTest {
 
-  protected abstract void registerMetrics();
+  protected abstract List<AutoCloseable> registerMetrics();
 
   protected abstract InstrumentationExtension testing();
 
