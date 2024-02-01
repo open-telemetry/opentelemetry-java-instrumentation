@@ -48,7 +48,7 @@ public class OtlpSpanExporterAutoConfiguration {
     return OtlpExporterUtil.applySignalProperties(
         OtlpConfigUtil.DATA_TYPE_TRACES,
         properties,
-        properties.getLogs(),
+        properties.getTraces(),
         OtlpGrpcSpanExporter::builder,
         () -> otlpHttpSpanExporterBuilder,
         OtlpGrpcSpanExporterBuilder::setEndpoint,
