@@ -11,7 +11,6 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.MapConverterTestAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.stream.Collectors;
@@ -30,9 +29,7 @@ class OtlpSpanExporterAutoConfigurationTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class,
-                  OtlpSpanExporterAutoConfiguration.class,
-                  MapConverterTestAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class, OtlpSpanExporterAutoConfiguration.class));
 
   @Test
   @DisplayName("when exporters are ENABLED should initialize OtlpHttpSpanExporter bean")

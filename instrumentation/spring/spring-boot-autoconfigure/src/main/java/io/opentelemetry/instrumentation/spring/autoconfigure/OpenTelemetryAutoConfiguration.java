@@ -35,12 +35,14 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -65,15 +67,28 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    @ConditionalOnBean({
-      OtelResourceAutoConfiguration.class,
-      OtlpLoggerExporterAutoConfiguration.class,
-      OtlpSpanExporterAutoConfiguration.class,
-      OtlpMetricExporterAutoConfiguration.class
-    })
+    @Conditional(MapConverterCondition.class)
     public MapConverter mapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
       return new MapConverter();
+    }
+
+    static final class MapConverterCondition extends AnyNestedCondition {
+      public MapConverterCondition() {
+        super(ConfigurationPhase.REGISTER_BEAN);
+      }
+
+      @ConditionalOnBean(OtelResourceAutoConfiguration.class)
+      static class Resource {}
+
+      @ConditionalOnBean(OtlpLoggerExporterAutoConfiguration.class)
+      static class Logger {}
+
+      @ConditionalOnBean(OtlpSpanExporterAutoConfiguration.class)
+      static class Span {}
+
+      @ConditionalOnBean(OtlpMetricExporterAutoConfiguration.class)
+      static class Metric {}
     }
 
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
