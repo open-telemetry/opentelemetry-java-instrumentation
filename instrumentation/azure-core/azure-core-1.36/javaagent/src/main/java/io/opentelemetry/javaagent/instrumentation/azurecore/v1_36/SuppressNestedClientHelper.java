@@ -14,24 +14,30 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
-public class SuppressNestedClientMono<T> extends Mono<T> {
+public class SuppressNestedClientHelper {
 
-  private final Mono<T> delegate;
-
-  public SuppressNestedClientMono(Mono<T> delegate) {
-    this.delegate = delegate;
-  }
-
-  @Override
-  public void subscribe(CoreSubscriber<? super T> actual) {
+  public static Scope disallowNestedClientSpanSync() {
     Context parentContext = currentContext();
     if (doesNotHaveClientSpan(parentContext)) {
-      try (Scope ignored = disallowNestedClientSpan(parentContext).makeCurrent()) {
-        delegate.subscribe(actual);
-      }
-    } else {
-      delegate.subscribe(actual);
+      return disallowNestedClientSpan(parentContext).makeCurrent();
     }
+    return null;
+  }
+
+  public static <T> Mono<T> disallowNestedClientSpanMono(Mono<T> delegate) {
+    return new Mono<T>() {
+      @Override
+      public void subscribe(CoreSubscriber<? super T> coreSubscriber) {
+        Context parentContext = currentContext();
+        if (doesNotHaveClientSpan(parentContext)) {
+          try (Scope ignored = disallowNestedClientSpan(parentContext).makeCurrent()) {
+            delegate.subscribe(coreSubscriber);
+          }
+        } else {
+          delegate.subscribe(coreSubscriber);
+        }
+      }
+    };
   }
 
   private static boolean doesNotHaveClientSpan(Context parentContext) {
@@ -44,4 +50,6 @@ public class SuppressNestedClientMono<T> extends Mono<T> {
     return SpanKey.HTTP_CLIENT.storeInContext(
         SpanKey.KIND_CLIENT.storeInContext(parentContext, span), span);
   }
+
+  private SuppressNestedClientHelper() {}
 }
