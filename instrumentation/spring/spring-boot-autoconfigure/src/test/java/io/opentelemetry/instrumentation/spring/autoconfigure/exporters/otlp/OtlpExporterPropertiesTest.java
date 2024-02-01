@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.MapConverterTestAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Arrays;
@@ -38,7 +38,7 @@ class OtlpExporterPropertiesTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, MapConverterTestAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class, OtelResourceAutoConfiguration.class));
 
   public static Stream<Arguments> headerKeys() {
     return Arrays.stream(HEADER_KEYS).map(Arguments::of);
