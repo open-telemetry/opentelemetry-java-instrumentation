@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.azure")
     module.set("azure-core")
-    versions.set("[1.36.0,1.40.0)")
+    versions.set("[1.36.0,)")
     assertInverse.set(true)
   }
 }
@@ -29,7 +29,6 @@ dependencies {
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.19:javaagent"))
-  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.40:javaagent"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -41,7 +40,7 @@ testing {
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
         if (latestDepTest) {
-          implementation("com.azure:azure-core:1.39.0")
+          implementation("com.azure:azure-core:+")
         } else {
           implementation("com.azure:azure-core:1.36.0")
         }
