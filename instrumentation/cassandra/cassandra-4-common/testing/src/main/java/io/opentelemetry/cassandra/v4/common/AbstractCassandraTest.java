@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -92,10 +93,16 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_TYPE, "ipv4"),
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    val -> val.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo("ipv4"), v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(
+                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                    val -> val.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo("127.0.0.1"), v -> assertThat(v).isEqualTo("0:0:0:0:0:0:0:1"))),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),
@@ -141,10 +148,16 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_TYPE, "ipv4"),
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    val -> val.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo("ipv4"), v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(
+                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                    val -> val.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo("127.0.0.1"), v -> assertThat(v).isEqualTo("0:0:0:0:0:0:0:1"))),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),

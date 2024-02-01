@@ -66,7 +66,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "0:0:0:0:0:0:0:1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),
