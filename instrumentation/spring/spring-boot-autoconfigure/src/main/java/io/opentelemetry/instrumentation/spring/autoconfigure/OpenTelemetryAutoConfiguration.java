@@ -86,7 +86,7 @@ public class OpenTelemetryAutoConfiguration {
       @ConditionalOnBean(OtelResourceAutoConfiguration.class)
       static class Resource {}
 
-      @ConditionalOnBean(OtlpLoggerExporterAutoConfiguration.class)
+      @ConditionalOnBean(OtlpLogRecordExporterAutoConfiguration.class)
       static class Logger {}
 
       @ConditionalOnBean(OtlpSpanExporterAutoConfiguration.class)
