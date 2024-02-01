@@ -9,13 +9,15 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
+import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
@@ -38,12 +40,8 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      SocketAddress address = coordinator.getEndPoint().resolve();
-      if (address instanceof InetSocketAddress) {
-        attributes.put(
-            SemanticAttributes.SERVER_ADDRESS, ((InetSocketAddress) address).getHostName());
-        attributes.put(SemanticAttributes.SERVER_PORT, ((InetSocketAddress) address).getPort());
-      }
+      updateServerAddressAndPort(attributes, coordinator);
+
       if (coordinator.getDatacenter() != null) {
         attributes.put(SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
       }
@@ -81,5 +79,23 @@ final class CassandraAttributesExtractor
       idempotent = config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE);
     }
     attributes.put(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, idempotent);
+  }
+
+  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (endPoint instanceof DefaultEndPoint) {
+      InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
+      attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
+      attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
+    } else if (endPoint instanceof SniEndPoint) {
+      String serverName = ((SniEndPoint) endPoint).getServerName();
+      // parse serverName to get hostname and port
+      int index = serverName.indexOf(":");
+      if (index != -1) {
+        attributes.put(SemanticAttributes.SERVER_ADDRESS, serverName.substring(0, index));
+        attributes.put(
+            SemanticAttributes.SERVER_PORT, Integer.parseInt(serverName.substring(index + 1)));
+      }
+    }
   }
 }
