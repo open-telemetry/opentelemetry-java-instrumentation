@@ -24,6 +24,8 @@
   ([#10303](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10303))
 - Backport: Fix Netty addListener instrumentation
   ([#10254](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10254))
+- Backport: Update azure-core-tracing-opentelemetry version and fix sync suppression
+  ([#10350](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10350))
 
 ## Version 1.32.0 (2023-11-17)
 
