@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.List;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -18,10 +20,26 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
   @RegisterExtension
   public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @Override
-  protected List<AutoCloseable> registerMetrics() {
-    return SystemMetrics.registerObservers(GlobalOpenTelemetry.get());
+  private static List<AutoCloseable> observables;
+
+  @BeforeAll
+  static void setUp() {
+    observables = SystemMetrics.registerObservers(GlobalOpenTelemetry.get());
   }
+
+  @AfterAll
+  static void tearDown() {
+    for (AutoCloseable observable : observables) {
+      try {
+        observable.close();
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+  }
+
+  @Override
+  protected void registerMetrics() {}
 
   @Override
   protected InstrumentationExtension testing() {
@@ -29,8 +47,7 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
   }
 
   @Test
-  void closeObservables() {
-    List<AutoCloseable> closeables = registerMetrics();
-    Assertions.assertThat(closeables).as("List of observables").isNotEmpty();
+  void verifyObservablesAreNotEmpty() {
+    Assertions.assertThat(observables).as("List of observables").isNotEmpty();
   }
 }

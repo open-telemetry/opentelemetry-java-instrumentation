@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.oshi;
 import io.opentelemetry.instrumentation.oshi.AbstractSystemMetricsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SystemMetricsTest extends AbstractSystemMetricsTest {
@@ -18,9 +16,7 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
   public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
-  protected List<AutoCloseable> registerMetrics() {
-    return Collections.emptyList();
-  }
+  protected void registerMetrics() {}
 
   @Override
   protected InstrumentationExtension testing() {
