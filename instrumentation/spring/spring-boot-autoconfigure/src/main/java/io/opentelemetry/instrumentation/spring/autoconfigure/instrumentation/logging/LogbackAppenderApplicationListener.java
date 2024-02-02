@@ -73,11 +73,12 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
       Optional<OpenTelemetryAppender> existingOpenTelemetryAppender,
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     OpenTelemetryAppender openTelemetryAppender = existingOpenTelemetryAppender.get();
-    openTelemetryAppender.stop(); // The OpenTelemetry appender is stopped and restarted from the
+    // The OpenTelemetry appender is stopped and restarted from the
     // org.springframework.boot.context.logging.LoggingApplicationListener.initialize
-    // method
+    // method.
     // The OpenTelemetryAppender initializes the LoggingEventMapper in the start() method. So, here
     // we stop the OpenTelemetry appender before its re-initialization and its restart.
+    openTelemetryAppender.stop();
     initializeOpenTelemetryAppenderFromProperties(
         applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
