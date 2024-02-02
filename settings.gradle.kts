@@ -575,7 +575,7 @@ nonCoreProjects.add(":instrumentation:wicket-8.0:javaagent")
 nonCoreProjects.add(":instrumentation:zio:zio-2.0:javaagent")
 
 if (isCI) {
-  // Include all subprojects when running in a GH Action.
+  // Include all subprojects when running in a GitHub Action.
   include(nonCoreProjects)
 } else {
   // Include the subprojects you'd like to enable locally here, e.g:
