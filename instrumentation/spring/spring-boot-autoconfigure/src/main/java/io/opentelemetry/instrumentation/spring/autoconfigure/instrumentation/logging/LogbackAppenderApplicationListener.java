@@ -99,6 +99,9 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
       OpenTelemetryAppender openTelemetryAppender) {
 
+    // Implemented in the same way as the
+    // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
+    // available
     Boolean codeAttribute =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
