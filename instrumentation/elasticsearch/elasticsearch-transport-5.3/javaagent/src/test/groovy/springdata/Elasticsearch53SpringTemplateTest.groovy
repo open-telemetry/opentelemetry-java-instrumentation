@@ -18,12 +18,14 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.search.aggregations.bucket.nested.InternalNested
 import org.elasticsearch.search.aggregations.bucket.terms.Terms
 import org.elasticsearch.transport.Netty3Plugin
+import org.junit.jupiter.api.Assumptions
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate
 import org.springframework.data.elasticsearch.core.ResultsExtractor
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
+import spock.util.environment.Jvm
 
 import java.util.concurrent.atomic.AtomicLong
 
@@ -45,7 +47,6 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
   ElasticsearchTemplate template
 
   def setupSpec() {
-
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
     println "ES work dir: $esWorkingDir"
@@ -79,6 +80,11 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
       FileSystemUtils.deleteSubDirectories(esWorkingDir.toPath())
       esWorkingDir.delete()
     }
+  }
+
+  def setup() {
+    // when running on jdk 21 this test occasionally fails with timeout
+    Assumptions.assumeTrue(Boolean.getBoolean("testLatestDeps") || !Jvm.getCurrent().isJava21Compatible())
   }
 
   def "test elasticsearch error"() {
