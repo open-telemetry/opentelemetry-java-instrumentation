@@ -84,10 +84,9 @@ class LogbackAppenderTest {
               assertThat(logRecord.getBody().asString()).contains("test log message");
 
               Attributes attributes = logRecord.getAttributes();
-              assertThat(attributes.size())
-                  .isEqualTo(
-                      2); // key1 and key2, the code attributes should not be present because they
-              // are enabled in the logback.xml file but are disabled with a property
+              // key1 and key2, the code attributes should not be present because they are enabled
+              // in the logback.xml file but are disabled with a property
+              assertThat(attributes.size()).isEqualTo(2);
               assertThat(attributes.asMap())
                   .containsEntry(AttributeKey.stringKey("key1"), "val1")
                   .containsEntry(AttributeKey.stringKey("key2"), "val2");
