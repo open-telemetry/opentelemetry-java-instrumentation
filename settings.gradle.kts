@@ -580,6 +580,12 @@ if(isCI) {
 } else {
   // Include the subprojects you'd like to enable locally here, e.g:
 
+  // include(":instrumentation:okhttp:okhttp-3.0:javaagent")
   // include(":instrumentation:okhttp:okhttp-3.0:library")
   // include(":instrumentation:okhttp:okhttp-3.0:testing")
+
+  // or:
+  // nonCoreProjects.filter { it.contains("okhttp-3.0") }.forEach {
+  //   include(it)
+  // }
 }
