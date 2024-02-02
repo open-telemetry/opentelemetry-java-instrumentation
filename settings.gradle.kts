@@ -158,7 +158,7 @@ include(":benchmark-jfr-analyzer")
 
 val nonCoreProjects = mutableListOf<String>()
 
-//// smoke tests
+// smoke tests
 nonCoreProjects.add(":smoke-tests")
 nonCoreProjects.add(":smoke-tests:images:fake-backend")
 nonCoreProjects.add(":smoke-tests:images:grpc")
@@ -574,7 +574,7 @@ nonCoreProjects.add(":instrumentation:vibur-dbcp-11.0:testing")
 nonCoreProjects.add(":instrumentation:wicket-8.0:javaagent")
 nonCoreProjects.add(":instrumentation:zio:zio-2.0:javaagent")
 
-if(isCI) {
+if (isCI) {
   // Include all subprojects when running in a GH Action.
   include(nonCoreProjects)
 } else {
