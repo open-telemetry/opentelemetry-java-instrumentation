@@ -97,8 +97,8 @@ public class Helpers {
           if (channel.pipeline().get(HttpClientTracingHandler.class) == null) {
             VirtualField<ChannelHandler, ChannelHandler> virtualField =
                 VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-            HttpClientTracingHandler ourHandler =
-                new HttpClientTracingHandler(NettyClientSingletons.instrumenter());
+            ChannelHandler ourHandler =
+                NettyClientSingletons.clientTelemetry().createCombinedHandler();
 
             channel
                 .pipeline()

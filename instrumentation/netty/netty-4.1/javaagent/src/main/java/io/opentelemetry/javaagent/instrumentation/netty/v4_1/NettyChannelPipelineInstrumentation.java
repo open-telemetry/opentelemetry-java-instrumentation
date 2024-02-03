@@ -22,9 +22,6 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumentationHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
@@ -112,11 +109,11 @@ public class NettyChannelPipelineInstrumentation
                 .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
-        ourHandler = new HttpClientTracingHandler(NettyClientSingletons.instrumenter());
+        ourHandler = NettyClientSingletons.clientTelemetry().createCombinedHandler();
       } else if (handler instanceof HttpRequestEncoder) {
-        ourHandler = new HttpClientRequestTracingHandler(NettyClientSingletons.instrumenter());
+        ourHandler = NettyClientSingletons.clientTelemetry().createRequestHandler();
       } else if (handler instanceof HttpResponseDecoder) {
-        ourHandler = new HttpClientResponseTracingHandler(NettyClientSingletons.instrumenter());
+        ourHandler = NettyClientSingletons.clientTelemetry().createResponseHandler();
         // the SslHandler lives in the netty-handler module, using class name comparison to avoid
         // adding a dependency
       } else if (handler.getClass().getName().equals("io.netty.handler.ssl.SslHandler")) {

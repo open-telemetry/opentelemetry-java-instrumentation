@@ -30,7 +30,7 @@ public final class NettyServerTelemetryBuilder {
   private Consumer<HttpServerRouteBuilder<HttpRequestAndChannel>> httpServerRouteConfigurer =
       builder -> {};
   private boolean emitExperimentalHttpServerMetrics = false;
-  private boolean captureExperimentalEvents = false;
+  private boolean emitExperimentalHttpServerEvents = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -39,12 +39,12 @@ public final class NettyServerTelemetryBuilder {
   /**
    * Configures emission of experimental events.
    *
-   * @param captureExperimentalEvents set to true to emit events
+   * @param emitExperimentalHttpServerEvents set to true to emit events
    */
   @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setCaptureExperimentalEvents(
-      boolean captureExperimentalEvents) {
-    this.captureExperimentalEvents = captureExperimentalEvents;
+  public NettyServerTelemetryBuilder setEmitExperimentalHttpServerEvents(
+      boolean emitExperimentalHttpServerEvents) {
+    this.emitExperimentalHttpServerEvents = emitExperimentalHttpServerEvents;
     return this;
   }
 
@@ -123,7 +123,7 @@ public final class NettyServerTelemetryBuilder {
             spanNameExtractorConfigurer,
             httpServerRouteConfigurer,
             emitExperimentalHttpServerMetrics),
-        captureExperimentalEvents
+        emitExperimentalHttpServerEvents
             ? ProtocolEventHandler.Enabled.INSTANCE
             : ProtocolEventHandler.Noop.INSTANCE);
   }

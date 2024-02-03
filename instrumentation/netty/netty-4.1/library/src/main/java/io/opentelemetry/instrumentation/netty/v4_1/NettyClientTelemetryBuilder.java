@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBu
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,9 +34,45 @@ public final class NettyClientTelemetryBuilder {
   private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
       spanNameExtractorConfigurer = builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
+  private NettyConnectionInstrumentationFlag connectionTelemetryState =
+      NettyConnectionInstrumentationFlag.DISABLED;
+  private NettyConnectionInstrumentationFlag sslTelemetryState =
+      NettyConnectionInstrumentationFlag.DISABLED;
+
+  private PeerServiceResolver peerServiceResolver =
+      PeerServiceResolver.create(Collections.emptyMap());
+  private boolean emitExperimentalHttpClientEvents = false;
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setConnectionTelemetryState(
+      NettyConnectionInstrumentationFlag connectionTelemetryState) {
+    this.connectionTelemetryState = connectionTelemetryState;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setSslTelemetryState(
+      NettyConnectionInstrumentationFlag sslTelemetryState) {
+    this.sslTelemetryState = sslTelemetryState;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setPeerServiceResolver(
+      PeerServiceResolver peerServiceResolver) {
+    this.peerServiceResolver = peerServiceResolver;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setEmitExperimentalHttpClientEvents(
+      boolean emitExperimentalHttpClientEvents) {
+    this.emitExperimentalHttpClientEvents = emitExperimentalHttpClientEvents;
+    return this;
   }
 
   /**
@@ -114,15 +151,21 @@ public final class NettyClientTelemetryBuilder {
 
   /** Returns a new {@link NettyClientTelemetry} with the given configuration. */
   public NettyClientTelemetry build() {
-    return new NettyClientTelemetry(
+    NettyClientInstrumenterFactory factory =
         new NettyClientInstrumenterFactory(
-                openTelemetry,
-                "io.opentelemetry.netty-4.1",
-                NettyConnectionInstrumentationFlag.DISABLED,
-                NettyConnectionInstrumentationFlag.DISABLED,
-                PeerServiceResolver.create(Collections.emptyMap()),
-                emitExperimentalHttpClientMetrics)
-            .createHttpInstrumenter(
-                extractorConfigurer, spanNameExtractorConfigurer, additionalAttributesExtractors));
+            openTelemetry,
+            "io.opentelemetry.netty-4.1",
+            connectionTelemetryState,
+            sslTelemetryState,
+            peerServiceResolver,
+            emitExperimentalHttpClientMetrics);
+    return new NettyClientTelemetry(
+        factory.createHttpInstrumenter(
+            extractorConfigurer, spanNameExtractorConfigurer, additionalAttributesExtractors),
+        factory::createConnectionInstrumenter,
+        factory::createSslInstrumenter,
+        emitExperimentalHttpClientEvents
+            ? ProtocolEventHandler.Enabled.INSTANCE
+            : ProtocolEventHandler.Noop.INSTANCE);
   }
 }

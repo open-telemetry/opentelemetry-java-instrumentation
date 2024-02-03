@@ -20,6 +20,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 
 /**
@@ -32,10 +33,13 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       AttributeKey.valueOf(HttpClientResponseTracingHandler.class, "http-client-response");
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final ProtocolEventHandler protocolEventHandler;
 
   public HttpClientResponseTracingHandler(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      ProtocolEventHandler protocolEventHandler) {
     this.instrumenter = instrumenter;
+    this.protocolEventHandler = protocolEventHandler;
   }
 
   @Override
@@ -54,8 +58,11 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       FullHttpResponse response = (FullHttpResponse) msg;
       if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
         HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
-        ProtocolSpecificEvent.SWITCHING_PROTOCOLS.addEvent(
-            context, request != null ? request.request() : null, response);
+        protocolEventHandler.handle(
+            ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
+            context,
+            request != null ? request.request() : null,
+            response);
       } else {
         HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
         instrumenter.end(context, request, (HttpResponse) msg, null);
@@ -66,8 +73,11 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       HttpResponse response = (HttpResponse) msg;
       if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
         HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
-        ProtocolSpecificEvent.SWITCHING_PROTOCOLS.addEvent(
-            context, request != null ? request.request() : null, response);
+        protocolEventHandler.handle(
+            ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
+            context,
+            request != null ? request.request() : null,
+            response);
       }
       // HTTP 101 proto switch note: netty sends EmptyLastHttpContent upon proto upgrade;
       // setting this here ensures we can see in the next if-block (LastHttpContent) whether

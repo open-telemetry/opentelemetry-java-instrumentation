@@ -14,18 +14,32 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
+import java.util.function.Supplier;
 
 /** Entrypoint for instrumenting Netty HTTP clients. */
 public final class NettyClientTelemetry {
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final Supplier<NettyConnectionInstrumenter> connectionInstrumenterSupplier;
+  private final Supplier<NettySslInstrumenter> sslInstrumenterSupplier;
+  private final ProtocolEventHandler protocolEventHandler;
 
-  NettyClientTelemetry(Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+  NettyClientTelemetry(
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      Supplier<NettyConnectionInstrumenter> connectionInstrumenterSupplier,
+      Supplier<NettySslInstrumenter> sslInstrumenterSupplier,
+      ProtocolEventHandler protocolEventHandler) {
     this.instrumenter = instrumenter;
+    this.connectionInstrumenterSupplier = connectionInstrumenterSupplier;
+    this.sslInstrumenterSupplier = sslInstrumenterSupplier;
+    this.protocolEventHandler = protocolEventHandler;
   }
 
   /** Returns a new {@link NettyClientTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -54,7 +68,7 @@ public final class NettyClientTelemetry {
    * responses. Must be paired with {@link #createRequestHandler()}.
    */
   public ChannelInboundHandlerAdapter createResponseHandler() {
-    return new HttpClientResponseTracingHandler(instrumenter);
+    return new HttpClientResponseTracingHandler(instrumenter, protocolEventHandler);
   }
 
   /**
@@ -64,7 +78,15 @@ public final class NettyClientTelemetry {
   public CombinedChannelDuplexHandler<
           ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
       createCombinedHandler() {
-    return new HttpClientTracingHandler(instrumenter);
+    return new HttpClientTracingHandler(instrumenter, protocolEventHandler);
+  }
+
+  public NettyConnectionInstrumenter getConnectionInstrumenterSupplier() {
+    return connectionInstrumenterSupplier.get();
+  }
+
+  public NettySslInstrumenter getSslInstrumenterSupplier() {
+    return sslInstrumenterSupplier.get();
   }
 
   /**
@@ -74,5 +96,9 @@ public final class NettyClientTelemetry {
   // TODO (trask) rename to setParentContext()?
   public static void setChannelContext(Channel channel, Context context) {
     channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(context);
+  }
+
+  public Instrumenter<HttpRequestAndChannel, HttpResponse> getInstrumenter() {
+    return instrumenter;
   }
 }
