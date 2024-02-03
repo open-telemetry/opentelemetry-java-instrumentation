@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
+import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
 import java.util.Deque;
@@ -55,10 +56,9 @@ public class Helpers {
           if (channel.pipeline().get(HttpServerTracingHandler.class) == null) {
             VirtualField<ChannelHandler, ChannelHandler> virtualField =
                 VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-            HttpServerTracingHandler ourHandler =
-                new HttpServerTracingHandler(
-                    NettyServerSingletons.instrumenter(),
-                    NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+            ChannelHandler ourHandler =
+                NettyServerSingletons.serverTelemetry()
+                    .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
 
             channel
                 .pipeline()
@@ -98,7 +98,7 @@ public class Helpers {
             VirtualField<ChannelHandler, ChannelHandler> virtualField =
                 VirtualField.find(ChannelHandler.class, ChannelHandler.class);
             HttpClientTracingHandler ourHandler =
-                new HttpClientTracingHandler(NettyServerSingletons.instrumenter());
+                new HttpClientTracingHandler(NettyClientSingletons.instrumenter());
 
             channel
                 .pipeline()

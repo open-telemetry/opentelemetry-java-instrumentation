@@ -21,7 +21,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvents;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import java.util.Deque;
 import javax.annotation.Nullable;
@@ -37,12 +38,15 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
   private final HttpServerResponseBeforeCommitHandler beforeCommitHandler;
+  private final ProtocolEventHandler eventHandler;
 
   public HttpServerResponseTracingHandler(
       Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
-      HttpServerResponseBeforeCommitHandler beforeCommitHandler) {
+      HttpServerResponseBeforeCommitHandler beforeCommitHandler,
+      ProtocolEventHandler eventHandler) {
     this.instrumenter = instrumenter;
     this.beforeCommitHandler = beforeCommitHandler;
+    this.eventHandler = eventHandler;
   }
 
   @Override
@@ -74,8 +78,11 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       if (msg instanceof FullHttpResponse) {
         FullHttpResponse response = (FullHttpResponse) msg;
         if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
-          ProtocolSpecificEvents.SWITCHING_PROTOCOLS.addEvent(
-              serverContext.context(), serverContext.request().request(), response);
+          eventHandler.handle(
+              ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
+              serverContext.context(),
+              serverContext.request().request(),
+              response);
         } else {
           // Headers and body all sent together, we have the response information in the msg.
           beforeCommitHandler.handle(serverContext.context(), (HttpResponse) msg);
@@ -107,8 +114,11 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       if (msg instanceof HttpResponse) {
         HttpResponse response = (HttpResponse) msg;
         if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
-          ProtocolSpecificEvents.SWITCHING_PROTOCOLS.addEvent(
-              serverContext.context(), serverContext.request().request(), response);
+          eventHandler.handle(
+              ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
+              serverContext.context(),
+              serverContext.request().request(),
+              response);
         } else {
           // Headers before body has been sent, store them to use when finishing the span.
           beforeCommitHandler.handle(serverContext.context(), response);

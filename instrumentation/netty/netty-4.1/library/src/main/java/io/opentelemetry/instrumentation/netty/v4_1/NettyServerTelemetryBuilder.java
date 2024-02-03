@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyServerInstrumenterFactory;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -29,9 +30,22 @@ public final class NettyServerTelemetryBuilder {
   private Consumer<HttpServerRouteBuilder<HttpRequestAndChannel>> httpServerRouteConfigurer =
       builder -> {};
   private boolean emitExperimentalHttpServerMetrics = false;
+  private boolean captureExperimentalEvents = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  /**
+   * Configures emission of experimental events.
+   *
+   * @param captureExperimentalEvents set to true to emit events
+   */
+  @CanIgnoreReturnValue
+  public NettyServerTelemetryBuilder setCaptureExperimentalEvents(
+      boolean captureExperimentalEvents) {
+    this.captureExperimentalEvents = captureExperimentalEvents;
+    return this;
   }
 
   /**
@@ -108,6 +122,9 @@ public final class NettyServerTelemetryBuilder {
             extractorConfigurer,
             spanNameExtractorConfigurer,
             httpServerRouteConfigurer,
-            emitExperimentalHttpServerMetrics));
+            emitExperimentalHttpServerMetrics),
+        captureExperimentalEvents
+            ? ProtocolEventHandler.Enabled.INSTANCE
+            : ProtocolEventHandler.Noop.INSTANCE);
   }
 }

@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public enum ProtocolSpecificEvents {
+public enum ProtocolSpecificEvent {
   /**
    * The event after which point the server or client transmits or receives, respectively, in one of
    * the signified upgraded protocols, per <a
@@ -54,7 +54,7 @@ public enum ProtocolSpecificEvents {
 
   private final String eventName;
 
-  ProtocolSpecificEvents(String eventName) {
+  ProtocolSpecificEvent(String eventName) {
     this.eventName = eventName;
   }
 

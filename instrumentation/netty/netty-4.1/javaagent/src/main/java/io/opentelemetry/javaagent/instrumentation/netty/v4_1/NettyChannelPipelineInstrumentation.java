@@ -25,9 +25,6 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySsl
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerRequestTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerResponseTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
@@ -105,16 +102,14 @@ public class NettyChannelPipelineInstrumentation
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
         ourHandler =
-            new HttpServerTracingHandler(
-                NettyServerSingletons.instrumenter(),
-                NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+            NettyServerSingletons.serverTelemetry()
+                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
       } else if (handler instanceof HttpRequestDecoder) {
-        ourHandler = new HttpServerRequestTracingHandler(NettyServerSingletons.instrumenter());
+        ourHandler = NettyServerSingletons.serverTelemetry().createRequestHandler();
       } else if (handler instanceof HttpResponseEncoder) {
         ourHandler =
-            new HttpServerResponseTracingHandler(
-                NettyServerSingletons.instrumenter(),
-                NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+            NettyServerSingletons.serverTelemetry()
+                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
         ourHandler = new HttpClientTracingHandler(NettyClientSingletons.instrumenter());

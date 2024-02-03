@@ -20,7 +20,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvents;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -54,7 +54,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       FullHttpResponse response = (FullHttpResponse) msg;
       if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
         HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
-        ProtocolSpecificEvents.SWITCHING_PROTOCOLS.addEvent(
+        ProtocolSpecificEvent.SWITCHING_PROTOCOLS.addEvent(
             context, request != null ? request.request() : null, response);
       } else {
         HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
@@ -66,7 +66,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
       HttpResponse response = (HttpResponse) msg;
       if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
         HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
-        ProtocolSpecificEvents.SWITCHING_PROTOCOLS.addEvent(
+        ProtocolSpecificEvent.SWITCHING_PROTOCOLS.addEvent(
             context, request != null ? request.request() : null, response);
       }
       // HTTP 101 proto switch note: netty sends EmptyLastHttpContent upon proto upgrade;
