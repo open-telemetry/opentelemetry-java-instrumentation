@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.assertj.core.api.AssertAccess;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -64,8 +63,6 @@ public class ServerH2Test extends AbstractServerTest {
   }
 
   @Test
-  // TODO temporarily disabled while sorting out the protocol upgrade event
-  @Disabled
   void h2ProtocolUpgrade() throws Exception {
     URI uri = URI.create("http://localhost:" + port + SUCCESS.getPath());
     Service<Request, Response> client = extension.clientFor(uri);

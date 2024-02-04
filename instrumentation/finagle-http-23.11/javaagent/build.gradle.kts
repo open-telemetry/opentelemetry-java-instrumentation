@@ -39,3 +39,9 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-4.1:library"))
   implementation(project(":instrumentation:netty:netty-4-common:library"))
 }
+
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+  }
+}
