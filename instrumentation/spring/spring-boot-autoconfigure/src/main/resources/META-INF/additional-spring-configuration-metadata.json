@@ -229,13 +229,13 @@
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-      "type": "java.lang.String",
-      "description": "Comma separated list of MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
+      "type": "java.util.List<java.lang.String>",
+      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
     },
     {
       "name": "otel.logs.exporter",
-      "type": "java.lang.String",
-      "description": "List of exporters to be used for logs, separated by commas.",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of exporters to be used for logs.",
       "defaultValue": "otlp"
     },
     {
@@ -246,14 +246,20 @@
     },
     {
       "name": "otel.metrics.exporter",
-      "type": "java.lang.String",
-      "description": "List of exporters to be used for metrics, separated by commas.",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of exporters to be used for metrics.",
       "defaultValue": "otlp"
     },
     {
+      "name": "otel.propagators",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of propagators to be used for context propagation.",
+      "defaultValue": "tracecontext,baggage"
+    },
+    {
       "name": "otel.traces.exporter",
-      "type": "java.lang.String",
-      "description": "List of exporters to be used for tracing, separated by commas.",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of exporters to be used for tracing.",
       "defaultValue": "otlp"
     },
     {
@@ -363,6 +369,39 @@
         {
           "value": "otlp",
           "description": "OpenTelemetry Protocol (OTLP) exporter."
+        }
+      ]
+    },
+    {
+      "name": "otel.propagators",
+      "values": [
+        {
+          "value": "baggage",
+          "description": "The Baggage propagator propagates baggage using the W3C Baggage format. See https://www.w3.org/TR/baggage/."
+        },
+        {
+          "value": "b3",
+          "description": "The B3 propagator propagates trace context using the B3 single-header format: See https://github.com/openzipkin/b3-propagation#single-header."
+        },
+        {
+          "value": "b3multi",
+          "description": "The B3 propagator propagates trace context using the B3 multi-header format: See https://github.com/openzipkin/b3-propagation#multiple-headers."
+        },
+        {
+          "value": "jaeger",
+          "description": "The Jaeger propagator propagates trace context using the Jaeger format. See https://www.jaegertracing.io/docs/1.21/client-libraries/#propagation-format."
+        },
+        {
+          "value": "ottrace",
+          "description": "The OpenTelemetry Trace Context propagator propagates trace context using the OpenTelemetry format. See https://github.com/opentracing/specification/blob/master/rfc/trace_identifiers.md."
+        },
+        {
+          "value": "tracecontext",
+          "description": "The Trace Context propagator propagates trace context using the W3C Trace Context format (add `baggage` as well to include W3C baggage). See https://www.w3.org/TR/trace-context/."
+        },
+        {
+          "value": "xray",
+          "description": "The AWS X-Ray propagator propagates trace context using the AWS X-Ray format. See https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html#xray-concepts-tracingheader."
         }
       ]
     },
