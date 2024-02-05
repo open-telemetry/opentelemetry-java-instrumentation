@@ -53,6 +53,8 @@ public abstract class AbstractCassandraTest {
 
   protected static int cassandraPort;
 
+  protected static String cassandraContainerName;
+
   protected abstract InstrumentationExtension testing();
 
   protected CqlSession wrap(CqlSession session) {
@@ -70,6 +72,7 @@ public abstract class AbstractCassandraTest {
     cassandra.start();
 
     cassandraPort = cassandra.getMappedPort(9042);
+    cassandraContainerName = cassandra.getHost();
   }
 
   @AfterAll

@@ -29,7 +29,6 @@ final class CassandraNetworkAttributesGetter
       return null;
     }
     // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-    // at least in the only current EndPoint implementation (DefaultEndPoint)
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       return (InetSocketAddress) coordinator.getEndPoint().resolve();

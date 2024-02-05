@@ -17,11 +17,16 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
+
+  private static final Logger logger = LoggerFactory.getLogger(CassandraAttributesExtractor.class);
 
   @Override
   public void onStart(
@@ -40,7 +45,11 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      updateServerAddressAndPort(attributes, coordinator);
+      try {
+        updateServerAddressAndPort(attributes, coordinator);
+      } catch (NoSuchFieldException | IllegalAccessException e) {
+        logger.error("Error while extracting server address and port", e);
+      }
 
       if (coordinator.getDatacenter() != null) {
         attributes.put(SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
@@ -81,20 +90,22 @@ final class CassandraAttributesExtractor
     attributes.put(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, idempotent);
   }
 
-  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator)
+      throws NoSuchFieldException, IllegalAccessException {
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
       attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
       attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
     } else if (endPoint instanceof SniEndPoint) {
-      String serverName = ((SniEndPoint) endPoint).getServerName();
-      // parse serverName to get hostname and port
-      int index = serverName.indexOf(":");
-      if (index != -1) {
-        attributes.put(SemanticAttributes.SERVER_ADDRESS, serverName.substring(0, index));
-        attributes.put(
-            SemanticAttributes.SERVER_PORT, Integer.parseInt(serverName.substring(index + 1)));
+      SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
+      Field privateField = sniEndPoint.getClass().getDeclaredField("proxyAddress");
+      privateField.setAccessible(true);
+      Object object = privateField.get(sniEndPoint);
+      if (object instanceof InetSocketAddress) {
+        InetSocketAddress address = (InetSocketAddress) object;
+        attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
+        attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
       }
     }
   }

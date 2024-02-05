@@ -152,12 +152,11 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
             .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
             .build();
+
+    InetSocketAddress address = new InetSocketAddress("localhost", cassandraPort);
     return wrap(
         CqlSession.builder()
-            .addContactEndPoint(
-                new SniEndPoint(
-                    new InetSocketAddress("localhost", cassandraPort),
-                    "localhost:" + cassandraPort))
+            .addContactEndPoint(new SniEndPoint(address, cassandraContainerName))
             .withConfigLoader(configLoader)
             .withLocalDatacenter("datacenter1")
             .withKeyspace(keyspace)
