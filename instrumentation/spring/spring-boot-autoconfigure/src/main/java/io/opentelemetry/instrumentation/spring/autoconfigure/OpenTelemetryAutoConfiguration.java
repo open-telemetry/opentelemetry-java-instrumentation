@@ -33,6 +33,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
@@ -56,11 +57,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
-@EnableConfigurationProperties({
-  MetricExportProperties.class,
-  SamplerProperties.class,
-  OtlpExporterProperties.class
-})
+@EnableConfigurationProperties({SamplerProperties.class, OtlpExporterProperties.class})
 public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
@@ -142,25 +139,26 @@ public class OpenTelemetryAutoConfiguration {
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
     @ConditionalOnMissingBean
     public SdkMeterProvider sdkMeterProvider(
-        MetricExportProperties properties,
+        ConfigProperties configProperties,
         ObjectProvider<List<MetricExporter>> metricExportersProvider,
         Resource otelResource) {
 
       SdkMeterProviderBuilder meterProviderBuilder = SdkMeterProvider.builder();
 
       metricExportersProvider.getIfAvailable(Collections::emptyList).stream()
-          .map(metricExporter -> createPeriodicMetricReader(properties, metricExporter))
+          .map(metricExporter -> createPeriodicMetricReader(configProperties, metricExporter))
           .forEach(meterProviderBuilder::registerMetricReader);
 
       return meterProviderBuilder.setResource(otelResource).build();
     }
 
     private static PeriodicMetricReader createPeriodicMetricReader(
-        MetricExportProperties properties, MetricExporter metricExporter) {
+        ConfigProperties properties, MetricExporter metricExporter) {
       PeriodicMetricReaderBuilder metricReaderBuilder =
           PeriodicMetricReader.builder(metricExporter);
-      if (properties.getInterval() != null) {
-        metricReaderBuilder.setInterval(properties.getInterval());
+      Duration interval = properties.getDuration("otel.metric.export.interval");
+      if (interval != null) {
+        metricReaderBuilder.setInterval(interval);
       }
       return metricReaderBuilder.build();
     }
