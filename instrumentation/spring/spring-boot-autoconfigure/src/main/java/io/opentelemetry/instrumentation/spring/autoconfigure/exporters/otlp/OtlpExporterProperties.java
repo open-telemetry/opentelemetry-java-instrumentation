@@ -9,9 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Configuration for OLTP exporters.
- */
+/** Configuration for OLTP exporters. */
 @ConfigurationProperties(prefix = "otel.exporter.otlp")
 public final class OtlpExporterProperties {
 
