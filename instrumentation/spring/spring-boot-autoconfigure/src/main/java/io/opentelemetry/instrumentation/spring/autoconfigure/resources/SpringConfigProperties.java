@@ -17,13 +17,13 @@ import javax.annotation.Nullable;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.ExpressionParser;
 
-public class SpringResourceConfigProperties implements ConfigProperties {
+public class SpringConfigProperties implements ConfigProperties {
   private final Environment environment;
 
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
 
-  public SpringResourceConfigProperties(
+  public SpringConfigProperties(
       Environment environment,
       ExpressionParser parser,
       OtlpExporterProperties otlpExporterProperties) {

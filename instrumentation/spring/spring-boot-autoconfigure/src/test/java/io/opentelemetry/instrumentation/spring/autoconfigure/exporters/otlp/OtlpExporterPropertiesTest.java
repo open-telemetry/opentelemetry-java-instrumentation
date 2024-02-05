@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -87,7 +87,7 @@ class OtlpExporterPropertiesTest {
   }
 
   private static ConfigProperties getConfig(AssertableApplicationContext context) {
-    return new SpringResourceConfigProperties(
+    return new SpringConfigProperties(
         context.getBean("environment", Environment.class),
         new SpelExpressionParser(),
         context.getBean(OtlpExporterProperties.class));
