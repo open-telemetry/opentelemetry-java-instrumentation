@@ -25,7 +25,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResp
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
 import java.util.Deque;
 
-public class Helpers {
+public final class Helpers {
 
   private Helpers() {}
 
