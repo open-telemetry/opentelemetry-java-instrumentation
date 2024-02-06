@@ -1,0 +1,42 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.xxljob.common;
+
+import com.xxl.job.core.glue.GlueTypeEnum;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import javax.annotation.Nullable;
+
+public class XxlJobExperimentalAttributeExtractor
+    implements AttributesExtractor<XxlJobProcessRequest, Void> {
+
+  private static final AttributeKey<String> XXL_JOB_GLUE_TYPE =
+      AttributeKey.stringKey("scheduling.xxl-job.glue.type");
+
+  private static final AttributeKey<String> XXL_JOB_RESULT_STATUS =
+      AttributeKey.stringKey("scheduling.xxl-job.result.status");
+
+  @Override
+  public void onStart(
+      AttributesBuilder attributes,
+      Context parentContext,
+      XxlJobProcessRequest xxlJobProcessRequest) {
+    GlueTypeEnum glueTypeEnum = xxlJobProcessRequest.getGlueTypeEnum();
+    attributes.put(XXL_JOB_GLUE_TYPE, glueTypeEnum.getDesc());
+  }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      XxlJobProcessRequest xxlJobProcessRequest,
+      @Nullable Void unused,
+      @Nullable Throwable error) {
+    attributes.put(XXL_JOB_RESULT_STATUS, xxlJobProcessRequest.getResultStatus());
+  }
+}

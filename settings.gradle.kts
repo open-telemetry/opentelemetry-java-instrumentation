@@ -569,6 +569,10 @@ include(":instrumentation:vibur-dbcp-11.0:javaagent")
 include(":instrumentation:vibur-dbcp-11.0:library")
 include(":instrumentation:vibur-dbcp-11.0:testing")
 include(":instrumentation:wicket-8.0:javaagent")
+include(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent")
+include(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent")
+include(":instrumentation:xxl-job:xxl-job-common:javaagent")
+include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
 
 // benchmark
