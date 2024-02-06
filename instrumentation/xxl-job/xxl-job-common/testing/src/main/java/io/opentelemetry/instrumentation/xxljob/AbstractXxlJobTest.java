@@ -95,41 +95,35 @@ public abstract class AbstractXxlJobTest {
   private static void checkXxlJob(String spanName, String... attributes) {
     testing.waitAndAssertTraces(
         trace -> {
-          trace
-              .hasSize(1)
-              .hasSpansSatisfyingExactly(
-                  span -> {
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName(spanName)
-                        .hasAttributesSatisfying(
-                            equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
-                            equalTo(
-                                AttributeKey.stringKey("scheduling.xxl-job.result.status"), "true"),
-                            equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
-                            equalTo(
-                                AttributeKey.stringKey("scheduling.xxl-job.type"), attributes[1]),
-                            equalTo(AttributeKey.stringKey("code.namespace"), attributes[2]));
-                  });
+          trace.hasSpansSatisfyingExactly(
+              span -> {
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName(spanName)
+                    .hasAttributesSatisfying(
+                        equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
+                        equalTo(AttributeKey.stringKey("scheduling.xxl-job.result.status"), "true"),
+                        equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
+                        equalTo(
+                            AttributeKey.stringKey("scheduling.xxl-job.glue.type"), attributes[1]),
+                        equalTo(AttributeKey.stringKey("code.namespace"), attributes[2]));
+              });
         });
   }
 
   private static void checkXxlJobWithoutNamespace(String spanName, String... attributes) {
     testing.waitAndAssertTraces(
         trace -> {
-          trace
-              .hasSize(1)
-              .hasSpansSatisfyingExactly(
-                  span -> {
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName(spanName)
-                        .hasAttributesSatisfying(
-                            equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
-                            equalTo(
-                                AttributeKey.stringKey("scheduling.xxl-job.result.status"), "true"),
-                            equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
-                            equalTo(
-                                AttributeKey.stringKey("scheduling.xxl-job.type"), attributes[1]));
-                  });
+          trace.hasSpansSatisfyingExactly(
+              span -> {
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName(spanName)
+                    .hasAttributesSatisfying(
+                        equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
+                        equalTo(AttributeKey.stringKey("scheduling.xxl-job.result.status"), "true"),
+                        equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
+                        equalTo(
+                            AttributeKey.stringKey("scheduling.xxl-job.glue.type"), attributes[1]));
+              });
         });
   }
 }

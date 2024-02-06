@@ -14,21 +14,11 @@ public final class ReflectiveMethodsFactory {
 
   public static class ReflectObject {
 
-    private String s;
-
     private ReflectObject() {}
 
-    public void initMethod() {
-      s = "init";
-    }
+    public void initMethod() {}
 
-    public void destroyMethod() {
-      s = null;
-    }
-
-    public String echo() {
-      return "echo: " + s;
-    }
+    public void destroyMethod() {}
 
     public ReturnT<String> echo(String param) {
       return new ReturnT<>("echo: " + param);
@@ -42,15 +32,6 @@ public final class ReflectiveMethodsFactory {
   }
 
   static Method getMethod() {
-    try {
-      return SINGLE_OBJECT.getClass().getMethod("echo");
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
-  }
-
-  static Method getMethod1() {
     try {
       return SINGLE_OBJECT.getClass().getMethod("echo", String.class);
     } catch (Throwable t) {

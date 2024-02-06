@@ -19,8 +19,6 @@ public final class XxlJobTestingConstants {
 
   public static final Method METHOD_JOB_HANDLER_METHOD = ReflectiveMethodsFactory.getMethod();
 
-  public static final Method METHOD_JOB_HANDLER_METHOD_OLD = ReflectiveMethodsFactory.getMethod1();
-
   public static final Method METHOD_JOB_HANDLER_INIT_METHOD =
       ReflectiveMethodsFactory.getInitMethod();
 

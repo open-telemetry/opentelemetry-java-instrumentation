@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLU
 import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLUE_JOB_SHELL_SCRIPT;
 import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_DESTROY_METHOD;
 import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_INIT_METHOD;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_METHOD_OLD;
+import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_METHOD;
 import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_OBJECT;
 
 import com.xxl.job.core.glue.GlueFactory;
@@ -26,7 +26,7 @@ class XxlJobTest extends AbstractXxlJobTest {
   private static final MethodJobHandler METHOD_JOB_HANDLER =
       new MethodJobHandler(
           METHOD_JOB_HANDLER_OBJECT,
-          METHOD_JOB_HANDLER_METHOD_OLD,
+          METHOD_JOB_HANDLER_METHOD,
           METHOD_JOB_HANDLER_INIT_METHOD,
           METHOD_JOB_HANDLER_DESTROY_METHOD);
 
