@@ -412,10 +412,10 @@ This is the preferred way to enable/disable exporters and takes precedence over 
 
 ##### Resource Properties
 
-| Feature  | Property                                                            | Default Value          |
-| -------- |---------------------------------------------------------------------| ---------------------- |
-| Resource | otel.springboot.resource.enabled                                    | `true`                 |
-|          | otel.resource.attributes (old: otel.springboot.resource.attributes) | `empty map`            |
+| Feature  | Property                         | Default Value |
+|----------|----------------------------------|---------------|
+| Resource | otel.springboot.resource.enabled | `true`        |
+|          | otel.resource.attributes         | `empty map`   |
 
 `otel.resource.attributes` supports a pattern-based resource configuration in the
 application.properties like this:

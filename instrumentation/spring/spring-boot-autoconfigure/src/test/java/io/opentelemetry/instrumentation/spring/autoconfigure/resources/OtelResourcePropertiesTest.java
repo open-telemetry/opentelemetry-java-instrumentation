@@ -64,7 +64,6 @@ public class OtelResourcePropertiesTest {
 
     this.contextRunner.run(
         context ->
-            assertThat(context.getBean(OtelSpringResourceProperties.class).getAttributes())
-                .isEmpty());
+            assertThat(context.getBean(OtelResourceProperties.class).getAttributes()).isEmpty());
   }
 }

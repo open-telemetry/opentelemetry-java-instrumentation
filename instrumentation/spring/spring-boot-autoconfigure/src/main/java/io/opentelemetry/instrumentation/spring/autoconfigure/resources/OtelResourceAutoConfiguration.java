@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@SuppressWarnings("deprecation") // old otel.springboot.resource support
 @Configuration
 @EnableConfigurationProperties({OtelSpringResourceProperties.class, OtelResourceProperties.class})
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)

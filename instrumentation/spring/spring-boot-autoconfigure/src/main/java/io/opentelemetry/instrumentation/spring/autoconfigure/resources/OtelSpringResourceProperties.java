@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+@Deprecated // Use otel.resource.attributes instead
 @ConfigurationProperties(prefix = "otel.springboot.resource")
 public class OtelSpringResourceProperties {
   private Map<String, String> attributes = Collections.emptyMap();
