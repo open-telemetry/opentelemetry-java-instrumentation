@@ -19,8 +19,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /**
- * Uses Spring-AOP to wrap methods marked by {@link WithSpan} (or the deprecated {@link
- * io.opentelemetry.extension.annotations.WithSpan}) in a {@link Span}.
+ * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link Span}.
  *
  * <p>Ensure methods annotated with {@link WithSpan} are implemented on beans managed by the Spring
  * container.

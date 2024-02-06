@@ -73,18 +73,4 @@ class WithSpanAspectParameterAttributeNamesExtractor implements ParameterAttribu
       return annotation == null ? null : annotation.value();
     }
   }
-
-  static final class SdkExtensionAnnotationAttributeNameSupplier
-      implements SpanAttributeNameSupplier {
-
-    @Nullable
-    @Override
-    @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
-    public String spanAttributeName(Parameter parameter) {
-      io.opentelemetry.extension.annotations.SpanAttribute annotation =
-          parameter.getDeclaredAnnotation(
-              io.opentelemetry.extension.annotations.SpanAttribute.class);
-      return annotation == null ? null : annotation.value();
-    }
-  }
 }
