@@ -167,8 +167,6 @@ class Netty40ClientSslTest {
             channel.get().pipeline().addLast(new ClientHandler(result));
             channel.get().writeAndFlush(request).get(10, TimeUnit.SECONDS);
             result.get(10, TimeUnit.SECONDS);
-          } catch (Exception ex) {
-            throw ex;
           } finally {
             if (channel.get() != null) {
               channel.get().close();
