@@ -311,6 +311,12 @@
       "defaultValue": false
     },
     {
+      "name": "otel.springboot.resource.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the resource auto-configuration.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.traces.exporter",
       "type": "java.util.List<java.lang.String>",
       "description": "List of exporters to be used for tracing.",
