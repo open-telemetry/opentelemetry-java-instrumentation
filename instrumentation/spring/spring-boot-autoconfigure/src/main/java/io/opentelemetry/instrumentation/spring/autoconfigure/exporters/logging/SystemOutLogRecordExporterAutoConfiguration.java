@@ -13,8 +13,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /** Configures {@link SystemOutLogRecordExporter} bean for tracing. */
 @Configuration
@@ -31,9 +33,7 @@ public class SystemOutLogRecordExporterAutoConfiguration {
 
   static final class CustomCondition implements Condition {
     @Override
-    public boolean matches(
-        org.springframework.context.annotation.ConditionContext context,
-        org.springframework.core.type.AnnotatedTypeMetadata metadata) {
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
           context.getEnvironment(),
           "otel.exporter.logging.enabled",
