@@ -10,7 +10,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
-public class ClientHandler extends ChannelInboundHandlerAdapter {
+class ClientHandler extends ChannelInboundHandlerAdapter {
   private final CompletableFuture<Integer> result;
 
   public ClientHandler(CompletableFuture<Integer> result) {

@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
+class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

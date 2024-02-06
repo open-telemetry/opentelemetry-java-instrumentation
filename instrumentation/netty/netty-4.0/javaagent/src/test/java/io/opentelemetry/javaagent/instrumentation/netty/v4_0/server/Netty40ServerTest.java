@@ -55,7 +55,7 @@ import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
+class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
