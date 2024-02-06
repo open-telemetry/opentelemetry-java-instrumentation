@@ -32,7 +32,7 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.10.1",
+  "org.junit:junit-bom:5.10.2",
   "org.testcontainers:testcontainers-bom:1.19.4",
   "org.spockframework:spock-bom:2.4-M1-groovy-4.0"
 )
@@ -44,7 +44,7 @@ val byteBuddyVersion = "1.14.11"
 val asmVersion = "9.6"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.11"
+val slf4jVersion = "2.0.12"
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:1.23.1-alpha",
@@ -98,7 +98,7 @@ val DEPENDENCIES = listOf(
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.28.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:1.0.0-alpha",
-  "org.assertj:assertj-core:3.25.2",
+  "org.assertj:assertj-core:3.25.3",
   "org.awaitility:awaitility:4.2.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",

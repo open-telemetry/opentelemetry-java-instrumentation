@@ -2,6 +2,51 @@
 
 ## Unreleased
 
+- Remove deprecated config properties in favor of the new names (#10349):
+  - `otel.instrumentation.kafka.client-propagation.enabled` ->
+    `otel.instrumentation.kafka.producer-propagation.enabled`
+  - `otel.instrumentation.netty.always-create-connect-span` ->
+    `otel.instrumentation.netty.connection-telemetry.enabled`
+  - `otel.instrumentation.http.capture-headers.client.request` ->
+    `otel.instrumentation.http.client.capture-request-headers`
+  - `otel.instrumentation.http.capture-headers.client.response` ->
+    `otel.instrumentation.http.client.capture-response-headers`
+  - `otel.instrumentation.http.capture-headers.server.request` ->
+    `otel.instrumentation.http.server.capture-request-headers`
+  - `otel.instrumentation.http.capture-headers.server.response` ->
+    `otel.instrumentation.http.server.capture-response-headers`
+  - `otel.instrumentation.http.client.emit-experimental-metrics` ->
+    `otel.instrumentation.http.client.emit-experimental-telemetry`
+  - `otel.instrumentation.http.server.emit-experimental-metrics` ->
+    `otel.instrumentation.http.server.emit-experimental-telemetry`
+
+## Version 1.32.1 (2024-02-02)
+
+### 📈 Enhancements
+
+- Backport: update jackson packages to v2.16.1
+  ([#10198](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10198),
+   [#10199](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10199))
+- Backport: implement forEach support for aws sqs tracing list
+  ([#10195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10195))
+- Backport: Bridge metric advice in OpenTelemetry API 1.32
+  ([#10026](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10026))
+- Update the OpenTelemetry SDK version to 1.34.1
+  ([#10320](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10320))
+
+### 🛠️ Bug fixes
+
+- Backport: Handle authority from request when HttpHost is null
+  ([#10204](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10204))
+- Backport: Null check for nullable response object in aws sdk 1.1 instrumentation
+  ([#10029](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10029))
+- Backport: Make Netty Instrumentation HttpServerRequestTracingHandler propagate "Channel Inactive" event to downstream according to parent contract
+  ([#10303](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10303))
+- Backport: Fix Netty addListener instrumentation
+  ([#10254](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10254))
+- Backport: Update azure-core-tracing-opentelemetry version and fix sync suppression
+  ([#10350](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10350))
+
 ## Version 2.0.0 (2024-01-12)
 
 The 2.0.0 release contains significant breaking changes that will most likely affect all users,

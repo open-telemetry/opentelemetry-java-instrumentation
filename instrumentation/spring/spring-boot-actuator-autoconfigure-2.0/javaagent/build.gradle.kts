@@ -23,6 +23,8 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  jvmArgs("-Dotel.instrumentation.spring-boot-actuator-autoconfigure.enabled=true")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

@@ -8,12 +8,13 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLoggerExporterAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpLogRecordExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
@@ -35,12 +36,14 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -53,7 +56,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
-@EnableConfigurationProperties({MetricExportProperties.class, SamplerProperties.class})
+@EnableConfigurationProperties({
+  MetricExportProperties.class,
+  SamplerProperties.class,
+  OtlpExporterProperties.class
+})
 public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
@@ -65,15 +72,35 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    @ConditionalOnBean({
-      OtelResourceAutoConfiguration.class,
-      OtlpLoggerExporterAutoConfiguration.class,
-      OtlpSpanExporterAutoConfiguration.class,
-      OtlpMetricExporterAutoConfiguration.class
-    })
+    @Conditional(MapConverterCondition.class)
     public MapConverter mapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
       return new MapConverter();
+    }
+
+    static final class MapConverterCondition extends AnyNestedCondition {
+      public MapConverterCondition() {
+        super(ConfigurationPhase.REGISTER_BEAN);
+      }
+
+      @ConditionalOnBean(OtelResourceAutoConfiguration.class)
+      static class Resource {}
+
+      @ConditionalOnBean(OtlpLogRecordExporterAutoConfiguration.class)
+      static class Logger {}
+
+      @ConditionalOnBean(OtlpSpanExporterAutoConfiguration.class)
+      static class Span {}
+
+      @ConditionalOnBean(OtlpMetricExporterAutoConfiguration.class)
+      static class Metric {}
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    ConfigProperties configProperties(
+        Environment env, OtlpExporterProperties otlpExporterProperties) {
+      return new SpringConfigProperties(env, new SpelExpressionParser(), otlpExporterProperties);
     }
 
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
@@ -141,8 +168,7 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public Resource otelResource(
-        Environment env, ObjectProvider<List<ResourceProvider>> resourceProviders) {
-      ConfigProperties config = new SpringResourceConfigProperties(env, new SpelExpressionParser());
+        ConfigProperties config, ObjectProvider<List<ResourceProvider>> resourceProviders) {
       Resource resource = Resource.getDefault();
       for (ResourceProvider resourceProvider :
           resourceProviders.getIfAvailable(Collections::emptyList)) {

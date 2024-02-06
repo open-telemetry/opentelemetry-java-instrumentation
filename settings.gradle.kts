@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "1.9.22"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.9.28"
+    id("org.graalvm.buildtools.native") version "0.10.0"
   }
 }
 
@@ -156,6 +156,7 @@ include(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent")
 include(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 include(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 include(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
+include(":instrumentation:apache-httpclient:apache-httpclient-5.2:library")
 include(":instrumentation:armeria-1.3:javaagent")
 include(":instrumentation:armeria-1.3:library")
 include(":instrumentation:armeria-1.3:testing")

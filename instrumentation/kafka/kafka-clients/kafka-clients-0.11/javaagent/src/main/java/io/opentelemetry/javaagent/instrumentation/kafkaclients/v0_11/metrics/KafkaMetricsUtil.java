@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
+import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +18,11 @@ import org.apache.kafka.clients.CommonClientConfigs;
 public final class KafkaMetricsUtil {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
   private static final boolean METRICS_ENABLED =
-      InstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.kafka.metric-reporter.enabled", true);
+      DeprecatedConfigProperties.getBoolean(
+          InstrumentationConfig.get(),
+          "otel.instrumentation.kafka.metric-reporter.enabled",
+          "otel.instrumentation.kafka-clients-metrics.enabled",
+          true);
 
   @SuppressWarnings("unchecked")
   public static void enhanceConfig(Map<? super String, Object> config) {

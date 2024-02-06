@@ -5,7 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
+import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -15,34 +20,43 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.StringMatcher;
 
 /**
- * Classloader used to load the helper classes from {@link
+ * Class loader used to load the helper classes from {@link
  * io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule}s, so that those
  * classes have access to both the agent/extension classes and the instrumented application classes.
  *
- * <p>This classloader implements the following classloading delegation strategy:
+ * <p>This class loader implements the following classloading delegation strategy:
  *
  * <ul>
  *   <li>First, injected classes are considered (usually the helper classes from the
  *       InstrumentationModule)
- *   <li>Next, the classloader looks in the agent or extension classloader, depending on where the
+ *   <li>Next, the class loader looks in the agent or extension class loader, depending on where the
  *       InstrumentationModule comes from
- *   <li>Finally, the instrumented application classloader is checked for the class
+ *   <li>Finally, the instrumented application class loader is checked for the class
  * </ul>
  *
- * <p>In addition, this classloader ensures that the lookup of corresponding .class resources follow
- * the same delegation strategy, so that bytecode inspection tools work correctly.
+ * <p>In addition, this class loader ensures that the lookup of corresponding .class resources
+ * follow the same delegation strategy, so that bytecode inspection tools work correctly.
  */
 public class InstrumentationModuleClassLoader extends ClassLoader {
 
   static {
     ClassLoader.registerAsParallelCapable();
   }
+
+  private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
 
   private static final Map<String, BytecodeWithUrl> ALWAYS_INJECTED_CLASSES =
       Collections.singletonMap(
@@ -54,33 +68,42 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private final ClassLoader agentOrExtensionCl;
   private volatile MethodHandles.Lookup cachedLookup;
 
-  private final ClassLoader instrumentedCl;
-  private final boolean delegateAllToAgent;
+  @Nullable private final ClassLoader instrumentedCl;
+
+  /**
+   * Only class names matching this matcher will be attempted to be loaded from the {@link
+   * #agentOrExtensionCl}. If a class is requested and it does not match this matcher, the lookup in
+   * {@link #agentOrExtensionCl} will be skipped.
+   */
+  private final ElementMatcher<String> agentClassNamesMatcher;
+
+  private final Set<InstrumentationModule> installedModules;
 
   public InstrumentationModuleClassLoader(
-      ClassLoader instrumentedCl,
-      ClassLoader agentOrExtensionCl,
-      Map<String, BytecodeWithUrl> injectedClasses) {
-    this(instrumentedCl, agentOrExtensionCl, injectedClasses, false);
+      ClassLoader instrumentedCl, ClassLoader agentOrExtensionCl) {
+    this(
+        instrumentedCl,
+        agentOrExtensionCl,
+        new StringMatcher("io.opentelemetry.javaagent", StringMatcher.Mode.STARTS_WITH));
   }
 
   InstrumentationModuleClassLoader(
-      ClassLoader instrumentedCl,
+      @Nullable ClassLoader instrumentedCl,
       ClassLoader agentOrExtensionCl,
-      Map<String, BytecodeWithUrl> injectedClasses,
-      boolean delegateAllToAgent) {
-    // agent/extension-classloader is "main"-parent, but class lookup is overridden
+      ElementMatcher<String> classesToLoadFromAgentOrExtensionCl) {
+    // agent/extension-class loader is "main"-parent, but class lookup is overridden
     super(agentOrExtensionCl);
-    additionalInjectedClasses = injectedClasses;
+    additionalInjectedClasses = new ConcurrentHashMap<>();
+    installedModules = Collections.newSetFromMap(new ConcurrentHashMap<>());
     this.agentOrExtensionCl = agentOrExtensionCl;
     this.instrumentedCl = instrumentedCl;
-    this.delegateAllToAgent = delegateAllToAgent;
+    this.agentClassNamesMatcher = classesToLoadFromAgentOrExtensionCl;
   }
 
   /**
-   * Provides a Lookup within this classloader. See {@link LookupExposer} for the details.
+   * Provides a Lookup within this class loader. See {@link LookupExposer} for the details.
    *
-   * @return a lookup capable of accessing public types in this classloader
+   * @return a lookup capable of accessing public types in this class loader
    */
   public MethodHandles.Lookup getLookup() {
     if (cachedLookup == null) {
@@ -94,6 +117,62 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       }
     }
     return cachedLookup;
+  }
+
+  public synchronized void installModule(InstrumentationModule module) {
+    if (module.getClass().getClassLoader() != agentOrExtensionCl) {
+      throw new IllegalArgumentException(
+          module.getClass().getName() + " is not loaded by " + agentOrExtensionCl);
+    }
+    if (!installedModules.add(module)) {
+      return;
+    }
+    Map<String, BytecodeWithUrl> classesToInject =
+        getClassesToInject(module).stream()
+            .collect(
+                Collectors.toMap(
+                    className -> className,
+                    className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
+    installInjectedClasses(classesToInject);
+  }
+
+  public synchronized boolean hasModuleInstalled(InstrumentationModule module) {
+    return installedModules.contains(module);
+  }
+
+  // Visible for testing
+  synchronized void installInjectedClasses(Map<String, BytecodeWithUrl> classesToInject) {
+    classesToInject.forEach(additionalInjectedClasses::putIfAbsent);
+  }
+
+  private static Set<String> getClassesToInject(InstrumentationModule module) {
+    Set<String> toInject = new HashSet<>(InstrumentationModuleMuzzle.getHelperClassNames(module));
+    // TODO (Jonas): Make muzzle include advice classes as helper classes
+    // so that we don't have to include them here
+    toInject.addAll(getModuleAdviceNames(module));
+    if (module instanceof ExperimentalInstrumentationModule) {
+      toInject.removeAll(((ExperimentalInstrumentationModule) module).injectedClassNames());
+    }
+    return toInject;
+  }
+
+  private static Set<String> getModuleAdviceNames(InstrumentationModule module) {
+    Set<String> adviceNames = new HashSet<>();
+    TypeTransformer nameCollector =
+        new TypeTransformer() {
+          @Override
+          public void applyAdviceToMethod(
+              ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+            adviceNames.add(adviceClassName);
+          }
+
+          @Override
+          public void applyTransformer(AgentBuilder.Transformer transformer) {}
+        };
+    for (TypeInstrumentation instr : module.typeInstrumentations()) {
+      instr.transform(nameCollector);
+    }
+    return adviceNames;
   }
 
   public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
@@ -140,12 +219,12 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   private boolean shouldLoadFromAgent(String dotClassName) {
-    return delegateAllToAgent || dotClassName.startsWith("io.opentelemetry.javaagent");
+    return agentClassNamesMatcher.matches(dotClassName);
   }
 
-  private static Class<?> tryLoad(ClassLoader cl, String name) {
+  private static Class<?> tryLoad(@Nullable ClassLoader cl, String name) {
     try {
-      return cl.loadClass(name);
+      return Class.forName(name, false, cl);
     } catch (ClassNotFoundException e) {
       return null;
     }
@@ -155,7 +234,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   public URL getResource(String resourceName) {
     String className = resourceToClassName(resourceName);
     if (className == null) {
-      // delegate to just the default parent (the agent classloader)
+      // delegate to just the default parent (the agent class loader)
       return super.getResource(resourceName);
     }
     // for classes use the same precedence as in loadClass
@@ -167,7 +246,12 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     if (fromAgentCl != null) {
       return fromAgentCl;
     }
-    return instrumentedCl.getResource(resourceName);
+
+    if (instrumentedCl != null) {
+      return instrumentedCl.getResource(resourceName);
+    } else {
+      return BOOT_LOADER.getResource(resourceName);
+    }
   }
 
   @Override

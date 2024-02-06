@@ -41,9 +41,9 @@ dependencies {
 
   implementation("com.github.johnrengelman:shadow:8.1.1")
 
-  testImplementation("org.assertj:assertj-core:3.25.2")
+  testImplementation("org.assertj:assertj-core:3.25.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
