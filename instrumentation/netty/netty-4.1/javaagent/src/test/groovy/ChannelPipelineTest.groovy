@@ -68,7 +68,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     replaceMethod(channelPipeline, "test", noopHandler, "http", httpHandler)
 
     then: "noop handler was removed; http and instrumentation handlers were added"
-    channelPipeline.size() == 2
+    channelPipeline.size() == 1
     channelPipeline.first() == httpHandler
     channelPipeline.last().getClass().simpleName == "HttpClientTracingHandler"
 
@@ -101,7 +101,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     channelPipeline.addLast("http", httpHandler)
 
     then: "add http and instrumentation handlers"
-    channelPipeline.size() == 2
+    channelPipeline.size() == 1
     channelPipeline.first() == httpHandler
     channelPipeline.last().getClass().simpleName == "HttpClientTracingHandler"
 
@@ -110,7 +110,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     channelPipeline.addAfter("http", "noop", noopHandler)
 
     then: "instrumentation handler is between with http and noop"
-    channelPipeline.size() == 3
+    channelPipeline.size() == 2
     channelPipeline.first() == httpHandler
     channelPipeline.last() == noopHandler
 
@@ -118,7 +118,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     channelPipeline.removeLast()
 
     then: "http and instrumentation handlers will be remained"
-    channelPipeline.size() == 2
+    channelPipeline.size() == 1
     channelPipeline.first() == httpHandler
     channelPipeline.last().getClass().simpleName == "HttpClientTracingHandler"
 
@@ -129,6 +129,33 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     channelPipeline.size() == 0
     // removing tracing handler also removes the http handler and returns it
     removed == httpHandler
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10377
+  def "our handler not in handlers map"() {
+    setup:
+    def channel = new EmbeddedChannel()
+    def channelPipeline = new DefaultChannelPipeline(channel)
+    def handler = new HttpClientCodec()
+
+    when:
+    // no handlers
+    channelPipeline.first() == null
+
+    then:
+    // add handler
+    channelPipeline.addLast("http", handler)
+    channelPipeline.first() == handler
+    // our handler was also added
+    channelPipeline.last().getClass().simpleName == "HttpClientTracingHandler"
+    // our handler not counted
+    channelPipeline.size() == 1
+    // our handler is not in handlers map
+    channelPipeline.toMap().size() == 1
+    // our handler is not in handlers iterator
+    def list = []
+    channelPipeline.iterator().forEachRemaining {list.add(it) }
+    list.size() == 1
   }
 
   private static class NoopChannelHandler extends ChannelHandlerAdapter {
