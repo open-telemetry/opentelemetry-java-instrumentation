@@ -193,7 +193,10 @@ public abstract class KafkaClientBaseTest {
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(
+                    SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+                    AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
@@ -236,12 +239,10 @@ public abstract class KafkaClientBaseTest {
     }
     if (messageValue == null) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
-      // TODO shouldn't set -1 in this case
-      assertions.add(equalTo(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, -1L));
     } else {
       assertions.add(
           equalTo(
-              SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+              SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
               messageValue.getBytes(StandardCharsets.UTF_8).length));
     }
     if (testHeaders) {

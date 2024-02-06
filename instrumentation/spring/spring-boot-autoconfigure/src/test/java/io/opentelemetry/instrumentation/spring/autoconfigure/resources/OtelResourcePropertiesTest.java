@@ -8,6 +8,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -17,7 +22,9 @@ public class OtelResourcePropertiesTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withPropertyValues("otel.springboot.resource.enabled=true")
-          .withConfiguration(AutoConfigurations.of(OtelResourceAutoConfiguration.class));
+          .withConfiguration(
+              AutoConfigurations.of(
+                  OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class));
 
   @Test
   @DisplayName("when attributes are SET should set OtelResourceProperties with given attributes")
@@ -25,20 +32,29 @@ public class OtelResourcePropertiesTest {
 
     this.contextRunner
         .withPropertyValues(
-            "otel.springboot.resource.attributes.environment=dev",
-            "otel.springboot.resource.attributes.xyz=foo",
-            "otel.springboot.resource.attributes.service.name=backend-name",
+            "otel.resource.attributes=foo=bar,environment=dev,service.name=hidden2",
+            "otel.springboot.resource.attributes.foo=baz", // hidden by otel.resource.attributes
+            "otel.springboot.resource.attributes.service.name=hidden1",
             "otel.springboot.resource.attributes.service.instance.id=id-example")
         .run(
             context -> {
-              OtelResourceProperties propertiesBean = context.getBean(OtelResourceProperties.class);
+              ResourceProvider resource =
+                  context.getBean("otelResourceProvider", ResourceProvider.class);
 
-              assertThat(propertiesBean.getAttributes())
+              assertThat(
+                      resource
+                          .createResource(
+                              DefaultConfigProperties.createFromMap(
+                                  ImmutableMap.of(
+                                      "spring.application.name", "hidden0",
+                                      "otel.service.name", "backend")))
+                          .getAttributes()
+                          .asMap())
                   .contains(
-                      entry("environment", "dev"),
-                      entry("xyz", "foo"),
-                      entry("service.name", "backend-name"),
-                      entry("service.instance.id", "id-example"));
+                      entry(AttributeKey.stringKey("foo"), "bar"),
+                      entry(AttributeKey.stringKey("environment"), "dev"),
+                      entry(AttributeKey.stringKey("service.name"), "backend"),
+                      entry(AttributeKey.stringKey("service.instance.id"), "id-example"));
             });
   }
 
@@ -48,6 +64,7 @@ public class OtelResourcePropertiesTest {
 
     this.contextRunner.run(
         context ->
-            assertThat(context.getBean(OtelResourceProperties.class).getAttributes()).isEmpty());
+            assertThat(context.getBean(OtelSpringResourceProperties.class).getAttributes())
+                .isEmpty());
   }
 }

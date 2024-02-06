@@ -28,7 +28,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 
 final class AwsSdkInstrumenterFactory {
@@ -40,13 +39,18 @@ final class AwsSdkInstrumenterFactory {
       RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
+  private static final SnsAttributesExtractor snsAttributesExtractor = new SnsAttributesExtractor();
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors = Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor);
+      defaultAttributesExtractors =
+          Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor, snsAttributesExtractor);
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       extendedAttributesExtractors =
           Arrays.asList(
-              httpAttributesExtractor, rpcAttributesExtractor, experimentalAttributesExtractor);
+              httpAttributesExtractor,
+              rpcAttributesExtractor,
+              snsAttributesExtractor,
+              experimentalAttributesExtractor);
   private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
   private final OpenTelemetry openTelemetry;
@@ -98,23 +102,23 @@ final class AwsSdkInstrumenterFactory {
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operation),
         SpanKindExtractor.alwaysConsumer(),
-        toSqsRequestExtractors(attributesExtractors(), Function.identity()),
+        toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
         messagingReceiveInstrumentationEnabled);
   }
 
-  Instrumenter<SqsProcessRequest, Void> consumerProcessInstrumenter() {
+  Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter() {
     MessageOperation operation = MessageOperation.PROCESS;
     SqsProcessRequestAttributesGetter getter = SqsProcessRequestAttributesGetter.INSTANCE;
-    AttributesExtractor<SqsProcessRequest, Void> messagingAttributeExtractor =
+    AttributesExtractor<SqsProcessRequest, Response<?>> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
-    InstrumenterBuilder<SqsProcessRequest, Void> builder =
-        Instrumenter.<SqsProcessRequest, Void>builder(
+    InstrumenterBuilder<SqsProcessRequest, Response<?>> builder =
+        Instrumenter.<SqsProcessRequest, Response<?>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors(), unused -> null))
+            .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors()))
             .addAttributesExtractor(messagingAttributeExtractor);
 
     if (messagingReceiveInstrumentationEnabled) {
@@ -128,14 +132,12 @@ final class AwsSdkInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  private static <RESPONSE>
-      List<AttributesExtractor<AbstractSqsRequest, RESPONSE>> toSqsRequestExtractors(
-          List<AttributesExtractor<Request<?>, Response<?>>> extractors,
-          Function<RESPONSE, Response<?>> responseConverter) {
-    List<AttributesExtractor<AbstractSqsRequest, RESPONSE>> result = new ArrayList<>();
+  private static List<AttributesExtractor<AbstractSqsRequest, Response<?>>> toSqsRequestExtractors(
+      List<AttributesExtractor<Request<?>, Response<?>>> extractors) {
+    List<AttributesExtractor<AbstractSqsRequest, Response<?>>> result = new ArrayList<>();
     for (AttributesExtractor<Request<?>, Response<?>> extractor : extractors) {
       result.add(
-          new AttributesExtractor<AbstractSqsRequest, RESPONSE>() {
+          new AttributesExtractor<AbstractSqsRequest, Response<?>>() {
             @Override
             public void onStart(
                 AttributesBuilder attributes,
@@ -149,14 +151,9 @@ final class AwsSdkInstrumenterFactory {
                 AttributesBuilder attributes,
                 Context context,
                 AbstractSqsRequest sqsRequest,
-                @Nullable RESPONSE response,
+                @Nullable Response<?> response,
                 @Nullable Throwable error) {
-              extractor.onEnd(
-                  attributes,
-                  context,
-                  sqsRequest.getRequest(),
-                  responseConverter.apply(response),
-                  error);
+              extractor.onEnd(attributes, context, sqsRequest.getRequest(), response, error);
             }
           });
     }

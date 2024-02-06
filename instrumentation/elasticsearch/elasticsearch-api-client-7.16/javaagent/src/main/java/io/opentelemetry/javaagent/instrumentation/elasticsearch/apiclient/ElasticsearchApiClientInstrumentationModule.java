@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
-    super("elasticsearch-api-client-7.16", "elasticsearch");
+    super("elasticsearch-api-client", "elasticsearch-api-client-7.16", "elasticsearch");
   }
 
   @Override

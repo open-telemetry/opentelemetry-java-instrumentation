@@ -25,7 +25,7 @@ dependencies {
   // test dependencies
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-  testImplementation("org.assertj:assertj-core:3.24.2")
+  testImplementation("org.assertj:assertj-core:3.25.3")
 
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
@@ -52,7 +52,6 @@ tasks.withType(Test).configureEach {
   jvmArgs "-Dotel.javaagent.testing.fail-on-context-leak=true"
   // prevent sporadic gradle deadlocks, see SafeLogger for more details
   jvmArgs "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
-  jvmArgs "-Dotel.metrics.exporter=otlp"
 
   dependsOn shadowJar
   dependsOn configurations.testAgent.buildDependencies

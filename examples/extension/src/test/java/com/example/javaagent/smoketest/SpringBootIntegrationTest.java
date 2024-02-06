@@ -8,6 +8,7 @@ package com.example.javaagent.smoketest;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -15,6 +16,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
 class SpringBootIntegrationTest extends IntegrationTest {
 
@@ -23,6 +26,12 @@ class SpringBootIntegrationTest extends IntegrationTest {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
         + jdk
         + "-20211213.1570880324";
+  }
+
+  @Override
+  protected WaitStrategy getTargetWaitStrategy() {
+    return Wait.forLogMessage(".*Started SpringbootApplication in.*", 1)
+        .withStartupTimeout(Duration.ofMinutes(1));
   }
 
   @Test
@@ -76,7 +85,7 @@ class SpringBootIntegrationTest extends IntegrationTest {
     Assertions.assertEquals(1, countSpansByName(traces, "WebController.withSpan"));
     Assertions.assertEquals(2, countSpansByAttributeValue(traces, "custom", "demo"));
     Assertions.assertNotEquals(
-        0, countResourcesByValue(traces, "telemetry.auto.version", currentAgentVersion));
+        0, countResourcesByValue(traces, "telemetry.distro.version", currentAgentVersion));
     Assertions.assertNotEquals(0, countResourcesByValue(traces, "custom.resource", "demo"));
   }
 }

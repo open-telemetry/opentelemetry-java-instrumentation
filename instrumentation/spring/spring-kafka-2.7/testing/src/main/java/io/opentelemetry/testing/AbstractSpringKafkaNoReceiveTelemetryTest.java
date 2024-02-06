@@ -70,7 +70,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
@@ -139,7 +139,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testSingleTopic"),
                                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
@@ -236,7 +236,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testBatchListener"),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer"))),
+                                    stringAssert -> stringAssert.startsWith("consumer")),
+                                equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
 
@@ -303,7 +304,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     "testBatchListener"),
                                 satisfies(
                                     SemanticAttributes.MESSAGING_CLIENT_ID,
-                                    stringAssert -> stringAssert.startsWith("consumer"))),
+                                    stringAssert -> stringAssert.startsWith("consumer")),
+                                equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
 }

@@ -85,7 +85,6 @@ class JavaagentTestArgumentsProvider(
     // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
     // in smoke tests instead.
     "-Dotel.javaagent.add-thread-details=false",
-    "-Dotel.metrics.exporter=otlp",
     "-Dotel.javaagent.experimental.indy=${findProperty("testIndy") == "true"}",
     // suppress repeated logging of "No metric data to export - skipping export."
     // since PeriodicMetricReader is configured with a short interval

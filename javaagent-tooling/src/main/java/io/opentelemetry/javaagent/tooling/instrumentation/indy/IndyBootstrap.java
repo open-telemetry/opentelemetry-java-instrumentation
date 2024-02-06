@@ -39,7 +39,7 @@ import net.bytebuddy.utility.JavaConstant;
  *       ↑ └───────── IndyBootstrapDispatcher ─ ↑ ──→ └────────────── {@link IndyBootstrap#bootstrap}
  *     Ext/Platform CL               ↑          │                        ╷
  *       ↑                           ╷          │                        ↓
- *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassloader(String, ClassLoader)}
+ *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassLoader(String, ClassLoader)}
  *       ↑                           ╷          │                        ╷
  *     Common               linking of CallSite │                        ╷
  *     ↑    ↑             (on first invocation) │                        ╷
@@ -171,7 +171,7 @@ public class IndyBootstrap {
       }
 
       InstrumentationModuleClassLoader instrumentationClassloader =
-          IndyModuleRegistry.getInstrumentationClassloader(
+          IndyModuleRegistry.getInstrumentationClassLoader(
               moduleClassName, lookup.lookupClass().getClassLoader());
 
       // Advices are not inlined. They are loaded as normal classes by the
@@ -207,7 +207,7 @@ public class IndyBootstrap {
       String methodKind)
       throws NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
     InstrumentationModuleClassLoader instrumentationClassloader =
-        IndyModuleRegistry.getInstrumentationClassloader(
+        IndyModuleRegistry.getInstrumentationClassLoader(
             moduleClassName, lookup.lookupClass().getClassLoader());
 
     Class<?> proxiedClass = instrumentationClassloader.loadClass(proxyClassName);

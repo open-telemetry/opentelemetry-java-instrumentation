@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -63,7 +64,7 @@ class AdviceTransformer {
 
     TransformationContext context = new TransformationContext();
     ClassVisitor cv =
-        new ClassVisitor(Opcodes.ASM9, cw) {
+        new ClassVisitor(AsmApi.VERSION, cw) {
 
           @Override
           public MethodVisitor visitMethod(
@@ -282,7 +283,7 @@ class AdviceTransformer {
       List<OutputArgument> writableArguments,
       int returnIndex) {
     MethodVisitor result =
-        new MethodVisitor(Opcodes.ASM9, target) {
+        new MethodVisitor(AsmApi.VERSION, target) {
           @Override
           public void visitCode() {
             AnnotationVisitor av =
@@ -344,11 +345,10 @@ class AdviceTransformer {
    * }
    * }</pre>
    */
-  @SuppressWarnings("UnusedVariable")
   private static MethodVisitor instrumentWritableReturn(
       MethodVisitor target, MethodNode source, OutputArgument writableReturn, int returnIndex) {
     MethodVisitor result =
-        new MethodVisitor(Opcodes.ASM9, target) {
+        new MethodVisitor(AsmApi.VERSION, target) {
           @Override
           public void visitCode() {
             AnnotationVisitor av =
@@ -421,7 +421,7 @@ class AdviceTransformer {
     AtomicInteger dataIndex = new AtomicInteger();
 
     target =
-        new MethodVisitor(Opcodes.ASM9, target) {
+        new MethodVisitor(AsmApi.VERSION, target) {
           @Override
           public AnnotationVisitor visitParameterAnnotation(
               int parameter, String descriptor, boolean visible) {
@@ -738,7 +738,7 @@ class AdviceTransformer {
 
   private static MethodVisitor addReturnArray(
       TransformationContext context, MethodVisitor target, int returnArraySize) {
-    return new MethodVisitor(Opcodes.ASM9, target) {
+    return new MethodVisitor(AsmApi.VERSION, target) {
       @Override
       public void visitInsn(int opcode) {
         if (Opcodes.RETURN == opcode) {
@@ -777,7 +777,7 @@ class AdviceTransformer {
    * annotation to {@code 0}.
    */
   private static MethodVisitor delegateAdvice(TransformationContext context, MethodVisitor target) {
-    return new MethodVisitor(Opcodes.ASM9, target) {
+    return new MethodVisitor(AsmApi.VERSION, target) {
       @Override
       public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
         AnnotationVisitor av = super.visitAnnotation(descriptor, visible);
@@ -818,7 +818,7 @@ class AdviceTransformer {
 
   /** If annotation has {@code readOnly} attribute set it to {@code true}. */
   private static MethodVisitor makeReadOnly(Class<?> annotationType, MethodVisitor target) {
-    return new MethodVisitor(Opcodes.ASM9, target) {
+    return new MethodVisitor(AsmApi.VERSION, target) {
 
       @Override
       public AnnotationVisitor visitParameterAnnotation(

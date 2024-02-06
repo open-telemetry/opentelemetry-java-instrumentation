@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import spock.lang.Shared
@@ -190,6 +189,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -197,7 +197,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSqsTestQueue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$HttpAttributes.ERROR_TYPE" "_OTHER"
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(2) {
@@ -424,6 +424,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
       }
@@ -465,6 +466,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
       }
@@ -523,6 +525,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -530,7 +533,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSnsToSqsTestQueue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$HttpAttributes.ERROR_TYPE" "_OTHER"
+            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(1) {

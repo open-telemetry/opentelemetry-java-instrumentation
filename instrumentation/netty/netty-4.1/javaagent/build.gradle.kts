@@ -54,27 +54,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      excludeTestsMatching("Netty41ConnectionSpanTest")
-      excludeTestsMatching("Netty41ClientSslTest")
-    }
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  val testStableSemconvConnectionSpan by registering(Test::class) {
-    filter {
-      includeTestsMatching("Netty41ConnectionSpanTest")
-      includeTestsMatching("Netty41ClientSslTest")
-    }
-    include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
@@ -86,8 +65,6 @@ tasks {
 
   check {
     dependsOn(testConnectionSpan)
-    dependsOn(testStableSemconv)
-    dependsOn(testStableSemconvConnectionSpan)
   }
 }
 

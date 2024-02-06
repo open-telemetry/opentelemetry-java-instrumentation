@@ -23,16 +23,6 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}
-
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an
 // internal file.
 if (!(findProperty("testLatestDeps") as Boolean)) {

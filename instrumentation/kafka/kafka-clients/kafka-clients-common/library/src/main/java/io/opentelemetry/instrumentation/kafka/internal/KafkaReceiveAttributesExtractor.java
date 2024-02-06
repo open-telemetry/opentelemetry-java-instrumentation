@@ -22,11 +22,6 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
     if (consumerGroup != null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
     }
-
-    String clientId = request.getClientId();
-    if (clientId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_CLIENT_ID, clientId);
-    }
   }
 
   @Override

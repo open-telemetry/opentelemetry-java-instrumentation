@@ -25,8 +25,19 @@ enum KafkaConsumerAttributesGetter implements MessagingAttributesGetter<KafkaPro
     return request.getRecord().topic();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(KafkaProcessRequest request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(KafkaProcessRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(KafkaProcessRequest request) {
     return false;
   }
 
@@ -36,20 +47,34 @@ enum KafkaConsumerAttributesGetter implements MessagingAttributesGetter<KafkaPro
     return null;
   }
 
+  @Nullable
   @Override
-  public Long getMessagePayloadSize(KafkaProcessRequest request) {
-    return (long) request.getRecord().serializedValueSize();
+  public Long getMessageBodySize(KafkaProcessRequest request) {
+    long size = request.getRecord().serializedValueSize();
+    return size >= 0 ? size : null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(KafkaProcessRequest request) {
+  @Override
+  public Long getMessageEnvelopeSize(KafkaProcessRequest request) {
     return null;
   }
 
   @Override
   @Nullable
   public String getMessageId(KafkaProcessRequest request, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(KafkaProcessRequest request) {
+    return request.getClientId();
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(KafkaProcessRequest request, @Nullable Void unused) {
     return null;
   }
 

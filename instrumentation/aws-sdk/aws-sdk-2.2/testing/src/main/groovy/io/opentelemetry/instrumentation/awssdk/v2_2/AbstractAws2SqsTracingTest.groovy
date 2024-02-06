@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
@@ -221,6 +220,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -237,6 +237,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -247,7 +248,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
-            "$HttpAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(2 + offset) {
@@ -300,7 +300,8 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
 
     then:
     resp.messages.size() == 1
-    resp.messages.each {message -> runWithSpan("process child") {}}
+    // using forEach instead of each here to test different ways of iterating messages list
+    resp.messages.forEach {message -> runWithSpan("process child") {}}
     assertSqsTraces(false, true)
   }
 
@@ -418,6 +419,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 3
           }
         }
         if (!xrayInjectionEnabled) {
@@ -449,6 +451,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -456,7 +459,6 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$SemanticAttributes.MESSAGING_OPERATION" "process"
               "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$HttpAttributes.ERROR_TYPE" "_OTHER"
             }
           }
           span(1 + 2*i + 1) {

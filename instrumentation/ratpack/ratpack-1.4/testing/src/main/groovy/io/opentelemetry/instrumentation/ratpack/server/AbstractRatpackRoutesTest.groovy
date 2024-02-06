@@ -98,6 +98,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" { it == "localhost" || it == null }
             "$SemanticAttributes.SERVER_PORT" { it == app.bindPort || it == null }
+            "$SemanticAttributes.CLIENT_ADDRESS" { it == "127.0.0.1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Long || it == null }
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"

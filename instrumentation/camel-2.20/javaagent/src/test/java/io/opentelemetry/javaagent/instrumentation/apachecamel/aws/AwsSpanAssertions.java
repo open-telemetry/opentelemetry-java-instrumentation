@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -67,6 +66,7 @@ class AwsSpanAssertions {
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isEqualTo(queueUrl), v -> assertThat(v).isNull())),
             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(SemanticAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             satisfies(
                 SemanticAttributes.SERVER_ADDRESS,
@@ -77,16 +77,11 @@ class AwsSpanAssertions {
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isNull(),
                         v -> assertThat(v).isInstanceOf(Number.class))),
+            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             equalTo(stringKey("rpc.system"), "aws-api"),
             satisfies(stringKey("rpc.method"), stringAssert -> stringAssert.isEqualTo(rpcMethod)),
             equalTo(stringKey("rpc.service"), "AmazonSQS")));
 
-    if (!spanName.endsWith("process")) {
-      attributeAssertions.addAll(
-          Arrays.asList(
-              equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-              equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
-    }
     if (spanName.endsWith("receive")
         || spanName.endsWith("process")
         || spanName.endsWith("publish")) {
@@ -100,7 +95,6 @@ class AwsSpanAssertions {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"));
         attributeAssertions.add(
             satisfies(SemanticAttributes.MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
-        attributeAssertions.add(equalTo(HttpAttributes.ERROR_TYPE, "_OTHER"));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"));
         attributeAssertions.add(
@@ -134,7 +128,7 @@ class AwsSpanAssertions {
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
   }
 
-  static SpanDataAssert sns(SpanDataAssert span, String spanName) {
+  static SpanDataAssert sns(SpanDataAssert span, String spanName, String topicArn) {
     return span.hasName(spanName)
         .hasKind(CLIENT)
         .hasAttributesSatisfyingExactly(
@@ -143,6 +137,7 @@ class AwsSpanAssertions {
             equalTo(stringKey("rpc.system"), "aws-api"),
             equalTo(stringKey("rpc.method"), spanName.substring(4)),
             equalTo(stringKey("rpc.service"), "AmazonSNS"),
+            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicArn),
             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(SemanticAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),

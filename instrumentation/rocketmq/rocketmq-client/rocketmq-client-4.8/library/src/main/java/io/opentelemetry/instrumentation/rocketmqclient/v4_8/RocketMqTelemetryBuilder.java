@@ -18,7 +18,6 @@ public final class RocketMqTelemetryBuilder {
 
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
-  private boolean propagationEnabled = true;
 
   RocketMqTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -33,21 +32,6 @@ public final class RocketMqTelemetryBuilder {
   public RocketMqTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    return this;
-  }
-
-  /**
-   * Sets whether the trace context should be written from producers / read from consumers for
-   * propagating through messaging.
-   *
-   * @deprecated if you have a need for this configuration option please open an issue in the <a
-   *     href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues">opentelemetry-java-instrumentation</a>
-   *     repository.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public RocketMqTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
-    this.propagationEnabled = propagationEnabled;
     return this;
   }
 
@@ -67,7 +51,6 @@ public final class RocketMqTelemetryBuilder {
    * RocketMqTelemetryBuilder}.
    */
   public RocketMqTelemetry build() {
-    return new RocketMqTelemetry(
-        openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, propagationEnabled);
+    return new RocketMqTelemetry(openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
   }
 }

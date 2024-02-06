@@ -13,10 +13,6 @@ dependencies {
 
   testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.2.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
-
-  // spring-cloud-gateway hasn't yet updated to spring 6.2/boot 3.2
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:3.1.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.1.+")
 }
 
 tasks.withType<Test>().configureEach {
@@ -25,6 +21,8 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }

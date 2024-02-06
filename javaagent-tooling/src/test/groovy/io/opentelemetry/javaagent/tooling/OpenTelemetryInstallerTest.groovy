@@ -31,13 +31,4 @@ class OpenTelemetryInstallerTest extends Specification {
     GlobalOpenTelemetry.get() != OpenTelemetry.noop()
   }
 
-  def "should disable the logs exporter by default"() {
-    when:
-    def autoConfiguredSdk = OpenTelemetryInstaller.installOpenTelemetrySdk(OpenTelemetryInstaller.classLoader)
-
-    then:
-    autoConfiguredSdk != null
-    autoConfiguredSdk.config.getString("otel.logs.exporter") == "none"
-  }
-
 }

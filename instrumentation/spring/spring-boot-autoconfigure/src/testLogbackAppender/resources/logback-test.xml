@@ -9,7 +9,9 @@
     </encoder>
   </appender>
   <appender name="OpenTelemetry"
-    class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender"/>
+    class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    <captureCodeAttributes>true</captureCodeAttributes>
+  </appender>
 
   <root level="INFO">
     <appender-ref ref="console"/>

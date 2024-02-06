@@ -74,17 +74,12 @@ tasks {
       dependsOn(testing.suites)
     }
   }
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }
 
 // play-test depends on websocket-client
 configurations.configureEach {
   exclude("org.eclipse.jetty.websocket", "websocket-client")
+}
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

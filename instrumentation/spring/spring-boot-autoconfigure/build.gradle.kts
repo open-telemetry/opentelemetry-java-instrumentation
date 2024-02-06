@@ -42,7 +42,6 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
-  compileOnly("io.opentelemetry:opentelemetry-exporter-jaeger")
   compileOnly("io.opentelemetry:opentelemetry-exporter-otlp")
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
   compileOnly(project(":instrumentation-annotations"))
@@ -67,7 +66,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
-  testImplementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
@@ -90,6 +88,7 @@ testing {
         implementation(project(":testing-common"))
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.mockito:mockito-inline")
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))

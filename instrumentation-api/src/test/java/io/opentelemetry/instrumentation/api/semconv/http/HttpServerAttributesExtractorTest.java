@@ -18,7 +18,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.ConnectException;
@@ -329,7 +328,7 @@ class HttpServerAttributesExtractorTest {
 
     assertThat(attributes.build())
         .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500)
-        .containsEntry(HttpAttributes.ERROR_TYPE, "500");
+        .containsEntry(SemanticAttributes.ERROR_TYPE, "500");
   }
 
   @Test
@@ -345,7 +344,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), emptyMap());
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
-    assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, "custom error type");
+    assertThat(attributes.build())
+        .containsEntry(SemanticAttributes.ERROR_TYPE, "custom error type");
   }
 
   @Test
@@ -358,7 +358,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), new ConnectException());
 
     assertThat(attributes.build())
-        .containsEntry(HttpAttributes.ERROR_TYPE, "java.net.ConnectException");
+        .containsEntry(SemanticAttributes.ERROR_TYPE, "java.net.ConnectException");
   }
 
   @Test
@@ -370,7 +370,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), emptyMap());
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
 
-    assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, HttpConstants._OTHER);
+    assertThat(attributes.build())
+        .containsEntry(SemanticAttributes.ERROR_TYPE, HttpConstants._OTHER);
   }
 
   @Test

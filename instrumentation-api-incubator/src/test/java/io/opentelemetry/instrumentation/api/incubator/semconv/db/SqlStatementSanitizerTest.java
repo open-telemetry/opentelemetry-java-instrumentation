@@ -36,10 +36,12 @@ public class SqlStatementSanitizerTest {
 
   @ParameterizedTest
   @ArgumentsSource(SimplifyArgs.class)
-  void simplifySql(String original, Function<String, SqlStatementInfo> expecter) {
+  void simplifySql(String original, Function<String, SqlStatementInfo> expectedFunction) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
-    String expected = expecter.apply(original).getFullStatement();
-    assertThat(result.getFullStatement()).isEqualTo(expected);
+    SqlStatementInfo expected = expectedFunction.apply(original);
+    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
+    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
+    assertThat(result.getMainIdentifier()).isEqualToIgnoringCase(expected.getMainIdentifier());
   }
 
   @Test

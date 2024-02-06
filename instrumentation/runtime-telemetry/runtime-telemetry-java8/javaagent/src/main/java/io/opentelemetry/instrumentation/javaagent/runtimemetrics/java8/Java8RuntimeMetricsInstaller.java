@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.BufferPools;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
@@ -41,7 +40,6 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     List<AutoCloseable> observables = new ArrayList<>();
-    observables.addAll(BufferPools.registerObservers(openTelemetry));
     observables.addAll(Classes.registerObservers(openTelemetry));
     observables.addAll(Cpu.registerObservers(openTelemetry));
     observables.addAll(GarbageCollector.registerObservers(openTelemetry));

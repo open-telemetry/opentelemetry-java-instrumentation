@@ -34,8 +34,19 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribute
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(ExecutionAttributes request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(ExecutionAttributes request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(ExecutionAttributes request) {
     return false;
   }
 
@@ -45,15 +56,15 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribute
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadSize(ExecutionAttributes request) {
+  @Override
+  public Long getMessageBodySize(ExecutionAttributes request) {
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(ExecutionAttributes request) {
+  @Override
+  public Long getMessageEnvelopeSize(ExecutionAttributes request) {
     return null;
   }
 
@@ -64,6 +75,18 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribute
       SdkResponse sdkResponse = response.getSdkResponse();
       return SqsAccess.getMessageId(sdkResponse);
     }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(ExecutionAttributes request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(ExecutionAttributes request, @Nullable Response response) {
     return null;
   }
 

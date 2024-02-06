@@ -76,11 +76,6 @@ For Maven, add to your `pom.xml` dependencies:
   <!-- opentelemetry exporters-->
   <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporter-jaeger</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporter-zipkin</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
@@ -129,7 +124,6 @@ For Gradle, add to your dependencies:
 
 ```groovy
 //opentelemetry exporter
-implementation("io.opentelemetry:opentelemetry-exporter-jaeger:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-exporter-zipkin:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-exporter-otlp:OPENTELEMETRY_VERSION")
 
@@ -384,56 +378,107 @@ public class OpenTelemetryConfig {}
 
 #### Exporter Configurations
 
-This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
+This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
 
 If an exporter is present in the classpath during runtime and a spring bean of the exporter is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](./src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/OpenTelemetryAutoConfiguration.java).
 
 #### Configuration Properties
 
-##### Enabling/Disabling Features
+##### Enabling/Disabling Exporters
 
-| Feature          | Property                                    | Default Value | ConditionalOnClass     |
-|------------------|---------------------------------------------|---------------|------------------------|
-| spring-web       | otel.instrumentation.spring-webmvc.enabled  | `true`        | RestTemplate           |
-| spring-webmvc    | otel.instrumentation.spring-web.enabled     | `true`        | OncePerRequestFilter   |
-| spring-webflux   | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient              |
-| @WithSpan        | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect       |
-| Otlp Exporter    | otel.exporter.otlp.enabled                  | `true`        | OtlpGrpcSpanExporter   |
-| Jaeger Exporter  | otel.exporter.jaeger.enabled                | `true`        | JaegerGrpcSpanExporter |
-| Zipkin Exporter  | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter     |
-| Logging Exporter | otel.exporter.logging.enabled               | `true`        | LoggingSpanExporter    |
+All exporters can be enabled or disabled as in the
+[SDK auto-configuration](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#exporters).
+This is the preferred way to enable/disable exporters and takes precedence over the properties below.
+
+| Feature               | Property                                    | Default Value | ConditionalOnClass        |
+|-----------------------|---------------------------------------------|---------------|---------------------------|
+| Otlp Exporter         | otel.exporter.otlp.enabled                  | `true`        | -                         |
+| Otlp Span Exporter    | otel.exporter.otlp.traces.enabled           | `true`        | OtlpGrpcSpanExporter      |
+| Otlp Metrics Exporter | otel.exporter.otlp.metrics.enabled          | `true`        | OtlpGrpcMetricExporter    |
+| Otlp Logs Exporter    | otel.exporter.otlp.logs.enabled             | `true`        | OtlpGrpcLogRecordExporter |
+| Zipkin Exporter       | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter        |
+| Logging Exporter      | otel.exporter.logging.enabled               | `false`       | LoggingSpanExporter       |
 
 <!-- Slf4j Log Correlation  otel.springboot.loggers.slf4j.enabled		true   		org.slf4j.MDC -->
 
+##### Enabling/Disabling Features
+
+| Feature               | Property                                    | Default Value | ConditionalOnClass        |
+|-----------------------|---------------------------------------------|---------------|---------------------------|
+| spring-web            | otel.instrumentation.spring-webmvc.enabled  | `true`        | RestTemplate              |
+| spring-webmvc         | otel.instrumentation.spring-web.enabled     | `true`        | OncePerRequestFilter      |
+| spring-webflux        | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient                 |
+| @WithSpan             | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect          |
+
 ##### Resource Properties
 
-| Feature  | Property                                         | Default Value          |
-| -------- | ------------------------------------------------ | ---------------------- |
-| Resource | otel.springboot.resource.enabled                 | `true`                 |
-|          | otel.springboot.resource.attributes.service.name | `unknown_service:java` |
-|          | otel.springboot.resource.attributes              | `empty map`            |
+| Feature  | Property                                                            | Default Value          |
+| -------- |---------------------------------------------------------------------| ---------------------- |
+| Resource | otel.springboot.resource.enabled                                    | `true`                 |
+|          | otel.resource.attributes (old: otel.springboot.resource.attributes) | `empty map`            |
 
-`unknown_service:java` will be used as the service-name if no value has been specified to the
-property `spring.application.name` or `otel.springboot.resource.attributes.service.name` (which has
-the highest priority)
-
-`otel.springboot.resource.attributes` supports a pattern-based resource configuration in the
+`otel.resource.attributes` supports a pattern-based resource configuration in the
 application.properties like this:
 
 ```
-otel.springboot.resource.attributes.environment=dev
-otel.springboot.resource.attributes.xyz=foo
+otel.resource.attributes.environment=dev
+otel.resource.attributes.xyz=foo
 ```
+
+It's also possible to specify the resource attributes in `application.yaml`:
+
+```yaml
+otel:
+  resource:
+    attributes:
+      environment: dev
+      xyz: foo
+```
+
+Finally, the resource attributes can be specified as a comma-separated list, as described in the
+[specification](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_resource_attributes):
+
+```shell
+export OTEL_RESOURCE_ATTRIBUTES="key1=value1,key2=value2"
+```
+
+The service name is determined by the following precedence, in accordance with the OpenTelemetry
+[specification](https://opentelemetry.io/docs/concepts/sdk-configuration/general-sdk-configuration/#otel_service_name):
+
+  1. `otel.service.name` spring property or `OTEL_SERVICE_NAME` environment variable (highest
+   precedence)
+2. `service.name` in `otel.resource.attributes` system/spring property or `OTEL_RESOURCE_ATTRIBUTES`
+   environment variable
+3. `service.name` in `otel.springboot.resource.attributes` system/spring property
+4. `spring.application.name` spring property
+5. the default value `unknown_service:java` (lowest precedence)
 
 ##### Exporter Properties
 
 | Feature         | Property                      | Default Value                        |
-| --------------- | ----------------------------- | ------------------------------------ |
+|-----------------|-------------------------------|--------------------------------------|
 | Otlp Exporter   | otel.exporter.otlp.endpoint   | `localhost:4317`                     |
+|                 | otel.exporter.otlp.protocol   | `grpc`                               |
+|                 | otel.exporter.otlp.headers    |                                      |
 |                 | otel.exporter.otlp.timeout    | `1s`                                 |
-| Jaeger Exporter | otel.exporter.jaeger.endpoint | `localhost:14250`                    |
-|                 | otel.exporter.jaeger.timeout  | `1s`                                 |
-| Zipkin Exporter | otel.exporter.jaeger.endpoint | `http://localhost:9411/api/v2/spans` |
+| Zipkin Exporter | otel.exporter.zipkin.endpoint | `http://localhost:9411/api/v2/spans` |
+
+The `otel.exporter.otlp.headers` property can be specified as a comma-separated list,
+which is compliant with the
+[specification](https://opentelemetry.io/docs/concepts/sdk-configuration/otlp-exporter-configuration/#otel_exporter_otlp_headers).
+Similar to the resource attributes, the headers can be specified in `application.properties` or
+`application.yaml`:
+
+```yaml
+otel:
+  exporter:
+    otlp:
+      headers:
+        - key: "header1"
+          value: "value1"
+        - key: "header2"
+          value: "value2"
+```
 
 ##### Tracer Properties
 

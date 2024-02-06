@@ -5,49 +5,45 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
+import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter;
+import io.opentelemetry.exporter.otlp.internal.OtlpMetricExporterProvider;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
-import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import java.time.Duration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@EnableConfigurationProperties(OtlpExporterProperties.class)
-@ConditionalOnProperty(
-    prefix = "otel.exporter.otlp",
-    name = {"enabled", "metrics.enabled"},
-    matchIfMissing = true)
+@Conditional(OtlpMetricExporterAutoConfiguration.CustomCondition.class)
 @ConditionalOnClass(OtlpGrpcMetricExporter.class)
 public class OtlpMetricExporterAutoConfiguration {
 
-  @Bean
-  @ConditionalOnMissingBean
-  public OtlpGrpcMetricExporter otelOtlpGrpcMetricExporter(OtlpExporterProperties properties) {
-    OtlpGrpcMetricExporterBuilder builder = OtlpGrpcMetricExporter.builder();
+  @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
+  @ConditionalOnMissingBean({OtlpGrpcMetricExporter.class, OtlpHttpMetricExporter.class})
+  public MetricExporter otelOtlpMetricExporter(ConfigProperties configProperties) {
+    return new OtlpMetricExporterProvider().createExporter(configProperties);
+  }
 
-    String endpoint = properties.getMetrics().getEndpoint();
-    if (endpoint == null) {
-      endpoint = properties.getEndpoint();
+  static final class CustomCondition implements Condition {
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+      return ExporterConfigEvaluator.isExporterEnabled(
+          context.getEnvironment(),
+          "otel.exporter.otlp.enabled",
+          "otel.exporter.otlp.metrics.enabled",
+          "otel.metrics.exporter",
+          "otlp",
+          true);
     }
-    if (endpoint != null) {
-      builder.setEndpoint(endpoint);
-    }
-
-    Duration timeout = properties.getMetrics().getTimeout();
-    if (timeout == null) {
-      timeout = properties.getTimeout();
-    }
-    if (timeout != null) {
-      builder.setTimeout(timeout);
-    }
-
-    return builder.build();
   }
 }

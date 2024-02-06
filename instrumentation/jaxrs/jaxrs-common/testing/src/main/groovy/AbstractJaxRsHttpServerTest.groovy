@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -299,7 +298,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
           "http.response.header.x-test-response" { it == ["test"] }
         }
         if (statusCode >= 500) {
-          "$HttpAttributes.ERROR_TYPE" "$statusCode"
+          "$SemanticAttributes.ERROR_TYPE" "$statusCode"
         }
       }
     }

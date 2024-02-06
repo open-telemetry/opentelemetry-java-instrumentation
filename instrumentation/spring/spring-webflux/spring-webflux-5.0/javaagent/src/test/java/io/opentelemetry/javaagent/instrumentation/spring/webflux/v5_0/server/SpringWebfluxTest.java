@@ -9,6 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.SemanticAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.SemanticAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
@@ -25,7 +27,6 @@ import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -119,6 +120,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -206,7 +208,15 @@ public class SpringWebfluxTest {
                     "/foo-delayed",
                     "/foo-delayed",
                     "getFooDelayed",
-                    new FooModel(3L, "delayed").toString()))));
+                    new FooModel(3L, "delayed").toString()))),
+        Arguments.of(
+            named(
+                "annotation API without parameters no mono",
+                new Parameter(
+                    "/foo-no-mono",
+                    "/foo-no-mono",
+                    "getFooModelNoMono",
+                    new FooModel(0L, "DEFAULT").toString()))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -231,6 +241,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -338,6 +349,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -410,6 +422,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, "/notfoundgreet"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
@@ -470,6 +483,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, "/echo"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 202),
@@ -510,13 +524,14 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            equalTo(HttpAttributes.ERROR_TYPE, "500")),
+                            equalTo(ERROR_TYPE, "500")),
                 span -> {
                   if (parameter.annotatedMethod == null) {
                     // Functional API
@@ -590,6 +605,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, "/double-greet-redirect"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 307),
@@ -618,6 +634,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, "/double-greet"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -669,6 +686,7 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -750,12 +768,13 @@ public class SpringWebfluxTest {
                                 val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(URL_PATH, "/slow"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/slow"),
-                            equalTo(HttpAttributes.ERROR_TYPE, "_OTHER")),
+                            equalTo(ERROR_TYPE, "_OTHER")),
                 span ->
                     span.hasName("SpringWebFluxTestApplication$$Lambda.handle")
                         .hasKind(SpanKind.INTERNAL)

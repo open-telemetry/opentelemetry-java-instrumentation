@@ -6,40 +6,41 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
 import io.opentelemetry.exporter.logging.LoggingMetricExporter;
-import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
-/** Configures {@link LoggingSpanExporter} bean for tracing. */
+/** Configures {@link LoggingMetricExporter} bean for tracing. */
 @Configuration
-@EnableConfigurationProperties(LoggingExporterProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(LoggingMetricExporterAutoConfiguration.AnyPropertyEnabled.class)
+@Conditional(LoggingMetricExporterAutoConfiguration.CustomCondition.class)
 @ConditionalOnClass(LoggingMetricExporter.class)
 public class LoggingMetricExporterAutoConfiguration {
 
-  @Bean
+  @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
+  @ConditionalOnMissingBean
   public LoggingMetricExporter otelLoggingMetricExporter() {
     return LoggingMetricExporter.create();
   }
 
-  static final class AnyPropertyEnabled extends AnyNestedCondition {
-
-    AnyPropertyEnabled() {
-      super(ConfigurationPhase.PARSE_CONFIGURATION);
+  static final class CustomCondition implements Condition {
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+      return ExporterConfigEvaluator.isExporterEnabled(
+          context.getEnvironment(),
+          "otel.exporter.logging.enabled",
+          "otel.exporter.logging.metrics.enabled",
+          "otel.metrics.exporter",
+          "logging",
+          false);
     }
-
-    @ConditionalOnProperty("otel.exporter.logging.enabled")
-    static class LoggingEnabled {}
-
-    @ConditionalOnProperty("otel.exporter.logging.metrics.enabled")
-    static class LoggingMetricsEnabled {}
   }
 }

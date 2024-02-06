@@ -8,9 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.metric
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongHistogramBuilder;
 import java.util.List;
 
-final class ApplicationLongHistogramBuilder131 extends ApplicationLongHistogramBuilder132
+final class ApplicationLongHistogramBuilder131 extends ApplicationLongHistogramBuilder
     implements ExtendedLongHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder;
