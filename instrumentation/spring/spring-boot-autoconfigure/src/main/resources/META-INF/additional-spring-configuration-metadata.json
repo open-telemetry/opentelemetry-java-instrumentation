@@ -198,6 +198,30 @@
       "defaultValue": "http://localhost:9411/api/v2/spans"
     },
     {
+      "name": "otel.instrumentation.annotations.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the <code>@WithSpan</code> annotation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Kafka instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.log4j-appender.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Log4J2 appender instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Logback appender instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-code-attributes",
       "type": "java.lang.Boolean",
       "description": "Enable the capture of source code attributes. Note that capturing source code attributes at logging sites might add a performance overhead.",
@@ -233,6 +257,30 @@
       "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
     },
     {
+      "name": "otel.instrumentation.micrometer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Micrometer instrumentation.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.spring-web.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the RestTemplate instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.spring-webflux.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the WebClient instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.spring-webmvc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Servlet instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.logs.exporter",
       "type": "java.util.List<java.lang.String>",
       "description": "List of exporters to be used for logs.",
@@ -255,6 +303,12 @@
       "type": "java.util.List<java.lang.String>",
       "description": "List of propagators to be used for context propagation.",
       "defaultValue": "tracecontext,baggage"
+    },
+    {
+      "name": "otel.sdk.disabled",
+      "type": "java.lang.Boolean",
+      "description": "Disable the OpenTelemetry Spring Starter.",
+      "defaultValue": false
     },
     {
       "name": "otel.traces.exporter",
