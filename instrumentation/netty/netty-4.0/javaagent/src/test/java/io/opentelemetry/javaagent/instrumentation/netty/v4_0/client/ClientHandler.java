@@ -10,6 +10,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
+/*
+Bridges from async Netty world to the sync world of our http client tests.
+When request initiated by a test gets a response, calls a given callback and completes given
+future with response's status code.
+*/
 class ClientHandler extends ChannelInboundHandlerAdapter {
   private final CompletableFuture<Integer> result;
 

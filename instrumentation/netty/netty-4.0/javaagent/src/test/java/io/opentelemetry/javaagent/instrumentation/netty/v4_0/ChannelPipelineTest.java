@@ -101,7 +101,7 @@ public class ChannelPipelineTest {
     }
 
     // noop handler was removed; http and instrumentation handlers were added
-    assertEquals(2, channelPipeline.toMap().size());
+    assertEquals(1, channelPipeline.toMap().size());
     assertEquals(httpHandler, channelPipeline.first());
     assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
 

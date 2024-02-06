@@ -57,14 +57,14 @@ class Netty40ClientSslTest {
   private static EventLoopGroup eventLoopGroup;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
     eventLoopGroup = new NioEventLoopGroup();
   }
 
   @AfterAll
-  static void cleanupSpec() throws InterruptedException, ExecutionException, TimeoutException {
+  static void cleanup() throws InterruptedException, ExecutionException, TimeoutException {
     eventLoopGroup.shutdownGracefully();
     server.stop().get(10, TimeUnit.SECONDS);
   }
@@ -119,11 +119,18 @@ class Netty40ClientSslTest {
                 testing.runWithSpan(
                     "parent",
                     () -> {
-                      channel.set(bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel());
-                      CompletableFuture<Integer> result = new CompletableFuture<>();
-                      channel.get().pipeline().addLast(new ClientHandler(result));
-                      channel.get().writeAndFlush(request).get(10, TimeUnit.SECONDS);
-                      result.get(10, TimeUnit.SECONDS);
+                      try {
+                        channel.set(
+                            bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel());
+                        CompletableFuture<Integer> result = new CompletableFuture<>();
+                        channel.get().pipeline().addLast(new ClientHandler(result));
+                        channel.get().writeAndFlush(request).get(10, TimeUnit.SECONDS);
+                        result.get(10, TimeUnit.SECONDS);
+                      } finally {
+                        if (channel.get() != null) {
+                          channel.get().close();
+                        }
+                      }
                     }));
 
     // Then
@@ -198,9 +205,9 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3));
                 }));
-    // cleanup
+
     if (channel.get() != null) {
-      channel.get().close();
+      channel.get().close().sync();
     }
   }
 
