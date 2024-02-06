@@ -3,15 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
+package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 
-import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
-import io.opentelemetry.exporter.otlp.internal.OtlpSpanExporterProvider;
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
+import io.opentelemetry.exporter.logging.SystemOutLogRecordExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -22,21 +18,17 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
-/**
- * Configures {@link OtlpGrpcSpanExporter} for tracing.
- *
- * <p>Initializes {@link OtlpGrpcSpanExporter} bean if bean is missing.
- */
+/** Configures {@link SystemOutLogRecordExporter} bean for tracing. */
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(OtlpSpanExporterAutoConfiguration.CustomCondition.class)
-@ConditionalOnClass(OtlpGrpcSpanExporter.class)
-public class OtlpSpanExporterAutoConfiguration {
+@Conditional(SystemOutLogRecordExporterAutoConfiguration.CustomCondition.class)
+@ConditionalOnClass(SystemOutLogRecordExporter.class)
+public class SystemOutLogRecordExporterAutoConfiguration {
 
   @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
-  @ConditionalOnMissingBean({OtlpGrpcSpanExporter.class, OtlpHttpSpanExporter.class})
-  public SpanExporter otelOtlpSpanExporter(ConfigProperties configProperties) {
-    return new OtlpSpanExporterProvider().createExporter(configProperties);
+  @ConditionalOnMissingBean
+  public SystemOutLogRecordExporter otelSystemOutLogRecordExporter() {
+    return SystemOutLogRecordExporter.create();
   }
 
   static final class CustomCondition implements Condition {
@@ -44,11 +36,11 @@ public class OtlpSpanExporterAutoConfiguration {
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
           context.getEnvironment(),
-          "otel.exporter.otlp.enabled",
-          "otel.exporter.otlp.traces.enabled",
-          "otel.traces.exporter",
-          "otlp",
-          true);
+          "otel.exporter.logging.enabled",
+          "otel.exporter.logging.logs.enabled",
+          "otel.logs.exporter",
+          "logging",
+          false);
     }
   }
 }
