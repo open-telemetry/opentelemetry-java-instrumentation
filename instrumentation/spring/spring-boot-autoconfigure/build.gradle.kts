@@ -37,7 +37,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
 
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   compileOnly("io.opentelemetry:opentelemetry-extension-annotations")
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")

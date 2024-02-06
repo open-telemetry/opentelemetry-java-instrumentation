@@ -26,7 +26,7 @@ public class OtelResourceAutoConfigurationTest {
   void shouldDetermineServiceNameByOtelServiceName() {
     this.contextRunner
         .withPropertyValues("otel.springboot.resource.enabled=true")
-        .run(context -> assertThat(context.containsBean("otelResourceProvider")).isTrue());
+        .run(context -> assertThat(context.containsBean("otelSpringResourceProvider")).isTrue());
   }
 
   @Test
@@ -34,7 +34,7 @@ public class OtelResourceAutoConfigurationTest {
       "when otel.springboot.resource.enabled is not specified configuration should be initialized")
   void shouldInitAutoConfigurationByDefault() {
     this.contextRunner.run(
-        context -> assertThat(context.containsBean("otelResourceProvider")).isTrue());
+        context -> assertThat(context.containsBean("otelSpringResourceProvider")).isTrue());
   }
 
   @Test
@@ -43,6 +43,6 @@ public class OtelResourceAutoConfigurationTest {
   void shouldNotInitAutoConfiguration() {
     this.contextRunner
         .withPropertyValues("otel.springboot.resource.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelResourceProvider")).isFalse());
+        .run(context -> assertThat(context.containsBean("otelSpringResourceProvider")).isFalse());
   }
 }

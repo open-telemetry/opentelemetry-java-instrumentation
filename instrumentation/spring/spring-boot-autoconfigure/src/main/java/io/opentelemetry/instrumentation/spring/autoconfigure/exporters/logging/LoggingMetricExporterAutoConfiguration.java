@@ -35,12 +35,7 @@ public class LoggingMetricExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.logging.enabled",
-          "otel.exporter.logging.metrics.enabled",
-          "otel.metrics.exporter",
-          "logging",
-          false);
+          context.getEnvironment(), "otel.metrics.exporter", "logging", false);
     }
   }
 }

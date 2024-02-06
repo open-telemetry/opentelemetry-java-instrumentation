@@ -43,12 +43,7 @@ public class OtlpSpanExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.otlp.enabled",
-          "otel.exporter.otlp.traces.enabled",
-          "otel.traces.exporter",
-          "otlp",
-          true);
+          context.getEnvironment(), "otel.traces.exporter", "otlp", true);
     }
   }
 }
