@@ -27,11 +27,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ForwardedForAddressAndPortExtractorTest {
+class HttpServerAddressAndPortExtractorTest {
 
   @Mock HttpServerAttributesGetter<String, String> getter;
 
-  @InjectMocks ForwardedForAddressAndPortExtractor<String> underTest;
+  @InjectMocks HttpServerAddressAndPortExtractor<String> underTest;
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedArgs.class)

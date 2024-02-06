@@ -123,6 +123,9 @@ abstract class AppServerTest extends SmokeTest {
     and: "Server span for the remote call"
     traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/headers") == 1
 
+    and: "Number of spans with client address"
+    traces.countFilteredAttributes(SemanticAttributes.CLIENT_ADDRESS.key, "127.0.0.1") == 1
+
     and: "Number of spans with http protocol version"
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
 
