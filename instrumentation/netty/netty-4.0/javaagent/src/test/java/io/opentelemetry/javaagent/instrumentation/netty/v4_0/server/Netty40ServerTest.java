@@ -40,8 +40,6 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.logging.InternalLoggerFactory;
-import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -60,12 +58,8 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  static final LoggingHandler LOGGING_HANDLER;
-
-  static {
-    InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
-    LOGGING_HANDLER = new LoggingHandler(Netty40ServerTest.class, LogLevel.DEBUG);
-  }
+  private static final LoggingHandler LOGGING_HANDLER =
+      new LoggingHandler(Netty40ServerTest.class, LogLevel.DEBUG);
 
   @Override
   protected EventLoopGroup setupServer() throws InterruptedException {
