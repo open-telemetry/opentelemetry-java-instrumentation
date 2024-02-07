@@ -69,7 +69,7 @@ public class SparkJavaBasedTest {
                             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
