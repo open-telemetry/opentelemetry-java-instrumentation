@@ -53,7 +53,6 @@ public class SparkJavaBasedTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("GET /param/:param")

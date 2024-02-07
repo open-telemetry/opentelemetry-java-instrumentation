@@ -40,7 +40,6 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       span.hasName("exchange.declare")

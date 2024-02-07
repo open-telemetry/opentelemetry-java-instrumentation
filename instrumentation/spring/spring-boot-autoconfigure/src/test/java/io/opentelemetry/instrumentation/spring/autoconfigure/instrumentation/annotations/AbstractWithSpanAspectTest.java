@@ -224,7 +224,6 @@ abstract class AbstractWithSpanAspectTest {
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
-                      .hasSize(1)
                       .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
@@ -259,7 +258,6 @@ abstract class AbstractWithSpanAspectTest {
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
-                      .hasSize(1)
                       .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
@@ -322,7 +320,6 @@ abstract class AbstractWithSpanAspectTest {
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
-                      .hasSize(1)
                       .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
@@ -358,7 +355,6 @@ abstract class AbstractWithSpanAspectTest {
           .hasTracesSatisfyingExactly(
               trace ->
                   trace
-                      .hasSize(1)
                       .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when

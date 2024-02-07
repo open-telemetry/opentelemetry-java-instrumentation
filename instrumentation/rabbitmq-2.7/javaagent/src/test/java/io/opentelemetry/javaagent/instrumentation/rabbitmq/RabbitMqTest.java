@@ -117,7 +117,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(5)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
@@ -145,7 +144,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     }),
         trace -> {
           trace
-              .hasSize(2)
               .hasSpansSatisfyingExactly(
                   span -> {
                     span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
@@ -193,7 +191,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(3)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
@@ -215,7 +212,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     }),
         trace -> {
           trace
-              .hasSize(2)
               .hasSpansSatisfyingExactly(
                   span -> {
                     span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
@@ -283,7 +279,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     traceAssertions.add(
         trace -> {
           trace
-              .hasSize(1)
               .hasSpansSatisfyingExactly(
                   span -> {
                     verifySpan(trace, span, 0, "exchange.declare");
@@ -292,7 +287,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     traceAssertions.add(
         trace -> {
           trace
-              .hasSize(1)
               .hasSpansSatisfyingExactly(
                   span -> {
                     verifySpan(trace, span, 0, "queue.declare");
@@ -301,7 +295,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     traceAssertions.add(
         trace -> {
           trace
-              .hasSize(1)
               .hasSpansSatisfyingExactly(
                   span -> {
                     verifySpan(trace, span, 0, "queue.bind");
@@ -310,7 +303,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     traceAssertions.add(
         trace -> {
           trace
-              .hasSize(1)
               .hasSpansSatisfyingExactly(
                   span -> {
                     verifySpan(trace, span, 0, "basic.consume");
@@ -321,7 +313,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       traceAssertions.add(
           trace -> {
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName);
@@ -379,35 +370,30 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, "exchange.declare");
                     }),
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, "queue.declare");
                     }),
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, "queue.bind");
                     }),
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, "basic.consume");
                     }),
         trace -> {
           trace
-              .hasSize(2)
               .hasSpansSatisfyingExactly(
                   span -> {
                     verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName);
@@ -448,7 +434,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(
@@ -493,7 +478,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(3)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
@@ -515,7 +499,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     }),
         trace -> {
           trace
-              .hasSize(2)
               .hasSpansSatisfyingExactly(
                   span -> {
                     span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
@@ -571,14 +554,12 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, "queue.declare");
                     }),
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, "<default>", null, "publish", "<default>");
@@ -622,7 +603,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     }),
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       verifySpan(trace, span, 0, "basic.consume");

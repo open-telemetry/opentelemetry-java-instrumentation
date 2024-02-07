@@ -72,7 +72,6 @@ class CouchbaseClient32Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span -> {
                       span.hasName("get");

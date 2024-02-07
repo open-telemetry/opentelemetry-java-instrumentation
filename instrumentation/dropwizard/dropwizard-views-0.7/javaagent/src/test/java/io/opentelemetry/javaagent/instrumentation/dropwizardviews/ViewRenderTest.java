@@ -52,7 +52,6 @@ class ViewRenderTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> span.hasName("Render " + template).hasParent(trace.getSpan(0))));

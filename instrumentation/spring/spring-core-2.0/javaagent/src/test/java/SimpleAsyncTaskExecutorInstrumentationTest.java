@@ -65,7 +65,6 @@ public class SimpleAsyncTaskExecutorInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->

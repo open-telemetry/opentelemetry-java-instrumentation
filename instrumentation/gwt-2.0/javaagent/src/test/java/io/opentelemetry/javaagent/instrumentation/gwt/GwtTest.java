@@ -148,7 +148,6 @@ class GwtTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("POST " + getContextPath() + "/greeting/greet")
@@ -174,7 +173,6 @@ class GwtTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("POST " + getContextPath() + "/greeting/greet")

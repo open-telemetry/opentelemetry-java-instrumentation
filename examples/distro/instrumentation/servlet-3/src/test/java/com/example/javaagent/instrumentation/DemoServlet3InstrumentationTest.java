@@ -80,11 +80,9 @@ class DemoServlet3InstrumentationTest {
     assertEquals("result", response.body().string());
 
     assertThat(instrumentation.waitForTraces(1))
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
                 trace
-                    .hasSize(1)
                     .hasSpansSatisfyingExactly(
                         span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
 

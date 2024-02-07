@@ -80,7 +80,6 @@ public class SessionTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
@@ -120,7 +119,6 @@ public class SessionTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(5)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
@@ -161,7 +159,6 @@ public class SessionTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(3)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
@@ -207,7 +204,6 @@ public class SessionTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
@@ -244,7 +240,6 @@ public class SessionTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
@@ -301,7 +296,6 @@ public class SessionTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(9)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("overlapping Sessions"),
                     span -> {

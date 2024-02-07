@@ -130,7 +130,6 @@ public class EntityManagerTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),

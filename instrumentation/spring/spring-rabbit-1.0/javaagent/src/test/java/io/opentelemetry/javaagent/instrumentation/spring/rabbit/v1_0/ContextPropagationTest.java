@@ -153,7 +153,6 @@ public class ContextPropagationTest {
         testing.waitAndAssertTraces(
             trace -> {
               trace
-                  .hasSize(5)
                   .hasSpansSatisfyingExactlyInAnyOrder(
                       span -> span.hasName("parent"),
                       span ->
@@ -205,7 +204,6 @@ public class ContextPropagationTest {
             },
             trace -> {
               trace
-                  .hasSize(1)
                   .hasSpansSatisfyingExactly(
                       span ->
                           span.hasName("basic.ack")

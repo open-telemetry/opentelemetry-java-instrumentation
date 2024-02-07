@@ -127,7 +127,6 @@ class PutGetTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
                     span ->

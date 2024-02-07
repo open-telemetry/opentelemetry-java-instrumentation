@@ -62,14 +62,12 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(1)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("toString test").hasTotalAttributeCount(0)));
   }
 
   static void assertHibernate4Trace(TraceAssert trace, String repoClassName) {
     trace
-        .hasSize(2)
         .hasSpansSatisfyingExactly(
             span ->
                 span.hasName("JpaCustomerRepository.save")
@@ -94,7 +92,6 @@ public abstract class AbstractSpringJpaTest<
 
   static void assertHibernateTrace(TraceAssert trace, String repoClassName) {
     trace
-        .hasSize(3)
         .hasSpansSatisfyingExactly(
             span ->
                 span.hasName("JpaCustomerRepository.save")
@@ -143,7 +140,6 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("JpaCustomerRepository.findAll")
@@ -183,7 +179,6 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(3)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("JpaCustomerRepository.save")
@@ -225,7 +220,6 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("JpaCustomerRepository.findByLastName")
@@ -253,7 +247,6 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(3)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("JpaCustomerRepository.delete")
@@ -302,7 +295,6 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("JpaCustomerRepository.findSpecialCustomers")
@@ -348,7 +340,6 @@ public abstract class AbstractSpringJpaTest<
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(2)
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("JpaCustomerRepository.findOneByLastName")

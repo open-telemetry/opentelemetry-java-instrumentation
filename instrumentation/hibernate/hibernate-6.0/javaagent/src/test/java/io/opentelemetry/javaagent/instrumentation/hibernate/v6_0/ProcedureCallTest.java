@@ -87,7 +87,6 @@ public class ProcedureCallTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
@@ -146,7 +145,6 @@ public class ProcedureCallTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(3)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->

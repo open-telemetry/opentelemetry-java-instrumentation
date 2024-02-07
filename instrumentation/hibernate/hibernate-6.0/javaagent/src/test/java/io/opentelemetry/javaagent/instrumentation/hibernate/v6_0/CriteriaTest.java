@@ -60,7 +60,6 @@ public class CriteriaTest extends AbstractHibernateTest {
     testing.waitAndAssertTraces(
         trace ->
             trace
-                .hasSize(4)
                 .hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
