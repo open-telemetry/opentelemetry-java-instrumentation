@@ -38,9 +38,8 @@ class LibraryInstrumentationExtensionTest {
     assertThat(traces)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSpansSatisfyingExactly(
-                        parentSpan -> parentSpan.hasName("parent"),
-                        childSpan -> childSpan.hasName("child")));
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan -> parentSpan.hasName("parent"),
+                    childSpan -> childSpan.hasName("child")));
   }
 }

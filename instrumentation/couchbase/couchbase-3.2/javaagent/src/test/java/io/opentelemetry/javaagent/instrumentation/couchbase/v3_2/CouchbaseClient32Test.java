@@ -71,14 +71,13 @@ class CouchbaseClient32Test {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
-            trace
-                .hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("get");
-                      if (Boolean.getBoolean("testLatestDeps")) {
-                        span.hasStatus(StatusData.error());
-                      }
-                    },
-                    span -> span.hasName("dispatch_to_server")));
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  span.hasName("get");
+                  if (Boolean.getBoolean("testLatestDeps")) {
+                    span.hasStatus(StatusData.error());
+                  }
+                },
+                span -> span.hasName("dispatch_to_server")));
   }
 }
