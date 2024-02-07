@@ -18,6 +18,9 @@ final class AwsExperimentalAttributes {
   static final AttributeKey<String> AWS_STREAM_NAME = stringKey("aws.stream.name");
   static final AttributeKey<String> AWS_TABLE_NAME = stringKey("aws.table.name");
   static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.requestId");
+  static final AttributeKey<String> AWS_REGION = stringKey("aws.region");
+  static final AttributeKey<String> AWS_ACCOUNT_ID = stringKey("aws.accountId");
+  static final AttributeKey<String> AWS_PARTITION = stringKey("aws.partition");
 
   private AwsExperimentalAttributes() {}
 }

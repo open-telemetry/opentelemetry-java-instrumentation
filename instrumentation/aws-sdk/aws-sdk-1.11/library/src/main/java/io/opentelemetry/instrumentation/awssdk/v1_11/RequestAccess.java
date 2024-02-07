@@ -63,6 +63,87 @@ final class RequestAccess {
   }
 
   @Nullable
+  static String getRegion(Object request) {
+    String url = getQueueUrl(request);
+
+    if (url == null) {
+      return null;
+    }
+
+    url = url.replace("http://", "");
+    url = url.replace("https://", "");
+
+    if (url.startsWith("queue.amazonaws.com/")) {
+      return "us-east-1";
+    } if (isSqsUrl(url)) {
+      return getRegionFromSqsUrl(url);
+    } else if (isLegacySqsUrl(url)) {
+      return getRegionFromLegacySqsUrl(url);
+    } else {
+      return null;
+    }
+  }
+
+  private static boolean isSqsUrl(String url) {
+    return url.startsWith("sqs.") && url.contains(".amazonaws.com/");
+  }
+
+  private static boolean isLegacySqsUrl(String url) {
+    return url.contains(".queue.amazonaws.com/");
+  }
+
+  private static String getRegionFromSqsUrl(String url) {
+    String[] split = url.split("\\.");
+
+    if (split.length >= 2) {
+      return split[1];
+    }
+
+    return null;
+  }
+
+  private static String getRegionFromLegacySqsUrl(String url) {
+    String[] split = url.split("\\.");
+    return split[0];
+  }
+
+  @Nullable
+  static String getAccountId(Object request) {
+    String url = getQueueUrl(request);
+
+    if (url == null) {
+      return null;
+    }
+
+    url = url.replace("http://", "");
+    url = url.replace("https://", "");
+
+    String[] split = url.split("/");
+    if (split.length >= 2) {
+      return split[1];
+    }
+
+    return null;
+  }
+
+  @Nullable
+  static String getPartition(Object request) {
+    String region = getRegion(request);
+
+    if (region == null) {
+      return null;
+    }
+
+    if (region.startsWith("us-gov-")) {
+      return "aws-us-gov";
+    } else if (region.startsWith("cn-")) {
+      return "aws-cn";
+    } else {
+      return "aws";
+    }
+  }
+
+  @Nullable
   private static String invokeOrNull(@Nullable MethodHandle method, Object obj) {
     if (method == null) {
       return null;
