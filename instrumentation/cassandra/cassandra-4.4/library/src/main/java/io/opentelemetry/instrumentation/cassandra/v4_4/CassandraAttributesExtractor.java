@@ -27,16 +27,7 @@ final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraAttributesExtractor.class);
-  private static Field proxyAddressField;
-
-  static {
-    try {
-      proxyAddressField = SniEndPoint.class.getDeclaredField("proxyAddress");
-      proxyAddressField.setAccessible(true);
-    } catch (NoSuchFieldException e) {
-      logger.error("No such a field called \"proxyAddress\"", e);
-    }
-  }
+  private static final Field proxyAddressField = getProxyAddressField();
 
   @Override
   public void onStart(
@@ -115,6 +106,17 @@ final class CassandraAttributesExtractor
         attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
         attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
       }
+    }
+  }
+
+  @Nullable
+  private static Field getProxyAddressField() {
+    try {
+      Field field = SniEndPoint.class.getDeclaredField("proxyAddress");
+      field.setAccessible(true);
+      return field;
+    } catch (Exception e) {
+      return null;
     }
   }
 }
