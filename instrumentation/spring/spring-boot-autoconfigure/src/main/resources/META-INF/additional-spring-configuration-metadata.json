@@ -305,6 +305,11 @@
       "defaultValue": "tracecontext,baggage"
     },
     {
+      "name": "otel.resource.attributes",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Resource attributes to be added to all spans. In addition to these attributes, the resource will also include attributes discovered from the runtime, such as <code>host.name</code> and <code>process.id</code>."
+    },
+    {
       "name": "otel.sdk.disabled",
       "type": "java.lang.Boolean",
       "description": "Disable the OpenTelemetry Spring Starter.",
@@ -405,6 +410,10 @@
     {
       "name": "otel.logs.exporter",
       "values": [
+        {
+          "value": "logging",
+          "description": "The logging exporter prints exported logs to stdout. It's mainly used for testing and debugging."
+        },
         {
           "value": "none",
           "description": "No autoconfigured exporter."
