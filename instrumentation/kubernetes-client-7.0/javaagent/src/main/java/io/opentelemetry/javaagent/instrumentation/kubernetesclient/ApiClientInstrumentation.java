@@ -35,7 +35,7 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(named("buildRequest")).and(takesArguments(10)),
+        isPublic().and(named("buildRequest")).and(takesArguments(10).or(takesArguments(11))),
         this.getClass().getName() + "$BuildRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()

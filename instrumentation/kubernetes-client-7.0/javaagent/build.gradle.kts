@@ -14,9 +14,29 @@ muzzle {
 dependencies {
   library("io.kubernetes:client-java-api:7.0.0")
 
-  implementation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
-
   testInstrumentation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
+
+  latestDepTestLibrary("io.kubernetes:client-java-api:19.+")
+}
+
+testing {
+  suites {
+    val version20Test by registering(JvmTestSuite::class) {
+      dependencies {
+        if (findProperty("testLatestDeps") as Boolean) {
+          implementation("io.kubernetes:client-java-api:+")
+        } else {
+          implementation("io.kubernetes:client-java-api:20.0.0")
+        }
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }
 
 tasks.withType<Test>().configureEach {
