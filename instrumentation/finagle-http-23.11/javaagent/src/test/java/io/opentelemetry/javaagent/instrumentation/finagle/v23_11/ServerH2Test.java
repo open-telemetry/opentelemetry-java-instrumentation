@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEven
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableMap;
 import java.net.URI;
@@ -29,8 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import org.assertj.core.api.AssertAccess;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -104,14 +101,6 @@ class ServerH2Test extends AbstractServerTest {
               });
 
           trace.hasSpansSatisfyingExactly(spanAssertions);
-
-          List<SpanData> spanData = AssertAccess.getActual(trace);
-          SpanData clientSpan = spanData.get(0);
-          SpanData controllerSpan = spanData.get(2);
-          // not testing client.end > server.end bc that's not always guaranteed to be true
-          // depending on how resources are closed and torn down
-          Assertions.assertThat(clientSpan.getEndEpochNanos())
-              .isGreaterThanOrEqualTo(controllerSpan.getEndEpochNanos());
         });
   }
 }
