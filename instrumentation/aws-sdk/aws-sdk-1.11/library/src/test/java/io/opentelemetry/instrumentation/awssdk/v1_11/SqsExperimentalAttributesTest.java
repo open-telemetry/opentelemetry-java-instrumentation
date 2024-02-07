@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -14,11 +16,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import org.junit.Test;
 import java.lang.reflect.Constructor;
 import java.net.URI;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 /*
   We cannot use a real looking SQS URL with a local endpoint for these tests because
@@ -54,7 +54,6 @@ public class SqsExperimentalAttributesTest {
         "111122223333",
         "aws");
   }
-
 
   @Test
   public void usGovRegions() throws Exception {
@@ -112,30 +111,16 @@ public class SqsExperimentalAttributesTest {
 
   @Test
   public void negativeTests() throws Exception {
-    sqsRegionTest(
-        "https://amazonaws.com",
-        "https://amazonaws.com",
-        null,
-        null,
-        null);
+    sqsRegionTest("https://amazonaws.com", "https://amazonaws.com", null, null, null);
 
-    sqsRegionTest(
-        "test",
-        "test",
-        null,
-        null,
-        null);
+    sqsRegionTest("test", "test", null, null, null);
   }
 
   private static void sqsRegionTest(
-      String url,
-      String endpoint,
-      String region,
-      String accountId,
-      String partition) throws Exception {
-    SendMessageRequest request = new SendMessageRequest()
-        .withQueueUrl(url)
-        .withMessageBody("Hello World!");
+      String url, String endpoint, String region, String accountId, String partition)
+      throws Exception {
+    SendMessageRequest request =
+        new SendMessageRequest().withQueueUrl(url).withMessageBody("Hello World!");
 
     DefaultRequest<SqsProcessRequest> defaultRequest = new DefaultRequest<>(request, "SQS");
     defaultRequest.setEndpoint(new URI(endpoint));
@@ -150,22 +135,25 @@ public class SqsExperimentalAttributesTest {
     assertThat(attributes.get(AttributeKey.stringKey("aws.partition"))).isEqualTo(partition);
   }
 
-  @SuppressWarnings ("unchecked")
+  @SuppressWarnings("unchecked")
   private static AttributesExtractor<Request<?>, Response<?>> getExtractor() throws Exception {
-    Constructor<?> constructor = Class.forName("io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkExperimentalAttributesExtractor")
-        .getDeclaredConstructors()[0];
+    Constructor<?> constructor =
+        Class.forName(
+                "io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkExperimentalAttributesExtractor")
+            .getDeclaredConstructors()[0];
 
     constructor.setAccessible(true);
 
-    return (AttributesExtractor<Request<?>, Response<?>>)constructor.newInstance();
+    return (AttributesExtractor<Request<?>, Response<?>>) constructor.newInstance();
   }
 
   private static AttributesBuilder getAttributesBuilder() throws Exception {
-    Constructor<?> constructor = Class.forName("io.opentelemetry.api.common.ArrayBackedAttributesBuilder")
-        .getDeclaredConstructors()[0];
+    Constructor<?> constructor =
+        Class.forName("io.opentelemetry.api.common.ArrayBackedAttributesBuilder")
+            .getDeclaredConstructors()[0];
 
     constructor.setAccessible(true);
 
-    return(AttributesBuilder) constructor.newInstance();
+    return (AttributesBuilder) constructor.newInstance();
   }
 }

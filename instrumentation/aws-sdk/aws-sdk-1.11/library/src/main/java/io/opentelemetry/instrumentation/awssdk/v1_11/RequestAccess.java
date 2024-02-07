@@ -75,7 +75,8 @@ final class RequestAccess {
 
     if (url.startsWith("queue.amazonaws.com/")) {
       return "us-east-1";
-    } if (isSqsUrl(url)) {
+    }
+    if (isSqsUrl(url)) {
       return getRegionFromSqsUrl(url);
     } else if (isLegacySqsUrl(url)) {
       return getRegionFromLegacySqsUrl(url);
