@@ -27,6 +27,16 @@ final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraAttributesExtractor.class);
+  private static Field proxyAddressField;
+
+  static {
+    try {
+      proxyAddressField = SniEndPoint.class.getDeclaredField("proxyAddress");
+      proxyAddressField.setAccessible(true);
+    } catch (NoSuchFieldException e) {
+      logger.error("No such a field called \"proxyAddress\"", e);
+    }
+  }
 
   @Override
   public void onStart(
@@ -97,11 +107,9 @@ final class CassandraAttributesExtractor
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
       attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
       attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
-    } else if (endPoint instanceof SniEndPoint) {
+    } else if (endPoint instanceof SniEndPoint && proxyAddressField != null) {
       SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
-      Field privateField = sniEndPoint.getClass().getDeclaredField("proxyAddress");
-      privateField.setAccessible(true);
-      Object object = privateField.get(sniEndPoint);
+      Object object = proxyAddressField.get(sniEndPoint);
       if (object instanceof InetSocketAddress) {
         InetSocketAddress address = (InetSocketAddress) object;
         attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
