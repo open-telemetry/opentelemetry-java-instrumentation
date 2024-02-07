@@ -85,7 +85,6 @@ class OtelSpringStarterSmokeTest {
 
     // Span
     TracesAssert.assertThat(exportedSpans)
-        .hasSize(2)
         .hasTracesSatisfyingExactly(
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(

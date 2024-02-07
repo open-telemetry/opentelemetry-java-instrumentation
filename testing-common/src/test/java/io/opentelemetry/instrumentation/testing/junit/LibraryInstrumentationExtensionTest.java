@@ -36,13 +36,10 @@ class LibraryInstrumentationExtensionTest {
     // then
     List<List<SpanData>> traces = testing.waitForTraces(1);
     assertThat(traces)
-        .hasSize(1)
         .hasTracesSatisfyingExactly(
             trace ->
-                trace
-                    .hasSize(2)
-                    .hasSpansSatisfyingExactly(
-                        parentSpan -> parentSpan.hasName("parent"),
-                        childSpan -> childSpan.hasName("child")));
+                trace.hasSpansSatisfyingExactly(
+                    parentSpan -> parentSpan.hasName("parent"),
+                    childSpan -> childSpan.hasName("child")));
   }
 }

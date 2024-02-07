@@ -39,32 +39,29 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("exchange.declare")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
-                          .hasAttribute(
-                              AttributeKey.stringKey("rabbitmq.command"), "exchange.declare")
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes)
-                                      .satisfies(
-                                          attrs -> {
-                                            String peerAddr =
-                                                attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS);
-                                            assertThat(peerAddr)
-                                                .isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null);
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  span.hasName("exchange.declare")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
+                      .hasAttribute(AttributeKey.stringKey("rabbitmq.command"), "exchange.declare")
+                      .hasAttributesSatisfying(
+                          attributes ->
+                              assertThat(attributes)
+                                  .satisfies(
+                                      attrs -> {
+                                        String peerAddr =
+                                            attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS);
+                                        assertThat(peerAddr)
+                                            .isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null);
 
-                                            String networkType =
-                                                attrs.get(SemanticAttributes.NETWORK_TYPE);
-                                            assertThat(networkType).isIn("ipv4", "ipv6", null);
+                                        String networkType =
+                                            attrs.get(SemanticAttributes.NETWORK_TYPE);
+                                        assertThat(networkType).isIn("ipv4", "ipv6", null);
 
-                                            assertNotNull(
-                                                attrs.get(NetworkAttributes.NETWORK_PEER_PORT));
-                                          }));
-                    }));
+                                        assertNotNull(
+                                            attrs.get(NetworkAttributes.NETWORK_PEER_PORT));
+                                      }));
+                }));
   }
 }
