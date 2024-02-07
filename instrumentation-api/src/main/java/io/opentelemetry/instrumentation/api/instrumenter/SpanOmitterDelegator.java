@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -27,7 +32,7 @@ class SpanOmitterDelegator implements SpanSuppressor {
   @Override
   public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
     for (SpanOmitter spanOmitter : spanOmitters) {
-      if(spanOmitter.shouldOmit(parentContext)){
+      if (spanOmitter.shouldOmit(parentContext)) {
         return true;
       }
     }

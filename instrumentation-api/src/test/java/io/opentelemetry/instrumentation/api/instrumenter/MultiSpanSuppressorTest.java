@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +51,7 @@ class MultiSpanSuppressorTest {
 
     SpanSuppressor suppressor = MultiSpanSuppressor.create(suppressor1, suppressor2, suppressor3);
 
-    Assertions.assertThat(suppressor.shouldSuppress(context,spanKind)).isTrue();
+    Assertions.assertThat(suppressor.shouldSuppress(context, spanKind)).isTrue();
     verify(suppressor1).shouldSuppress(context, spanKind);
     verify(suppressor2).shouldSuppress(context, spanKind);
     verify(suppressor3, never()).shouldSuppress(any(), any());
@@ -62,14 +67,14 @@ class MultiSpanSuppressorTest {
 
     SpanSuppressor suppressor = MultiSpanSuppressor.create(suppressor1, suppressor2, suppressor3);
 
-    Assertions.assertThat(suppressor.shouldSuppress(context,spanKind)).isFalse();
+    Assertions.assertThat(suppressor.shouldSuppress(context, spanKind)).isFalse();
     verify(suppressor1).shouldSuppress(context, spanKind);
     verify(suppressor2).shouldSuppress(context, spanKind);
     verify(suppressor3).shouldSuppress(context, spanKind);
   }
 
   @Test
-  void returnCompositeContext(){
+  void returnCompositeContext() {
     SpanKind spanKind = SpanKind.CLIENT;
     Span span = Span.getInvalid();
     Context original = mock(Context.class);
@@ -80,7 +85,8 @@ class MultiSpanSuppressorTest {
 
     SpanSuppressor suppressor = MultiSpanSuppressor.create(suppressor1, suppressor2);
 
-    Assertions.assertThat(suppressor.storeInContext(original, spanKind, span)).isEqualTo(fromSuppressor2);
+    Assertions.assertThat(suppressor.storeInContext(original, spanKind, span))
+        .isEqualTo(fromSuppressor2);
     verify(suppressor1).storeInContext(original, spanKind, span);
     verify(suppressor2).storeInContext(fromSuppressor1, spanKind, span);
   }

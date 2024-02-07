@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
@@ -28,7 +33,7 @@ class MultiSpanSuppressor implements SpanSuppressor {
   @Override
   public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
     for (SpanSuppressor suppressor : suppressors) {
-      if(suppressor.shouldSuppress(parentContext, spanKind)) {
+      if (suppressor.shouldSuppress(parentContext, spanKind)) {
         return true;
       }
     }

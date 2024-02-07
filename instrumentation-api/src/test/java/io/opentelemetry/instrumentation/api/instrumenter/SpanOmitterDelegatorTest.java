@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,11 +29,12 @@ class SpanOmitterDelegatorTest {
 
     SpanSuppressor suppressor = SpanOmitterDelegator.create(Collections.emptyList());
 
-    assertThat(suppressor.storeInContext(context, SpanKind.CLIENT, Span.getInvalid())).isEqualTo(context);
+    assertThat(suppressor.storeInContext(context, SpanKind.CLIENT, Span.getInvalid()))
+        .isEqualTo(context);
   }
 
   @Test
-  void suppressSpanWhenAtLeastOneOmitterOmitsIt(){
+  void suppressSpanWhenAtLeastOneOmitterOmitsIt() {
     Context context = mock(Context.class);
     List<SpanOmitter> omitters = new ArrayList<>();
     SpanOmitter omitter1 = createOmitter(false);
@@ -47,7 +53,7 @@ class SpanOmitterDelegatorTest {
   }
 
   @Test
-  void shouldNotSuppressWhenNoOmitterOmitsIt(){
+  void shouldNotSuppressWhenNoOmitterOmitsIt() {
     Context context = mock(Context.class);
     List<SpanOmitter> omitters = new ArrayList<>();
     SpanOmitter omitter1 = createOmitter(false);
