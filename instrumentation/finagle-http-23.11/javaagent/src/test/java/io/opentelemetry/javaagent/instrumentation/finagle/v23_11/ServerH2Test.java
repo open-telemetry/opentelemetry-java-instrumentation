@@ -34,7 +34,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ServerH2Test extends AbstractServerTest {
+class ServerH2Test extends AbstractServerTest {
 
   @RegisterExtension
   static final FinagleClientExtension extension = FinagleClientExtension.http_2();

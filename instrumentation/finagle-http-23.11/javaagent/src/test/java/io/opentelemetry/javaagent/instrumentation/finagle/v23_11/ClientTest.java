@@ -44,7 +44,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  *     untested due to lack of concrete support from the otel instrumentation test framework and
  *     upstream netty instrumentation, both.
  */
-public class ClientTest extends AbstractHttpClientTest<Request> {
+class ClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 

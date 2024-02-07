@@ -38,7 +38,7 @@ import java.net.URI;
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer> {
+abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();

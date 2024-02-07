@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.finagle.v23_11;
 import com.twitter.finagle.Http;
 import com.twitter.finagle.ListeningServer;
 
-public class ServerH1Test extends AbstractServerTest {
+class ServerH1Test extends AbstractServerTest {
   @Override
   protected ListeningServer setupServer() {
     return Http.server()
