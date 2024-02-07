@@ -12,6 +12,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -67,6 +68,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean enabled = true;
+  private final List<SpanOmitter> omitters = new ArrayList<>();
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -168,6 +170,18 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addOperationMetrics(OperationMetrics factory) {
     operationMetrics.add(requireNonNull(factory, "operationMetrics"));
+    return this;
+  }
+
+  /**
+   * Adds a {@link SpanOmitter} which will be evaluated right before creating a new {@link Span} to
+   * decide whether to continue with the {@link Span} creation or to avoid it.
+   */
+  @CanIgnoreReturnValue
+  public InstrumenterBuilder<REQUEST, RESPONSE> addSpanOmitter(SpanOmitter spanOmitter) {
+    if (!omitters.contains(spanOmitter)) {
+      omitters.add(spanOmitter);
+    }
     return this;
   }
 
@@ -354,8 +368,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressor buildSpanSuppressor() {
-    return new SpanSuppressors.ByContextKey(
-        spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
+    SpanSuppressors.ByContextKey suppressor =
+        new SpanSuppressors.ByContextKey(
+            spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
+
+    if (omitters.isEmpty()) {
+      return suppressor;
+    } else {
+      return MultiSpanSuppressor.create(suppressor, SpanOmitterDelegator.create(omitters));
+    }
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {

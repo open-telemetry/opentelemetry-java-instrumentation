@@ -9,6 +9,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -701,6 +704,24 @@ class InstrumenterTest {
 
     assertThatSpanKeyWasStored(SpanKey.DB_CLIENT, context);
     assertThatSpanKeyWasStored(SpanKey.HTTP_CLIENT, context);
+  }
+
+  @Test
+  void addSpanOmitter() {
+    SpanOmitter omitter = mock(SpanOmitter.class);
+    doReturn(false).when(omitter).shouldOmit(any());
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .addSpanOmitter(omitter)
+            .buildInstrumenter();
+
+    assertThat(instrumenter.shouldStart(Context.root(), "request")).isTrue();
+
+    // Change omitter's decision
+    doReturn(true).when(omitter).shouldOmit(any());
+
+    assertThat(instrumenter.shouldStart(Context.root(), "request")).isFalse();
   }
 
   private static void assertThatSpanKeyWasStored(SpanKey spanKey, Context context) {
