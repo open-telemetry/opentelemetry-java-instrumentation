@@ -48,7 +48,7 @@ final class CassandraAttributesExtractor
     if (coordinator != null) {
       try {
         updateServerAddressAndPort(attributes, coordinator);
-      } catch (NoSuchFieldException | IllegalAccessException e) {
+      } catch (IllegalAccessException e) {
         logger.error("Error while extracting server address and port", e);
       }
 
