@@ -92,7 +92,7 @@ final class CassandraAttributesExtractor
   }
 
   private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator)
-      throws NoSuchFieldException, IllegalAccessException {
+      throws IllegalAccessException {
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
