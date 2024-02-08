@@ -46,11 +46,7 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      try {
-        updateServerAddressAndPort(attributes, coordinator);
-      } catch (IllegalAccessException e) {
-        logger.error("Error while extracting server address and port", e);
-      }
+      updateServerAddressAndPort(attributes, coordinator);
 
       if (coordinator.getDatacenter() != null) {
         attributes.put(SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
@@ -91,8 +87,7 @@ final class CassandraAttributesExtractor
     attributes.put(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, idempotent);
   }
 
-  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator)
-      throws IllegalAccessException {
+  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
@@ -100,7 +95,14 @@ final class CassandraAttributesExtractor
       attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
     } else if (endPoint instanceof SniEndPoint && proxyAddressField != null) {
       SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
-      Object object = proxyAddressField.get(sniEndPoint);
+      Object object = null;
+      try {
+        object = proxyAddressField.get(sniEndPoint);
+      } catch (IllegalAccessException e) {
+        logger.warn(
+            "Error when retrieving the private field proxyAddress of SniEndPoint using reflection.",
+            e);
+      }
       if (object instanceof InetSocketAddress) {
         InetSocketAddress address = (InetSocketAddress) object;
         attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
