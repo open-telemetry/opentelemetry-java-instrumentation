@@ -129,33 +129,31 @@ public class EntityManagerTest extends AbstractHibernateTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(4)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
-                    span ->
-                        span.hasName("SELECT db1.Value")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-                                equalTo(SemanticAttributes.DB_NAME, "db1"),
-                                equalTo(SemanticAttributes.DB_USER, "sa"),
-                                equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-                                satisfies(
-                                    SemanticAttributes.DB_STATEMENT,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
-                                equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
-                    span ->
-                        assertTransactionCommitSpan(
-                            span,
-                            trace.getSpan(0),
-                            trace
-                                .getSpan(1)
-                                .getAttributes()
-                                .get(AttributeKey.stringKey("hibernate.session_id")))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
+                span ->
+                    span.hasName("SELECT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
+                            equalTo(SemanticAttributes.DB_NAME, "db1"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            satisfies(
+                                SemanticAttributes.DB_STATEMENT,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
+                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                span ->
+                    assertTransactionCommitSpan(
+                        span,
+                        trace.getSpan(0),
+                        trace
+                            .getSpan(1)
+                            .getAttributes()
+                            .get(AttributeKey.stringKey("hibernate.session_id")))));
   }
 
   private static Stream<Arguments> provideHibernateActionParameters() {
