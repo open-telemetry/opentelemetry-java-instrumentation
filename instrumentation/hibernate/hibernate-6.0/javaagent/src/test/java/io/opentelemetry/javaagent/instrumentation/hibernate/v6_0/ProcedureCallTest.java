@@ -86,40 +86,38 @@ public class ProcedureCallTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(4)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("ProcedureCall.getOutputs TEST_PROC")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    AttributeKey.stringKey("hibernate.session_id"),
-                                    val -> val.isInstanceOf(String.class))),
-                    span ->
-                        span.hasName("CALL test.TEST_PROC")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
-                                equalTo(SemanticAttributes.DB_NAME, "test"),
-                                equalTo(SemanticAttributes.DB_USER, "sa"),
-                                equalTo(SemanticAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                                equalTo(SemanticAttributes.DB_STATEMENT, "{call TEST_PROC()}"),
-                                equalTo(SemanticAttributes.DB_OPERATION, "CALL")),
-                    span ->
-                        span.hasName("Transaction.commit")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    AttributeKey.stringKey("hibernate.session_id"),
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(AttributeKey.stringKey("hibernate.session_id"))))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("CALL test.TEST_PROC")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
+                            equalTo(SemanticAttributes.DB_NAME, "test"),
+                            equalTo(SemanticAttributes.DB_USER, "sa"),
+                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(SemanticAttributes.DB_STATEMENT, "{call TEST_PROC()}"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "CALL")),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 
   @Test
@@ -145,44 +143,41 @@ public class ProcedureCallTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(3)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("ProcedureCall.getOutputs TEST_PROC")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("exception")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                AttributeKey.stringKey("exception.type"),
-                                                "org.hibernate.exception.SQLGrammarException"),
-                                            satisfies(
-                                                AttributeKey.stringKey("exception.message"),
-                                                val ->
-                                                    val.startsWith("could not prepare statement")),
-                                            satisfies(
-                                                AttributeKey.stringKey("exception.stacktrace"),
-                                                val -> val.isNotNull())))
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    AttributeKey.stringKey("hibernate.session_id"),
-                                    val -> val.isInstanceOf(String.class))),
-                    span ->
-                        span.hasName("Transaction.commit")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    AttributeKey.stringKey("hibernate.session_id"),
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(AttributeKey.stringKey("hibernate.session_id"))))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            AttributeKey.stringKey("exception.type"),
+                                            "org.hibernate.exception.SQLGrammarException"),
+                                        satisfies(
+                                            AttributeKey.stringKey("exception.message"),
+                                            val -> val.startsWith("could not prepare statement")),
+                                        satisfies(
+                                            AttributeKey.stringKey("exception.stacktrace"),
+                                            val -> val.isNotNull())))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 }
