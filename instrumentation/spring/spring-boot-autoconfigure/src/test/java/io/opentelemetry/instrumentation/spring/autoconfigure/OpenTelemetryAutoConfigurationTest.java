@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -16,9 +17,11 @@ import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import java.util.Properties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
@@ -114,6 +117,27 @@ class OpenTelemetryAutoConfigurationTest {
               Resource otelResource = context.getBean("otelResource", Resource.class);
 
               assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("myapp-backend");
+            });
+  }
+
+  @Test
+  @DisplayName(
+      "when spring.application.name is set value should be passed to service name attribute")
+  void shouldDetermineServiceNameAndVersionBySpringApplicationVersion() {
+    Properties properties = new Properties();
+    properties.put("name", "demo");
+    properties.put("version", "0.3");
+    this.contextRunner
+        .withBean("buildProperties", BuildProperties.class, () -> new BuildProperties(properties))
+        .withConfiguration(
+            AutoConfigurations.of(
+                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
+        .run(
+            context -> {
+              Resource otelResource = context.getBean("otelResource", Resource.class);
+
+              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("demo");
+              assertThat(otelResource.getAttribute(SERVICE_VERSION)).isEqualTo("0.3");
             });
   }
 

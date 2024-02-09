@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.resources.ContainerResource;
 import io.opentelemetry.instrumentation.resources.ContainerResourceProvider;
 import io.opentelemetry.instrumentation.resources.HostResource;
 import io.opentelemetry.instrumentation.resources.HostResourceProvider;
+import io.opentelemetry.instrumentation.resources.JarServiceNameDetector;
 import io.opentelemetry.instrumentation.resources.OsResource;
 import io.opentelemetry.instrumentation.resources.OsResourceProvider;
 import io.opentelemetry.instrumentation.resources.ProcessResource;
@@ -18,10 +19,13 @@ import io.opentelemetry.instrumentation.resources.ProcessRuntimeResourceProvider
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,13 +41,20 @@ public class OtelResourceAutoConfiguration {
   }
 
   @Bean
-  public ResourceProvider otelSpringResourceProvider() {
-    return new SpringResourceProvider();
+  public ResourceProvider otelSpringResourceProvider(
+      @Autowired(required = false) BuildProperties buildProperties) {
+    return new SpringResourceProvider(Optional.ofNullable(buildProperties));
   }
 
   @Bean
   public ResourceProvider otelDistroVersionResourceProvider() {
     return new DistroVersionResourceProvider();
+  }
+
+  @Bean
+  @ConditionalOnClass(JarServiceNameDetector.class)
+  public ResourceProvider otelJarResourceProvider() {
+    return new JarServiceNameDetector();
   }
 
   @Bean
