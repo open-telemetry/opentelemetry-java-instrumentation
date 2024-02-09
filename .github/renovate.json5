@@ -4,6 +4,7 @@
     "config:base"
   ],
   "ignorePaths": ["instrumentation/**"],
+  "baseBranches": ["main", "release/v1.32.x"],
   "packageRules": [
     {
       "matchPackagePrefixes": ["ch.qos.logback:"],
