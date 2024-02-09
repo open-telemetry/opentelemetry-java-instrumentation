@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.EAR_EXTENSION;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.JAR_EXTENSION;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.WAR_EXTENSION;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -18,6 +19,7 @@ import io.opentelemetry.api.events.GlobalEventEmitterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
+import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.net.URI;
@@ -108,7 +110,9 @@ final class JarAnalyzer implements ClassFileTransformer {
     try {
       locationUri = archiveUrl.toURI();
     } catch (URISyntaxException e) {
-      logger.log(Level.WARNING, "Unable to get URI for code location URL: " + archiveUrl, e);
+      if (logger.isLoggable(FINE)) {
+        logger.log(Level.WARNING, "Unable to get URI for code location URL: " + archiveUrl, e);
+      }
       return;
     }
 
@@ -127,8 +131,28 @@ final class JarAnalyzer implements ClassFileTransformer {
     if (!file.endsWith(JAR_EXTENSION)
         && !file.endsWith(WAR_EXTENSION)
         && !file.endsWith(EAR_EXTENSION)) {
-      logger.log(Level.INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
+      if (logger.isLoggable(FINE)) {
+        logger.log(Level.INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
+      }
       return;
+    }
+
+    // Payara 5 and 6 have url with file protocol that fail on openStream with
+    // java.io.IOException: no entry name specified
+    //   at
+    // java.base/sun.net.www.protocol.jar.JarURLConnection.getInputStream(JarURLConnection.java:160)
+    // To avoid this here we recreate the URL when it points to a file.
+    if ("file".equals(archiveUrl.getProtocol())) {
+      try {
+        File archiveFile = new File(archiveUrl.toURI().getSchemeSpecificPart());
+        if (archiveFile.exists() && archiveFile.isFile()) {
+          archiveUrl = archiveFile.toURI().toURL();
+        }
+      } catch (Exception e) {
+        if (logger.isLoggable(FINE)) {
+          logger.log(Level.WARNING, "Unable to normalize location URL: " + archiveUrl, e);
+        }
+      }
     }
 
     // Only code locations with .jar and .war extension should make it here
@@ -174,10 +198,14 @@ final class JarAnalyzer implements ClassFileTransformer {
           // events
           processUrl(eventEmitter, archiveUrl);
         } catch (Throwable e) {
-          logger.log(Level.WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
+          if (logger.isLoggable(FINE)) {
+            logger.log(Level.WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
+          }
         }
       }
-      logger.warning("JarAnalyzer stopped");
+      if (logger.isLoggable(FINE)) {
+        logger.warning("JarAnalyzer stopped");
+      }
     }
   }
 
@@ -190,7 +218,9 @@ final class JarAnalyzer implements ClassFileTransformer {
     try {
       jarDetails = JarDetails.forUrl(archiveUrl);
     } catch (IOException e) {
-      logger.log(Level.WARNING, "Error reading package for archive URL: " + archiveUrl, e);
+      if (logger.isLoggable(FINE)) {
+        logger.log(Level.WARNING, "Error reading package for archive URL: " + archiveUrl, e);
+      }
       return;
     }
     AttributesBuilder builder = Attributes.builder();
