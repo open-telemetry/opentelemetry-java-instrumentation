@@ -9,7 +9,16 @@ group = "io.opentelemetry.instrumentation"
 val versions: Map<String, String> by project
 val springBootVersion = versions["org.springframework.boot"]
 
+configurations.all {
+  resolutionStrategy {
+    force("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.36.0-SNAPSHOT")
+    force("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.36.0-SNAPSHOT")
+  }
+}
+
 dependencies {
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.36.0-SNAPSHOT")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.36.0-SNAPSHOT")
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")

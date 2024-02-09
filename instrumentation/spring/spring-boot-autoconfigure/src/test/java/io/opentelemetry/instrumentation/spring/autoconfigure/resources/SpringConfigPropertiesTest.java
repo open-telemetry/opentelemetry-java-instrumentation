@@ -8,8 +8,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;

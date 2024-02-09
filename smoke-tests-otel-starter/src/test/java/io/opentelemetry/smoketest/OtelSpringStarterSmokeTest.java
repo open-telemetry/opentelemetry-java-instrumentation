@@ -7,8 +7,12 @@ package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.logs.ConfigurableLogRecordExporterProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.metrics.ConfigurableMetricExporterProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.traces.ConfigurableSpanExporterProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
@@ -43,6 +47,9 @@ import org.springframework.context.annotation.Configuration;
       "otel.logs.exporter=none",
       "otel.metric.export.interval=100",
       "otel.exporter.otlp.headers=a=1,b=2",
+      "otel.traces.exporter=memory",
+      "otel.metrics.exporter=memory",
+      "otel.logs.exporter=memory"
       // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
       // the headers are simply set here to make sure that headers can be parsed
     })
@@ -60,19 +67,50 @@ class OtelSpringStarterSmokeTest {
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
+
     @Bean
-    public MetricExporter metricExporter() {
-      return METRIC_EXPORTER;
+    ConfigurableMetricExporterProvider otlpMetricExporterProvider() {
+      return new ConfigurableMetricExporterProvider() {
+        @Override
+        public MetricExporter createExporter(ConfigProperties configProperties) {
+          return METRIC_EXPORTER;
+        }
+
+        @Override
+        public String getName() {
+          return "memory";
+        }
+      };
     }
 
     @Bean
-    public SpanExporter spanExporter() {
-      return SPAN_EXPORTER;
+    ConfigurableSpanExporterProvider otlpSpanExporterProvider() {
+      return new ConfigurableSpanExporterProvider() {
+        @Override
+        public SpanExporter createExporter(ConfigProperties configProperties) {
+          return SPAN_EXPORTER;
+        }
+
+        @Override
+        public String getName() {
+          return "memory";
+        }
+      };
     }
 
     @Bean
-    public LogRecordExporter logRecordExporter() {
-      return LOG_RECORD_EXPORTER;
+    ConfigurableLogRecordExporterProvider otlpLogRecordExporterProvider() {
+      return new ConfigurableLogRecordExporterProvider() {
+        @Override
+        public LogRecordExporter createExporter(ConfigProperties configProperties) {
+          return LOG_RECORD_EXPORTER;
+        }
+
+        @Override
+        public String getName() {
+          return "memory";
+        }
+      };
     }
   }
 
@@ -111,6 +149,14 @@ class OtelSpringStarterSmokeTest {
                     spanDataAssert ->
                         spanDataAssert
                             .hasKind(SpanKind.SERVER)
+                            .hasResourceSatisfying(
+                                r ->
+                                    r.hasAttribute(
+                                            AttributeKey.booleanKey(
+                                                "AutoConfigurationCustomizerProvider"),
+                                            true)
+                                        .hasAttribute(
+                                            AttributeKey.stringKey("applicationYaml"), "true"))
                             .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
                             .hasAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
                             .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/ping")));

@@ -10,12 +10,22 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+configurations.all {
+  resolutionStrategy {
+    force("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.36.0-SNAPSHOT")
+    force("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.36.0-SNAPSHOT")
+  }
+}
+
 dependencies {
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.36.0-SNAPSHOT")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.36.0-SNAPSHOT")
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
   implementation("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
   implementation(project(":instrumentation:jdbc:library"))
+  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 

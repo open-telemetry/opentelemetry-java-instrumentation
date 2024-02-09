@@ -3,16 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
+package io.opentelemetry.instrumentation.spring.autoconfigure.properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -38,9 +34,9 @@ class OtlpExporterPropertiesTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withConfiguration(
-              AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, OtelResourceAutoConfiguration.class));
+          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+          .withPropertyValues(
+              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none");
 
   public static Stream<Arguments> headerKeys() {
     return Arrays.stream(HEADER_KEYS).map(Arguments::of);

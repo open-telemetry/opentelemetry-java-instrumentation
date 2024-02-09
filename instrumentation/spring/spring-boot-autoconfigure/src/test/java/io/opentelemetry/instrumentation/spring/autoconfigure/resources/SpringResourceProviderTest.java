@@ -26,10 +26,9 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 public class SpringResourceProviderTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withPropertyValues("otel.springboot.resource.enabled=true")
-          .withConfiguration(
-              AutoConfigurations.of(
-                  OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class));
+          .withPropertyValues(
+              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none")
+          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class));
 
   @Test
   @DisplayName("when attributes are SET should set OtelResourceProperties with given attributes")
@@ -49,15 +48,6 @@ public class SpringResourceProviderTest {
                       .asMap())
               .contains(entry(AttributeKey.stringKey("service.name"), "backend"));
         });
-  }
-
-  @Test
-  @DisplayName("when attributes are DEFAULT should set OtelResourceProperties to default values")
-  void hasDefaultTypes() {
-
-    this.contextRunner.run(
-        context ->
-            assertThat(context.getBean(OtelResourceProperties.class).getAttributes()).isEmpty());
   }
 
   @Test
