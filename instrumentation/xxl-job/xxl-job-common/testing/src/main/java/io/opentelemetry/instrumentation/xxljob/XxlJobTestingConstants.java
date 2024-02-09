@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.xxljob;
 
 import java.lang.reflect.Method;
 
-public final class XxlJobTestingConstants {
+public class XxlJobTestingConstants {
 
   private XxlJobTestingConstants() {}
 

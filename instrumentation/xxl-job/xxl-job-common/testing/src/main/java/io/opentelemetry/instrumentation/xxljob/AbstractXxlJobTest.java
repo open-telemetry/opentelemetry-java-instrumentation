@@ -22,7 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public abstract class AbstractXxlJobTest {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void testGlueJob() {
