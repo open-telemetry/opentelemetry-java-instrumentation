@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.Ja
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.JAR_EXTENSION;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarDetails.WAR_EXTENSION;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -56,10 +58,12 @@ final class JarAnalyzer implements ClassFileTransformer {
       AttributeKey.stringKey("package.checksum_algorithm");
   static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
+  private final boolean debug;
   private final Set<URI> seenUris = new HashSet<>();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
 
-  private JarAnalyzer(OpenTelemetry unused, int jarsPerSecond) {
+  private JarAnalyzer(OpenTelemetry unused, int jarsPerSecond, boolean debug) {
+    this.debug = debug;
     // TODO(jack-berg): Use OpenTelemetry to obtain EventEmitter when event API is stable
     EventEmitter eventEmitter =
         GlobalEventEmitterProvider.get()
@@ -67,7 +71,7 @@ final class JarAnalyzer implements ClassFileTransformer {
             .setInstrumentationVersion(JmxRuntimeMetricsUtil.getInstrumentationVersion())
             .setEventDomain(EVENT_DOMAIN_PACKAGE)
             .build();
-    Worker worker = new Worker(eventEmitter, toProcess, jarsPerSecond);
+    Worker worker = new Worker(eventEmitter, toProcess, jarsPerSecond, debug);
     Thread workerThread =
         new DaemonThreadFactory(JarAnalyzer.class.getSimpleName() + "_WorkerThread")
             .newThread(worker);
@@ -75,8 +79,8 @@ final class JarAnalyzer implements ClassFileTransformer {
   }
 
   /** Create {@link JarAnalyzer} and start the worker thread. */
-  public static JarAnalyzer create(OpenTelemetry unused, int jarsPerSecond) {
-    return new JarAnalyzer(unused, jarsPerSecond);
+  public static JarAnalyzer create(OpenTelemetry unused, int jarsPerSecond, boolean debug) {
+    return new JarAnalyzer(unused, jarsPerSecond, debug);
   }
 
   /**
@@ -110,9 +114,8 @@ final class JarAnalyzer implements ClassFileTransformer {
     try {
       locationUri = archiveUrl.toURI();
     } catch (URISyntaxException e) {
-      if (logger.isLoggable(FINE)) {
-        logger.log(Level.WARNING, "Unable to get URI for code location URL: " + archiveUrl, e);
-      }
+      logger.log(
+          debug ? WARNING : FINE, "Unable to get URI for code location URL: " + archiveUrl, e);
       return;
     }
 
@@ -131,9 +134,8 @@ final class JarAnalyzer implements ClassFileTransformer {
     if (!file.endsWith(JAR_EXTENSION)
         && !file.endsWith(WAR_EXTENSION)
         && !file.endsWith(EAR_EXTENSION)) {
-      if (logger.isLoggable(FINE)) {
-        logger.log(Level.INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
-      }
+      logger.log(
+          debug ? INFO : FINE, "Skipping processing unrecognized code location: {0}", archiveUrl);
       return;
     }
 
@@ -149,9 +151,7 @@ final class JarAnalyzer implements ClassFileTransformer {
           archiveUrl = archiveFile.toURI().toURL();
         }
       } catch (Exception e) {
-        if (logger.isLoggable(FINE)) {
-          logger.log(Level.WARNING, "Unable to normalize location URL: " + archiveUrl, e);
-        }
+        logger.log(debug ? WARNING : FINE, "Unable to normalize location URL: " + archiveUrl, e);
       }
     }
 
@@ -164,18 +164,21 @@ final class JarAnalyzer implements ClassFileTransformer {
     private final EventEmitter eventEmitter;
     private final BlockingQueue<URL> toProcess;
     private final io.opentelemetry.sdk.internal.RateLimiter rateLimiter;
+    private final boolean debug;
 
-    private Worker(EventEmitter eventEmitter, BlockingQueue<URL> toProcess, int jarsPerSecond) {
+    private Worker(
+        EventEmitter eventEmitter, BlockingQueue<URL> toProcess, int jarsPerSecond, boolean debug) {
       this.eventEmitter = eventEmitter;
       this.toProcess = toProcess;
       this.rateLimiter =
           new io.opentelemetry.sdk.internal.RateLimiter(
               jarsPerSecond, jarsPerSecond, Clock.getDefault());
+      this.debug = debug;
     }
 
     /**
      * Continuously poll the {@link #toProcess} for archive {@link URL}s, and process each wit
-     * {@link #processUrl(EventEmitter, URL)}.
+     * {@link #processUrl(EventEmitter, URL, boolean)}.
      */
     @Override
     public void run() {
@@ -196,16 +199,13 @@ final class JarAnalyzer implements ClassFileTransformer {
         try {
           // TODO(jack-berg): add ability to optionally re-process urls periodically to re-emit
           // events
-          processUrl(eventEmitter, archiveUrl);
+          processUrl(eventEmitter, archiveUrl, debug);
         } catch (Throwable e) {
-          if (logger.isLoggable(FINE)) {
-            logger.log(Level.WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
-          }
+          logger.log(
+              debug ? WARNING : FINE, "Unexpected error processing archive URL: " + archiveUrl, e);
         }
       }
-      if (logger.isLoggable(FINE)) {
-        logger.warning("JarAnalyzer stopped");
-      }
+      logger.log(debug ? WARNING : FINE, "JarAnalyzer stopped");
     }
   }
 
@@ -213,14 +213,12 @@ final class JarAnalyzer implements ClassFileTransformer {
    * Process the {@code archiveUrl}, extracting metadata from it and emitting an event with the
    * content.
    */
-  static void processUrl(EventEmitter eventEmitter, URL archiveUrl) {
+  static void processUrl(EventEmitter eventEmitter, URL archiveUrl, boolean debug) {
     JarDetails jarDetails;
     try {
       jarDetails = JarDetails.forUrl(archiveUrl);
     } catch (IOException e) {
-      if (logger.isLoggable(FINE)) {
-        logger.log(Level.WARNING, "Error reading package for archive URL: " + archiveUrl, e);
-      }
+      logger.log(debug ? WARNING : FINE, "Error reading package for archive URL: " + archiveUrl, e);
       return;
     }
     AttributesBuilder builder = Attributes.builder();

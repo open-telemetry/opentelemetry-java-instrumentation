@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -32,7 +33,10 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
     int jarsPerSecond =
         config.getInt("otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second", 10);
     JarAnalyzer jarAnalyzer =
-        JarAnalyzer.create(autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(), jarsPerSecond);
+        JarAnalyzer.create(
+            autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(),
+            jarsPerSecond,
+            AgentConfig.isDebugModeEnabled(config));
     inst.addTransformer(jarAnalyzer);
   }
 }
