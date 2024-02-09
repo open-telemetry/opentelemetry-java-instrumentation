@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -21,6 +22,11 @@ public class MyBatisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new MyBatisExecuteInstrumentation());
+    return asList(new MapperMethodInstrumentation(), new SqlCommandInstrumentation());
+  }
+
+  @Override
+  public boolean defaultEnabled(ConfigProperties config) {
+    return false;
   }
 }

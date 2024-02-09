@@ -6,26 +6,32 @@
 package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 public final class MyBatisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.mybatis-3.2";
-
-  private static final Instrumenter<MapperMethodRequest, Void> MAPPER_INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 
   static {
-    SpanNameExtractor<MapperMethodRequest> spanNameExtractor = new MyBatisSpanNameExtractor();
+    CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
+        ClassAndMethod.codeAttributesGetter();
 
-    MAPPER_INSTRUMENTER =
-        Instrumenter.<MapperMethodRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+    INSTRUMENTER =
+        Instrumenter.<ClassAndMethod, Void>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
-  public static Instrumenter<MapperMethodRequest, Void> mapperInstrumenter() {
-    return MAPPER_INSTRUMENTER;
+  public static Instrumenter<ClassAndMethod, Void> instrumenter() {
+    return INSTRUMENTER;
   }
 
   private MyBatisSingletons() {}

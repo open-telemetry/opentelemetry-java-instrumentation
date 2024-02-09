@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.mybatis.v3_2.MyBatisSingletons.mapperInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.mybatis.v3_2.MyBatisSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -18,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public class MyBatisExecuteInstrumentation implements TypeInstrumentation {
+public class MapperMethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,7 +29,7 @@ public class MyBatisExecuteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute"), MyBatisExecuteInstrumentation.class.getName() + "$ExecuteAdvice");
+        named("execute"), MapperMethodInstrumentation.class.getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -37,27 +38,33 @@ public class MyBatisExecuteInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void getMapperInfo(
         @Advice.FieldValue("command") SqlCommand command,
-        @Advice.Local("otelRequest") MapperMethodRequest request,
+        @Advice.Local("otelRequest") ClassAndMethod request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (command == null || !mapperInstrumenter().shouldStart(parentContext, request)) {
+      if (command == null) {
         return;
       }
-      request = MapperMethodRequest.create(command.getName());
-      context = mapperInstrumenter().start(parentContext, request);
+      request = SqlCommandUtil.getClassAndMethod(command);
+      if (request == null) {
+        return;
+      }
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") MapperMethodRequest request,
+        @Advice.Local("otelRequest") ClassAndMethod request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope != null) {
         scope.close();
-        mapperInstrumenter().end(context, request, null, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
     }
   }
