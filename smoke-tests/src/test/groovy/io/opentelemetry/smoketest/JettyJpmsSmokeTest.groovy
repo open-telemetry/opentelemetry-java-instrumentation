@@ -21,9 +21,6 @@ class Jetty11JpmsJdk11 extends JettyJpmsSmokeTest {
 @AppServer(version = "11.0.19", jdk = "17")
 class Jetty11JpmsJdk17 extends JettyJpmsSmokeTest {
 }
-@AppServer(version = "11.0.19", jdk = "20")
-class Jetty11JpmsJdk20 extends JettyJpmsSmokeTest {
-}
 @AppServer(version = "11.0.19", jdk = "21")
 class Jetty11JpmsJdk21 extends JettyJpmsSmokeTest {
 }
