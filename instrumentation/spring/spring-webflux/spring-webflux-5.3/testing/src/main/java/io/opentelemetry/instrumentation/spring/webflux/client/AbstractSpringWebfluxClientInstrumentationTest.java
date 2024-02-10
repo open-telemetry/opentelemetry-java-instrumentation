@@ -34,6 +34,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 public abstract class AbstractSpringWebfluxClientInstrumentationTest
     extends AbstractHttpClientTest<WebClient.RequestBodySpec> {
 
+  private static final String URI_TEMPLATE_ATTRIBUTE = WebClient.class.getName() + ".uriTemplate";
+
   @Override
   public WebClient.RequestBodySpec buildRequest(
       String method, URI uri, Map<String, String> headers) {
@@ -45,6 +47,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     return webClient
         .method(HttpMethod.valueOf(method))
         .uri(uri)
+        .attribute(URI_TEMPLATE_ATTRIBUTE, uri.getPath())
         .headers(h -> headers.forEach(h::add));
   }
 
@@ -182,6 +185,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.URL_FULL, uri.toString()),
+                            equalTo(SemanticAttributes.HTTP_ROUTE, uri.getPath()),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
                             equalTo(SemanticAttributes.ERROR_TYPE, "cancelled")),
