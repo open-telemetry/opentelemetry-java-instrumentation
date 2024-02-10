@@ -56,7 +56,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
-@EnableConfigurationProperties({MetricExportProperties.class,SamplerProperties.class, OtlpExporterProperties.class})
+@EnableConfigurationProperties({
+  MetricExportProperties.class,
+  SamplerProperties.class,
+  OtlpExporterProperties.class
+})
 public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
