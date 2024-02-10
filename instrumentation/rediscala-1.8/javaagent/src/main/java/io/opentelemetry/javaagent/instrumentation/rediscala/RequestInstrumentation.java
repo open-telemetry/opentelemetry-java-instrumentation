@@ -23,7 +23,11 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.ActorRequest;
+import redis.BufferedRequest;
 import redis.RedisCommand;
+import redis.Request;
+import redis.RoundRobinPoolRequest;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 
@@ -74,17 +78,28 @@ public class RequestInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
+        @Advice.This Object action,
         @Advice.Argument(0) RedisCommand<?, ?> cmd,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable,
-        @Advice.FieldValue("executionContext") ExecutionContext ctx,
         @Advice.Return(readOnly = false) Future<Object> responseFuture) {
 
       if (scope == null) {
         return;
       }
       scope.close();
+
+      ExecutionContext ctx = null;
+      if (action instanceof ActorRequest) {
+        ctx = ((ActorRequest) action).executionContext();
+      } else if (action instanceof Request) {
+        ctx = ((Request) action).executionContext();
+      } else if (action instanceof BufferedRequest) {
+        ctx = ((BufferedRequest) action).executionContext();
+      } else if (action instanceof RoundRobinPoolRequest) {
+        ctx = ((RoundRobinPoolRequest) action).executionContext();
+      }
 
       if (throwable != null) {
         instrumenter().end(context, cmd, null, throwable);

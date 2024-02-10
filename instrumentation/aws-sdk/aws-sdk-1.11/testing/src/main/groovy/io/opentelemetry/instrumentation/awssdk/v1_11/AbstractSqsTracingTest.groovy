@@ -152,6 +152,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             if (testCaptureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
@@ -319,6 +320,7 @@ abstract class AbstractSqsTracingTest extends InstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
+            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }

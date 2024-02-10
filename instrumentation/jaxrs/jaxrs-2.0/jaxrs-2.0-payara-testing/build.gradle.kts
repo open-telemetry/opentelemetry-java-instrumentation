@@ -16,3 +16,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent"))
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+}

@@ -80,3 +80,6 @@ tasks {
 configurations.configureEach {
   exclude("org.eclipse.jetty.websocket", "websocket-client")
 }
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

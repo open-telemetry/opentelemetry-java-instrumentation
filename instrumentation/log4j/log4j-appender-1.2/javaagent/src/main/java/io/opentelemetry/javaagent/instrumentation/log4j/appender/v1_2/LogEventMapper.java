@@ -135,7 +135,7 @@ public final class LogEventMapper {
   }
 
   private static AttributeKey<String> getMdcAttributeKey(String key) {
-    return mdcAttributeKeys.computeIfAbsent(key, k -> AttributeKey.stringKey("log4j.mdc." + k));
+    return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static Severity levelToSeverity(Priority level) {

@@ -11,15 +11,22 @@ import io.opentelemetry.api.OpenTelemetry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
 class RestTemplateBeanPostProcessorTest {
+  private static final DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+
+  static {
+    beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
+  }
 
   @Test
   @DisplayName("when processed bean is not of type RestTemplate should return object")
   void returnsObject() {
-    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(() -> OpenTelemetry.noop());
+    BeanPostProcessor underTest =
+        new RestTemplateBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     assertThat(underTest.postProcessAfterInitialization(new Object(), "testObject"))
         .isExactlyInstanceOf(Object.class);
@@ -28,7 +35,8 @@ class RestTemplateBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is of type RestTemplate should return RestTemplate")
   void returnsRestTemplate() {
-    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(() -> OpenTelemetry.noop());
+    BeanPostProcessor underTest =
+        new RestTemplateBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     assertThat(underTest.postProcessAfterInitialization(new RestTemplate(), "testRestTemplate"))
         .isInstanceOf(RestTemplate.class);
@@ -37,7 +45,8 @@ class RestTemplateBeanPostProcessorTest {
   @Test
   @DisplayName("when processed bean is of type RestTemplate should add ONE RestTemplateInterceptor")
   void addsRestTemplateInterceptor() {
-    BeanPostProcessor underTest = new RestTemplateBeanPostProcessor(() -> OpenTelemetry.noop());
+    BeanPostProcessor underTest =
+        new RestTemplateBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     RestTemplate restTemplate = new RestTemplate();
 

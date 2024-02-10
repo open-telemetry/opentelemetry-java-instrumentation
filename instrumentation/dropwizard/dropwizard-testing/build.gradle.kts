@@ -27,3 +27,7 @@ configurations.testRuntimeClasspath {
     force("com.fasterxml.jackson.module:jackson-module-afterburner:2.15.3")
   }
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

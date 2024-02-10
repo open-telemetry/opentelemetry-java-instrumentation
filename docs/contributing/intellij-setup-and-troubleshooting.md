@@ -31,6 +31,16 @@ on which you are not actively working.
 Specifically, unload all modules, and then selectively load the modules on which you need to work.
 IntelliJ will prompt you to load additional modules on which the selected modules depend.
 
+If you are working on a specific instrumentation, you can load only the modules for that instrumentation.
+For example, to load the modules for the Spring Boot autoconfigure instrumentation, run:
+
+```shell
+./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure/
+```
+
+Install the [Kotlin executable](https://kotlinlang.org/docs/tutorials/command-line.html)
+if you don't have it already.
+
 ## Troubleshooting
 
 Occasionally, Intellij gets confused, maybe due to the number of modules in this project,

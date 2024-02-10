@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
+import java.util.function.Supplier;
+
 /**
  * Associate value with a class loader. Added value will behave as if it was stored in a field in
  * the class loader object, meaning that the value can be garbage collected once the class loader is
@@ -20,5 +22,10 @@ public final class ClassLoaderValue<T> {
 
   public void put(ClassLoader classLoader, T value) {
     ClassLoaderMap.put(classLoader, this, value);
+  }
+
+  @SuppressWarnings("unchecked")
+  public T computeIfAbsent(ClassLoader classLoader, Supplier<? extends T> value) {
+    return (T) ClassLoaderMap.computeIfAbsent(classLoader, this, value);
   }
 }

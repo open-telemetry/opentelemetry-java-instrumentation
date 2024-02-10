@@ -43,8 +43,7 @@ public final class Log4jHelper {
             "otel.instrumentation.log4j-appender.experimental.capture-marker-attribute", false);
     List<String> captureContextDataAttributes =
         config.getList(
-            "otel.instrumentation.log4j-appender.experimental.capture-context-data-attributes",
-            emptyList());
+            "otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes", emptyList());
 
     mapper =
         new LogEventMapper<>(

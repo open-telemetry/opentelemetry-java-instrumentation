@@ -68,6 +68,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" Long
+            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.URL_PATH" "/listProducts"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
@@ -158,6 +159,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$NetworkAttributes.NETWORK_PEER_PORT" Long
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" Long
+              "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
               "$SemanticAttributes.URL_PATH" baseUrl
               "$SemanticAttributes.URL_QUERY" "$TEST_REQUEST_ID_PARAMETER=$requestId"
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"

@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES;
 import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
@@ -115,8 +115,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
-                                    equalTo(
-                                        MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
+                                    equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(
                                         MESSAGING_MESSAGE_ID,
@@ -133,8 +132,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
-                                    equalTo(
-                                        MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length),
+                                    equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(
                                         MESSAGING_MESSAGE_ID,

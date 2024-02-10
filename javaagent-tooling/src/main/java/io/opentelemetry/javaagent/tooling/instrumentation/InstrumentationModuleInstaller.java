@@ -109,8 +109,6 @@ public final class InstrumentationModuleInstaller {
       injectedHelperClassNames = Collections.emptyList();
     }
 
-    IndyModuleRegistry.registerIndyModule(instrumentationModule);
-
     ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
       ((ExperimentalInstrumentationModule) instrumentationModule)
@@ -149,14 +147,17 @@ public final class InstrumentationModuleInstaller {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
-              .transform(new PatchByteCodeVersionTransformer())
-              .transform(helperInjector);
+              .transform(new PatchByteCodeVersionTransformer());
 
       // TODO (Jonas): we are not calling
       // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
       // As a result the advices should store `VirtualFields` as static variables instead of having
       // the lookup inline
       // We need to update our documentation on that
+      extendableAgentBuilder =
+          IndyModuleRegistry.initializeModuleLoaderOnMatch(
+              instrumentationModule, extendableAgentBuilder);
+      extendableAgentBuilder = extendableAgentBuilder.transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       IndyTypeTransformerImpl typeTransformer =
           new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);

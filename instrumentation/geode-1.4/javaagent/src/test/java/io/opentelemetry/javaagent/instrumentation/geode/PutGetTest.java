@@ -126,32 +126,30 @@ class PutGetTest {
   void assertGeodeTrace(String verb, String query) {
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(4)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
-                    span ->
-                        span.hasName("clear test-region")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.DB_SYSTEM, "geode"),
-                                equalTo(SemanticAttributes.DB_NAME, "test-region"),
-                                equalTo(SemanticAttributes.DB_OPERATION, "clear")),
-                    span ->
-                        span.hasName("put test-region")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.DB_SYSTEM, "geode"),
-                                equalTo(SemanticAttributes.DB_NAME, "test-region"),
-                                equalTo(SemanticAttributes.DB_OPERATION, "put")),
-                    span ->
-                        span.hasName(verb.concat(" test-region"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.DB_SYSTEM, "geode"),
-                                equalTo(SemanticAttributes.DB_NAME, "test-region"),
-                                equalTo(SemanticAttributes.DB_OPERATION, verb),
-                                equalTo(SemanticAttributes.DB_STATEMENT, query))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("clear test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "geode"),
+                            equalTo(SemanticAttributes.DB_NAME, "test-region"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "clear")),
+                span ->
+                    span.hasName("put test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "geode"),
+                            equalTo(SemanticAttributes.DB_NAME, "test-region"),
+                            equalTo(SemanticAttributes.DB_OPERATION, "put")),
+                span ->
+                    span.hasName(verb.concat(" test-region"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.DB_SYSTEM, "geode"),
+                            equalTo(SemanticAttributes.DB_NAME, "test-region"),
+                            equalTo(SemanticAttributes.DB_OPERATION, verb),
+                            equalTo(SemanticAttributes.DB_STATEMENT, query))));
   }
 
   static class Card implements DataSerializable {

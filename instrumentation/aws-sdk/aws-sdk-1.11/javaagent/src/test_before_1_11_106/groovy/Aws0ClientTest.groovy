@@ -23,7 +23,6 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
@@ -181,7 +180,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
-            "$HttpAttributes.ERROR_TYPE" AmazonClientException.name
+            "$SemanticAttributes.ERROR_TYPE" AmazonClientException.name
           }
         }
       }
@@ -226,7 +225,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            "$HttpAttributes.ERROR_TYPE" IllegalStateException.name
+            "$SemanticAttributes.ERROR_TYPE" IllegalStateException.name
           }
         }
       }
@@ -270,7 +269,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            "$HttpAttributes.ERROR_TYPE" AmazonClientException.name
+            "$SemanticAttributes.ERROR_TYPE" AmazonClientException.name
           }
         }
       }

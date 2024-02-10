@@ -6,8 +6,13 @@ on:
         description: "The pull request # to backport"
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   backport:
+    permissions:
+      contents: write  # for Git to git push
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -16,7 +21,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           # history is needed to run git cherry-pick below
           fetch-depth: 0

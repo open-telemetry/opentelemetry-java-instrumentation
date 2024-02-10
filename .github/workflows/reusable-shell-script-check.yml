@@ -3,11 +3,14 @@ name: Reusable - Shell script check
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   shell-script-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Install shell check
         run: wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.x86_64.tar.xz" | tar -xJv

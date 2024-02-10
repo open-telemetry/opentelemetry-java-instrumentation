@@ -31,8 +31,19 @@ enum KafkaProducerAttributesGetter
     return request.getRecord().topic();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(KafkaProducerRequest request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(KafkaProducerRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(KafkaProducerRequest request) {
     return false;
   }
 
@@ -42,21 +53,34 @@ enum KafkaProducerAttributesGetter
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadSize(KafkaProducerRequest request) {
+  @Override
+  public Long getMessageBodySize(KafkaProducerRequest request) {
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(KafkaProducerRequest request) {
+  @Override
+  public Long getMessageEnvelopeSize(KafkaProducerRequest request) {
     return null;
   }
 
   @Override
   @Nullable
   public String getMessageId(
+      KafkaProducerRequest request, @Nullable RecordMetadata recordMetadata) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(KafkaProducerRequest request) {
+    return request.getClientId();
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(
       KafkaProducerRequest request, @Nullable RecordMetadata recordMetadata) {
     return null;
   }

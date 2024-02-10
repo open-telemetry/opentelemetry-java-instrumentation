@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.C
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ProxyInjectionBuilder;
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
+import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -57,7 +58,11 @@ public class ClassInjectorImpl implements ClassInjector {
     public void inject(InjectionMode mode) {
       classesToInject.add(
           cl -> {
-            TypePool typePool = IndyModuleTypePool.get(cl, instrumentationModule);
+            InstrumentationModuleClassLoader moduleCl =
+                IndyModuleRegistry.getInstrumentationClassLoader(instrumentationModule, cl);
+            TypePool typePool =
+                AgentTooling.poolStrategy()
+                    .typePool(AgentTooling.locationStrategy().classFileLocator(moduleCl), moduleCl);
             TypeDescription proxiedType = typePool.describe(classToProxy).resolve();
             DynamicType.Unloaded<?> proxy = proxyFactory.generateProxy(proxiedType, proxyClassName);
             return HelperClassDefinition.create(proxy, mode);

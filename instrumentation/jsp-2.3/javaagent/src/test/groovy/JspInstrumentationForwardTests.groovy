@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
@@ -98,6 +97,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
+            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -166,6 +166,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
+            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -213,6 +214,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
+            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -308,6 +310,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
+            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -389,9 +392,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
+            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$HttpAttributes.ERROR_TYPE" "500"
+            "$SemanticAttributes.ERROR_TYPE" "500"
           }
         }
         span(1) {
@@ -450,6 +454,7 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
+            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }

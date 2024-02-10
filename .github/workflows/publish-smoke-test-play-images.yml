@@ -5,9 +5,9 @@ on:
     paths:
       - "smoke-tests/images/play/**"
       - ".github/workflows/publish-smoke-test-play-images.yml"
+      - ".github/workflows/reusable-smoke-test-images.yml"
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   publish:
@@ -18,7 +18,7 @@ jobs:
       # Play doesn't support Java 16+ yet
       # https://github.com/playframework/playframework/pull/10819
       skip-java-17: true
-      skip-java-19: true
+      skip-java-21: true
 
   workflow-notification:
     needs:

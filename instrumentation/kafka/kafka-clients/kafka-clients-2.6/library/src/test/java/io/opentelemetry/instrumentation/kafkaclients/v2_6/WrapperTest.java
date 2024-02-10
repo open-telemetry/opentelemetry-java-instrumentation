@@ -107,7 +107,7 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                 equalTo(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     greeting.getBytes(StandardCharsets.UTF_8).length),
                 satisfies(
                     SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
@@ -141,7 +141,8 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    stringAssert -> stringAssert.startsWith("consumer")),
+                equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (testHeaders) {
       assertions.add(
           equalTo(

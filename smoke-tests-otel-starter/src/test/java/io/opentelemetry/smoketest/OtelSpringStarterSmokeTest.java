@@ -36,8 +36,13 @@ import org.springframework.context.annotation.Configuration;
       OtelSpringStarterSmokeTest.TestConfiguration.class
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = {"otel.exporter.otlp.enabled=false", "otel.metric.export.interval=100"
+    properties = {
+      "otel.exporter.otlp.enabled=false",
+      "otel.metric.export.interval=100",
+      "otel.exporter.otlp.headers=a=1,b=2",
       // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
+      // the headers are simply set here to make sure that headers can be parsed, even with
+      // otel.exporter.otlp.enabled=false
     })
 class OtelSpringStarterSmokeTest {
 
@@ -80,7 +85,6 @@ class OtelSpringStarterSmokeTest {
 
     // Span
     TracesAssert.assertThat(exportedSpans)
-        .hasSize(2)
         .hasTracesSatisfyingExactly(
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
@@ -116,5 +120,9 @@ class OtelSpringStarterSmokeTest {
         .as("Should instrument logs")
         .startsWith("Starting ")
         .contains(this.getClass().getSimpleName());
+    assertThat(firstLog.getAttributes().asMap())
+        .as("Should capture code attributes")
+        .containsEntry(
+            SemanticAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
   }
 }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,8 @@ class OtlpLogExporterAutoConfigurationTest {
       new ApplicationContextRunner()
           .withConfiguration(
               AutoConfigurations.of(
-                  OpenTelemetryAutoConfiguration.class, OtlpLoggerExporterAutoConfiguration.class));
+                  OpenTelemetryAutoConfiguration.class,
+                  OtlpLogRecordExporterAutoConfiguration.class));
 
   @Test
   void otlpEnabled() {
@@ -61,14 +61,5 @@ class OtlpLogExporterAutoConfigurationTest {
     runner
         .withPropertyValues("otel.logs.exporter=none")
         .run(context -> assertThat(context.containsBean("otelOtlpLogRecordExporter")).isFalse());
-  }
-
-  @Test
-  void loggerPresentByDefault() {
-    runner.run(
-        context ->
-            assertThat(
-                    context.getBean("otelOtlpLogRecordExporter", OtlpGrpcLogRecordExporter.class))
-                .isNotNull());
   }
 }

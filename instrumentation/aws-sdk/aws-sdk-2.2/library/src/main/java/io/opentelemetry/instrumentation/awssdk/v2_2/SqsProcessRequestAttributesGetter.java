@@ -34,8 +34,19 @@ enum SqsProcessRequestAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(SqsProcessRequest request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(SqsProcessRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(SqsProcessRequest request) {
     return false;
   }
 
@@ -45,15 +56,15 @@ enum SqsProcessRequestAttributesGetter
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadSize(SqsProcessRequest request) {
+  @Override
+  public Long getMessageBodySize(SqsProcessRequest request) {
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(SqsProcessRequest request) {
+  @Override
+  public Long getMessageEnvelopeSize(SqsProcessRequest request) {
     return null;
   }
 
@@ -61,6 +72,18 @@ enum SqsProcessRequestAttributesGetter
   @Nullable
   public String getMessageId(SqsProcessRequest request, @Nullable Response response) {
     return request.getMessage().getMessageId();
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(SqsProcessRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(SqsProcessRequest request, @Nullable Response response) {
+    return null;
   }
 
   @Override

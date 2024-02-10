@@ -100,7 +100,7 @@ public class ContextPropagationTest {
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (operation != null) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, operation));
@@ -152,70 +152,67 @@ public class ContextPropagationTest {
             });
         testing.waitAndAssertTraces(
             trace -> {
-              trace
-                  .hasSize(5)
-                  .hasSpansSatisfyingExactlyInAnyOrder(
-                      span -> span.hasName("parent"),
-                      span ->
-                          span.hasName("<default> publish")
-                              .hasKind(SpanKind.PRODUCER)
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfyingExactly(
-                                  getAssertions(
-                                      "<default>", "publish", "127.0.0.1", true, testHeaders)),
-                      // spring-cloud-stream-binder-rabbit listener puts all messages into a
-                      // BlockingQueue immediately after receiving
-                      // that's why the rabbitmq CONSUMER span will never have any child span (and
-                      // propagate context, actually)
-                      span ->
-                          span.hasName("testQueue process")
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(1))
-                              .hasAttributesSatisfyingExactly(
-                                  getAssertions("<default>", "process", null, true, testHeaders)),
-                      // created by spring-rabbit instrumentation
-                      span ->
-                          span.hasName("testQueue process")
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(1))
-                              .hasAttributesSatisfyingExactly(
-                                  getAssertions("testQueue", "process", null, false, testHeaders)),
-                      span -> {
-                        // occasionally "testQueue process" spans have their order swapped, usually
-                        // it would be
-                        // 0 - parent
-                        // 1 - <default> publish
-                        // 2 - testQueue process (<default>)
-                        // 3 - testQueue process (testQueue)
-                        // 4 - consumer
-                        // but it could also be
-                        // 0 - parent
-                        // 1 - <default> publish
-                        // 2 - testQueue process (testQueue)
-                        // 3 - consumer
-                        // 4 - testQueue process (<default>)
-                        // determine the correct parent span based on the span name
-                        SpanData parentSpan = trace.getSpan(3);
-                        if (!"testQueue process".equals(parentSpan.getName())) {
-                          parentSpan = trace.getSpan(2);
-                        }
-                        span.hasName("consumer").hasParent(parentSpan);
-                      });
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent"),
+                  span ->
+                      span.hasName("<default> publish")
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              getAssertions(
+                                  "<default>", "publish", "127.0.0.1", true, testHeaders)),
+                  // spring-cloud-stream-binder-rabbit listener puts all messages into a
+                  // BlockingQueue immediately after receiving
+                  // that's why the rabbitmq CONSUMER span will never have any child span (and
+                  // propagate context, actually)
+                  span ->
+                      span.hasName("testQueue process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              getAssertions(
+                                  "<default>", "process", "127.0.0.1", true, testHeaders)),
+                  // created by spring-rabbit instrumentation
+                  span ->
+                      span.hasName("testQueue process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              getAssertions("testQueue", "process", null, false, testHeaders)),
+                  span -> {
+                    // occasionally "testQueue process" spans have their order swapped, usually
+                    // it would be
+                    // 0 - parent
+                    // 1 - <default> publish
+                    // 2 - testQueue process (<default>)
+                    // 3 - testQueue process (testQueue)
+                    // 4 - consumer
+                    // but it could also be
+                    // 0 - parent
+                    // 1 - <default> publish
+                    // 2 - testQueue process (testQueue)
+                    // 3 - consumer
+                    // 4 - testQueue process (<default>)
+                    // determine the correct parent span based on the span name
+                    SpanData parentSpan = trace.getSpan(3);
+                    if (!"testQueue process".equals(parentSpan.getName())) {
+                      parentSpan = trace.getSpan(2);
+                    }
+                    span.hasName("consumer").hasParent(parentSpan);
+                  });
             },
             trace -> {
-              trace
-                  .hasSize(1)
-                  .hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("basic.ack")
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                  satisfies(
-                                      NetworkAttributes.NETWORK_PEER_PORT,
-                                      AbstractLongAssert::isNotNegative),
-                                  equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")));
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("basic.ack")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                              satisfies(
+                                  NetworkAttributes.NETWORK_PEER_PORT,
+                                  AbstractLongAssert::isNotNegative),
+                              equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")));
             });
       }
     }

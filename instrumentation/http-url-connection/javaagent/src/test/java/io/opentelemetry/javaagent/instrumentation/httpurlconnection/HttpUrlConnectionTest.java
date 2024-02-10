@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -316,7 +315,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
                 equalTo(SemanticAttributes.URL_FULL, uri),
                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                equalTo(HttpAttributes.ERROR_TYPE, "java.net.ConnectException")));
+                equalTo(SemanticAttributes.ERROR_TYPE, "java.net.ConnectException")));
 
     testing.waitAndAssertTraces(
         trace ->

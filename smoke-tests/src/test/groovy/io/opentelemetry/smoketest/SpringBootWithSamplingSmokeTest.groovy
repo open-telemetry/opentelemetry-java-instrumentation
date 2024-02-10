@@ -47,7 +47,6 @@ class SpringBootWithSamplingSmokeTest extends SmokeTest {
 
     then:
     // since sampling is enabled, not really expecting to receive NUM_TRIES spans
-    Math.abs(countSpansByName(traces, 'WebController.greeting') - (SAMPLER_PROBABILITY * NUM_TRIES)) <= ALLOWED_DEVIATION
     Math.abs(countSpansByName(traces, 'GET /greeting') - (SAMPLER_PROBABILITY * NUM_TRIES)) <= ALLOWED_DEVIATION
 
     cleanup:

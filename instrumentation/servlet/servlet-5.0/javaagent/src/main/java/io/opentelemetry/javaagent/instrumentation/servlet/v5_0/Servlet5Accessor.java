@@ -194,7 +194,9 @@ public class Servlet5Accessor
 
     @Override
     public void onStartAsync(AsyncEvent event) {
-      event.getAsyncContext().addListener(this);
+      event
+          .getAsyncContext()
+          .addListener(this, event.getSuppliedRequest(), event.getSuppliedResponse());
     }
   }
 }

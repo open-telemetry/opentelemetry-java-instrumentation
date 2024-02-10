@@ -45,7 +45,7 @@ may be restricted by the interception APIs provided by the library.
 Within the subfolder, create three folders `library` (skip if library instrumentation is not
 possible),`javaagent`, and `testing`.
 
-For example, if you are targeting the RPC framework `yarpc` at version `1.0`, you would have a
+For example, if you are targeting the RPC framework `yarpc` at minimal supported version `1.0`, you would have a
 directory tree like the following:
 
 ```
@@ -60,7 +60,7 @@ instrumentation ->
             build.gradle.kts
 ```
 
-The top level `settings.gradle.kts` file would contain the following:
+The top level `settings.gradle.kts` file would contain the following (please add in alphabetical order):
 
 ```kotlin
 include("instrumentation:yarpc-1.0:javaagent")

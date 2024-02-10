@@ -128,7 +128,7 @@ class AwsSpanAssertions {
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
   }
 
-  static SpanDataAssert sns(SpanDataAssert span, String spanName) {
+  static SpanDataAssert sns(SpanDataAssert span, String spanName, String topicArn) {
     return span.hasName(spanName)
         .hasKind(CLIENT)
         .hasAttributesSatisfyingExactly(
@@ -137,6 +137,7 @@ class AwsSpanAssertions {
             equalTo(stringKey("rpc.system"), "aws-api"),
             equalTo(stringKey("rpc.method"), spanName.substring(4)),
             equalTo(stringKey("rpc.service"), "AmazonSNS"),
+            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicArn),
             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(SemanticAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),

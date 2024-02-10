@@ -17,7 +17,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ClassInfo;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -103,7 +102,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                 equalTo(SemanticAttributes.URL_FULL, uri.toString()),
                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
-                equalTo(HttpAttributes.ERROR_TYPE, "500")));
+                equalTo(SemanticAttributes.ERROR_TYPE, "500")));
 
     testing.waitAndAssertTraces(
         trace ->

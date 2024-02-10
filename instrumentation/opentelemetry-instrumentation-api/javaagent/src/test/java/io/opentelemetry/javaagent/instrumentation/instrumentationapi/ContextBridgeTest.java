@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
@@ -94,7 +93,7 @@ class ContextBridgeTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/test/server/*"),
-                            equalTo(HttpAttributes.ERROR_TYPE, "_OTHER"))));
+                            equalTo(SemanticAttributes.ERROR_TYPE, "_OTHER"))));
   }
 
   @Test
@@ -115,6 +114,6 @@ class ContextBridgeTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/test/controller/:id"),
-                            equalTo(HttpAttributes.ERROR_TYPE, "_OTHER"))));
+                            equalTo(SemanticAttributes.ERROR_TYPE, "_OTHER"))));
   }
 }

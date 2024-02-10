@@ -120,6 +120,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
+            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
             }
@@ -136,7 +137,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
@@ -175,6 +176,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
             "$SemanticAttributes.MESSAGING_OPERATION" "receive"
             "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
+            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (Boolean.getBoolean("testLatestDeps")) {
               "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
             }
@@ -191,7 +193,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
-            "$SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES" Long
+            "$SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"

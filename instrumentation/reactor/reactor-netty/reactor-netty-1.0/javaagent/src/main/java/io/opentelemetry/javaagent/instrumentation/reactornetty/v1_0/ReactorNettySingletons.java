@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyCli
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
@@ -28,17 +27,9 @@ public final class ReactorNettySingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.reactor-netty-1.0";
 
-  private static final boolean connectionTelemetryEnabled;
-
-  static {
-    InstrumentationConfig config = InstrumentationConfig.get();
-    connectionTelemetryEnabled =
-        DeprecatedConfigProperties.getBoolean(
-            config,
-            "otel.instrumentation.reactor-netty.always-create-connect-span",
-            "otel.instrumentation.reactor-netty.connection-telemetry.enabled",
-            false);
-  }
+  private static final boolean connectionTelemetryEnabled =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.reactor-netty.connection-telemetry.enabled", false);
 
   private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;

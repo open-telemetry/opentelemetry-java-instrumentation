@@ -16,16 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "otel.exporter.zipkin")
 public class ZipkinSpanExporterProperties {
 
-  private boolean enabled = true;
   @Nullable private String endpoint;
-
-  public boolean isEnabled() {
-    return enabled;
-  }
-
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
-  }
 
   @Nullable
   public String getEndpoint() {

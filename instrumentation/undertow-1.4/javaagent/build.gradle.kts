@@ -20,3 +20,7 @@ dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

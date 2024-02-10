@@ -79,14 +79,6 @@ class B3MultiPropagationTest extends PropagationTest {
 }
 
 @IgnoreIf({ useWindowsContainers() })
-class JaegerPropagationTest extends PropagationTest {
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return ["otel.propagators": "jaeger"]
-  }
-}
-
-@IgnoreIf({ useWindowsContainers() })
 class OtTracePropagationTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk) {

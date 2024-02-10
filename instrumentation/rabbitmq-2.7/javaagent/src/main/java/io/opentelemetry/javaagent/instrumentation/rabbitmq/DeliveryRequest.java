@@ -7,19 +7,26 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.google.auto.value.AutoValue;
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Envelope;
 
 @AutoValue
 abstract class DeliveryRequest {
 
   static DeliveryRequest create(
-      String queue, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
-    return new AutoValue_DeliveryRequest(queue, envelope, properties, body);
+      String queue,
+      Envelope envelope,
+      Connection connection,
+      AMQP.BasicProperties properties,
+      byte[] body) {
+    return new AutoValue_DeliveryRequest(queue, envelope, connection, properties, body);
   }
 
   abstract String getQueue();
 
   abstract Envelope getEnvelope();
+
+  abstract Connection getConnection();
 
   abstract AMQP.BasicProperties getProperties();
 

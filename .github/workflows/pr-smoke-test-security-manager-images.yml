@@ -5,6 +5,9 @@ on:
     paths:
       - "smoke-tests/images/security-manager/**"
       - ".github/workflows/pr-smoke-test-security-manager-images.yml"
+      - ".github/workflows/reusable-smoke-test-images.yml"
+    branches:
+      - main
 
 jobs:
   build:

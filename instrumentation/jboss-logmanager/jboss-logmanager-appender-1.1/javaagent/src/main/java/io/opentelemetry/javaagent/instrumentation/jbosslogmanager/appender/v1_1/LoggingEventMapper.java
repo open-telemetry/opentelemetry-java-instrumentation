@@ -127,8 +127,7 @@ public final class LoggingEventMapper {
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {
-    return mdcAttributeKeys.computeIfAbsent(
-        key, k -> AttributeKey.stringKey("jboss-logmanager.mdc." + k));
+    return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static Severity levelToSeverity(java.util.logging.Level level) {

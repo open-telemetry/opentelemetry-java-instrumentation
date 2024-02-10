@@ -52,28 +52,27 @@ public class SparkJavaBasedTest {
     assertEquals(content, "Hello asdf1234");
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(1)
-                .hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET /param/:param")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.URL_SCHEME, "http"),
-                                equalTo(SemanticAttributes.URL_PATH, "/param/asdf1234"),
-                                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                satisfies(
-                                    SemanticAttributes.USER_AGENT_ORIGINAL,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
-                                    val -> val.isInstanceOf(Long.class)))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /param/:param")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.URL_SCHEME, "http"),
+                            equalTo(SemanticAttributes.URL_PATH, "/param/asdf1234"),
+                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            satisfies(
+                                SemanticAttributes.USER_AGENT_ORIGINAL,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
+                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class)))));
   }
 }

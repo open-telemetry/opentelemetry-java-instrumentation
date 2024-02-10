@@ -15,7 +15,6 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -132,7 +131,7 @@ class KubernetesClientTest {
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(HttpAttributes.ERROR_TYPE, "451"),
+                            equalTo(SemanticAttributes.ERROR_TYPE, "451"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name"))));
@@ -247,7 +246,7 @@ class KubernetesClientTest {
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(HttpAttributes.ERROR_TYPE, "451"),
+                            equalTo(SemanticAttributes.ERROR_TYPE, "451"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name")),

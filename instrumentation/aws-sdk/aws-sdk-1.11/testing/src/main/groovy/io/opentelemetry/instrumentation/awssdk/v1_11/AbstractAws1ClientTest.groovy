@@ -27,8 +27,9 @@ import com.amazonaws.services.rds.AmazonRDSClientBuilder
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.sns.AmazonSNSClientBuilder
+import com.amazonaws.services.sns.model.PublishRequest
 import io.opentelemetry.api.trace.Span
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
@@ -154,6 +155,26 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
       """
+    "SNS"        | "Publish"           | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | AmazonSNSClientBuilder.standard()                 | { c -> c.publish(new PublishRequest().withMessage("somemessage").withTopicArn("somearn")) } | ["$SemanticAttributes.MESSAGING_DESTINATION_NAME": "somearn"] | """
+          <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
+              <PublishResult>
+                  <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>
+              </PublishResult>
+              <ResponseMetadata>
+                  <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>
+              </ResponseMetadata>
+          </PublishResponse>
+      """
+      "SNS"      | "Publish"            | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | AmazonSNSClientBuilder.standard()                 | { c -> c.publish(new PublishRequest().withMessage("somemessage").withTargetArn("somearn")) } | ["$SemanticAttributes.MESSAGING_DESTINATION_NAME": "somearn"] | """
+          <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
+              <PublishResult>
+                  <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>
+              </PublishResult>
+              <ResponseMetadata>
+                  <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>
+              </ResponseMetadata>
+          </PublishResponse>
+      """
   }
 
   def "send #operation request to closed port"() {
@@ -192,7 +213,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
-            "$HttpAttributes.ERROR_TYPE" SdkClientException.name
+            "$SemanticAttributes.ERROR_TYPE" SdkClientException.name
           }
         }
       }
@@ -246,7 +267,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            "$HttpAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
+            "$SemanticAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
           }
         }
       }

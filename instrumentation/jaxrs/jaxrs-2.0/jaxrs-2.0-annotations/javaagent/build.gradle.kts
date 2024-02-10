@@ -24,3 +24,9 @@ dependencies {
 
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0")
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+}

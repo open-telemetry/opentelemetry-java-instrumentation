@@ -38,6 +38,7 @@ tasks {
     }
     include("**/ReactorNettyConnectionSpanTest.*")
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
   test {

@@ -132,8 +132,8 @@ class Slf4jToLog4jTest {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("log4j.context_data.key1"), "val1"),
-            equalTo(AttributeKey.stringKey("log4j.context_data.key2"), "val2"),
+            equalTo(AttributeKey.stringKey("key1"), "val1"),
+            equalTo(AttributeKey.stringKey("key2"), "val2"),
             equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
             equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
   }

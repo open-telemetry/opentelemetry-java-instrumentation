@@ -74,6 +74,7 @@ tasks {
       jvmArgs("--add-modules=java.se")
       // add offset to default port values
       jvmArgs("-Djboss.socket.binding.port-offset=300")
+      jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
       // remove logback-classic from classpath
       classpath = classpath.filter {

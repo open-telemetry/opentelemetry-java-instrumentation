@@ -36,6 +36,7 @@ tasks {
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-client-key")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
     // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
     // breaks the tests

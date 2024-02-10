@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.entry;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.spring.autoconfigure.MapConverterTestAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +24,7 @@ public class OtelResourcePropertiesTest {
           .withPropertyValues("otel.springboot.resource.enabled=true")
           .withConfiguration(
               AutoConfigurations.of(
-                  OtelResourceAutoConfiguration.class, MapConverterTestAutoConfiguration.class));
+                  OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class));
 
   @Test
   @DisplayName("when attributes are SET should set OtelResourceProperties with given attributes")

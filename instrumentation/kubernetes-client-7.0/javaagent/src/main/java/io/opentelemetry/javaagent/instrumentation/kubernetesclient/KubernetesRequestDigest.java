@@ -89,7 +89,7 @@ class KubernetesRequestDigest {
   @Override
   public String toString() {
     if (isNonResourceRequest) {
-      return verb.value() + ' ' + urlPath;
+      return (verb != null ? verb.value() + ' ' : "") + urlPath;
     }
 
     String groupVersion;

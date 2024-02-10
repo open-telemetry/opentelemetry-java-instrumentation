@@ -33,14 +33,13 @@ public final class RocketMqTelemetry {
   RocketMqTelemetry(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
-      boolean captureExperimentalSpanAttributes,
-      boolean propagationEnabled) {
+      boolean captureExperimentalSpanAttributes) {
     rocketMqConsumerInstrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
-            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, propagationEnabled);
+            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
     rocketMqProducerInstrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
-            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, propagationEnabled);
+            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
   }
 
   /**

@@ -168,10 +168,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getAttributes().size()).isEqualTo(2 + 4); // 4 code attributes
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key1")))
-        .isEqualTo("val1");
-    assertThat(logData.getAttributes().get(AttributeKey.stringKey("logback.mdc.key2")))
-        .isEqualTo("val2");
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key1"))).isEqualTo("val1");
+    assertThat(logData.getAttributes().get(AttributeKey.stringKey("key2"))).isEqualTo("val2");
   }
 
   @Test

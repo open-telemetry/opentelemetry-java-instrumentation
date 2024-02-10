@@ -43,7 +43,7 @@ public final class FutureListenerWrappers {
       };
 
   public static boolean shouldWrap(GenericFutureListener<? extends Future<?>> listener) {
-    return shouldWrap.get(listener.getClass());
+    return listener != null && shouldWrap.get(listener.getClass());
   }
 
   @SuppressWarnings("unchecked")

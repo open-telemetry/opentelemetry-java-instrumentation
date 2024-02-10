@@ -206,7 +206,8 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                 satisfies(
                     SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    stringAssert -> stringAssert.startsWith("consumer")),
+                equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (Boolean.getBoolean("hasConsumerGroup")) {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
@@ -245,7 +246,7 @@ public abstract class AbstractReactorKafkaTest {
     if (messageValue != null) {
       assertions.add(
           equalTo(
-              SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
+              SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
               messageValue.getBytes(StandardCharsets.UTF_8).length));
     }
     return assertions;

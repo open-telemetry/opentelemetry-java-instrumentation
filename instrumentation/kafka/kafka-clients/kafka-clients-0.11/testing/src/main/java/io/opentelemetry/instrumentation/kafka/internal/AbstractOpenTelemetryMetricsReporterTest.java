@@ -396,6 +396,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                             .equals(kafkaMetricId))
                 .findFirst()
                 .map(RegisteredObservable::getInstrumentDescriptor);
+        if (!descriptor.isPresent()) {
+          continue;
+        }
         // Append table row
         sb.append(
             String.format(
@@ -406,11 +409,25 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                     .map(key -> "`" + key + "`")
                     .collect(joining(",")),
                 descriptor.map(i -> "`" + i.getName() + "`").orElse(""),
-                descriptor.map(InstrumentDescriptor::getDescription).orElse(""),
+                descriptor.map(i -> toDescription(i)).orElse(""),
                 descriptor.map(i -> "`" + i.getInstrumentType() + "`").orElse("")));
       }
     }
     logger.info("Mapping table" + System.lineSeparator() + sb);
+  }
+
+  private static String toDescription(InstrumentDescriptor instrumentDescriptor) {
+    String description = instrumentDescriptor.getDescription();
+    if (!description.isEmpty() && !description.endsWith(".")) {
+      return description + ".";
+    } else if (description.isEmpty()
+        && "kafka.consumer.request_latency_avg".equals(instrumentDescriptor.getName())) {
+      return "The average request latency in ms.";
+    } else if (description.isEmpty()
+        && "kafka.consumer.request_latency_max".equals(instrumentDescriptor.getName())) {
+      return "The maximum request latency in ms.";
+    }
+    return description;
   }
 
   /**
@@ -428,6 +445,12 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
     @Override
     public void metricChange(KafkaMetric kafkaMetric) {
+      try {
+        kafkaMetric.measurable();
+      } catch (IllegalStateException exception) {
+        // ignore non-measurable metrics, we don't report them
+        return;
+      }
       seenMetrics.add(KafkaMetricId.create(kafkaMetric.metricName()));
     }
 

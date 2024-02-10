@@ -18,6 +18,14 @@ which could have unknown side-effects.
 | ------------------------------ | ------------------------------ | -------------------------------------------------------------------------------------------------- |
 | otel.javaagent.exclude-classes | OTEL_JAVAAGENT_EXCLUDE_CLASSES | Suppresses all instrumentation for specific classes, format is "my.package.MyClass,my.package2.\*" |
 
+## Excluding specific classes loaders
+
+This option can be used to exclude classes loaded by given class loaders from being instrumented.
+
+| System property                      | Environment variable                 | Purpose                                                                         |
+|--------------------------------------|--------------------------------------|---------------------------------------------------------------------------------|
+| otel.javaagent.exclude-class-loaders | OTEL_JAVAAGENT_EXCLUDE_CLASS_LOADERS | Ignore the specified class loaders, format is "my.package.MyClass,my.package2." |
+
 ## Running application with security manager
 
 This option can be used to let agent run with all privileges without being affected by security policy restricting some operations.

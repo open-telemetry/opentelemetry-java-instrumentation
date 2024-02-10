@@ -54,6 +54,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                 equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(SemanticAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"))
                             .hasEventsSatisfyingExactly(
@@ -67,6 +69,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                 equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(SemanticAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET a"))
                             .hasEventsSatisfyingExactly(

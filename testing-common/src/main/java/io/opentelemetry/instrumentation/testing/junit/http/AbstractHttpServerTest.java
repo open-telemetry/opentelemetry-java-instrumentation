@@ -27,7 +27,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -761,14 +760,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs)
-              .hasEntrySatisfying(
-                  SemanticAttributes.CLIENT_ADDRESS,
-                  entry ->
-                      assertThat(entry)
-                          .satisfiesAnyOf(
-                              value -> assertThat(value).isNull(),
-                              value -> assertThat(value).isEqualTo(TEST_CLIENT_IP)));
+          assertThat(attrs).containsEntry(SemanticAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP);
           // client.port is opt-in
           assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
 
@@ -776,7 +768,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           assertThat(attrs).containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
           if (statusCode >= 500) {
-            assertThat(attrs).containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(statusCode));
+            assertThat(attrs)
+                .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(statusCode));
           }
 
           assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);

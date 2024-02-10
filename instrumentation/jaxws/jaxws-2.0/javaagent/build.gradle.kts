@@ -14,3 +14,7 @@ dependencies {
   library("javax.xml.ws:jaxws-api:2.0")
   implementation(project(":instrumentation:jaxws:jaxws-common:javaagent"))
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

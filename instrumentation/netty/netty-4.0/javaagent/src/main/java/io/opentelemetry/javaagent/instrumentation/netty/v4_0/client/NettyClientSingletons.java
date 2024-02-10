@@ -15,26 +15,17 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyCli
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Collections;
 
 public final class NettyClientSingletons {
 
-  private static final boolean connectionTelemetryEnabled;
-  private static final boolean sslTelemetryEnabled;
-
-  static {
-    InstrumentationConfig config = InstrumentationConfig.get();
-    connectionTelemetryEnabled =
-        DeprecatedConfigProperties.getBoolean(
-            config,
-            "otel.instrumentation.netty.always-create-connect-span",
-            "otel.instrumentation.netty.connection-telemetry.enabled",
-            false);
-    sslTelemetryEnabled =
-        config.getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
-  }
+  private static final boolean connectionTelemetryEnabled =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.netty.connection-telemetry.enabled", false);
+  private static final boolean sslTelemetryEnabled =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
 
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;

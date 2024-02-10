@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.KINESIS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.S3;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SNS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SQS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.response;
@@ -30,6 +31,7 @@ enum AwsSdkRequest {
   // generic requests
   DynamoDbRequest(DYNAMODB, "DynamoDbRequest"),
   S3Request(S3, "S3Request"),
+  SnsRequest(SNS, "SnsRequest"),
   SqsRequest(SQS, "SqsRequest"),
   KinesisRequest(KINESIS, "KinesisRequest"),
   // specific requests

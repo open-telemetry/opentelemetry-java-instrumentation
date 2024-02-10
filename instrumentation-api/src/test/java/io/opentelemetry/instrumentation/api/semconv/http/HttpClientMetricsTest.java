@@ -15,7 +15,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -49,7 +48,7 @@ class HttpClientMetricsTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-            .put(HttpAttributes.ERROR_TYPE, "400")
+            .put(SemanticAttributes.ERROR_TYPE, "400")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
             .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
@@ -95,7 +94,7 @@ class HttpClientMetricsTest {
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(HttpAttributes.ERROR_TYPE, "400"),
+                                            equalTo(SemanticAttributes.ERROR_TYPE, "400"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(

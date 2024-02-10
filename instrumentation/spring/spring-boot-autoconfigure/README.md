@@ -76,11 +76,6 @@ For Maven, add to your `pom.xml` dependencies:
   <!-- opentelemetry exporters-->
   <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporter-jaeger</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporter-zipkin</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
@@ -129,7 +124,6 @@ For Gradle, add to your dependencies:
 
 ```groovy
 //opentelemetry exporter
-implementation("io.opentelemetry:opentelemetry-exporter-jaeger:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-exporter-zipkin:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-exporter-otlp:OPENTELEMETRY_VERSION")
 
@@ -384,7 +378,7 @@ public class OpenTelemetryConfig {}
 
 #### Exporter Configurations
 
-This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
+This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
 
 If an exporter is present in the classpath during runtime and a spring bean of the exporter is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](./src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/OpenTelemetryAutoConfiguration.java).
 
@@ -402,7 +396,6 @@ This is the preferred way to enable/disable exporters and takes precedence over 
 | Otlp Span Exporter    | otel.exporter.otlp.traces.enabled           | `true`        | OtlpGrpcSpanExporter      |
 | Otlp Metrics Exporter | otel.exporter.otlp.metrics.enabled          | `true`        | OtlpGrpcMetricExporter    |
 | Otlp Logs Exporter    | otel.exporter.otlp.logs.enabled             | `true`        | OtlpGrpcLogRecordExporter |
-| Jaeger Exporter       | otel.exporter.jaeger.enabled                | `true`        | JaegerGrpcSpanExporter    |
 | Zipkin Exporter       | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter        |
 | Logging Exporter      | otel.exporter.logging.enabled               | `false`       | LoggingSpanExporter       |
 
@@ -468,9 +461,7 @@ The service name is determined by the following precedence, in accordance with t
 |                 | otel.exporter.otlp.protocol   | `grpc`                               |
 |                 | otel.exporter.otlp.headers    |                                      |
 |                 | otel.exporter.otlp.timeout    | `1s`                                 |
-| Jaeger Exporter | otel.exporter.jaeger.endpoint | `localhost:14250`                    |
-|                 | otel.exporter.jaeger.timeout  | `1s`                                 |
-| Zipkin Exporter | otel.exporter.jaeger.endpoint | `http://localhost:9411/api/v2/spans` |
+| Zipkin Exporter | otel.exporter.zipkin.endpoint | `http://localhost:9411/api/v2/spans` |
 
 The `otel.exporter.otlp.headers` property can be specified as a comma-separated list,
 which is compliant with the

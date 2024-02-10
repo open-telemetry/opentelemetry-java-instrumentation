@@ -151,8 +151,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (span.getSpanContext().isValid()) {
         helper().onPublish(span, exchange, routingKey);
         if (body != null) {
-          span.setAttribute(
-              SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, (long) body.length);
+          span.setAttribute(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
@@ -235,11 +234,12 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapConsumer(
+        @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
         @Advice.Argument(value = 6, readOnly = false) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
       if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
-        consumer = new TracedDelegatingConsumer(queue, consumer);
+        consumer = new TracedDelegatingConsumer(queue, consumer, channel.getConnection());
       }
     }
   }

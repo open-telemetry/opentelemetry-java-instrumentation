@@ -1,0 +1,391 @@
+{
+  "groups": [
+    {
+      "name": "otel"
+    }
+  ],
+  "properties": [
+    {
+      "name": "otel.experimental.exporter.otlp.retry.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable experimental retry support. See https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#otlp-exporter-retry.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.exporter.otlp.certificate",
+      "type": "java.lang.String",
+      "description": "The path to the file containing trusted certificates to use when verifying an OTLP trace, metric, or log server's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default the host platform's trusted root certificates are used."
+    },
+    {
+      "name": "otel.exporter.otlp.client.certificate",
+      "type": "java.lang.String",
+      "description": "The path to the file containing trusted certificates to use when verifying an OTLP trace, metric, or log client's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default, no chain file is used."
+    },
+    {
+      "name": "otel.exporter.otlp.client.key",
+      "type": "java.lang.String",
+      "description": "The path to the file containing private client key to use when verifying an OTLP trace, metric, or log client's TLS credentials.<br/>The file should contain one private key PKCS8 PEM format.<br/>By default, no client key is used."
+    },
+    {
+      "name": "otel.exporter.otlp.compression",
+      "type": "java.lang.String",
+      "description": "The compression type to use on OTLP trace, metric, and log requests.<br/>Options include <code>gzip</code>.<br/>By default, no compression will be used."
+    },
+    {
+      "name": "otel.exporter.otlp.endpoint",
+      "type": "java.lang.String",
+      "description": "The OTLP traces, metrics, and logs endpoint to connect to.<br/>Must be a URL with a scheme of either <code>http</code> or <code>https</code> based on the use of TLS. If protocol is <code>http/protobuf</code> the version and signal will be appended to the path (e.g. <code>v1/traces</code>, <code>v1/metrics</code>, or <code>v1/logs</code>).<br/>Default is <code>http://localhost:4317</code> when protocol is <code>grpc</code>, and <code>http://localhost:4318/v1/{signal}</code> when protocol is <code>http/protobuf</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.headers",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Request headers for OTLP trace, metric, and log requests.<br/>Can be either a Spring map or a key-value separated String, e.g. <code>key1=value1,key2=value2</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.logs.certificate",
+      "type": "java.lang.String",
+      "description": " The path to the file containing trusted certificates to use when verifying an OTLP log server's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default, the host platform's trusted root certificates are used."
+    },
+    {
+      "name": "otel.exporter.otlp.logs.client.certificate",
+      "type": "java.lang.String",
+      "description": "The path to the file containing trusted certificates to use when verifying an OTLP log server's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default, no chain file is used."
+    },
+    {
+      "name": "otel.exporter.otlp.logs.client.key",
+      "type": "java.lang.String",
+      "description": "The path to the file containing private client key to use when verifying an OTLP log client's TLS credentials.<br/>The file should contain one private key PKCS8 PEM format.<br/>By default, no client key file is used."
+    },
+    {
+      "name": "otel.exporter.otlp.logs.compression",
+      "type": "java.lang.String",
+      "description": "The compression type to use on OTLP log requests.<br/>Options include <code>gzip</code>.<br/>By default, no compression will be used."
+    },
+    {
+      "name": "otel.exporter.otlp.logs.endpoint",
+      "type": "java.lang.String",
+      "description": "The OTLP logs endpoint to connect to.<br/>Must be a URL with a scheme of either <code>http</code> or <code>https</code> based on the use of TLS.<br/>Default is <code>http://localhost:4317</code> when protocol is <code>grpc</code>, and <code>http://localhost:4318/v1/logs</code> when protocol is <code>http/protobuf</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.logs.headers",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Request headers for OTLP log requests.<br/>Can be either a Spring map or a key-value separated String, e.g. <code>key1=value1,key2=value2</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.logs.protocol",
+      "type": "java.lang.String",
+      "description": "The transport protocol to use on OTLP log requests.",
+      "defaultValue": "http/protobuf"
+    },
+    {
+      "name": "otel.exporter.otlp.logs.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum waiting time, in milliseconds, allowed to send each OTLP log batch.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": "10000"
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.certificate",
+      "type": "java.lang.String",
+      "description": "The path to the file containing trusted certificates to use when verifying an OTLP metric server's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default, the host platform's trusted root certificates are used."
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.client.certificate",
+      "type": "java.lang.String",
+      "description": "The path to the file containing trusted certificates to use when verifying an OTLP metric server's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default, no chain file is used."
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.client.key",
+      "type": "java.lang.String",
+      "description": "The path to the file containing private client key to use when verifying an OTLP metric client's TLS credentials.<br/>The file should contain one private key PKCS8 PEM format.<br/>By default, no client key file is used."
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.compression",
+      "type": "java.lang.String",
+      "description": "The compression type to use on OTLP metric requests.<br/>Options include <code>gzip</code>.<br/>By default, no compression will be used."
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.default.histogram.aggregation",
+      "type": "java.lang.String",
+      "description": "The preferred default histogram aggregation.",
+      "defaultValue": "EXPLICIT_BUCKET_HISTOGRAM"
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.endpoint",
+      "type": "java.lang.String",
+      "description": "The OTLP metrics endpoint to connect to.<br/>Must be a URL with a scheme of either <code>http</code> or <code>https</code> based on the use of TLS.<br/>Default is <code>http://localhost:4317</code> when protocol is <code>grpc</code>, and <code>http://localhost:4318/v1/metrics</code> when protocol is <code>http/protobuf</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.headers",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Request headers for OTLP metric requests.<br/>Can be either a Spring map or a key-value separated String, e.g. <code>key1=value1,key2=value2</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.protocol",
+      "type": "java.lang.String",
+      "description": "The transport protocol to use on OTLP metric requests.",
+      "defaultValue": "http/protobuf"
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.temporality.preference",
+      "type": "java.lang.String",
+      "description": "The preferred output aggregation temporality.",
+      "defaultValue": "CUMULATIVE"
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum waiting time, in milliseconds, allowed to send each OTLP metric batch.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": "10000"
+    },
+    {
+      "name": "otel.exporter.otlp.protocol",
+      "type": "java.lang.String",
+      "description": "The transport protocol to use on OTLP trace, metric, and log requests.",
+      "defaultValue": "http/protobuf"
+    },
+    {
+      "name": "otel.exporter.otlp.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum waiting time, in milliseconds, allowed to send each OTLP trace, metric, and log batch.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": "10000"
+    },
+    {
+      "name": "otel.exporter.otlp.traces.certificate",
+      "type": "java.lang.String",
+      "description": "The path to the file containing trusted certificates to use when verifying an OTLP trace server's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default, the host platform's trusted root certificates are used."
+    },
+    {
+      "name": "otel.exporter.otlp.traces.client.certificate",
+      "type": "java.lang.String",
+      "description": "The path to the file containing trusted certificates to use when verifying an OTLP trace server's TLS credentials.<br/>The file should contain one or more X.509 certificates in PEM format.<br/>By default no chain file is used."
+    },
+    {
+      "name": "otel.exporter.otlp.traces.client.key",
+      "type": "java.lang.String",
+      "description": "The path to the file containing private client key to use when verifying an OTLP trace client's TLS credentials.<br/>The file should contain one private key PKCS8 PEM format.<br/>By default, no client key file is used."
+    },
+    {
+      "name": "otel.exporter.otlp.traces.compression",
+      "type": "java.lang.String",
+      "description": "The compression type to use on OTLP trace requests.<br/>Options include <code>gzip</code>.<br/>By default, no compression will be used."
+    },
+    {
+      "name": "otel.exporter.otlp.traces.endpoint",
+      "type": "java.lang.String",
+      "description": "The OTLP traces endpoint to connect to.<br/>Must be a URL with a scheme of either <code>http</code> or <code>https</code> based on the use of TLS.<br/>Default is <code>http://localhost:4317</code> when protocol is <code>grpc</code>, and <code>http://localhost:4318/v1/traces</code> when protocol is <code>http/protobuf</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.traces.headers",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Request headers for OTLP trace requests.<br/>Can be either a Spring map or a key-value separated String, e.g. <code>key1=value1,key2=value2</code>."
+    },
+    {
+      "name": "otel.exporter.otlp.traces.protocol",
+      "type": "java.lang.String",
+      "description": "The transport protocol to use on OTLP trace requests.",
+      "defaultValue": "http/protobuf"
+    },
+    {
+      "name": "otel.exporter.otlp.traces.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum waiting time, in milliseconds, allowed to send each OTLP trace batch.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": "10000"
+    },
+    {
+      "name": "otel.exporter.zipkin.endpoint",
+      "type": "java.lang.String",
+      "description": "The Zipkin endpoint to connect to.<br/>Currently only HTTP is supported.",
+      "defaultValue": "http://localhost:9411/api/v2/spans"
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-code-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of source code attributes. Note that capturing source code attributes at logging sites might add a performance overhead.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-marker-attribute",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of Logback markers as attributes.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of Logback key value pairs as attributes.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental-log-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental log attributes thread.name and thread.id.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of Logback logger context properties as attributes.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
+      "type": "java.lang.String",
+      "description": "Comma separated list of MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
+    },
+    {
+      "name": "otel.logs.exporter",
+      "type": "java.lang.String",
+      "description": "List of exporters to be used for logs, separated by commas.",
+      "defaultValue": "otlp"
+    },
+    {
+      "name": "otel.metric.export.interval",
+      "type": "java.lang.String",
+      "description": "The interval, in milliseconds, between the start of two export attempts.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": "60000"
+    },
+    {
+      "name": "otel.metrics.exporter",
+      "type": "java.lang.String",
+      "description": "List of exporters to be used for metrics, separated by commas.",
+      "defaultValue": "otlp"
+    },
+    {
+      "name": "otel.traces.exporter",
+      "type": "java.lang.String",
+      "description": "List of exporters to be used for tracing, separated by commas.",
+      "defaultValue": "otlp"
+    },
+    {
+      "name": "otel.traces.sampler.probability",
+      "type": "java.lang.Double",
+      "description": "The probability of sampling.<br/>The value should be within [0.0, 1.0]. 1.0 means keep everything, 0.0 means drop all spans.",
+      "defaultValue": 1.0
+    }
+  ],
+  "hints": [
+    {
+      "name": "otel.exporter.otlp.logs.protocol",
+      "values": [
+        {
+          "value": "http/protobuf"
+        },
+        {
+          "value": "grpc"
+        }
+      ]
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.protocol",
+      "values": [
+        {
+          "value": "http/protobuf"
+        },
+        {
+          "value": "grpc"
+        }
+      ]
+    },
+    {
+      "name": "otel.exporter.otlp.protocol",
+      "values": [
+        {
+          "value": "http/protobuf"
+        },
+        {
+          "value": "grpc"
+        }
+      ]
+    },
+    {
+      "name": "otel.exporter.otlp.traces.protocol",
+      "values": [
+        {
+          "value": "http/protobuf"
+        },
+        {
+          "value": "grpc"
+        }
+      ]
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.default.histogram.aggregation",
+      "values": [
+        {
+          "value": "BASE2_EXPONENTIAL_BUCKET_HISTOGRAM"
+        },
+        {
+          "value": "EXPLICIT_BUCKET_HISTOGRAM"
+        }
+      ]
+    },
+    {
+      "name": "otel.exporter.otlp.metrics.temporality.preference",
+      "values": [
+        {
+          "value": "CUMULATIVE",
+          "description": "All instruments will have cumulative temporality."
+        },
+        {
+          "value": "DELTA",
+          "description": "Counter (sync and async) and histograms will be delta, up down counters (sync and async) will be cumulative."
+        },
+        {
+          "value": "LOWMEMORY",
+          "description": "Sync counter and histograms will be delta, async counter and up down counters (sync and async) will be cumulative."
+        }
+      ]
+    },
+    {
+      "name": "otel.logs.exporter",
+      "values": [
+        {
+          "value": "none",
+          "description": "No autoconfigured exporter."
+        },
+        {
+          "value": "otlp",
+          "description": "OpenTelemetry Protocol (OTLP) exporter."
+        }
+      ]
+    },
+    {
+      "name": "otel.metrics.exporter",
+      "values": [
+        {
+          "value": "logging",
+          "description": "The logging exporter prints exported metrics to stdout. It's mainly used for testing and debugging."
+        },
+        {
+          "value": "none",
+          "description": "No autoconfigured exporter."
+        },
+        {
+          "value": "otlp",
+          "description": "OpenTelemetry Protocol (OTLP) exporter."
+        }
+      ]
+    },
+    {
+      "name": "otel.traces.exporter",
+      "values": [
+        {
+          "value": "logging",
+          "description": "The logging exporter prints the name of the span along with its attributes to stdout. It's mainly used for testing and debugging."
+        },
+        {
+          "value": "none",
+          "description": "No autoconfigured exporter."
+        },
+        {
+          "value": "otlp",
+          "description": "OpenTelemetry Protocol (OTLP) exporter."
+        },
+        {
+          "value": "zipkin",
+          "description": "Zipkin exporter."
+        }
+      ]
+    }
+  ]
+}

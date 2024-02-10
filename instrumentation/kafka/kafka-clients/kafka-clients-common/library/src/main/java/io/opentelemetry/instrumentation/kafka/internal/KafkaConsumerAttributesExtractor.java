@@ -38,11 +38,6 @@ final class KafkaConsumerAttributesExtractor
     if (consumerGroup != null) {
       attributes.put(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
     }
-
-    String clientId = request.getClientId();
-    if (clientId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_CLIENT_ID, clientId);
-    }
   }
 
   private static boolean canSerialize(Class<?> keyClass) {

@@ -18,7 +18,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
@@ -254,7 +253,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -294,7 +293,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -353,7 +352,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
               .collect(Collectors.toList()));
@@ -400,7 +399,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -1021,19 +1020,20 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
                 if (responseCode >= 400) {
                   assertThat(attrs)
-                      .containsEntry(HttpAttributes.ERROR_TYPE, String.valueOf(responseCode));
+                      .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(responseCode));
                 }
               } else {
                 assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE);
                 // TODO: add more detailed assertions, per url
-                assertThat(attrs).containsKey(HttpAttributes.ERROR_TYPE);
+                assertThat(attrs).containsKey(SemanticAttributes.ERROR_TYPE);
               }
 
               if (resendCount != null) {
                 assertThat(attrs)
-                    .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
+                    .containsEntry(
+                        SemanticAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
-                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
+                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT);
               }
             });
   }

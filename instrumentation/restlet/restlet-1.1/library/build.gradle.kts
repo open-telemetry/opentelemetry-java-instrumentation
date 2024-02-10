@@ -15,3 +15,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:restlet:restlet-1.1:testing"))
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

@@ -22,7 +22,7 @@ the second Monday of the month (roughly a few of days after the monthly minor re
   [renovate has run](https://developer.mend.io/github/open-telemetry/opentelemetry-java-instrumentation)
   sometime in the past day (this link is only accessible if you have write access to the
   repository), and check that all
-  [renovate PRs](https://github.com/open-telemetry/opentelemetry-java-contrib/pulls/app%2Frenovate)
+  [renovate PRs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pulls/app%2Frenovate)
   have been merged.
 - Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
   if there is one.

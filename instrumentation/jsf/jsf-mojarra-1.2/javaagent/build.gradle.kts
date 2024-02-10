@@ -90,3 +90,6 @@ tasks {
     dependsOn(testing.suites)
   }
 }
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}

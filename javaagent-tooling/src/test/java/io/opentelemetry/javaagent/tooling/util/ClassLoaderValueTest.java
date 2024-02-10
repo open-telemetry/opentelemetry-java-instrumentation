@@ -22,9 +22,22 @@ class ClassLoaderValueTest {
   }
 
   void testClassLoader(ClassLoader classLoader) {
-    ClassLoaderValue<String> classLoaderValue = new ClassLoaderValue<>();
-    classLoaderValue.put(classLoader, "value");
-    assertThat(classLoaderValue.get(classLoader)).isEqualTo("value");
+    ClassLoaderValue<String> value1 = new ClassLoaderValue<>();
+    value1.put(classLoader, "value");
+    assertThat(value1.get(classLoader)).isEqualTo("value");
+
+    ClassLoaderValue<String> value2 = new ClassLoaderValue<>();
+    String value = "value";
+    String ret1 = value2.computeIfAbsent(classLoader, () -> value);
+    String ret2 =
+        value2.computeIfAbsent(
+            classLoader,
+            () -> {
+              throw new IllegalStateException("Shouldn't be invoked");
+            });
+    assertThat(ret1).isSameAs(value);
+    assertThat(ret2).isSameAs(value);
+    assertThat(value2.get(classLoader)).isSameAs(value);
   }
 
   @Test

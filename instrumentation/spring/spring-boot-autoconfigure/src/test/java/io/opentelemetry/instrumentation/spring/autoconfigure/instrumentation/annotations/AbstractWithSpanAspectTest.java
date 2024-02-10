@@ -223,9 +223,8 @@ abstract class AbstractWithSpanAspectTest {
       assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
-                  trace
-                      .hasSize(1)
-                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.complete("DONE");
@@ -258,9 +257,8 @@ abstract class AbstractWithSpanAspectTest {
       assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
-                  trace
-                      .hasSize(1)
-                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
@@ -321,9 +319,8 @@ abstract class AbstractWithSpanAspectTest {
       assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
-                  trace
-                      .hasSize(1)
-                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.complete("DONE");
@@ -357,9 +354,8 @@ abstract class AbstractWithSpanAspectTest {
       assertThat(testing.waitForTraces(1))
           .hasTracesSatisfyingExactly(
               trace ->
-                  trace
-                      .hasSize(1)
-                      .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));

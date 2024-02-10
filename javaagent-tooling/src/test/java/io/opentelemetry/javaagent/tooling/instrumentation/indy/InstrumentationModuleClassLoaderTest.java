@@ -29,6 +29,7 @@ import java.util.jar.JarOutputStream;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -44,9 +45,12 @@ class InstrumentationModuleClassLoaderTest {
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
 
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject, true);
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+    m1.installInjectedClasses(toInject);
+
     InstrumentationModuleClassLoader m2 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject, true);
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+    m2.installInjectedClasses(toInject);
 
     // MethodHandles.publicLookup() always succeeds on the first invocation
     lookupAndInvokeFoo(m1);
@@ -80,7 +84,8 @@ class InstrumentationModuleClassLoaderTest {
 
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, toInject, true);
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+    m1.installInjectedClasses(toInject);
 
     Class<?> injected = Class.forName(A.class.getName(), true, m1);
     // inject two classes from the same package to trigger errors if we try to redefine the package
@@ -121,7 +126,8 @@ class InstrumentationModuleClassLoaderTest {
       toInject.put(C.class.getName(), BytecodeWithUrl.create(C.class.getName(), moduleSourceCl));
 
       InstrumentationModuleClassLoader moduleCl =
-          new InstrumentationModuleClassLoader(appCl, agentCl, toInject, true);
+          new InstrumentationModuleClassLoader(appCl, agentCl, ElementMatchers.any());
+      moduleCl.installInjectedClasses(toInject);
 
       // Verify precedence for classloading
       Class<?> clA = moduleCl.loadClass(A.class.getName());

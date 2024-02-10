@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.api.semconv.http.CapturedHttpHead
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
@@ -111,7 +110,7 @@ abstract class HttpCommonAttributesExtractor<
         errorType = _OTHER;
       }
     }
-    internalSet(attributes, HttpAttributes.ERROR_TYPE, errorType);
+    internalSet(attributes, SemanticAttributes.ERROR_TYPE, errorType);
 
     String protocolName = lowercaseStr(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercaseStr(getter.getNetworkProtocolVersion(request, response));

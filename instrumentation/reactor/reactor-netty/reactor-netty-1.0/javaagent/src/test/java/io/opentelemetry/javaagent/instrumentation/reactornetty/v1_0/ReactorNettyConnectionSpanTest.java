@@ -14,7 +14,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -161,7 +160,8 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
                             equalTo(
-                                HttpAttributes.ERROR_TYPE, connectException.getClass().getName())),
+                                SemanticAttributes.ERROR_TYPE,
+                                connectException.getClass().getName())),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)

@@ -96,6 +96,7 @@ public final class RabbitSingletons {
     extractors.add(
         buildMessagingAttributesExtractor(
             RabbitDeliveryAttributesGetter.INSTANCE, MessageOperation.PROCESS));
+    extractors.add(NetworkAttributesExtractor.create(new RabbitDeliveryNetAttributesGetter()));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());

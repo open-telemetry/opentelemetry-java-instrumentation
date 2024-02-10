@@ -7,8 +7,10 @@ package springdata
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import org.junit.jupiter.api.Assumptions
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
+import spock.util.environment.Jvm
 
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
@@ -48,7 +50,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
     }
 
     void close() {
-      applicationContext.close()
+      applicationContext?.close()
     }
 
     @Override
@@ -58,6 +60,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
   }
 
   def setup() {
+    // when running on jdk 21 this test occasionally fails with timeout
+    Assumptions.assumeTrue(Boolean.getBoolean("testLatestDeps") || !Jvm.getCurrent().isJava21Compatible())
+
     repo.refresh()
     clearExportedData()
     runWithSpan("delete") {

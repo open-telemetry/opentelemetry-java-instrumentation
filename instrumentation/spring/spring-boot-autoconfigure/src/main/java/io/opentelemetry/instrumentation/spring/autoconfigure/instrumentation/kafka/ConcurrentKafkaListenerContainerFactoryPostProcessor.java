@@ -5,18 +5,19 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.kafka;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySupplier;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 
 class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostProcessor {
 
-  private final OpenTelemetrySupplier openTelemetrySupplier;
+  private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
 
   ConcurrentKafkaListenerContainerFactoryPostProcessor(
-      OpenTelemetrySupplier openTelemetrySupplier) {
-    this.openTelemetrySupplier = openTelemetrySupplier;
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    this.openTelemetryProvider = openTelemetryProvider;
   }
 
   @Override
@@ -28,7 +29,7 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
     ConcurrentKafkaListenerContainerFactory<?, ?> listenerContainerFactory =
         (ConcurrentKafkaListenerContainerFactory<?, ?>) bean;
     SpringKafkaTelemetry springKafkaTelemetry =
-        SpringKafkaTelemetry.create(openTelemetrySupplier.get());
+        SpringKafkaTelemetry.create(openTelemetryProvider.getObject());
     listenerContainerFactory.setBatchInterceptor(springKafkaTelemetry.createBatchInterceptor());
     listenerContainerFactory.setRecordInterceptor(springKafkaTelemetry.createRecordInterceptor());
 
