@@ -23,6 +23,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -34,8 +35,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 public abstract class AbstractSpringWebfluxClientInstrumentationTest
     extends AbstractHttpClientTest<WebClient.RequestBodySpec> {
 
-  private static final String URI_TEMPLATE_ATTRIBUTE = WebClient.class.getName() + ".uriTemplate";
-
   @Override
   public WebClient.RequestBodySpec buildRequest(
       String method, URI uri, Map<String, String> headers) {
@@ -46,8 +45,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
     return webClient
         .method(HttpMethod.valueOf(method))
-        .uri(uri)
-        .attribute(URI_TEMPLATE_ATTRIBUTE, uri.getPath())
+        .uri(uri.toString(), Collections.emptyMap())
         .headers(h -> headers.forEach(h::add));
   }
 
