@@ -57,7 +57,7 @@ jobs:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
           GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         with:
           arguments: >
             check -x spotlessCheck
@@ -71,7 +71,7 @@ jobs:
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
