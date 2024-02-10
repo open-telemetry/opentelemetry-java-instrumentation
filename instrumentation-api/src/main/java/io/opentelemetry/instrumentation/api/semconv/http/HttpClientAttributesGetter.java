@@ -35,7 +35,7 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   /**
    * Returns the path template in the format used by the respective client framework.
    *
-   * <p>Examples: {@code /foo/{bar}</p>
+   * <p>Examples: <code>/foo/{bar}</code>
    */
   @Nullable
   default String getHttpRoute(REQUEST request) {
