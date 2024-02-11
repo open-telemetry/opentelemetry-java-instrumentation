@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,7 @@ class SpringBootServiceVersionDetectorTest {
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
     Resource result = guesser.createResource(config);
     assertThat(result.getAttribute(SERVICE_VERSION)).isEqualTo("0.0.2");
+    assertThat(result.getAttribute(SERVICE_NAME)).isEqualTo("some-name");
   }
 
   @Test
