@@ -78,7 +78,7 @@ public class SocketInstrumentation implements TypeInstrumentation {
         request.setNode(node);
         if (throwable != null) {
           request.setStatus(FAILURE);
-          requestContext.endSpan(instrumenter(), requestContext.getContext(), request, throwable);
+          requestContext.endSpan(instrumenter(), throwable);
           requestContext.detachAndEnd();
         }
       }

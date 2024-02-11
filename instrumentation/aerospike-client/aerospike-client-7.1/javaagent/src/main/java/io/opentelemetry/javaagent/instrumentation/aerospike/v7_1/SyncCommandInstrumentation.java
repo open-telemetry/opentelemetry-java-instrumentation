@@ -123,7 +123,7 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
 
       scope.close();
       if (requestContext != null) {
-        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), throwable);
         requestContext.detachAndEnd();
       }
     }
@@ -159,7 +159,7 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static AerospikeRequestContext stopSpan(
+    public static void stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Enter AerospikeRequestContext requestContext,
         @Advice.Local("otelAerospikeRequest") AerospikeRequest request,
@@ -170,16 +170,14 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
       } else {
         request.setStatus(Status.SUCCESS);
       }
-      if (scope == null) {
-        return requestContext;
+      if (scope != null) {
+        scope.close();
       }
 
-      scope.close();
       if (requestContext != null) {
-        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), throwable);
         requestContext.detachAndEnd();
       }
-      return requestContext;
     }
   }
 
@@ -195,7 +193,6 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-
       request = AerospikeRequest.create(methodName.toUpperCase(Locale.ROOT), namespace, setName);
       if (!AersopikeSingletons.instrumenter().shouldStart(parentContext, request)) {
         return null;
@@ -206,7 +203,7 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static AerospikeRequestContext stopSpan(
+    public static void stopSpan(
         @Advice.Thrown Throwable throwable,
         @Advice.Enter AerospikeRequestContext requestContext,
         @Advice.Local("otelAerospikeRequest") AerospikeRequest request,
@@ -217,16 +214,13 @@ public class SyncCommandInstrumentation implements TypeInstrumentation {
       } else {
         request.setStatus(Status.SUCCESS);
       }
-      if (scope == null) {
-        return requestContext;
+      if (scope != null) {
+        scope.close();
       }
-
-      scope.close();
       if (requestContext != null) {
-        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), throwable);
         requestContext.detachAndEnd();
       }
-      return requestContext;
     }
   }
 }

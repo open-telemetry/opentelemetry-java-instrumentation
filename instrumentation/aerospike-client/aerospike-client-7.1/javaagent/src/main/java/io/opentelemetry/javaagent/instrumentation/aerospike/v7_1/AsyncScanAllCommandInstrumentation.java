@@ -92,7 +92,7 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
         } else {
           request.setStatus(Status.FAILURE);
         }
-        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), throwable);
       }
     }
   }
@@ -112,7 +112,7 @@ public class AsyncScanAllCommandInstrumentation implements TypeInstrumentation {
         AerospikeRequest request = requestContext.getRequest();
         Context context = requestContext.getContext();
         request.setStatus(Status.FAILURE);
-        requestContext.endSpan(AersopikeSingletons.instrumenter(), context, request, throwable);
+        requestContext.endSpan(AersopikeSingletons.instrumenter(), throwable);
       }
     }
   }

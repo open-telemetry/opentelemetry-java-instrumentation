@@ -15,7 +15,6 @@ import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
-import com.aerospike.client.async.EventLoops;
 import com.aerospike.client.async.EventPolicy;
 import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.policy.ClientPolicy;
@@ -62,11 +61,11 @@ class AerospikeClientTest {
     port = aerospikeServer.getMappedPort(3000);
     ClientPolicy clientPolicy = new ClientPolicy();
     int eventLoopSize = Runtime.getRuntime().availableProcessors();
+    System.out.println(eventLoopSize);
     EventPolicy eventPolicy = new EventPolicy();
     eventPolicy.commandsPerEventLoop = 2;
-    EventLoops eventLoops = new NioEventLoops(eventPolicy, eventLoopSize);
-    clientPolicy.eventLoops = eventLoops;
-    clientPolicy.maxConnsPerNode = 11;
+    clientPolicy.eventLoops = new NioEventLoops(eventPolicy, eventLoopSize);
+    clientPolicy.maxConnsPerNode = eventLoopSize;
     clientPolicy.failIfNotConnected = true;
     aerospikeClient = new AerospikeClient(clientPolicy, "localhost", port);
   }

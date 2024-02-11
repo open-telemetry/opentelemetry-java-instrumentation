@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.aerospike")
     module.set("aerospike-client")
-    versions.set("[4.4.9,)")
+    versions.set("[7.0.0,)")
     assertInverse.set(true)
   }
 }
@@ -23,6 +23,7 @@ tasks {
   test {
     jvmArgs("-Djava.net.preferIPv4Stack=true")
     jvmArgs("-Dotel.instrumentation.aerospike.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.aerospike.experimental-metrics=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

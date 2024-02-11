@@ -29,16 +29,11 @@ public final class AerospikeRequestContext {
     contextThreadLocal.remove();
   }
 
-  @SuppressWarnings("unchecked")
   public static AerospikeRequestContext current() {
     return contextThreadLocal.get();
   }
 
-  public void endSpan(
-      Instrumenter<AerospikeRequest, Void> instrumenter,
-      Context context,
-      AerospikeRequest request,
-      Throwable throwable) {
+  public void endSpan(Instrumenter<AerospikeRequest, Void> instrumenter, Throwable throwable) {
     instrumenter.end(context, request, null, throwable);
   }
 

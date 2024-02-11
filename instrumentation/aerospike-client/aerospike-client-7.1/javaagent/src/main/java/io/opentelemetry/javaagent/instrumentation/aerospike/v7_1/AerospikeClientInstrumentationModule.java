@@ -23,7 +23,7 @@ public class AerospikeClientInstrumentationModule extends InstrumentationModule 
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.aerospike.client.AerospikeClient");
+    return hasClassesNamed("com.aerospike.client.AerospikeClient").and(hasClassesNamed("com.aerospike.client.metrics.MetricsPolicy"));
   }
 
   @Override
@@ -34,10 +34,5 @@ public class AerospikeClientInstrumentationModule extends InstrumentationModule 
         new AsyncCommandInstrumentation(),
         new AsyncHandlerInstrumentation(),
         new AsyncScanAllCommandInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyModule() {
-    return false;
   }
 }

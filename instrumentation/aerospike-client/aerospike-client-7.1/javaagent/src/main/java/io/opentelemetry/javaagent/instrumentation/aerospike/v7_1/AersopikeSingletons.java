@@ -32,11 +32,13 @@ public final class AersopikeSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(aerospikeDbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(aerospikeDbAttributesGetter))
-            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
-            .addOperationMetrics(AerospikeMetrics.get());
-    if (InstrumentationConfig.get()
-        .getBoolean("otel.instrumentation.aerospike.experimental-span-attributes", false)) {
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter));
+    InstrumentationConfig instrumentationConfig = InstrumentationConfig.get();
+    if (instrumentationConfig.getBoolean("otel.instrumentation.aerospike.experimental-span-attributes", false)) {
       builder.addAttributesExtractor(new AerospikeClientAttributeExtractor());
+    }
+    if (instrumentationConfig.getBoolean("otel.instrumentation.aerospike.experimental-metrics", false)) {
+      builder.addOperationMetrics(AerospikeMetrics.get());
     }
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
