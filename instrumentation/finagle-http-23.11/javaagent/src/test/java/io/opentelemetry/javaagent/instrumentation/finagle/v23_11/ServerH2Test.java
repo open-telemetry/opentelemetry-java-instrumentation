@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.finagle.v23_11;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent.SWITCHING_PROTOCOLS;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.CONNECTION_TIMEOUT;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -15,7 +17,9 @@ import com.twitter.finagle.Service;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
 import com.twitter.finagle.http2.param.PriorKnowledge;
+import com.twitter.finagle.service.RetryBudget;
 import com.twitter.util.Await;
+import com.twitter.util.Duration;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -29,12 +33,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ServerH2Test extends AbstractServerTest {
-
-  @RegisterExtension
-  static final FinagleClientExtension extension = FinagleClientExtension.http_2();
 
   @Override
   protected ListeningServer setupServer() {
@@ -62,11 +62,22 @@ class ServerH2Test extends AbstractServerTest {
   @Test
   void h2ProtocolUpgrade() throws Exception {
     URI uri = URI.create("http://localhost:" + port + SUCCESS.getPath());
-    Service<Request, Response> client = extension.clientFor(uri);
+    Service<Request, Response> client =
+        Http.client()
+            .withHttp2()
+            .withTransport()
+            .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))
+            .withTransport()
+            .connectTimeout(Duration.fromMilliseconds(CONNECTION_TIMEOUT.toMillis()))
+            // disable automatic retries -- retries will result in under-counting traces in the
+            // tests
+            .withRetryBudget(RetryBudget.Empty())
+            .newService(uri.getHost() + ":" + uri.getPort());
+
     Response response =
         Await.result(
             client.apply(
-                FinagleClientExtension.buildRequest(
+                Utils.buildRequest(
                     "GET",
                     uri,
                     ImmutableMap.of(
@@ -75,6 +86,8 @@ class ServerH2Test extends AbstractServerTest {
                         HttpHeaderNames.X_FORWARDED_FOR.toString(),
                         TEST_CLIENT_IP))),
             com.twitter.util.Duration.fromSeconds(20));
+
+    Await.result(client.close(), Duration.fromSeconds(5));
 
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentString()).isEqualTo(SUCCESS.getBody());
