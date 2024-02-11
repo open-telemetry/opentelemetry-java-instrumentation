@@ -10,12 +10,14 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -23,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -53,32 +56,38 @@ class JarServiceNameDetectorTest {
     assertThat(resource.getAttributes()).isEmpty();
   }
 
-  @Test
-  void createResource_processHandleJar() {
-    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
+  @ParameterizedTest(name = "[{index}]: {0} -> {1}, {2}")
+  @CsvSource({
+    "my-service, my-service, ",
+    "my-service.jar0, my-service.jar0, ",
+    "my-service.jar, my-service, ",
+    "my-service-1.0.0-SNAPSHOT, my-service-1.0.0-SNAPSHOT, ",
+    "my-service-1.0.0-SNAPSHOT.jar, my-service, 1.0.0-SNAPSHOT",
+    "my-service-v1.0.0-SNAPSHOT.jar, my-service, v1.0.0-SNAPSHOT",
+    "my-service-1.0.0, my-service-1.0.0, ",
+    "my-service-1.0.0.jar, my-service, 1.0.0",
+    "my-service-v1.0.0.jar, my-service, v1.0.0",
+    "my-service2.3-1.0.0.jar, my-service2.3, 1.0.0",
+    "my-service-2.3-1.0.0.jar, my-service, 2.3-1.0.0",
+    "my_service_2.3_1.0.0.jar, my_service, 2.3_1.0.0",
+  })
+  void createResource_processHandleJar(
+      String jar, String expectedServiceName, @Nullable String expectedServiceVersion) {
+    String path = Paths.get("path", "to", "app", jar).toString();
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path, "abc", "def"};
     JarServiceNameDetector serviceNameProvider =
         new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
-    assertThat(resource.getAttributes())
-        .hasSize(1)
-        .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
-  }
+    AttributesAssert attributesAssert = assertThat(resource.getAttributes());
+    attributesAssert.containsEntry(ResourceAttributes.SERVICE_NAME, expectedServiceName);
 
-  @Test
-  void createResource_processHandleJarWithoutExtension() {
-    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
-    String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path};
-    JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
-
-    Resource resource = serviceNameProvider.createResource(config);
-
-    assertThat(resource.getAttributes())
-        .hasSize(1)
-        .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
+    if (expectedServiceVersion == null) {
+      attributesAssert.doesNotContainKey(ResourceAttributes.SERVICE_VERSION);
+    } else {
+      attributesAssert.containsEntry(ResourceAttributes.SERVICE_VERSION, expectedServiceVersion);
+    }
   }
 
   @ParameterizedTest

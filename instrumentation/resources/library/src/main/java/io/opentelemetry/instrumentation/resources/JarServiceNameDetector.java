@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
@@ -19,10 +20,13 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -36,6 +40,27 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
   private final Supplier<String[]> getProcessHandleArguments;
   private final Function<String, String> getSystemProperty;
   private final Predicate<Path> fileExists;
+
+  private static final Pattern JAR_FILE_VERSION_PATTERN = Pattern.compile("[-_]v?\\d.*");
+
+  private static final Pattern ANY_DIGIT = Pattern.compile("\\d");
+
+  private static class NameAndVersion {
+    final String name;
+    final Optional<String> version;
+
+    NameAndVersion(String name, Optional<String> version) {
+      this.name = name;
+      this.version = version;
+    }
+
+    @Override
+    public String toString() {
+      return version
+          .map(v -> String.format("name: %s, version: %s", name, v))
+          .orElse(String.format("name: %s", name));
+    }
+  }
 
   @SuppressWarnings("unused") // SPI
   public JarServiceNameDetector() {
@@ -61,9 +86,12 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     if (jarPath == null) {
       return Resource.empty();
     }
-    String serviceName = getServiceName(jarPath);
-    logger.log(FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
-    return Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, serviceName));
+    NameAndVersion nameAndVersion = getServiceNameAndVersion(jarPath);
+    logger.log(FINE, "Auto-detected service name from the jar file: {0}", nameAndVersion);
+    AttributesBuilder builder =
+        Attributes.builder().put(ResourceAttributes.SERVICE_NAME, nameAndVersion.name);
+    nameAndVersion.version.ifPresent(v -> builder.put(ResourceAttributes.SERVICE_VERSION, v));
+    return Resource.create(builder.build());
   }
 
   @Override
@@ -121,10 +149,27 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     return fileExists.test(candidate) ? candidate : null;
   }
 
-  private static String getServiceName(Path jarPath) {
+  private static NameAndVersion getServiceNameAndVersion(Path jarPath) {
     String jarName = jarPath.getFileName().toString();
     int dotIndex = jarName.lastIndexOf(".");
-    return dotIndex == -1 ? jarName : jarName.substring(0, dotIndex);
+    if (dotIndex == -1 || ANY_DIGIT.matcher(jarName.substring(dotIndex)).find()) {
+      // don't change if digit it extension, it's probably a version
+      return new NameAndVersion(jarName, Optional.empty());
+    }
+
+    return getNameAndVersion(jarName.substring(0, dotIndex));
+  }
+
+  private static NameAndVersion getNameAndVersion(String jarNameWithoutExtension) {
+    Matcher matcher = JAR_FILE_VERSION_PATTERN.matcher(jarNameWithoutExtension);
+    if (matcher.find()) {
+      int start = matcher.start();
+      String name = jarNameWithoutExtension.substring(0, start);
+      String version = jarNameWithoutExtension.substring(start + 1);
+      return new NameAndVersion(name, Optional.of(version));
+    }
+
+    return new NameAndVersion(jarNameWithoutExtension, Optional.empty());
   }
 
   @Override
