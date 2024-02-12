@@ -85,11 +85,7 @@ class Payara6Jdk17 extends PayaraSmokeTest {
 @AppServer(version = "6.2023.12", jdk = "17-openj9")
 class Payara6Jdk17Openj9 extends PayaraSmokeTest {
 }
-/*
-@AppServer(version = "6.2023.12", jdk = "21")
-class Payara6Jdk21 extends PayaraSmokeTest {
-}
-*/
+
 @AppServer(version = "6.2023.12", jdk = "21-openj9")
 class Payara6Jdk21Openj9 extends PayaraSmokeTest {
 }
