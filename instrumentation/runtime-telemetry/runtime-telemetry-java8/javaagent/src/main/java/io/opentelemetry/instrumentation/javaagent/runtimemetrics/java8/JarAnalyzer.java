@@ -194,7 +194,7 @@ final class JarAnalyzer implements ClassFileTransformer {
           logger.log(Level.WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
         }
       }
-      logger.log(Level.WARNING, "JarAnalyzer stopped");
+      logger.warning("JarAnalyzer stopped");
     }
   }
 
