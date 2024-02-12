@@ -57,7 +57,7 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20230822.5936895750"
+    String extraTag = "20240209.7847080088"
     String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
@@ -85,6 +85,10 @@ abstract class AppServerTest extends SmokeTest {
   }
 
   boolean testRequestOutsideDeployedApp() {
+    true
+  }
+
+  boolean testJsp() {
     true
   }
 
@@ -373,6 +377,8 @@ abstract class AppServerTest extends SmokeTest {
 
   @Unroll
   def "JSP smoke test for Snippet Injection"() {
+    assumeTrue(testJsp())
+
     when:
     def response = client().get("/app/jsp").aggregate().join()
     TraceInspector traces = new TraceInspector(waitForTraces())
