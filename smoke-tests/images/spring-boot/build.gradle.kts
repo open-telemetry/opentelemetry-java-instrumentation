@@ -37,11 +37,6 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-springBoot {
-  buildInfo {
-  }
-}
-
 jib {
   from.image = "openjdk:$targetJDK"
   to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$targetJDK-$tag"
