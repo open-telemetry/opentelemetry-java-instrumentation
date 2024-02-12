@@ -5,8 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.finagle.v23_11;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.CONNECTION_TIMEOUT;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
+
+import com.twitter.finagle.Http;
 import com.twitter.finagle.http.Method;
 import com.twitter.finagle.http.Request;
+import com.twitter.finagle.service.RetryBudget;
+import com.twitter.util.Duration;
 import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
@@ -14,6 +20,38 @@ import java.util.Map;
 final class Utils {
 
   private Utils() {}
+
+  static Http.Client createClient(ClientType clientType) {
+    Http.Client client =
+        Http.client()
+            .withNoHttp2()
+            .withTransport()
+            .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))
+            .withTransport()
+            .connectTimeout(Duration.fromMilliseconds(CONNECTION_TIMEOUT.toMillis()))
+            // disable automatic retries -- retries will result in under-counting traces in the
+            // tests
+            .withRetryBudget(RetryBudget.Empty());
+
+    switch (clientType) {
+      case TLS:
+        client = client.withTransport().tlsWithoutValidation();
+        break;
+      case SINGLE_CONN:
+        client = client.withSessionPool().maxSize(1);
+        break;
+      case DEFAULT:
+        break;
+    }
+
+    return client;
+  }
+
+  enum ClientType {
+    TLS,
+    SINGLE_CONN,
+    DEFAULT;
+  }
 
   static int safePort(URI uri) {
     int port = uri.getPort();
