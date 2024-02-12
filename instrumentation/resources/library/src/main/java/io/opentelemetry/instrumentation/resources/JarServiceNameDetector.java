@@ -129,7 +129,8 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
 
   @Override
   public int order() {
-    // make it run later than the SpringBootServiceNameDetector
-    return 1000;
+    // make it run earlier than the SpringBootServiceNameDetector
+    // because jar files often get renamed in production
+    return -1000;
   }
 }
