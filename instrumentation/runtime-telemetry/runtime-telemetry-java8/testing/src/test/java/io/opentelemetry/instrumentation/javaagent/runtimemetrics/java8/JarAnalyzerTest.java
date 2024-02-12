@@ -40,7 +40,7 @@ class JarAnalyzerTest {
   @MethodSource("processUrlArguments")
   void processUrl_EmitsEvents(URL archiveUrl, Consumer<AttributesAssert> attributesConsumer) {
     EventEmitter eventEmitter = mock(EventEmitter.class);
-    JarAnalyzer.processUrl(eventEmitter, archiveUrl, false);
+    JarAnalyzer.processUrl(eventEmitter, archiveUrl);
 
     ArgumentCaptor<Attributes> attributesArgumentCaptor = ArgumentCaptor.forClass(Attributes.class);
     verify(eventEmitter).emit(eq("info"), attributesArgumentCaptor.capture());
