@@ -301,12 +301,18 @@ abstract class AbstractRocketMqClientTest {
                                       SemanticAttributes.MESSAGING_DESTINATION_NAME, sharedTopic),
                                   equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
                                   satisfies(
+                                      SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                                      val -> val.isInstanceOf(Long.class)),
+                                  satisfies(
                                       SemanticAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
                                   equalTo(
                                       SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                   satisfies(
                                       AttributeKey.stringKey("messaging.rocketmq.broker_address"),
+                                      val -> val.isInstanceOf(Long.class)),
+                                  satisfies(
+                                      AttributeKey.stringKey("messaging.rocketmq.queue_id"),
                                       val -> val.isInstanceOf(Long.class)),
                                   satisfies(
                                       AttributeKey.stringKey("messaging.rocketmq.queue_offset"),
@@ -338,7 +344,10 @@ abstract class AbstractRocketMqClientTest {
                                   satisfies(
                                       AttributeKey.stringKey("messaging.rocketmq.queue_offset"),
                                       val -> val.isInstanceOf(Long.class))),
-                      span -> span.hasName("messageListener").hasKind(SpanKind.INTERNAL)));
+                      span ->
+                          span.hasName("messageListener")
+                              .hasParent(trace.getSpan(0))
+                              .hasKind(SpanKind.INTERNAL)));
     }
   }
 
