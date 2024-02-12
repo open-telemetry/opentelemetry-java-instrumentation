@@ -41,7 +41,7 @@ final class CassandraAttributesExtractor
       SocketAddress address = coordinator.getEndPoint().resolve();
       if (address instanceof InetSocketAddress) {
         attributes.put(
-            SemanticAttributes.SERVER_ADDRESS, ((InetSocketAddress) address).getHostName());
+            SemanticAttributes.SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
         attributes.put(SemanticAttributes.SERVER_PORT, ((InetSocketAddress) address).getPort());
       }
       if (coordinator.getDatacenter() != null) {

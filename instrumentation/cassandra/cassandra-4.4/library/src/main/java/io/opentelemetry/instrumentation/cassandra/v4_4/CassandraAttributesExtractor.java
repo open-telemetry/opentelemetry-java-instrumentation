@@ -19,14 +19,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
-  private static final Logger logger = LoggerFactory.getLogger(CassandraAttributesExtractor.class);
+  private static final java.util.logging.Logger logger =
+      Logger.getLogger(CassandraAttributesExtractor.class.getName());
+
   private static final Field proxyAddressField = getProxyAddressField();
 
   @Override
@@ -91,21 +92,20 @@ final class CassandraAttributesExtractor
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
-      attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
+      attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostString());
       attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
     } else if (endPoint instanceof SniEndPoint && proxyAddressField != null) {
       SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
       Object object = null;
       try {
         object = proxyAddressField.get(sniEndPoint);
-      } catch (IllegalAccessException e) {
-        logger.warn(
-            "Error when retrieving the private field proxyAddress of SniEndPoint using reflection.",
-            e);
+      } catch (Exception e) {
+        logger.fine(
+            "Error when accessing the private field proxyAddress of SniEndPoint using reflection.");
       }
       if (object instanceof InetSocketAddress) {
         InetSocketAddress address = (InetSocketAddress) object;
-        attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostName());
+        attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostString());
         attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
       }
     }

@@ -29,7 +29,7 @@ public class CassandraAttributesExtractor
     }
     attributes.put(
         SemanticAttributes.SERVER_ADDRESS,
-        executionInfo.getQueriedHost().getSocketAddress().getHostName());
+        executionInfo.getQueriedHost().getSocketAddress().getHostString());
     attributes.put(
         SemanticAttributes.SERVER_PORT,
         executionInfo.getQueriedHost().getSocketAddress().getPort());
