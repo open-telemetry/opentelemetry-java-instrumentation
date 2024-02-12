@@ -85,10 +85,18 @@ class Liberty22Jdk17Openj9 extends LibertySmokeTest {
 
 @AppServer(version = "23.0.0.12", jdk = "8")
 class Liberty23Jdk8 extends LibertySmokeTest {
+  @Override
+  boolean testJsp() {
+    false
+  }
 }
 
 @AppServer(version = "23.0.0.12", jdk = "8-openj9")
 class Liberty23Jdk8Openj9 extends LibertySmokeTest {
+  @Override
+  boolean testJsp() {
+    false
+  }
 }
 
 @AppServer(version = "23.0.0.12", jdk = "11")

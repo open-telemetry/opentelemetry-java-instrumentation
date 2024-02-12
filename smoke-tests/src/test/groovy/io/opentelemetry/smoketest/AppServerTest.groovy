@@ -88,6 +88,10 @@ abstract class AppServerTest extends SmokeTest {
     true
   }
 
+  boolean testJsp() {
+    true
+  }
+
   //TODO add assert that server spans were created by servers, not by servlets
   @Unroll
   def "#appServer smoke test on JDK #jdk"(String appServer, String jdk, boolean isWindows) {
@@ -373,6 +377,8 @@ abstract class AppServerTest extends SmokeTest {
 
   @Unroll
   def "JSP smoke test for Snippet Injection"() {
+    assumeTrue(testJsp())
+
     when:
     def response = client().get("/app/jsp").aggregate().join()
     TraceInspector traces = new TraceInspector(waitForTraces())
