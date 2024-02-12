@@ -15,24 +15,23 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * A {@link ResourceProvider} that will attempt to detect the application name from the jar name.
+ * A {@link ResourceProvider} that will attempt to detect the application version from the jar name.
  */
 @AutoService(ResourceProvider.class)
-public final class JarServiceNameDetector extends JarResourceDetector {
+public final class JarServiceVersionDetector extends JarResourceDetector {
 
   @SuppressWarnings("unused") // SPI
-  public JarServiceNameDetector() {
+  public JarServiceVersionDetector() {
     this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
   }
 
   // visible for tests
-  JarServiceNameDetector(
+  JarServiceVersionDetector(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
       Predicate<Path> fileExists) {
@@ -42,23 +41,20 @@ public final class JarServiceNameDetector extends JarResourceDetector {
   @Override
   public Resource createResource(ConfigProperties config) {
     return getServiceNameAndVersion()
+        .flatMap(n -> n.version)
         .map(
-            nameAndVersion -> {
-              logger.log(
-                  FINE, "Auto-detected service.name from the jar file: {0}", nameAndVersion.name);
+            version -> {
+              logger.log(FINE, "Auto-detected service.version from the jar file: {0}", version);
 
-              return Resource.create(
-                  Attributes.of(ResourceAttributes.SERVICE_NAME, nameAndVersion.name));
+              return Resource.create(Attributes.of(ResourceAttributes.SERVICE_VERSION, version));
             })
         .orElse(Resource.empty());
   }
 
   @Override
   public boolean shouldApply(ConfigProperties config, Resource existing) {
-    String serviceName = config.getString("otel.service.name");
-    Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
-    return serviceName == null
-        && !resourceAttributes.containsKey(ResourceAttributes.SERVICE_NAME.getKey())
-        && "unknown_service:java".equals(existing.getAttribute(ResourceAttributes.SERVICE_NAME));
+    return !config
+        .getMap("otel.resource.attributes")
+        .containsKey(ResourceAttributes.SERVICE_VERSION.getKey());
   }
 }

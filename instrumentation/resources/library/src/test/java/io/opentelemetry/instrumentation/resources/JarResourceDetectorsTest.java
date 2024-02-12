@@ -30,7 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class JarServiceNameDetectorTest {
+class JarResourceDetectorsTest {
 
   @Mock ConfigProperties config;
 
@@ -38,7 +38,7 @@ class JarServiceNameDetectorTest {
   void createResource_empty() {
     JarServiceNameDetector serviceNameProvider =
         new JarServiceNameDetector(
-            () -> new String[0], prop -> null, JarServiceNameDetectorTest::failPath);
+            () -> new String[0], prop -> null, JarResourceDetectorsTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -49,7 +49,7 @@ class JarServiceNameDetectorTest {
   void createResource_noJarFileInArgs() {
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar"};
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
+        new JarServiceNameDetector(() -> args, prop -> null, JarResourceDetectorsTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -76,9 +76,14 @@ class JarServiceNameDetectorTest {
     String path = Paths.get("path", "to", "app", jar).toString();
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path, "abc", "def"};
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
+        new JarServiceNameDetector(() -> args, prop -> null, JarResourceDetectorsTest::failPath);
+    JarServiceVersionDetector serviceVersionProvider =
+        new JarServiceVersionDetector(() -> args, prop -> null, JarResourceDetectorsTest::failPath);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource =
+        serviceNameProvider
+            .createResource(config)
+            .merge(serviceVersionProvider.createResource(config));
 
     AttributesAssert attributesAssert = assertThat(resource.getAttributes());
     attributesAssert.containsEntry(ResourceAttributes.SERVICE_NAME, expectedServiceName);
