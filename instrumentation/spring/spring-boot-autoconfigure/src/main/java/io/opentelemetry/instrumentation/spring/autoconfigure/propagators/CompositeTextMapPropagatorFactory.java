@@ -51,14 +51,6 @@ public final class CompositeTextMapPropagatorFactory {
                     .getIfAvailable(B3Propagator::injectingMultiHeaders));
           }
           break;
-        case "jaeger":
-          if (isOnClasspath("io.opentelemetry.extension.trace.propagation.JaegerPropagator")) {
-            propagators.add(
-                beanFactory
-                    .getBeanProvider(JaegerPropagator.class)
-                    .getIfAvailable(JaegerPropagator::getInstance));
-          }
-          break;
         case "ottrace":
           if (isOnClasspath("io.opentelemetry.extension.trace.propagation.OtTracerPropagator")) {
             propagators.add(
