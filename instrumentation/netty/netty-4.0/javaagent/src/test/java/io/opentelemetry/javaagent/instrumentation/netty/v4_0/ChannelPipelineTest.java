@@ -6,7 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
@@ -18,11 +22,24 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChannelPipelineTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private static final Class<?> defaultChannelPipelineClass = getDefaultChannelPipelineClass();
+
+  private static Class<?> getDefaultChannelPipelineClass() {
+    try {
+        return Class.forName("io.netty.channel.DefaultChannelPipeline");
+    } catch (Exception e) {
+      return null;
+    }
+  }
 
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
@@ -31,19 +48,15 @@ public class ChannelPipelineTest {
   @CsvSource({"by instance", "by class", "by name", "first"})
   void testRemoveOurHandler(String testName) throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new NoopChannelHandler());
-    ChannelPipeline channelPipeline = channel.pipeline();
+    assertNotNull(defaultChannelPipelineClass);
+    Constructor<?> constructor = defaultChannelPipelineClass.getDeclaredConstructor(Channel.class);
+    constructor.setAccessible(true);
+    ChannelPipeline channelPipeline = (ChannelPipeline)constructor.newInstance(channel);
     HttpClientCodec handler = new HttpClientCodec();
 
-    // remove the default head and tail handlers
-    if (channelPipeline.first() != null) {
-      channelPipeline.removeFirst();
-    }
-    if (channelPipeline.last() != null) {
-      channelPipeline.removeLast();
-    }
-
     // no handlers initially
-    assertEquals(0, channelPipeline.toMap().size());
+    assertTrue(channelPipeline.first() == null || channelPipeline.first().getClass().getName().equals("io.netty.channel.DefaultChannelPipeline$TailHandler"));
+    assertNotNull(channelPipeline.last());
 
     // add handler
     channelPipeline.addLast("http", handler);
@@ -62,34 +75,30 @@ public class ChannelPipelineTest {
     }
 
     // removing handler also removes our handler
-    assertEquals(0, channelPipeline.toMap().size());
+    assertTrue(channelPipeline.first() == null || channelPipeline.first().getClass().getName().equals("io.netty.channel.DefaultChannelPipeline$TailHandler"));
+    assertNull(channelPipeline.last());
   }
 
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
   @ParameterizedTest
   @CsvSource({"by instance", "by class", "by name"})
-  void shouldReplaceHandler(String desc) {
+  void shouldReplaceHandler(String desc) throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new NoopChannelHandler());
-    ChannelPipeline channelPipeline = channel.pipeline();
+    assertNotNull(defaultChannelPipelineClass);
+    Constructor<?> constructor = defaultChannelPipelineClass.getDeclaredConstructor(Channel.class);
+    constructor.setAccessible(true);
+    ChannelPipeline channelPipeline = (ChannelPipeline)constructor.newInstance(channel);
     HttpClientCodec httpHandler = new HttpClientCodec();
 
-    // remove the default head and tail handlers
-    if (channelPipeline.first() != null) {
-      channelPipeline.removeFirst();
-    }
-    if (channelPipeline.last() != null) {
-      channelPipeline.removeLast();
-    }
-
     // no handlers initially
-    assertEquals(0, channelPipeline.toMap().size());
+    assertTrue(channelPipeline.first() == null || channelPipeline.first().getClass().getName().equals("io.netty.channel.DefaultChannelPipeline$TailHandler"));
+    assertNull(channelPipeline.last());
 
     NoopChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addFirst("test", noopHandler);
 
     // only the noop handler
-    assertEquals(1, channelPipeline.toMap().size());
     assertEquals(noopHandler, channelPipeline.first());
 
     if ("by instance".equals(desc)) {
@@ -101,7 +110,6 @@ public class ChannelPipelineTest {
     }
 
     // noop handler was removed; http and instrumentation handlers were added
-    assertEquals(1, channelPipeline.toMap().size());
     assertEquals(httpHandler, channelPipeline.first());
     assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
 
@@ -109,45 +117,82 @@ public class ChannelPipelineTest {
     channelPipeline.replace("http", "test", anotherNoopHandler);
 
     // http and instrumentation handlers were removed; noop handler was added
-    assertEquals(1, channelPipeline.toMap().size());
     assertEquals(anotherNoopHandler, channelPipeline.first());
   }
 
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4056
   @Test
-  void shouldAddAfterAndRemoveLastHandler() {
+  void shouldAddAfterAndRemoveLastHandler() throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new NoopChannelHandler());
-    ChannelPipeline channelPipeline = channel.pipeline();
+    assertNotNull(defaultChannelPipelineClass);
+    Constructor<?> constructor = defaultChannelPipelineClass.getDeclaredConstructor(Channel.class);
+    constructor.setAccessible(true);
+    ChannelPipeline channelPipeline = (ChannelPipeline)constructor.newInstance(channel);
     HttpClientCodec httpHandler = new HttpClientCodec();
 
-    if (channelPipeline.first() != null) {
-      channelPipeline.removeFirst();
-    }
-    if (channelPipeline.last() != null) {
-      channelPipeline.removeLast();
-    }
+    // no handlers initially
+    assertTrue(channelPipeline.first() == null || channelPipeline.first().getClass().getName().equals("io.netty.channel.DefaultChannelPipeline$TailHandler"));
+    assertNull(channelPipeline.last());
 
-    assertEquals(0, channelPipeline.toMap().size());
-
+    // Add http and instrumentation handlers
     channelPipeline.addLast("http", httpHandler);
-    assertEquals(2, channelPipeline.toMap().size());
     assertEquals(channelPipeline.first(), httpHandler);
-    assertEquals(channelPipeline.last().getClass().getSimpleName(), "HttpClientTracingHandler");
+    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
 
     NoopChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addAfter("http", "noop", noopHandler);
 
-    assertEquals(3, channelPipeline.toMap().size());
+    // instrumentation handler is between http and noop handlers
     assertEquals(channelPipeline.first(), httpHandler);
     assertEquals(channelPipeline.last(), noopHandler);
 
-    // removeLast will remove everything after httpHandler
     ChannelHandler removed = channelPipeline.removeLast();
     assertEquals(httpHandler, removed);
 
-    // there i sno handler in the pipeline
+    // http and instrumentation handlers will be remained; noop handler will be removed
+    assertEquals(httpHandler, channelPipeline.first());
+    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
+
+    removed = channelPipeline.removeLast();
+
+    // there is no handler in the pipeline
     assertEquals(0, channelPipeline.toMap().size());
+    assertEquals(httpHandler, removed);
+  }
+
+  @SuppressWarnings("SystemOut")
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10377
+  @Test
+  void ourHandlerNotInHandlerMap() throws Exception {
+    EmbeddedChannel channel = new EmbeddedChannel(new NoopChannelHandler());
+    assertNotNull(defaultChannelPipelineClass);
+    Constructor<?> constructor = defaultChannelPipelineClass.getDeclaredConstructor(Channel.class);
+    constructor.setAccessible(true);
+    ChannelPipeline channelPipeline = (ChannelPipeline)constructor.newInstance(channel);
+    HttpClientCodec httpHandler = new HttpClientCodec();
+
+    // no handlers initially
+    assertTrue(channelPipeline.first() == null || channelPipeline.first().getClass().getName().equals("io.netty.channel.DefaultChannelPipeline$TailHandler"));
+    assertNotNull(channelPipeline.last());
+
+    // add handler
+    channelPipeline.addLast("http", httpHandler);
+    assertEquals(httpHandler, channelPipeline.first());
+
+    // our handler was also added
+    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
+
+    // our handler i snot in handlers map
+    assertEquals(1, channelPipeline.toMap().size());
+
+    // our handler i snot in handlers iterator
+    List<ChannelHandler> list = new ArrayList<>();
+    channelPipeline.iterator().forEachRemaining(entry -> {
+      list.add(entry.getValue());
+    });
+    assertEquals(1, list.size());
+
   }
 
   private static class NoopChannelHandler extends ChannelHandlerAdapter {}
