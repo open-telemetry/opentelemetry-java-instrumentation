@@ -71,7 +71,8 @@ public class SpringConfigProperties implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String name) {
-    return (List<String>) environment.getProperty(name, List.class);
+    List<String> value = environment.getProperty(name, List.class);
+    return value == null ? Collections.emptyList() : value;
   }
 
   @Nullable

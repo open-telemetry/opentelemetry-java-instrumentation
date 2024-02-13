@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration for propagators. */
 @ConfigurationProperties(prefix = "otel.propagation")
+@Deprecated // use otel.propagators instead
 public final class PropagationProperties {
 
   private List<String> type = Arrays.asList("tracecontext", "baggage");
