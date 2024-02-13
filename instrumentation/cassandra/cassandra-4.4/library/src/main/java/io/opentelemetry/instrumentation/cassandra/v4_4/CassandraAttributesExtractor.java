@@ -19,13 +19,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
-  private static final java.util.logging.Logger logger =
+  private static final Logger logger =
       Logger.getLogger(CassandraAttributesExtractor.class.getName());
 
   private static final Field proxyAddressField = getProxyAddressField();
@@ -100,8 +101,10 @@ final class CassandraAttributesExtractor
       try {
         object = proxyAddressField.get(sniEndPoint);
       } catch (Exception e) {
-        logger.fine(
-            "Error when accessing the private field proxyAddress of SniEndPoint using reflection.");
+        logger.log(
+            Level.FINE,
+            "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
+            e);
       }
       if (object instanceof InetSocketAddress) {
         InetSocketAddress address = (InetSocketAddress) object;

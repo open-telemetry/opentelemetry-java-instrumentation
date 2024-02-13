@@ -156,7 +156,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
     InetSocketAddress address = new InetSocketAddress("localhost", cassandraPort);
     return wrap(
         CqlSession.builder()
-            .addContactEndPoint(new SniEndPoint(address, "localhost"))
+            .addContactEndPoint(new SniEndPoint(address, "dummy"))
             .withConfigLoader(configLoader)
             .withLocalDatacenter("datacenter1")
             .withKeyspace(keyspace)
