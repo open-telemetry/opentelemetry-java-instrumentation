@@ -25,33 +25,56 @@ public abstract class JarResourceDetector implements ConditionalResourceProvider
   protected final Supplier<String[]> getProcessHandleArguments;
   protected final Function<String, String> getSystemProperty;
   protected final Predicate<Path> fileExists;
+  private final Function<Supplier<Optional<String>>, Optional<String>> jarNameCacheLookup;
+
+  protected static final Function<Supplier<Optional<String>>, Optional<String>> CACHE_LOOKUP =
+      new Function<Supplier<Optional<String>>, Optional<String>>() {
+        private Optional<String> cachedValue = Optional.empty();
+
+        @Override
+        public Optional<String> apply(Supplier<Optional<String>> supplier) {
+          if (cachedValue.isPresent()) {
+            return cachedValue;
+          }
+          Optional<String> value = supplier.get();
+          cachedValue = value;
+          return value;
+        }
+      };
 
   public JarResourceDetector(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
-      Predicate<Path> fileExists) {
+      Predicate<Path> fileExists,
+      Function<Supplier<Optional<String>>, Optional<String>> jarNameCacheLookup) {
     this.getProcessHandleArguments = getProcessHandleArguments;
     this.getSystemProperty = getSystemProperty;
     this.fileExists = fileExists;
+    this.jarNameCacheLookup = jarNameCacheLookup;
   }
 
-  protected Optional<NameAndVersion> getServiceNameAndVersion() {
+  private Optional<String> getJarPath() {
     Path jarPath = getJarPathFromProcessHandle();
     if (jarPath == null) {
       jarPath = getJarPathFromSunCommandLine();
     }
-    if (jarPath == null) {
-      return Optional.empty();
-    }
+    return Optional.ofNullable(jarPath).map(p -> p.getFileName().toString());
+  }
 
-    String jarName = jarPath.getFileName().toString();
-    int dotIndex = jarName.lastIndexOf(".");
-    if (dotIndex == -1 || ANY_DIGIT.matcher(jarName.substring(dotIndex)).find()) {
-      // don't change if digit it extension, it's probably a version
-      return Optional.of(new NameAndVersion(jarName, Optional.empty()));
-    }
+  protected Optional<NameAndVersion> getServiceNameAndVersion() {
+    return jarNameCacheLookup
+        .apply(this::getJarPath)
+        .flatMap(
+            jarName -> {
+              int dotIndex = jarName.lastIndexOf(".");
+              if (dotIndex == -1 || ANY_DIGIT.matcher(jarName.substring(dotIndex)).find()) {
+                // don't change if digit it extension, it's probably a version
+                return Optional.of(new NameAndVersion(jarName, Optional.empty()));
+              }
 
-    return Optional.of(JarResourceDetector.getNameAndVersion(jarName.substring(0, dotIndex)));
+              return Optional.of(
+                  JarResourceDetector.getNameAndVersion(jarName.substring(0, dotIndex)));
+            });
   }
 
   private static NameAndVersion getNameAndVersion(String jarNameWithoutExtension) {

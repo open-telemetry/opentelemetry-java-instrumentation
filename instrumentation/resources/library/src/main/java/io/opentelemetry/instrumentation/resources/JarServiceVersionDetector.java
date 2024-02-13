@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -27,15 +28,20 @@ public final class JarServiceVersionDetector extends JarResourceDetector {
 
   @SuppressWarnings("unused") // SPI
   public JarServiceVersionDetector() {
-    this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
+    this(
+        ProcessArguments::getProcessArguments,
+        System::getProperty,
+        Files::isRegularFile,
+        CACHE_LOOKUP);
   }
 
   // visible for tests
   JarServiceVersionDetector(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
-      Predicate<Path> fileExists) {
-    super(getProcessHandleArguments, getSystemProperty, fileExists);
+      Predicate<Path> fileExists,
+      Function<Supplier<Optional<String>>, Optional<String>> jarNameCacheLookup) {
+    super(getProcessHandleArguments, getSystemProperty, fileExists, jarNameCacheLookup);
   }
 
   @Override

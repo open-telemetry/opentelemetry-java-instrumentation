@@ -16,6 +16,7 @@ import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -28,15 +29,20 @@ public final class JarServiceNameDetector extends JarResourceDetector {
 
   @SuppressWarnings("unused") // SPI
   public JarServiceNameDetector() {
-    this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
+    this(
+        ProcessArguments::getProcessArguments,
+        System::getProperty,
+        Files::isRegularFile,
+        CACHE_LOOKUP);
   }
 
   // visible for tests
   JarServiceNameDetector(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
-      Predicate<Path> fileExists) {
-    super(getProcessHandleArguments, getSystemProperty, fileExists);
+      Predicate<Path> fileExists,
+      Function<Supplier<Optional<String>>, Optional<String>> jarNameCacheLookup) {
+    super(getProcessHandleArguments, getSystemProperty, fileExists, jarNameCacheLookup);
   }
 
   @Override
