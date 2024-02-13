@@ -50,8 +50,8 @@ public class ReceiveMessageHelper {
       attributesBuilder.put(SemanticAttributes.MESSAGING_OPERATION, SemanticAttributes.MessagingOperationValues.RECEIVE);
       attributesBuilder.put(SemanticAttributes.MESSAGING_SYSTEM, PubsubAttributes.MessagingSystemValues.GCP_PUBSUB);
       attributesBuilder.put(SemanticAttributes.MESSAGING_MESSAGE_ID, msg.getMessageId());
-      attributesBuilder.put(PubsubAttributes.MESSAGE_ENVELOPE_SIZE, msg.getSerializedSize());
-      attributesBuilder.put(PubsubAttributes.MESSAGE_BODY_SIZE, msg.getData().size());
+      attributesBuilder.put(SemanticAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, msg.getSerializedSize());
+      attributesBuilder.put(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, msg.getData().size());
       if (!msg.getOrderingKey().isEmpty()) {
         attributesBuilder.put(PubsubAttributes.ORDERING_KEY, msg.getOrderingKey());
       }

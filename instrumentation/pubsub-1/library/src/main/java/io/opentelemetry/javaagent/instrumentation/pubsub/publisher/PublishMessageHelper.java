@@ -3,8 +3,6 @@ package io.opentelemetry.javaagent.instrumentation.pubsub.publisher;
 import com.google.pubsub.v1.PublishRequest;
 import com.google.pubsub.v1.PublishResponse;
 import com.google.pubsub.v1.PubsubMessage;
-import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
-import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubUtils;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -12,15 +10,14 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
+import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubUtils;
 import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
-
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes.MESSAGE_BODY_SIZE;
+import javax.annotation.Nullable;
 
 public class PublishMessageHelper {
   private PublishMessageHelper() {}
@@ -41,7 +38,7 @@ public class PublishMessageHelper {
       attributesBuilder.put(SemanticAttributes.MESSAGING_SYSTEM, PubsubAttributes.MessagingSystemValues.GCP_PUBSUB);
       attributesBuilder.put(SemanticAttributes.MESSAGING_DESTINATION_NAME, req.topicName);
       attributesBuilder.put(ResourceAttributes.CLOUD_RESOURCE_ID, req.topicFullResourceName);
-      attributesBuilder.put(MESSAGE_BODY_SIZE, req.msg.getData().size());
+      attributesBuilder.put(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, req.msg.getData().size());
       if (!req.msg.getOrderingKey().isEmpty()) {
         attributesBuilder.put(PubsubAttributes.ORDERING_KEY, req.msg.getOrderingKey());
       }

@@ -1,5 +1,15 @@
 package io.opentelemetry.javaagent.instrumentation.pubsub.publisher;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_RESOURCE_ID;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.google.api.core.ApiFuture;
 import com.google.api.core.SettableApiFuture;
 import com.google.api.gax.rpc.ApiCallContext;
@@ -8,32 +18,22 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PublishRequest;
 import com.google.pubsub.v1.PublishResponse;
 import com.google.pubsub.v1.PubsubMessage;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
-import io.opentelemetry.javaagent.instrumentation.pubsub.subscriber.ReceiveMessageHelper;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
+import io.opentelemetry.javaagent.instrumentation.pubsub.subscriber.ReceiveMessageHelper;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class TracingMessagePublisherTest {
 
@@ -98,7 +98,7 @@ public class TracingMessagePublisherTest {
             .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
             .hasAttribute(MESSAGING_DESTINATION_NAME, "top")
             .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/topics/top")
-            .hasAttribute(PubsubAttributes.MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+            .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
             .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
             .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderkey")
             .hasParent(parent)
@@ -150,7 +150,7 @@ public class TracingMessagePublisherTest {
             .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
             .hasAttribute(MESSAGING_DESTINATION_NAME, "top")
             .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/topics/top")
-            .hasAttribute(PubsubAttributes.MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+            .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
             .hasParent(parent)
             .hasKind(SpanKind.PRODUCER)
             .hasException(error)

@@ -1,31 +1,32 @@
 package io.opentelemetry.javaagent.instrumentation.pubsub.subscriber;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_RESOURCE_ID;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_CLIENT_ID;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PublishRequest;
 import com.google.pubsub.v1.PubsubMessage;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
-import io.opentelemetry.javaagent.instrumentation.pubsub.publisher.PublishMessageHelper;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
+import io.opentelemetry.javaagent.instrumentation.pubsub.publisher.PublishMessageHelper;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.util.List;
-
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_CLIENT_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_SYSTEM;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TracingMessageReceiverTest {
 
@@ -69,8 +70,8 @@ class TracingMessageReceiverTest {
             .hasAttribute(MESSAGING_OPERATION, "receive")
             .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
             .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
-            .hasAttribute(PubsubAttributes.MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
-            .hasAttribute(PubsubAttributes.MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+            .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
+            .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
             .hasAttribute(PubsubAttributes.ACK_RESULT, PubsubAttributes.AckResultValues.ACK)
             .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
             .hasParent(parent)
@@ -95,8 +96,9 @@ class TracingMessageReceiverTest {
             .hasAttribute(MESSAGING_OPERATION, "receive")
             .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
             .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
-            .hasAttribute(PubsubAttributes.MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
-            .hasAttribute(PubsubAttributes.MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+            .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
+            .hasAttribute(
+                MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
             .hasAttribute(PubsubAttributes.ACK_RESULT, PubsubAttributes.AckResultValues.NACK)
             .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
             .hasParent(parent)
@@ -126,8 +128,8 @@ class TracingMessageReceiverTest {
             .hasAttribute(MESSAGING_OPERATION, "receive")
             .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
             .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
-            .hasAttribute(PubsubAttributes.MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
-            .hasAttribute(PubsubAttributes.MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+            .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
+            .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
             .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
             .hasException(error)
             .hasParent(parent)
