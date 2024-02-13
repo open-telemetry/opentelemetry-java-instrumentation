@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.PubSubEmulatorContainer;
 import org.testcontainers.utility.DockerImageName;
 
-public class PubsubSmokeTest {
+public class PubsubInstrumentationTest {
   private static PubSubEmulatorContainer emulator;
 
   @RegisterExtension
