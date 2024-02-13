@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.sslInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons.serverTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -99,21 +101,21 @@ public class NettyChannelPipelineInstrumentation
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
         ourHandler =
-            NettyServerSingletons.serverTelemetry()
+            serverTelemetry()
                 .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
       } else if (handler instanceof HttpRequestDecoder) {
-        ourHandler = NettyServerSingletons.serverTelemetry().createRequestHandler();
+        ourHandler = serverTelemetry().createRequestHandler();
       } else if (handler instanceof HttpResponseEncoder) {
         ourHandler =
-            NettyServerSingletons.serverTelemetry()
+            serverTelemetry()
                 .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
-        ourHandler = NettyClientSingletons.clientTelemetry().createCombinedHandler();
+        ourHandler = clientHandlerFactory().createCombinedHandler();
       } else if (handler instanceof HttpRequestEncoder) {
-        ourHandler = NettyClientSingletons.clientTelemetry().createRequestHandler();
+        ourHandler = clientHandlerFactory().createRequestHandler();
       } else if (handler instanceof HttpResponseDecoder) {
-        ourHandler = NettyClientSingletons.clientTelemetry().createResponseHandler();
+        ourHandler = clientHandlerFactory().createResponseHandler();
         // the SslHandler lives in the netty-handler module, using class name comparison to avoid
         // adding a dependency
       } else if (handler.getClass().getName().equals("io.netty.handler.ssl.SslHandler")) {

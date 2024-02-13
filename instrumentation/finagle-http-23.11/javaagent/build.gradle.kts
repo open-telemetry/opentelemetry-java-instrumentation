@@ -42,6 +42,7 @@ dependencies {
 
 tasks {
   test {
+    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
   }
 }

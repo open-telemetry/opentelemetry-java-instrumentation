@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.v23_11;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 
 import com.twitter.util.Local;
 import io.netty.channel.Channel;
@@ -20,7 +21,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
 import java.util.Deque;
@@ -97,8 +97,7 @@ public final class Helpers {
           if (channel.pipeline().get(HttpClientTracingHandler.class) == null) {
             VirtualField<ChannelHandler, ChannelHandler> virtualField =
                 VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-            ChannelHandler ourHandler =
-                NettyClientSingletons.clientTelemetry().createCombinedHandler();
+            ChannelHandler ourHandler = clientHandlerFactory().createCombinedHandler();
 
             channel
                 .pipeline()
