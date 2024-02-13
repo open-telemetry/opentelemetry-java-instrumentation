@@ -24,30 +24,18 @@ class InstrumentationAnnotationsAutoConfigurationTest {
   void instrumentationEnabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.annotations.enabled=true")
-        .run(
-            context ->
-                assertThat(context)
-                    .hasBean("otelInstrumentationWithSpanAspect")
-                    .hasBean("otelSdkExtensionWithSpanAspect"));
+        .run(context -> assertThat(context).hasBean("otelInstrumentationWithSpanAspect"));
   }
 
   @Test
   void instrumentationDisabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.annotations.enabled=false")
-        .run(
-            context ->
-                assertThat(context)
-                    .doesNotHaveBean("otelInstrumentationWithSpanAspect")
-                    .doesNotHaveBean("otelSdkExtensionWithSpanAspect"));
+        .run(context -> assertThat(context).doesNotHaveBean("otelInstrumentationWithSpanAspect"));
   }
 
   @Test
   void defaultConfiguration() {
-    contextRunner.run(
-        context ->
-            assertThat(context)
-                .hasBean("otelInstrumentationWithSpanAspect")
-                .hasBean("otelSdkExtensionWithSpanAspect"));
+    contextRunner.run(context -> assertThat(context).hasBean("otelInstrumentationWithSpanAspect"));
   }
 }

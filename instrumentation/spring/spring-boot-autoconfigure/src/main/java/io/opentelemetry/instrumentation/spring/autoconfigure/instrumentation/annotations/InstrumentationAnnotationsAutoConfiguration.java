@@ -30,11 +30,4 @@ public class InstrumentationAnnotationsAutoConfiguration {
   InstrumentationWithSpanAspect otelInstrumentationWithSpanAspect(OpenTelemetry openTelemetry) {
     return new InstrumentationWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
-
-  @Bean
-  @SuppressWarnings("deprecation") // instrumenting deprecated class for backwards compatibility
-  @ConditionalOnClass(io.opentelemetry.extension.annotations.WithSpan.class)
-  SdkExtensionWithSpanAspect otelSdkExtensionWithSpanAspect(OpenTelemetry openTelemetry) {
-    return new SdkExtensionWithSpanAspect(openTelemetry, parameterNameDiscoverer);
-  }
 }
