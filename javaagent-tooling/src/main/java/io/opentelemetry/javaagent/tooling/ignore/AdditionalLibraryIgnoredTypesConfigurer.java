@@ -226,6 +226,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("com.google.cloud.")
+        .allowClass("com.google.cloud.pubsub.")
         .ignoreClass("com.google.instrumentation.")
         .ignoreClass("com.google.j2objc.")
         .ignoreClass("com.google.gson.")
