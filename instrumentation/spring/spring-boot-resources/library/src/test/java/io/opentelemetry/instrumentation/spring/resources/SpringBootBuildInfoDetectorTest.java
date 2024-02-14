@@ -10,10 +10,15 @@ import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.resources.Resource;
 import java.io.InputStream;
-import org.junit.jupiter.api.Test;
+import java.util.Collection;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,44 +32,81 @@ class SpringBootBuildInfoDetectorTest {
   @Mock ConfigProperties config;
   @Mock SystemHelper system;
 
-  @Test
-  void givenBuildVersionIsPresentInBuildInfProperties_thenReturnBuildNameAndVersion() {
-    when(system.openClasspathResource(META_INFO, BUILD_PROPS))
-        .thenReturn(openClasspathResource(META_INFO + "/" + BUILD_PROPS))
-        .thenReturn(openClasspathResource(META_INFO + "/" + BUILD_PROPS));
+  private static class TestCase {
+    String name;
+    private final Function<SystemHelper, SpringBootBuildInfoDetector> factory;
+    AttributeKey<String> key;
+    String expected;
+    InputStream input;
 
-    assertThat(
-            new SpringBootServiceVersionDetector(system)
-                .createResource(config)
-                .getAttribute(SERVICE_VERSION))
-        .isEqualTo("0.0.2");
-    assertThat(
-            new SpringBootBuildInfoServiceNameDetector(system)
-                .createResource(config)
-                .getAttribute(SERVICE_NAME))
-        .isEqualTo("some-name");
+    public TestCase(
+        String name,
+        Function<SystemHelper, SpringBootBuildInfoDetector> factory,
+        AttributeKey<String> key,
+        String expected,
+        InputStream input) {
+      this.name = name;
+      this.factory = factory;
+      this.key = key;
+      this.expected = expected;
+      this.input = input;
+    }
   }
 
-  @Test
-  void givenBuildVersionFileNotPresent_thenReturnEmptyResource() {
-    when(system.openClasspathResource(META_INFO, BUILD_PROPS)).thenReturn(null);
+  @TestFactory
+  Collection<DynamicTest> createResource() {
+    return Stream.of(
+            new TestCase(
+                "name ok",
+                SpringBootBuildInfoServiceNameDetector::new,
+                SERVICE_NAME,
+                "some-name",
+                openClasspathResource(META_INFO + "/" + BUILD_PROPS)),
+            new TestCase(
+                "version ok",
+                SpringBootServiceVersionDetector::new,
+                SERVICE_VERSION,
+                "0.0.2",
+                openClasspathResource(META_INFO + "/" + BUILD_PROPS)),
+            new TestCase(
+                "name - no resource",
+                SpringBootBuildInfoServiceNameDetector::new,
+                SERVICE_NAME,
+                null,
+                null),
+            new TestCase(
+                "version - no resource",
+                SpringBootServiceVersionDetector::new,
+                SERVICE_VERSION,
+                null,
+                null),
+            new TestCase(
+                "name - empty resource",
+                SpringBootBuildInfoServiceNameDetector::new,
+                SERVICE_NAME,
+                null,
+                openClasspathResource(BUILD_PROPS)),
+            new TestCase(
+                "version - empty resource",
+                SpringBootServiceVersionDetector::new,
+                SERVICE_VERSION,
+                null,
+                openClasspathResource(BUILD_PROPS)))
+        .map(
+            t ->
+                DynamicTest.dynamicTest(
+                    t.name,
+                    () -> {
+                      when(system.openClasspathResource(META_INFO, BUILD_PROPS))
+                          .thenReturn(t.input);
 
-    SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
-    Resource result = guesser.createResource(config);
-    assertThat(result).isEqualTo(Resource.empty());
+                      assertThat(t.factory.apply(system).createResource(config).getAttribute(t.key))
+                          .isEqualTo(t.expected);
+                    }))
+        .collect(Collectors.toList());
   }
 
-  @Test
-  void givenBuildVersionFileIsPresentButBuildVersionPropertyNotPresent_thenReturnEmptyResource() {
-    when(system.openClasspathResource(META_INFO, BUILD_PROPS))
-        .thenReturn(openClasspathResource(BUILD_PROPS));
-
-    SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
-    Resource result = guesser.createResource(config);
-    assertThat(result).isEqualTo(Resource.empty());
-  }
-
-  private InputStream openClasspathResource(String resource) {
-    return getClass().getClassLoader().getResourceAsStream(resource);
+  private static InputStream openClasspathResource(String resource) {
+    return SpringBootBuildInfoDetectorTest.class.getClassLoader().getResourceAsStream(resource);
   }
 }
