@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pubsub.subscriber;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -23,32 +28,35 @@ public class PubsubSubscriberInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-            isMethod()
-                    .and(isStatic())
-                    .and(named("newBuilder"))
-                    .and(isPublic())
-                    .and(takesArgument(0, named("java.lang.String")))
-                    .and(takesArgument(1, named("com.google.cloud.pubsub.v1.MessageReceiver"))),
-            PubsubSubscriberInstrumentation.class.getName() + "$AddMessageReceiverAdvice");
+        isMethod()
+            .and(isStatic())
+            .and(named("newBuilder"))
+            .and(isPublic())
+            .and(takesArgument(0, named("java.lang.String")))
+            .and(takesArgument(1, named("com.google.cloud.pubsub.v1.MessageReceiver"))),
+        PubsubSubscriberInstrumentation.class.getName() + "$AddMessageReceiverAdvice");
     transformer.applyAdviceToMethod(
-            isMethod()
-                    .and(isStatic())
-                    .and(named("newBuilder"))
-                    .and(isPublic())
-                    .and(takesArgument(0, named("java.lang.String")))
-                    .and(takesArgument(1, named("com.google.cloud.pubsub.v1.MessageReceiverWithAckResponse"))),
-            PubsubSubscriberInstrumentation.class.getName() + "$AddMessageReceiverWithAckResponseAdvice");
+        isMethod()
+            .and(isStatic())
+            .and(named("newBuilder"))
+            .and(isPublic())
+            .and(takesArgument(0, named("java.lang.String")))
+            .and(
+                takesArgument(
+                    1, named("com.google.cloud.pubsub.v1.MessageReceiverWithAckResponse"))),
+        PubsubSubscriberInstrumentation.class.getName()
+            + "$AddMessageReceiverWithAckResponseAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AddMessageReceiverAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
-            @Advice.Argument(0) String subscription,
-            @Advice.Argument(value = 1, readOnly = false) MessageReceiver messageReceiver) {
-      messageReceiver = new TracingMessageReceiver(
-              ReceiveMessageHelper.of(subscription).instrumenter()
-      ).build(messageReceiver);
+        @Advice.Argument(0) String subscription,
+        @Advice.Argument(value = 1, readOnly = false) MessageReceiver messageReceiver) {
+      messageReceiver =
+          new TracingMessageReceiver(ReceiveMessageHelper.of(subscription).instrumenter())
+              .build(messageReceiver);
     }
   }
 
@@ -56,11 +64,12 @@ public class PubsubSubscriberInstrumentation implements TypeInstrumentation {
   public static class AddMessageReceiverWithAckResponseAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
-            @Advice.Argument(0) String subscription,
-            @Advice.Argument(value = 1, readOnly = false) MessageReceiverWithAckResponse messageReceiver) {
-      messageReceiver = new TracingMessageReceiver(
-              ReceiveMessageHelper.of(subscription).instrumenter()
-      ).buildWithAckResponse(messageReceiver);
+        @Advice.Argument(0) String subscription,
+        @Advice.Argument(value = 1, readOnly = false)
+            MessageReceiverWithAckResponse messageReceiver) {
+      messageReceiver =
+          new TracingMessageReceiver(ReceiveMessageHelper.of(subscription).instrumenter())
+              .buildWithAckResponse(messageReceiver);
     }
   }
 }

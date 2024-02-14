@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pubsub.subscriber;
 
 import com.google.cloud.pubsub.v1.AckReplyConsumer;

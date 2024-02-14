@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pubsub.publisher;
 
 import com.google.pubsub.v1.PublishRequest;
@@ -21,8 +26,10 @@ import javax.annotation.Nullable;
 
 public class PublishMessageHelper {
   private PublishMessageHelper() {}
-  public static final Instrumenter<Request, PublishResponse> INSTRUMENTER = Instrumenter.<Request, PublishResponse>builder(
-                  GlobalOpenTelemetry.get(), PubsubUtils.INSTRUMENTATION_NAME, spanNameExtractor())
+
+  public static final Instrumenter<Request, PublishResponse> INSTRUMENTER =
+      Instrumenter.<Request, PublishResponse>builder(
+              GlobalOpenTelemetry.get(), PubsubUtils.INSTRUMENTATION_NAME, spanNameExtractor())
           .addAttributesExtractor(new PubsubPublisherAttributesExtractor())
           .buildProducerInstrumenter(AttributesSetter.INSTANCE);
 
@@ -30,24 +37,35 @@ public class PublishMessageHelper {
     return req -> req.spanName;
   }
 
-  static class PubsubPublisherAttributesExtractor implements AttributesExtractor<Request, PublishResponse> {
+  static class PubsubPublisherAttributesExtractor
+      implements AttributesExtractor<Request, PublishResponse> {
 
     @Override
     public void onStart(AttributesBuilder attributesBuilder, Context context, Request req) {
-      attributesBuilder.put(SemanticAttributes.MESSAGING_OPERATION, SemanticAttributes.MessagingOperationValues.CREATE);
-      attributesBuilder.put(SemanticAttributes.MESSAGING_SYSTEM, PubsubAttributes.MessagingSystemValues.GCP_PUBSUB);
+      attributesBuilder.put(
+          SemanticAttributes.MESSAGING_OPERATION,
+          SemanticAttributes.MessagingOperationValues.CREATE);
+      attributesBuilder.put(
+          SemanticAttributes.MESSAGING_SYSTEM, PubsubAttributes.MessagingSystemValues.GCP_PUBSUB);
       attributesBuilder.put(SemanticAttributes.MESSAGING_DESTINATION_NAME, req.topicName);
       attributesBuilder.put(ResourceAttributes.CLOUD_RESOURCE_ID, req.topicFullResourceName);
-      attributesBuilder.put(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, req.msg.getData().size());
+      attributesBuilder.put(
+          SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, req.msg.getData().size());
       if (!req.msg.getOrderingKey().isEmpty()) {
         attributesBuilder.put(PubsubAttributes.ORDERING_KEY, req.msg.getOrderingKey());
       }
     }
 
     @Override
-    public void onEnd(AttributesBuilder attributesBuilder, Context context, Request req, @Nullable PublishResponse response, @Nullable Throwable throwable) {
+    public void onEnd(
+        AttributesBuilder attributesBuilder,
+        Context context,
+        Request req,
+        @Nullable PublishResponse response,
+        @Nullable Throwable throwable) {
       if (response != null) {
-        attributesBuilder.put(SemanticAttributes.MESSAGING_MESSAGE_ID, response.getMessageIds(req.index));
+        attributesBuilder.put(
+            SemanticAttributes.MESSAGING_MESSAGE_ID, response.getMessageIds(req.index));
       }
     }
   }
@@ -63,19 +81,23 @@ public class PublishMessageHelper {
     }
   }
 
-  public static List<Request> deconstructRequest(String topicName, String topicFullResourceName, List<PubsubMessage> messages) {
-    String spanName = PubsubUtils.getSpanName(SemanticAttributes.MessagingOperationValues.CREATE, topicName);
+  public static List<Request> deconstructRequest(
+      String topicName, String topicFullResourceName, List<PubsubMessage> messages) {
+    String spanName =
+        PubsubUtils.getSpanName(SemanticAttributes.MessagingOperationValues.CREATE, topicName);
     return IntStream.range(0, messages.size())
-            .mapToObj(i -> new Request(
-                topicName, topicFullResourceName, spanName, messages.get(i).toBuilder(), i))
-            .collect(Collectors.toList());
+        .mapToObj(
+            i ->
+                new Request(
+                    topicName, topicFullResourceName, spanName, messages.get(i).toBuilder(), i))
+        .collect(Collectors.toList());
   }
 
   public static PublishRequest reconstructRequest(PublishRequest original, List<Request> reqs) {
     return original.toBuilder()
-            .clearMessages()
-            .addAllMessages(reqs.stream().map(r -> r.msg.build()).collect(Collectors.toList()))
-            .build();
+        .clearMessages()
+        .addAllMessages(reqs.stream().map(r -> r.msg.build()).collect(Collectors.toList()))
+        .build();
   }
 
   public static final class Request {
@@ -85,7 +107,12 @@ public class PublishMessageHelper {
     public final PubsubMessage.Builder msg;
     public final int index;
 
-    public Request(String topicName, String topicFullResourceName, String spanName, PubsubMessage.Builder msg, int index) {
+    public Request(
+        String topicName,
+        String topicFullResourceName,
+        String spanName,
+        PubsubMessage.Builder msg,
+        int index) {
       this.topicName = topicName;
       this.topicFullResourceName = topicFullResourceName;
       this.spanName = spanName;

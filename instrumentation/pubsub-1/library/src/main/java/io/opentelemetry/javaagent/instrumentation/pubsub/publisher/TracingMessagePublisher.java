@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pubsub.publisher;
 
 import com.google.api.core.ApiFuture;
@@ -7,10 +12,9 @@ import com.google.api.gax.rpc.UnaryCallable;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.pubsub.v1.PublishRequest;
 import com.google.pubsub.v1.PublishResponse;
-import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubUtils;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-
+import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -36,7 +40,11 @@ public class TracingMessagePublisher extends UnaryCallable<PublishRequest, Publi
     }
   }
 
-  void end(List<PublishMessageHelper.Request> requests, List<Context> contexts, PublishResponse response, Throwable error) {
+  void end(
+      List<PublishMessageHelper.Request> requests,
+      List<Context> contexts,
+      PublishResponse response,
+      Throwable error) {
     for (int i = 0; i < requests.size(); ++i) {
       Context context = contexts.get(i);
       if (context != null) {
@@ -56,15 +64,20 @@ public class TracingMessagePublisher extends UnaryCallable<PublishRequest, Publi
     String topicFullResourceName = PubsubUtils.getFullResourceName(req.getTopic());
 
     // Start a span for each message
-    List<PublishMessageHelper.Request> msgRequests = PublishMessageHelper.deconstructRequest(topicName, topicFullResourceName, req.getMessagesList());
+    List<PublishMessageHelper.Request> msgRequests =
+        PublishMessageHelper.deconstructRequest(
+            topicName, topicFullResourceName, req.getMessagesList());
     List<Context> msgContexts = start(parentContext, msgRequests);
     PublishRequest modifiedRequest = PublishMessageHelper.reconstructRequest(req, msgRequests);
 
     // Start a span for the batch, and make it current
-    PublishBatchHelper.Request batchRequest = new PublishBatchHelper.Request(topicName, topicFullResourceName, req.getMessagesCount(), msgContexts);
-    Context batchContext = PublishBatchHelper.INSTRUMENTER.shouldStart(parentContext, batchRequest) ?
-            PublishBatchHelper.INSTRUMENTER.start(parentContext, batchRequest) :
-            null;
+    PublishBatchHelper.Request batchRequest =
+        new PublishBatchHelper.Request(
+            topicName, topicFullResourceName, req.getMessagesCount(), msgContexts);
+    Context batchContext =
+        PublishBatchHelper.INSTRUMENTER.shouldStart(parentContext, batchRequest)
+            ? PublishBatchHelper.INSTRUMENTER.start(parentContext, batchRequest)
+            : null;
 
     // Create a new future that will finish once the original callback AND the spans have ended
     SettableApiFuture<PublishResponse> returnedFuture = SettableApiFuture.create();
@@ -72,40 +85,43 @@ public class TracingMessagePublisher extends UnaryCallable<PublishRequest, Publi
     try (Scope scope = batchContext == null ? Scope.noop() : batchContext.makeCurrent()) {
 
       // Call the original callable, and add callback to run when the future finishes
-      ApiFuture<PublishResponse> future = originalCallable.futureCall(modifiedRequest, apiCallContext);
-      future.addListener(() -> {
-        PublishResponse response = null;
-        Throwable error = null;
-        try {
-          response = future.get();
-        } catch (RuntimeException|InterruptedException e) {
-          error = e;
-        } catch (ExecutionException e) {
-          error = e.getCause();
-        }
+      ApiFuture<PublishResponse> future =
+          originalCallable.futureCall(modifiedRequest, apiCallContext);
+      future.addListener(
+          () -> {
+            PublishResponse response = null;
+            Throwable error = null;
+            try {
+              response = future.get();
+            } catch (RuntimeException | InterruptedException e) {
+              error = e;
+            } catch (ExecutionException e) {
+              error = e.getCause();
+            }
 
-        try {
-          if (!msgContexts.isEmpty()) {
-            end(msgRequests, msgContexts, response, error);
-          }
-        } catch (Throwable t) {
-          logger.log(Level.WARNING, "Error ending pubsub publish message spans", t);
-        }
+            try {
+              if (!msgContexts.isEmpty()) {
+                end(msgRequests, msgContexts, response, error);
+              }
+            } catch (Throwable t) {
+              logger.log(Level.WARNING, "Error ending pubsub publish message spans", t);
+            }
 
-        if (batchContext != null) {
-          try {
-            PublishBatchHelper.INSTRUMENTER.end(batchContext, batchRequest, null, error);
-          } catch (Throwable t) {
-            logger.log(Level.WARNING, "Error ending pubsub publish batch span", t);
-          }
-        }
+            if (batchContext != null) {
+              try {
+                PublishBatchHelper.INSTRUMENTER.end(batchContext, batchRequest, null, error);
+              } catch (Throwable t) {
+                logger.log(Level.WARNING, "Error ending pubsub publish batch span", t);
+              }
+            }
 
-        if (error == null) {
-          returnedFuture.set(response);
-        } else {
-          returnedFuture.setException(error);
-        }
-      }, MoreExecutors.directExecutor());
+            if (error == null) {
+              returnedFuture.set(response);
+            } else {
+              returnedFuture.setException(error);
+            }
+          },
+          MoreExecutors.directExecutor());
     }
     return returnedFuture;
   }

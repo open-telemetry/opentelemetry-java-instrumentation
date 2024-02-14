@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pubsub;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -45,9 +50,10 @@ public class PubsubInstrumentationTest {
 
   @BeforeAll
   static void beforeAll() {
-    emulator = new PubSubEmulatorContainer(
-        DockerImageName.parse("gcr.io/google.com/cloudsdktool/google-cloud-cli:463.0.0-emulators")
-    );
+    emulator =
+        new PubSubEmulatorContainer(
+            DockerImageName.parse(
+                "gcr.io/google.com/cloudsdktool/google-cloud-cli:463.0.0-emulators"));
     emulator.start();
   }
 
@@ -60,55 +66,68 @@ public class PubsubInstrumentationTest {
 
   @Test
   public void publishAndSubscribe() throws Exception {
-    FixedTransportChannelProvider channelProvider = FixedTransportChannelProvider.create(
+    FixedTransportChannelProvider channelProvider =
+        FixedTransportChannelProvider.create(
             GrpcTransportChannel.create(
-                    ManagedChannelBuilder.forTarget(emulator.getEmulatorEndpoint()).usePlaintext().build()));
+                ManagedChannelBuilder.forTarget(emulator.getEmulatorEndpoint())
+                    .usePlaintext()
+                    .build()));
     NoCredentialsProvider credentialsProvider = NoCredentialsProvider.create();
 
     // Create topic
     int randomNumber = new Random().nextInt();
     String topicName = String.format("test.topic-%d", randomNumber);
     String topic = String.format("projects/my-gcp-project/topics/%s", topicName);
-    try (TopicAdminClient topicClient = TopicAdminClient.create(
+    try (TopicAdminClient topicClient =
+        TopicAdminClient.create(
             TopicAdminSettings.newBuilder()
-                    .setTransportChannelProvider(channelProvider)
-                    .setCredentialsProvider(credentialsProvider)
-                    .build())) {
+                .setTransportChannelProvider(channelProvider)
+                .setCredentialsProvider(credentialsProvider)
+                .build())) {
       topicClient.createTopic(topic);
     }
 
     // Create subscription
     String subscriptionName = String.format("test.sub-%d", randomNumber);
-    String subscription = String.format("projects/my-gcp-project/subscriptions/%s", subscriptionName);
-    try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(
+    String subscription =
+        String.format("projects/my-gcp-project/subscriptions/%s", subscriptionName);
+    try (SubscriptionAdminClient subscriptionAdminClient =
+        SubscriptionAdminClient.create(
             SubscriptionAdminSettings.newBuilder()
-                    .setTransportChannelProvider(channelProvider)
-                    .setCredentialsProvider(credentialsProvider)
-                    .build())) {
-      subscriptionAdminClient.createSubscription(subscription, topic, PushConfig.getDefaultInstance(), 20);
+                .setTransportChannelProvider(channelProvider)
+                .setCredentialsProvider(credentialsProvider)
+                .build())) {
+      subscriptionAdminClient.createSubscription(
+          subscription, topic, PushConfig.getDefaultInstance(), 20);
     }
 
     // Publish a message
-    PublishRequest request = PublishRequest.newBuilder()
+    PublishRequest request =
+        PublishRequest.newBuilder()
             .addMessages(PubsubMessage.newBuilder().setData(ByteString.copyFrom("data", "UTF-8")))
             .setTopic(topic)
             .build();
     String msgId = null;
-    try (GrpcPublisherStub grpcPublisher = GrpcPublisherStub.create(PublisherStubSettings.newBuilder()
-            .setTransportChannelProvider(channelProvider)
-            .setCredentialsProvider(credentialsProvider)
-            .build())) {
-      PublishResponse response = testing.runWithSpan("parent", () -> grpcPublisher.publishCallable().call(request));
+    try (GrpcPublisherStub grpcPublisher =
+        GrpcPublisherStub.create(
+            PublisherStubSettings.newBuilder()
+                .setTransportChannelProvider(channelProvider)
+                .setCredentialsProvider(credentialsProvider)
+                .build())) {
+      PublishResponse response =
+          testing.runWithSpan("parent", () -> grpcPublisher.publishCallable().call(request));
       msgId = response.getMessageIds(0);
     }
 
     // Subscribe until the message is received
     AtomicReference<PubsubMessage> receivedMessage = new AtomicReference<>();
-    MessageReceiver receiver = (msg, ack) -> {
-      ack.ack();
-      receivedMessage.set(msg);
-    };
-    Subscriber subscriber = Subscriber.newBuilder(subscription, receiver)
+    MessageReceiver receiver =
+        (msg, ack) -> {
+          ack.ack();
+          receivedMessage.set(msg);
+        };
+    Subscriber subscriber =
+        Subscriber.newBuilder(subscription, receiver)
             .setChannelProvider(channelProvider)
             .setCredentialsProvider(credentialsProvider)
             .build();
@@ -120,15 +139,28 @@ public class PubsubInstrumentationTest {
     List<SpanData> spans = testing.spans();
 
     SpanData parent = spans.stream().filter(s -> s.getName().equals("parent")).findFirst().get();
-    SpanData publish = spans.stream().filter(s -> s.getName().equals(String.format("%s publish", topicName))).findFirst().get();
-    SpanData create = spans.stream().filter(s -> s.getName().equals(String.format("%s create", topicName))).findFirst().get();
-    SpanData receive = spans.stream().filter(s -> s.getName().equals(String.format("%s receive", subscriptionName))).findFirst().get();
+    SpanData publish =
+        spans.stream()
+            .filter(s -> s.getName().equals(String.format("%s publish", topicName)))
+            .findFirst()
+            .get();
+    SpanData create =
+        spans.stream()
+            .filter(s -> s.getName().equals(String.format("%s create", topicName)))
+            .findFirst()
+            .get();
+    SpanData receive =
+        spans.stream()
+            .filter(s -> s.getName().equals(String.format("%s receive", subscriptionName)))
+            .findFirst()
+            .get();
 
     assertThat(publish).hasParent(parent).hasEnded();
-    assertThat(create).hasParent(parent).hasEnded()
-            .hasAttribute(MESSAGING_MESSAGE_ID, msgId);
-    assertThat(receive).hasParent(create).hasEnded()
-            .hasAttribute(AttributeKey.stringKey("messaging.gcp_pubsub.message.ack_result"), "ack")
-            .hasAttribute(MESSAGING_MESSAGE_ID, msgId);
+    assertThat(create).hasParent(parent).hasEnded().hasAttribute(MESSAGING_MESSAGE_ID, msgId);
+    assertThat(receive)
+        .hasParent(create)
+        .hasEnded()
+        .hasAttribute(AttributeKey.stringKey("messaging.gcp_pubsub.message.ack_result"), "ack")
+        .hasAttribute(MESSAGING_MESSAGE_ID, msgId);
   }
 }

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pubsub;
 
 import static java.util.Arrays.asList;
@@ -17,8 +22,6 @@ public class PubsubInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-            new PubsubPublisherInstrumentation(),
-            new PubsubSubscriberInstrumentation());
+    return asList(new PubsubPublisherInstrumentation(), new PubsubSubscriberInstrumentation());
   }
 }

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pubsub.subscriber;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -42,21 +47,33 @@ class TracingMessageReceiverTest {
   static final String SUBSCRIPTION = "projects/proj/subscriptions/sub";
 
   private static PubsubMessage injectParentSpan(PubsubMessage originalMsg) {
-    List<PublishMessageHelper.Request> reqs = PublishMessageHelper.deconstructRequest(
-        "top",
-        "//pubsub.googleapis.com/projects/proj/topics/top",
-        Lists.newArrayList(originalMsg));
-    testing.runWithSpan("parent", () -> reqs.forEach(req -> W3CTraceContextPropagator.getInstance().inject(Context.current(), req, PublishMessageHelper.AttributesSetter.INSTANCE)));
-    return PublishMessageHelper.reconstructRequest(PublishRequest.getDefaultInstance(), reqs).getMessages(0);
+    List<PublishMessageHelper.Request> reqs =
+        PublishMessageHelper.deconstructRequest(
+            "top",
+            "//pubsub.googleapis.com/projects/proj/topics/top",
+            Lists.newArrayList(originalMsg));
+    testing.runWithSpan(
+        "parent",
+        () ->
+            reqs.forEach(
+                req ->
+                    W3CTraceContextPropagator.getInstance()
+                        .inject(
+                            Context.current(),
+                            req,
+                            PublishMessageHelper.AttributesSetter.INSTANCE)));
+    return PublishMessageHelper.reconstructRequest(PublishRequest.getDefaultInstance(), reqs)
+        .getMessages(0);
   }
 
-  private static PubsubMessage message(String msgId, String data, String orderKey) throws Exception {
+  private static PubsubMessage message(String msgId, String data, String orderKey)
+      throws Exception {
     return injectParentSpan(
-            PubsubMessage.newBuilder()
-                    .setMessageId(msgId)
-                    .setData(ByteString.copyFrom(data, "UTF-8"))
-                    .setOrderingKey(orderKey)
-                    .build());
+        PubsubMessage.newBuilder()
+            .setMessageId(msgId)
+            .setData(ByteString.copyFrom(data, "UTF-8"))
+            .setOrderingKey(orderKey)
+            .build());
   }
 
   @Test
@@ -68,21 +85,22 @@ class TracingMessageReceiverTest {
     List<SpanData> spans = testing.spans();
 
     SpanData parent = spans.stream().filter(s -> s.getName().equals("parent")).findFirst().get();
-    SpanData receive = spans.stream().filter(s -> s.getName().equals("sub receive")).findFirst().get();
+    SpanData receive =
+        spans.stream().filter(s -> s.getName().equals("sub receive")).findFirst().get();
 
     assertThat(receive)
-            .hasAttribute(MESSAGING_CLIENT_ID, "sub")
-            .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/subscriptions/sub")
-            .hasAttribute(MESSAGING_OPERATION, "receive")
-            .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
-            .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
-            .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
-            .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
-            .hasAttribute(PubsubAttributes.ACK_RESULT, PubsubAttributes.AckResultValues.ACK)
-            .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
-            .hasParent(parent)
-            .hasKind(SpanKind.CONSUMER)
-            .hasEnded();
+        .hasAttribute(MESSAGING_CLIENT_ID, "sub")
+        .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/subscriptions/sub")
+        .hasAttribute(MESSAGING_OPERATION, "receive")
+        .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
+        .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
+        .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
+        .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+        .hasAttribute(PubsubAttributes.ACK_RESULT, PubsubAttributes.AckResultValues.ACK)
+        .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
+        .hasParent(parent)
+        .hasKind(SpanKind.CONSUMER)
+        .hasEnded();
   }
 
   @Test
@@ -94,61 +112,62 @@ class TracingMessageReceiverTest {
     List<SpanData> spans = testing.spans();
 
     SpanData parent = spans.stream().filter(s -> s.getName().equals("parent")).findFirst().get();
-    SpanData receive = spans.stream().filter(s -> s.getName().equals("sub receive")).findFirst().get();
+    SpanData receive =
+        spans.stream().filter(s -> s.getName().equals("sub receive")).findFirst().get();
 
     assertThat(receive)
-            .hasAttribute(MESSAGING_CLIENT_ID, "sub")
-            .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/subscriptions/sub")
-            .hasAttribute(MESSAGING_OPERATION, "receive")
-            .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
-            .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
-            .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
-            .hasAttribute(
-                MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
-            .hasAttribute(PubsubAttributes.ACK_RESULT, PubsubAttributes.AckResultValues.NACK)
-            .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
-            .hasParent(parent)
-            .hasKind(SpanKind.CONSUMER)
-            .hasEnded();
+        .hasAttribute(MESSAGING_CLIENT_ID, "sub")
+        .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/subscriptions/sub")
+        .hasAttribute(MESSAGING_OPERATION, "receive")
+        .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
+        .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
+        .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
+        .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+        .hasAttribute(PubsubAttributes.ACK_RESULT, PubsubAttributes.AckResultValues.NACK)
+        .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
+        .hasParent(parent)
+        .hasKind(SpanKind.CONSUMER)
+        .hasEnded();
   }
 
   @Test
   public void receiveAndThrow() throws Exception {
     PubsubMessage originalMsg = message("msg1", "data", "orderKey");
     RuntimeException error = new RuntimeException("oh no");
-    MessageReceiver instrumented = instrument((req, ack) -> {
-      throw error;
-    });
+    MessageReceiver instrumented =
+        instrument(
+            (req, ack) -> {
+              throw error;
+            });
 
     assertThatThrownBy(() -> instrumented.receiveMessage(originalMsg, ackReplyConsumer))
-            .isEqualTo(error);
+        .isEqualTo(error);
 
     List<SpanData> spans = testing.spans();
 
     SpanData parent = spans.stream().filter(s -> s.getName().equals("parent")).findFirst().get();
-    SpanData receive = spans.stream().filter(s -> s.getName().equals("sub receive")).findFirst().get();
+    SpanData receive =
+        spans.stream().filter(s -> s.getName().equals("sub receive")).findFirst().get();
 
     assertThat(receive)
-            .hasAttribute(MESSAGING_CLIENT_ID, "sub")
-            .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/subscriptions/sub")
-            .hasAttribute(MESSAGING_OPERATION, "receive")
-            .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
-            .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
-            .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
-            .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
-            .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
-            .hasException(error)
-            .hasParent(parent)
-            .hasKind(SpanKind.CONSUMER)
-            .hasEnded();
+        .hasAttribute(MESSAGING_CLIENT_ID, "sub")
+        .hasAttribute(CLOUD_RESOURCE_ID, "//pubsub.googleapis.com/projects/proj/subscriptions/sub")
+        .hasAttribute(MESSAGING_OPERATION, "receive")
+        .hasAttribute(MESSAGING_SYSTEM, "gcp_pubsub")
+        .hasAttribute(MESSAGING_MESSAGE_ID, "msg1")
+        .hasAttribute(MESSAGING_MESSAGE_ENVELOPE_SIZE, (long) originalMsg.getSerializedSize())
+        .hasAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) originalMsg.getData().size())
+        .hasAttribute(PubsubAttributes.ORDERING_KEY, "orderKey")
+        .hasException(error)
+        .hasParent(parent)
+        .hasKind(SpanKind.CONSUMER)
+        .hasEnded();
   }
 
   private static MessageReceiver instrument(MessageReceiver receiver) {
-    MessageReceiver receiverWithInnerSpan = (msg, ack) -> testing.runWithSpan(
-        "inner",
-        () -> receiver.receiveMessage(msg, ack));
+    MessageReceiver receiverWithInnerSpan =
+        (msg, ack) -> testing.runWithSpan("inner", () -> receiver.receiveMessage(msg, ack));
     return new TracingMessageReceiver(ReceiveMessageHelper.of(SUBSCRIPTION).instrumenter())
         .build(receiverWithInnerSpan);
   }
-
 }
