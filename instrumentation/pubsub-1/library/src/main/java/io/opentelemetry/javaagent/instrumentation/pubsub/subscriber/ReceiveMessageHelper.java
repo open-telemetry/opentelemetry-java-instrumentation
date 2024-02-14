@@ -18,16 +18,22 @@ import javax.annotation.Nullable;
 public class ReceiveMessageHelper {
   private final String subscriptionName;
   private final String subscriptionFullResourceName;
+  private final String spanName;
 
   public static ReceiveMessageHelper of(String subscriptionPath) {
+    String subscriptionName = PubsubUtils.getResourceName(subscriptionPath);
     return new ReceiveMessageHelper(
-            PubsubUtils.getResourceName(subscriptionPath),
-            PubsubUtils.getFullResourceName(subscriptionPath));
+        subscriptionName,
+        PubsubUtils.getFullResourceName(subscriptionPath),
+        PubsubUtils.getSpanName(
+            SemanticAttributes.MessagingOperationValues.RECEIVE, subscriptionName)
+    );
   }
 
-  ReceiveMessageHelper(String subscriptionName, String subscriptionFullResourceName) {
+  ReceiveMessageHelper(String subscriptionName, String subscriptionFullResourceName, String spanName) {
     this.subscriptionName = subscriptionName;
     this.subscriptionFullResourceName = subscriptionFullResourceName;
+    this.spanName = spanName;
   }
 
   public Instrumenter<PubsubMessage, Void> instrumenter() {
@@ -38,7 +44,7 @@ public class ReceiveMessageHelper {
   }
 
   SpanNameExtractor<PubsubMessage> spanNameExtractor() {
-    return msg -> PubsubUtils.getSpanName(SemanticAttributes.MessagingOperationValues.RECEIVE, subscriptionName);
+    return msg -> spanName;
   }
 
   class PubsubSubscriberAttributesExtractor implements AttributesExtractor<PubsubMessage, Void> {

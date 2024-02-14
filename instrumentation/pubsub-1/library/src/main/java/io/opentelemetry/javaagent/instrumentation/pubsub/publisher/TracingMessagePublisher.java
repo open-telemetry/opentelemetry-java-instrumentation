@@ -65,9 +65,12 @@ public class TracingMessagePublisher extends UnaryCallable<PublishRequest, Publi
     Context batchContext = PublishBatchHelper.INSTRUMENTER.shouldStart(parentContext, batchRequest) ?
             PublishBatchHelper.INSTRUMENTER.start(parentContext, batchRequest) :
             null;
+
+    // Create a new future that will finish once the original callback AND the spans have ended
     SettableApiFuture<PublishResponse> returnedFuture = SettableApiFuture.create();
 
     try (Scope scope = batchContext == null ? Scope.noop() : batchContext.makeCurrent()) {
+
       // Call the original callable, and add callback to run when the future finishes
       ApiFuture<PublishResponse> future = originalCallable.futureCall(modifiedRequest, apiCallContext);
       future.addListener(() -> {

@@ -68,7 +68,7 @@ public class PubsubInstrumentationTest {
     // Create topic
     int randomNumber = new Random().nextInt();
     String topicName = String.format("test.topic-%d", randomNumber);
-    String topic = String.format("projects/kognic-doesnt-exist/topics/%s", topicName);
+    String topic = String.format("projects/my-gcp-project/topics/%s", topicName);
     try (TopicAdminClient topicClient = TopicAdminClient.create(
             TopicAdminSettings.newBuilder()
                     .setTransportChannelProvider(channelProvider)
@@ -79,7 +79,7 @@ public class PubsubInstrumentationTest {
 
     // Create subscription
     String subscriptionName = String.format("test.sub-%d", randomNumber);
-    String subscription = String.format("projects/kognic-doesnt-exist/subscriptions/%s", subscriptionName);
+    String subscription = String.format("projects/my-gcp-project/subscriptions/%s", subscriptionName);
     try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(
             SubscriptionAdminSettings.newBuilder()
                     .setTransportChannelProvider(channelProvider)

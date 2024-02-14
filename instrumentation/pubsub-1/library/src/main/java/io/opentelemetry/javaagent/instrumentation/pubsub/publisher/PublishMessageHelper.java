@@ -27,14 +27,14 @@ public class PublishMessageHelper {
           .buildProducerInstrumenter(AttributesSetter.INSTANCE);
 
   static SpanNameExtractor<Request> spanNameExtractor() {
-    return req -> PubsubUtils.getSpanName("create", req.topicName);
+    return req -> req.spanName;
   }
 
   static class PubsubPublisherAttributesExtractor implements AttributesExtractor<Request, PublishResponse> {
 
     @Override
     public void onStart(AttributesBuilder attributesBuilder, Context context, Request req) {
-      attributesBuilder.put(SemanticAttributes.MESSAGING_OPERATION, "create");
+      attributesBuilder.put(SemanticAttributes.MESSAGING_OPERATION, SemanticAttributes.MessagingOperationValues.CREATE);
       attributesBuilder.put(SemanticAttributes.MESSAGING_SYSTEM, PubsubAttributes.MessagingSystemValues.GCP_PUBSUB);
       attributesBuilder.put(SemanticAttributes.MESSAGING_DESTINATION_NAME, req.topicName);
       attributesBuilder.put(ResourceAttributes.CLOUD_RESOURCE_ID, req.topicFullResourceName);
@@ -64,8 +64,10 @@ public class PublishMessageHelper {
   }
 
   public static List<Request> deconstructRequest(String topicName, String topicFullResourceName, List<PubsubMessage> messages) {
+    String spanName = PubsubUtils.getSpanName(SemanticAttributes.MessagingOperationValues.CREATE, topicName);
     return IntStream.range(0, messages.size())
-            .mapToObj(i -> new Request(topicName, topicFullResourceName, messages.get(i).toBuilder(), i))
+            .mapToObj(i -> new Request(
+                topicName, topicFullResourceName, spanName, messages.get(i).toBuilder(), i))
             .collect(Collectors.toList());
   }
 
@@ -79,12 +81,14 @@ public class PublishMessageHelper {
   public static final class Request {
     public final String topicName;
     public final String topicFullResourceName;
+    public final String spanName;
     public final PubsubMessage.Builder msg;
     public final int index;
 
-    public Request(String topicName, String topicFullResourceName, PubsubMessage.Builder msg, int index) {
+    public Request(String topicName, String topicFullResourceName, String spanName, PubsubMessage.Builder msg, int index) {
       this.topicName = topicName;
       this.topicFullResourceName = topicFullResourceName;
+      this.spanName = spanName;
       this.msg = msg;
       this.index = index;
     }

@@ -34,11 +34,11 @@ public class TracingMessageReceiver {
     }
     Context context = instrumenter.start(parentContext, msg);
     try (Scope scope = context.makeCurrent()) {
-      Throwable error = null;
+      RuntimeException error = null;
       try {
         receiver.run();
-      } catch (Throwable t) {
-        error = t;
+      } catch (RuntimeException e) {
+        error = e;
       }
       try {
         instrumenter.end(context, msg, null, error);
@@ -46,13 +46,8 @@ public class TracingMessageReceiver {
         logger.log(Level.WARNING, "Error ending pubsub subscriber span", t);
       }
       if (error != null) {
-        unsafeThrow(error);
+        throw error;
       }
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T extends Throwable> void unsafeThrow(Throwable t) throws T {
-    throw (T) t;
   }
 }
