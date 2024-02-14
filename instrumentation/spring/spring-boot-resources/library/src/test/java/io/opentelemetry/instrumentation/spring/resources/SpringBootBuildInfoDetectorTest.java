@@ -19,7 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class SpringBootServiceVersionDetectorTest {
+class SpringBootBuildInfoDetectorTest {
 
   static final String BUILD_PROPS = "build-info.properties";
   static final String META_INFO = "META-INF";
@@ -28,14 +28,21 @@ class SpringBootServiceVersionDetectorTest {
   @Mock SystemHelper system;
 
   @Test
-  void givenBuildVersionIsPresentInBuildInfProperties_thenReturnBuildVersion() {
+  void givenBuildVersionIsPresentInBuildInfProperties_thenReturnBuildNameAndVersion() {
     when(system.openClasspathResource(META_INFO, BUILD_PROPS))
+        .thenReturn(openClasspathResource(META_INFO + "/" + BUILD_PROPS))
         .thenReturn(openClasspathResource(META_INFO + "/" + BUILD_PROPS));
 
-    SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
-    Resource result = guesser.createResource(config);
-    assertThat(result.getAttribute(SERVICE_VERSION)).isEqualTo("0.0.2");
-    assertThat(result.getAttribute(SERVICE_NAME)).isEqualTo("some-name");
+    assertThat(
+            new SpringBootServiceVersionDetector(system)
+                .createResource(config)
+                .getAttribute(SERVICE_VERSION))
+        .isEqualTo("0.0.2");
+    assertThat(
+            new SpringBootBuildInfoServiceNameDetector(system)
+                .createResource(config)
+                .getAttribute(SERVICE_NAME))
+        .isEqualTo("some-name");
   }
 
   @Test
