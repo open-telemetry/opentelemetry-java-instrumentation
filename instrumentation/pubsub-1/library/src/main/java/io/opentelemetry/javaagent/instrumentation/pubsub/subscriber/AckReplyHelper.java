@@ -1,8 +1,8 @@
 package io.opentelemetry.javaagent.instrumentation.pubsub.subscriber;
 
-import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.instrumentation.pubsub.PubsubAttributes;
 
 public class AckReplyHelper {
   private AckReplyHelper() {}

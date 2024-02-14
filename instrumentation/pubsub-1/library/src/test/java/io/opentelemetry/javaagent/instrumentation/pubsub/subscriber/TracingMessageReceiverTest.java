@@ -26,12 +26,18 @@ import io.opentelemetry.javaagent.instrumentation.pubsub.publisher.PublishMessag
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class TracingMessageReceiverTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @Mock AckReplyConsumer ackReplyConsumer;
 
   static final String SUBSCRIPTION = "projects/proj/subscriptions/sub";
 
@@ -57,7 +63,7 @@ class TracingMessageReceiverTest {
   public void receiveAndAck() throws Exception {
     PubsubMessage originalMsg = message("msg1", "data", "orderKey");
     MessageReceiver instrumented = instrument((req, ack) -> ack.ack());
-    instrumented.receiveMessage(originalMsg, replyConsumer());
+    instrumented.receiveMessage(originalMsg, ackReplyConsumer);
 
     List<SpanData> spans = testing.spans();
 
@@ -83,7 +89,7 @@ class TracingMessageReceiverTest {
   public void receiveAndNack() throws Exception {
     PubsubMessage originalMsg = message("msg1", "data", "orderKey");
     MessageReceiver instrumented = instrument((req, ack) -> ack.nack());
-    instrumented.receiveMessage(originalMsg, replyConsumer());
+    instrumented.receiveMessage(originalMsg, ackReplyConsumer);
 
     List<SpanData> spans = testing.spans();
 
@@ -114,7 +120,7 @@ class TracingMessageReceiverTest {
       throw error;
     });
 
-    assertThatThrownBy(() -> instrumented.receiveMessage(originalMsg, replyConsumer()))
+    assertThatThrownBy(() -> instrumented.receiveMessage(originalMsg, ackReplyConsumer))
             .isEqualTo(error);
 
     List<SpanData> spans = testing.spans();
@@ -137,22 +143,12 @@ class TracingMessageReceiverTest {
             .hasEnded();
   }
 
-  private static AckReplyConsumer replyConsumer() {
-    return new AckReplyConsumer() {
-      @Override
-      public void ack() {
-        AckReplyHelper.ack(Context.current());
-      }
-
-      @Override
-      public void nack() {
-        AckReplyHelper.nack(Context.current());
-      }
-    };
-  }
-
   private static MessageReceiver instrument(MessageReceiver receiver) {
-    return new TracingMessageReceiver(ReceiveMessageHelper.of(SUBSCRIPTION).instrumenter()).build(receiver);
+    MessageReceiver receiverWithInnerSpan = (msg, ack) -> testing.runWithSpan(
+        "inner",
+        () -> receiver.receiveMessage(msg, ack));
+    return new TracingMessageReceiver(ReceiveMessageHelper.of(SUBSCRIPTION).instrumenter())
+        .build(receiverWithInnerSpan);
   }
 
 }

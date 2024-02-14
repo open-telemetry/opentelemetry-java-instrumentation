@@ -6,7 +6,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.pubsub.publisher.PubsubPublisherInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.pubsub.subscriber.PubsubAckReplyInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.pubsub.subscriber.PubsubSubscriberInstrumentation;
 import java.util.List;
 
@@ -20,7 +19,6 @@ public class PubsubInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
             new PubsubPublisherInstrumentation(),
-            new PubsubAckReplyInstrumentation(),
             new PubsubSubscriberInstrumentation());
   }
 }

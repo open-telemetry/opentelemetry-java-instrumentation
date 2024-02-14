@@ -6,7 +6,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,24 +19,41 @@ public class TracingMessageReceiver {
   }
 
   public MessageReceiver build(MessageReceiver wrapped) {
-    return (msg, ack) -> receiveMessage(() -> wrapped.receiveMessage(msg, ack), msg);
+    return (msg, ack) -> {
+      if (!receiveMessageWithTracing(
+          ctx -> wrapped.receiveMessage(msg, new TracingAckReplyConsumer(ack, ctx)), msg)) {
+        wrapped.receiveMessage(msg, ack);
+      }
+    };
   }
 
-  public MessageReceiverWithAckResponse buildWithAckResponse(MessageReceiverWithAckResponse wrapped) {
-    return (msg, ack) -> receiveMessage(() -> wrapped.receiveMessage(msg, ack), msg);
+  public MessageReceiverWithAckResponse buildWithAckResponse(
+      MessageReceiverWithAckResponse wrapped) {
+    return (msg, ack) -> {
+      if (!receiveMessageWithTracing(
+          ctx -> wrapped.receiveMessage(msg, new TracingAckReplyConsumerWithResponse(ack, ctx)),
+          msg)) {
+        wrapped.receiveMessage(msg, ack);
+      }
+    };
   }
 
-  private void receiveMessage(Runnable receiver, PubsubMessage msg) {
+  private boolean receiveMessageWithTracing(Consumer<Context> receiver, PubsubMessage msg) {
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, msg)) {
-      receiver.run();
-      return;
+      return false;
     }
-    Context context = instrumenter.start(parentContext, msg);
+    Context context;
+    try {
+      context = instrumenter.start(parentContext, msg);
+    } catch (Throwable t) {
+      logger.log(Level.WARNING, "Error starting pubsub subscriber span", t);
+      return false;
+    }
     try (Scope scope = context.makeCurrent()) {
       RuntimeException error = null;
       try {
-        receiver.run();
+        receiver.accept(context);
       } catch (RuntimeException e) {
         error = e;
       }
@@ -48,6 +65,7 @@ public class TracingMessageReceiver {
       if (error != null) {
         throw error;
       }
+      return true;
     }
   }
 }
