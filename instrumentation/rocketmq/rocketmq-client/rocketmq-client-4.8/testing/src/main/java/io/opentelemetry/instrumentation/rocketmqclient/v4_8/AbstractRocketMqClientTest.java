@@ -36,10 +36,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** TODO add tests for propagationEnabled flag */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRocketMqClientTest {
+
+  private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
 
   abstract InstrumentationExtension testing();
 
@@ -257,7 +261,7 @@ abstract class AbstractRocketMqClientTest {
         // if messages weren't received as a batch we get 1 trace instead of 2
         testing().waitForTraces(1);
         testing().clearData();
-        System.err.println("Messages weren't received as batch, retrying");
+        logger.error("Messages weren't received as batch, retrying");
       }
       testing()
           .waitAndAssertTraces(
