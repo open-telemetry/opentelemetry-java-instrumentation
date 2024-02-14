@@ -90,6 +90,7 @@ public abstract class PriorityResourceProvider<D> implements ConditionalResource
               // the thread local is a hack to work around this
               Resource existing =
                   Objects.requireNonNull(existingResource.get(), "call shouldApply first");
+              existingResource.remove();
               Map<String, String> resourceAttributes = getResourceAttributes(config);
               AttributesBuilder builder = Attributes.builder();
               attributeGetters.entrySet().stream()
