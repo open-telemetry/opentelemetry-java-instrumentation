@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
@@ -203,6 +204,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
+      if (spanKind == SpanKind.SERVER) {
+        HttpRouteState.updateSpan(context, span);
+      }
     }
 
     return spanSuppressor.storeInContext(context, spanKind, span);
