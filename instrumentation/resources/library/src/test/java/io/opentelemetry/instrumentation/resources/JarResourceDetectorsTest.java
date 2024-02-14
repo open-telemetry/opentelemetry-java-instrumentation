@@ -14,12 +14,11 @@ import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -36,16 +35,18 @@ class JarResourceDetectorsTest {
 
   @Mock ConfigProperties config;
 
-  protected static final Function<Supplier<Optional<String>>, Optional<String>> NO_CACHE =
-      Supplier::get;
+  @BeforeEach
+  void setUp() {
+    PriorityResourceProvider.resetForTest();
+  }
 
   @Test
   void createResource_empty() {
     JarServiceNameDetector serviceNameProvider =
         new JarServiceNameDetector(
-            () -> new String[0], prop -> null, JarResourceDetectorsTest::failPath, NO_CACHE);
+            () -> new String[0], prop -> null, JarResourceDetectorsTest::failPath);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = getResource(serviceNameProvider);
 
     assertThat(resource.getAttributes()).isEmpty();
   }
@@ -54,10 +55,9 @@ class JarResourceDetectorsTest {
   void createResource_noJarFileInArgs() {
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar"};
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(
-            () -> args, prop -> null, JarResourceDetectorsTest::failPath, NO_CACHE);
+        new JarServiceNameDetector(() -> args, prop -> null, JarResourceDetectorsTest::failPath);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = getResource(serviceNameProvider);
 
     assertThat(resource.getAttributes()).isEmpty();
   }
@@ -82,16 +82,11 @@ class JarResourceDetectorsTest {
     String path = Paths.get("path", "to", "app", jar).toString();
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path, "abc", "def"};
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(
-            () -> args, prop -> null, JarResourceDetectorsTest::failPath, NO_CACHE);
+        new JarServiceNameDetector(() -> args, prop -> null, JarResourceDetectorsTest::failPath);
     JarServiceVersionDetector serviceVersionProvider =
-        new JarServiceVersionDetector(
-            () -> args, prop -> null, JarResourceDetectorsTest::failPath, NO_CACHE);
+        new JarServiceVersionDetector(() -> args, prop -> null, JarResourceDetectorsTest::failPath);
 
-    Resource resource =
-        serviceNameProvider
-            .createResource(config)
-            .merge(serviceVersionProvider.createResource(config));
+    Resource resource = getResource(serviceNameProvider).merge(getResource(serviceVersionProvider));
 
     AttributesAssert attributesAssert = assertThat(resource.getAttributes());
     attributesAssert.containsEntry(ResourceAttributes.SERVICE_NAME, expectedServiceName);
@@ -111,13 +106,18 @@ class JarResourceDetectorsTest {
     Predicate<Path> fileExists = jarPath::equals;
 
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists, NO_CACHE);
+        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = getResource(serviceNameProvider);
 
     assertThat(resource.getAttributes())
         .hasSize(1)
         .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
+  }
+
+  private Resource getResource(PriorityResourceProvider<?> provider) {
+    provider.shouldApply(config, Resource.getDefault()); // needed to initialize the thread local
+    return provider.createResource(config);
   }
 
   // regression test for
@@ -129,9 +129,9 @@ class JarResourceDetectorsTest {
     Predicate<Path> fileExists = path -> false;
 
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists, NO_CACHE);
+        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = getResource(serviceNameProvider);
 
     assertThat(resource.getAttributes()).isEmpty();
   }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,39 +17,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-public abstract class JarResourceDetector implements ConditionalResourceProvider {
+public abstract class JarResourceDetector
+    extends PriorityResourceProvider<JarResourceDetector.NameAndVersion> {
   protected static final Logger logger = Logger.getLogger(JarServiceNameDetector.class.getName());
   private static final Pattern JAR_FILE_VERSION_PATTERN = Pattern.compile("[-_]v?\\d.*");
   private static final Pattern ANY_DIGIT = Pattern.compile("\\d");
   protected final Supplier<String[]> getProcessHandleArguments;
   protected final Function<String, String> getSystemProperty;
   protected final Predicate<Path> fileExists;
-  private final Function<Supplier<Optional<String>>, Optional<String>> jarNameCacheLookup;
-
-  protected static final Function<Supplier<Optional<String>>, Optional<String>> CACHE_LOOKUP =
-      new Function<Supplier<Optional<String>>, Optional<String>>() {
-        private Optional<String> cachedValue = Optional.empty();
-
-        @Override
-        public Optional<String> apply(Supplier<Optional<String>> supplier) {
-          if (cachedValue.isPresent()) {
-            return cachedValue;
-          }
-          Optional<String> value = supplier.get();
-          cachedValue = value;
-          return value;
-        }
-      };
 
   public JarResourceDetector(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
-      Predicate<Path> fileExists,
-      Function<Supplier<Optional<String>>, Optional<String>> jarNameCacheLookup) {
+      Predicate<Path> fileExists) {
     this.getProcessHandleArguments = getProcessHandleArguments;
     this.getSystemProperty = getSystemProperty;
     this.fileExists = fileExists;
-    this.jarNameCacheLookup = jarNameCacheLookup;
   }
 
   private Optional<String> getJarPath() {
@@ -61,9 +43,9 @@ public abstract class JarResourceDetector implements ConditionalResourceProvider
     return Optional.ofNullable(jarPath).map(p -> p.getFileName().toString());
   }
 
-  protected Optional<NameAndVersion> getServiceNameAndVersion() {
-    return jarNameCacheLookup
-        .apply(this::getJarPath)
+  @Override
+  protected Optional<NameAndVersion> readData() {
+    return getJarPath()
         .flatMap(
             jarName -> {
               int dotIndex = jarName.lastIndexOf(".");
@@ -136,9 +118,9 @@ public abstract class JarResourceDetector implements ConditionalResourceProvider
   }
 
   @Override
-  public int order() {
-    // make it run later than the SpringBootServiceNameDetector
-    return 1000;
+  protected int priority() {
+    // lower priority than the SpringBootServiceNameDetector
+    return -1000;
   }
 
   protected static class NameAndVersion {
