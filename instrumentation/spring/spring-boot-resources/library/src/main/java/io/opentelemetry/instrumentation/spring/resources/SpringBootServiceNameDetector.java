@@ -11,6 +11,7 @@ import static java.util.logging.Level.FINER;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.io.IOException;
@@ -49,7 +50,7 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
  * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */
 @AutoService(ResourceProvider.class)
-public class SpringBootServiceNameDetector implements ResourceProvider {
+public class SpringBootServiceNameDetector implements ConditionalResourceProvider {
 
   private static final Logger logger =
       Logger.getLogger(SpringBootServiceNameDetector.class.getName());
@@ -101,6 +102,17 @@ public class SpringBootServiceNameDetector implements ResourceProvider {
               return Resource.builder().put(ResourceAttributes.SERVICE_NAME, serviceName).build();
             })
         .orElseGet(Resource::empty);
+  }
+
+  @Override
+  public boolean shouldApply(ConfigProperties config, Resource resource) {
+    // we're skipping this provider if the service name was manually set by the user -- no need to
+    // waste time trying to compute the service name if it's going to be overridden anyway
+    String serviceName = config.getString("otel.service.name");
+    Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
+    return serviceName == null
+        && !resourceAttributes.containsKey(ResourceAttributes.SERVICE_NAME.getKey())
+        && "unknown_service:java".equals(resource.getAttribute(ResourceAttributes.SERVICE_NAME));
   }
 
   @Override
