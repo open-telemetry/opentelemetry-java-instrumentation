@@ -6,13 +6,13 @@ muzzle {
   pass {
     group.set("com.google.cloud")
     module.set("google-cloud-pubsub")
-    versions.set("[1.120.0,)")
+    versions.set("[1.120.4,)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("com.google.cloud:google-cloud-pubsub:1.125.7")
+  library("com.google.cloud:google-cloud-pubsub:1.126.6")
   implementation(project(":instrumentation:pubsub-1:library"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")

@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  library("com.google.cloud:google-cloud-pubsub:1.125.7")
+  library("com.google.cloud:google-cloud-pubsub:1.126.6")
 }
