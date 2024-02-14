@@ -13,7 +13,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelInitializerDelegate;
+import io.netty.channel.OpenTelemetryChannelInitializerDelegate;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -32,7 +32,7 @@ public final class Helpers {
   public static final Local<Context> CONTEXT_LOCAL = new Local<>();
 
   public static <C extends Channel> ChannelInitializer<C> wrapServer(ChannelInitializer<C> inner) {
-    return new ChannelInitializerDelegate<C>(inner) {
+    return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
       @Override
       protected void initChannel(C channel) throws Exception {
@@ -72,7 +72,7 @@ public final class Helpers {
   }
 
   public static <C extends Channel> ChannelInitializer<C> wrapClient(ChannelInitializer<C> inner) {
-    return new ChannelInitializerDelegate<C>(inner) {
+    return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
       // wraps everything for roughly the same reasons as in wrapServer(), above
       @Override

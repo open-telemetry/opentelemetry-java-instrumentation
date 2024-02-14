@@ -6,11 +6,11 @@
 package io.netty.channel;
 
 /** Exists to correctly expose and propagate the {@link #initChannel(Channel)} calls. */
-public abstract class ChannelInitializerDelegate<T extends Channel> extends ChannelInitializer<T> {
+public abstract class OpenTelemetryChannelInitializerDelegate<T extends Channel> extends ChannelInitializer<T> {
 
   private final ChannelInitializer<T> initializer;
 
-  public ChannelInitializerDelegate(ChannelInitializer<T> initializer) {
+  public OpenTelemetryChannelInitializerDelegate(ChannelInitializer<T> initializer) {
     this.initializer = initializer;
   }
 

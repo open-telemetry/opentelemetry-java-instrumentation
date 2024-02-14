@@ -29,6 +29,6 @@ public class FinagleCoreInstrumentationModule extends InstrumentationModule {
   @Override
   public boolean isHelperClass(String className) {
     return className.equals("com.twitter.finagle.ChannelTransportHelpers")
-        || className.equals("io.netty.channel.ChannelInitializerDelegate");
+        || className.equals("io.netty.channel.OpenTelemetryChannelInitializerDelegate");
   }
 }
