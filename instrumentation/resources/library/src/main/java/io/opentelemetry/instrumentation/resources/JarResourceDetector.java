@@ -44,6 +44,11 @@ public abstract class JarResourceDetector
   }
 
   @Override
+  protected final String cacheKey() {
+    return JarResourceDetector.class.getName();
+  }
+
+  @Override
   protected Optional<NameAndVersion> readData() {
     return getJarPath()
         .flatMap(
