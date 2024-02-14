@@ -60,7 +60,8 @@ public final class JarServiceVersionDetector extends JarResourceDetector {
   @Override
   public boolean shouldApply(ConfigProperties config, Resource existing) {
     return !config
-        .getMap("otel.resource.attributes")
-        .containsKey(ResourceAttributes.SERVICE_VERSION.getKey());
+            .getMap("otel.resource.attributes")
+            .containsKey(ResourceAttributes.SERVICE_VERSION.getKey())
+        && existing.getAttribute(ResourceAttributes.SERVICE_VERSION) == null;
   }
 }
