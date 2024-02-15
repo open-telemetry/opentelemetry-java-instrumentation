@@ -157,7 +157,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
   @Override
   protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
     InetSocketAddress address = new InetSocketAddress("localhost", cassandraPort);
-    sessionBuilder.addContactEndPoint(new SniEndPoint(address, "dummy"));
+    sessionBuilder.addContactEndPoint(new SniEndPoint(address, "localhost"));
     return sessionBuilder;
   }
 }
