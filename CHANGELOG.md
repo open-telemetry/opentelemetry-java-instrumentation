@@ -111,6 +111,12 @@
   ([#10389](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10389))
 - Fix JarAnalyzer warnings on Payara
   ([#10458](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10458))
+- Return wrapped connection from `Statement.getConnection()`
+  ([#10554](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10554))
+- Spring starter: Fix `otel.propagators`
+  ([#10559](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10559))
+- Populate `server.address` and `server.port` in Cassandra instrumentation
+  ([#10357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10357))
 
 ### 🧰 Tooling
 
