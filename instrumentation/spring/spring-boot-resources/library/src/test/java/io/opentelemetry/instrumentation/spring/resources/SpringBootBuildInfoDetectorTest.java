@@ -33,11 +33,11 @@ class SpringBootBuildInfoDetectorTest {
   @Mock SystemHelper system;
 
   private static class TestCase {
-    String name;
+    private final String name;
     private final Function<SystemHelper, SpringBootBuildInfoDetector> factory;
-    AttributeKey<String> key;
-    String expected;
-    InputStream input;
+    private final AttributeKey<String> key;
+    private final String expected;
+    private final InputStream input;
 
     public TestCase(
         String name,
