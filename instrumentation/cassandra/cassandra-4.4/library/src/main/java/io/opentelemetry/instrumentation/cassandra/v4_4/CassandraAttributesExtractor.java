@@ -9,15 +9,27 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
+import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
+import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
+
+  private static final Logger logger =
+      Logger.getLogger(CassandraAttributesExtractor.class.getName());
+
+  private static final Field proxyAddressField = getProxyAddressField();
 
   @Override
   public void onStart(
@@ -36,6 +48,8 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
+      updateServerAddressAndPort(attributes, coordinator);
+
       if (coordinator.getDatacenter() != null) {
         attributes.put(SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
       }
@@ -73,5 +87,41 @@ final class CassandraAttributesExtractor
       idempotent = config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE);
     }
     attributes.put(SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE, idempotent);
+  }
+
+  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (endPoint instanceof DefaultEndPoint) {
+      InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
+      attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostString());
+      attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
+    } else if (endPoint instanceof SniEndPoint && proxyAddressField != null) {
+      SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
+      Object object = null;
+      try {
+        object = proxyAddressField.get(sniEndPoint);
+      } catch (Exception e) {
+        logger.log(
+            Level.FINE,
+            "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
+            e);
+      }
+      if (object instanceof InetSocketAddress) {
+        InetSocketAddress address = (InetSocketAddress) object;
+        attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostString());
+        attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
+      }
+    }
+  }
+
+  @Nullable
+  private static Field getProxyAddressField() {
+    try {
+      Field field = SniEndPoint.class.getDeclaredField("proxyAddress");
+      field.setAccessible(true);
+      return field;
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
