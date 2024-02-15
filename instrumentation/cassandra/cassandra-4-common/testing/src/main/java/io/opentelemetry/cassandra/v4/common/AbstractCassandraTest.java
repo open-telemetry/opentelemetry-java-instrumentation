@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
@@ -329,11 +330,15 @@ public abstract class AbstractCassandraTest {
             .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
             .build();
     return wrap(
-        CqlSession.builder()
-            .addContactPoint(new InetSocketAddress("localhost", cassandraPort))
+        addContactPoint(CqlSession.builder())
             .withConfigLoader(configLoader)
             .withLocalDatacenter("datacenter1")
             .withKeyspace(keyspace)
             .build());
+  }
+
+  protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
+    sessionBuilder.addContactPoint(new InetSocketAddress("localhost", cassandraPort));
+    return sessionBuilder;
   }
 }

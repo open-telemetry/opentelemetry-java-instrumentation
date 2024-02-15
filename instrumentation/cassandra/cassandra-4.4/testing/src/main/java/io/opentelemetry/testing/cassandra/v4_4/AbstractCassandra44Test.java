@@ -24,14 +24,12 @@ import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
-import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import java.net.InetSocketAddress;
-import java.time.Duration;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -146,20 +144,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
   }
 
   @Override
-  protected CqlSession getSession(String keyspace) {
-    DriverConfigLoader configLoader =
-        DriverConfigLoader.programmaticBuilder()
-            .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
-            .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
-            .build();
-
+  protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
     InetSocketAddress address = new InetSocketAddress("localhost", cassandraPort);
-    return wrap(
-        CqlSession.builder()
-            .addContactEndPoint(new SniEndPoint(address, "dummy"))
-            .withConfigLoader(configLoader)
-            .withLocalDatacenter("datacenter1")
-            .withKeyspace(keyspace)
-            .build());
+    sessionBuilder.addContactEndPoint(new SniEndPoint(address, "dummy"));
+    return sessionBuilder;
   }
 }
