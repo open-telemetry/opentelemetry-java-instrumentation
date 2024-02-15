@@ -83,7 +83,6 @@
   ([#10250](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10250))
 - add @ConditionalOnMissingBean to LoggingMetricExporter
   ([#10283](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10283))
-  ([#10305](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10305))
 - Make Netty Instrumentation HttpServerRequestTracingHandler propagate "Channel Inactive" event
   to downstream according to parent contract
   ([#10303](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10303))
