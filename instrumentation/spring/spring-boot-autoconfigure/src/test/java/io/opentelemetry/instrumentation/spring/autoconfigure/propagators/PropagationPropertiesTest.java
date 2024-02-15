@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+@SuppressWarnings("deprecation") // test for deprecated code
 public class PropagationPropertiesTest {
 
   private final ApplicationContextRunner contextRunner =

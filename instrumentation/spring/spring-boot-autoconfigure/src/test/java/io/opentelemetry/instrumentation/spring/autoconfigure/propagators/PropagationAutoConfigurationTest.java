@@ -92,10 +92,25 @@ class PropagationAutoConfigurationTest {
   }
 
   @Test
+  @DisplayName(
+      "when propagation is set to some values should contain only supported values - deprecated")
+  void shouldContainOnlySupportedDeprecated() {
+    this.contextRunner
+        .withPropertyValues("otel.propagation.type=invalid,b3")
+        .run(
+            context -> {
+              TextMapPropagator compositePropagator =
+                  context.getBean("compositeTextMapPropagator", TextMapPropagator.class);
+
+              assertThat(compositePropagator.fields()).containsExactly("b3");
+            });
+  }
+
+  @Test
   @DisplayName("when propagation is set to some values should contain only supported values")
   void shouldContainOnlySupported() {
     this.contextRunner
-        .withPropertyValues("otel.propagation.type=invalid,b3")
+        .withPropertyValues("otel.propagators=invalid,b3")
         .run(
             context -> {
               TextMapPropagator compositePropagator =

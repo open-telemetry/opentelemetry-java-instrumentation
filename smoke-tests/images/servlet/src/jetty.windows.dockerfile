@@ -18,7 +18,8 @@ ENV JETTY_BASE=/base
 WORKDIR $JETTY_BASE
 # depending on Jetty version one of the following commands should succeed
 RUN java -jar /server/start.jar --add-module=ext,server,jsp,resources,deploy,jstl,websocket,http; \
-    if ($LASTEXITCODE -ne 0) { java -jar /server/start.jar --add-to-start=ext,server,jsp,resources,deploy,jstl,websocket,http }
+    if ($LASTEXITCODE -ne 0) { java -jar /server/start.jar --add-module=ext,server,ee10-jsp,resources,ee10-deploy,ee10-jstl,http; \
+    if ($LASTEXITCODE -ne 0) { java -jar /server/start.jar --add-to-start=ext,server,jsp,resources,deploy,jstl,websocket,http }}
 
 CMD java -jar /server/start.jar
 

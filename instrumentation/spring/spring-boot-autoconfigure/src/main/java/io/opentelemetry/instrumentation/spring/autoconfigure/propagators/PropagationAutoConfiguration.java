@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.BeanFactory;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(PropagationProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.propagation", name = "enabled", matchIfMissing = true)
+@SuppressWarnings("deprecation")
 public class PropagationAutoConfiguration {
 
   @Bean
@@ -41,9 +43,11 @@ public class PropagationAutoConfiguration {
 
     @Bean
     TextMapPropagator compositeTextMapPropagator(
-        BeanFactory beanFactory, PropagationProperties properties) {
+        BeanFactory beanFactory,
+        PropagationProperties properties,
+        ConfigProperties configProperties) {
       return CompositeTextMapPropagatorFactory.getCompositeTextMapPropagator(
-          beanFactory, properties.getType());
+          beanFactory, configProperties.getList("otel.propagators", properties.getType()));
     }
   }
 }

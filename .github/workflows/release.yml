@@ -86,7 +86,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Build and publish artifacts
-        uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # v3.0.0
+        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
         with:
           arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
@@ -96,7 +96,7 @@ jobs:
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
 
       - name: Build and publish gradle plugins
-        uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # v3.0.0
+        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
