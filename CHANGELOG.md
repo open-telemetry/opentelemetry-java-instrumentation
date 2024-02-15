@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.1.0 (2024-02-15)
 
 ### Migration notes
 
