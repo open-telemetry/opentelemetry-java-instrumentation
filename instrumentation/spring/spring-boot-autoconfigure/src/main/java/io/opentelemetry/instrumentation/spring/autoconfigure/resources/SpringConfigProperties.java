@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
@@ -22,14 +23,17 @@ public class SpringConfigProperties implements ConfigProperties {
 
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
+  private final PropagationProperties propagationProperties;
 
   public SpringConfigProperties(
       Environment environment,
       ExpressionParser parser,
-      OtlpExporterProperties otlpExporterProperties) {
+      OtlpExporterProperties otlpExporterProperties,
+      PropagationProperties propagationProperties) {
     this.environment = environment;
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
+    this.propagationProperties = propagationProperties;
   }
 
   @Nullable
@@ -71,6 +75,9 @@ public class SpringConfigProperties implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String name) {
+    if (name.equals("otel.propagators")) {
+      return propagationProperties.getPropagators();
+    }
     List<String> value = environment.getProperty(name, List.class);
     return value == null ? Collections.emptyList() : value;
   }

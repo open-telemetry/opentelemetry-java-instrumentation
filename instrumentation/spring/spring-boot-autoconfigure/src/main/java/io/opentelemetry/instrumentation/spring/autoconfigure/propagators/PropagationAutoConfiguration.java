@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 
 /** Configures {@link ContextPropagators} bean for propagation. */
 @Configuration
-@EnableConfigurationProperties(PropagationProperties.class)
+@EnableConfigurationProperties(DeprecatedPropagationProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.propagation", name = "enabled", matchIfMissing = true)
 @SuppressWarnings("deprecation")
@@ -44,7 +44,7 @@ public class PropagationAutoConfiguration {
     @Bean
     TextMapPropagator compositeTextMapPropagator(
         BeanFactory beanFactory,
-        PropagationProperties properties,
+        DeprecatedPropagationProperties properties,
         ConfigProperties configProperties) {
       return CompositeTextMapPropagatorFactory.getCompositeTextMapPropagator(
           beanFactory, configProperties.getList("otel.propagators", properties.getType()));
