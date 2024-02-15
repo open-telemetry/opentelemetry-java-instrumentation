@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Collections;
@@ -30,6 +31,7 @@ public final class NettyClientSingletons {
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
   private static final NettySslInstrumenter SSL_INSTRUMENTER;
+  private static final NettyClientHandlerFactory CLIENT_HANDLER_FACTORY;
 
   static {
     NettyClientInstrumenterFactory factory =
@@ -51,6 +53,9 @@ public final class NettyClientSingletons {
             Collections.emptyList());
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
+    CLIENT_HANDLER_FACTORY =
+        new NettyClientHandlerFactory(
+            INSTRUMENTER, CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
   }
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
@@ -63,6 +68,10 @@ public final class NettyClientSingletons {
 
   public static NettySslInstrumenter sslInstrumenter() {
     return SSL_INSTRUMENTER;
+  }
+
+  public static NettyClientHandlerFactory clientHandlerFactory() {
+    return CLIENT_HANDLER_FACTORY;
   }
 
   private NettyClientSingletons() {}

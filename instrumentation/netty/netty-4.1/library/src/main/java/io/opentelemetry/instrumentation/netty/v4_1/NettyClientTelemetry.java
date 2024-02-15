@@ -15,17 +15,18 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 
 /** Entrypoint for instrumenting Netty HTTP clients. */
 public final class NettyClientTelemetry {
 
-  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final NettyClientHandlerFactory handlerFactory;
 
-  NettyClientTelemetry(Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
-    this.instrumenter = instrumenter;
+  NettyClientTelemetry(
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      boolean emitExperimentalHttpClientEvents) {
+    this.handlerFactory =
+        new NettyClientHandlerFactory(instrumenter, emitExperimentalHttpClientEvents);
   }
 
   /** Returns a new {@link NettyClientTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -42,11 +43,11 @@ public final class NettyClientTelemetry {
   }
 
   /**
-   * /** Returns a new {@link ChannelOutboundHandlerAdapter} that generates telemetry for outgoing
-   * HTTP requests. Must be paired with {@link #createResponseHandler()}.
+   * Returns a new {@link ChannelOutboundHandlerAdapter} that generates telemetry for outgoing HTTP
+   * requests. Must be paired with {@link #createResponseHandler()}.
    */
   public ChannelOutboundHandlerAdapter createRequestHandler() {
-    return new HttpClientRequestTracingHandler(instrumenter);
+    return handlerFactory.createRequestHandler();
   }
 
   /**
@@ -54,7 +55,7 @@ public final class NettyClientTelemetry {
    * responses. Must be paired with {@link #createRequestHandler()}.
    */
   public ChannelInboundHandlerAdapter createResponseHandler() {
-    return new HttpClientResponseTracingHandler(instrumenter);
+    return handlerFactory.createResponseHandler();
   }
 
   /**
@@ -64,7 +65,7 @@ public final class NettyClientTelemetry {
   public CombinedChannelDuplexHandler<
           ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
       createCombinedHandler() {
-    return new HttpClientTracingHandler(instrumenter);
+    return handlerFactory.createCombinedHandler();
   }
 
   /**
