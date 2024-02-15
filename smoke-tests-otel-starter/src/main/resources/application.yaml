@@ -1,0 +1,7 @@
+otel:
+  instrumentation:
+    logback-appender:
+      experimental:
+        capture-code-attributes: true
+  propagators:
+    - b3

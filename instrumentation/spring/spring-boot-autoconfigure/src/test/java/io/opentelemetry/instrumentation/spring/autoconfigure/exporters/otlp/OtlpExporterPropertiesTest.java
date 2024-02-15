@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -90,6 +91,7 @@ class OtlpExporterPropertiesTest {
     return new SpringConfigProperties(
         context.getBean("environment", Environment.class),
         new SpelExpressionParser(),
-        context.getBean(OtlpExporterProperties.class));
+        context.getBean(OtlpExporterProperties.class),
+        new PropagationProperties());
   }
 }

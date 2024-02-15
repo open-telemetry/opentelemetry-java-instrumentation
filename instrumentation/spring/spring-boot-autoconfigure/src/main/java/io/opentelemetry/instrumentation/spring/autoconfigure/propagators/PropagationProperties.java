@@ -5,22 +5,21 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Configuration for propagators. */
-@ConfigurationProperties(prefix = "otel.propagation")
-@Deprecated // use otel.propagators instead
+@ConfigurationProperties(prefix = "otel")
 public final class PropagationProperties {
 
-  private List<String> type = Arrays.asList("tracecontext", "baggage");
+  private List<String> propagators = Collections.emptyList();
 
-  public List<String> getType() {
-    return type;
+  public List<String> getPropagators() {
+    return propagators;
   }
 
-  public void setType(List<String> type) {
-    this.type = type;
+  public void setPropagators(List<String> propagators) {
+    this.propagators = propagators;
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.smoketest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
@@ -54,6 +55,8 @@ class OtelSpringStarterSmokeTest {
 
   @Autowired private TestRestTemplate testRestTemplate;
 
+  @Autowired private ConfigProperties configProperties;
+
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
     @Bean
@@ -70,6 +73,14 @@ class OtelSpringStarterSmokeTest {
     public LogRecordExporter logRecordExporter() {
       return LOG_RECORD_EXPORTER;
     }
+  }
+
+  @Test
+  void propertyConversion() {
+    assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
+        .containsEntry("a", "1")
+        .containsEntry("b", "2");
+    assertThat(configProperties.getList("otel.propagators")).containsExactly("b3");
   }
 
   @Test

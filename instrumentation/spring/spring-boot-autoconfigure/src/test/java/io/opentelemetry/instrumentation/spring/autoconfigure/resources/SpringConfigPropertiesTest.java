@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -29,7 +30,10 @@ class SpringConfigPropertiesTest {
               Environment env = context.getBean("environment", Environment.class);
               SpringConfigProperties config =
                   new SpringConfigProperties(
-                      env, new SpelExpressionParser(), new OtlpExporterProperties());
+                      env,
+                      new SpelExpressionParser(),
+                      new OtlpExporterProperties(),
+                      new PropagationProperties());
 
               assertThat(config.getMap("otel.springboot.test.map"))
                   .contains(
