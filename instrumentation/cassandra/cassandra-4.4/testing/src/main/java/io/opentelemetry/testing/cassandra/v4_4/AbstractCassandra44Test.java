@@ -158,7 +158,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
         CqlSession.builder()
             .addContactEndPoint(new SniEndPoint(address, "dummy"))
             .withConfigLoader(configLoader)
-            .withLocalDatacenter("datacenter2")
+            .withLocalDatacenter("datacenter1")
             .withKeyspace(keyspace)
             .build());
   }
