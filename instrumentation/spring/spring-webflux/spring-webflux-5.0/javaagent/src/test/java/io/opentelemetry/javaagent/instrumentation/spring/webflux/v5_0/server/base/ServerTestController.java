@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package server.base;
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
-import static server.base.SpringWebFluxServerTest.NESTED_PATH;
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base.SpringWebFluxServerTest.NESTED_PATH;
 
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
