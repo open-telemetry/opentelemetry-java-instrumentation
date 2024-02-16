@@ -167,7 +167,7 @@ These are the supported libraries and frameworks:
 [Database Pool Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md
 [JVM Runtime Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md
 [System Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/system/system-metrics.md
-[GraphQL Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/graphql.md
+[GraphQL Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md
 [FaaS Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md
 
 ## Application Servers
