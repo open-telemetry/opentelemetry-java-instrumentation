@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package server.base;
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base.SpringWebFluxServerTest.NESTED_PATH;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.path;
 import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
-import static server.base.SpringWebFluxServerTest.NESTED_PATH;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;

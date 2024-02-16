@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -27,9 +26,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @SpringBootApplication
-@ComponentScan(
-    basePackages = {"server"},
-    excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "server.base.*"))
+@ComponentScan(basePackages = {"server"})
 public class SpringWebFluxTestApplication {
 
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
