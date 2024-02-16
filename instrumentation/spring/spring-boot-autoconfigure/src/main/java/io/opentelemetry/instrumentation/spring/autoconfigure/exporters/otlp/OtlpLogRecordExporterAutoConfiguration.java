@@ -36,12 +36,7 @@ public class OtlpLogRecordExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.otlp.enabled",
-          "otel.exporter.otlp.logs.enabled",
-          "otel.logs.exporter",
-          "otlp",
-          true);
+          context.getEnvironment(), "otel.logs.exporter", "otlp", true);
     }
   }
 }

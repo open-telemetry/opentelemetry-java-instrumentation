@@ -38,12 +38,7 @@ public class OtlpMetricExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.otlp.enabled",
-          "otel.exporter.otlp.metrics.enabled",
-          "otel.metrics.exporter",
-          "otlp",
-          true);
+          context.getEnvironment(), "otel.metrics.exporter", "otlp", true);
     }
   }
 }

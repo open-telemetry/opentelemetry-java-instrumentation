@@ -35,12 +35,7 @@ public class SystemOutLogRecordExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.logging.enabled",
-          "otel.exporter.logging.logs.enabled",
-          "otel.logs.exporter",
-          "logging",
-          false);
+          context.getEnvironment(), "otel.logs.exporter", "logging", false);
     }
   }
 }

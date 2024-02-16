@@ -42,7 +42,7 @@ class MetricExporterAutoConfigurationTest {
   @Test
   void loggingEnabledByConfiguration() {
     contextRunner
-        .withPropertyValues("otel.exporter.logging.enabled=true")
+        .withPropertyValues("otel.metrics.exporter=logging,otlp")
         .run(
             context -> {
               assertThat(context.getBean("otelOtlpMetricExporter", OtlpHttpMetricExporter.class))

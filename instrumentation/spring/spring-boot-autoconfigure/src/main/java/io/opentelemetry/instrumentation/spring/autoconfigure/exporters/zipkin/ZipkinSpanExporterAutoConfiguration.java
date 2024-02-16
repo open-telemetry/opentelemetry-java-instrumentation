@@ -47,12 +47,7 @@ public class ZipkinSpanExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          null,
-          "otel.exporter.zipkin.enabled",
-          "otel.traces.exporter",
-          "zipkin",
-          true);
+          context.getEnvironment(), "otel.traces.exporter", "zipkin", true);
     }
   }
 }

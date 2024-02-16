@@ -35,12 +35,7 @@ public class LoggingSpanExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.logging.enabled",
-          "otel.exporter.logging.traces.enabled",
-          "otel.traces.exporter",
-          "logging",
-          false);
+          context.getEnvironment(), "otel.traces.exporter", "logging", false);
     }
   }
 }
