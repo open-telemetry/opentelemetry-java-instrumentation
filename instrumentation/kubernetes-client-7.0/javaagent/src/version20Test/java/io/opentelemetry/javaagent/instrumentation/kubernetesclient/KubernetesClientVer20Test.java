@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.kubernetes.client.openapi.ApiCallback;
@@ -27,11 +28,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 class KubernetesClientVer20Test {
 
   private static final String TEST_USER_AGENT = "test-user-agent";
@@ -81,13 +84,16 @@ class KubernetesClientVer20Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                SemanticAttributes.HTTP_URL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                AbstractAssert::isNotNull),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name"))));
@@ -128,14 +134,16 @@ class KubernetesClientVer20Test {
                         .hasException(apiException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                SemanticAttributes.HTTP_URL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(SemanticAttributes.ERROR_TYPE, "451"),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 451),
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                AbstractAssert::isNotNull),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name"))));
@@ -181,13 +189,16 @@ class KubernetesClientVer20Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                SemanticAttributes.HTTP_URL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 200),
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                AbstractAssert::isNotNull),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name")),
@@ -241,14 +252,16 @@ class KubernetesClientVer20Test {
                         .hasException(exceptionReference.get())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                SemanticAttributes.HTTP_URL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(SemanticAttributes.ERROR_TYPE, "451"),
+                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
+                            equalTo(SemanticAttributes.HTTP_STATUS_CODE, 451),
+                            equalTo(SemanticAttributes.NET_PEER_NAME, "127.0.0.1"),
+                            equalTo(SemanticAttributes.NET_PEER_PORT, mockWebServer.httpPort()),
+                            satisfies(
+                                SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH,
+                                AbstractAssert::isNotNull),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name")),
