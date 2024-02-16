@@ -27,7 +27,7 @@ val targets = mapOf(
     ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("sourceVersion" to "9.4.53.v20231009")),
     ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "10.0.19")),
     ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "11.0.19"), "servlet-5.0"),
-    ImageTarget(listOf("12.0.6"), listOf("hotspot"), listOf("17"), mapOf("sourceVersion" to "12.0.6"), "servlet-5.0"),
+    ImageTarget(listOf("12.0.6"), listOf("hotspot", "openj9"), listOf("17", "21"), mapOf("sourceVersion" to "12.0.6"), "servlet-5.0"),
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
