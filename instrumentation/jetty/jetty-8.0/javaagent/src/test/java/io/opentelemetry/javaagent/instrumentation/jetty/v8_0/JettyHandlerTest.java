@@ -62,25 +62,17 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   private static final TestHandler testHandler = new TestHandler();
 
   @Override
-  protected Server setupServer() {
+  protected Server setupServer() throws Exception {
     Server server = new Server(port);
     server.setHandler(testHandler);
     server.addBean(errorHandler);
-    try {
-      server.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    server.start();
     return server;
   }
 
   @Override
-  protected void stopServer(Server server) {
-    try {
-      server.stop();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  protected void stopServer(Server server) throws Exception {
+    server.stop();
   }
 
   @Override

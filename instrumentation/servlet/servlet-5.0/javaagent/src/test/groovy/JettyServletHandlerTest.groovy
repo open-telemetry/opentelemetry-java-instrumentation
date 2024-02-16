@@ -13,6 +13,8 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletHandler
 import spock.lang.IgnoreIf
+import test.AbstractServlet5Test
+import test.TestServlet5
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 

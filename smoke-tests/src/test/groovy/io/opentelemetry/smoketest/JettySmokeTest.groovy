@@ -98,3 +98,19 @@ class Jetty11Jdk21 extends JettySmokeTest {
 @AppServer(version = "11.0.19", jdk = "21-openj9")
 class Jetty11Jdk21Openj9 extends JettySmokeTest {
 }
+
+@AppServer(version = "12.0.6", jdk = "17")
+class Jetty12Jdk17 extends JettySmokeTest {
+}
+
+@AppServer(version = "12.0.6", jdk = "17-openj9")
+class Jetty12Jdk17Openj9 extends JettySmokeTest {
+}
+
+@AppServer(version = "12.0.6", jdk = "21")
+class Jetty12Jdk21 extends JettySmokeTest {
+}
+
+@AppServer(version = "12.0.6", jdk = "21-openj9")
+class Jetty12Jdk21Openj9 extends JettySmokeTest {
+}
