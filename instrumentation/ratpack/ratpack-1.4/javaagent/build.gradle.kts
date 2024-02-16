@@ -55,6 +55,10 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=http")
   }
 
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+
   check {
     dependsOn(testStableSemconv)
   }
