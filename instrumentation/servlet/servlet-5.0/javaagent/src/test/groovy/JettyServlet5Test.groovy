@@ -123,6 +123,13 @@ class JettyServlet5TestAsync extends JettyServlet5Test {
   boolean errorEndpointUsesSendError() {
     false
   }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
+  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -131,6 +138,13 @@ class JettyServlet5TestFakeAsync extends JettyServlet5Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet5.FakeAsync
+  }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
   }
 }
 
@@ -223,6 +237,13 @@ class JettyServlet5TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
+  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -253,6 +274,13 @@ class JettyServlet5TestDispatchAsync extends JettyDispatchTest {
   @Override
   boolean errorEndpointUsesSendError() {
     false
+  }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
   }
 }
 
