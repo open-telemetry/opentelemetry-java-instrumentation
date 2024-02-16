@@ -212,7 +212,7 @@ jobs:
           fi
 
           message="Merge change log updates from $GITHUB_REF_NAME"
-          body="Merge log updates from \`$GITHUB_REF_NAME\`."
+          body="Merge change log updates from \`$GITHUB_REF_NAME\`."
           branch="opentelemetrybot/merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
 
           git checkout -b $branch
