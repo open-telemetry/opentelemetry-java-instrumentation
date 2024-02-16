@@ -34,4 +34,12 @@ public class XxlJobTestingConstants {
           + "    return new ReturnT<>(\"Hello World\")\n"
           + "  }\n"
           + "}\n";
+
+  public static final String GLUE_JOB_GROOVY_SOURCE = "import com.xxl.job.core.handler.IJobHandler\n"
+      + "\n"
+      + "class CustomizedGroovyHandler extends IJobHandler {\n"
+      + "  @Override\n"
+      + "  void execute() throws Exception {\n"
+      + "  }\n"
+      + "}\n";
 }

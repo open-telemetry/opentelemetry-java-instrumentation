@@ -22,6 +22,9 @@ dependencies {
   }
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.1.1") {
+    exclude("org.codehaus.groovy", "groovy")
+  }
 }
 
 tasks.withType<Test>().configureEach {
