@@ -40,7 +40,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
+class JettyHandlerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();

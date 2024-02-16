@@ -36,7 +36,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.Callback;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
+class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
