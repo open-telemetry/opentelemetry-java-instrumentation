@@ -67,7 +67,7 @@ dependencies {
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.1.0")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.6.0")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.0.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.2")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.2"))
