@@ -25,9 +25,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
+import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
+import java.net.InetSocketAddress;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -151,11 +154,16 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "users"))));
   }
 
-  // TODO (trask) this is causing sporadic test failures
-  // @Override
-  // protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
-  //   InetSocketAddress address = new InetSocketAddress("localhost", cassandraPort);
-  //   sessionBuilder.addContactEndPoint(new SniEndPoint(address, "localhost"));
-  //   return sessionBuilder;
-  // }
+  @Override
+  protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
+    InetSocketAddress address = new InetSocketAddress("localhost", cassandraPort);
+    sessionBuilder.addContactEndPoint(
+        new SniEndPoint(address, "localhost") {
+          @Override
+          public InetSocketAddress resolve() {
+            return address;
+          }
+        });
+    return sessionBuilder;
+  }
 }
