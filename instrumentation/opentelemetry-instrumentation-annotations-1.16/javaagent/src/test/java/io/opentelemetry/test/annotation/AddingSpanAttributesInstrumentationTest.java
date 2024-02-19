@@ -101,7 +101,7 @@ class AddingSpanAttributesInstrumentationTest {
 
     new ExtractAttributesUsingAddingSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
 
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
   @Test
