@@ -22,7 +22,7 @@ public class RxJava3Test extends AbstractRxJava3Test {
   }
 
   @BeforeAll
-  public void setupSpec() {
+  public void setup() {
     tracingAssembly.enable();
   }
 }
