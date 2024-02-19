@@ -92,7 +92,7 @@ abstract class SmokeTest {
   }
 
   @AfterEach
-  void cleanup() throws IOException {
+  void reset() throws IOException {
     client
         .newCall(
             new Request.Builder()
