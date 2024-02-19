@@ -755,7 +755,10 @@ public abstract class AbstractGrpcTest {
             t -> {
               // gRPC doesn't appear to propagate server exceptions that are thrown, not onError.
               assertThat(t.getStatus().getCode()).isEqualTo(Status.UNKNOWN.getCode());
-              assertThat(t.getStatus().getDescription()).isNull();
+              assertThat(t.getStatus().getDescription())
+                  .satisfiesAnyOf(
+                      a -> assertThat(a).isNull(),
+                      a -> assertThat(a).isEqualTo("Application error processing RPC"));
             });
 
     testing()

@@ -40,7 +40,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.10.4"
 val errorProneVersion = "2.24.1"
-val byteBuddyVersion = "1.14.11"
+val byteBuddyVersion = "1.14.12"
 val asmVersion = "9.6"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -84,7 +84,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.10.22",
+  "com.uber.nullaway:nullaway:0.10.23",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.6.0",
   "commons-codec:commons-codec:1.16.1",

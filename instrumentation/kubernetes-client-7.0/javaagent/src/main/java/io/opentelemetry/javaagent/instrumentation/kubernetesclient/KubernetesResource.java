@@ -12,7 +12,7 @@ class KubernetesResource {
 
   public static final Pattern CORE_RESOURCE_URL_PATH_PATTERN =
       Pattern.compile(
-          "^/api/v1(/namespaces/(?<namespace>[\\w-]+))?/(?<resource>[\\w-]+)(/(?<name>[\\w-]+))?(/(?<subresource>[\\w-]+))?");
+          "^/api/v1(/namespaces/(?<namespace>[\\w-]+))?/(?<resource>[\\w-]+)(/(?<name>[\\w-]+))?(/(?<subresource>[\\w-]+))?(/.*)?");
 
   public static final Pattern REGULAR_RESOURCE_URL_PATH_PATTERN =
       Pattern.compile(
