@@ -45,26 +45,26 @@ abstract class AbstractRocketMqClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
 
+  private DefaultMQProducer producer;
+
+  private DefaultMQPushConsumer consumer;
+
+  private String sharedTopic;
+
+  private Message msg;
+
+  private final List<Message> msgs = new ArrayList<>();
+
+  private final TracingMessageListener tracingMessageListener = new TracingMessageListener();
+
   abstract InstrumentationExtension testing();
-
-  DefaultMQProducer producer;
-
-  DefaultMQPushConsumer consumer;
-
-  String sharedTopic;
-
-  Message msg;
-
-  List<Message> msgs = new ArrayList<>();
-
-  TracingMessageListener tracingMessageListener = new TracingMessageListener();
 
   abstract void configureMqProducer(DefaultMQProducer producer);
 
   abstract void configureMqPushConsumer(DefaultMQPushConsumer consumer);
 
   @BeforeAll
-  void setupSpec() throws MQClientException, InterruptedException {
+  void setup() throws MQClientException, InterruptedException {
     sharedTopic = BaseConf.initTopic();
     msg = new Message(sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
     Message msg1 =
@@ -85,7 +85,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @AfterAll
-  void cleanupSpec() {
+  void cleanup() {
     if (producer != null) {
       producer.shutdown();
     }
@@ -96,7 +96,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @BeforeEach
-  void setup() {
+  void resetTest() {
     tracingMessageListener.reset();
   }
 
