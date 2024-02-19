@@ -53,6 +53,10 @@ configurations.configureEach {
   exclude("org.spockframework", "spock-core")
 }
 
+springBoot {
+  buildInfo()
+}
+
 graalvmNative {
   binaries.all {
     // Workaround for https://github.com/junit-team/junit5/issues/3405

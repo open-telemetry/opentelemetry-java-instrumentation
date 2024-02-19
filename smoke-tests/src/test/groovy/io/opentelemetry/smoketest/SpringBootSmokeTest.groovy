@@ -98,7 +98,7 @@ class SpringBootSmokeTest extends SmokeTest {
       .map { it.stringValue }
       .findAny()
     serviceName.isPresent()
-    serviceName.get() == "spring-boot"
+    serviceName.get() == "otel-spring-test-app"
 
     then: "service version is autodetected"
     def serviceVersion = findResourceAttribute(traces, "service.version")
