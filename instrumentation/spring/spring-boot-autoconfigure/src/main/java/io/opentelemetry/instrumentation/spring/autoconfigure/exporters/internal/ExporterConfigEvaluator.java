@@ -16,6 +16,10 @@ public final class ExporterConfigEvaluator {
 
   private ExporterConfigEvaluator() {}
 
+  /**
+   * Returns whether the exporter is enabled. This method is used for OTLP, logging and zipkin
+   * exporters.
+   */
   public static boolean isExporterEnabled(
       Environment environment, String exportersKey, String wantExporter, boolean defaultValue) {
 
