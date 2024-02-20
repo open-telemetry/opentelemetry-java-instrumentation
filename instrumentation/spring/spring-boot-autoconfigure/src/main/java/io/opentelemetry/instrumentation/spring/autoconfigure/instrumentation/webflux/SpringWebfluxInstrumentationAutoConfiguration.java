@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.we
 
 import io.opentelemetry.api.OpenTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -21,9 +23,23 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 @ConditionalOnBean(OpenTelemetry.class)
 @ConditionalOnClass(WebClient.class)
-@ConditionalOnProperty(name = "otel.instrumentation.spring-webflux.enabled", matchIfMissing = true)
+@Conditional(SpringWebfluxInstrumentationAutoConfiguration.Condition.class)
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {
+
+  static final class Condition extends AllNestedConditions {
+    public Condition() {
+      super(ConfigurationPhase.PARSE_CONFIGURATION);
+    }
+
+    @ConditionalOnProperty(
+        name = "otel.instrumentation.spring-webflux.enabled",
+        matchIfMissing = true)
+    static class WebFlux {}
+
+    @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
+    static class SdkEnabled {}
+  }
 
   public SpringWebfluxInstrumentationAutoConfiguration() {}
 

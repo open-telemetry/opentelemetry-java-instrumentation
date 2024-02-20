@@ -21,17 +21,34 @@ import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceVersio
 import io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties({OtelResourceProperties.class})
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "otel.springboot.resource", name = "enabled", matchIfMissing = true)
+@Conditional(OtelResourceAutoConfiguration.Condition.class)
 public class OtelResourceAutoConfiguration {
+
+  static final class Condition extends AllNestedConditions {
+    public Condition() {
+      super(ConfigurationPhase.PARSE_CONFIGURATION);
+    }
+
+    @ConditionalOnProperty(
+        prefix = "otel.springboot.resource",
+        name = "enabled",
+        matchIfMissing = true)
+    static class Resource {}
+
+    @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
+    static class SdkEnabled {}
+  }
 
   @Bean
   public ResourceProvider otelEnvironmentResourceProvider() {

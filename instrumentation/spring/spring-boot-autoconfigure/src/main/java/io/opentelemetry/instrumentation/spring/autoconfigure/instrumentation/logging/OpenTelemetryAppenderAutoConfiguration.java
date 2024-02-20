@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 
 @ConditionalOnBean(OpenTelemetry.class)
 @Configuration
+@ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
 @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
 public class OpenTelemetryAppenderAutoConfiguration {
 

@@ -10,21 +10,36 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryInject
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @ConditionalOnClass(OpenTelemetryDriver.class)
-@ConditionalOnProperty(
-    name = "spring.datasource.driver-class-name",
-    havingValue = "io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver")
+@Conditional(OpenTelemetryJdbcDriverAutoConfiguration.Condition.class)
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(
     name = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
 @ConditionalOnBean(name = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
 public class OpenTelemetryJdbcDriverAutoConfiguration {
+
+  static final class Condition extends AllNestedConditions {
+    public Condition() {
+      super(ConfigurationPhase.PARSE_CONFIGURATION);
+    }
+
+    @ConditionalOnProperty(
+        name = "spring.datasource.driver-class-name",
+        havingValue = "io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver")
+    static class Driver {}
+
+    @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
+    static class SdkEnabled {}
+  }
+
   @Bean
   OpenTelemetryInjector injectOtelIntoJdbcDriver() {
     return openTelemetry -> OpenTelemetryDriver.install(openTelemetry);
