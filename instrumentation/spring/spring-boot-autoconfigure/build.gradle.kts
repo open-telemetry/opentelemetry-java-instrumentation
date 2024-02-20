@@ -46,8 +46,8 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-exporter-zipkin")
   compileOnly(project(":instrumentation-annotations"))
 
-  compileOnly(project(":instrumentation:resources:library"))
-  compileOnly(project(":instrumentation:spring:spring-boot-resources:library"))
+  library(project(":instrumentation:resources:library"))
+  library(project(":instrumentation:spring:spring-boot-resources:library"))
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
 
@@ -61,7 +61,6 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-  testImplementation(project(":instrumentation:resources:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
