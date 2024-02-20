@@ -9,7 +9,6 @@ target
 !**/gradle/wrapper/*
 .gradle
 **/build/
-**/generated/
 examples/**/build/
 
 # Eclipse #
