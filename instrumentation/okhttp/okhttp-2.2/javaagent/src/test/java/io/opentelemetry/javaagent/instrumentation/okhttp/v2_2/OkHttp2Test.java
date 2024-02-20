@@ -37,7 +37,7 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   private static final OkHttpClient clientWithReadTimeout = new OkHttpClient();
 
   @BeforeAll
-  void setupSpec() {
+  void setup() {
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     clientWithReadTimeout.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     clientWithReadTimeout.setReadTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);

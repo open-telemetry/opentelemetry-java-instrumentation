@@ -23,7 +23,7 @@ public class RxJava3SubscriptionTest extends AbstractRxJava3SubscriptionTest {
   static TracingAssembly tracingAssembly = TracingAssembly.create();
 
   @BeforeAll
-  public static void setupSpec() {
+  public static void setup() {
     tracingAssembly.enable();
   }
 }
