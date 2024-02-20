@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.resources;
 
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -60,20 +61,17 @@ public abstract class SpringBootBuildInfoDetector implements ConditionalResource
 
   protected Optional<Properties> getPropertiesFromBuildInfo() {
     try (InputStream in = system.openClasspathResource("META-INF", "build-info.properties")) {
-      return in != null ? getPropertiesFromStream(in) : Optional.empty();
+      return in != null ? Optional.of(getPropertiesFromStream(in)) : Optional.empty();
     } catch (Exception e) {
+      logger.log(WARNING, "Failed to read build-info.properties", e);
       return Optional.empty();
     }
   }
 
-  private static Optional<Properties> getPropertiesFromStream(InputStream in) {
+  private static Properties getPropertiesFromStream(InputStream in) throws IOException {
     Properties properties = new Properties();
-    try {
-      // Note: load() uses ISO 8859-1 encoding, same as spring uses by default for property files
-      properties.load(in);
-      return Optional.of(properties);
-    } catch (IOException e) {
-      return Optional.empty();
-    }
+    // Note: load() uses ISO 8859-1 encoding, same as spring uses by default for property files
+    properties.load(in);
+    return properties;
   }
 }
