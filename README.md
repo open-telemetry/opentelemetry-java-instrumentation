@@ -41,6 +41,7 @@
 * [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
 * [Troubleshooting](#troubleshooting)
 * [Contributing](#contributing)
+* [OSHI Jar Setup with Special Configuration](#OSHI Jar Setup with Special Configuration)
 
 ## About
 
@@ -182,3 +183,46 @@ Thanks to all the people who already contributed!
 [manual]: https://opentelemetry.io/docs/instrumentation/java/manual/
 
 [suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation
+
+## OSHI Jar Setup with Special Configuration
+
+Introduction: OSHI (Operating System Hardware Information) is a Java library that provides cross-platform access to information about system hardware, operating system, and JVM. Sometimes, you may need to manually download the OSHI jar file and add it to the system classpath, especially in environments where dependency management tools like Maven or Gradle are not available or suitable.
+
+Step1:
+download oshi-core jar 
+from https://search.maven.org/search?q=g:com.github.oshi%20AND%20a:oshi-core 
+
+
+
+Step2: Adding OSHI Jar to Classpath:
+
+Once you've downloaded the OSHI jar file, you need to add it to the classpath of your Java application.
+
+1. Command Line: You can add the OSHI jar to the classpath using the -cp or -classpath option when running the java command.
+
+Cmd:
+java -cp /path/to/oshi-core-v1.jar MainClass 
+
+Note: In above cmd, v1 denotes the version for the .jar
+
+Replace /path/to/oshi-core-v1.jar with the actual path to the downloaded jar file and MainClass with the main class of your Java application.
+
+2. Environment Variable: Set the CLASSPATH environment variable to include the path to the OSHI jar file.
+
+Cmd:
+export CLASSPATH=/path/to/oshi-core-v1.jar:$CLASSPATH 
+
+
+Note: In above cmd, v1 denotes the version for the .jar
+
+Replace /path/to/oshi-core-v1.jar with the actual path to the downloaded jar file.
+
+3. IDE Setup: If you are using an Integrated Development Environment (IDE) like Eclipse or IntelliJ IDEA, you can add the OSHI jar to your project's build path through the IDE's project settings.
+•	In Eclipse: Right-click on your project, select "Properties" > "Java Build Path" > "Libraries" > "Add External JARs", then select the downloaded OSHI jar.
+•	In IntelliJ IDEA: Right-click on your project, select "Open Module Settings" > "Dependencies" tab, click on the "+" icon, and select "JARs or directories" to add the OSHI jar.
+
+Conclusion: By following the steps mentioned above, you can manually download the OSHI jar file and add it to the system classpath for your Java applications, enabling access to system hardware information and monitoring capabilities provided by OSHI.
+
+
+
+
