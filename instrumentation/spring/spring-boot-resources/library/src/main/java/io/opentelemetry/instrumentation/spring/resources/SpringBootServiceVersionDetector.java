@@ -18,10 +18,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-/**
- * Note: should not be used inside a spring application, where the spring.application.name is
- * already available.
- */
 @AutoService(ResourceProvider.class)
 public class SpringBootServiceVersionDetector implements ResourceProvider {
 

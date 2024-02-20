@@ -17,15 +17,14 @@ import io.opentelemetry.instrumentation.resources.ProcessResourceProvider;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceNameDetector;
+import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceVersionDetector;
 import io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -41,9 +40,8 @@ public class OtelResourceAutoConfiguration {
   }
 
   @Bean
-  public ResourceProvider otelSpringResourceProvider(
-      @Autowired(required = false) BuildProperties buildProperties) {
-    return new SpringResourceProvider(Optional.ofNullable(buildProperties));
+  public ResourceProvider otelSpringResourceProvider() {
+    return new SpringResourceProvider();
   }
 
   @Bean
@@ -53,8 +51,20 @@ public class OtelResourceAutoConfiguration {
 
   @Bean
   @ConditionalOnClass(JarServiceNameDetector.class)
-  public ResourceProvider otelJarResourceProvider() {
+  public ResourceProvider otelJarNameResourceProvider() {
     return new JarServiceNameDetector();
+  }
+
+  @Bean
+  @ConditionalOnClass(SpringBootServiceNameDetector.class)
+  public ResourceProvider otelSpringBootServiceNameResourceProvider() {
+    return new SpringBootServiceNameDetector();
+  }
+
+  @Bean
+  @ConditionalOnClass(SpringBootServiceVersionDetector.class)
+  public ResourceProvider otelSpringBootServiceVersionResourceProvider() {
+    return new SpringBootServiceVersionDetector();
   }
 
   @Bean
