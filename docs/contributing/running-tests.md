@@ -55,7 +55,7 @@ If you are on Windows and you want to run the tests using linux containers:
 USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 ```
 
-If you want to run a specific test from a specific suite:
+If you want to run a specific smoke test:
 
 ```
 ./gradlew :smoke-tests:test --tests '*SpringBootSmokeTest*'
