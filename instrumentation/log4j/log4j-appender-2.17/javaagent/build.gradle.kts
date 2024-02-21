@@ -24,7 +24,7 @@ dependencies {
 
   if (testLatestDeps) {
     // this dependency is needed for the slf4j->log4j test
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:+")
+    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.+")
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
   } else {
     // log4j 2.17 doesn't have an slf4j2 bridge
