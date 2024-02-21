@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.jms.MessagePropertyGetter;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
@@ -32,7 +33,7 @@ public final class JmsSingletons {
 
     PRODUCER_INSTRUMENTER = factory.createProducerInstrumenter();
     CONSUMER_RECEIVE_INSTRUMENTER = factory.createConsumerReceiveInstrumenter();
-    CONSUMER_PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
+    CONSUMER_PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter(false);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {
@@ -53,6 +54,7 @@ public final class JmsSingletons {
     boolean receiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
     Context parentContext = Context.current();
+    // if receive instrumentation is not enabled we'll use the producer as parent
     if (!receiveInstrumentationEnabled) {
       parentContext =
           propagators
@@ -61,14 +63,16 @@ public final class JmsSingletons {
     }
 
     if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
-      InstrumenterUtil.startAndEnd(
-          consumerReceiveInstrumenter(),
-          parentContext,
-          request,
-          null,
-          throwable,
-          timer.startTime(),
-          timer.now());
+      Context receiveContext =
+          InstrumenterUtil.startAndEnd(
+              consumerReceiveInstrumenter(),
+              parentContext,
+              request,
+              null,
+              throwable,
+              timer.startTime(),
+              timer.now());
+      JmsReceiveContextHolder.set(receiveContext);
     }
   }
 

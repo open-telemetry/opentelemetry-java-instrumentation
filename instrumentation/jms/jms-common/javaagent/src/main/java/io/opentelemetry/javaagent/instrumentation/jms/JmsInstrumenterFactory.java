@@ -76,16 +76,26 @@ public final class JmsInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter() {
+  public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter(
+      boolean canHaveReceiveInstrumentation) {
     JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
-    return Instrumenter.<MessageWithDestination, Void>builder(
-            openTelemetry,
-            instrumentationName,
-            MessagingSpanNameExtractor.create(getter, operation))
-        .addAttributesExtractor(createMessagingAttributesExtractor(operation))
-        .buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
+    InstrumenterBuilder<MessageWithDestination, Void> builder =
+        Instrumenter.<MessageWithDestination, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
+    if (canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled) {
+      builder.addSpanLinksExtractor(
+          new PropagatorBasedSpanLinksExtractor<>(
+              openTelemetry.getPropagators().getTextMapPropagator(),
+              MessagePropertyGetter.INSTANCE));
+      return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    } else {
+      return builder.buildConsumerInstrumenter(MessagePropertyGetter.INSTANCE);
+    }
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(

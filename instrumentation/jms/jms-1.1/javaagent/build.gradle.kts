@@ -22,6 +22,7 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:jms:jms-common:bootstrap"))
   implementation(project(":instrumentation:jms:jms-common:javaagent"))
 
   compileOnly("javax.jms:jms-api:1.1-rev-1")
