@@ -62,6 +62,10 @@
   ([#10355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10355))
 - Spring starter: re-use sdk logic for configuring otlp exporters
   ([#10292](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10292))
+  - All available spring starter properties (including the new properties) can be found
+    [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/v2.1.0/instrumentation/spring/spring-boot-autoconfigure/src/main/resources/META-INF/additional-spring-configuration-metadata.json)
+  - You can also use auto-completion in your IDE to see the available properties in
+    `application.properties` or `application.yml`
 - Spring starter: add SystemOutLogRecordExporter
   ([#10420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10420))
 - Spring starter: use duration parser of config properties
