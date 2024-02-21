@@ -10,11 +10,10 @@ import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.resources.Resource;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
@@ -26,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ManifestResourceProviderTest {
 
-  static final String BUILD_PROPS = "build-info.properties";
+  static final String MANIFEST_MF = "MANIFEST.MF";
   static final String META_INFO = "META-INF";
 
   @Mock ConfigProperties config;
@@ -34,22 +33,19 @@ class ManifestResourceProviderTest {
 
   private static class TestCase {
     private final String name;
-    private final Function<SystemHelper, SpringBootBuildInfoDetector> factory;
-    private final AttributeKey<String> key;
-    private final String expected;
-    private final InputStream input;
+      private final String expectedName;
+      private final String expectedVersion;
+      private final InputStream input;
 
     public TestCase(
         String name,
-        Function<SystemHelper, SpringBootBuildInfoDetector> factory,
-        AttributeKey<String> key,
-        String expected,
+        String expectedName,
+        String expectedVersion,
         InputStream input) {
       this.name = name;
-      this.factory = factory;
-      this.key = key;
-      this.expected = expected;
-      this.input = input;
+        this.expectedName = expectedName;
+        this.expectedVersion = expectedVersion;
+        this.input = input;
     }
   }
 
@@ -58,50 +54,33 @@ class ManifestResourceProviderTest {
     return Stream.of(
             new TestCase(
                 "name ok",
-                SpringBootBuildInfoServiceNameDetector::new,
-                SERVICE_NAME,
-                "some-name",
-                openClasspathResource(META_INFO + "/" + BUILD_PROPS)),
-            new TestCase(
-                "version ok",
-                SpringBootServiceVersionDetector::new,
-                SERVICE_VERSION,
-                "0.0.2",
-                openClasspathResource(META_INFO + "/" + BUILD_PROPS)),
+                "demo",
+                "0.0.1-SNAPSHOT",
+                openClasspathResource(MANIFEST_MF)),
             new TestCase(
                 "name - no resource",
-                SpringBootBuildInfoServiceNameDetector::new,
-                SERVICE_NAME,
                 null,
-                null),
-            new TestCase(
-                "version - no resource",
-                SpringBootServiceVersionDetector::new,
-                SERVICE_VERSION,
                 null,
                 null),
             new TestCase(
                 "name - empty resource",
-                SpringBootBuildInfoServiceNameDetector::new,
-                SERVICE_NAME,
                 null,
-                openClasspathResource(BUILD_PROPS)),
-            new TestCase(
-                "version - empty resource",
-                SpringBootServiceVersionDetector::new,
-                SERVICE_VERSION,
                 null,
-                openClasspathResource(BUILD_PROPS)))
+                openClasspathResource("empty-MANIFEST.MF")))
         .map(
             t ->
                 DynamicTest.dynamicTest(
                     t.name,
                     () -> {
-                      when(system.openClasspathResource(META_INFO, BUILD_PROPS))
+                      when(system.openClasspathResource(META_INFO, MANIFEST_MF))
                           .thenReturn(t.input);
 
-                      assertThat(t.factory.apply(system).createResource(config).getAttribute(t.key))
-                          .isEqualTo(t.expected);
+                      ManifestResourceProvider provider = new ManifestResourceProvider(system);
+                      provider.shouldApply(config, Resource.getDefault());
+
+                      Resource resource = provider.createResource(config);
+                      assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(t.expectedName);
+                      assertThat(resource.getAttribute(SERVICE_VERSION)).isEqualTo(t.expectedVersion);
                     }))
         .collect(Collectors.toList());
   }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.resources;
+package io.opentelemetry.instrumentation.resources;
 
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -13,13 +13,13 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class SystemHelper {
+public class SystemHelper {
   private static final Logger logger = Logger.getLogger(SystemHelper.class.getName());
 
   private final ClassLoader classLoader;
   private final boolean addBootInfPrefix;
 
-  SystemHelper() {
+  public SystemHelper() {
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
     classLoader =
         contextClassLoader != null ? contextClassLoader : ClassLoader.getSystemClassLoader();
@@ -29,25 +29,25 @@ class SystemHelper {
     }
   }
 
-  String getenv(String name) {
+  public String getenv(String name) {
     return System.getenv(name);
   }
 
-  String getProperty(String key) {
+  public String getProperty(String key) {
     return System.getProperty(key);
   }
 
-  InputStream openClasspathResource(String filename) {
+  public InputStream openClasspathResource(String filename) {
     String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
     return classLoader.getResourceAsStream(path);
   }
 
-  InputStream openClasspathResource(String directory, String filename) {
+  public InputStream openClasspathResource(String directory, String filename) {
     String path = directory + "/" + filename;
     return classLoader.getResourceAsStream(path);
   }
 
-  InputStream openFile(String filename) throws Exception {
+  public InputStream openFile(String filename) throws Exception {
     return Files.newInputStream(Paths.get(filename));
   }
 
@@ -56,7 +56,7 @@ class SystemHelper {
    * main method arguments). Will only succeed on java 9+.
    */
   @SuppressWarnings("unchecked")
-  String[] attemptGetCommandLineArgsViaReflection() throws Exception {
+  public String[] attemptGetCommandLineArgsViaReflection() throws Exception {
     Class<?> clazz = Class.forName("java.lang.ProcessHandle");
     Method currentMethod = clazz.getDeclaredMethod("current");
     Method infoMethod = clazz.getDeclaredMethod("info");

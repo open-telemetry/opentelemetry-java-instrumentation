@@ -11,7 +11,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Optional;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
@@ -26,23 +25,28 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
   private static final Logger logger = Logger.getLogger(ManifestResourceProvider.class.getName());
 
   public ManifestResourceProvider() {
+    this(new SystemHelper());
+  }
+
+  // Visible for testing
+  ManifestResourceProvider(SystemHelper systemHelper) {
     super(
         new AttributeProvider<Manifest>() {
           @Override
           public Optional<Manifest> readData() {
-            try {
-              Manifest manifest = new Manifest();
-              InputStream systemResourceAsStream =
-                  ClassLoader.getSystemResourceAsStream("META-INF/MANIFEST.MF");
-              if (systemResourceAsStream == null) {
-                return Optional.empty();
-              }
-              manifest.read(systemResourceAsStream);
-              return Optional.of(manifest);
-            } catch (IOException e) {
-              logger.log(WARNING, "Error reading manifest", e);
-              return Optional.empty();
-            }
+            return Optional.ofNullable(
+                    systemHelper.openClasspathResource("META-INF", "MANIFEST.MF"))
+                .flatMap(
+                    s -> {
+                      try {
+                        Manifest manifest = new Manifest();
+                        manifest.read(s);
+                        return Optional.of(manifest);
+                      } catch (IOException e) {
+                        logger.log(WARNING, "Error reading manifest", e);
+                        return Optional.empty();
+                      }
+                    });
           }
 
           @Override
