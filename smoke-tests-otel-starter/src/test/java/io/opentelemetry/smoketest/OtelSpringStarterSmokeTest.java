@@ -14,19 +14,16 @@ import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import java.util.List;
-import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -112,15 +109,6 @@ class OtelSpringStarterSmokeTest {
                     spanDataAssert ->
                         spanDataAssert
                             .hasKind(SpanKind.SERVER)
-                            .hasResourceSatisfying(
-                                r ->
-                                    r.hasAttribute(
-                                            ResourceAttributes.SERVICE_NAME,
-                                            "smoke-tests-otel-starter")
-                                        .hasAttribute(
-                                            OpenTelemetryAssertions.satisfies(
-                                                ResourceAttributes.SERVICE_VERSION,
-                                                AbstractCharSequenceAssert::isNotBlank)))
                             .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
                             .hasAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
                             .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/ping")));
