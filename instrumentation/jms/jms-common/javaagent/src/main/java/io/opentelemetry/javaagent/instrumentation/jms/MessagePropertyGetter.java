@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 
-public enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
+enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   INSTANCE;
 
   @Override
