@@ -33,40 +33,25 @@ class ManifestResourceProviderTest {
 
   private static class TestCase {
     private final String name;
-      private final String expectedName;
-      private final String expectedVersion;
-      private final InputStream input;
+    private final String expectedName;
+    private final String expectedVersion;
+    private final InputStream input;
 
-    public TestCase(
-        String name,
-        String expectedName,
-        String expectedVersion,
-        InputStream input) {
+    public TestCase(String name, String expectedName, String expectedVersion, InputStream input) {
       this.name = name;
-        this.expectedName = expectedName;
-        this.expectedVersion = expectedVersion;
-        this.input = input;
+      this.expectedName = expectedName;
+      this.expectedVersion = expectedVersion;
+      this.input = input;
     }
   }
 
   @TestFactory
   Collection<DynamicTest> createResource() {
     return Stream.of(
+            new TestCase("name ok", "demo", "0.0.1-SNAPSHOT", openClasspathResource(MANIFEST_MF)),
+            new TestCase("name - no resource", null, null, null),
             new TestCase(
-                "name ok",
-                "demo",
-                "0.0.1-SNAPSHOT",
-                openClasspathResource(MANIFEST_MF)),
-            new TestCase(
-                "name - no resource",
-                null,
-                null,
-                null),
-            new TestCase(
-                "name - empty resource",
-                null,
-                null,
-                openClasspathResource("empty-MANIFEST.MF")))
+                "name - empty resource", null, null, openClasspathResource("empty-MANIFEST.MF")))
         .map(
             t ->
                 DynamicTest.dynamicTest(
@@ -80,7 +65,8 @@ class ManifestResourceProviderTest {
 
                       Resource resource = provider.createResource(config);
                       assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(t.expectedName);
-                      assertThat(resource.getAttribute(SERVICE_VERSION)).isEqualTo(t.expectedVersion);
+                      assertThat(resource.getAttribute(SERVICE_VERSION))
+                          .isEqualTo(t.expectedVersion);
                     }))
         .collect(Collectors.toList());
   }

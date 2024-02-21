@@ -10,6 +10,12 @@ import io.opentelemetry.api.common.AttributeKey;
 import java.util.Optional;
 import java.util.function.Function;
 
+/**
+ * An easier alternative to {@link io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider}, which
+ * avoids some common pitfalls and boilerplate.
+ *
+ * <p>An example of how to use this interface can be found in {@link ManifestResourceProvider}.
+ */
 public interface AttributeProvider<D> {
   Optional<D> readData();
 

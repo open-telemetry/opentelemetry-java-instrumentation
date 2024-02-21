@@ -19,6 +19,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
+/**
+ * An easier alternative to {@link io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider}, which
+ * avoids some common pitfalls and boilerplate.
+ *
+ * <p>An example of how to use this interface can be found in {@link ManifestResourceProvider}.
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class AttributeResourceProvider<D> implements ConditionalResourceProvider {
 
