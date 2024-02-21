@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.createReceiveSpan;
+import static io.opentelemetry.javaagent.instrumentation.jms.JmsReceiveSpanUtil.createReceiveSpan;
+import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -74,7 +75,7 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       MessageWithDestination request =
           MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
 
-      createReceiveSpan(request, timer, throwable);
+      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, throwable);
     }
   }
 }

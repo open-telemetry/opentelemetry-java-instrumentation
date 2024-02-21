@@ -6,15 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.jms.MessagePropertyGetter;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
 
 public final class JmsSingletons {
@@ -46,34 +40,6 @@ public final class JmsSingletons {
 
   public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
-  }
-
-  public static void createReceiveSpan(
-      MessageWithDestination request, Timer timer, Throwable throwable) {
-    ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
-    boolean receiveInstrumentationEnabled =
-        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
-    Context parentContext = Context.current();
-    // if receive instrumentation is not enabled we'll use the producer as parent
-    if (!receiveInstrumentationEnabled) {
-      parentContext =
-          propagators
-              .getTextMapPropagator()
-              .extract(parentContext, request, MessagePropertyGetter.INSTANCE);
-    }
-
-    if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
-      Context receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter(),
-              parentContext,
-              request,
-              null,
-              throwable,
-              timer.startTime(),
-              timer.now());
-      JmsReceiveContextHolder.set(receiveContext);
-    }
   }
 
   private JmsSingletons() {}

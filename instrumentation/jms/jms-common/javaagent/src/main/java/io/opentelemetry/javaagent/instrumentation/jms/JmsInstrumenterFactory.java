@@ -60,7 +60,6 @@ public final class JmsInstrumenterFactory {
     JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.RECEIVE;
 
-    // MessageConsumer does not do context propagation
     InstrumenterBuilder<MessageWithDestination, Void> builder =
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
