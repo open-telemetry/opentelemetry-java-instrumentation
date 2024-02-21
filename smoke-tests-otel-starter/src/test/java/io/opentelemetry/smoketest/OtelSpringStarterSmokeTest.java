@@ -38,7 +38,9 @@ import org.springframework.context.annotation.Configuration;
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
-      "otel.exporter.otlp.enabled=false",
+      "otel.traces.exporter=none",
+      "otel.metrics.exporter=none",
+      "otel.logs.exporter=none",
       "otel.metric.export.interval=100",
       "otel.exporter.otlp.headers=a=1,b=2",
       // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
