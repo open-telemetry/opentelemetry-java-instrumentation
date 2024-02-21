@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +16,6 @@ import java.util.List;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -27,20 +27,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(PropagationProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(PropagationAutoConfiguration.Condition.class)
+@ConditionalOnProperty(prefix = "otel.propagation", name = "enabled", matchIfMissing = true)
+@Conditional(SdkEnabled.class)
 public class PropagationAutoConfiguration {
-
-  static final class Condition extends AllNestedConditions {
-    public Condition() {
-      super(ConfigurationPhase.PARSE_CONFIGURATION);
-    }
-
-    @ConditionalOnProperty(prefix = "otel.propagation", name = "enabled", matchIfMissing = true)
-    static class Propagation {}
-
-    @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
-    static class SdkEnabled {}
-  }
 
   private static final List<String> DEFAULT_PROPAGATORS = Arrays.asList("tracecontext", "baggage");
 

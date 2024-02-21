@@ -16,12 +16,12 @@ import io.opentelemetry.instrumentation.resources.ProcessResourceProvider;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceNameDetector;
 import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceVersionDetector;
 import io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,23 +32,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({OtelResourceProperties.class})
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(OtelResourceAutoConfiguration.Condition.class)
+@ConditionalOnProperty(prefix = "otel.springboot.resource", name = "enabled", matchIfMissing = true)
+@Conditional(SdkEnabled.class)
 public class OtelResourceAutoConfiguration {
-
-  static final class Condition extends AllNestedConditions {
-    public Condition() {
-      super(ConfigurationPhase.PARSE_CONFIGURATION);
-    }
-
-    @ConditionalOnProperty(
-        prefix = "otel.springboot.resource",
-        name = "enabled",
-        matchIfMissing = true)
-    static class Resource {}
-
-    @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
-    static class SdkEnabled {}
-  }
 
   @Bean
   public ResourceProvider otelEnvironmentResourceProvider() {
