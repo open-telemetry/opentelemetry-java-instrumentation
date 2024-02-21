@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.resources.ContainerResource;
 import io.opentelemetry.instrumentation.resources.ContainerResourceProvider;
 import io.opentelemetry.instrumentation.resources.HostResource;
 import io.opentelemetry.instrumentation.resources.HostResourceProvider;
-import io.opentelemetry.instrumentation.resources.JarServiceNameDetector;
 import io.opentelemetry.instrumentation.resources.OsResource;
 import io.opentelemetry.instrumentation.resources.OsResourceProvider;
 import io.opentelemetry.instrumentation.resources.ProcessResource;
@@ -47,12 +46,6 @@ public class OtelResourceAutoConfiguration {
   @Bean
   public ResourceProvider otelDistroVersionResourceProvider() {
     return new DistroVersionResourceProvider();
-  }
-
-  @Bean
-  @ConditionalOnClass(JarServiceNameDetector.class)
-  public ResourceProvider otelJarNameResourceProvider() {
-    return new JarServiceNameDetector();
   }
 
   @Bean
