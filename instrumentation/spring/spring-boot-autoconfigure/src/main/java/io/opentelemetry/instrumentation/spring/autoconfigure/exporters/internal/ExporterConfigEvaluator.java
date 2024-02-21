@@ -22,11 +22,6 @@ public final class ExporterConfigEvaluator {
    */
   public static boolean isExporterEnabled(
       Environment environment, String exportersKey, String wantExporter, boolean defaultValue) {
-
-    if (environment.getProperty("otel.sdk.disabled", Boolean.class, false)) {
-      return false;
-    }
-
     String exporter = environment.getProperty(exportersKey);
     if (exporter != null) {
       return Arrays.asList(exporter.split(",")).contains(wantExporter);

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 import io.opentelemetry.exporter.logging.LoggingMetricExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -21,7 +22,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 /** Configures {@link LoggingMetricExporter} bean for tracing. */
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(LoggingMetricExporterAutoConfiguration.CustomCondition.class)
+@Conditional({LoggingMetricExporterAutoConfiguration.CustomCondition.class, SdkEnabled.class})
 @ConditionalOnClass(LoggingMetricExporter.class)
 public class LoggingMetricExporterAutoConfiguration {
 
