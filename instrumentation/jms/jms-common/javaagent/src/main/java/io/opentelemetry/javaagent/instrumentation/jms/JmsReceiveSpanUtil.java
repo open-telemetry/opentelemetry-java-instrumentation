@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 
 public final class JmsReceiveSpanUtil {
   private static final ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
