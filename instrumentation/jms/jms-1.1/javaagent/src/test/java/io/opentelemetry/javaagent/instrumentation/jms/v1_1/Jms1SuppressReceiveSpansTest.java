@@ -10,10 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -22,7 +19,7 @@ import javax.jms.TextMessage;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
-class Jms1InstrumentationTest extends AbstractJms1Test {
+class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
 
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
@@ -50,37 +47,32 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
 
     String messageId = receivedMessage.getJMSMessageID();
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("producer parent").hasNoParent(),
-              span ->
-                  span.hasName(destinationName + " publish")
-                      .hasKind(PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                          equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                          equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                          messagingTempDestination(isTemporary)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("consumer parent").hasNoParent(),
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName(destinationName + " publish")
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
+                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(isTemporary)),
                 span ->
                     span.hasName(destinationName + " receive")
                         .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
+                        .hasTotalRecordedLinks(0)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
                             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
                             equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                             equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                            messagingTempDestination(isTemporary))));
+                            messagingTempDestination(isTemporary))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));
   }
 }

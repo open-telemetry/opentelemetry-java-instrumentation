@@ -14,6 +14,7 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:jms:jms-common:bootstrap"))
   implementation(project(":instrumentation:jms:jms-common:javaagent"))
   implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
   library("org.springframework:spring-jms:2.0")

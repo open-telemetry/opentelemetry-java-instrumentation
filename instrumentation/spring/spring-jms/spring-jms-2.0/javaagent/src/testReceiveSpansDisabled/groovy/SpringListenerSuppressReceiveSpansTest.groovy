@@ -23,7 +23,7 @@ class SpringListenerSuppressReceiveSpansTest extends AgentInstrumentationSpecifi
     assertTraces(1) {
       trace(0, 2) {
         SpringListenerTest.producerSpan(it, 0, "SpringListenerJms2")
-        SpringListenerTest.consumerSpan(it, 1, "SpringListenerJms2", "", span(0), "process")
+        SpringListenerTest.consumerSpan(it, 1, "SpringListenerJms2", "", span(0), null, "process")
       }
     }
 
