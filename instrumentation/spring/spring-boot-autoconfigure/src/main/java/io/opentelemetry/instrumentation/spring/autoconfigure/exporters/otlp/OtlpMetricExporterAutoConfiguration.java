@@ -10,6 +10,7 @@ import io.opentelemetry.exporter.otlp.internal.OtlpMetricExporterProvider;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -24,7 +25,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(OtlpMetricExporterAutoConfiguration.CustomCondition.class)
+@Conditional({OtlpMetricExporterAutoConfiguration.CustomCondition.class, SdkEnabled.class})
 @ConditionalOnClass(OtlpGrpcMetricExporter.class)
 public class OtlpMetricExporterAutoConfiguration {
 

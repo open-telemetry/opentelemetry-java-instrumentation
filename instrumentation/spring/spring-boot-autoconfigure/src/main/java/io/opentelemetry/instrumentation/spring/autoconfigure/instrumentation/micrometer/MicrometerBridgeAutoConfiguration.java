@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -17,6 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
@@ -24,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean({Clock.class, OpenTelemetry.class})
 @ConditionalOnClass(MeterRegistry.class)
 @ConditionalOnProperty(name = "otel.instrumentation.micrometer.enabled")
+@Conditional(SdkEnabled.class)
 @Configuration
 public class MicrometerBridgeAutoConfiguration {
 
