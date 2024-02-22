@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -122,7 +123,7 @@ class HostIdResourceProviderTest {
     if (expectedValue == null) {
       that.isEmpty();
     } else {
-      that.containsEntry(HostIdResourceProvider.HOST_ID, expectedValue);
+      that.containsEntry(ResourceAttributes.HOST_ID, expectedValue);
     }
   }
 
