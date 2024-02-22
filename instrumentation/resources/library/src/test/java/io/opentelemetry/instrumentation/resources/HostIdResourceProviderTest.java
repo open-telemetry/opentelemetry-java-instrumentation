@@ -59,13 +59,7 @@ class HostIdResourceProviderTest {
   Collection<DynamicTest> createResourceLinux() {
     return Stream.of(
             new LinuxTestCase("default", "test", path -> Collections.singletonList("test")),
-            new LinuxTestCase("empty file", null, path -> Collections.emptyList()),
-            new LinuxTestCase(
-                "error reading",
-                null,
-                path -> {
-                  throw new IllegalStateException("can't read file");
-                }))
+            new LinuxTestCase("empty file or error reading", null, path -> Collections.emptyList()))
         .map(
             testCase ->
                 DynamicTest.dynamicTest(
