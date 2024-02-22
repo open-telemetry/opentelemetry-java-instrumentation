@@ -5,9 +5,12 @@ on:
     # daily at 4:00 UTC
     - cron: "0 4 * * *"
   workflow_dispatch:
+  pull_request:
+    types: [ labeled ]
 
 jobs:
-  build:
+  graalvm-native-tests:
+    if: ${{ github.event.label.name == 'native' || github.event.label.name == 'spring boot starter' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -27,8 +30,8 @@ jobs:
 
   workflow-notification:
     needs:
-      - build
-    if: always()
+      - graalvm-native-tests
+    if: github.event_name == 'schedule'
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.build.result == 'success' }}
