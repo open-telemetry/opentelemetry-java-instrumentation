@@ -5,16 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
@@ -22,7 +18,7 @@ import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.junit.jupiter.api.Test;
 
-class PulsarClientTest extends AbstractPulsarClientTest {
+class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
   @Test
   void testSendNonPartitionedTopic() throws Exception {
@@ -71,35 +67,26 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     latch.await(1, TimeUnit.MINUTES);
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic, msgId.toString(), false)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
                 span ->
                     span.hasName(topic + " receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false)),
                 span ->
                     span.hasName(topic + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic, msgId.toString(), false))));
   }
@@ -123,28 +110,20 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     Message<String> receivedMsg = consumer.receive();
     consumer.acknowledge(receivedMsg);
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic, msgId.toString(), false)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
                 span ->
                     span.hasName(topic + " receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
   }
@@ -178,34 +157,26 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     result.get(1, TimeUnit.MINUTES);
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic, msgId.toString(), false)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
                 span ->
                     span.hasName(topic + " receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+                        .hasParent(trace.getSpan(2))));
   }
 
   @Test
@@ -228,28 +199,20 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     Message<String> receivedMsg = consumer.receive(1, TimeUnit.MINUTES);
     consumer.acknowledge(receivedMsg);
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic, msgId.toString(), false)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), false)),
                 span ->
                     span.hasName(topic + " receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
   }
@@ -283,35 +246,26 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     latch.await(1, TimeUnit.MINUTES);
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic, msgId.toString(), true)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId.toString(), true)),
                 span ->
                     span.hasName(topic + " receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), true)),
                 span ->
                     span.hasName(topic + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic, msgId.toString(), true))));
   }
@@ -364,35 +318,26 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     latch.await(1, TimeUnit.MINUTES);
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic + "-partition-0 publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic + "-partition-0", msgId.toString(), false)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + "-partition-0 publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic + "-partition-0", msgId.toString(), false)),
                 span ->
                     span.hasName(topic + "-partition-0 receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic + "-partition-0", msgId.toString(), false)),
                 span ->
                     span.hasName(topic + "-partition-0 process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic + "-partition-0", msgId.toString(), false))));
   }
@@ -425,64 +370,48 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     latch.await(1, TimeUnit.MINUTES);
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    AtomicReference<SpanData> producerSpan2 = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent1", topic1 + " receive", "parent2", topic2 + " receive"),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic1 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic1, msgId1.toString(), false)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
+        orderByRootSpanName("parent1", "parent2"),
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic1 + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic1, msgId1.toString(), false)),
                 span ->
                     span.hasName(topic1 + " receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic1, msgId1.toString(), false)),
                 span ->
                     span.hasName(topic1 + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic1, msgId1.toString(), false))),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(topic2 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic2, msgId2.toString(), false)));
-
-          producerSpan2.set(trace.getSpan(1));
-        },
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic2 + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic2, msgId2.toString(), false)),
                 span ->
                     span.hasName(topic2 + " receive")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic2, msgId2.toString(), false)),
                 span ->
                     span.hasName(topic2 + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic2, msgId2.toString(), false))));
   }
