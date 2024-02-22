@@ -21,13 +21,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-/** {@link ResourceProvider} for automatically configuring <code>host.id</code>. */
+/**
+ * {@link ResourceProvider} for automatically configuring <code>host.id</code> according to <a
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/host.md#non-privileged-machine-id-lookup">the
+ * semantic conventions</a>
+ */
 public final class HostIdResourceProvider implements ConditionalResourceProvider {
 
   private static final Logger logger = Logger.getLogger(HostIdResourceProvider.class.getName());
@@ -43,7 +49,8 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
 
   enum OsType {
     WINDOWS,
-    LINUX
+    LINUX,
+    OTHER
   }
 
   static class ExecResult {
@@ -82,8 +89,11 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
         return readWindowsGuid();
       case LINUX:
         return readLinuxMachineId();
+      case OTHER:
+        break;
     }
-    throw new IllegalStateException("Unsupported OS type: " + osType);
+    logger.info("Unsupported OS type: " + osType);
+    return Resource.empty();
   }
 
   private Resource readLinuxMachineId() {
@@ -99,27 +109,38 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     try {
       List<String> lines = Files.readAllLines(path);
       if (lines.isEmpty()) {
-        logger.warning("Failed to read /etc/machine-id: empty file");
+        logger.info("Failed to read /etc/machine-id: empty file");
       }
       return lines;
     } catch (IOException e) {
-      logger.log(Level.WARNING, "Failed to read /etc/machine-id", e);
+      logger.log(Level.INFO, "Failed to read /etc/machine-id", e);
       return Collections.emptyList();
     }
   }
 
   private static OsType getOsType() {
+    // see
+    // https://github.com/apache/commons-lang/blob/master/src/main/java/org/apache/commons/lang3/SystemUtils.java
+    // for values
     String osName = System.getProperty("os.name");
-    return osName != null && osName.startsWith("Windows") ? OsType.WINDOWS : OsType.LINUX;
+    if (osName == null) {
+      return OsType.OTHER;
+    }
+    if (osName.startsWith("Windows")) {
+      return OsType.WINDOWS;
+    }
+    if (osName.toLowerCase(Locale.ROOT).equals("linux")) {
+      return OsType.LINUX;
+    }
+    return OsType.OTHER;
   }
 
   private Resource readWindowsGuid() {
-
     try {
       ExecResult execResult = queryWindowsRegistry.get();
 
       if (execResult.exitCode != 0) {
-        logger.warning(
+        logger.info(
             "Failed to read Windows registry. Exit code: "
                 + execResult.exitCode
                 + " Output: "
@@ -135,20 +156,28 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
           }
         }
       }
-      logger.warning(
+      logger.info(
           "Failed to read Windows registry: No MachineGuid found in output: " + execResult.lines);
       return Resource.empty();
     } catch (RuntimeException e) {
-      logger.log(Level.WARNING, "Failed to read Windows registry", e);
+      logger.log(Level.INFO, "Failed to read Windows registry", e);
       return Resource.empty();
     }
   }
 
   private static ExecResult queryWindowsRegistry() {
     try {
-      Process process = Runtime.getRuntime().exec(REGISTRY_QUERY);
+      ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", REGISTRY_QUERY);
+      processBuilder.redirectErrorStream(true);
+      Process process = processBuilder.start();
 
-      if (process.waitFor() != 0) {
+      if (!process.waitFor(2, TimeUnit.SECONDS)) {
+        logger.info("Timed out waiting for reg query to complete");
+        process.destroy();
+        return new ExecResult(-1, Collections.emptyList());
+      }
+
+      if (process.exitValue() != 0) {
         return new ExecResult(process.exitValue(), getLines(process.getErrorStream()));
       }
 
