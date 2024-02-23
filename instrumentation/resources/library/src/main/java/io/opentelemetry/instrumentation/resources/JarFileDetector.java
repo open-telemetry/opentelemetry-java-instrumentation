@@ -51,11 +51,15 @@ class JarFileDetector {
 
   @Nullable
   Path getJarPath() {
-    Path jarPath = getJarPathFromProcessHandle();
-    if (jarPath != null) {
-      return jarPath;
-    }
-    return getJarPathFromSunCommandLine();
+    return ResourceDiscoveryCache.get(
+        "jarPath",
+        () -> {
+          Path jarPath = getJarPathFromProcessHandle();
+          if (jarPath != null) {
+            return jarPath;
+          }
+          return getJarPathFromSunCommandLine();
+        });
   }
 
   Optional<Manifest> getManifestFromJarFile() {

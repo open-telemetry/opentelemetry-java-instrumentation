@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -32,6 +33,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class JarServiceNameDetectorTest {
 
   @Mock ConfigProperties config;
+
+  @BeforeEach
+  void setUp() {
+    ResourceDiscoveryCache.resetForTest();
+  }
 
   @Test
   void createResource_empty() {

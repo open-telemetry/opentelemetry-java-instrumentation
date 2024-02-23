@@ -19,10 +19,16 @@ import java.util.Optional;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
 class ManifestResourceProviderTest {
+
+  @BeforeEach
+  void setUp() {
+    ResourceDiscoveryCache.resetForTest();
+  }
 
   private static class TestCase {
     private final String name;
