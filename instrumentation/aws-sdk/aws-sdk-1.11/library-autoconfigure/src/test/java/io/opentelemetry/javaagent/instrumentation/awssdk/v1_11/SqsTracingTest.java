@@ -6,15 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
-import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractSqsTracingTest2;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractSqsTracingTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class SqsTracing2Test extends AbstractSqsTracingTest2 {
+class SqsTracingTest extends AbstractSqsTracingTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {
