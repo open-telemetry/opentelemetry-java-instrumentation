@@ -15,6 +15,9 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
+      skip-native-tests:
+        type: boolean
+        required: false
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY:
         required: false
