@@ -13,6 +13,7 @@ jobs:
   workflow-notification:
     needs:
       - graalvm-native-tests
+    if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.build.result == 'success' }}
