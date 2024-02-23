@@ -8,28 +8,21 @@ package io.opentelemetry.instrumentation.resources;
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 class ManifestResourceProviderTest {
-
-  static final String MANIFEST_MF = "MANIFEST.MF";
-  static final String META_INFO = "META-INF";
-
-  @Mock ConfigProperties config;
-  @Mock SystemHelper system;
 
   private static class TestCase {
     private final String name;
@@ -47,8 +40,10 @@ class ManifestResourceProviderTest {
 
   @TestFactory
   Collection<DynamicTest> createResource() {
+    ConfigProperties config = DefaultConfigProperties.createFromMap(Collections.emptyMap());
+
     return Stream.of(
-            new TestCase("name ok", "demo", "0.0.1-SNAPSHOT", openClasspathResource(MANIFEST_MF)),
+            new TestCase("name ok", "demo", "0.0.1-SNAPSHOT", openClasspathResource("MANIFEST.MF")),
             new TestCase("name - no resource", null, null, null),
             new TestCase(
                 "name - empty resource", null, null, openClasspathResource("empty-MANIFEST.MF")))
@@ -57,10 +52,21 @@ class ManifestResourceProviderTest {
                 DynamicTest.dynamicTest(
                     t.name,
                     () -> {
-                      when(system.openClasspathResource(META_INFO, MANIFEST_MF))
-                          .thenReturn(t.input);
-
-                      ManifestResourceProvider provider = new ManifestResourceProvider(system);
+                      ManifestResourceProvider provider =
+                          new ManifestResourceProvider(
+                              new JarFileDetector(
+                                  () -> JarServiceNameDetectorTest.getArgs("app.jar"),
+                                  prop -> null,
+                                  JarServiceNameDetectorTest::failPath,
+                                  p -> {
+                                    try {
+                                      Manifest manifest = new Manifest();
+                                      manifest.read(t.input);
+                                      return Optional.of(manifest);
+                                    } catch (Exception e) {
+                                      return Optional.empty();
+                                    }
+                                  }));
                       provider.shouldApply(config, Resource.getDefault());
 
                       Resource resource = provider.createResource(config);

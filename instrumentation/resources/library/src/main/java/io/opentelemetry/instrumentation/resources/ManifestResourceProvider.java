@@ -5,15 +5,11 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static java.util.logging.Level.WARNING;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.semconv.ResourceAttributes;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.jar.Manifest;
-import java.util.logging.Logger;
 
 /**
  * A {@link ResourceProvider} that will attempt to detect the <code>service.name</code> and <code>
@@ -22,31 +18,18 @@ import java.util.logging.Logger;
 @AutoService(ResourceProvider.class)
 public final class ManifestResourceProvider extends AttributeResourceProvider<Manifest> {
 
-  private static final Logger logger = Logger.getLogger(ManifestResourceProvider.class.getName());
-
+  @SuppressWarnings("unused") // SPI
   public ManifestResourceProvider() {
-    this(new SystemHelper());
+    this(new JarFileDetector());
   }
 
   // Visible for testing
-  ManifestResourceProvider(SystemHelper systemHelper) {
+  ManifestResourceProvider(JarFileDetector jarFileDetector) {
     super(
         new AttributeProvider<Manifest>() {
           @Override
           public Optional<Manifest> readData() {
-            return Optional.ofNullable(
-                    systemHelper.openClasspathResource("META-INF", "MANIFEST.MF"))
-                .flatMap(
-                    s -> {
-                      try {
-                        Manifest manifest = new Manifest();
-                        manifest.read(s);
-                        return Optional.of(manifest);
-                      } catch (IOException e) {
-                        logger.log(WARNING, "Error reading manifest", e);
-                        return Optional.empty();
-                      }
-                    });
+            return jarFileDetector.getManifestFromJarFile();
           }
 
           @Override

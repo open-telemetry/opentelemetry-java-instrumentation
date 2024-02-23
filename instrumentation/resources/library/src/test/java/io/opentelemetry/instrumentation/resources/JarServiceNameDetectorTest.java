@@ -13,6 +13,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -27,26 +28,34 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+// todo split JarFileDetectorTest and JarServiceNameDetectorTest
 class JarServiceNameDetectorTest {
 
   @Mock ConfigProperties config;
 
   @Test
   void createResource_empty() {
-    JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(
-            () -> new String[0], prop -> null, JarServiceNameDetectorTest::failPath);
+    String[] processArgs = new String[0];
+    Function<String, String> getProperty = prop -> null;
+    Predicate<Path> fileExists = JarServiceNameDetectorTest::failPath;
+    JarServiceNameDetector serviceNameProvider = getDetector(processArgs, getProperty, fileExists);
 
     Resource resource = serviceNameProvider.createResource(config);
 
     assertThat(resource.getAttributes()).isEmpty();
   }
 
+  private static JarServiceNameDetector getDetector(
+      String[] processArgs, Function<String, String> getProperty, Predicate<Path> fileExists) {
+    return new JarServiceNameDetector(
+        new JarFileDetector(() -> processArgs, getProperty, fileExists, p -> Optional.empty()));
+  }
+
   @Test
   void createResource_noJarFileInArgs() {
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar"};
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
+        getDetector(args, prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -55,10 +64,8 @@ class JarServiceNameDetectorTest {
 
   @Test
   void createResource_processHandleJar() {
-    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
-    String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path, "abc", "def"};
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
+        getDetector(getArgs("my-service.jar"), prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -69,16 +76,19 @@ class JarServiceNameDetectorTest {
 
   @Test
   void createResource_processHandleJarWithoutExtension() {
-    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
-    String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar", path};
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> args, prop -> null, JarServiceNameDetectorTest::failPath);
+        getDetector(getArgs("my-service"), prop -> null, JarServiceNameDetectorTest::failPath);
 
     Resource resource = serviceNameProvider.createResource(config);
 
     assertThat(resource.getAttributes())
         .hasSize(1)
         .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
+  }
+
+  static String[] getArgs(String jarName) {
+    String path = Paths.get("path", "to", "app", jarName).toString();
+    return new String[] {"-Dtest=42", "-Xmx666m", "-jar", path, "abc", "def"};
   }
 
   @ParameterizedTest
@@ -89,7 +99,7 @@ class JarServiceNameDetectorTest {
     Predicate<Path> fileExists = jarPath::equals;
 
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists);
+        getDetector(new String[0], getProperty, fileExists);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -107,7 +117,7 @@ class JarServiceNameDetectorTest {
     Predicate<Path> fileExists = path -> false;
 
     JarServiceNameDetector serviceNameProvider =
-        new JarServiceNameDetector(() -> new String[0], getProperty, fileExists);
+        getDetector(new String[0], getProperty, fileExists);
 
     Resource resource = serviceNameProvider.createResource(config);
 
@@ -128,7 +138,7 @@ class JarServiceNameDetectorTest {
     }
   }
 
-  private static boolean failPath(Path file) {
+  static boolean failPath(Path file) {
     throw new AssertionError("Unexpected call to Files.isRegularFile()");
   }
 }
