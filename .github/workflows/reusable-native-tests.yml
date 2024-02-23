@@ -2,6 +2,10 @@ name: Reusable - Native tests
 
 on:
   workflow_call:
+    inputs:
+      skip-native-tests:
+        type: boolean
+        required: false
 
 jobs:
   graalvm-native-tests:
