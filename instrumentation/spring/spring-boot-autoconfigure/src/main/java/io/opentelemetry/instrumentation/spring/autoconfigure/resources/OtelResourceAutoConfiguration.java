@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
-import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceNameDetector;
 import io.opentelemetry.instrumentation.spring.resources.SpringBootServiceVersionDetector;
 import io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
@@ -49,12 +48,6 @@ public class OtelResourceAutoConfiguration {
   @Bean
   public ResourceProvider otelDistroVersionResourceProvider() {
     return new DistroVersionResourceProvider();
-  }
-
-  @Bean
-  @ConditionalOnClass(SpringBootServiceNameDetector.class)
-  public ResourceProvider otelSpringBootServiceNameResourceProvider() {
-    return new SpringBootServiceNameDetector();
   }
 
   @Bean
