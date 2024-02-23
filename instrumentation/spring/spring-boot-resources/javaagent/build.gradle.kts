@@ -1,5 +1,5 @@
 plugins {
-  id("otel.sdk-extension")
+  id("otel.javaagent-instrumentation")
 }
 
 dependencies {
