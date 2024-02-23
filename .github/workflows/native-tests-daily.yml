@@ -1,4 +1,4 @@
-name: GraalVM native tests
+name: Daily GraalVM native tests
 
 on:
   schedule:
