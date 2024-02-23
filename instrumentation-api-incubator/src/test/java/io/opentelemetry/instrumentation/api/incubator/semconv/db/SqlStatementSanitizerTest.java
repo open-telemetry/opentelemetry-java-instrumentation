@@ -113,6 +113,19 @@ public class SqlStatementSanitizerTest {
     }
   }
 
+  @Test
+  public void longInStatementDoesntCauseStackOverflow() {
+    StringBuilder s = new StringBuilder("select col from table where col in (");
+    for (int i = 0; i < 10000; i++) {
+      s.append("?,");
+    }
+    s.append("?)");
+
+    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getFullStatement();
+
+    assertThat(sanitized).isEqualTo("select col from table where col in(?)");
+  }
+
   static class SqlArgs implements ArgumentsProvider {
 
     @Override
