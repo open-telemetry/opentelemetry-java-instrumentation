@@ -119,8 +119,10 @@ public final class PulsarSingletons {
       SpanLinksExtractor<PulsarRequest> spanLinksExtractor =
           new PropagatorBasedSpanLinksExtractor<>(PROPAGATOR, MessageTextMapGetter.INSTANCE);
       instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
+      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    } else {
+      return instrumenterBuilder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
     }
-    return instrumenterBuilder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
