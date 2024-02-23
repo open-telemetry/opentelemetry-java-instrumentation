@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.resources;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.resources.SystemHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
