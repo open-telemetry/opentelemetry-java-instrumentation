@@ -5,33 +5,14 @@ on:
     # daily at 4:00 UTC
     - cron: "0 4 * * *"
   workflow_dispatch:
-  pull_request:
-    types: [ labeled ]
 
 jobs:
   graalvm-native-tests:
-    if: ${{ github.event.label.name == 'native' || github.event.label.name == 'spring boot starter' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'}}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7.1
-        with:
-          version: "latest"
-          java-version: "17"
-          components: "native-image"
-      - name: Running test
-        run: |
-          echo "GRAALVM_HOME: $GRAALVM_HOME"
-          echo "JAVA_HOME: $JAVA_HOME"
-          java --version
-          gu --version
-          native-image --version
-          ./gradlew nativeTest
+    uses: ./.github/workflows/reusable-native-tests
 
   workflow-notification:
     needs:
       - graalvm-native-tests
-    if: github.event_name == 'schedule'
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.build.result == 'success' }}
