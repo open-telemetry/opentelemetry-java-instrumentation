@@ -48,9 +48,7 @@ public abstract class AbstractSqsTracingTest {
       AmazonSQSAsyncClientBuilder client);
 
   private static int sqsPort;
-
   private static SQSRestServer sqsRestServer;
-
   private static AmazonSQSAsync sqsClient;
 
   @BeforeEach
@@ -62,6 +60,7 @@ public abstract class AbstractSqsTracingTest {
         new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"));
     AwsClientBuilder.EndpointConfiguration endpointConfiguration =
         new AwsClientBuilder.EndpointConfiguration("http://localhost:" + sqsPort, "elasticmq");
+
     sqsClient =
         configureClient(AmazonSQSAsyncClient.asyncBuilder())
             .withCredentials(credentials)
@@ -159,6 +158,7 @@ public abstract class AbstractSqsTracingTest {
                                       SemanticAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
                                   equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
+
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
