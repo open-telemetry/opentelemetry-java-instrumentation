@@ -120,7 +120,7 @@ public final class PulsarSingletons {
           new PropagatorBasedSpanLinksExtractor<>(PROPAGATOR, MessageTextMapGetter.INSTANCE);
       instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
     }
-    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    return instrumenterBuilder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
@@ -163,6 +163,11 @@ public final class PulsarSingletons {
       return null;
     }
     if (!receiveInstrumentationEnabled) {
+      // suppress receive span when receive telemetry is not enabled and message is going to be
+      // processed by a listener
+      if (MessageListenerContext.isActive()) {
+        return null;
+      }
       parent = PROPAGATOR.extract(parent, request, MessageTextMapGetter.INSTANCE);
     }
     return InstrumenterUtil.startAndEnd(
@@ -201,11 +206,17 @@ public final class PulsarSingletons {
 
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
+    boolean listenerContextActive = MessageListenerContext.isActive();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
     future.whenComplete(
         (message, throwable) -> {
-          Context context = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
+          // we create a "receive" span when receive telemetry is enabled or when we know that
+          // this message will not be passed to a listener that would create the "process" span
+          Context context =
+              receiveInstrumentationEnabled || !listenerContextActive
+                  ? startAndEndConsumerReceive(parent, message, timer, consumer, throwable)
+                  : parent;
           runWithContext(
               context,
               () -> {

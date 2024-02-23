@@ -78,15 +78,9 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic, msgId.toString(), false)),
                 span ->
-                    span.hasName(topic + " receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            receiveAttributes(topic, msgId.toString(), false)),
-                span ->
                     span.hasName(topic + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic, msgId.toString(), false))));
   }
@@ -257,15 +251,9 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic, msgId.toString(), true)),
                 span ->
-                    span.hasName(topic + " receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            receiveAttributes(topic, msgId.toString(), true)),
-                span ->
                     span.hasName(topic + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic, msgId.toString(), true))));
   }
@@ -329,15 +317,9 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic + "-partition-0", msgId.toString(), false)),
                 span ->
-                    span.hasName(topic + "-partition-0 receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            receiveAttributes(topic + "-partition-0", msgId.toString(), false)),
-                span ->
                     span.hasName(topic + "-partition-0 process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic + "-partition-0", msgId.toString(), false))));
   }
@@ -382,15 +364,9 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic1, msgId1.toString(), false)),
                 span ->
-                    span.hasName(topic1 + " receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            receiveAttributes(topic1, msgId1.toString(), false)),
-                span ->
                     span.hasName(topic1 + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic1, msgId1.toString(), false))),
         trace ->
@@ -403,15 +379,9 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic2, msgId2.toString(), false)),
                 span ->
-                    span.hasName(topic2 + " receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            receiveAttributes(topic2, msgId2.toString(), false)),
-                span ->
                     span.hasName(topic2 + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic2, msgId2.toString(), false))));
   }
