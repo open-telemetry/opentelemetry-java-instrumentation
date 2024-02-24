@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2;
 import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.DEFAULT_GLUE_UPDATE_TIME;
 import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLUE_JOB_GROOVY_SOURCE_OLD;
 import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLUE_JOB_SHELL_SCRIPT;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.xxl.job.core.glue.GlueFactory;
 import com.xxl.job.core.glue.GlueTypeEnum;
@@ -70,5 +71,6 @@ class XxlJobTest extends AbstractXxlJobTest {
   @Override
   public void testMethodJob() {
     // The version [1.9.2~2.1.2) of the module does not support method job.
+    assumeTrue(Boolean.FALSE);
   }
 }

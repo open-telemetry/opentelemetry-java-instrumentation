@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2;
 
+import static io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2.XxlJobSingletons.instrumenter;
+
 import com.xxl.job.core.biz.model.ReturnT;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
