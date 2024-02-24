@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2;
+package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -19,14 +18,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class XxlJobInstrumentationModule extends InstrumentationModule {
 
   public XxlJobInstrumentationModule() {
-    super("xxl-job", "xxl-job-2.1.2");
+    super("xxl-job", "xxl-job-2.3.0");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("com.xxl.job.core.handler.impl.MethodJobHandler")
-        // Class was added in 2.3.0
-        .and(not(hasClassesNamed("com.xxl.job.core.context.XxlJobHelper")));
+        .and(hasClassesNamed("com.xxl.job.core.context.XxlJobHelper"));
   }
 
   @Override

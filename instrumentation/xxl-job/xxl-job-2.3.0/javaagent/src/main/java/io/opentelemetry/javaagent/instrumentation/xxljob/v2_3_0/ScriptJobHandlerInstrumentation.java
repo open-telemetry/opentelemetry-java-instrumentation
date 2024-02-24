@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2;
+package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import com.xxl.job.core.glue.GlueTypeEnum;
 import io.opentelemetry.context.Context;
@@ -19,7 +18,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
@@ -32,7 +30,7 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(isPublic()).and(takesArguments(1).and(takesArgument(0, String.class))),
+        named("execute").and(isPublic()).and(takesNoArguments()),
         ScriptJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
   }
 
@@ -59,12 +57,11 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelRequest") XxlJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      XxlJobHelper.stopSpan(result, request, throwable, scope, context);
+      XxlJobHelper.stopSpan(request, throwable, scope, context);
     }
   }
 }

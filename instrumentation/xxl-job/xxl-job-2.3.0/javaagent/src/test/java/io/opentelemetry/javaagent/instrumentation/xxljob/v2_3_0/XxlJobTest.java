@@ -68,6 +68,11 @@ class XxlJobTest extends AbstractXxlJobTest {
   }
 
   @Override
+  protected IJobHandler getCustomizeFailedHandler() {
+    return new CustomizedFailedHandler();
+  }
+
+  @Override
   protected IJobHandler getMethodHandler() {
     return METHOD_JOB_HANDLER;
   }

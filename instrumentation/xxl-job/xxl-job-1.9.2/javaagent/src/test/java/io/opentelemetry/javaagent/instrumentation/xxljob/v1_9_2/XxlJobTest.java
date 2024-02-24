@@ -15,6 +15,8 @@ import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.handler.impl.GlueJobHandler;
 import com.xxl.job.core.handler.impl.ScriptJobHandler;
 import io.opentelemetry.instrumentation.xxljob.AbstractXxlJobTest;
+import io.opentelemetry.instrumentation.xxljob.CustomizedFailedHandler;
+import io.opentelemetry.instrumentation.xxljob.SimpleCustomizedHandler;
 
 class XxlJobTest extends AbstractXxlJobTest {
 
@@ -37,7 +39,7 @@ class XxlJobTest extends AbstractXxlJobTest {
 
   @Override
   protected String getPackageName() {
-    return "io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2";
+    return "io.opentelemetry.instrumentation.xxljob";
   }
 
   @Override
@@ -56,12 +58,17 @@ class XxlJobTest extends AbstractXxlJobTest {
   }
 
   @Override
+  protected IJobHandler getCustomizeFailedHandler() {
+    return new CustomizedFailedHandler();
+  }
+
+  @Override
   protected IJobHandler getMethodHandler() {
     return null;
   }
 
   @Override
   public void testMethodJob() {
-    // version 1.9.2 does not support method job
+    // The version [1.9.2~2.1.2) of the module does not support method job.
   }
 }

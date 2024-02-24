@@ -6,21 +6,17 @@ muzzle {
   pass {
     group.set("com.xuxueli")
     module.set("xxl-job-core")
-    versions.set("[2.1.2,2.3.0)")
+    versions.set("[2.3.0,)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("com.xuxueli:xxl-job-core:2.1.2") {
+  library("com.xuxueli:xxl-job-core:2.3.0") {
     exclude("org.codehaus.groovy", "groovy")
   }
   implementation(project(":instrumentation:xxl-job:xxl-job-common:javaagent"))
-
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
-  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") {
-    exclude("org.codehaus.groovy", "groovy")
-  }
 }
 
 tasks.withType<Test>().configureEach {

@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -32,7 +33,7 @@ public abstract class AbstractXxlJobTest {
     jobThread.pushTriggerQueue(triggerParam);
     jobThread.start();
     checkXxlJob(
-        "CustomizedGroovyHandler.execute",
+        "CustomizedGroovyHandler.execute", StatusData.unset(),
         "execute",
         GlueTypeEnum.GLUE_GROOVY.getDesc(),
         "CustomizedGroovyHandler");
@@ -48,7 +49,8 @@ public abstract class AbstractXxlJobTest {
     triggerParam.setExecutorTimeout(0);
     jobThread.pushTriggerQueue(triggerParam);
     jobThread.start();
-    checkXxlJobWithoutNamespace("GLUE(Shell).ID-2", "ID-2", GlueTypeEnum.GLUE_SHELL.getDesc());
+    checkXxlJobWithoutNamespace("GLUE(Shell).ID-2", StatusData.unset(), "ID-2",
+        GlueTypeEnum.GLUE_SHELL.getDesc());
     jobThread.toStop("Test finish");
   }
 
@@ -60,7 +62,7 @@ public abstract class AbstractXxlJobTest {
     jobThread.pushTriggerQueue(triggerParam);
     jobThread.start();
     checkXxlJob(
-        "SimpleCustomizedHandler.execute",
+        "SimpleCustomizedHandler.execute", StatusData.unset(),
         "execute",
         GlueTypeEnum.BEAN.getDesc(),
         getPackageName() + ".SimpleCustomizedHandler");
@@ -69,20 +71,34 @@ public abstract class AbstractXxlJobTest {
 
   @Test
   public void testMethodJob() {
-    JobThread jobThread = new JobThread(0, getMethodHandler());
+    JobThread jobThread = new JobThread(4, getMethodHandler());
     TriggerParam triggerParam = new TriggerParam();
     triggerParam.setExecutorTimeout(0);
     jobThread.pushTriggerQueue(triggerParam);
     jobThread.start();
     checkXxlJob(
-        "ReflectObject.echo",
+        "ReflectObject.echo", StatusData.unset(),
         "echo",
         GlueTypeEnum.BEAN.getDesc(),
         "io.opentelemetry.instrumentation.xxljob.ReflectiveMethodsFactory$ReflectObject");
     jobThread.toStop("Test finish");
   }
 
-  protected abstract String getPackageName();
+  @Test
+  void testFailedJob() {
+    JobThread jobThread = new JobThread(5, getCustomizeFailedHandler());
+    TriggerParam triggerParam = new TriggerParam();
+    triggerParam.setExecutorTimeout(0);
+    jobThread.pushTriggerQueue(triggerParam);
+    jobThread.start();
+    checkXxlJob(
+        "CustomizedFailedHandler.execute", StatusData.error(),
+        "execute",
+        GlueTypeEnum.BEAN.getDesc(),
+        getPackageName() + ".CustomizedFailedHandler");
+    jobThread.toStop("Test finish");
+  }
+
 
   protected abstract IJobHandler getGlueJobHandler();
 
@@ -90,18 +106,22 @@ public abstract class AbstractXxlJobTest {
 
   protected abstract IJobHandler getCustomizeHandler();
 
+  protected abstract IJobHandler getCustomizeFailedHandler();
+
   protected abstract IJobHandler getMethodHandler();
 
-  private static void checkXxlJob(String spanName, String... attributes) {
+  protected abstract String getPackageName();
+
+  private static void checkXxlJob(String spanName, StatusData statusData, String... attributes) {
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasKind(SpanKind.INTERNAL)
                     .hasName(spanName)
+                    .hasStatus(statusData)
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
-                        equalTo(AttributeKey.stringKey("scheduling.xxl-job.result.status"), "true"),
                         equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
                         equalTo(
                             AttributeKey.stringKey("scheduling.xxl-job.glue.type"), attributes[1]),
@@ -110,16 +130,17 @@ public abstract class AbstractXxlJobTest {
         });
   }
 
-  private static void checkXxlJobWithoutNamespace(String spanName, String... attributes) {
+  private static void checkXxlJobWithoutNamespace(String spanName, StatusData statusData,
+      String... attributes) {
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasKind(SpanKind.INTERNAL)
                     .hasName(spanName)
+                    .hasStatus(statusData)
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
-                        equalTo(AttributeKey.stringKey("scheduling.xxl-job.result.status"), "true"),
                         equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
                         equalTo(
                             AttributeKey.stringKey("scheduling.xxl-job.glue.type"), attributes[1]));

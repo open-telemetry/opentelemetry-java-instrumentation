@@ -15,10 +15,10 @@ public class XxlJobHelper {
   private XxlJobHelper() {}
 
   public static Context startSpan(Context parentContext, XxlJobProcessRequest request) {
-    if (!XxlJobSingletons.xxlJobProcessInstrumenter().shouldStart(parentContext, request)) {
+    if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
-    return XxlJobSingletons.xxlJobProcessInstrumenter().start(parentContext, request);
+    return instrumenter().start(parentContext, request);
   }
 
   public static void stopSpan(
@@ -27,18 +27,19 @@ public class XxlJobHelper {
       Throwable throwable,
       Scope scope,
       Context context) {
+    if (scope == null) {
+      return;
+    }
     if (result != null && (result instanceof ReturnT)) {
       ReturnT<?> res = (ReturnT<?>) result;
       if (res.getCode() == ReturnT.FAIL_CODE) {
-        request.setResultStatus(Boolean.FALSE.toString());
+        request.setSchedulingSuccess(Boolean.FALSE);
       }
     }
     if (throwable != null) {
-      request.setResultStatus(Boolean.FALSE.toString());
+      request.setSchedulingSuccess(Boolean.FALSE);
     }
-    if (scope != null) {
-      scope.close();
-      XxlJobSingletons.xxlJobProcessInstrumenter().end(context, request, null, throwable);
-    }
+    scope.close();
+    instrumenter().end(context, request, null, throwable);
   }
 }

@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2;
+package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
-import com.xxl.job.core.glue.GlueTypeEnum;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
@@ -20,7 +19,7 @@ import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessReq
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobSpanNameExtractor;
 
 public final class XxlJobSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-1.9.2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-2.3.0";
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       InstrumentationConfig.get()
@@ -52,13 +51,6 @@ public final class XxlJobSingletons {
 
   public static Instrumenter<XxlJobProcessRequest, Void> instrumenter() {
     return INSTRUMENTER;
-  }
-
-  @SuppressWarnings({"Unused", "ReturnValueIgnored"})
-  private static void limitSupportedVersions() {
-    // GLUE_POWERSHELL was added in 1.9.2. Using this constant here ensures that muzzle will disable
-    // this instrumentation on earlier versions where this constant does not exist.
-    GlueTypeEnum.GLUE_POWERSHELL.name();
   }
 
   private XxlJobSingletons() {}

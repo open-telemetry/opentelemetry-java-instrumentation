@@ -32,7 +32,8 @@ public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(isPublic()), ScheduleAdvice.class.getName());
+        named("execute").and(isPublic()),
+        MethodJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
   }
 
   @SuppressWarnings("unused")

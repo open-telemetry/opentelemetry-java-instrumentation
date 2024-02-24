@@ -5,10 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
+import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.IJobHandler;
 
-class SimpleCustomizedHandler extends IJobHandler {
+class CustomizedFailedHandler extends IJobHandler {
 
   @Override
-  public void execute() throws Exception {}
+  public void execute() throws Exception {
+    XxlJobHelper.handleFail();
+  }
 }

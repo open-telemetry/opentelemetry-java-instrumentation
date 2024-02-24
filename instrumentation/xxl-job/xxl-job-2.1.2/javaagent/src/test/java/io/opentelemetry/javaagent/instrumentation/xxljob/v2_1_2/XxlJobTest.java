@@ -20,6 +20,8 @@ import com.xxl.job.core.handler.impl.GlueJobHandler;
 import com.xxl.job.core.handler.impl.MethodJobHandler;
 import com.xxl.job.core.handler.impl.ScriptJobHandler;
 import io.opentelemetry.instrumentation.xxljob.AbstractXxlJobTest;
+import io.opentelemetry.instrumentation.xxljob.CustomizedFailedHandler;
+import io.opentelemetry.instrumentation.xxljob.SimpleCustomizedHandler;
 
 class XxlJobTest extends AbstractXxlJobTest {
 
@@ -49,7 +51,7 @@ class XxlJobTest extends AbstractXxlJobTest {
 
   @Override
   protected String getPackageName() {
-    return "io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2";
+    return "io.opentelemetry.instrumentation.xxljob";
   }
 
   @Override
@@ -65,6 +67,11 @@ class XxlJobTest extends AbstractXxlJobTest {
   @Override
   protected IJobHandler getCustomizeHandler() {
     return new SimpleCustomizedHandler();
+  }
+
+  @Override
+  protected IJobHandler getCustomizeFailedHandler() {
+    return new CustomizedFailedHandler();
   }
 
   @Override

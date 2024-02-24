@@ -15,16 +15,16 @@ public class XxlJobProcessRequest {
 
   private Class<?> declaringClass;
 
-  private String resultStatus = "true";
+  private Boolean schedulingSuccess = Boolean.TRUE;
 
   private GlueTypeEnum glueTypeEnum;
 
-  public String getResultStatus() {
-    return resultStatus;
+  public Boolean getSchedulingSuccess() {
+    return schedulingSuccess;
   }
 
-  public void setResultStatus(String resultStatus) {
-    this.resultStatus = resultStatus;
+  public void setSchedulingSuccess(Boolean schedulingSuccess) {
+    this.schedulingSuccess = schedulingSuccess;
   }
 
   public String getMethodName() {

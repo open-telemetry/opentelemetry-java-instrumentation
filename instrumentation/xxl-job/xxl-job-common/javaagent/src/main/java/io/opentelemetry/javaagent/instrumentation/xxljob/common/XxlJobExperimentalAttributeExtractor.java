@@ -18,9 +18,6 @@ public class XxlJobExperimentalAttributeExtractor
   private static final AttributeKey<String> XXL_JOB_GLUE_TYPE =
       AttributeKey.stringKey("scheduling.xxl-job.glue.type");
 
-  private static final AttributeKey<String> XXL_JOB_RESULT_STATUS =
-      AttributeKey.stringKey("scheduling.xxl-job.result.status");
-
   @Override
   public void onStart(
       AttributesBuilder attributes,
@@ -37,6 +34,5 @@ public class XxlJobExperimentalAttributeExtractor
       XxlJobProcessRequest xxlJobProcessRequest,
       @Nullable Void unused,
       @Nullable Throwable error) {
-    attributes.put(XXL_JOB_RESULT_STATUS, xxlJobProcessRequest.getResultStatus());
   }
 }

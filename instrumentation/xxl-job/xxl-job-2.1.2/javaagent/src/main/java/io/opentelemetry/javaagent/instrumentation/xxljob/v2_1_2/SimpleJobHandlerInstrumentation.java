@@ -17,10 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.handler.IJobHandler;
-import com.xxl.job.core.handler.impl.GlueJobHandler;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
@@ -40,7 +38,8 @@ public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(isPublic()), ScheduleAdvice.class.getName());
+        named("execute").and(isPublic()),
+        SimpleJobHandlerInstrumentation.class.getName() + "$ScheduleAdvice");
   }
 
   public static class ScheduleAdvice {
@@ -53,8 +52,6 @@ public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      VirtualField<GlueJobHandler, IJobHandler> handlerMap =
-          VirtualField.find(GlueJobHandler.class, IJobHandler.class);
       request = new XxlJobProcessRequest();
       request.setDeclaringClass(handler.getClass());
       request.setGlueTypeEnum(GlueTypeEnum.BEAN);

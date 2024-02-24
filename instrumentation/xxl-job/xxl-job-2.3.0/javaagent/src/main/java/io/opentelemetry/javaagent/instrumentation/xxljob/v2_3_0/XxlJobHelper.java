@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2;
+package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2.XxlJobSingletons.instrumenter;
+import static com.xxl.job.core.context.XxlJobContext.HANDLE_COCE_SUCCESS;
+import static io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0.XxlJobSingletons.instrumenter;
 
-import com.xxl.job.core.biz.model.ReturnT;
+import com.xxl.job.core.context.XxlJobContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
@@ -24,17 +25,15 @@ public class XxlJobHelper {
   }
 
   public static void stopSpan(
-      Object result,
-      XxlJobProcessRequest request,
-      Throwable throwable,
-      Scope scope,
-      Context context) {
+      XxlJobProcessRequest request, Throwable throwable, Scope scope, Context context) {
     if (scope == null) {
       return;
     }
-    if (result != null && (result instanceof ReturnT)) {
-      ReturnT<?> res = (ReturnT<?>) result;
-      if (res.getCode() == ReturnT.FAIL_CODE) {
+    // From 2.3.0, XxlJobContext is used to store the result of the job execution.
+    XxlJobContext xxlJobContext = XxlJobContext.getXxlJobContext();
+    if (xxlJobContext != null) {
+      int handleCode = xxlJobContext.getHandleCode();
+      if (handleCode != HANDLE_COCE_SUCCESS) {
         request.setSchedulingSuccess(Boolean.FALSE);
       }
     }

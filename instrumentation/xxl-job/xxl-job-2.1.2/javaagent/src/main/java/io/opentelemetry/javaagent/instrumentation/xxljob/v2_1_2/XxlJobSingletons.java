@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -24,7 +25,7 @@ public final class XxlJobSingletons {
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.xxl-job.experimental-span-attributes", false);
 
-  private static final Instrumenter<XxlJobProcessRequest, Void> XXL_JOB_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<XxlJobProcessRequest, Void> INSTRUMENTER;
 
   static {
     XxlJobSpanNameExtractor spanNameExtractor = new XxlJobSpanNameExtractor();
@@ -32,17 +33,24 @@ public final class XxlJobSingletons {
         Instrumenter.<XxlJobProcessRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(
-                CodeAttributesExtractor.create(new XxlJobCodeAttributesGetter()));
+                CodeAttributesExtractor.create(new XxlJobCodeAttributesGetter()))
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, xxlJobProcessRequest, response, error) -> {
+                  if (error != null
+                      || Boolean.FALSE.equals(xxlJobProcessRequest.getSchedulingSuccess())) {
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  }
+                });
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       builder.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "xxl-job"));
       builder.addAttributesExtractor(new XxlJobExperimentalAttributeExtractor());
     }
-    XXL_JOB_PROCESS_INSTRUMENTER = builder.buildInstrumenter();
+    INSTRUMENTER = builder.buildInstrumenter();
   }
 
-  public static Instrumenter<XxlJobProcessRequest, Void> xxlJobProcessInstrumenter() {
-    return XXL_JOB_PROCESS_INSTRUMENTER;
+  public static Instrumenter<XxlJobProcessRequest, Void> instrumenter() {
+    return INSTRUMENTER;
   }
 
   private XxlJobSingletons() {}
