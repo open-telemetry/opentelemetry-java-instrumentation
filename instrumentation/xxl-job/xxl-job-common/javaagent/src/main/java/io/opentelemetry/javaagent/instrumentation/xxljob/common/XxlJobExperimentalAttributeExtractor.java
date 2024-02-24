@@ -33,6 +33,5 @@ public class XxlJobExperimentalAttributeExtractor
       Context context,
       XxlJobProcessRequest xxlJobProcessRequest,
       @Nullable Void unused,
-      @Nullable Throwable error) {
-  }
+      @Nullable Throwable error) {}
 }
