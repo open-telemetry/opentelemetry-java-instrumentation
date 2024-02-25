@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {
