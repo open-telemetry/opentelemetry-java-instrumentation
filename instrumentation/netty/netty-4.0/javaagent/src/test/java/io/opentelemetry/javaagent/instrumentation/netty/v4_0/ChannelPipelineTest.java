@@ -184,7 +184,6 @@ public class ChannelPipelineTest {
     assertEquals(0, channelPipeline.toMap().size());
   }
 
-  @SuppressWarnings("SystemOut")
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10377
   @Test
