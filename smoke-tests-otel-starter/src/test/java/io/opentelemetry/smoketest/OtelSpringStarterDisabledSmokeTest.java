@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest;
 
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(
@@ -15,6 +16,9 @@ import org.springframework.boot.test.context.SpringBootTest;
       OtelSpringStarterSmokeTest.TestConfiguration.class
     },
     properties = {"otel.sdk.disabled=true"})
+@DisabledInNativeImage // Without this the native tests if the OtelSpringStarterSmokeTest class will
+// fail with org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "TEST_TABLE"
+// already exists
 class OtelSpringStarterDisabledSmokeTest {
 
   @Test
