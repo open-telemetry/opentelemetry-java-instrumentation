@@ -18,6 +18,7 @@ import io.opentelemetry.api.events.GlobalEventEmitterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
+import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.net.URI;
@@ -129,6 +130,22 @@ final class JarAnalyzer implements ClassFileTransformer {
         && !file.endsWith(EAR_EXTENSION)) {
       logger.log(Level.INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
       return;
+    }
+
+    // Payara 5 and 6 have url with file protocol that fail on openStream with
+    // java.io.IOException: no entry name specified
+    //   at
+    // java.base/sun.net.www.protocol.jar.JarURLConnection.getInputStream(JarURLConnection.java:160)
+    // To avoid this here we recreate the URL when it points to a file.
+    if ("file".equals(archiveUrl.getProtocol())) {
+      try {
+        File archiveFile = new File(archiveUrl.toURI().getSchemeSpecificPart());
+        if (archiveFile.exists() && archiveFile.isFile()) {
+          archiveUrl = archiveFile.toURI().toURL();
+        }
+      } catch (Exception e) {
+        logger.log(Level.WARNING, "Unable to normalize location URL: " + archiveUrl, e);
+      }
     }
 
     // Only code locations with .jar and .war extension should make it here

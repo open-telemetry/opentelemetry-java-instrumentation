@@ -9,6 +9,7 @@ import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,7 +29,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @EnableConfigurationProperties(ZipkinSpanExporterProperties.class)
-@Conditional(ZipkinSpanExporterAutoConfiguration.CustomCondition.class)
+@Conditional({ZipkinSpanExporterAutoConfiguration.CustomCondition.class, SdkEnabled.class})
 @ConditionalOnClass(ZipkinSpanExporter.class)
 public class ZipkinSpanExporterAutoConfiguration {
 
@@ -47,12 +48,7 @@ public class ZipkinSpanExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          null,
-          "otel.exporter.zipkin.enabled",
-          "otel.traces.exporter",
-          "zipkin",
-          true);
+          context.getEnvironment(), "otel.traces.exporter", "zipkin", true);
     }
   }
 }

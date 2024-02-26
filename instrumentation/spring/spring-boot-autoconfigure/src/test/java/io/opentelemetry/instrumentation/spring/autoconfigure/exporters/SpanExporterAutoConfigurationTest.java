@@ -42,7 +42,7 @@ class SpanExporterAutoConfigurationTest {
   @Test
   void loggingEnabledByConfiguration() {
     contextRunner
-        .withPropertyValues("otel.exporter.logging.enabled=true")
+        .withPropertyValues("otel.traces.exporter=logging,otlp")
         .run(
             context -> {
               assertThat(context.getBean("otelOtlpSpanExporter", OtlpHttpSpanExporter.class))

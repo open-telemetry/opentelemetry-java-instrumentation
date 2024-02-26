@@ -36,7 +36,23 @@ otelJava {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
 
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("Jms3SuppressReceiveSpansTest")
+    }
+    include("**/Jms3SuppressReceiveSpansTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("Jms3SuppressReceiveSpansTest")
+    }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testReceiveSpansDisabled)
   }
 }

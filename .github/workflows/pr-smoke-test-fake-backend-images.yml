@@ -25,7 +25,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Build Docker image
-        uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # v3.0.0
+        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
         with:
           arguments: ":smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain"
           cache-read-only: true
@@ -50,7 +50,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Build Docker image
-        uses: gradle/gradle-build-action@3b1b3b9a2104c2b47fbae53f3938079c00c9bb87 # v3.0.0
+        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
         with:
           arguments: ":smoke-tests:images:fake-backend:windowsBackendImageBuild"
           cache-read-only: true

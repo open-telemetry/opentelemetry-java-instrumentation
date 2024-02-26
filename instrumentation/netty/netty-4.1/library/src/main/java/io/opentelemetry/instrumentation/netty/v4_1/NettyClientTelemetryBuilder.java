@@ -33,9 +33,17 @@ public final class NettyClientTelemetryBuilder {
   private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
       spanNameExtractorConfigurer = builder -> {};
   private boolean emitExperimentalHttpClientMetrics = false;
+  private boolean emitExperimentalHttpClientEvents = false;
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setEmitExperimentalHttpClientEvents(
+      boolean emitExperimentalHttpClientEvents) {
+    this.emitExperimentalHttpClientEvents = emitExperimentalHttpClientEvents;
+    return this;
   }
 
   /**
@@ -123,6 +131,7 @@ public final class NettyClientTelemetryBuilder {
                 PeerServiceResolver.create(Collections.emptyMap()),
                 emitExperimentalHttpClientMetrics)
             .createHttpInstrumenter(
-                extractorConfigurer, spanNameExtractorConfigurer, additionalAttributesExtractors));
+                extractorConfigurer, spanNameExtractorConfigurer, additionalAttributesExtractors),
+        emitExperimentalHttpClientEvents);
   }
 }

@@ -13,7 +13,9 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.Otlp
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -33,6 +35,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
@@ -57,9 +60,10 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  */
 @Configuration
 @EnableConfigurationProperties({
-  MetricExportProperties.class,
   SamplerProperties.class,
-  OtlpExporterProperties.class
+  OtlpExporterProperties.class,
+  OtelResourceProperties.class,
+  PropagationProperties.class
 })
 public class OpenTelemetryAutoConfiguration {
 
@@ -99,8 +103,16 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     ConfigProperties configProperties(
-        Environment env, OtlpExporterProperties otlpExporterProperties) {
-      return new SpringConfigProperties(env, new SpelExpressionParser(), otlpExporterProperties);
+        Environment env,
+        OtlpExporterProperties otlpExporterProperties,
+        OtelResourceProperties resourceProperties,
+        PropagationProperties propagationProperties) {
+      return new SpringConfigProperties(
+          env,
+          new SpelExpressionParser(),
+          otlpExporterProperties,
+          resourceProperties,
+          propagationProperties);
     }
 
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
@@ -142,25 +154,26 @@ public class OpenTelemetryAutoConfiguration {
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
     @ConditionalOnMissingBean
     public SdkMeterProvider sdkMeterProvider(
-        MetricExportProperties properties,
+        ConfigProperties configProperties,
         ObjectProvider<List<MetricExporter>> metricExportersProvider,
         Resource otelResource) {
 
       SdkMeterProviderBuilder meterProviderBuilder = SdkMeterProvider.builder();
 
       metricExportersProvider.getIfAvailable(Collections::emptyList).stream()
-          .map(metricExporter -> createPeriodicMetricReader(properties, metricExporter))
+          .map(metricExporter -> createPeriodicMetricReader(configProperties, metricExporter))
           .forEach(meterProviderBuilder::registerMetricReader);
 
       return meterProviderBuilder.setResource(otelResource).build();
     }
 
     private static PeriodicMetricReader createPeriodicMetricReader(
-        MetricExportProperties properties, MetricExporter metricExporter) {
+        ConfigProperties properties, MetricExporter metricExporter) {
       PeriodicMetricReaderBuilder metricReaderBuilder =
           PeriodicMetricReader.builder(metricExporter);
-      if (properties.getInterval() != null) {
-        metricReaderBuilder.setInterval(properties.getInterval());
+      Duration interval = properties.getDuration("otel.metric.export.interval");
+      if (interval != null) {
+        metricReaderBuilder.setInterval(interval);
       }
       return metricReaderBuilder.build();
     }

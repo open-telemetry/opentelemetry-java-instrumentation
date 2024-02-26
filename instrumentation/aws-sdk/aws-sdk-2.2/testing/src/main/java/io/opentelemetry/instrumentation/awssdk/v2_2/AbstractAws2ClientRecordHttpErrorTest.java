@@ -51,11 +51,11 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   protected static List<String> httpErrorMessages = new ArrayList<>();
 
   @BeforeAll
-  public static void setupSpec() {
+  public static void setup() {
     server.start();
   }
 
-  public static void cleanupSpec() {
+  public static void cleanup() {
     server.stop();
   }
 

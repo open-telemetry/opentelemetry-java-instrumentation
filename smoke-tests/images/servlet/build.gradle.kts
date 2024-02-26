@@ -27,7 +27,7 @@ val targets = mapOf(
     ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("sourceVersion" to "9.4.53.v20231009")),
     ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "10.0.19")),
     ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "11.0.19"), "servlet-5.0"),
-//    ImageTarget(listOf("12.0.5"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "12.0.5")), //enable once Jetty 12 is supported
+    ImageTarget(listOf("12.0.6"), listOf("hotspot", "openj9"), listOf("17", "21"), mapOf("sourceVersion" to "12.0.6"), "servlet-5.0"),
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
@@ -39,7 +39,9 @@ val targets = mapOf(
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
-    ImageTarget(listOf("6.2023.12"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
+    // Test application is not deployed when server is sarted with hotspot jdk version 21
+    ImageTarget(listOf("6.2023.12"), listOf("hotspot"), listOf("11", "17"), war = "servlet-5.0"),
+    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
@@ -58,7 +60,12 @@ val targets = mapOf(
   "wildfly" to listOf(
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(
-      listOf("17.0.1.Final", "21.0.0.Final", "28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
+      listOf("17.0.1.Final", "21.0.0.Final"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21")
+    ),
+    ImageTarget(
+      listOf("28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
       listOf("hotspot", "openj9"),
       listOf("11", "17", "21"),
       war = "servlet-5.0"

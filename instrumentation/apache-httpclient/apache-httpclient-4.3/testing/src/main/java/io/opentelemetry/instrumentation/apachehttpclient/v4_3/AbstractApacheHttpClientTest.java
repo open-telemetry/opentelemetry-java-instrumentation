@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -54,8 +55,15 @@ public abstract class AbstractApacheHttpClientTest {
     return client;
   }
 
+  abstract static class ApacheHttpClientTest<T> extends AbstractHttpClientTest<T> {
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      optionsBuilder.markAsLowLevelInstrumentation();
+    }
+  }
+
   @Nested
-  class ApacheClientHostRequestTest extends AbstractHttpClientTest<BasicHttpRequest> {
+  class ApacheClientHostRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -92,7 +100,7 @@ public abstract class AbstractApacheHttpClientTest {
   }
 
   @Nested
-  class ApacheClientHostRequestContextTest extends AbstractHttpClientTest<BasicHttpRequest> {
+  class ApacheClientHostRequestContextTest extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -133,7 +141,7 @@ public abstract class AbstractApacheHttpClientTest {
   }
 
   @Nested
-  class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<BasicHttpRequest> {
+  class ApacheClientHostAbsoluteUriRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -170,7 +178,7 @@ public abstract class AbstractApacheHttpClientTest {
 
   @Nested
   class ApacheClientHostAbsoluteUriRequestContextTest
-      extends AbstractHttpClientTest<BasicHttpRequest> {
+      extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -210,7 +218,7 @@ public abstract class AbstractApacheHttpClientTest {
   }
 
   @Nested
-  class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientUriRequestTest extends ApacheHttpClientTest<HttpUriRequest> {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -241,7 +249,7 @@ public abstract class AbstractApacheHttpClientTest {
   }
 
   @Nested
-  class ApacheClientUriRequestContextTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientUriRequestContextTest extends ApacheHttpClientTest<HttpUriRequest> {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {

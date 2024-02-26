@@ -36,18 +36,40 @@ testing {
         implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
         implementation("org.hornetq:hornetq-jms-server:2.4.7.Final")
       }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+          }
+        }
+      }
     }
   }
 }
 
-tasks.withType<Test>().configureEach {
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-}
-
 tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("Jms1SuppressReceiveSpansTest")
+    }
+    include("**/Jms1SuppressReceiveSpansTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("Jms1SuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
   check {
     dependsOn(testing.suites)
+    dependsOn(testReceiveSpansDisabled)
   }
 }
 

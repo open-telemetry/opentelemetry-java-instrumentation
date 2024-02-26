@@ -4,6 +4,12 @@
     "config:base"
   ],
   "ignorePaths": ["instrumentation/**"],
+  "baseBranches": ["main", "release/v1.32.x"],
+  // needed in order to get patch-only updates in package rules below
+  // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
+  // so we have to apply it globally here, see
+  // https://github.com/renovatebot/renovate/discussions/8399#discussioncomment-305798
+  "separateMinorPatch": true,
   "packageRules": [
     {
       "matchPackagePrefixes": ["ch.qos.logback:"],

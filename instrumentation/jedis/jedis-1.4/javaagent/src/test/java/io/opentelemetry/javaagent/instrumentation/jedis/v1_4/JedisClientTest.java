@@ -32,19 +32,19 @@ class JedisClientTest {
   static Jedis jedis;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     redisServer.start();
     port = redisServer.getMappedPort(6379);
     jedis = new Jedis("localhost", port);
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     redisServer.stop();
   }
 
   @BeforeEach
-  void setup() {
+  void reset() {
     jedis.flushAll();
     testing.clearData();
   }

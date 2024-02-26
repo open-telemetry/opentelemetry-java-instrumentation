@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -21,7 +22,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 /** Configures {@link LoggingSpanExporter} bean for tracing. */
 @Configuration
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(LoggingSpanExporterAutoConfiguration.CustomCondition.class)
+@Conditional({LoggingSpanExporterAutoConfiguration.CustomCondition.class, SdkEnabled.class})
 @ConditionalOnClass(LoggingSpanExporter.class)
 public class LoggingSpanExporterAutoConfiguration {
 
@@ -35,12 +36,7 @@ public class LoggingSpanExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.logging.enabled",
-          "otel.exporter.logging.traces.enabled",
-          "otel.traces.exporter",
-          "logging",
-          false);
+          context.getEnvironment(), "otel.traces.exporter", "logging", false);
     }
   }
 }

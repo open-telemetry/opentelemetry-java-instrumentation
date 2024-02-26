@@ -23,7 +23,7 @@ class LoggingMetricExporterAutoConfigurationTest {
                   LoggingMetricExporterAutoConfiguration.class));
 
   @Test
-  void loggingEnabledNew() {
+  void enabled() {
     runner
         .withPropertyValues("otel.metrics.exporter=logging")
         .run(
@@ -34,39 +34,10 @@ class LoggingMetricExporterAutoConfigurationTest {
   }
 
   @Test
-  void loggingEnabled() {
+  void disabled() {
     runner
-        .withPropertyValues("otel.exporter.logging.enabled=true")
-        .run(
-            context ->
-                assertThat(
-                        context.getBean("otelLoggingMetricExporter", LoggingMetricExporter.class))
-                    .isNotNull());
-  }
-
-  @Test
-  void loggingMetricsEnabled() {
-    runner
-        .withPropertyValues("otel.exporter.logging.metrics.enabled=true")
-        .run(
-            context ->
-                assertThat(
-                        context.getBean("otelLoggingMetricExporter", LoggingMetricExporter.class))
-                    .isNotNull());
-  }
-
-  @Test
-  void loggingDisabled() {
-    runner
-        .withPropertyValues("otel.exporter.logging.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelLoggingMetricExporter")).isFalse());
-  }
-
-  @Test
-  void loggingMetricsDisabled() {
-    runner
-        .withPropertyValues("otel.exporter.logging.metrics.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelLoggingMetricExporter")).isFalse());
+        .withPropertyValues("otel.metrics.exporter=none")
+        .run(context -> assertThat(context.containsBean("otelOtlpMetricExporter")).isFalse());
   }
 
   @Test

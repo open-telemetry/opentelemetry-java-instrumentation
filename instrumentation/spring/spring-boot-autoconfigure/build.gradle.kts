@@ -37,8 +37,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
 
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
-  compileOnly("io.opentelemetry:opentelemetry-extension-annotations")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
@@ -47,6 +46,7 @@ dependencies {
   compileOnly(project(":instrumentation-annotations"))
 
   compileOnly(project(":instrumentation:resources:library"))
+  compileOnly(project(":instrumentation:spring:spring-boot-resources:library"))
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
 
@@ -61,8 +61,8 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation(project(":instrumentation:resources:library"))
+  testImplementation(project(":instrumentation:spring:spring-boot-resources:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
-  testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
@@ -127,13 +127,5 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    // disable tests on openj9 18 because they often crash JIT compiler
-    val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
-    val testOnOpenJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
-      ?: false
-    if (testOnOpenJ9 && testJavaVersion?.majorVersion == "18") {
-      enabled = false
-    }
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
@@ -22,14 +23,20 @@ public class SpringConfigProperties implements ConfigProperties {
 
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
+  private final OtelResourceProperties resourceProperties;
+  private final PropagationProperties propagationProperties;
 
   public SpringConfigProperties(
       Environment environment,
       ExpressionParser parser,
-      OtlpExporterProperties otlpExporterProperties) {
+      OtlpExporterProperties otlpExporterProperties,
+      OtelResourceProperties resourceProperties,
+      PropagationProperties propagationProperties) {
     this.environment = environment;
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
+    this.resourceProperties = resourceProperties;
+    this.propagationProperties = propagationProperties;
   }
 
   @Nullable
@@ -71,7 +78,12 @@ public class SpringConfigProperties implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String name) {
-    return (List<String>) environment.getProperty(name, List.class);
+    if (name.equals("otel.propagators")) {
+      return propagationProperties.getPropagators();
+    }
+
+    List<String> value = environment.getProperty(name, List.class);
+    return value == null ? Collections.emptyList() : value;
   }
 
   @Nullable
@@ -90,6 +102,8 @@ public class SpringConfigProperties implements ConfigProperties {
   public Map<String, String> getMap(String name) {
     // maps from config properties are not supported by Environment, so we have to fake it
     switch (name) {
+      case "otel.resource.attributes":
+        return resourceProperties.getAttributes();
       case "otel.exporter.otlp.headers":
         return otlpExporterProperties.getHeaders();
       case "otel.exporter.otlp.logs.headers":
