@@ -16,6 +16,8 @@ import org.slf4j.event.KeyValuePair;
 
 class LoggingEventToReplay implements ILoggingEvent {
 
+  
+
   private final ILoggingEvent loggingEvent;
   private final long timeStamp;
   private StackTraceElement[] callerData;
