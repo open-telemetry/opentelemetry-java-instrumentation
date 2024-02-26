@@ -54,8 +54,8 @@ WHITESPACE          = [ \t\r\n]+
   // max length of the sanitized statement - SQLs longer than this will be trimmed
   static final int LIMIT = 32 * 1024;
 
-  // Match on "IN(?, ?, ...)". This can also match invalid sql syntax like IN(?,,), which is a tradeoff to avoid stack overflows
-  private static final Pattern IN_STATEMENT_PATTERN = Pattern.compile("\\sin\\s*\\(\\s*\\?[\\s?,]*?\\)", Pattern.CASE_INSENSITIVE);
+  // Match on "IN(?, ?, ...)"
+  private static final Pattern IN_STATEMENT_PATTERN = Pattern.compile("(\\sin\\s*)\\(\\s*\\?\\s*(,\\s*\\?\\s*)*+\\)", Pattern.CASE_INSENSITIVE);
   private static final String IN_STATEMENT_NORMALIZED = " in(?)";
 
   private final StringBuilder builder = new StringBuilder();
