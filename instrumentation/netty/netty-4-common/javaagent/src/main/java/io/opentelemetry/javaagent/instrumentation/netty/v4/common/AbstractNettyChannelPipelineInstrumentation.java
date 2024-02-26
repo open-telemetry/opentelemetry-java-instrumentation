@@ -167,16 +167,13 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           pipeline.remove(ourHandler);
         }
         virtualField.set(handler, null);
-      } else if (handler
-          .getClass()
-          .getName()
-          .startsWith("io.opentelemetry.javaagent.instrumentation.netty.")) {
-        handler = pipeline.removeLast();
-      } else if (handler
-          .getClass()
-          .getName()
-          .startsWith("io.opentelemetry.instrumentation.netty.")) {
-        handler = pipeline.removeLast();
+      } else {
+        String handlerClassName = handler.getClass().getName();
+        if (handlerClassName.endsWith("TracingHandler")
+            && (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
+                || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty."))) {
+          handler = pipeline.removeLast();
+        }
       }
     }
   }
@@ -210,8 +207,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
       for (Iterator<ChannelHandler> iterator = map.values().iterator(); iterator.hasNext(); ) {
         ChannelHandler handler = iterator.next();
         String handlerClassName = handler.getClass().getName();
-        if (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
-            || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty.")) {
+        if (handlerClassName.endsWith("TracingHandler")
+            && (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
+                || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty."))) {
           iterator.remove();
         }
       }

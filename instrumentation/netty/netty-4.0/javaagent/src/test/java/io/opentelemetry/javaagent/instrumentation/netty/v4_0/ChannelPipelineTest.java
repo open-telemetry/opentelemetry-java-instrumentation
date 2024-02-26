@@ -118,7 +118,7 @@ public class ChannelPipelineTest {
 
     // only the noop handler
     assertEquals(noopHandler, channelPipeline.first());
-    assertEquals(0, channelPipeline.toMap().size());
+    assertEquals(1, channelPipeline.toMap().size());
 
     if ("by instance".equals(desc)) {
       channelPipeline.replace(noopHandler, "http", httpHandler);
@@ -168,20 +168,23 @@ public class ChannelPipelineTest {
     // instrumentation handler is between http and noop handlers
     assertEquals(channelPipeline.first(), httpHandler);
     assertEquals(channelPipeline.last(), noopHandler);
-    assertEquals(1, channelPipeline.toMap().size());
+    assertEquals(2, channelPipeline.toMap().size());
 
-    ChannelHandler removed = channelPipeline.removeLast();
-    assertEquals(httpHandler, removed);
-    assertEquals(0, channelPipeline.toMap().size());
+    // http and instrumentation handlers will remain when last handler is removed
+    {
+      ChannelHandler removed = channelPipeline.removeLast();
+      assertEquals(noopHandler, removed);
+      assertEquals(channelPipeline.first(), httpHandler);
+      assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
+      assertEquals(1, channelPipeline.toMap().size());
+    }
 
-    // http and instrumentation handlers will be remained; noop handler will be removed
-    // but in reality, line 162 will remove http, instrumentation, and noop handlers
-    assertTrue(
-        channelPipeline.first() == null
-            || "io.netty.channel.DefaultChannelPipeline$TailHandler"
-                .equals(channelPipeline.first().getClass().getName()));
-    assertNull(channelPipeline.last());
-    assertEquals(0, channelPipeline.toMap().size());
+    // there is no handler in pipeline when last handler is removed
+    {
+      ChannelHandler removed = channelPipeline.removeLast();
+      assertEquals(httpHandler, removed);
+      assertEquals(0, channelPipeline.toMap().size());
+    }
   }
 
   // regression test for
