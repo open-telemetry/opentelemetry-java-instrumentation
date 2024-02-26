@@ -8,7 +8,7 @@ on:
 
 jobs:
   graalvm-native-tests:
-    uses: ./.github/workflows/reusable-native-tests
+    uses: ./.github/workflows/reusable-native-tests.yml
 
   workflow-notification:
     needs:
