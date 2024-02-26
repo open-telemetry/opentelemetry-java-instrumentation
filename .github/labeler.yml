@@ -1,4 +1,5 @@
 test native:
+- all:
   - changed-files:
       - any-glob-to-any-file:
           - instrumentation/logback/logback-appender-10/library/**
