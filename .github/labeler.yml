@@ -9,7 +9,4 @@ test native:
       - all-globs-to-all-files: '!instrumentation/spring/**/javaagent/**'
 
 test native:
-- all:
-
-test native:
  - head-branch: ['^renovate']
