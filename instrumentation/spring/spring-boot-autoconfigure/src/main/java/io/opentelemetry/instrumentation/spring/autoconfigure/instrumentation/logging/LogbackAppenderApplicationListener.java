@@ -63,10 +63,23 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
       if (existingOpenTelemetryAppender.isPresent()) {
         reInitializeOpenTelemetryAppender(
             existingOpenTelemetryAppender, applicationEnvironmentPreparedEvent);
-      } else {
+      } else if (isLogbackAppenderAddable(applicationEnvironmentPreparedEvent)) {
         addOpenTelemetryAppender(applicationEnvironmentPreparedEvent);
       }
     }
+  }
+
+  private static boolean isLogbackAppenderAddable(
+      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
+    Boolean otelSdkDisableProperty =
+        evaluateBooleanProperty(applicationEnvironmentPreparedEvent, "otel.sdk.disabled");
+    Boolean logbackInstrumentationEnabledProperty =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-appender.enabled");
+    return otelSdkDisableProperty == null
+        || !otelSdkDisableProperty.booleanValue()
+        || logbackInstrumentationEnabledProperty == null
+        || logbackInstrumentationEnabledProperty.booleanValue();
   }
 
   private static void reInitializeOpenTelemetryAppender(
