@@ -39,7 +39,7 @@ class VertxRedisClientTest {
   private static RedisAPI redis;
 
   @BeforeAll
-  static void setupSpec() throws Exception {
+  static void setup() throws Exception {
     redisServer.start();
     port = redisServer.getMappedPort(6379);
 
@@ -51,7 +51,7 @@ class VertxRedisClientTest {
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     redis.close();
     client.close();
     redisServer.stop();

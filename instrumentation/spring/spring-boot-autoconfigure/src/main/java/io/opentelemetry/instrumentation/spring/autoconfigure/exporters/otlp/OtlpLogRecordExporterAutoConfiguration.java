@@ -10,6 +10,7 @@ import io.opentelemetry.exporter.otlp.internal.OtlpLogRecordExporterProvider;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal.ExporterConfigEvaluator;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -22,7 +23,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
-@Conditional(OtlpLogRecordExporterAutoConfiguration.CustomCondition.class)
+@Conditional({OtlpLogRecordExporterAutoConfiguration.CustomCondition.class, SdkEnabled.class})
 @ConditionalOnClass(OtlpGrpcLogRecordExporter.class)
 public class OtlpLogRecordExporterAutoConfiguration {
 
@@ -36,12 +37,7 @@ public class OtlpLogRecordExporterAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       return ExporterConfigEvaluator.isExporterEnabled(
-          context.getEnvironment(),
-          "otel.exporter.otlp.enabled",
-          "otel.exporter.otlp.logs.enabled",
-          "otel.logs.exporter",
-          "otlp",
-          true);
+          context.getEnvironment(), "otel.logs.exporter", "otlp", true);
     }
   }
 }

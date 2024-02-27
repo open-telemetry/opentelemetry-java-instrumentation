@@ -23,16 +23,19 @@ public class SpringConfigProperties implements ConfigProperties {
 
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
+  private final OtelResourceProperties resourceProperties;
   private final PropagationProperties propagationProperties;
 
   public SpringConfigProperties(
       Environment environment,
       ExpressionParser parser,
       OtlpExporterProperties otlpExporterProperties,
+      OtelResourceProperties resourceProperties,
       PropagationProperties propagationProperties) {
     this.environment = environment;
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
+    this.resourceProperties = resourceProperties;
     this.propagationProperties = propagationProperties;
   }
 
@@ -78,6 +81,7 @@ public class SpringConfigProperties implements ConfigProperties {
     if (name.equals("otel.propagators")) {
       return propagationProperties.getPropagators();
     }
+
     List<String> value = environment.getProperty(name, List.class);
     return value == null ? Collections.emptyList() : value;
   }
@@ -98,6 +102,8 @@ public class SpringConfigProperties implements ConfigProperties {
   public Map<String, String> getMap(String name) {
     // maps from config properties are not supported by Environment, so we have to fake it
     switch (name) {
+      case "otel.resource.attributes":
+        return resourceProperties.getAttributes();
       case "otel.exporter.otlp.headers":
         return otlpExporterProperties.getHeaders();
       case "otel.exporter.otlp.logs.headers":

@@ -14,6 +14,7 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:jms:jms-common:bootstrap"))
   implementation(project(":instrumentation:jms:jms-common:javaagent"))
   implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
 
@@ -34,9 +35,25 @@ otelJava {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
 
+  val testReceiveSpansDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("SpringListenerSuppressReceiveSpansTest")
+    }
+    include("**/SpringListenerSuppressReceiveSpansTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
+    }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testReceiveSpansDisabled)
   }
 }

@@ -19,6 +19,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {

@@ -1,0 +1,28 @@
+name: Reusable - Native tests
+
+on:
+  workflow_call:
+    inputs:
+      skip-native-tests:
+        type: boolean
+        required: false
+
+jobs:
+  graalvm-native-tests:
+    if: "!inputs.skip-native-tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: graalvm/setup-graalvm@5c3001733f88c5e6475916e448f865429d2c154e # v1.1.8.1
+        with:
+          version: "latest"
+          java-version: "17"
+          components: "native-image"
+      - name: Running test
+        run: |
+          echo "GRAALVM_HOME: $GRAALVM_HOME"
+          echo "JAVA_HOME: $JAVA_HOME"
+          java --version
+          gu --version
+          native-image --version
+          ./gradlew nativeTest

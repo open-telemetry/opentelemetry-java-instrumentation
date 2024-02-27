@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -51,7 +52,7 @@ public final class RpcClientMetrics implements OperationListener {
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   public static OperationMetrics get() {
-    return RpcClientMetrics::new;
+    return OperationMetricsUtil.create("rpc client", RpcClientMetrics::new);
   }
 
   @Override

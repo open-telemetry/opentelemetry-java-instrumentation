@@ -9,7 +9,6 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
-import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -28,12 +27,10 @@ final class CassandraNetworkAttributesGetter
     if (coordinator == null) {
       return null;
     }
-    // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
-      return (InetSocketAddress) coordinator.getEndPoint().resolve();
-    } else if (endPoint instanceof SniEndPoint) {
-      return ((SniEndPoint) endPoint).resolve();
+      // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
+      return (InetSocketAddress) endPoint.resolve();
     }
     return null;
   }

@@ -140,7 +140,7 @@ class OpenTelemetryAutoConfigurationTest {
         .withConfiguration(
             AutoConfigurations.of(
                 OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .withPropertyValues("otel.springboot.resource.attributes.service.name=otel-name-backend")
+        .withPropertyValues("otel.resource.attributes.service.name=otel-name-backend")
         .run(
             context -> {
               Resource otelResource = context.getBean("otelResource", Resource.class);
@@ -157,9 +157,9 @@ class OpenTelemetryAutoConfigurationTest {
             AutoConfigurations.of(
                 OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
         .withPropertyValues(
-            "otel.springboot.resource.attributes.xyz=foo",
-            "otel.springboot.resource.attributes.environment=dev",
-            "otel.springboot.resource.attributes.service.instance.id=id-example")
+            "otel.resource.attributes.xyz=foo",
+            "otel.resource.attributes.environment=dev",
+            "otel.resource.attributes.service.instance.id=id-example")
         .run(
             context -> {
               Resource otelResource = context.getBean("otelResource", Resource.class);

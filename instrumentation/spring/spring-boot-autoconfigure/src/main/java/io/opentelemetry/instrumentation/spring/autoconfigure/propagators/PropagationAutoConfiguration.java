@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.propagators;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.BeanFactory;
@@ -18,15 +20,18 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 /** Configures {@link ContextPropagators} bean for propagation. */
 @Configuration
-@EnableConfigurationProperties(DeprecatedPropagationProperties.class)
+@EnableConfigurationProperties(PropagationProperties.class)
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.propagation", name = "enabled", matchIfMissing = true)
-@SuppressWarnings("deprecation")
+@Conditional(SdkEnabled.class)
 public class PropagationAutoConfiguration {
+
+  private static final List<String> DEFAULT_PROPAGATORS = Arrays.asList("tracecontext", "baggage");
 
   @Bean
   @ConditionalOnMissingBean
@@ -43,11 +48,9 @@ public class PropagationAutoConfiguration {
 
     @Bean
     TextMapPropagator compositeTextMapPropagator(
-        BeanFactory beanFactory,
-        DeprecatedPropagationProperties properties,
-        ConfigProperties configProperties) {
+        BeanFactory beanFactory, ConfigProperties configProperties) {
       return CompositeTextMapPropagatorFactory.getCompositeTextMapPropagator(
-          beanFactory, configProperties.getList("otel.propagators", properties.getType()));
+          beanFactory, configProperties.getList("otel.propagators", DEFAULT_PROPAGATORS));
     }
   }
 }
