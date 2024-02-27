@@ -4,7 +4,7 @@
     "config:base"
   ],
   "ignorePaths": ["instrumentation/**"],
-  "baseBranches": ["main", "release/v1.32.x"],
+  "baseBranches": ["main", "release/v1.33.x"],
   // needed in order to get patch-only updates in package rules below
   // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
   // so we have to apply it globally here, see
