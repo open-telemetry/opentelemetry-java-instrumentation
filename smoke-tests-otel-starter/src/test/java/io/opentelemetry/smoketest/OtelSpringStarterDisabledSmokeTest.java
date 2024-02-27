@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
       OtelSpringStarterSmokeTest.TestConfiguration.class
     },
     properties = {"otel.sdk.disabled=true"})
-@DisabledInNativeImage // Without this the native tests if the OtelSpringStarterSmokeTest class will
+@DisabledInNativeImage // Without this the native tests in the OtelSpringStarterSmokeTest class will
 // fail with org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "TEST_TABLE"
 // already exists
 class OtelSpringStarterDisabledSmokeTest {
