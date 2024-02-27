@@ -160,11 +160,11 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 
 - [Lauri Tulmin](https://github.com/laurit), Splunk
-- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
 Emeritus maintainers:
 
+- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Tyler Benson](https://github.com/tylerbenson)
 
