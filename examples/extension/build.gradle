@@ -26,7 +26,7 @@ ext {
     opentelemetrySdk           : "1.34.1",
 
     // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "1.32.1",
+    opentelemetryJavaagent     : "2.1.0",
     opentelemetryJavaagentAlpha: "1.32.1-alpha",
 
     junit                      : "5.10.2"
