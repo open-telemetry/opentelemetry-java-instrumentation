@@ -12,24 +12,23 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * A {@link ResourceProvider} that will attempt to detect the application name from the jar name.
+ * A {@link ResourceProvider} that will attempt to detect the application version from the jar name.
  */
 @AutoService(ResourceProvider.class)
-public final class JarServiceNameDetector extends JarResourceDetector {
+public final class JarServiceVersionDetector extends JarResourceDetector {
 
   @SuppressWarnings("unused") // SPI
-  public JarServiceNameDetector() {
+  public JarServiceVersionDetector() {
     this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
   }
 
   // visible for tests
-  JarServiceNameDetector(
+  JarServiceVersionDetector(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
       Predicate<Path> fileExists) {
@@ -39,11 +38,12 @@ public final class JarServiceNameDetector extends JarResourceDetector {
   @Override
   protected void registerAttributes(
       PriorityResourceProvider<NameAndVersion>.AttributeBuilder attributeBuilder) {
+
     attributeBuilder.add(
-        ResourceAttributes.SERVICE_NAME,
+        ResourceAttributes.SERVICE_VERSION,
         d -> {
-          logger.log(FINE, "Auto-detected service.name from the jar file: {0}", d.name);
-          return Optional.of(d.name);
+          logger.log(FINE, "Auto-detected service.version from the jar file: {0}", d.version);
+          return d.version;
         });
   }
 }
