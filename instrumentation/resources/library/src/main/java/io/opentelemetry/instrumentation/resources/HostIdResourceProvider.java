@@ -92,7 +92,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       case OTHER:
         break;
     }
-    logger.info("Unsupported OS type: " + osType);
+    logger.fine("Unsupported OS type: " + osType);
     return Resource.empty();
   }
 
@@ -109,11 +109,11 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     try {
       List<String> lines = Files.readAllLines(path);
       if (lines.isEmpty()) {
-        logger.info("Failed to read /etc/machine-id: empty file");
+        logger.fine("Failed to read /etc/machine-id: empty file");
       }
       return lines;
     } catch (IOException e) {
-      logger.log(Level.INFO, "Failed to read /etc/machine-id", e);
+      logger.log(Level.FINE, "Failed to read /etc/machine-id", e);
       return Collections.emptyList();
     }
   }
@@ -140,7 +140,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       ExecResult execResult = queryWindowsRegistry.get();
 
       if (execResult.exitCode != 0) {
-        logger.info(
+        logger.fine(
             "Failed to read Windows registry. Exit code: "
                 + execResult.exitCode
                 + " Output: "
@@ -156,11 +156,11 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
           }
         }
       }
-      logger.info(
+      logger.fine(
           "Failed to read Windows registry: No MachineGuid found in output: " + execResult.lines);
       return Resource.empty();
     } catch (RuntimeException e) {
-      logger.log(Level.INFO, "Failed to read Windows registry", e);
+      logger.log(Level.FINE, "Failed to read Windows registry", e);
       return Resource.empty();
     }
   }
@@ -172,7 +172,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       Process process = processBuilder.start();
 
       if (!process.waitFor(2, TimeUnit.SECONDS)) {
-        logger.info("Timed out waiting for reg query to complete");
+        logger.fine("Timed out waiting for reg query to complete");
         process.destroy();
         return new ExecResult(-1, Collections.emptyList());
       }
