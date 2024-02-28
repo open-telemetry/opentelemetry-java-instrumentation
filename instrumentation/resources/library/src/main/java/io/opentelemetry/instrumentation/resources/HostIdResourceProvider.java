@@ -168,7 +168,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
             "Failed to read Windows registry. Exit code: "
                 + exitedValue
                 + " Output: "
-                + String.join("\n", getLines(process.getErrorStream())));
+                + String.join("\n", getLines(process.getInputStream())));
 
         return Collections.emptyList();
       }
