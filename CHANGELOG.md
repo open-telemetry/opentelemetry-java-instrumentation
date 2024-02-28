@@ -1,5 +1,19 @@
 # Changelog
 
+## Version 1.33.0 (2024-02-28)
+
+### Migration notes
+
+- The deprecated Jaeger exporter has been removed
+  ([#10524](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10524))
+
+### 📈 Enhancements
+
+- Backport: Set route only on the SERVER span
+  ([#10580](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10580))
+- Update the OpenTelemetry SDK version to 1.35.0
+  ([#10524](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10524))
+
 ## Version 1.32.1 (2024-02-02)
 
 ### 📈 Enhancements
