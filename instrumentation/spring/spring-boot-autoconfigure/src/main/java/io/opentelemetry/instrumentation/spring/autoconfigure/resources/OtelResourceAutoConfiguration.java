@@ -20,7 +20,6 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled
 import io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,9 +42,8 @@ public class OtelResourceAutoConfiguration {
   }
 
   @Bean
-  public ResourceProvider otelSpringResourceProvider(
-      @Autowired(required = false) BuildProperties buildProperties) {
-    return new SpringResourceProvider(Optional.ofNullable(buildProperties));
+  public ResourceProvider otelSpringResourceProvider(Optional<BuildProperties> buildProperties) {
+    return new SpringResourceProvider(buildProperties);
   }
 
   @Bean
