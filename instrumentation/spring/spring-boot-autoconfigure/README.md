@@ -76,11 +76,6 @@ For Maven, add to your `pom.xml` dependencies:
   <!-- opentelemetry exporters-->
   <dependency>
     <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporter-jaeger</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporter-zipkin</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
@@ -129,7 +124,6 @@ For Gradle, add to your dependencies:
 
 ```groovy
 //opentelemetry exporter
-implementation("io.opentelemetry:opentelemetry-exporter-jaeger:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-exporter-zipkin:OPENTELEMETRY_VERSION")
 implementation("io.opentelemetry:opentelemetry-exporter-otlp:OPENTELEMETRY_VERSION")
 
@@ -384,7 +378,7 @@ public class OpenTelemetryConfig {}
 
 #### Exporter Configurations
 
-This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Jaeger](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/jaeger), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
+This package provides auto configurations for [OTLP](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp), [Zipkin](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/zipkin), and [Logging](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/logging) Span Exporters.
 
 If an exporter is present in the classpath during runtime and a spring bean of the exporter is missing from the spring application context. An exporter bean is initialized and added to a simple span processor in the active tracer provider. Check out the implementation [here](./src/main/java/io/opentelemetry/instrumentation/spring/autoconfigure/OpenTelemetryAutoConfiguration.java).
 
@@ -399,7 +393,6 @@ If an exporter is present in the classpath during runtime and a spring bean of t
 | spring-webflux   | otel.instrumentation.spring-webflux.enabled | `true`        | WebClient              |
 | @WithSpan        | otel.instrumentation.annotations.enabled    | `true`        | WithSpan, Aspect       |
 | Otlp Exporter    | otel.exporter.otlp.enabled                  | `true`        | OtlpGrpcSpanExporter   |
-| Jaeger Exporter  | otel.exporter.jaeger.enabled                | `true`        | JaegerGrpcSpanExporter |
 | Zipkin Exporter  | otel.exporter.zipkin.enabled                | `true`        | ZipkinSpanExporter     |
 | Logging Exporter | otel.exporter.logging.enabled               | `true`        | LoggingSpanExporter    |
 
@@ -431,9 +424,7 @@ otel.springboot.resource.attributes.xyz=foo
 | --------------- | ----------------------------- | ------------------------------------ |
 | Otlp Exporter   | otel.exporter.otlp.endpoint   | `localhost:4317`                     |
 |                 | otel.exporter.otlp.timeout    | `1s`                                 |
-| Jaeger Exporter | otel.exporter.jaeger.endpoint | `localhost:14250`                    |
-|                 | otel.exporter.jaeger.timeout  | `1s`                                 |
-| Zipkin Exporter | otel.exporter.jaeger.endpoint | `http://localhost:9411/api/v2/spans` |
+| Zipkin Exporter | otel.exporter.zipkin.endpoint | `http://localhost:9411/api/v2/spans` |
 
 ##### Tracer Properties
 

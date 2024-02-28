@@ -1,6 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration,\
-io.opentelemetry.instrumentation.spring.autoconfigure.exporters.jaeger.JaegerSpanExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.logging.LoggingSpanExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpMetricExporterAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.OtlpSpanExporterAutoConfiguration,\
