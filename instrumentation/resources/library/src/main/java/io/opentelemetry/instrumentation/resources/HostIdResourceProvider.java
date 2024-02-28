@@ -11,11 +11,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +24,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * {@link ResourceProvider} for automatically configuring <code>host.id</code> according to <a
@@ -154,11 +150,13 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     try {
       ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", REGISTRY_QUERY);
       processBuilder.redirectErrorStream(true);
+      File tempFile = File.createTempFile("otel", "regquery");
+      processBuilder.redirectOutput(tempFile);
       Process process = processBuilder.start();
 
       if (!process.waitFor(2, TimeUnit.SECONDS)) {
-        logger.fine("Timed out waiting for reg query to complete");
         process.destroy();
+        logger.fine("Timed out waiting for reg query to complete");
         return Collections.emptyList();
       }
 
@@ -168,22 +166,20 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
             "Failed to read Windows registry. Exit code: "
                 + exitedValue
                 + " Output: "
-                + String.join("\n", getLines(process.getInputStream())));
+                + String.join("\n", getLines(tempFile)));
 
         return Collections.emptyList();
       }
 
-      return getLines(process.getInputStream());
+      return getLines(tempFile);
     } catch (IOException | InterruptedException e) {
       logger.log(Level.FINE, "Failed to read Windows registry", e);
       return Collections.emptyList();
     }
   }
 
-  private static List<String> getLines(InputStream inputStream) {
-    return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-        .lines()
-        .collect(Collectors.toList());
+  private static List<String> getLines(File tempFile) throws IOException {
+    return Files.readAllLines(tempFile.toPath());
   }
 
   @Override
