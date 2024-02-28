@@ -43,12 +43,10 @@ class HostIdResourceProviderTest {
   private static class WindowsTestCase {
     private final String name;
     private final String expectedValue;
-    private final Supplier<HostIdResourceProvider.ExecResult> queryWindowsRegistry;
+    private final Supplier<List<String>> queryWindowsRegistry;
 
     private WindowsTestCase(
-        String name,
-        String expectedValue,
-        Supplier<HostIdResourceProvider.ExecResult> queryWindowsRegistry) {
+        String name, String expectedValue, Supplier<List<String>> queryWindowsRegistry) {
       this.name = name;
       this.expectedValue = expectedValue;
       this.queryWindowsRegistry = queryWindowsRegistry;
@@ -81,19 +79,10 @@ class HostIdResourceProviderTest {
                 "default",
                 "test",
                 () ->
-                    new HostIdResourceProvider.ExecResult(
-                        0,
-                        Arrays.asList(
-                            "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
-                            "    MachineGuid    REG_SZ    test"))),
-            new WindowsTestCase(
-                "error code",
-                null,
-                () -> new HostIdResourceProvider.ExecResult(1, Collections.emptyList())),
-            new WindowsTestCase(
-                "short output",
-                null,
-                () -> new HostIdResourceProvider.ExecResult(0, Collections.emptyList())))
+                    Arrays.asList(
+                        "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
+                        "    MachineGuid    REG_SZ    test")),
+            new WindowsTestCase("short output", null, Collections::emptyList))
         .map(
             testCase ->
                 DynamicTest.dynamicTest(

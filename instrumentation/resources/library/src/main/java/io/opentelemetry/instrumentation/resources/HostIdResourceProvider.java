@@ -45,7 +45,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
 
   private final Function<Path, List<String>> machineIdReader;
 
-  private final Supplier<ExecResult> queryWindowsRegistry;
+  private final Supplier<List<String>> queryWindowsRegistry;
 
   enum OsType {
     WINDOWS,
@@ -75,7 +75,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
   HostIdResourceProvider(
       Supplier<OsType> getOsType,
       Function<Path, List<String>> machineIdReader,
-      Supplier<ExecResult> queryWindowsRegistry) {
+      Supplier<List<String>> queryWindowsRegistry) {
     this.getOsType = getOsType;
     this.machineIdReader = machineIdReader;
     this.queryWindowsRegistry = queryWindowsRegistry;
@@ -136,36 +136,21 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
   }
 
   private Resource readWindowsGuid() {
-    try {
-      ExecResult execResult = queryWindowsRegistry.get();
+    List<String> lines = queryWindowsRegistry.get();
 
-      if (execResult.exitCode != 0) {
-        logger.fine(
-            "Failed to read Windows registry. Exit code: "
-                + execResult.exitCode
-                + " Output: "
-                + String.join("\n", execResult.lines));
-        return Resource.empty();
-      }
-
-      for (String line : execResult.lines) {
-        if (line.contains("MachineGuid")) {
-          String[] parts = line.trim().split("\\s+");
-          if (parts.length == 3) {
-            return Resource.create(Attributes.of(ResourceAttributes.HOST_ID, parts[2]));
-          }
+    for (String line : lines) {
+      if (line.contains("MachineGuid")) {
+        String[] parts = line.trim().split("\\s+");
+        if (parts.length == 3) {
+          return Resource.create(Attributes.of(ResourceAttributes.HOST_ID, parts[2]));
         }
       }
-      logger.fine(
-          "Failed to read Windows registry: No MachineGuid found in output: " + execResult.lines);
-      return Resource.empty();
-    } catch (RuntimeException e) {
-      logger.log(Level.FINE, "Failed to read Windows registry", e);
-      return Resource.empty();
     }
+    logger.fine("Failed to read Windows registry: No MachineGuid found in output: " + lines);
+    return Resource.empty();
   }
 
-  private static ExecResult queryWindowsRegistry() {
+  private static List<String> queryWindowsRegistry() {
     try {
       ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", REGISTRY_QUERY);
       processBuilder.redirectErrorStream(true);
@@ -174,16 +159,24 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       if (!process.waitFor(2, TimeUnit.SECONDS)) {
         logger.fine("Timed out waiting for reg query to complete");
         process.destroy();
-        return new ExecResult(-1, Collections.emptyList());
+        return Collections.emptyList();
       }
 
-      if (process.exitValue() != 0) {
-        return new ExecResult(process.exitValue(), getLines(process.getErrorStream()));
+      int exitedValue = process.exitValue();
+      if (exitedValue != 0) {
+        logger.fine(
+            "Failed to read Windows registry. Exit code: "
+                + exitedValue
+                + " Output: "
+                + String.join("\n", getLines(process.getErrorStream())));
+
+        return Collections.emptyList();
       }
 
-      return new ExecResult(0, getLines(process.getInputStream()));
+      return getLines(process.getInputStream());
     } catch (IOException | InterruptedException e) {
-      throw new IllegalStateException(e);
+      logger.log(Level.FINE, "Failed to read Windows registry", e);
+      return Collections.emptyList();
     }
   }
 
