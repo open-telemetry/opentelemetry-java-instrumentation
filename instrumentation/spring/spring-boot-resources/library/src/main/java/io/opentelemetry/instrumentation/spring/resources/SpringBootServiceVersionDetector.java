@@ -18,6 +18,10 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+/**
+ * Note: The spring starter already includes provider in
+ * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
+ */
 @AutoService(ResourceProvider.class)
 public class SpringBootServiceVersionDetector implements ResourceProvider {
 

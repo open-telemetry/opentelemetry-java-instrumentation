@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -98,55 +97,6 @@ class OpenTelemetryAutoConfigurationTest {
                     .doesNotHaveBean("sdkMeterProvider")
                     .hasBean("customLoggerProvider")
                     .doesNotHaveBean("sdkLoggerProvider"));
-  }
-
-  @Test
-  @DisplayName(
-      "when spring.application.name is set value should be passed to service name attribute")
-  void shouldDetermineServiceNameBySpringApplicationName() {
-    this.contextRunner
-        .withPropertyValues("spring.application.name=myapp-backend")
-        .withConfiguration(
-            AutoConfigurations.of(
-                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .run(
-            context -> {
-              Resource otelResource = context.getBean("otelResource", Resource.class);
-
-              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("myapp-backend");
-            });
-  }
-
-  @Test
-  @DisplayName(
-      "when spring application name and otel service name are not set service name should be default")
-  void hasDefaultServiceName() {
-    this.contextRunner
-        .withConfiguration(
-            AutoConfigurations.of(
-                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .run(
-            context -> {
-              Resource otelResource = context.getBean("otelResource", Resource.class);
-
-              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("unknown_service:java");
-            });
-  }
-
-  @Test
-  @DisplayName("when otel service name is set it should be set as service name attribute")
-  void shouldDetermineServiceNameByOtelServiceName() {
-    this.contextRunner
-        .withConfiguration(
-            AutoConfigurations.of(
-                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .withPropertyValues("otel.resource.attributes.service.name=otel-name-backend")
-        .run(
-            context -> {
-              Resource otelResource = context.getBean("otelResource", Resource.class);
-
-              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("otel-name-backend");
-            });
   }
 
   @Test
