@@ -11,11 +11,13 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -150,9 +152,9 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     try {
       ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", REGISTRY_QUERY);
       processBuilder.redirectErrorStream(true);
-      File tempFile = File.createTempFile("otel", "regquery");
-      processBuilder.redirectOutput(tempFile);
       Process process = processBuilder.start();
+
+      List<String> output = getProcessOutput(process);
 
       if (!process.waitFor(2, TimeUnit.SECONDS)) {
         process.destroy();
@@ -166,20 +168,31 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
             "Failed to read Windows registry. Exit code: "
                 + exitedValue
                 + " Output: "
-                + String.join("\n", getLines(tempFile)));
+                + String.join("\n", output));
 
         return Collections.emptyList();
       }
 
-      return getLines(tempFile);
+      return output;
     } catch (IOException | InterruptedException e) {
       logger.log(Level.FINE, "Failed to read Windows registry", e);
       return Collections.emptyList();
     }
   }
 
-  private static List<String> getLines(File tempFile) throws IOException {
-    return Files.readAllLines(tempFile.toPath());
+  public static List<String> getProcessOutput(Process process)
+      throws IOException, InterruptedException {
+    List<String> result = new ArrayList<>();
+
+    try (BufferedReader processOutputReader =
+        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+      String readLine;
+
+      while ((readLine = processOutputReader.readLine()) != null) {
+        result.add(readLine);
+      }
+    }
+    return result;
   }
 
   @Override
