@@ -46,7 +46,6 @@ dependencies {
   compileOnly(project(":instrumentation-annotations"))
 
   compileOnly(project(":instrumentation:resources:library"))
-  compileOnly(project(":instrumentation:spring:spring-boot-resources:library"))
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
 
