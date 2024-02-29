@@ -12,6 +12,16 @@
   "separateMinorPatch": true,
   "packageRules": [
     {
+      "matchPackageNames": [
+        "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator"
+      ],
+      // Renovate's default behavior is only to update from unstable -> unstable if it's for the
+      // major.minor.patch, under the assumption that you would want to update to the stable version
+      // of that release instead of the unstable version for a future release
+      // (but there's never any stable version of these artifacts so this logic doesn't apply)
+      "ignoreUnstable": false
+    },
+    {
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "groupName": "logback packages"
     },
