@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -22,7 +23,6 @@ import org.springframework.web.client.RestTemplate;
  * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization
  */
 @ConditionalOnBean(OpenTelemetry.class)
-@ConditionalOnClass(RestTemplate.class)
 @ConditionalOnProperty(name = "otel.instrumentation.spring-web.enabled", matchIfMissing = true)
 @Conditional(SdkEnabled.class)
 @Configuration
@@ -30,9 +30,17 @@ public class SpringWebInstrumentationAutoConfiguration {
 
   public SpringWebInstrumentationAutoConfiguration() {}
 
+  @ConditionalOnClass(RestTemplate.class)
   @Bean
   static RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new RestTemplateBeanPostProcessor(openTelemetryProvider);
+  }
+
+  @ConditionalOnClass(RestClient.class)
+  @Bean
+  static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
+    ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+      return new RestClientBeanPostProcessor(openTelemetryProvider);
   }
 }
