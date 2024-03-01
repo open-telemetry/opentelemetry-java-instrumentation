@@ -11,7 +11,7 @@ import static java.util.Collections.unmodifiableSet;
 import java.util.HashSet;
 import java.util.Set;
 
-public class XxlJobConstants {
+public final class XxlJobConstants {
 
   private XxlJobConstants() {}
 

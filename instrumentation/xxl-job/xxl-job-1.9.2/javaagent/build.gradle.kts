@@ -17,6 +17,9 @@ dependencies {
   }
   implementation(project(":instrumentation:xxl-job:xxl-job-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent"))
+  testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
+
   // It needs the javax.annotation-api in xxl-job-core 1.9.2.
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0.XxlJobSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
@@ -45,10 +46,8 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = new XxlJobProcessRequest();
-      request.setGlueTypeEnum(glueTypeEnum);
-      request.setJobId(jobId);
-      context = XxlJobHelper.startSpan(parentContext, request);
+      request = XxlJobProcessRequest.createScriptJobRequest(glueTypeEnum, jobId);
+      context = helper().startSpan(parentContext, request);
       if (context == null) {
         return;
       }
@@ -61,7 +60,7 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") XxlJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      XxlJobHelper.stopSpan(request, throwable, scope, context);
+      helper().stopSpan(request, throwable, scope, context);
     }
   }
 }

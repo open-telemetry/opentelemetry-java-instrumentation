@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2.XxlJobSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.xxl.job.core.glue.GlueTypeEnum;
-import com.xxl.job.core.handler.annotation.XxlJob;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -40,24 +39,14 @@ public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
   public static class ScheduleAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onSchedule(
-        @Advice.FieldValue("target") Object declaringClass,
+        @Advice.FieldValue("target") Object target,
         @Advice.FieldValue("method") Method method,
         @Advice.Local("otelRequest") XxlJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = new XxlJobProcessRequest();
-      request.setGlueTypeEnum(GlueTypeEnum.BEAN);
-      if (method != null) {
-        XxlJob xxlJobAnnotation = method.getAnnotation(XxlJob.class);
-        String annotationName = method.getName();
-        if (xxlJobAnnotation != null) {
-          annotationName = xxlJobAnnotation.value();
-        }
-        request.setMethodName(annotationName);
-      }
-      request.setDeclaringClass(declaringClass.getClass());
-      context = XxlJobHelper.startSpan(parentContext, request);
+      request = XxlJobProcessRequest.createMethodJobRequest(target, method);
+      context = helper().startSpan(parentContext, request);
       if (context == null) {
         return;
       }
@@ -71,7 +60,7 @@ public class MethodJobHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") XxlJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      XxlJobHelper.stopSpan(result, request, throwable, scope, context);
+      helper().stopSpan(result, request, throwable, scope, context);
     }
   }
 }

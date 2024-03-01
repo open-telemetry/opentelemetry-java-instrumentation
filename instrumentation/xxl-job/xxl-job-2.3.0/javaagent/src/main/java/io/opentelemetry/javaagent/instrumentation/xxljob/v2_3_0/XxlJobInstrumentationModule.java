@@ -23,8 +23,8 @@ public class XxlJobInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.xxl.job.core.handler.impl.MethodJobHandler")
-        .and(hasClassesNamed("com.xxl.job.core.context.XxlJobHelper"));
+    return hasClassesNamed(
+        "com.xxl.job.core.handler.impl.MethodJobHandler", "com.xxl.job.core.context.XxlJobHelper");
   }
 
   @Override

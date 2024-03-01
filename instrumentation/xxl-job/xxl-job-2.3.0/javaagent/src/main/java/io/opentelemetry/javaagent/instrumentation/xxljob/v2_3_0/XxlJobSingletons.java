@@ -5,52 +5,33 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import static com.xxl.job.core.context.XxlJobContext.HANDLE_COCE_SUCCESS;
+
+import com.xxl.job.core.context.XxlJobContext;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobCodeAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobExperimentalAttributeExtractor;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobHelper;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobSpanNameExtractor;
 
 public final class XxlJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-2.3.0";
+  private static final Instrumenter<XxlJobProcessRequest, Void> INSTRUMENTER =
+      XxlJobInstrumenterFactory.create(INSTRUMENTATION_NAME);
+  private static final XxlJobHelper HELPER =
+      XxlJobHelper.create(
+          INSTRUMENTER,
+          unused -> {
+            // From 2.3.0, XxlJobContext is used to store the result of the job execution.
+            XxlJobContext xxlJobContext = XxlJobContext.getXxlJobContext();
+            if (xxlJobContext != null) {
+              int handleCode = xxlJobContext.getHandleCode();
+              return handleCode != HANDLE_COCE_SUCCESS;
+            }
+            return false;
+          });
 
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.xxl-job.experimental-span-attributes", false);
-
-  private static final Instrumenter<XxlJobProcessRequest, Void> INSTRUMENTER;
-
-  static {
-    XxlJobSpanNameExtractor spanNameExtractor = new XxlJobSpanNameExtractor();
-    InstrumenterBuilder<XxlJobProcessRequest, Void> builder =
-        Instrumenter.<XxlJobProcessRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(
-                CodeAttributesExtractor.create(new XxlJobCodeAttributesGetter()))
-            .setSpanStatusExtractor(
-                (spanStatusBuilder, xxlJobProcessRequest, response, error) -> {
-                  if (error != null
-                      || Boolean.FALSE.equals(xxlJobProcessRequest.getSchedulingSuccess())) {
-                    spanStatusBuilder.setStatus(StatusCode.ERROR);
-                  }
-                });
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      builder.addAttributesExtractor(
-          AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "xxl-job"));
-      builder.addAttributesExtractor(new XxlJobExperimentalAttributeExtractor());
-    }
-    INSTRUMENTER = builder.buildInstrumenter();
-  }
-
-  public static Instrumenter<XxlJobProcessRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+  public static XxlJobHelper helper() {
+    return HELPER;
   }
 
   private XxlJobSingletons() {}

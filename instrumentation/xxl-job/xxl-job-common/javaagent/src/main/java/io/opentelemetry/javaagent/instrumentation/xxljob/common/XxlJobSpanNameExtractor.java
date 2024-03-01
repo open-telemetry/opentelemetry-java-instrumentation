@@ -8,26 +8,23 @@ package io.opentelemetry.javaagent.instrumentation.xxljob.common;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.SCRIPT_JOB_TYPE;
 
 import com.xxl.job.core.glue.GlueTypeEnum;
-import io.opentelemetry.api.internal.StringUtils;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
-public class XxlJobSpanNameExtractor implements SpanNameExtractor<XxlJobProcessRequest> {
+class XxlJobSpanNameExtractor implements SpanNameExtractor<XxlJobProcessRequest> {
+  private final SpanNameExtractor<XxlJobProcessRequest> codeSpanNameExtractor;
+
+  XxlJobSpanNameExtractor(CodeAttributesGetter<XxlJobProcessRequest> getter) {
+    codeSpanNameExtractor = CodeSpanNameExtractor.create(getter);
+  }
 
   @Override
   public String extract(XxlJobProcessRequest request) {
-    GlueTypeEnum glueTypeEnum = request.getGlueTypeEnum();
+    GlueTypeEnum glueTypeEnum = request.getGlueType();
     if (SCRIPT_JOB_TYPE.contains(glueTypeEnum.getDesc())) {
       return glueTypeEnum.getDesc() + ".ID-" + request.getJobId();
     }
-    String methodName = request.getMethodName();
-    if (StringUtils.isNullOrEmpty(methodName)) {
-      methodName = "execute";
-    }
-    Class<?> declaringClass = request.getDeclaringClass();
-    if (declaringClass != null) {
-      return declaringClass.getSimpleName() + "." + methodName;
-    } else {
-      return "unknown" + "." + methodName;
-    }
+    return codeSpanNameExtractor.extract(request);
   }
 }

@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-public class XxlJobExperimentalAttributeExtractor
+class XxlJobExperimentalAttributeExtractor
     implements AttributesExtractor<XxlJobProcessRequest, Void> {
 
   private static final AttributeKey<String> XXL_JOB_GLUE_TYPE =
@@ -23,7 +23,7 @@ public class XxlJobExperimentalAttributeExtractor
       AttributesBuilder attributes,
       Context parentContext,
       XxlJobProcessRequest xxlJobProcessRequest) {
-    GlueTypeEnum glueTypeEnum = xxlJobProcessRequest.getGlueTypeEnum();
+    GlueTypeEnum glueTypeEnum = xxlJobProcessRequest.getGlueType();
     attributes.put(XXL_JOB_GLUE_TYPE, glueTypeEnum.getDesc());
   }
 

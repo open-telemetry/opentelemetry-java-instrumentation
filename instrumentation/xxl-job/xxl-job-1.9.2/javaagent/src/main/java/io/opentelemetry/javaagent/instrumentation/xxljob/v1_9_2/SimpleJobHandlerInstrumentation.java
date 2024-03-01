@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_GLUE_JOB_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_METHOD_JOB_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_SCRIPT_JOB_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2.XxlJobSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,7 +18,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.handler.IJobHandler;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -54,10 +54,8 @@ public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = new XxlJobProcessRequest();
-      request.setDeclaringClass(handler.getClass());
-      request.setGlueTypeEnum(GlueTypeEnum.BEAN);
-      context = XxlJobHelper.startSpan(parentContext, request);
+      request = XxlJobProcessRequest.createSimpleJobRequest(handler);
+      context = helper().startSpan(parentContext, request);
       if (context == null) {
         return;
       }
@@ -72,7 +70,7 @@ public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") XxlJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      XxlJobHelper.stopSpan(result, request, throwable, scope, context);
+      helper().stopSpan(result, request, throwable, scope, context);
     }
   }
 }

@@ -16,7 +16,13 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -24,6 +30,11 @@ public abstract class AbstractXxlJobTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @BeforeAll
+  static void setUp() {
+    XxlJobFileAppender.initLogPath("build/xxljob/log");
+  }
 
   @Test
   void testGlueJob() {
@@ -35,23 +46,22 @@ public abstract class AbstractXxlJobTest {
     checkXxlJob(
         "CustomizedGroovyHandler.execute",
         StatusData.unset(),
-        "execute",
-        GlueTypeEnum.GLUE_GROOVY.getDesc(),
-        "CustomizedGroovyHandler");
+        GlueTypeEnum.GLUE_GROOVY,
+        "CustomizedGroovyHandler",
+        "execute");
     jobThread.toStop("Test finish");
   }
 
   @Test
   void testScriptJob() {
-    XxlJobFileAppender.initLogPath("resources/test/log");
     JobThread jobThread = new JobThread(2, getScriptJobHandler());
     TriggerParam triggerParam = new TriggerParam();
     triggerParam.setExecutorParams("");
     triggerParam.setExecutorTimeout(0);
     jobThread.pushTriggerQueue(triggerParam);
     jobThread.start();
-    checkXxlJobWithoutNamespace(
-        "GLUE(Shell).ID-2", StatusData.unset(), "ID-2", GlueTypeEnum.GLUE_SHELL.getDesc());
+    checkXxlJobWithoutCodeAttributes(
+        "GLUE(Shell).ID-2", StatusData.unset(), GlueTypeEnum.GLUE_SHELL);
     jobThread.toStop("Test finish");
   }
 
@@ -65,14 +75,17 @@ public abstract class AbstractXxlJobTest {
     checkXxlJob(
         "SimpleCustomizedHandler.execute",
         StatusData.unset(),
-        "execute",
-        GlueTypeEnum.BEAN.getDesc(),
-        getPackageName() + ".SimpleCustomizedHandler");
+        GlueTypeEnum.BEAN,
+        getPackageName() + ".SimpleCustomizedHandler",
+        "execute");
     jobThread.toStop("Test finish");
   }
 
   @Test
   public void testMethodJob() {
+    // method handle is null if test is not supported by tested version of the library
+    Assumptions.assumeTrue(getMethodHandler() != null);
+
     JobThread jobThread = new JobThread(4, getMethodHandler());
     TriggerParam triggerParam = new TriggerParam();
     triggerParam.setExecutorTimeout(0);
@@ -81,9 +94,9 @@ public abstract class AbstractXxlJobTest {
     checkXxlJob(
         "ReflectObject.echo",
         StatusData.unset(),
-        "echo",
-        GlueTypeEnum.BEAN.getDesc(),
-        "io.opentelemetry.instrumentation.xxljob.ReflectiveMethodsFactory$ReflectObject");
+        GlueTypeEnum.BEAN,
+        "io.opentelemetry.instrumentation.xxljob.ReflectiveMethodsFactory$ReflectObject",
+        "echo");
     jobThread.toStop("Test finish");
   }
 
@@ -97,9 +110,9 @@ public abstract class AbstractXxlJobTest {
     checkXxlJob(
         "CustomizedFailedHandler.execute",
         StatusData.error(),
-        "execute",
-        GlueTypeEnum.BEAN.getDesc(),
-        getPackageName() + ".CustomizedFailedHandler");
+        GlueTypeEnum.BEAN,
+        getPackageName() + ".CustomizedFailedHandler",
+        "execute");
     jobThread.toStop("Test finish");
   }
 
@@ -115,39 +128,40 @@ public abstract class AbstractXxlJobTest {
 
   protected abstract String getPackageName();
 
-  private static void checkXxlJob(String spanName, StatusData statusData, String... attributes) {
+  private static void checkXxlJob(
+      String spanName, StatusData statusData, List<AttributeAssertion> assertions) {
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasKind(SpanKind.INTERNAL)
-                    .hasName(spanName)
-                    .hasStatus(statusData)
-                    .hasAttributesSatisfying(
-                        equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
-                        equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
-                        equalTo(
-                            AttributeKey.stringKey("scheduling.xxl-job.glue.type"), attributes[1]),
-                        equalTo(AttributeKey.stringKey("code.namespace"), attributes[2]));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName(spanName)
+                        .hasStatus(statusData)
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
-  private static void checkXxlJobWithoutNamespace(
-      String spanName, StatusData statusData, String... attributes) {
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasKind(SpanKind.INTERNAL)
-                    .hasName(spanName)
-                    .hasStatus(statusData)
-                    .hasAttributesSatisfying(
-                        equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
-                        equalTo(AttributeKey.stringKey("code.function"), attributes[0]),
-                        equalTo(
-                            AttributeKey.stringKey("scheduling.xxl-job.glue.type"), attributes[1]));
-              });
-        });
+  private static void checkXxlJob(
+      String spanName,
+      StatusData statusData,
+      GlueTypeEnum glueType,
+      String codeNamespace,
+      String codeFunction) {
+    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+    attributeAssertions.addAll(attributeAssertions(glueType));
+    attributeAssertions.add(equalTo(AttributeKey.stringKey("code.namespace"), codeNamespace));
+    attributeAssertions.add(equalTo(AttributeKey.stringKey("code.function"), codeFunction));
+
+    checkXxlJob(spanName, statusData, attributeAssertions);
+  }
+
+  private static void checkXxlJobWithoutCodeAttributes(
+      String spanName, StatusData statusData, GlueTypeEnum glueType) {
+    checkXxlJob(spanName, statusData, attributeAssertions(glueType));
+  }
+
+  private static List<AttributeAssertion> attributeAssertions(GlueTypeEnum glueType) {
+    return Arrays.asList(
+        equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
+        equalTo(AttributeKey.stringKey("scheduling.xxl-job.glue.type"), glueType.getDesc()));
   }
 }
