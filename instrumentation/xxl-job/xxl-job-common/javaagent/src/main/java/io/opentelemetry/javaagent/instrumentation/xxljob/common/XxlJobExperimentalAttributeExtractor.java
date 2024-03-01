@@ -23,8 +23,8 @@ class XxlJobExperimentalAttributeExtractor
       AttributesBuilder attributes,
       Context parentContext,
       XxlJobProcessRequest xxlJobProcessRequest) {
-    GlueTypeEnum glueTypeEnum = xxlJobProcessRequest.getGlueType();
-    attributes.put(XXL_JOB_GLUE_TYPE, glueTypeEnum.getDesc());
+    GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
+    attributes.put(XXL_JOB_GLUE_TYPE, glueType.getDesc());
   }
 
   @Override

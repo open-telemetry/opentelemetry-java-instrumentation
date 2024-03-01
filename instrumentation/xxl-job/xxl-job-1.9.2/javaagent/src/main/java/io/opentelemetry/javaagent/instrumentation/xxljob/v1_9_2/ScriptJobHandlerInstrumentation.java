@@ -42,13 +42,13 @@ public class ScriptJobHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onSchedule(
-        @Advice.FieldValue("glueType") GlueTypeEnum glueTypeEnum,
+        @Advice.FieldValue("glueType") GlueTypeEnum glueType,
         @Advice.FieldValue("jobId") int jobId,
         @Advice.Local("otelRequest") XxlJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = XxlJobProcessRequest.createScriptJobRequest(glueTypeEnum, jobId);
+      request = XxlJobProcessRequest.createScriptJobRequest(glueType, jobId);
       context = helper().startSpan(parentContext, request);
       if (context == null) {
         return;

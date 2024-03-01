@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.xxljob;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 
 import com.xxl.job.core.biz.model.TriggerParam;
 import com.xxl.job.core.glue.GlueTypeEnum;
@@ -19,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -160,7 +160,7 @@ public abstract class AbstractXxlJobTest {
   }
 
   private static List<AttributeAssertion> attributeAssertions(GlueTypeEnum glueType) {
-    return Arrays.asList(
+    return asList(
         equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
         equalTo(AttributeKey.stringKey("scheduling.xxl-job.glue.type"), glueType.getDesc()));
   }

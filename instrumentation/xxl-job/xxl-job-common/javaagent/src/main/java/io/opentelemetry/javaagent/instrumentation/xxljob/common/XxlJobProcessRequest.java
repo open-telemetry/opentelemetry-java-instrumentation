@@ -34,8 +34,8 @@ public final class XxlJobProcessRequest {
     return createRequestForMethod(GlueTypeEnum.GLUE_GROOVY, handler.getClass(), "execute");
   }
 
-  public static XxlJobProcessRequest createScriptJobRequest(GlueTypeEnum glueTypeEnum, int jobId) {
-    XxlJobProcessRequest request = new XxlJobProcessRequest(glueTypeEnum);
+  public static XxlJobProcessRequest createScriptJobRequest(GlueTypeEnum glueType, int jobId) {
+    XxlJobProcessRequest request = new XxlJobProcessRequest(glueType);
     request.jobId = jobId;
 
     return request;

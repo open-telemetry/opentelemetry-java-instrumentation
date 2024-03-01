@@ -21,9 +21,9 @@ class XxlJobSpanNameExtractor implements SpanNameExtractor<XxlJobProcessRequest>
 
   @Override
   public String extract(XxlJobProcessRequest request) {
-    GlueTypeEnum glueTypeEnum = request.getGlueType();
-    if (SCRIPT_JOB_TYPE.contains(glueTypeEnum.getDesc())) {
-      return glueTypeEnum.getDesc() + ".ID-" + request.getJobId();
+    GlueTypeEnum glueType = request.getGlueType();
+    if (SCRIPT_JOB_TYPE.contains(glueType.getDesc())) {
+      return glueType.getDesc() + ".ID-" + request.getJobId();
     }
     return codeSpanNameExtractor.extract(request);
   }

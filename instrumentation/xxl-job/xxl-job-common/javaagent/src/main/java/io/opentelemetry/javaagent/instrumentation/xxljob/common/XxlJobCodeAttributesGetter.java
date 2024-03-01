@@ -16,8 +16,8 @@ class XxlJobCodeAttributesGetter implements CodeAttributesGetter<XxlJobProcessRe
   @Nullable
   @Override
   public Class<?> getCodeClass(XxlJobProcessRequest xxlJobProcessRequest) {
-    GlueTypeEnum glueTypeEnum = xxlJobProcessRequest.getGlueType();
-    if (!SCRIPT_JOB_TYPE.contains(glueTypeEnum.getDesc())) {
+    GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
+    if (!SCRIPT_JOB_TYPE.contains(glueType.getDesc())) {
       return xxlJobProcessRequest.getDeclaringClass();
     }
     return null;
@@ -26,8 +26,8 @@ class XxlJobCodeAttributesGetter implements CodeAttributesGetter<XxlJobProcessRe
   @Nullable
   @Override
   public String getMethodName(XxlJobProcessRequest xxlJobProcessRequest) {
-    GlueTypeEnum glueTypeEnum = xxlJobProcessRequest.getGlueType();
-    if (!SCRIPT_JOB_TYPE.contains(glueTypeEnum.getDesc())) {
+    GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
+    if (!SCRIPT_JOB_TYPE.contains(glueType.getDesc())) {
       return xxlJobProcessRequest.getMethodName();
     }
     return null;
