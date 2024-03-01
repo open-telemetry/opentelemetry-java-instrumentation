@@ -18,9 +18,9 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Configures {@link RestTemplate} for tracing.
+ * Configures {@link RestTemplate} and {@link RestClient} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization
+ * <p>Adds Open Telemetry instrumentation to RestTemplate and RestClient beans after initialization
  */
 @ConditionalOnBean(OpenTelemetry.class)
 @ConditionalOnProperty(name = "otel.instrumentation.spring-web.enabled", matchIfMissing = true)
