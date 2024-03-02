@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.resources;
 
 import static java.util.Optional.empty;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -25,7 +24,7 @@ class CgroupV2ContainerIdExtractor {
 
   static final Path V2_CGROUP_PATH = Paths.get("/proc/self/mountinfo");
   private static final Pattern CONTAINER_ID_RE = Pattern.compile("^[0-9a-f]{64}$");
-
+  private static final Pattern CONTAINER_ID_RE1 = Pattern.compile("cri-containerd:[0-9a-f]{64}");
   private final ContainerResource.Filesystem filesystem;
 
   CgroupV2ContainerIdExtractor() {
@@ -42,15 +41,29 @@ class CgroupV2ContainerIdExtractor {
       return empty();
     }
     try {
-      return filesystem
-          .lines(V2_CGROUP_PATH)
-          .filter(line -> line.contains("hostname"))
-          .flatMap(line -> Stream.of(line.split("/")))
-          .map(CONTAINER_ID_RE::matcher)
-          .filter(Matcher::matches)
-          .findFirst()
-          .map(matcher -> matcher.group(0));
-    } catch (IOException e) {
+      try (Stream<String> lines = filesystem.lines(V2_CGROUP_PATH)) {
+        Optional<String> optCid =
+            lines
+                .filter(line -> line.contains("/containers/"))
+                .flatMap(line -> Stream.of(line.split("/")))
+                .map(CONTAINER_ID_RE::matcher)
+                .filter(Matcher::matches)
+                .reduce((first, second) -> second)
+                .map(matcher -> matcher.group(0));
+        if (optCid.isPresent()) {
+          return optCid;
+        }
+      }
+
+      try (Stream<String> lines = filesystem.lines(V2_CGROUP_PATH)) {
+        return lines
+            .filter(line -> line.contains("cri-containerd:"))
+            .map(CONTAINER_ID_RE1::matcher)
+            .filter(Matcher::find)
+            .findFirst()
+            .map(matcher -> matcher.group(0).substring(15));
+      }
+    } catch (Exception e) {
       logger.log(Level.WARNING, "Unable to read v2 cgroup path", e);
     }
     return empty();
