@@ -170,21 +170,19 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
-    for (SpanLinksExtractor<? super REQUEST> spanLinksExtractor : spanLinksExtractors) {
-      spanLinksExtractor.extract(spanLinksBuilder, parentContext, request);
-    }
+    spanLinksExtractors.forEach(
+        spanLinksExtractor -> spanLinksExtractor.extract(spanLinksBuilder, parentContext, request));
 
     UnsafeAttributes attributes = new UnsafeAttributes();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onStart(attributes, parentContext, request);
-    }
+    attributesExtractors.forEach(
+        extractor -> extractor.onStart(attributes, parentContext, request));
 
     Context context = parentContext;
 
     // context customizers run before span start, so that they can have access to the parent span
     // context, and so that their additions to the context will be visible to span processors
-    for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
-      context = contextCustomizer.onStart(context, request, attributes);
+    for (int i = 0; i < contextCustomizers.size(); i++) {
+      context = contextCustomizers.get(i).onStart(context, request, attributes);
     }
 
     boolean localRoot = LocalRootSpan.isLocalRoot(context);
@@ -197,8 +195,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
       // operation listeners run after span start, so that they have access to the current span
       // for capturing exemplars
       long startNanos = getNanos(startTime);
-      for (OperationListener operationListener : operationListeners) {
-        context = operationListener.onStart(context, attributes, startNanos);
+      for (int i = 0; i < operationListeners.size(); i++) {
+        context = operationListeners.get(i).onStart(context, attributes, startNanos);
       }
     }
 
@@ -226,8 +224,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
-      extractor.onEnd(attributes, context, request, response, error);
+    for (int i = 0; i < attributesExtractors.size(); i++) {
+      attributesExtractors.get(i).onEnd(attributes, context, request, response, error);
     }
     span.setAllAttributes(attributes);
 

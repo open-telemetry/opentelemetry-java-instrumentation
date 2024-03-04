@@ -63,24 +63,24 @@ final class SpanSuppressors {
 
   static final class BySpanKey implements SpanSuppressor {
 
-    private final Set<SpanKey> spanKeys;
+    private final SpanKey[] spanKeys;
 
     BySpanKey(Set<SpanKey> spanKeys) {
-      this.spanKeys = spanKeys;
+      this.spanKeys = spanKeys.toArray(new SpanKey[spanKeys.size()]);
     }
 
     @Override
     public Context storeInContext(Context context, SpanKind spanKind, Span span) {
-      for (SpanKey spanKey : spanKeys) {
-        context = spanKey.storeInContext(context, span);
+      for (int i = 0; i < spanKeys.length; i++) {
+        context = spanKeys[i].storeInContext(context, span);
       }
       return context;
     }
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      for (SpanKey spanKey : spanKeys) {
-        if (spanKey.fromContextOrNull(parentContext) == null) {
+      for (int i = 0; i < spanKeys.length; i++) {
+        if (spanKeys[i].fromContextOrNull(parentContext) == null) {
           return false;
         }
       }
