@@ -11,6 +11,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.base.Charsets;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -21,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -155,14 +155,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       Process process = processBuilder.start();
 
       List<String> output = getProcessOutput(process);
-
-      if (!process.waitFor(2, TimeUnit.SECONDS)) {
-        process.destroy();
-        logger.fine("Timed out waiting for reg query to complete");
-        return Collections.emptyList();
-      }
-
-      int exitedValue = process.exitValue();
+      int exitedValue = process.waitFor();
       if (exitedValue != 0) {
         logger.fine(
             "Failed to read Windows registry. Exit code: "
@@ -180,12 +173,11 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     }
   }
 
-  public static List<String> getProcessOutput(Process process)
-      throws IOException, InterruptedException {
+  public static List<String> getProcessOutput(Process process) throws IOException {
     List<String> result = new ArrayList<>();
 
     try (BufferedReader processOutputReader =
-        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        new BufferedReader(new InputStreamReader(process.getInputStream(), Charsets.UTF_8))) {
       String readLine;
 
       while ((readLine = processOutputReader.readLine()) != null) {
