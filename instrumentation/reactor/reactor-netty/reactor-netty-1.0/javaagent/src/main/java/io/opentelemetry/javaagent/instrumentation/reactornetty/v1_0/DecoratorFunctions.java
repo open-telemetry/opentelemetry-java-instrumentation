@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
+import io.opentelemetry.instrumentation.reactornetty.v1_0.InstrumentationContexts;
 import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientInfos;
 import reactor.util.context.ContextView;
