@@ -24,7 +24,7 @@ class CgroupV2ContainerIdExtractor {
 
   static final Path V2_CGROUP_PATH = Paths.get("/proc/self/mountinfo");
   private static final Pattern CONTAINER_ID_RE = Pattern.compile("^[0-9a-f]{64}$");
-  private static final Pattern CONTAINER_ID_RE1 = Pattern.compile("cri-containerd:[0-9a-f]{64}");
+  private static final Pattern CRI_CONTAINER_ID_RE = Pattern.compile("cri-containerd:[0-9a-f]{64}");
   private final ContainerResource.Filesystem filesystem;
 
   CgroupV2ContainerIdExtractor() {
@@ -41,28 +41,24 @@ class CgroupV2ContainerIdExtractor {
       return empty();
     }
     try {
-      try (Stream<String> lines = filesystem.lines(V2_CGROUP_PATH)) {
-        Optional<String> optCid =
-            lines
-                .filter(line -> line.contains("/containers/"))
-                .flatMap(line -> Stream.of(line.split("/")))
-                .map(CONTAINER_ID_RE::matcher)
-                .filter(Matcher::matches)
-                .reduce((first, second) -> second)
-                .map(matcher -> matcher.group(0));
-        if (optCid.isPresent()) {
-          return optCid;
-        }
+      Optional<String> optCid =
+          filesystem.lineList(V2_CGROUP_PATH).stream()
+              .filter(line -> line.contains("/containers/"))
+              .flatMap(line -> Stream.of(line.split("/")))
+              .map(CONTAINER_ID_RE::matcher)
+              .filter(Matcher::matches)
+              .reduce((first, second) -> second)
+              .map(matcher -> matcher.group(0));
+      if (optCid.isPresent()) {
+        return optCid;
       }
 
-      try (Stream<String> lines = filesystem.lines(V2_CGROUP_PATH)) {
-        return lines
-            .filter(line -> line.contains("cri-containerd:"))
-            .map(CONTAINER_ID_RE1::matcher)
-            .filter(Matcher::find)
-            .findFirst()
-            .map(matcher -> matcher.group(0).substring(15));
-      }
+      return filesystem.lineList(V2_CGROUP_PATH).stream()
+          .filter(line -> line.contains("cri-containerd:"))
+          .map(CRI_CONTAINER_ID_RE::matcher)
+          .filter(Matcher::find)
+          .findFirst()
+          .map(matcher -> matcher.group(0).substring(15));
     } catch (Exception e) {
       logger.log(Level.WARNING, "Unable to read v2 cgroup path", e);
     }

@@ -13,8 +13,9 @@ import static org.mockito.Mockito.when;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -33,12 +34,9 @@ class CgroupV2ContainerIdExtractorTest {
     assertThat(result).isSameAs(Optional.empty());
   }
 
-  @SuppressWarnings("unchecked")
   private void verifyContainerId(String rawFileContent, String containerId) throws Exception {
     when(filesystem.isReadable(V2_CGROUP_PATH)).thenReturn(true);
-    Stream<String> fileContent = fileToStreamOfLines(rawFileContent);
-    Stream<String> fileContent1 = fileToStreamOfLines(rawFileContent);
-    when(filesystem.lines(V2_CGROUP_PATH)).thenReturn(fileContent, fileContent1);
+    when(filesystem.lineList(V2_CGROUP_PATH)).thenReturn(fileToListOfLines(rawFileContent));
     CgroupV2ContainerIdExtractor extractor = new CgroupV2ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
     assertThat(result.orElse("fail")).isEqualTo(containerId);
@@ -58,7 +56,6 @@ class CgroupV2ContainerIdExtractorTest {
         "188329f95b930c32eeeffd34658ed2538960947e166743fa3743f5ce3d739b40");
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   void extractSuccess_containerd() throws Exception {
     verifyContainerId(
@@ -87,9 +84,11 @@ class CgroupV2ContainerIdExtractorTest {
         "f23ec1d4b715c6531a17e9c549222fbbe1f7ffff697a29a2212b3b4cdc37f52e");
   }
 
-  private static Stream<String> fileToStreamOfLines(String filename) {
+  private static List<String> fileToListOfLines(String filename) {
     InputStream in =
         CgroupV2ContainerIdExtractorTest.class.getClassLoader().getResourceAsStream(filename);
-    return new BufferedReader(new InputStreamReader(in, UTF_8)).lines();
+    return new BufferedReader(new InputStreamReader(in, UTF_8))
+        .lines()
+        .collect(Collectors.toList());
   }
 }
