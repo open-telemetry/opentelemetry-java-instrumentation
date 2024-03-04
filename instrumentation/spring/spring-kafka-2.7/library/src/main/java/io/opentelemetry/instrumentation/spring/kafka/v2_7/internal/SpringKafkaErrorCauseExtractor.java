@@ -3,12 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.kafka.v2_7;
+package io.opentelemetry.instrumentation.spring.kafka.v2_7.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import org.springframework.kafka.listener.ListenerExecutionFailedException;
 
-enum SpringKafkaErrorCauseExtractor implements ErrorCauseExtractor {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public enum SpringKafkaErrorCauseExtractor implements ErrorCauseExtractor {
   INSTANCE;
 
   @Override
