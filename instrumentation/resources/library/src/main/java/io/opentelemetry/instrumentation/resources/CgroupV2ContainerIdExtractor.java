@@ -9,6 +9,7 @@ import static java.util.Optional.empty;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,8 +42,9 @@ class CgroupV2ContainerIdExtractor {
       return empty();
     }
     try {
+      List<String> fileAsList = filesystem.lineList(V2_CGROUP_PATH);
       Optional<String> optCid =
-          filesystem.lineList(V2_CGROUP_PATH).stream()
+          fileAsList.stream()
               .filter(line -> line.contains("/containers/"))
               .flatMap(line -> Stream.of(line.split("/")))
               .map(CONTAINER_ID_RE::matcher)
@@ -53,7 +55,7 @@ class CgroupV2ContainerIdExtractor {
         return optCid;
       }
 
-      return filesystem.lineList(V2_CGROUP_PATH).stream()
+      return fileAsList.stream()
           .filter(line -> line.contains("cri-containerd:"))
           .map(CRI_CONTAINER_ID_RE::matcher)
           .filter(Matcher::find)
