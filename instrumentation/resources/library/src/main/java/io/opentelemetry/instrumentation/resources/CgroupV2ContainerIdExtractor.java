@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources;
 
 import static java.util.Optional.empty;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -42,29 +43,31 @@ class CgroupV2ContainerIdExtractor {
     if (!filesystem.isReadable(V2_CGROUP_PATH)) {
       return empty();
     }
-    try {
-      List<String> fileAsList = filesystem.lineList(V2_CGROUP_PATH);
-      Optional<String> optCid =
-          fileAsList.stream()
-              .filter(line -> line.contains("/containers/"))
-              .flatMap(line -> Stream.of(line.split("/")))
-              .map(CONTAINER_ID_RE::matcher)
-              .filter(Matcher::matches)
-              .reduce((first, second) -> second)
-              .map(matcher -> matcher.group(0));
-      if (optCid.isPresent()) {
-        return optCid;
-      }
 
-      return fileAsList.stream()
-          .filter(line -> line.contains("cri-containerd:"))
-          .map(CRI_CONTAINER_ID_RE::matcher)
-          .filter(Matcher::find)
-          .findFirst()
-          .map(matcher -> matcher.group(0).substring(15));
-    } catch (Exception e) {
+    List<String> fileAsList;
+    try {
+      fileAsList = filesystem.lineList(V2_CGROUP_PATH);
+    } catch (IOException e) {
       logger.log(Level.WARNING, "Unable to read v2 cgroup path", e);
+      return empty();
     }
-    return empty();
+
+    Optional<String> optCid =
+        fileAsList.stream()
+            .filter(line -> line.contains("/containers/"))
+            .flatMap(line -> Stream.of(line.split("/")))
+            .map(CONTAINER_ID_RE::matcher)
+            .filter(Matcher::matches)
+            .reduce((first, second) -> second)
+            .map(matcher -> matcher.group(0));
+    if (optCid.isPresent()) {
+      return optCid;
+    }
+    return fileAsList.stream()
+        .filter(line -> line.contains("cri-containerd:"))
+        .map(CRI_CONTAINER_ID_RE::matcher)
+        .filter(Matcher::find)
+        .findFirst()
+        .map(matcher -> matcher.group(0).substring(15));
   }
 }
