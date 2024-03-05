@@ -60,7 +60,7 @@ class ManifestResourceProviderTest {
                     () -> {
                       ManifestResourceProvider provider =
                           new ManifestResourceProvider(
-                              new JarFileDetector(
+                              new JarPathFinder(
                                   () -> JarServiceNameDetectorTest.getArgs("app.jar"),
                                   prop -> null,
                                   JarServiceNameDetectorTest::failPath,

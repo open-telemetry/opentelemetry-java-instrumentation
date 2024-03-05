@@ -16,13 +16,13 @@ import java.util.function.Function;
  *
  * <p>An example of how to use this interface can be found in {@link ManifestResourceProvider}.
  */
-public interface AttributeProvider<D> {
+interface AttributeProvider<D> {
   Optional<D> readData();
 
   void registerAttributes(Builder<D> builder);
 
-  public interface Builder<D> {
+  interface Builder<D> {
     @CanIgnoreReturnValue
-    public <T> Builder<D> add(AttributeKey<T> key, Function<D, Optional<T>> getter);
+    <T> Builder<D> add(AttributeKey<T> key, Function<D, Optional<T>> getter);
   }
 }

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.resources;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-public class ResourceDiscoveryCache {
+class ResourceDiscoveryCache {
   private static final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
 
   private ResourceDiscoveryCache() {}

@@ -26,21 +26,21 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
 
   private static final Logger logger = Logger.getLogger(JarServiceNameDetector.class.getName());
 
-  private final JarFileDetector jarFileDetector;
+  private final JarPathFinder jarPathFinder;
 
   @SuppressWarnings("unused") // SPI
   public JarServiceNameDetector() {
-    this(new JarFileDetector());
+    this(new JarPathFinder());
   }
 
   // visible for tests
-  JarServiceNameDetector(JarFileDetector jarFileDetector) {
-    this.jarFileDetector = jarFileDetector;
+  JarServiceNameDetector(JarPathFinder jarPathFinder) {
+    this.jarPathFinder = jarPathFinder;
   }
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    Path jarPath = jarFileDetector.getJarPath();
+    Path jarPath = jarPathFinder.getJarPath();
     if (jarPath == null) {
       return Resource.empty();
     }

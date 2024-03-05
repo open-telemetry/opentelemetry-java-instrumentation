@@ -54,7 +54,7 @@ class JarServiceNameDetectorTest {
   private static JarServiceNameDetector getDetector(
       String[] processArgs, Function<String, String> getProperty, Predicate<Path> fileExists) {
     return new JarServiceNameDetector(
-        new JarFileDetector(() -> processArgs, getProperty, fileExists, p -> Optional.empty()));
+        new JarPathFinder(() -> processArgs, getProperty, fileExists, p -> Optional.empty()));
   }
 
   @Test

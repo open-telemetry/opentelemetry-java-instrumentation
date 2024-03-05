@@ -21,24 +21,24 @@ import java.util.jar.Manifest;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-class JarFileDetector {
+class JarPathFinder {
   private final Supplier<String[]> getProcessHandleArguments;
   private final Function<String, String> getSystemProperty;
   private final Predicate<Path> fileExists;
   private final Function<Path, Optional<Manifest>> manifestReader;
 
-  private static final Logger logger = Logger.getLogger(JarFileDetector.class.getName());
+  private static final Logger logger = Logger.getLogger(JarPathFinder.class.getName());
 
-  public JarFileDetector() {
+  public JarPathFinder() {
     this(
         ProcessArguments::getProcessArguments,
         System::getProperty,
         Files::isRegularFile,
-        JarFileDetector::readManifest);
+        JarPathFinder::readManifest);
   }
 
   // visible for tests
-  JarFileDetector(
+  JarPathFinder(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
       Predicate<Path> fileExists,

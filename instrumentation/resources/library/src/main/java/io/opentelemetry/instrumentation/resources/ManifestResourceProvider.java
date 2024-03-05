@@ -20,16 +20,16 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
 
   @SuppressWarnings("unused") // SPI
   public ManifestResourceProvider() {
-    this(new JarFileDetector());
+    this(new JarPathFinder());
   }
 
   // Visible for testing
-  ManifestResourceProvider(JarFileDetector jarFileDetector) {
+  ManifestResourceProvider(JarPathFinder jarPathFinder) {
     super(
         new AttributeProvider<Manifest>() {
           @Override
           public Optional<Manifest> readData() {
-            return jarFileDetector.getManifestFromJarFile();
+            return jarPathFinder.getManifestFromJarFile();
           }
 
           @Override
