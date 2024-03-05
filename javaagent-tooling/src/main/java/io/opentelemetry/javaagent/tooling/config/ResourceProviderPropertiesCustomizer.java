@@ -35,7 +35,7 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider", "aws");
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
-        "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider", "aws");
+        "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider", "gcp");
     // for testing
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.javaagent.tooling.config.ResourceProviderPropertiesCustomizerTest$Provider",
@@ -62,7 +62,8 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
       String providerName = providerEntry.getKey();
       String providerGroup = providerEntry.getValue();
       Boolean explictEnabled =
-          config.getBoolean(String.format("otel.instrumentation.%s.enabled", providerGroup));
+          config.getBoolean(
+              String.format("otel.instrumentation.resource-provider.%s.enabled", providerGroup));
 
       if (isEnabled(providerName, enabledProviders, explictEnabled)) {
         enabled.add(providerName);

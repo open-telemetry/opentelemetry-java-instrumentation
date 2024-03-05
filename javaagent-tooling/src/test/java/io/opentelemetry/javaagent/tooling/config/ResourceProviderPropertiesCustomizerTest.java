@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,8 +26,7 @@ import org.junit.jupiter.api.TestFactory;
 
 public class ResourceProviderPropertiesCustomizerTest {
 
-  public static final class Provider
-      implements io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider {
+  public static final class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
       return Resource.create(Attributes.of(AttributeKey.stringKey("key"), "value"));
@@ -115,7 +115,7 @@ public class ResourceProviderPropertiesCustomizerTest {
 
                       if (tc.explicitEnabled != null) {
                         props.put(
-                            "otel.instrumentation.test.enabled",
+                            "otel.instrumentation.resource-provider.test.enabled",
                             Boolean.toString(tc.explicitEnabled));
                       }
 
