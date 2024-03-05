@@ -9,6 +9,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.36.0"
+val otelContribVersion = "1.33.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -39,7 +40,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.10.4"
-val errorProneVersion = "2.26.0"
+val errorProneVersion = "2.25.0"
 val byteBuddyVersion = "1.14.12"
 val asmVersion = "9.6"
 val jmhVersion = "1.37"
@@ -96,10 +97,10 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.3.0",
   "commons-validator:commons-validator:1.8.0",
   "io.netty:netty:3.10.6.Final",
-  "io.opentelemetry.contrib:opentelemetry-aws-resources:1.33.0-alpha",
-  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.33.0-alpha",
+  "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
+  "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
+  "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.1.0-alpha",
-  "io.opentelemetry.contrib:opentelemetry-gcp-resources:1.33.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.25.3",
   "org.awaitility:awaitility:4.2.0",

@@ -37,17 +37,8 @@ dependencies {
 
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
-  implementation("io.opentelemetry.contrib:opentelemetry-aws-resources") {
-    exclude("io.opentelemetry", "opentelemetry-api")
-    exclude("io.opentelemetry", "opentelemetry-sdk")
-    exclude("io.opentelemetry.semconv", "opentelemetry-semconv")
-  }
-
-  implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources") {
-    exclude("io.opentelemetry", "opentelemetry-api")
-    exclude("io.opentelemetry", "opentelemetry-sdk")
-    exclude("io.opentelemetry.semconv", "opentelemetry-semconv")
-  }
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
 
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
