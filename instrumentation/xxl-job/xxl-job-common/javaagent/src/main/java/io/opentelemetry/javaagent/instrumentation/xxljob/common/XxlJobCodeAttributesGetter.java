@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.common;
 
-import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.SCRIPT_JOB_TYPE;
-
 import com.xxl.job.core.glue.GlueTypeEnum;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import javax.annotation.Nullable;
@@ -17,7 +15,7 @@ class XxlJobCodeAttributesGetter implements CodeAttributesGetter<XxlJobProcessRe
   @Override
   public Class<?> getCodeClass(XxlJobProcessRequest xxlJobProcessRequest) {
     GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
-    if (!SCRIPT_JOB_TYPE.contains(glueType.getDesc())) {
+    if (!glueType.isScript()) {
       return xxlJobProcessRequest.getDeclaringClass();
     }
     return null;
@@ -27,7 +25,7 @@ class XxlJobCodeAttributesGetter implements CodeAttributesGetter<XxlJobProcessRe
   @Override
   public String getMethodName(XxlJobProcessRequest xxlJobProcessRequest) {
     GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
-    if (!SCRIPT_JOB_TYPE.contains(glueType.getDesc())) {
+    if (!glueType.isScript()) {
       return xxlJobProcessRequest.getMethodName();
     }
     return null;

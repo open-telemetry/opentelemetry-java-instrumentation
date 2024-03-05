@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.common;
 
-import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.SCRIPT_JOB_TYPE;
-
 import com.xxl.job.core.glue.GlueTypeEnum;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
@@ -22,7 +20,7 @@ class XxlJobSpanNameExtractor implements SpanNameExtractor<XxlJobProcessRequest>
   @Override
   public String extract(XxlJobProcessRequest request) {
     GlueTypeEnum glueType = request.getGlueType();
-    if (SCRIPT_JOB_TYPE.contains(glueType.getDesc())) {
+    if (glueType.isScript()) {
       return glueType.getDesc() + ".ID-" + request.getJobId();
     }
     return codeSpanNameExtractor.extract(request);
