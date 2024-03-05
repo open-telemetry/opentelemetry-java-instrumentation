@@ -15,8 +15,7 @@ import io.opentelemetry.semconv.ResourceAttributes;
  * Detects <code>service.name</code> and <code>service.version</code> from Spring Boot's <code>
  * build-info.properties</code> file.
  *
- * <p>Use the following snippet in your pom.xml file to generate the build-info.properties file (the
- * gradle plugin generates this file by default):
+ * <p>Use the following snippet in your pom.xml file to generate the build-info.properties file:
  *
  * <pre>{@code
  * <build>
@@ -37,6 +36,16 @@ import io.opentelemetry.semconv.ResourceAttributes;
  *     </plugins>
  * </build>
  * }</pre>
+ *
+ * <p>Use the following snippet in your gradle file to generate the build-info.properties file:
+ *
+ * <pre>{@code
+ * springBoot {
+ *   buildInfo {
+ *   }
+ * }
+ * }</pre>
+ *
  * <p>Note: The spring starter already includes provider in
  * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */

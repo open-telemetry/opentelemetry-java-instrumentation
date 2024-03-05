@@ -15,6 +15,9 @@ import java.util.Map;
 /**
  * Detects <code>service.name</code> and <code>service.version</code> from Spring Boot's <code>
  * build-info.properties</code> file.
+ *
+ * <p>Note: The spring starter already includes provider in
+ * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */
 @AutoService(ResourceProvider.class)
 public class SpringBootBuildInfoServiceNameDetector extends SpringBootBuildInfoDetector {
