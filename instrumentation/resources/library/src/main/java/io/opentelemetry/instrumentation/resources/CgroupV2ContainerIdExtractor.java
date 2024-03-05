@@ -26,6 +26,7 @@ class CgroupV2ContainerIdExtractor {
   static final Path V2_CGROUP_PATH = Paths.get("/proc/self/mountinfo");
   private static final Pattern CONTAINER_ID_RE = Pattern.compile("^[0-9a-f]{64}$");
   private static final Pattern CRI_CONTAINER_ID_RE = Pattern.compile("cri-containerd:[0-9a-f]{64}");
+
   private final ContainerResource.Filesystem filesystem;
 
   CgroupV2ContainerIdExtractor() {
