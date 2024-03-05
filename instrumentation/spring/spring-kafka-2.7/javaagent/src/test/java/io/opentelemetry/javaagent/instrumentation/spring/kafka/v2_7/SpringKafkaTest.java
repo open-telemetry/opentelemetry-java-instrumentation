@@ -355,31 +355,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
               });
         });
 
-    Consumer<SpanDataAssert> receiveSpanAssert =
-        span ->
-            span.hasName("testBatchTopic receive")
-                .hasKind(SpanKind.CONSUMER)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                    equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-                    equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                    equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-                    satisfies(
-                        SemanticAttributes.MESSAGING_CLIENT_ID,
-                        stringAssert -> stringAssert.startsWith("consumer")),
-                    equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1));
-    List<AttributeAssertion> processAttributes =
-        Arrays.asList(
-            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-            equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-            satisfies(
-                SemanticAttributes.MESSAGING_CLIENT_ID,
-                stringAssert -> stringAssert.startsWith("consumer")),
-            equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1));
-
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
@@ -414,72 +389,69 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       assertions.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
-                  receiveSpanAssert,
-                  span ->
-                      span.hasName("testBatchTopic process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(0))
-                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                          .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
-                          .hasAttributesSatisfyingExactly(processAttributes),
+                  SpringKafkaTest::assertReceiveSpan,
+                  span -> assertProcessSpan(span, trace, producer.get(), true),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(1)),
-                  span ->
-                      span.hasName("testBatchTopic process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(0))
-                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                          .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
-                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> assertProcessSpan(span, trace, producer.get(), true),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(3)),
-                  span ->
-                      span.hasName("testBatchTopic process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(0))
-                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> assertProcessSpan(span, trace, producer.get(), false),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(5))));
     } else {
       assertions.addAll(
           Arrays.asList(
               trace ->
                   trace.hasSpansSatisfyingExactly(
-                      receiveSpanAssert,
-                      span ->
-                          span.hasName("testBatchTopic process")
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(0))
-                              .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                              .hasStatus(StatusData.error())
-                              .hasException(new IllegalArgumentException("boom"))
-                              .hasAttributesSatisfyingExactly(processAttributes),
+                      SpringKafkaTest::assertReceiveSpan,
+                      span -> assertProcessSpan(span, trace, producer.get(), true),
                       span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
-                      receiveSpanAssert,
-                      span ->
-                          span.hasName("testBatchTopic process")
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(0))
-                              .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                              .hasStatus(StatusData.error())
-                              .hasException(new IllegalArgumentException("boom"))
-                              .hasAttributesSatisfyingExactly(processAttributes),
+                      SpringKafkaTest::assertReceiveSpan,
+                      span -> assertProcessSpan(span, trace, producer.get(), true),
                       span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
-                      receiveSpanAssert,
-                      span ->
-                          span.hasName("testBatchTopic process")
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(0))
-                              .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                              .hasAttributesSatisfyingExactly(processAttributes),
+                      SpringKafkaTest::assertReceiveSpan,
+                      span -> assertProcessSpan(span, trace, producer.get(), false),
                       span -> span.hasName("consumer").hasParent(trace.getSpan(1)))));
     }
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER), assertions);
+  }
+
+  private static void assertReceiveSpan(SpanDataAssert span) {
+    span.hasName("testBatchTopic receive")
+        .hasKind(SpanKind.CONSUMER)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(
+            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
+            equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
+            equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
+            satisfies(
+                SemanticAttributes.MESSAGING_CLIENT_ID,
+                stringAssert -> stringAssert.startsWith("consumer")),
+            equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1));
+  }
+
+  private static void assertProcessSpan(
+      SpanDataAssert span, TraceAssert trace, SpanData producer, boolean failed) {
+    span.hasName("testBatchTopic process")
+        .hasKind(SpanKind.CONSUMER)
+        .hasParent(trace.getSpan(0))
+        .hasLinks(LinkData.create(producer.getSpanContext()))
+        .hasAttributesSatisfyingExactly(
+            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
+            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
+            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+            equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
+            satisfies(
+                SemanticAttributes.MESSAGING_CLIENT_ID,
+                stringAssert -> stringAssert.startsWith("consumer")),
+            equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1));
+    if (failed) {
+      span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));
+    }
   }
 }
