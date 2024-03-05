@@ -59,7 +59,6 @@ public class ResourceProviderPropertiesCustomizerTest {
   Stream<DynamicTest> enabledTestCases() {
     String className =
         "io.opentelemetry.javaagent.tooling.config.ResourceProviderPropertiesCustomizerTest$Provider";
-
     return Stream.of(
             new EnabledTestCase(
                 "explicitEnabled", true, Collections.emptySet(), Collections.emptySet(), true),
@@ -116,7 +115,7 @@ public class ResourceProviderPropertiesCustomizerTest {
 
                       if (tc.explicitEnabled != null) {
                         props.put(
-                            "otel.instrumentation." + className + ".enabled",
+                            "otel.instrumentation.test.enabled",
                             Boolean.toString(tc.explicitEnabled));
                       }
 
@@ -126,22 +125,12 @@ public class ResourceProviderPropertiesCustomizerTest {
                                   .addPropertiesSupplier(() -> props)
                                   .build());
 
-                      //                      ConfigProperties config =
-                      // DefaultConfigProperties.createFromMap(props);
-                      //                      Map<String, String> customize = new
-                      // ResourceProviderPropertiesCustomizer().customize(
-                      //                          config);
-
                       if (tc.result) {
                         assertThat(attributes.get(AttributeKey.stringKey("key")))
                             .isEqualTo("value");
                       } else {
                         assertThat(attributes.get(AttributeKey.stringKey("key"))).isNull();
                       }
-                      //
-                      //                      assertThat(
-                      //                          customize)
-                      //                          .isEqualTo(tc.result);
                     }));
   }
 }

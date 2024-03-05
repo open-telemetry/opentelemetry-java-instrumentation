@@ -10,8 +10,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,17 +21,27 @@ import javax.annotation.Nullable;
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCustomizerProvider {
 
-  private static final Set<String> DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS =
-      new HashSet<>(
-          Arrays.asList(
-              "io.opentelemetry.contrib.aws.resource.BeanstalkResourceProvider",
-              "io.opentelemetry.contrib.aws.resource.Ec2ResourceProvider",
-              "io.opentelemetry.contrib.aws.resource.EcsResourceProvider",
-              "io.opentelemetry.contrib.aws.resource.EksResourceProvider",
-              "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
-              "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
-              // for testing
-              "io.opentelemetry.javaagent.tooling.config.ResourceProviderPropertiesCustomizerTest$Provider"));
+  private static final Map<String, String> DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS = new HashMap<>();
+
+  static {
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.aws.resource.BeanstalkResourceProvider", "aws");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.aws.resource.Ec2ResourceProvider", "aws");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.aws.resource.EcsResourceProvider", "aws");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.aws.resource.EksResourceProvider", "aws");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider", "aws");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider", "aws");
+    // for testing
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.javaagent.tooling.config.ResourceProviderPropertiesCustomizerTest$Provider",
+        "test");
+  }
+
   static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
   static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
 
@@ -47,9 +57,12 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
     List<String> enabled = new ArrayList<>();
     List<String> disabled = new ArrayList<>();
 
-    for (String providerName : DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS) {
+    for (Map.Entry<String, String> providerEntry :
+        DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.entrySet()) {
+      String providerName = providerEntry.getKey();
+      String providerGroup = providerEntry.getValue();
       Boolean explictEnabled =
-          config.getBoolean(String.format("otel.instrumentation.%s.enabled", providerName));
+          config.getBoolean(String.format("otel.instrumentation.%s.enabled", providerGroup));
 
       if (isEnabled(providerName, enabledProviders, explictEnabled)) {
         enabled.add(providerName);
