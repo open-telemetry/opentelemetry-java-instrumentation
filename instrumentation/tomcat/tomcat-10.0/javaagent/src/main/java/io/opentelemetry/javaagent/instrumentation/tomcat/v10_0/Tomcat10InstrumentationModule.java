@@ -25,7 +25,7 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // only matches tomcat 10.0+
-    return hasClassesNamed("jakarta.servlet.ReadListener");
+    return hasClassesNamed("jakarta.servlet.http.HttpServletRequest");
   }
 
   @Override
