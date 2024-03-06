@@ -24,7 +24,15 @@ public interface Cache<K, V> {
    * Object#equals(Object)}.
    */
   static <K, V> Cache<K, V> weak() {
-    return new WeakLockFreeCache<>();
+    return new WeakLockFreeCache<>(true);
+  }
+
+  /**
+   * Same as {@link #weak()}, but the provided cache doesn't do inline cleanup of GCed keys.
+   * Instead, those are cleaned up by a background thread.
+   */
+  static <K, V> Cache<K, V> weakWithoutInlineExpunction() {
+    return new WeakLockFreeCache<>(false);
   }
 
   /**
