@@ -14,7 +14,7 @@ import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
-public class Jetty12HttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+class Jetty12HttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
   public String getHttpRequestMethod(Request request) {

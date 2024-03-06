@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
-public class Jetty12ServerInstrumentation implements TypeInstrumentation {
+class Jetty12ServerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
