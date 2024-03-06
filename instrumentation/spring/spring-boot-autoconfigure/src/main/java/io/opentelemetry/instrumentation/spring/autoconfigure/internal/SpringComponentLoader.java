@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import io.opentelemetry.sdk.autoconfigure.internal.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
-import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.context.ApplicationContext;
@@ -34,21 +32,5 @@ public class SpringComponentLoader implements ComponentLoader {
         applicationContext.getBeanProvider(spiClass).stream().collect(Collectors.toList());
     spi.addAll(beans);
     return spi;
-  }
-
-  @Override
-  public <T extends Ordered> List<T> loadOrdered(Class<T> spiClass) {
-    List<T> result = spiHelper.loadOrdered(spiClass);
-
-    // don't use the Ordered annotation, because users have to implement the order method anyways
-    List<T> beans =
-        applicationContext.getBeanProvider(spiClass).stream()
-            .sorted(Comparator.comparing(Ordered::order))
-            .collect(Collectors.toList());
-
-    // (user provided) beans have a higher priority, e.g. to replace a resource from a resource
-    // provider
-    result.addAll(beans);
-    return result;
   }
 }

@@ -16,13 +16,16 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringCo
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.DistroVersionResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -79,8 +82,8 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    public ResourceProvider otelSpringResourceProvider() {
-      return new SpringResourceProvider();
+    public ResourceProvider otelSpringResourceProvider(Optional<BuildProperties> buildProperties) {
+      return new SpringResourceProvider(buildProperties);
     }
 
     @Bean
@@ -97,9 +100,10 @@ public class OpenTelemetryAutoConfiguration {
         ObjectProvider<OpenTelemetryInjector> openTelemetryConsumerProvider) {
 
       OpenTelemetry openTelemetry =
-          AutoConfiguredOpenTelemetrySdk.builder()
-              .setConfig(configProperties)
-              .setComponentLoader(componentLoader)
+          AutoConfigureUtil.setComponentLoader(
+                  AutoConfigureUtil.setConfigPropertiesCustomizer(
+                      AutoConfiguredOpenTelemetrySdk.builder(), c -> configProperties),
+                  componentLoader)
               .build()
               .getOpenTelemetrySdk();
 
