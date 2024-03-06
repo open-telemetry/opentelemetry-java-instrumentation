@@ -11,32 +11,33 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
+import java.util.Optional;
+import org.springframework.boot.info.BuildProperties;
 
 public class SpringResourceProvider implements ResourceProvider {
 
-  private final OtelSpringResourceProperties otelSpringResourceProperties;
-  private final OtelResourceProperties otelResourceProperties;
+  private final Optional<BuildProperties> buildProperties;
 
-  public SpringResourceProvider(
-      OtelSpringResourceProperties otelSpringResourceProperties,
-      OtelResourceProperties otelResourceProperties) {
-    this.otelSpringResourceProperties = otelSpringResourceProperties;
-    this.otelResourceProperties = otelResourceProperties;
+  public SpringResourceProvider(Optional<BuildProperties> buildProperties) {
+    this.buildProperties = buildProperties;
   }
 
   @Override
   public Resource createResource(ConfigProperties configProperties) {
     AttributesBuilder attributesBuilder = Attributes.builder();
+    buildProperties
+        .map(BuildProperties::getName)
+        .ifPresent(v -> attributesBuilder.put(ResourceAttributes.SERVICE_NAME, v));
+
     String springApplicationName = configProperties.getString("spring.application.name");
     if (springApplicationName != null) {
       attributesBuilder.put(ResourceAttributes.SERVICE_NAME, springApplicationName);
     }
-    otelSpringResourceProperties.getAttributes().forEach(attributesBuilder::put);
-    otelResourceProperties.getAttributes().forEach(attributesBuilder::put);
-    String applicationName = configProperties.getString("otel.service.name");
-    if (applicationName != null) {
-      attributesBuilder.put(ResourceAttributes.SERVICE_NAME, applicationName);
-    }
+
+    buildProperties
+        .map(BuildProperties::getVersion)
+        .ifPresent(v -> attributesBuilder.put(ResourceAttributes.SERVICE_VERSION, v));
+
     return Resource.create(attributesBuilder.build());
   }
 }

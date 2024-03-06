@@ -57,7 +57,7 @@ abstract class SmokeTest {
   private static GenericContainer backend;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     backend =
         new GenericContainer<>(
                 "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891")
@@ -92,7 +92,7 @@ abstract class SmokeTest {
   }
 
   @AfterEach
-  void cleanup() throws IOException {
+  void reset() throws IOException {
     client
         .newCall(
             new Request.Builder()
@@ -107,7 +107,7 @@ abstract class SmokeTest {
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     backend.stop();
   }
 

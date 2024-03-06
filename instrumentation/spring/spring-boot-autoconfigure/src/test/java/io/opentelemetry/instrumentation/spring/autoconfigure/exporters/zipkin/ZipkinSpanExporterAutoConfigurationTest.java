@@ -27,7 +27,7 @@ class ZipkinSpanExporterAutoConfigurationTest {
   @DisplayName("when exporters are ENABLED should initialize ZipkinSpanExporter bean")
   void exportersEnabled() {
     this.contextRunner
-        .withPropertyValues("otel.exporter.zipkin.enabled=true")
+        .withPropertyValues("otel.traces.exporter=zipkin")
         .run(
             context ->
                 assertThat(context.getBean("otelZipkinSpanExporter", ZipkinSpanExporter.class))
@@ -40,7 +40,7 @@ class ZipkinSpanExporterAutoConfigurationTest {
   void handlesProperties() {
     this.contextRunner
         .withPropertyValues(
-            "otel.exporter.zipkin.enabled=true",
+            "otel.traces.exporter=zipkin",
             "otel.exporter.zipkin.endpoint=http://localhost:8080/test")
         .run(
             context -> {
@@ -49,14 +49,6 @@ class ZipkinSpanExporterAutoConfigurationTest {
               assertThat(zipkinSpanExporterProperties.getEndpoint())
                   .isEqualTo("http://localhost:8080/test");
             });
-  }
-
-  @Test
-  @DisplayName("when exporters are DISABLED should NOT initialize ZipkinSpanExporter bean")
-  void disabledPropertyOld() {
-    this.contextRunner
-        .withPropertyValues("otel.exporter.zipkin.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelZipkinSpanExporter")).isFalse());
   }
 
   @Test

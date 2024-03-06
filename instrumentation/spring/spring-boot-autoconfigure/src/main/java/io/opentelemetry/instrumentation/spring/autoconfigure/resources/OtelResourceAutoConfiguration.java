@@ -16,25 +16,34 @@ import io.opentelemetry.instrumentation.resources.ProcessResourceProvider;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
+import io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import java.util.Optional;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({OtelSpringResourceProperties.class, OtelResourceProperties.class})
+@EnableConfigurationProperties({OtelResourceProperties.class})
 @AutoConfigureBefore(OpenTelemetryAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "otel.springboot.resource", name = "enabled", matchIfMissing = true)
+@Conditional(SdkEnabled.class)
 public class OtelResourceAutoConfiguration {
 
   @Bean
-  public ResourceProvider otelResourceProvider(
-      OtelSpringResourceProperties otelSpringResourceProperties,
-      OtelResourceProperties otelResourceProperties) {
-    return new SpringResourceProvider(otelSpringResourceProperties, otelResourceProperties);
+  public ResourceProvider otelEnvironmentResourceProvider() {
+    return new EnvironmentResourceProvider();
+  }
+
+  @Bean
+  public ResourceProvider otelSpringResourceProvider(Optional<BuildProperties> buildProperties) {
+    return new SpringResourceProvider(buildProperties);
   }
 
   @Bean

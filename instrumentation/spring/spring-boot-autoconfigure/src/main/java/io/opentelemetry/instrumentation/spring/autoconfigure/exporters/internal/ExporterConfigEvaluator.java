@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.exporters.internal;
 
 import java.util.Arrays;
-import javax.annotation.Nullable;
 import org.springframework.core.env.Environment;
 
 /**
@@ -17,29 +16,17 @@ public final class ExporterConfigEvaluator {
 
   private ExporterConfigEvaluator() {}
 
+  /**
+   * Returns whether the exporter is enabled. This method is used for OTLP, logging and zipkin
+   * exporters.
+   */
   public static boolean isExporterEnabled(
-      Environment environment,
-      @Nullable String oldAllKey,
-      String oldKey,
-      String exportersKey,
-      String wantExporter,
-      boolean defaultValue) {
-
+      Environment environment, String exportersKey, String wantExporter, boolean defaultValue) {
     String exporter = environment.getProperty(exportersKey);
     if (exporter != null) {
       return Arrays.asList(exporter.split(",")).contains(wantExporter);
     }
 
-    String old = environment.getProperty(oldKey);
-    if (old != null) {
-      return "true".equals(old);
-    }
-    if (oldAllKey != null) {
-      String oldAll = environment.getProperty(oldAllKey);
-      if (oldAll != null) {
-        return "true".equals(oldAll);
-      }
-    }
     return defaultValue;
   }
 }

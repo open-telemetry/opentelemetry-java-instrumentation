@@ -19,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.logging.Logger;
 
 /**
@@ -46,7 +47,8 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   public static OperationMetrics get() {
-    return HttpServerExperimentalMetrics::new;
+    return OperationMetricsUtil.create(
+        "experimental http server", HttpServerExperimentalMetrics::new);
   }
 
   private final LongUpDownCounter activeRequests;

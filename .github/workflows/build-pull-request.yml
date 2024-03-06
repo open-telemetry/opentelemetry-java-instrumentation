@@ -26,6 +26,11 @@ jobs:
     with:
       cache-read-only: true
 
+  test-native:
+    uses: ./.github/workflows/reusable-native-tests.yml
+    with:
+      skip-native-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test native') }}
+
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml
     with:

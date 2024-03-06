@@ -4,13 +4,25 @@
     "config:base"
   ],
   "ignorePaths": ["instrumentation/**"],
-  "baseBranches": ["main", "release/v1.32.x"],
+  "baseBranches": ["main", "release/v1.33.x"],
   // needed in order to get patch-only updates in package rules below
   // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
   // so we have to apply it globally here, see
   // https://github.com/renovatebot/renovate/discussions/8399#discussioncomment-305798
   "separateMinorPatch": true,
   "packageRules": [
+    {
+      "matchPackageNames": [
+        "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator",
+        "io.opentelemetry.proto:opentelemetry-proto",
+        "io.opentelemetry.semconv:opentelemetry-semconv"
+      ],
+      // Renovate's default behavior is only to update from unstable -> unstable if it's for the
+      // major.minor.patch, under the assumption that you would want to update to the stable version
+      // of that release instead of the unstable version for a future release
+      // (TODO remove once the artifacts above release stable versions)
+      "ignoreUnstable": false
+    },
     {
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "groupName": "logback packages"

@@ -94,11 +94,13 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     expect:
     receivedMessage.text == messageText
     assertTraces(2) {
+      def producer
       trace(0, 1) {
         producerSpan(it, 0, destinationName)
+        producer = span(0)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationName, receivedMessage.getJMSMessageID(), null, "receive")
+        consumerSpan(it, 0, destinationName, receivedMessage.getJMSMessageID(), null, producer, "receive")
       }
     }
 
@@ -128,22 +130,26 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     receivedMessage.text == "responded!"
     assertTraces(4) {
       traces.sort(orderByRootSpanName(
-        "$destinationName receive",
         "$destinationName publish",
-        "(temporary) receive",
-        "(temporary) publish"))
+        "$destinationName receive",
+        "(temporary) publish",
+        "(temporary) receive"))
 
+      def producer
       trace(0, 1) {
-        consumerSpan(it, 0, destinationName, msgId.get(), null, "receive")
+        producerSpan(it, 0, destinationName)
+        producer = span(0)
       }
       trace(1, 1) {
-        producerSpan(it, 0, destinationName)
+        consumerSpan(it, 0, destinationName, msgId.get(), null, producer, "receive")
       }
+      def tempProducer
       trace(2, 1) {
-        consumerSpan(it, 0, "(temporary)", receivedMessage.getJMSMessageID(), null, "receive")
+        producerSpan(it, 0, "(temporary)")
+        tempProducer = span(0)
       }
       trace(3, 1) {
-        producerSpan(it, 0, "(temporary)")
+        consumerSpan(it, 0, "(temporary)", receivedMessage.getJMSMessageID(), null, tempProducer, "receive")
       }
     }
 
@@ -167,11 +173,13 @@ class SpringTemplateTest extends AgentInstrumentationSpecification {
     expect:
     receivedMessage.text == messageText
     assertTraces(2) {
+      def producer
       trace(0, 1) {
         producerSpan(it, 0, destinationName, true)
+        producer = span(0)
       }
       trace(1, 1) {
-        consumerSpan(it, 0, destinationName, receivedMessage.getJMSMessageID(), null, "receive", true)
+        consumerSpan(it, 0, destinationName, receivedMessage.getJMSMessageID(), null, producer,"receive", true)
       }
     }
 

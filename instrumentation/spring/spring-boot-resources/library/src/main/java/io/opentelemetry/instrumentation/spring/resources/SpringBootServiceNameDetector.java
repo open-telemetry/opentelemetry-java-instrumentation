@@ -45,6 +45,9 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
  *   <li>Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
  *   <li>Check for --spring.application.name program argument via sun.java.command system property
  * </ul>
+ *
+ * <p>Note: The spring starter already includes provider in
+ * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */
 @AutoService(ResourceProvider.class)
 public class SpringBootServiceNameDetector implements ConditionalResourceProvider {

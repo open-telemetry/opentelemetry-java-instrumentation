@@ -174,7 +174,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jms.")
         .allowClass("org.springframework.jms.listener.")
         .allowClass(
-            "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback");
+            "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback")
+        .allowClass("org.springframework.jms.support.destination.JmsDestinationAccessor");
 
     builder
         .ignoreClass("org.springframework.util.")

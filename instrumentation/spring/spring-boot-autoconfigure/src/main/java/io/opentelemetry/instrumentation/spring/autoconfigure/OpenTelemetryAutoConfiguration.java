@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.exporters.otlp.Otlp
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.propagators.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringConfigProperties;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -61,6 +62,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 @EnableConfigurationProperties({
   SamplerProperties.class,
   OtlpExporterProperties.class,
+  OtelResourceProperties.class,
   PropagationProperties.class
 })
 public class OpenTelemetryAutoConfiguration {
@@ -103,9 +105,14 @@ public class OpenTelemetryAutoConfiguration {
     ConfigProperties configProperties(
         Environment env,
         OtlpExporterProperties otlpExporterProperties,
+        OtelResourceProperties resourceProperties,
         PropagationProperties propagationProperties) {
       return new SpringConfigProperties(
-          env, new SpelExpressionParser(), otlpExporterProperties, propagationProperties);
+          env,
+          new SpelExpressionParser(),
+          otlpExporterProperties,
+          resourceProperties,
+          propagationProperties);
     }
 
     @Bean(destroyMethod = "") // SDK components are shutdown from the OpenTelemetry instance
