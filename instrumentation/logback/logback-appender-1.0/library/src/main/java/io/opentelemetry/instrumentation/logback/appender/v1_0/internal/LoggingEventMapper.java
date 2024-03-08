@@ -221,8 +221,20 @@ public final class LoggingEventMapper {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
+        Object value = keyValuePair.value;
         if (keyValuePair.value != null) {
-          attributes.put(getAttributeKey(keyValuePair.key), keyValuePair.value.toString());
+          if (value instanceof Boolean) {
+            attributes.put(keyValuePair.key, (Boolean) keyValuePair.value);
+          } else if (value instanceof Byte
+              || value instanceof Integer
+              || value instanceof Long
+              || value instanceof Short) {
+            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).longValue());
+          } else if (value instanceof Double || value instanceof Float) {
+            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).doubleValue());
+          } else {
+            attributes.put(getAttributeKey(keyValuePair.key), keyValuePair.value.toString());
+          }
         }
       }
     }
@@ -236,7 +248,7 @@ public final class LoggingEventMapper {
   }
 
   public static AttributeKey<String> getAttributeKey(String key) {
-    return attributeKeys.computeIfAbsent(key, k -> AttributeKey.stringKey(k));
+    return attributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static boolean supportsKeyValuePairs() {
