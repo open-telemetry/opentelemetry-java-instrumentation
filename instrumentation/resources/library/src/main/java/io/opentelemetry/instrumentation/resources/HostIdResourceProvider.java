@@ -11,10 +11,10 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
-import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.base.Charsets;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,31 +39,15 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
   public static final String REGISTRY_QUERY =
       "reg query HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid";
 
-  private final Supplier<OsType> getOsType;
+  private final Supplier<String> getOsType;
 
   private final Function<Path, List<String>> machineIdReader;
 
   private final Supplier<List<String>> queryWindowsRegistry;
 
-  enum OsType {
-    WINDOWS,
-    LINUX,
-    OTHER
-  }
-
-  static class ExecResult {
-    int exitCode;
-    List<String> lines;
-
-    public ExecResult(int exitCode, List<String> lines) {
-      this.exitCode = exitCode;
-      this.lines = lines;
-    }
-  }
-
   public HostIdResourceProvider() {
     this(
-        HostIdResourceProvider::getOsType,
+        HostIdResourceProvider::getOsTypeSystemProperty,
         HostIdResourceProvider::readMachineIdFile,
         HostIdResourceProvider::queryWindowsRegistry);
   }
@@ -71,7 +55,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
   // Visible for testing
 
   HostIdResourceProvider(
-      Supplier<OsType> getOsType,
+      Supplier<String> getOsType,
       Function<Path, List<String>> machineIdReader,
       Supplier<List<String>> queryWindowsRegistry) {
     this.getOsType = getOsType;
@@ -81,17 +65,29 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    OsType osType = getOsType.get();
-    switch (osType) {
-      case WINDOWS:
-        return readWindowsGuid();
-      case LINUX:
-        return readLinuxMachineId();
-      case OTHER:
-        break;
+    if(runningWindows()){
+      return readWindowsGuid();
     }
-    logger.fine("Unsupported OS type: " + osType);
+    if(runningLinux()){
+      return readLinuxMachineId();
+    }
+    logger.fine("Unsupported OS type: " + getOsType.get());
     return Resource.empty();
+  }
+
+  private boolean runningLinux() {
+    return getOsType.get().toLowerCase(Locale.ROOT).equals("linux");
+  }
+
+  private boolean runningWindows() {
+    return getOsType.get().startsWith("Windows");
+  }
+
+  // see
+  // https://github.com/apache/commons-lang/blob/master/src/main/java/org/apache/commons/lang3/SystemUtils.java
+  // for values
+  private static String getOsTypeSystemProperty() {
+    return System.getProperty("os.name", "");
   }
 
   private Resource readLinuxMachineId() {
@@ -114,23 +110,6 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       logger.log(Level.FINE, "Failed to read /etc/machine-id", e);
       return Collections.emptyList();
     }
-  }
-
-  private static OsType getOsType() {
-    // see
-    // https://github.com/apache/commons-lang/blob/master/src/main/java/org/apache/commons/lang3/SystemUtils.java
-    // for values
-    String osName = System.getProperty("os.name");
-    if (osName == null) {
-      return OsType.OTHER;
-    }
-    if (osName.startsWith("Windows")) {
-      return OsType.WINDOWS;
-    }
-    if (osName.toLowerCase(Locale.ROOT).equals("linux")) {
-      return OsType.LINUX;
-    }
-    return OsType.OTHER;
   }
 
   private Resource readWindowsGuid() {
@@ -177,7 +156,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     List<String> result = new ArrayList<>();
 
     try (BufferedReader processOutputReader =
-        new BufferedReader(new InputStreamReader(process.getInputStream(), Charsets.UTF_8))) {
+        new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
       String readLine;
 
       while ((readLine = processOutputReader.readLine()) != null) {
