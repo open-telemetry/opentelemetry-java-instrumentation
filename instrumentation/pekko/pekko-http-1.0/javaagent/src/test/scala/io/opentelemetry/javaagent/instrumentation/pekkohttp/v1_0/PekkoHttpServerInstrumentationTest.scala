@@ -8,16 +8,22 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
-import io.opentelemetry.instrumentation.testing.junit.http.{HttpServerInstrumentationExtension, HttpServerTestOptions, ServerEndpoint}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  HttpServerInstrumentationExtension,
+  HttpServerTestOptions,
+  ServerEndpoint
+}
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
-import io.opentelemetry.testing.internal.armeria.common.{AggregatedHttpRequest, HttpMethod}
+import io.opentelemetry.testing.internal.armeria.common.{
+  AggregatedHttpRequest,
+  HttpMethod
+}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util
 import java.util.function.{BiFunction, Consumer, Function}
-
 
 class PekkoHttpServerInstrumentationTest
     extends AbstractHttpServerInstrumentationTest {

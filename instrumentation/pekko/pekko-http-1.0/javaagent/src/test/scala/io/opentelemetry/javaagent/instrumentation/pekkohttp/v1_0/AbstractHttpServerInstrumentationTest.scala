@@ -6,7 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, HttpServerTestOptions, ServerEndpoint}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  HttpServerTestOptions,
+  ServerEndpoint
+}
 import io.opentelemetry.semconv.SemanticAttributes
 
 import java.util
