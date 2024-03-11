@@ -63,7 +63,7 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
       String providerGroup = providerEntry.getValue();
       Boolean explictEnabled =
           config.getBoolean(
-              String.format("otel.instrumentation.resource-provider.%s.enabled", providerGroup));
+              String.format("otel.resource.providers.%s.enabled", providerGroup));
 
       if (isEnabled(providerName, enabledProviders, explictEnabled)) {
         enabled.add(providerName);

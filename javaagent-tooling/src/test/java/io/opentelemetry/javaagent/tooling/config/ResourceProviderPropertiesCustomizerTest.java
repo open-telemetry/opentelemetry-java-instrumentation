@@ -115,7 +115,7 @@ public class ResourceProviderPropertiesCustomizerTest {
 
                       if (tc.explicitEnabled != null) {
                         props.put(
-                            "otel.instrumentation.resource-provider.test.enabled",
+                            "otel.resource.providers.test.enabled",
                             Boolean.toString(tc.explicitEnabled));
                       }
 
