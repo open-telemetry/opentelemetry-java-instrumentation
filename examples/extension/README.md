@@ -30,7 +30,7 @@ contain extension jars) for the `otel.javaagent.extensions` value.
 
 To simplify deployment, you can embed extensions into the OpenTelemetry Java Agent to produce a single jar file. With an integrated extension, you no longer need the `-Dotel.javaagent.extensions` command line option.
 
-For more information, see the `extendedAgent` task in [build.gradle](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/examples/extension/build.gradle?rgh-link-date=2024-03-11T10%3A36%3A52Z#:~:text=extendedAgent).
+For more information, see the `extendedAgent` task in [build.gradle](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/examples/extension/build.gradle?T10%3A36%3A52Z#:~:text=extendedAgent).
 
 ## Extensions examples
 
