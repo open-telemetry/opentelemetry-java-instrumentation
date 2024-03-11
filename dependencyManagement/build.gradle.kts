@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.35.0"
+val otelSdkVersion = "1.36.0"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -26,7 +26,7 @@ val groovyVersion = "4.0.19"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.16.1",
+  "com.fasterxml.jackson:jackson-bom:2.16.2",
   "com.squareup.okio:okio-bom:3.8.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.0.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
