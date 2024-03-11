@@ -110,8 +110,6 @@ testing {
     val testLogbackMissing by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-        implementation("io.opentelemetry:opentelemetry-sdk")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
         implementation("org.slf4j:slf4j-api") {
