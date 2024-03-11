@@ -13,8 +13,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 /**
- * This instrumentation applies to classes in akka-http.jar while
- * AkkaHttpServerInstrumentationModule applies to classes in akka-http-core.jar
+ * This instrumentation applies to classes in pekko-http.jar while
+ * PekkoHttpServerInstrumentationModule applies to classes in pekko-http-core.jar
  */
 @AutoService(InstrumentationModule.class)
 public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationModule {
@@ -24,8 +24,8 @@ public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationMo
 
   @Override
   public boolean isIndyModule() {
-    // AkkaHttpServerInstrumentationModule and AkkaHttpServerRouteInstrumentationModule share
-    // AkkaRouteHolder class
+    // PekkoHttpServerInstrumentationModule and PekkoHttpServerRouteInstrumentationModule share
+    // PekkoRouteHolder class
     return false;
   }
 
