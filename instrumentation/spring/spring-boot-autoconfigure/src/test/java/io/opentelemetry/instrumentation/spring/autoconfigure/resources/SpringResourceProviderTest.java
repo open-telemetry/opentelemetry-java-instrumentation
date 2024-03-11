@@ -9,9 +9,15 @@ import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import java.util.Collections;
 import java.util.Properties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +25,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.core.env.Environment;
 
 public class SpringResourceProviderTest {
 
@@ -56,10 +63,18 @@ public class SpringResourceProviderTest {
   }
 
   private static AttributesAssert assertResourceAttributes(AssertableApplicationContext context) {
+    ConfigProperties configProperties =
+        SpringConfigProperties.create(
+            context.getBean(Environment.class),
+            new OtlpExporterProperties(),
+            new OtelResourceProperties(),
+            new PropagationProperties(),
+            DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+
     return OpenTelemetryAssertions.assertThat(
         context
             .getBean(SpringResourceProvider.class)
-            .createResource(context.getBean(ConfigProperties.class))
+            .createResource(configProperties)
             .getAttributes());
   }
 }

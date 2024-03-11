@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.resources.DistroVer
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
@@ -30,7 +29,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * Create {@link io.opentelemetry.api.OpenTelemetry} bean if bean is missing.
@@ -62,21 +60,6 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    ConfigProperties configProperties(
-        Environment env,
-        OtlpExporterProperties otlpExporterProperties,
-        OtelResourceProperties resourceProperties,
-        PropagationProperties propagationProperties) {
-      return new SpringConfigProperties(
-          env,
-          new SpelExpressionParser(),
-          otlpExporterProperties,
-          resourceProperties,
-          propagationProperties);
-    }
-
-    @Bean
     public SpringComponentLoader springComponentLoader(ApplicationContext applicationContext) {
       return new SpringComponentLoader(applicationContext);
     }
@@ -95,14 +78,24 @@ public class OpenTelemetryAutoConfiguration {
     // If you change the bean name, also change it in the OpenTelemetryJdbcDriverAutoConfiguration
     // class
     public OpenTelemetry openTelemetry(
+        Environment env,
+        OtlpExporterProperties otlpExporterProperties,
+        OtelResourceProperties resourceProperties,
+        PropagationProperties propagationProperties,
         SpringComponentLoader componentLoader,
-        ConfigProperties configProperties,
         ObjectProvider<OpenTelemetryInjector> openTelemetryConsumerProvider) {
 
       OpenTelemetry openTelemetry =
           AutoConfigureUtil.setComponentLoader(
                   AutoConfigureUtil.setConfigPropertiesCustomizer(
-                      AutoConfiguredOpenTelemetrySdk.builder(), c -> configProperties),
+                      AutoConfiguredOpenTelemetrySdk.builder(),
+                      c ->
+                          SpringConfigProperties.create(
+                              env,
+                              otlpExporterProperties,
+                              resourceProperties,
+                              propagationProperties,
+                              c)),
                   componentLoader)
               .build()
               .getOpenTelemetrySdk();

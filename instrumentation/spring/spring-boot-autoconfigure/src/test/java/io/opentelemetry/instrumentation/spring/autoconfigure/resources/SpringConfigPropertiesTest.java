@@ -12,6 +12,9 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelReso
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -30,19 +33,26 @@ class SpringConfigPropertiesTest {
         .run(
             context -> {
               Environment env = context.getBean("environment", Environment.class);
+              Map<String, String> fallback = new HashMap<>();
+              fallback.put("fallback", "fallbackVal");
+              fallback.put("otel.springboot.test.map", "hidden");
+
               SpringConfigProperties config =
                   new SpringConfigProperties(
                       env,
                       new SpelExpressionParser(),
                       new OtlpExporterProperties(),
                       new OtelResourceProperties(),
-                      new PropagationProperties());
+                      new PropagationProperties(),
+                      DefaultConfigProperties.createFromMap(fallback));
 
               assertThat(config.getMap("otel.springboot.test.map"))
                   .contains(
                       entry("environment", "dev"),
                       entry("xyz", "foo"),
                       entry("service.instance.id", "id-example"));
+
+              assertThat(config.getString("fallback")).isEqualTo("fallbackVal");
             });
   }
 }

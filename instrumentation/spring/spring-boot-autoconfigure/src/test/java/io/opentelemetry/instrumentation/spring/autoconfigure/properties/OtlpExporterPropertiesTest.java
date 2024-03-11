@@ -10,7 +10,9 @@ import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -90,6 +92,7 @@ class OtlpExporterPropertiesTest {
         new SpelExpressionParser(),
         context.getBean(OtlpExporterProperties.class),
         new OtelResourceProperties(),
-        new PropagationProperties());
+        new PropagationProperties(),
+        DefaultConfigProperties.createFromMap(Collections.emptyMap()));
   }
 }

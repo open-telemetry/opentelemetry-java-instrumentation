@@ -9,7 +9,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.logs.ConfigurableLogRecordExporterProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.metrics.ConfigurableMetricExporterProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.traces.ConfigurableSpanExporterProvider;
@@ -27,6 +32,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +40,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @SpringBootTest(
     classes = {
@@ -63,7 +70,10 @@ class OtelSpringStarterSmokeTest {
 
   @Autowired private TestRestTemplate testRestTemplate;
 
-  @Autowired private ConfigProperties configProperties;
+  @Autowired private Environment environment;
+  @Autowired private PropagationProperties propagationProperties;
+  @Autowired private OtelResourceProperties otelResourceProperties;
+  @Autowired private OtlpExporterProperties otlpExporterProperties;
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
@@ -116,6 +126,13 @@ class OtelSpringStarterSmokeTest {
 
   @Test
   void propertyConversion() {
+    ConfigProperties configProperties =
+        SpringConfigProperties.create(
+            environment,
+            otlpExporterProperties,
+            otelResourceProperties,
+            propagationProperties,
+            DefaultConfigProperties.createFromMap(Collections.emptyMap()));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
         .containsEntry("a", "1")
         .containsEntry("b", "2");
