@@ -64,8 +64,7 @@ class HostIdResourceProviderTest {
                     testCase.name,
                     () -> {
                       HostIdResourceProvider provider =
-                          new HostIdResourceProvider(
-                              () -> "linux", testCase.pathReader, null);
+                          new HostIdResourceProvider(() -> "linux", testCase.pathReader, null);
 
                       assertHostId(testCase.expectedValue, provider);
                     }))
@@ -90,9 +89,7 @@ class HostIdResourceProviderTest {
                     () -> {
                       HostIdResourceProvider provider =
                           new HostIdResourceProvider(
-                              () -> "Windows 95",
-                              null,
-                              testCase.queryWindowsRegistry);
+                              () -> "Windows 95", null, testCase.queryWindowsRegistry);
 
                       assertHostId(testCase.expectedValue, provider);
                     }))

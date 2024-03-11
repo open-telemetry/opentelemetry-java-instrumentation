@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
@@ -24,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -65,13 +66,13 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    if(runningWindows()){
+    if (runningWindows()) {
       return readWindowsGuid();
     }
-    if(runningLinux()){
+    if (runningLinux()) {
       return readLinuxMachineId();
     }
-    logger.fine("Unsupported OS type: " + getOsType.get());
+    logger.log(FINE, "Unsupported OS type: {0}", getOsType.get());
     return Resource.empty();
   }
 
@@ -107,7 +108,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       }
       return lines;
     } catch (IOException e) {
-      logger.log(Level.FINE, "Failed to read /etc/machine-id", e);
+      logger.log(FINE, "Failed to read /etc/machine-id", e);
       return Collections.emptyList();
     }
   }
@@ -147,7 +148,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
 
       return output;
     } catch (IOException | InterruptedException e) {
-      logger.log(Level.FINE, "Failed to read Windows registry", e);
+      logger.log(FINE, "Failed to read Windows registry", e);
       return Collections.emptyList();
     }
   }
@@ -156,7 +157,8 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     List<String> result = new ArrayList<>();
 
     try (BufferedReader processOutputReader =
-        new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+        new BufferedReader(
+            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
       String readLine;
 
       while ((readLine = processOutputReader.readLine()) != null) {
