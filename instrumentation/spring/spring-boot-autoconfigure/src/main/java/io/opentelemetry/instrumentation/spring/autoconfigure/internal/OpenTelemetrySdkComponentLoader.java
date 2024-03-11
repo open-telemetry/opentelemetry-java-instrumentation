@@ -15,13 +15,13 @@ import org.springframework.context.ApplicationContext;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class SpringComponentLoader implements ComponentLoader {
+public class OpenTelemetrySdkComponentLoader implements ComponentLoader {
   private final ApplicationContext applicationContext;
 
   private final SpiHelper spiHelper =
-      SpiHelper.create(SpringComponentLoader.class.getClassLoader());
+      SpiHelper.create(OpenTelemetrySdkComponentLoader.class.getClassLoader());
 
-  public SpringComponentLoader(ApplicationContext applicationContext) {
+  public OpenTelemetrySdkComponentLoader(ApplicationContext applicationContext) {
     this.applicationContext = applicationContext;
   }
 

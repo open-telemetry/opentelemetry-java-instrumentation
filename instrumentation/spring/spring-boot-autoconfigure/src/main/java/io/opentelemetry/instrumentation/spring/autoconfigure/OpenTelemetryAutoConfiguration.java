@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SpringComponentLoader;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySdkComponentLoader;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
@@ -60,8 +60,9 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    public SpringComponentLoader springComponentLoader(ApplicationContext applicationContext) {
-      return new SpringComponentLoader(applicationContext);
+    public OpenTelemetrySdkComponentLoader openTelemetrySdkComponentLoader(
+        ApplicationContext applicationContext) {
+      return new OpenTelemetrySdkComponentLoader(applicationContext);
     }
 
     @Bean
@@ -82,7 +83,7 @@ public class OpenTelemetryAutoConfiguration {
         OtlpExporterProperties otlpExporterProperties,
         OtelResourceProperties resourceProperties,
         PropagationProperties propagationProperties,
-        SpringComponentLoader componentLoader,
+        OpenTelemetrySdkComponentLoader componentLoader,
         ObjectProvider<OpenTelemetryInjector> openTelemetryConsumerProvider) {
 
       OpenTelemetry openTelemetry =
