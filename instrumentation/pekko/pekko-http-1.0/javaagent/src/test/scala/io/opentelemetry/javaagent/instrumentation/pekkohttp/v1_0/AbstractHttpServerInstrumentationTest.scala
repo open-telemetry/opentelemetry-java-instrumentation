@@ -6,11 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.instrumentation.testing.junit.http.{
-  AbstractHttpServerTest,
-  HttpServerTestOptions,
-  ServerEndpoint
-}
+import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, HttpServerTestOptions, ServerEndpoint}
+import io.opentelemetry.semconv.SemanticAttributes
 
 import java.util
 import java.util.Collections
@@ -25,8 +22,13 @@ abstract class AbstractHttpServerInstrumentationTest
     options.setTestCaptureHttpHeaders(false)
     options.setHttpAttributes(
       new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] =
-          Collections.emptySet()
+        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
+          val set = new util.HashSet[AttributeKey[_]](
+            HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
+          )
+          set.remove(SemanticAttributes.HTTP_ROUTE)
+          set
+        }
       }
     )
     options.setHasResponseCustomizer(
