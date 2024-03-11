@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -36,7 +35,7 @@ class JarServiceNameDetectorTest {
 
   @BeforeEach
   void setUp() {
-    ResourceDiscoveryCache.resetForTest();
+    JarPathFinder.resetForTest();
   }
 
   @Test
@@ -54,7 +53,7 @@ class JarServiceNameDetectorTest {
   private static JarServiceNameDetector getDetector(
       String[] processArgs, Function<String, String> getProperty, Predicate<Path> fileExists) {
     return new JarServiceNameDetector(
-        new JarPathFinder(() -> processArgs, getProperty, fileExists, p -> Optional.empty()));
+        new JarPathFinder(() -> processArgs, getProperty, fileExists));
   }
 
   @Test

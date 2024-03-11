@@ -27,7 +27,7 @@ class ManifestResourceProviderTest {
 
   @BeforeEach
   void setUp() {
-    ResourceDiscoveryCache.resetForTest();
+    JarPathFinder.resetForTest();
   }
 
   private static class TestCase {
@@ -63,16 +63,16 @@ class ManifestResourceProviderTest {
                               new JarPathFinder(
                                   () -> JarServiceNameDetectorTest.getArgs("app.jar"),
                                   prop -> null,
-                                  JarServiceNameDetectorTest::failPath,
-                                  p -> {
-                                    try {
-                                      Manifest manifest = new Manifest();
-                                      manifest.read(t.input);
-                                      return Optional.of(manifest);
-                                    } catch (Exception e) {
-                                      return Optional.empty();
-                                    }
-                                  }));
+                                  JarServiceNameDetectorTest::failPath),
+                              p -> {
+                                try {
+                                  Manifest manifest = new Manifest();
+                                  manifest.read(t.input);
+                                  return Optional.of(manifest);
+                                } catch (Exception e) {
+                                  return Optional.empty();
+                                }
+                              });
                       provider.shouldApply(config, Resource.getDefault());
 
                       Resource resource = provider.createResource(config);

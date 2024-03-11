@@ -40,13 +40,16 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    Path jarPath = jarPathFinder.getJarPath();
-    if (jarPath == null) {
-      return Resource.empty();
-    }
-    String serviceName = getServiceName(jarPath);
-    logger.log(FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
-    return Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, serviceName));
+    return jarPathFinder
+        .getJarPath()
+        .map(
+            jarPath -> {
+              String serviceName = getServiceName(jarPath);
+              logger.log(
+                  FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
+              return Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, serviceName));
+            })
+        .orElseGet(Resource::empty);
   }
 
   @Override

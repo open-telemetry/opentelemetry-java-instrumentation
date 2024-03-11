@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static java.util.logging.Level.WARNING;
-
-import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -17,69 +13,48 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.jar.Manifest;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 class JarPathFinder {
   private final Supplier<String[]> getProcessHandleArguments;
   private final Function<String, String> getSystemProperty;
   private final Predicate<Path> fileExists;
-  private final Function<Path, Optional<Manifest>> manifestReader;
 
-  private static final Logger logger = Logger.getLogger(JarPathFinder.class.getName());
+  private static Optional<Optional<Path>> jarPath = Optional.empty();
 
   public JarPathFinder() {
-    this(
-        ProcessArguments::getProcessArguments,
-        System::getProperty,
-        Files::isRegularFile,
-        JarPathFinder::readManifest);
+    this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
   }
 
   // visible for tests
   JarPathFinder(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
-      Predicate<Path> fileExists,
-      Function<Path, Optional<Manifest>> manifestReader) {
+      Predicate<Path> fileExists) {
     this.getProcessHandleArguments = getProcessHandleArguments;
     this.getSystemProperty = getSystemProperty;
     this.fileExists = fileExists;
-    this.manifestReader = manifestReader;
   }
 
-  @Nullable
-  Path getJarPath() {
-    return ResourceDiscoveryCache.get(
-        "jarPath",
-        () -> {
-          Path jarPath = getJarPathFromProcessHandle();
-          if (jarPath != null) {
-            return jarPath;
-          }
-          return getJarPathFromSunCommandLine();
-        });
+  // visible for testing
+  static void resetForTest() {
+    jarPath = Optional.empty();
   }
 
-  Optional<Manifest> getManifestFromJarFile() {
-    Path jarPath = getJarPath();
-    if (jarPath == null) {
-      return Optional.empty();
+  Optional<Path> getJarPath() {
+    if (jarPath.isPresent()) {
+      return jarPath.get();
     }
-    return manifestReader.apply(jarPath);
+    jarPath = Optional.of(Optional.ofNullable(readJarPath()));
+    return jarPath.get();
   }
 
-  private static Optional<Manifest> readManifest(Path jarPath) {
-    try (InputStream s =
-        new URL(String.format("jar:%s!/META-INF/MANIFEST.MF", jarPath.toUri())).openStream()) {
-      Manifest manifest = new Manifest();
-      manifest.read(s);
-      return Optional.of(manifest);
-    } catch (Exception e) {
-      logger.log(WARNING, "Error reading manifest", e);
-      return Optional.empty();
+  private Path readJarPath() {
+    Path jarPath = getJarPathFromProcessHandle();
+    if (jarPath != null) {
+      return jarPath;
     }
+    return getJarPathFromSunCommandLine();
   }
 
   @Nullable
