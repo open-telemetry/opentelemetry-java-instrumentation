@@ -223,6 +223,7 @@ public final class LoggingEventMapper {
       for (KeyValuePair keyValuePair : keyValuePairs) {
         Object value = keyValuePair.value;
         if (keyValuePair.value != null) {
+          // preserve type for boolean and numeric values, everything else is converted to String
           if (value instanceof Boolean) {
             attributes.put(keyValuePair.key, (Boolean) keyValuePair.value);
           } else if (value instanceof Byte
