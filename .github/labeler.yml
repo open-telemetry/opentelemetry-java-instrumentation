@@ -6,4 +6,5 @@ test native:
           - instrumentation/jdbc/library/**
           - instrumentation/spring/**
           - smoke-tests-otel-starter/**
+          - dependencyManagement/build.gradle.kts
       - all-globs-to-all-files: '!instrumentation/spring/**/javaagent/**'
