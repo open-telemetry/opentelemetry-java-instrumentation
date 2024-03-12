@@ -18,6 +18,7 @@ public class BatchRecordListener {
 
   private static final AtomicInteger lastBatchSize = new AtomicInteger();
   private static volatile CountDownLatch messageReceived = new CountDownLatch(2);
+  private int failureCount;
 
   @KafkaListener(
       id = "testBatchListener",
@@ -30,7 +31,8 @@ public class BatchRecordListener {
     GlobalTraceUtil.runWithSpan("consumer", () -> {});
     records.forEach(
         record -> {
-          if (record.value().equals("error")) {
+          if (record.value().equals("error") && failureCount < 2) {
+            failureCount++;
             throw new IllegalArgumentException("boom");
           }
         });
