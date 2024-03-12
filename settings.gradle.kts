@@ -1,10 +1,10 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.5"
+    id("com.github.jk1.dependency-license-report") version "2.6"
     id("com.google.cloud.tools.jib") version "3.4.1"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.22"
+    id("org.jetbrains.kotlin.jvm") version "1.9.23"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.10.1"
