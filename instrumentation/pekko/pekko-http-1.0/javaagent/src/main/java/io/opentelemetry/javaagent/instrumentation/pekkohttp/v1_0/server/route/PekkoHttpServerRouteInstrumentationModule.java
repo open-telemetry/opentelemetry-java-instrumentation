@@ -19,7 +19,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationModule {
   public PekkoHttpServerRouteInstrumentationModule() {
-    super("pekko-http", "pekko-http-10.0", "pekko-http-server", "pekko-http-server-route");
+    super("pekko-http", "pekko-http-1.0", "pekko-http-server", "pekko-http-server-route");
   }
 
   @Override
