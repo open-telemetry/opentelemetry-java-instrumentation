@@ -20,7 +20,15 @@ class JarPathFinder {
   private final Function<String, String> getSystemProperty;
   private final Predicate<Path> fileExists;
 
-  private static Optional<Optional<Path>> jarPath = Optional.empty();
+  private static class DetectionResult {
+    private final Optional<Path> jarPath;
+
+    private DetectionResult(Optional<Path> jarPath) {
+      this.jarPath = jarPath;
+    }
+  }
+
+  private static Optional<DetectionResult> detectionResult = Optional.empty();
 
   public JarPathFinder() {
     this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
@@ -38,18 +46,17 @@ class JarPathFinder {
 
   // visible for testing
   static void resetForTest() {
-    jarPath = Optional.empty();
+    detectionResult = Optional.empty();
   }
 
   Optional<Path> getJarPath() {
-    if (jarPath.isPresent()) {
-      return jarPath.get();
+    if (!detectionResult.isPresent()) {
+      detectionResult = Optional.of(new DetectionResult(Optional.ofNullable(detectJarPath())));
     }
-    jarPath = Optional.of(Optional.ofNullable(readJarPath()));
-    return jarPath.get();
+    return detectionResult.get().jarPath;
   }
 
-  private Path readJarPath() {
+  private Path detectJarPath() {
     Path jarPath = getJarPathFromProcessHandle();
     if (jarPath != null) {
       return jarPath;
