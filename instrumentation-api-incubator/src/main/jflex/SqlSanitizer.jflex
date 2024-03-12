@@ -128,10 +128,53 @@ WHITESPACE          = [ \t\r\n]+
     /** @return true if all statement info is gathered */
     boolean handleNext() {
       return false;
-     }
+    }
+
+    /** @return true if all statement info is gathered */
+    boolean handleOperationTarget(String target) {
+      return false;
+    }
+
+    boolean expectingOperationTarget() {
+      return false;
+    }
 
     SqlStatementInfo getResult(String fullStatement) {
       return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+    }
+  }
+
+  private abstract class DdlOperation extends Operation {
+    private String operationTarget = "";
+    private boolean expectingOperationTarget = true;
+
+    boolean expectingOperationTarget() {
+      return expectingOperationTarget;
+    }
+
+    boolean handleOperationTarget(String target) {
+      operationTarget = target;
+      expectingOperationTarget = false;
+      return false;
+    }
+
+    boolean shouldHandleIdentifier() {
+      // Return true only if the provided value corresponds to a table, as it will be used to set the attribute `db.sql.table`.
+      return "TABLE".equals(operationTarget);
+    }
+
+    boolean handleIdentifier() {
+      if (shouldHandleIdentifier()) {
+        mainIdentifier = readIdentifierName();
+      }
+      return true;
+    }
+
+    SqlStatementInfo getResult(String fullStatement) {
+      if (!"".equals(operationTarget)) {
+        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+      }
+      return super.getResult(fullStatement);
     }
   }
 
@@ -279,6 +322,15 @@ WHITESPACE          = [ \t\r\n]+
     }
   }
 
+  private class Create extends DdlOperation {
+  }
+
+  private class Drop extends DdlOperation {
+  }
+
+  private class Alter extends DdlOperation {
+  }
+
   private SqlStatementInfo getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
@@ -339,6 +391,27 @@ WHITESPACE          = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "CREATE" {
+          if (!insideComment) {
+            setOperation(new Create());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "DROP" {
+          if (!insideComment) {
+            setOperation(new Drop());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "ALTER" {
+          if (!insideComment) {
+            setOperation(new Alter());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "FROM" {
           if (!insideComment && !extractionDone) {
             if (operation == NoOp.INSTANCE) {
@@ -367,11 +440,27 @@ WHITESPACE          = [ \t\r\n]+
       }
   "NEXT" {
           if (!insideComment && !extractionDone) {
-              extractionDone = operation.handleNext();
-            }
+            extractionDone = operation.handleNext();
+          }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "IF" | "NOT" | "EXISTS" {
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
+          if (!insideComment && !extractionDone) {
+            if (operation.expectingOperationTarget()) {
+              extractionDone = operation.handleOperationTarget(yytext());
+            } else {
+              extractionDone = operation.handleIdentifier();
+            }
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
   {COMMA} {
           if (!insideComment && !extractionDone) {
             extractionDone = operation.handleComma();

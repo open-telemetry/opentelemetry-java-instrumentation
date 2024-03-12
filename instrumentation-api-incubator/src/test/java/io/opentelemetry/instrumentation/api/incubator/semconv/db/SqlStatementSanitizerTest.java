@@ -60,6 +60,17 @@ public class SqlStatementSanitizerTest {
     assertThat(result).isEqualTo(expected);
   }
 
+  @ParameterizedTest
+  @ArgumentsSource(DdlArgs.class)
+  void checkDdlOperationStatementsAreOk(
+      String actual, Function<String, SqlStatementInfo> expectFunc) {
+    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(actual);
+    SqlStatementInfo expected = expectFunc.apply(actual);
+    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
+    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
+    assertThat(result.getMainIdentifier()).isEqualTo(expected.getMainIdentifier());
+  }
+
   @Test
   void lotsOfTicksDontCauseStackOverflowOrLongRuntimes() {
     String s = "'";
@@ -355,6 +366,36 @@ public class SqlStatementSanitizerTest {
           Arguments.of("and now for something completely different", expect(null, null)),
           Arguments.of("", expect(null, null)),
           Arguments.of(null, expect(null, null)));
+    }
+  }
+
+  static class DdlArgs implements ArgumentsProvider {
+
+    static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
+      return sql -> SqlStatementInfo.create(sql, operation, identifier);
+    }
+
+    static Function<String, SqlStatementInfo> expect(
+        String sql, String operation, String identifier) {
+      return ignored -> SqlStatementInfo.create(sql, operation, identifier);
+    }
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+      return Stream.of(
+          Arguments.of("CREATE TABLE `table`", expect("CREATE TABLE", "table")),
+          Arguments.of("CREATE TABLE IF NOT EXISTS table", expect("CREATE TABLE", "table")),
+          Arguments.of("DROP TABLE `if`", expect("DROP TABLE", "if")),
+          Arguments.of(
+              "ALTER TABLE table ADD CONSTRAINT c FOREIGN KEY (foreign_id) REFERENCES ref (id)",
+              expect("ALTER TABLE", "table")),
+          Arguments.of("CREATE INDEX types_name ON types (name)", expect("CREATE INDEX", null)),
+          Arguments.of("DROP INDEX types_name ON types (name)", expect("DROP INDEX", null)),
+          Arguments.of(
+              "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?",
+              expect("CREATE VIEW", null)),
+          Arguments.of(
+              "CREATE PROCEDURE p AS SELECT * FROM table GO", expect("CREATE PROCEDURE", null)));
     }
   }
 }

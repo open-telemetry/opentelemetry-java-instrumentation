@@ -399,7 +399,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         span(1) {
-          name dbNameLower
+          name spanName
           kind CLIENT
           childOf span(0)
           attributes {
@@ -410,6 +410,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             }
             "$SemanticAttributes.DB_STATEMENT" query
             "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$SemanticAttributes.DB_OPERATION" "CREATE TABLE"
+            "$SemanticAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -420,19 +422,19 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     connection.close()
 
     where:
-    system   | connection                                                | username | query                                                                           | url
-    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"                   | "h2:mem:"
-    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"                | "derby:memory:"
-    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)    | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE S_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "h2:mem:"
-    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "derby:memory:"
-    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection() | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE S_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "h2:mem:"
-    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "derby:memory:"
-    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection() | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE S_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"              | "h2:mem:"
-    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE S_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "derby:memory:"
-    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()   | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "hsqldb:mem:"
+    system   | connection                                                           | username | query                                                                           | spanName                                   | url             | table
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"                   | "CREATE TABLE jdbcunittest.S_H2"           | "h2:mem:"       | "S_H2"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"                | "CREATE TABLE jdbcunittest.S_DERBY"        | "derby:memory:" | "S_DERBY"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "CREATE TABLE PUBLIC.S_HSQLDB"             | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB"
+    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | "CREATE TABLE S_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "CREATE TABLE jdbcunittest.S_H2_TOMCAT"    | "h2:mem:"       | "S_H2_TOMCAT"
+    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | "CREATE TABLE S_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "CREATE TABLE jdbcunittest.S_DERBY_TOMCAT" | "derby:memory:" | "S_DERBY_TOMCAT"
+    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT"      | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB_TOMCAT"
+    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | "CREATE TABLE S_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "CREATE TABLE jdbcunittest.S_H2_HIKARI"    | "h2:mem:"       | "S_H2_HIKARI"
+    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | "CREATE TABLE S_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "CREATE TABLE jdbcunittest.S_DERBY_HIKARI" | "derby:memory:" | "S_DERBY_HIKARI"
+    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI"      | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB_HIKARI"
+    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | "CREATE TABLE S_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"              | "CREATE TABLE jdbcunittest.S_H2_C3P0"      | "h2:mem:"       | "S_H2_C3P0"
+    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | "CREATE TABLE S_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "CREATE TABLE jdbcunittest.S_DERBY_C3P0"   | "derby:memory:" | "S_DERBY_C3P0"
+    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0"        | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB_C3P0"
   }
 
   def "prepared statement update on #system with #connection.getClass().getCanonicalName() generates a span"() {
@@ -452,7 +454,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         span(1) {
-          name dbNameLower
+          name spanName
           kind CLIENT
           childOf span(0)
           attributes {
@@ -463,6 +465,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             }
             "$SemanticAttributes.DB_STATEMENT" query
             "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$SemanticAttributes.DB_OPERATION" "CREATE TABLE"
+            "$SemanticAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -473,15 +477,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     connection.close()
 
     where:
-    system  | connection                                                | username | query                                                                    | url
-    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "h2:mem:"
-    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "derby:memory:"
-    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "h2:mem:"
-    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "derby:memory:"
-    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "h2:mem:"
-    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "derby:memory:"
-    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE PS_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"      | "h2:mem:"
-    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "derby:memory:"
+    system  | connection                                                | username | query                                                                    | spanName                                    | url             | table
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "CREATE TABLE jdbcunittest.PS_H2"           | "h2:mem:"       | "PS_H2"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "CREATE TABLE jdbcunittest.PS_DERBY"        | "derby:memory:" | "PS_DERBY"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "CREATE TABLE jdbcunittest.PS_H2_TOMCAT"    | "h2:mem:"       | "PS_H2_TOMCAT"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE jdbcunittest.PS_DERBY_TOMCAT" | "derby:memory:" | "PS_DERBY_TOMCAT"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "CREATE TABLE jdbcunittest.PS_H2_HIKARI"    | "h2:mem:"       | "PS_H2_HIKARI"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE jdbcunittest.PS_DERBY_HIKARI" | "derby:memory:" | "PS_DERBY_HIKARI"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE PS_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"      | "CREATE TABLE jdbcunittest.PS_H2_C3P0"      | "h2:mem:"       | "PS_H2_C3P0"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "CREATE TABLE jdbcunittest.PS_DERBY_C3P0"   | "derby:memory:" | "PS_DERBY_C3P0"
   }
 
   def "connection constructor throwing then generating correct spans after recovery using #driver connection (prepare statement = #prepareStatement)"() {
@@ -698,12 +702,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     }
 
     where:
-    url                                         | query                 | sanitizedQuery        | spanName            | databaseName | operation | table
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT test.table" | "test"       | "SELECT"  | "table"
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT ?"            | "SELECT test"       | "test"       | "SELECT"  | null
-    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT table"      | null         | "SELECT"  | "table"
-    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "CREATE TABLE table"  | "test"              | "test"       | null      | null
-    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "CREATE TABLE table"  | "DB Query"          | null         | null      | null
+    url                                         | query                 | sanitizedQuery        | spanName                  | databaseName | operation      | table
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT test.table"       | "test"       | "SELECT"       | "table"
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT ?"            | "SELECT test"             | "test"       | "SELECT"       | null
+    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT table"            | null         | "SELECT"       | "table"
+    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "CREATE TABLE table"  | "CREATE TABLE test.table" | "test"       | "CREATE TABLE" | "table"
+    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "CREATE TABLE table"  | "CREATE TABLE table"      | null         | "CREATE TABLE" | "table"
   }
 
   def "#connectionPoolName connections should be cached in case of wrapped connections"() {

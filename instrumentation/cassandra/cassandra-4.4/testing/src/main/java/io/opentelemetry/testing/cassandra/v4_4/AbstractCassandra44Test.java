@@ -106,8 +106,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "DROP KEYSPACE IF EXISTS reactive_test",
                     "DROP KEYSPACE IF EXISTS reactive_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -116,8 +116,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -126,9 +126,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "reactive_test",
                     "CREATE TABLE reactive_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE reactive_test.users ( id UUID PRIMARY KEY, name text )",
-                    "reactive_test",
-                    null,
-                    null))),
+                    "CREATE TABLE reactive_test.users",
+                    "CREATE TABLE",
+                    "reactive_test.users"))),
         Arguments.of(
             named(
                 "Insert data",

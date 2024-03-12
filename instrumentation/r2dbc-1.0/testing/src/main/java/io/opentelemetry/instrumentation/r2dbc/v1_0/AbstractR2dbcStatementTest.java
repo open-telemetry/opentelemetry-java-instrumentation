@@ -204,9 +204,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                DB,
-                                null,
-                                null))),
+                                "CREATE TABLE " + DB + ".person",
+                                "person",
+                                "CREATE TABLE"))),
                     Arguments.of(
                         named(
                             system.system + " Insert",
