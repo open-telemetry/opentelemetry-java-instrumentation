@@ -281,6 +281,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.reactor-netty.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Reactor Netty HttpClient instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.logs.exporter",
       "type": "java.util.List<java.lang.String>",
       "description": "List of exporters to be used for logs.",
