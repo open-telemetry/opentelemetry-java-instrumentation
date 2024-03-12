@@ -92,7 +92,9 @@ jobs:
           branch="opentelemetrybot/update-opentelemetry-sdk-to-${VERSION}"
 
           git checkout -b $branch
-          git commit -a -m "$message"
+          git add -u
+          git add licenses
+          git commit -m "$message"
           git push --set-upstream origin $branch
           gh pr create --title "$message" \
                        --body "$body" \
