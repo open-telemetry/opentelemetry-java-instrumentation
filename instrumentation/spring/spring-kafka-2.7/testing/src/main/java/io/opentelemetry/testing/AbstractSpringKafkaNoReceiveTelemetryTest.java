@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaTest {
 
+  protected abstract boolean isLibraryInstrumentationTest();
+
   @Test
   void shouldCreateSpansForSingleRecordProcess() {
     testing()
@@ -324,7 +326,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(processAttributes),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
             trace -> {
-              if (Boolean.getBoolean("testLatestDeps")) {
+              if (isLibraryInstrumentationTest() && Boolean.getBoolean("testLatestDeps")) {
                 // in latest dep tests process spans are not created for retries because spring does
                 // not call the success/failure methods on the BatchInterceptor for reties
                 trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
@@ -342,7 +344,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
               }
             },
             trace -> {
-              if (Boolean.getBoolean("testLatestDeps")) {
+              if (isLibraryInstrumentationTest() && Boolean.getBoolean("testLatestDeps")) {
                 trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
               } else {
                 trace.hasSpansSatisfyingExactly(
