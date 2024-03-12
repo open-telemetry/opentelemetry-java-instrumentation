@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.RequestDispatcherServlet
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
@@ -20,6 +21,8 @@ import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 import spock.lang.Shared
 import spock.lang.Unroll
+import test.AbstractServlet5Test
+import test.TestServlet5
 
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit

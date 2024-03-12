@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
+
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -14,12 +16,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class RequestDispatcherServlet {
-  /* There's something about the getRequestDispatcher call that breaks horribly when these classes
-   * are written in groovy.
-   */
 
   @WebServlet(asyncSupported = true)
   public static class Forward extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
@@ -32,6 +33,8 @@ public class RequestDispatcherServlet {
 
   @WebServlet(asyncSupported = true)
   public static class Include extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {

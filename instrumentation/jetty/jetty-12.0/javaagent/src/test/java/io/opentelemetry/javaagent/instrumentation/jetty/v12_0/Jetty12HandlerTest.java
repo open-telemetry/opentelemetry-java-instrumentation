@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
+package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -27,45 +27,26 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
-import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.util.Callback;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JettyHandlerTest extends AbstractHttpServerTest<Server> {
+class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private static final ErrorHandler errorHandler =
-      new ErrorHandler() {
-        @Override
-        protected void handleErrorPage(
-            HttpServletRequest request, Writer writer, int code, String message)
-            throws IOException {
-          Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception");
-          String errorMsg = th != null ? th.getMessage() : message;
-          if (errorMsg != null) {
-            writer.write(errorMsg);
-          }
-        }
-      };
-
-  private static final TestHandler testHandler = new TestHandler();
+  private final TestHandler testHandler = new TestHandler();
 
   @Override
   protected Server setupServer() throws Exception {
     Server server = new Server(port);
     server.setHandler(testHandler);
-    server.addBean(errorHandler);
     server.start();
     return server;
   }
@@ -81,7 +62,6 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
         unused ->
             Sets.difference(
                 DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
-    options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
@@ -98,66 +78,60 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
     return span;
   }
 
-  private static void handleRequest(Request request, HttpServletResponse response) {
-    ServerEndpoint endpoint = ServerEndpoint.forPath(request.getRequestURI());
+  private void handleRequest(Request request, Response response) {
+    ServerEndpoint endpoint = ServerEndpoint.forPath(request.getHttpURI().getPath());
     controller(
         endpoint,
         () -> {
           try {
-            return response(request, response, endpoint);
+            response(request, response, endpoint);
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
+          return null;
         });
   }
 
-  private static HttpServletResponse response(
-      Request request, HttpServletResponse response, ServerEndpoint endpoint) throws IOException {
-    response.setContentType("text/plain");
+  private void response(Request request, Response response, ServerEndpoint endpoint)
+      throws IOException {
     if (SUCCESS.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
-      response.getWriter().print(endpoint.getBody());
+      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else if (QUERY_PARAM.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
-      response.getWriter().print(request.getQueryString());
+      response.write(
+          true, StandardCharsets.UTF_8.encode(request.getHttpURI().getQuery()), Callback.NOOP);
     } else if (REDIRECT.equals(endpoint)) {
-      response.sendRedirect(endpoint.getBody());
-    } else if (ERROR.equals(endpoint)) {
-      response.sendError(endpoint.getStatus(), endpoint.getBody());
-    } else if (CAPTURE_HEADERS.equals(endpoint)) {
-      response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"));
       response.setStatus(endpoint.getStatus());
-      response.getWriter().print(endpoint.getBody());
+      response.getHeaders().add("Location", "http://localhost:" + port + endpoint.getBody());
+    } else if (ERROR.equals(endpoint)) {
+      response.setStatus(endpoint.getStatus());
+      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
+    } else if (CAPTURE_HEADERS.equals(endpoint)) {
+      response.getHeaders().add("X-Test-Response", request.getHeaders().get("X-Test-Request"));
+      response.setStatus(endpoint.getStatus());
+      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else if (EXCEPTION.equals(endpoint)) {
       throw new IllegalStateException(endpoint.getBody());
     } else if (INDEXED_CHILD.equals(endpoint)) {
-      INDEXED_CHILD.collectSpanAttributes(name -> request.getParameter(name));
+      INDEXED_CHILD.collectSpanAttributes(
+          name -> Request.extractQueryParameters(request).getValue(name));
       response.setStatus(endpoint.getStatus());
-      response.getWriter().print(endpoint.getBody());
+      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else {
       response.setStatus(NOT_FOUND.getStatus());
-      response.getWriter().print(NOT_FOUND.getBody());
+      response.write(true, StandardCharsets.UTF_8.encode(NOT_FOUND.getBody()), Callback.NOOP);
     }
-    return response;
   }
 
-  private static class TestHandler extends AbstractHandler {
+  private class TestHandler extends Handler.Abstract {
+
     @Override
-    public void handle(
-        String target,
-        Request baseRequest,
-        HttpServletRequest request,
-        HttpServletResponse response)
-        throws IOException, ServletException {
-      // This line here is to verify that we don't break Jetty if it wants to cast to implementation
-      // class
-      Response jettyResponse = (Response) response;
-      if (baseRequest.getDispatcherType() != DispatcherType.ERROR) {
-        handleRequest(baseRequest, jettyResponse);
-        baseRequest.setHandled(true);
-      } else {
-        errorHandler.handle(target, baseRequest, baseRequest, response);
-      }
+    public boolean handle(Request baseRequest, Response response, Callback callback) {
+      handleRequest(baseRequest, response);
+
+      callback.succeeded();
+      return true;
     }
   }
 }
