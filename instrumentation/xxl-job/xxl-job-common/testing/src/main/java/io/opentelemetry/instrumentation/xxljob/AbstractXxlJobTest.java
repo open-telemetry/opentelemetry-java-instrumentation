@@ -60,8 +60,7 @@ public abstract class AbstractXxlJobTest {
     triggerParam.setExecutorTimeout(0);
     jobThread.pushTriggerQueue(triggerParam);
     jobThread.start();
-    checkXxlJobWithoutCodeAttributes(
-        "GLUE(Shell).ID-2", StatusData.unset(), GlueTypeEnum.GLUE_SHELL);
+    checkXxlJobWithoutCodeAttributes("GLUE(Shell)", StatusData.unset(), GlueTypeEnum.GLUE_SHELL, 2);
     jobThread.toStop("Test finish");
   }
 
@@ -155,8 +154,12 @@ public abstract class AbstractXxlJobTest {
   }
 
   private static void checkXxlJobWithoutCodeAttributes(
-      String spanName, StatusData statusData, GlueTypeEnum glueType) {
-    checkXxlJob(spanName, statusData, attributeAssertions(glueType));
+      String spanName, StatusData statusData, GlueTypeEnum glueType, int jobId) {
+    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+    attributeAssertions.addAll(attributeAssertions(glueType));
+    attributeAssertions.add(equalTo(AttributeKey.longKey("scheduling.xxl-job.job.id"), jobId));
+
+    checkXxlJob(spanName, statusData, attributeAssertions);
   }
 
   private static List<AttributeAssertion> attributeAssertions(GlueTypeEnum glueType) {
