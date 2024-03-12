@@ -13,7 +13,9 @@
   "packageRules": [
     {
       "matchPackageNames": [
+        "io.opentelemetry.contrib:opentelemetry-aws-resources",
         "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator",
+        "io.opentelemetry.contrib:opentelemetry-gcp-resources",
         "io.opentelemetry.proto:opentelemetry-proto",
         "io.opentelemetry.semconv:opentelemetry-semconv"
       ],
