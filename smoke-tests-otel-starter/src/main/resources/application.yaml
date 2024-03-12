@@ -7,4 +7,4 @@ otel:
     - b3
   resource:
     attributes:
-      applicationYaml: "true" # boolean doesn't work here
+      attributeFromYaml: true # boolean will be automatically converted to string by spring

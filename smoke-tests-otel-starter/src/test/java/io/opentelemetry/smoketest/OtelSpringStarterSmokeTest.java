@@ -8,11 +8,13 @@ package io.opentelemetry.smoketest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.logs.ConfigurableLogRecordExporterProvider;
@@ -23,6 +25,7 @@ import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
@@ -122,6 +125,17 @@ class OtelSpringStarterSmokeTest {
         }
       };
     }
+
+    @Bean
+    AutoConfigurationCustomizerProvider propagatorCustomizer() {
+      return customizer ->
+          customizer.addResourceCustomizer(
+              (resource, config) ->
+                  resource.merge(
+                      Resource.create(
+                          Attributes.of(
+                              AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
+    }
   }
 
   @Test
@@ -169,11 +183,10 @@ class OtelSpringStarterSmokeTest {
                             .hasResourceSatisfying(
                                 r ->
                                     r.hasAttribute(
-                                            AttributeKey.booleanKey(
-                                                "AutoConfigurationCustomizerProvider"),
+                                            AttributeKey.booleanKey("keyFromResourceCustomizer"),
                                             true)
                                         .hasAttribute(
-                                            AttributeKey.stringKey("applicationYaml"), "true"))
+                                            AttributeKey.stringKey("attributeFromYaml"), "true"))
                             .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
                             .hasAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
                             .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/ping")));
