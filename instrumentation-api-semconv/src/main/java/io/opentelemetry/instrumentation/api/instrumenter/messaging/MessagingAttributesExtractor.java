@@ -64,6 +64,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     this.capturedHeaders = lowercase(capturedHeaders);
   }
 
+  @SuppressWarnings("deprecation") // old semconv
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.getSystem(request));

@@ -207,6 +207,7 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // old semconv
   protected static List<AttributeAssertion> processAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =

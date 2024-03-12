@@ -139,6 +139,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChannelPublishAdvice {
 
+    @SuppressWarnings("deprecation") // old semconv
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void setSpanNameAddHeaders(
         @Advice.Argument(0) String exchange,
