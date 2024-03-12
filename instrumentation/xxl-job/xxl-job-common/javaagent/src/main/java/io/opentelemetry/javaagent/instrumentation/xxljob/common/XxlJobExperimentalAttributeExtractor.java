@@ -28,7 +28,7 @@ class XxlJobExperimentalAttributeExtractor
       XxlJobProcessRequest xxlJobProcessRequest) {
     GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
     attributes.put(XXL_JOB_GLUE_TYPE, glueType.getDesc());
-    // store jobId in experimental attribute for script job. 
+    // store jobId in experimental attribute for script job.
     if (glueType.isScript()) {
       attributes.put(XXL_JOB_JOB_ID, xxlJobProcessRequest.getJobId());
     }
