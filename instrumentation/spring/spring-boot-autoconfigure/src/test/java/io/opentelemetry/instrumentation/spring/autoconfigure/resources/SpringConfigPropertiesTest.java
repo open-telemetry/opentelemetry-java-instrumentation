@@ -33,6 +33,7 @@ class SpringConfigPropertiesTest {
                       env,
                       new SpelExpressionParser(),
                       new OtlpExporterProperties(),
+                      new OtelResourceProperties(),
                       new PropagationProperties());
 
               assertThat(config.getMap("otel.springboot.test.map"))

@@ -26,16 +26,18 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
 
     template.convertAndSend("SpringListenerJms2", "a message")
 
+    def producer
     expect:
     assertTraces(2) {
-      traces.sort(orderByRootSpanKind(CONSUMER, PRODUCER))
+      traces.sort(orderByRootSpanKind(PRODUCER, CONSUMER))
 
       trace(0, 1) {
-        consumerSpan(it, 0, "SpringListenerJms2", "", null, "receive")
+        producerSpan(it, 0, "SpringListenerJms2")
+        producer = span(0)
       }
       trace(1, 2) {
-        producerSpan(it, 0, "SpringListenerJms2")
-        consumerSpan(it, 1, "SpringListenerJms2", "", span(0), "process")
+        consumerSpan(it, 0, "SpringListenerJms2", "", null, producer, "receive")
+        consumerSpan(it, 1, "SpringListenerJms2", "", span(0), producer, "process")
       }
     }
 
@@ -70,14 +72,19 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
   // passing messageId = null will verify message.id is not captured,
   // passing messageId = "" will verify message.id is captured (but won't verify anything about the value),
   // any other value for messageId will verify that message.id is captured and has that same value
-  static consumerSpan(TraceAssert trace, int index, String destinationName, String messageId, Object parentOrLinkedSpan, String operation, boolean testHeaders = false) {
+  static consumerSpan(TraceAssert trace, int index, String destinationName, String messageId, Object parent, Object linkedSpan, String operation, boolean testHeaders = false) {
     trace.span(index) {
       name destinationName + " " + operation
       kind CONSUMER
-      if (parentOrLinkedSpan != null) {
-        childOf((SpanData) parentOrLinkedSpan)
+      if (parent != null) {
+        childOf((SpanData) parent)
       } else {
         hasNoParent()
+      }
+      if (linkedSpan != null) {
+        hasLink((SpanData) linkedSpan)
+      } else {
+        hasNoLinks()
       }
       attributes {
         "$SemanticAttributes.MESSAGING_SYSTEM" "jms"

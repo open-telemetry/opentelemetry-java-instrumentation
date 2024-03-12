@@ -2,7 +2,21 @@
 
 ## Unreleased
 
-## Version 2.1.0 (2024-02-15)
+## Version 1.33.0 (2024-02-28)
+
+### Migration notes
+
+- The deprecated Jaeger exporter has been removed
+  ([#10524](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10524))
+
+### 📈 Enhancements
+
+- Backport: Set route only on the SERVER span
+  ([#10580](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10580))
+- Update the OpenTelemetry SDK version to 1.35.0
+  ([#10524](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10524))
+
+## Version 2.1.0 (2024-02-16)
 
 ### Migration notes
 
@@ -62,6 +76,10 @@
   ([#10355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10355))
 - Spring starter: re-use sdk logic for configuring otlp exporters
   ([#10292](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10292))
+  - All available spring starter properties (including the new properties) can be found
+    [here](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/v2.1.0/instrumentation/spring/spring-boot-autoconfigure/src/main/resources/META-INF/additional-spring-configuration-metadata.json)
+  - You can also use auto-completion in your IDE to see the available properties in
+    `application.properties` or `application.yml`
 - Spring starter: add SystemOutLogRecordExporter
   ([#10420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10420))
 - Spring starter: use duration parser of config properties

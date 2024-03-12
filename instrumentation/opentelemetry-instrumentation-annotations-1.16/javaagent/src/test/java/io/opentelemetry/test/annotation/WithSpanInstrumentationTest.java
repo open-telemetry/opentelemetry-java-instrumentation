@@ -158,7 +158,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().ignored();
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
   @Test
@@ -253,7 +253,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completionStage(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.complete("Done");
 
@@ -286,7 +286,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completionStage(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.completeExceptionally(new IllegalArgumentException("Boom"));
 
@@ -405,7 +405,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completableFuture(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.complete("Done");
 
@@ -438,7 +438,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completableFuture(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.completeExceptionally(new IllegalArgumentException("Boom"));
 

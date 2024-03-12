@@ -55,6 +55,12 @@ If you are on Windows and you want to run the tests using linux containers:
 USE_LINUX_CONTAINERS=1 ./gradlew :smoke-tests:test -PsmokeTestSuite=payara
 ```
 
+If you want to run a specific smoke test:
+
+```
+./gradlew :smoke-tests:test --tests '*SpringBootSmokeTest*'
+```
+
 # Smoke OpenTelemetry starter tests
 
 Smoke tests for the [OpenTelemetry Spring starter](../../instrumentation/spring/starters/spring-boot-starter/README.md).

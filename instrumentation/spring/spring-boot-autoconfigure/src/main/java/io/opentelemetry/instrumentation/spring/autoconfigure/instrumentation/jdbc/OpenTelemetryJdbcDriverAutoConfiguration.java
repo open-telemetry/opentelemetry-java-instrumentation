@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jd
 
 import io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryInjector;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -14,12 +15,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @ConditionalOnClass(OpenTelemetryDriver.class)
 @ConditionalOnProperty(
     name = "spring.datasource.driver-class-name",
     havingValue = "io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver")
+@Conditional(SdkEnabled.class)
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(
     name = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")

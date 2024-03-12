@@ -64,7 +64,7 @@ class PropagationAutoConfigurationTest {
   @DisplayName("when propagation is set to b3 should contain only b3 propagator")
   void shouldContainB3() {
     this.contextRunner
-        .withPropertyValues("otel.propagation.type=b3")
+        .withPropertyValues("otel.propagators=b3")
         .run(
             context -> {
               TextMapPropagator compositePropagator =
@@ -81,7 +81,7 @@ class PropagationAutoConfigurationTest {
   void shouldCreateNoop() {
 
     this.contextRunner
-        .withPropertyValues("otel.propagation.type=invalid")
+        .withPropertyValues("otel.propagators=invalid")
         .run(
             context -> {
               TextMapPropagator compositePropagator =
@@ -92,11 +92,10 @@ class PropagationAutoConfigurationTest {
   }
 
   @Test
-  @DisplayName(
-      "when propagation is set to some values should contain only supported values - deprecated")
-  void shouldContainOnlySupportedDeprecated() {
+  @DisplayName("when propagation is set to some values should contain only supported values - List")
+  void shouldContainOnlySupportedList() {
     this.contextRunner
-        .withPropertyValues("otel.propagation.type=invalid,b3")
+        .withPropertyValues("otel.propagators=invalid,b3")
         .run(
             context -> {
               TextMapPropagator compositePropagator =

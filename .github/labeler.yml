@@ -1,0 +1,10 @@
+test native:
+- all:
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/logback/logback-appender-10/library/**
+          - instrumentation/jdbc/library/**
+          - instrumentation/spring/**
+          - smoke-tests-otel-starter/**
+          - dependencyManagement/build.gradle.kts
+      - all-globs-to-all-files: '!instrumentation/spring/**/javaagent/**'

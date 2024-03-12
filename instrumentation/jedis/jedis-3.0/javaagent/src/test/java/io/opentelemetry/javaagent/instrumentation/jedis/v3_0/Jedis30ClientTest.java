@@ -35,20 +35,20 @@ class Jedis30ClientTest {
   static Jedis jedis;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     redisServer.start();
     port = redisServer.getMappedPort(6379);
     jedis = new Jedis("localhost", port);
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     redisServer.stop();
     jedis.close();
   }
 
   @BeforeEach
-  void setup() {
+  void reset() {
     jedis.flushAll();
     testing.clearData();
   }

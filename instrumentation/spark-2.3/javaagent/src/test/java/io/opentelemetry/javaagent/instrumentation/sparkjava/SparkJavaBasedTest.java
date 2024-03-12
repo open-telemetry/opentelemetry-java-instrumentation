@@ -32,14 +32,14 @@ public class SparkJavaBasedTest {
   static WebClient client;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     port = PortUtils.findOpenPort();
     TestSparkJavaApplication.initSpark(port);
     client = WebClient.of("http://localhost:" + port);
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     Spark.stop();
   }
 
