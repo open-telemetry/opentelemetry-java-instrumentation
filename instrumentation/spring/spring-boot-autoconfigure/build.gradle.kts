@@ -105,6 +105,27 @@ testing {
       }
     }
   }
+
+  suites {
+    val testLogbackMissing by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.7.32")
+          }
+        }
+      }
+    }
+  }
+}
+
+configurations.configureEach {
+  if (name.contains("testLogbackMissing")) {
+    exclude("ch.qos.logback", "logback-classic")
+  }
 }
 
 tasks {
