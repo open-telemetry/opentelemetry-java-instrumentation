@@ -113,6 +113,19 @@ public class SqlStatementSanitizerTest {
     }
   }
 
+  @Test
+  public void longInStatementDoesntCauseStackOverflow() {
+    StringBuilder s = new StringBuilder("select col from table where col in (");
+    for (int i = 0; i < 10000; i++) {
+      s.append("?,");
+    }
+    s.append("?)");
+
+    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getFullStatement();
+
+    assertThat(sanitized).isEqualTo("select col from table where col in (?)");
+  }
+
   static class SqlArgs implements ArgumentsProvider {
 
     @Override
@@ -271,7 +284,11 @@ public class SqlStatementSanitizerTest {
           Arguments.of("select col from table1 as t1, table2 as t2", expect("SELECT", null)),
           Arguments.of(
               "select col from table where col in (1, 2, 3)",
-              expect("select col from table where col in (?, ?, ?)", "SELECT", "table")),
+              expect("select col from table where col in (?)", "SELECT", "table")),
+          Arguments.of(
+              "select 'a' IN(x, 'b') from table where col in (1) and z IN( '3', '4' )",
+              expect(
+                  "select ? IN(x, ?) from table where col in (?) and z IN(?)", "SELECT", "table")),
           Arguments.of("select col from table order by col, col2", expect("SELECT", "table")),
           Arguments.of("select ąś∂ń© from źćļńĶ order by col, col2", expect("SELECT", "źćļńĶ")),
           Arguments.of("select 12345678", expect("select ?", "SELECT", null)),
@@ -298,6 +315,9 @@ public class SqlStatementSanitizerTest {
               "delete from `my table` where something something", expect("DELETE", "my table")),
           Arguments.of(
               "delete from \"my table\" where something something", expect("DELETE", "my table")),
+          Arguments.of(
+              "delete from foo where x IN (1,2,3)",
+              expect("delete from foo where x IN (?)", "DELETE", "foo")),
           Arguments.of("delete from 12345678", expect("delete from ?", "DELETE", null)),
           Arguments.of("delete   (((", expect("delete (((", "DELETE", null)),
 
@@ -307,6 +327,12 @@ public class SqlStatementSanitizerTest {
           Arguments.of(
               "update `my table` set answer=42",
               expect("update `my table` set answer=?", "UPDATE", "my table")),
+          Arguments.of(
+              "update `my table` set answer=42 where x IN('a', 'b') AND y In ('a',  'b')",
+              expect(
+                  "update `my table` set answer=? where x IN(?) AND y In (?)",
+                  "UPDATE",
+                  "my table")),
           Arguments.of(
               "update \"my table\" set answer=42",
               expect("update \"my table\" set answer=?", "UPDATE", "my table")),

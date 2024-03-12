@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import java.util.regex.Pattern;
+
 %%
 
 %final
@@ -51,6 +53,10 @@ WHITESPACE          = [ \t\r\n]+
 
   // max length of the sanitized statement - SQLs longer than this will be trimmed
   static final int LIMIT = 32 * 1024;
+
+  // Match on strings like "IN(?, ?, ...)"
+  private static final Pattern IN_STATEMENT_PATTERN = Pattern.compile("(\\sIN\\s*)\\(\\s*\\?\\s*(?:,\\s*\\?\\s*)*+\\)", Pattern.CASE_INSENSITIVE);
+  private static final String IN_STATEMENT_NORMALIZED = "$1(?)";
 
   private final StringBuilder builder = new StringBuilder();
 
@@ -278,7 +284,11 @@ WHITESPACE          = [ \t\r\n]+
       builder.delete(LIMIT, builder.length());
     }
     String fullStatement = builder.toString();
-    return operation.getResult(fullStatement);
+
+    // Normalize all 'in (?, ?, ...)' statements to in (?) to reduce cardinality
+    String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
+
+    return operation.getResult(normalizedStatement);
   }
 
 %}
