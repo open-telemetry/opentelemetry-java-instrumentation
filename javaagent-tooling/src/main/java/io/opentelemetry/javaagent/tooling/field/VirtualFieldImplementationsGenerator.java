@@ -266,8 +266,11 @@ final class VirtualFieldImplementationsGenerator {
   // Called from generated code
   @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
   static final class VirtualFieldImplementationTemplate extends VirtualField<Object, Object> {
+
+    // We use a cache without inline expunction here to prevent deadlocks on virtual threads
+    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10747
     private static final VirtualFieldImplementationTemplate INSTANCE =
-        new VirtualFieldImplementationTemplate(Cache.weak());
+        new VirtualFieldImplementationTemplate(Cache.weakWithoutInlineExpunction());
 
     private final Cache<Object, Object> map;
 

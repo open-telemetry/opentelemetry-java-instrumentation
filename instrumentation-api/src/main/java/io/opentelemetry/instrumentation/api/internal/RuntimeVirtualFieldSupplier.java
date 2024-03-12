@@ -47,8 +47,10 @@ public final class RuntimeVirtualFieldSupplier {
 
   private static final class CacheBasedVirtualFieldSupplier implements VirtualFieldSupplier {
 
+    // We use a cache without inline expunction here to prevent deadlocks on virtual threads
+    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10747
     private final Cache<Class<?>, Cache<Class<?>, VirtualField<?, ?>>>
-        ownerToFieldToImplementationMap = Cache.weak();
+        ownerToFieldToImplementationMap = Cache.weakWithoutInlineExpunction();
 
     @Override
     @SuppressWarnings("unchecked")
