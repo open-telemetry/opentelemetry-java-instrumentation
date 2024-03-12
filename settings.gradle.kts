@@ -576,6 +576,11 @@ include(":instrumentation:wicket-8.0:common-testing")
 include(":instrumentation:wicket-8.0:javaagent")
 include(":instrumentation:wicket-8.0:wicket8-testing")
 include(":instrumentation:wicket-8.0:wicket10-testing")
+include(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent")
+include(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent")
+include(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent")
+include(":instrumentation:xxl-job:xxl-job-common:javaagent")
+include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
 
 // benchmark
