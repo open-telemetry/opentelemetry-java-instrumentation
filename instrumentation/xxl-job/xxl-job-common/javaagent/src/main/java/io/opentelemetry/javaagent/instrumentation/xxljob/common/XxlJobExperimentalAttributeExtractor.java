@@ -18,6 +18,9 @@ class XxlJobExperimentalAttributeExtractor
   private static final AttributeKey<String> XXL_JOB_GLUE_TYPE =
       AttributeKey.stringKey("scheduling.xxl-job.glue.type");
 
+  private static final AttributeKey<Long> XXL_JOB_JOB_ID =
+      AttributeKey.longKey("scheduling.xxl-job.job.id");
+
   @Override
   public void onStart(
       AttributesBuilder attributes,
@@ -25,6 +28,10 @@ class XxlJobExperimentalAttributeExtractor
       XxlJobProcessRequest xxlJobProcessRequest) {
     GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
     attributes.put(XXL_JOB_GLUE_TYPE, glueType.getDesc());
+    // store jobId in experimental attribute for script job. 
+    if (glueType.isScript()) {
+      attributes.put(XXL_JOB_JOB_ID, xxlJobProcessRequest.getJobId());
+    }
   }
 
   @Override

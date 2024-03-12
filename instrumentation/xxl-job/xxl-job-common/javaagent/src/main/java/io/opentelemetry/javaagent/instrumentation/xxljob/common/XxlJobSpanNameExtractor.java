@@ -21,7 +21,9 @@ class XxlJobSpanNameExtractor implements SpanNameExtractor<XxlJobProcessRequest>
   public String extract(XxlJobProcessRequest request) {
     GlueTypeEnum glueType = request.getGlueType();
     if (glueType.isScript()) {
-      return glueType.getDesc() + ".ID-" + request.getJobId();
+      // TODO: need to discuss a better span name for script job in the future.  
+      // for detail can refer to https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10421#discussion_r1511532584
+      return glueType.getDesc();
     }
     return codeSpanNameExtractor.extract(request);
   }
