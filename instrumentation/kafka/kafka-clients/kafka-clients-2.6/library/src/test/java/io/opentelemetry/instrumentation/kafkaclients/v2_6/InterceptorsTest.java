@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 
+@SuppressWarnings("deprecation") // old semconv
 class InterceptorsTest extends AbstractInterceptorsTest {
 
   @Override

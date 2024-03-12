@@ -13,6 +13,7 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractLongAssert;
 
+@SuppressWarnings("deprecation") // old semconv
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
   @Override

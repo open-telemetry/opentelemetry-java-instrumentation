@@ -27,6 +27,7 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // old semconv
 class SpringKafkaTest extends AbstractSpringKafkaTest {
 
   @RegisterExtension

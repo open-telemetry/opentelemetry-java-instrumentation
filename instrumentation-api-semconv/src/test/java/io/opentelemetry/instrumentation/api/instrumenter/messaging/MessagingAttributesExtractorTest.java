@@ -30,6 +30,7 @@ class MessagingAttributesExtractorTest {
 
   @ParameterizedTest
   @MethodSource("destinations")
+  @SuppressWarnings("deprecation") // old semconv
   void shouldExtractAllAvailableAttributes(
       boolean temporary,
       String destination,
