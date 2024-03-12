@@ -121,6 +121,11 @@ public class OpenTelemetryAutoConfiguration {
     }
   }
 
+  /**
+   * The {@link ComponentLoader} is used by the SDK autoconfiguration to load all components, e.g.
+   * <a
+   * href="https://github.com/open-telemetry/opentelemetry-java/blob/4519a7e90243e5b75b3a46a14c872de88b95a9a1/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/AutoConfiguredOpenTelemetrySdkBuilder.java#L405-L408">here</a>
+   */
   public static class OpenTelemetrySdkComponentLoader implements ComponentLoader {
     private final ApplicationContext applicationContext;
 

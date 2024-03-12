@@ -127,8 +127,6 @@ class OtelSpringStarterSmokeTest {
       };
     }
 
-    // this bean gets loaded here:
-    // https://github.com/open-telemetry/opentelemetry-java/blob/4519a7e90243e5b75b3a46a14c872de88b95a9a1/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/AutoConfiguredOpenTelemetrySdkBuilder.java#L405-L408
     @Bean
     @Order(1)
     AutoConfigurationCustomizerProvider hiddenPropagatorCustomizer() {
