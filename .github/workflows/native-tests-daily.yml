@@ -16,4 +16,4 @@ jobs:
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
-      success: ${{ needs.build.result == 'success' }}
+      success: ${{ needs.graalvm-native-tests.result == 'success' }}
