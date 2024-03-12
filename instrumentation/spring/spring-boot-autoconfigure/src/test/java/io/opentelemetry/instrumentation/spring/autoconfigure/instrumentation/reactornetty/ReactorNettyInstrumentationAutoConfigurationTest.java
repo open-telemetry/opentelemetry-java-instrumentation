@@ -28,7 +28,8 @@ class ReactorNettyInstrumentationAutoConfigurationTest {
             context ->
                 assertThat(
                         context.getBean(
-                            "reactorNettyHttpClientInitializingBean", ReactorNettyHttpClientInitializingBean.class))
+                            "reactorNettyHttpClientInitializingBean",
+                            ReactorNettyHttpClientInitializingBean.class))
                     .isNotNull());
   }
 
@@ -38,7 +39,8 @@ class ReactorNettyInstrumentationAutoConfigurationTest {
         .withPropertyValues("otel.instrumentation.reactor-netty.enabled=false")
         .run(
             context ->
-                assertThat(context.containsBean("reactorNettyHttpClientInitializingBean")).isFalse());
+                assertThat(context.containsBean("reactorNettyHttpClientInitializingBean"))
+                    .isFalse());
   }
 
   @Test
@@ -47,7 +49,8 @@ class ReactorNettyInstrumentationAutoConfigurationTest {
         context ->
             assertThat(
                     context.getBean(
-                        "reactorNettyHttpClientInitializingBean", ReactorNettyHttpClientInitializingBean.class))
+                        "reactorNettyHttpClientInitializingBean",
+                        ReactorNettyHttpClientInitializingBean.class))
                 .isNotNull());
   }
 }

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.re
 import io.micrometer.observation.ObservationRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
-import reactor.netty.http.client.HttpClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -17,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
 /**
  * Configures {@link HttpClient} for tracing.
@@ -34,8 +34,8 @@ public class ReactorNettyInstrumentationAutoConfiguration {
 
   @ConditionalOnClass({HttpClient.class, ObservationRegistry.class})
   @Bean
-  static ReactorNettyHttpClientInitializingBean reactorNettyHttpClientInitializingBean(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+  static ReactorNettyHttpClientInitializingBean reactorNettyHttpClientInitializingBean(
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new ReactorNettyHttpClientInitializingBean(openTelemetryProvider.getIfAvailable());
   }
-
 }

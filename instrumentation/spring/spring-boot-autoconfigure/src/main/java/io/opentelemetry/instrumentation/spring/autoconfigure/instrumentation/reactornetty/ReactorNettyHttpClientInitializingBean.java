@@ -29,7 +29,15 @@ final class ReactorNettyHttpClientInitializingBean implements InitializingBean {
       return;
     }
     OtelCurrentTraceContext otelCurrentTraceContext = new OtelCurrentTraceContext();
-    OtelTracer otelTracer = new OtelTracer(openTelemetry.getTracer("springboot-reactor-netty"), otelCurrentTraceContext, event -> {}, new OtelBaggageManager(otelCurrentTraceContext, Collections.emptyList(), Collections.emptyList()));
-    OBSERVATION_REGISTRY.observationConfig().observationHandler(new ReactorNettyTracingObservationHandler(otelTracer));
+    OtelTracer otelTracer =
+        new OtelTracer(
+            openTelemetry.getTracer("springboot-reactor-netty"),
+            otelCurrentTraceContext,
+            event -> {},
+            new OtelBaggageManager(
+                otelCurrentTraceContext, Collections.emptyList(), Collections.emptyList()));
+    OBSERVATION_REGISTRY
+        .observationConfig()
+        .observationHandler(new ReactorNettyTracingObservationHandler(otelTracer));
   }
 }
