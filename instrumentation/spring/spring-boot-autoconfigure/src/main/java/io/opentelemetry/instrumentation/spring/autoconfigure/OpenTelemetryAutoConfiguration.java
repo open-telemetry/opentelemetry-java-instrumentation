@@ -135,7 +135,7 @@ public class OpenTelemetryAutoConfiguration {
     public <T> Iterable<T> load(Class<T> spiClass) {
       List<T> spi = spiHelper.load(spiClass);
       List<T> beans =
-          applicationContext.getBeanProvider(spiClass).stream().collect(Collectors.toList());
+          applicationContext.getBeanProvider(spiClass).orderedStream().collect(Collectors.toList());
       spi.addAll(beans);
       return spi;
     }

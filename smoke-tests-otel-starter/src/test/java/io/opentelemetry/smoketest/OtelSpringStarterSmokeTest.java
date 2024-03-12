@@ -43,6 +43,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
 @SpringBootTest(
@@ -129,6 +130,19 @@ class OtelSpringStarterSmokeTest {
     // this bean gets loaded here:
     // https://github.com/open-telemetry/opentelemetry-java/blob/4519a7e90243e5b75b3a46a14c872de88b95a9a1/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/AutoConfiguredOpenTelemetrySdkBuilder.java#L405-L408
     @Bean
+    @Order(1)
+    AutoConfigurationCustomizerProvider hiddenPropagatorCustomizer() {
+      return customizer ->
+          customizer.addResourceCustomizer(
+              (resource, config) ->
+                  resource.merge(
+                      Resource.create(
+                          Attributes.of(
+                              AttributeKey.booleanKey("keyFromResourceCustomizer"), false))));
+    }
+
+    @Bean
+    @Order(2)
     AutoConfigurationCustomizerProvider propagatorCustomizer() {
       return customizer ->
           customizer.addResourceCustomizer(
