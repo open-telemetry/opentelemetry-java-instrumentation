@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OpenTelemetrySdkComponentLoader;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
@@ -17,8 +16,12 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.resources.DistroVer
 import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
+import io.opentelemetry.sdk.autoconfigure.internal.ComponentLoader;
+import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -115,6 +118,26 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public OpenTelemetry openTelemetry() {
       return OpenTelemetry.noop();
+    }
+  }
+
+  public static class OpenTelemetrySdkComponentLoader implements ComponentLoader {
+    private final ApplicationContext applicationContext;
+
+    private final SpiHelper spiHelper =
+        SpiHelper.create(OpenTelemetrySdkComponentLoader.class.getClassLoader());
+
+    public OpenTelemetrySdkComponentLoader(ApplicationContext applicationContext) {
+      this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public <T> Iterable<T> load(Class<T> spiClass) {
+      List<T> spi = spiHelper.load(spiClass);
+      List<T> beans =
+          applicationContext.getBeanProvider(spiClass).stream().collect(Collectors.toList());
+      spi.addAll(beans);
+      return spi;
     }
   }
 }
