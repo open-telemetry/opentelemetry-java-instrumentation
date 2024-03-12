@@ -8,6 +8,8 @@ group = "io.opentelemetry.instrumentation"
 
 val versions: Map<String, String> by project
 val springBootVersion = versions["org.springframework.boot"]
+val micrometerVersion = "1.10.0"
+val micrometerTraceVersion = "1.0.0"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
@@ -33,9 +35,9 @@ dependencies {
 
   library("org.springframework.kafka:spring-kafka:2.9.0")
   library("io.projectreactor.netty:reactor-netty:1.1.0")
-  implementation("io.micrometer:micrometer-tracing-bridge-otel:1.0.0")
-  implementation("io.micrometer:micrometer-tracing:1.0.0")
-  implementation("io.micrometer:micrometer-core:1.10.0")
+  implementation("io.micrometer:micrometer-tracing-bridge-otel:${micrometerTraceVersion}")
+  implementation("io.micrometer:micrometer-tracing:${micrometerTraceVersion}")
+  implementation("io.micrometer:micrometer-core:${micrometerVersion}")
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
