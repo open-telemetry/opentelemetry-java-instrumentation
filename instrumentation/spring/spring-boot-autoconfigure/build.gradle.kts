@@ -32,6 +32,10 @@ dependencies {
   implementation(project(":instrumentation:jdbc:library"))
 
   library("org.springframework.kafka:spring-kafka:2.9.0")
+  library("io.projectreactor.netty:reactor-netty:1.1.0")
+  implementation("io.micrometer:micrometer-tracing-bridge-otel:1.0.0")
+  implementation("io.micrometer:micrometer-tracing:1.0.0")
+  implementation("io.micrometer:micrometer-core:1.10.0")
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
@@ -68,6 +72,9 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
+  testImplementation("io.micrometer:micrometer-tracing-bridge-otel:1.0.0")
+  testImplementation("io.micrometer:micrometer-tracing:1.0.0")
+  testImplementation("io.micrometer:micrometer-core:1.10.0")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
