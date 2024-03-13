@@ -77,7 +77,7 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
 
   @Override
   public int order() {
-    // make it run later than SpringBootServiceNameDetector but before JarServiceNameDetector
+    // make it run later than ManifestResourceProvider and SpringBootServiceNameDetector
     return 300;
   }
 }
