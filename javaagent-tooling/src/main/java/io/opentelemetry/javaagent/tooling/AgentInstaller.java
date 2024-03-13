@@ -158,7 +158,7 @@ public class AgentInstaller {
 
     agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
 
-    if (AgentConfig.isDebugModeEnabled(sdkConfig)) {
+    if (logger.isLoggable(FINE)) {
       agentBuilder =
           agentBuilder
               .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
