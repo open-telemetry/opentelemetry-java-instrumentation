@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.UnknownHostException;
 import java.util.Map;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
@@ -43,6 +44,11 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   static void setUp() {
     redisServer.start();
     host = redisServer.getHost();
+    try {
+      ip = java.net.InetAddress.getByName(host).getHostAddress();
+    } catch (UnknownHostException e) {
+      ip = "127.0.0.1";
+    }
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
@@ -121,7 +127,11 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
                                         equalTo(
                                             AttributeKey.stringKey("exception.message"),
-                                            "Connection refused: localhost/127.0.0.1:"
+                                            "Connection refused: "
+                                                + host
+                                                + "/"
+                                                + ip
+                                                + ":"
                                                 + incorrectPort),
                                         satisfies(
                                             AttributeKey.stringKey("exception.stacktrace"),

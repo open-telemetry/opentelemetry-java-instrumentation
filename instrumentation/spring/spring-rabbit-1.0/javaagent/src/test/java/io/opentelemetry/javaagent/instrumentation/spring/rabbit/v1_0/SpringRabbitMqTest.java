@@ -20,6 +20,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +57,8 @@ public class SpringRabbitMqTest {
   private static ConfigurableApplicationContext applicationContext;
   private static ConnectionFactory connectionFactory;
 
+  private static String ip;
+
   @BeforeAll
   static void setUp() {
     rabbitMqContainer =
@@ -78,6 +81,11 @@ public class SpringRabbitMqTest {
     connectionFactory = new ConnectionFactory();
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
+    try {
+      ip = java.net.InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
+    } catch (UnknownHostException e) {
+      ip = "127.0.0.1";
+    }
   }
 
   @AfterAll
@@ -161,8 +169,7 @@ public class SpringRabbitMqTest {
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              getAssertions(
-                                  "<default>", "publish", "127.0.0.1", true, testHeaders)),
+                              getAssertions("<default>", "publish", ip, true, testHeaders)),
                   // spring-cloud-stream-binder-rabbit listener puts all messages into a
                   // BlockingQueue immediately after receiving
                   // that's why the rabbitmq CONSUMER span will never have any child span (and
@@ -172,8 +179,7 @@ public class SpringRabbitMqTest {
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
                           .hasAttributesSatisfyingExactly(
-                              getAssertions(
-                                  "<default>", "process", "127.0.0.1", true, testHeaders)),
+                              getAssertions("<default>", "process", ip, true, testHeaders)),
                   // created by spring-rabbit instrumentation
                   span ->
                       span.hasName("testQueue process")
@@ -210,7 +216,7 @@ public class SpringRabbitMqTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
                               equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                              equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                               satisfies(
                                   NetworkAttributes.NETWORK_PEER_PORT,
                                   AbstractLongAssert::isNotNegative),

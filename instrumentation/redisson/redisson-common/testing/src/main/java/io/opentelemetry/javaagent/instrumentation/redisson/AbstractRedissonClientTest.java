@@ -20,6 +20,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.lang.reflect.InvocationTargetException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +61,8 @@ public abstract class AbstractRedissonClientTest {
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
+  private static String ip;
+
   private static int port;
   private static String address;
   private RedissonClient redisson;
@@ -67,8 +70,13 @@ public abstract class AbstractRedissonClientTest {
   @BeforeAll
   static void setupAll() {
     redisServer.start();
+    try {
+      ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
+    } catch (UnknownHostException e) {
+      ip = "127.0.0.1";
+    }
     port = redisServer.getMappedPort(6379);
-    address = "localhost:" + port;
+    address = redisServer.getHost() + ":" + port;
   }
 
   @AfterAll
@@ -113,7 +121,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
@@ -125,7 +133,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
@@ -151,7 +159,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
@@ -193,7 +201,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
@@ -203,7 +211,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET batch2 ?"),
@@ -214,7 +222,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "EXEC"),
@@ -236,7 +244,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "RPUSH list1 ?"),
@@ -261,7 +269,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
@@ -275,7 +283,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "HGET map1 key1"),
@@ -296,7 +304,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
@@ -324,7 +332,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
@@ -351,7 +359,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "INCR AtomicLong"),
@@ -377,7 +385,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
@@ -392,7 +400,7 @@ public abstract class AbstractRedissonClientTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
@@ -408,7 +416,7 @@ public abstract class AbstractRedissonClientTest {
                           .hasKind(CLIENT)
                           .hasAttributesSatisfyingExactly(
                               equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                              equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                               equalTo(DbIncubatingAttributes.DB_OPERATION, "DEL"),

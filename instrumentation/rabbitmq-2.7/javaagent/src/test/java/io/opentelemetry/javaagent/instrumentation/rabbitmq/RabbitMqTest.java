@@ -870,10 +870,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
               .satisfies(
                   attrs -> {
                     String peerAddr = attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS);
-                    assertTrue(
-                        "127.0.0.1".equals(peerAddr)
-                            || "0:0:0:0:0:0:0:1".equals(peerAddr)
-                            || peerAddr == null);
+                    assertThat(peerAddr).isIn(rabbitMqIp, null);
 
                     String networkType = attrs.get(NetworkAttributes.NETWORK_TYPE);
                     assertThat(networkType).isIn("ipv4", "ipv6", null);

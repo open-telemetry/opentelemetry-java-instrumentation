@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.UnknownHostException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,8 @@ class Jedis40ClientTest {
   static GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
+  static String ip;
+
   static int port;
 
   static Jedis jedis;
@@ -36,7 +39,12 @@ class Jedis40ClientTest {
   static void setup() {
     redisServer.start();
     port = redisServer.getMappedPort(6379);
-    jedis = new Jedis("localhost", port);
+    try {
+      ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
+    } catch (UnknownHostException e) {
+      ip = "127.0.0.1";
+    }
+    jedis = new Jedis(redisServer.getHost(), port);
   }
 
   @AfterAll
@@ -67,7 +75,7 @@ class Jedis40ClientTest {
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -89,7 +97,7 @@ class Jedis40ClientTest {
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -101,7 +109,7 @@ class Jedis40ClientTest {
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -123,7 +131,7 @@ class Jedis40ClientTest {
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -135,6 +143,6 @@ class Jedis40ClientTest {
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))));
   }
 }

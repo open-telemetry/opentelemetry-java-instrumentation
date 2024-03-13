@@ -19,6 +19,7 @@ import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,8 @@ class VertxRedisClientTest {
 
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
+  private static String host;
+  private static String ip;
   private static int port;
   private static Vertx vertx;
   private static Redis client;
@@ -42,10 +45,17 @@ class VertxRedisClientTest {
   @BeforeAll
   static void setup() throws Exception {
     redisServer.start();
+
+    host = redisServer.getHost();
+    try {
+      ip = java.net.InetAddress.getByName(host).getHostAddress();
+    } catch (UnknownHostException e) {
+      ip = "127.0.0.1";
+    }
     port = redisServer.getMappedPort(6379);
 
     vertx = Vertx.vertx();
-    client = Redis.createClient(vertx, "redis://localhost:" + port + "/1");
+    client = Redis.createClient(vertx, "redis://" + host + ":" + port + "/1");
     RedisConnection connection =
         client.connect().toCompletionStage().toCompletableFuture().get(30, TimeUnit.SECONDS);
     redis = RedisAPI.api(connection);
@@ -199,10 +209,10 @@ class VertxRedisClientTest {
       equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
       equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
       equalTo(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, 1),
-      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+      equalTo(ServerAttributes.SERVER_ADDRESS, host),
       equalTo(ServerAttributes.SERVER_PORT, port),
       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")
+      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
     };
   }
 }
