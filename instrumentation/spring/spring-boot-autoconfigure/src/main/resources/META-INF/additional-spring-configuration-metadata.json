@@ -6,10 +6,80 @@
   ],
   "properties": [
     {
+      "name": "otel.attribute.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of attributes. Applies to spans, span events, span links, and logs.",
+      "defaultValue": 128
+    },
+    {
+      "name": "otel.attribute.value.length.limit",
+      "type": "java.lang.String",
+      "description": "The maximum length of attribute values. Applies to spans and logs. By default, there is no limit."
+    },
+    {
+      "name": "otel.blrp.export.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum allowed time, in milliseconds, to export OTLP log batch data.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 30000
+    },
+    {
+      "name": "otel.blrp.max.export.batch.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP log batch size.",
+      "defaultValue": 512
+    },
+    {
+      "name": "otel.blrp.max.queue.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP log batch queue size.",
+      "defaultValue": 2048
+    },
+    {
+      "name": "otel.blrp.schedule.delay",
+      "type": "java.lang.String",
+      "description": "The interval, in milliseconds, between two consecutive OTLP log batch exports.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 1000
+    },
+    {
+      "name": "otel.bsp.schedule.delay",
+      "type": "java.lang.String",
+      "description": "The interval, in milliseconds, between two consecutive OTLP span batch exports.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 5000
+    },
+    {
+      "name": "otel.bsp.export.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum allowed time, in milliseconds, to export OTLP span batch data.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 30000
+    },
+    {
+      "name": "otel.bsp.max.export.batch.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP span batch size.",
+      "defaultValue": 512
+    },
+    {
+      "name": "otel.bsp.max.queue.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP span batch queue size.",
+      "defaultValue": 2048
+    },
+    {
       "name": "otel.experimental.exporter.otlp.retry.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable experimental retry support. See https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#otlp-exporter-retry.",
       "defaultValue": false
+    },
+    {
+      "name": "otel.experimental.metrics.cardinality.limit",
+      "type": "java.lang.Integer",
+      "description": "If set, configure experimental cardinality limit. The value dictates the maximum number of distinct points per metric.",
+      "defaultValue": 2000
+    },
+    {
+      "name": "otel.experimental.resource.disabled.keys",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Filter out resource entries with these keys."
     },
     {
       "name": "otel.exporter.otlp.certificate",
@@ -281,6 +351,16 @@
       "defaultValue": true
     },
     {
+      "name": "otel.java.enabled.resource.providers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Enables one or more <code>ResourceProvider</code> types. If unset, all resource providers are enabled. Each entry is the fully qualified classname of a <code>ResourceProvider</code>."
+    },
+    {
+      "name": "otel.java.disabled.resource.providers",
+      "type": "java.util.List<java.lang.String>",
+      "description": " Disables one or more <code>ResourceProvider</code> types. Each entry is the fully qualified classname of a <code>ResourceProvider</code>."
+    },
+    {
       "name": "otel.logs.exporter",
       "type": "java.util.List<java.lang.String>",
       "description": "List of exporters to be used for logs.",
@@ -291,6 +371,12 @@
       "type": "java.lang.String",
       "description": "The interval, in milliseconds, between the start of two export attempts.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
       "defaultValue": "60000"
+    },
+    {
+      "name": "otel.metrics.exemplar.filter",
+      "type": "java.lang.String",
+      "description": "The filter for exemplar sampling.",
+      "defaultValue": "TRACE_BASED"
     },
     {
       "name": "otel.metrics.exporter",
@@ -316,10 +402,32 @@
       "defaultValue": false
     },
     {
-      "name": "otel.springboot.resource.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable the resource auto-configuration.",
-      "defaultValue": true
+      "name": "otel.service.name",
+      "type": "java.lang.String",
+      "description": "Specify logical service name. Takes precedence over <code>service.name</code> defined with <code>otel.resource.attributes</code>."
+    },
+    {
+      "name": "otel.span.attribute.value.length.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum length of span attribute values. Takes precedence over <code>otel.attribute.value.length.limit</code>. By default, there is no limit."
+    },
+    {
+      "name": "otel.span.attribute.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of attributes per span. Takes precedence over <code>otel.attribute.count.limit<code>.",
+      "defaultValue": 128
+    },
+    {
+      "name": "otel.span.event.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of events per span.",
+      "defaultValue": 128
+    },
+    {
+      "name": "otel.span.link.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of links per span.",
+      "defaultValue": 128
     },
     {
       "name": "otel.traces.exporter",
@@ -328,9 +436,15 @@
       "defaultValue": "otlp"
     },
     {
-      "name": "otel.traces.sampler.probability",
+      "name": "otel.traces.sampler",
+      "type": "java.lang.String",
+      "description": "The sampler to use for tracing.",
+      "defaultValue": "parentbased_always_on"
+    },
+    {
+      "name": "otel.traces.sampler.arg",
       "type": "java.lang.Double",
-      "description": "The probability of sampling.<br/>The value should be within [0.0, 1.0]. 1.0 means keep everything, 0.0 means drop all spans.",
+      "description": "An argument to the configured tracer if supported, for example a ratio.",
       "defaultValue": 1.0
     }
   ],
@@ -425,6 +539,23 @@
       ]
     },
     {
+      "name": "otel.metrics.exemplar.filter",
+      "values": [
+        {
+          "value": "ALWAYS_ON",
+          "description": "Take all exemplars."
+        },
+        {
+          "value": "ALWAYS_OFF",
+          "description": "Drop all exemplars."
+        },
+        {
+          "value": "TRACE_BASED",
+          "description": "Choose exemplars that correspond to a sampled span."
+        }
+      ]
+    },
+    {
       "name": "otel.metrics.exporter",
       "values": [
         {
@@ -492,6 +623,35 @@
         {
           "value": "zipkin",
           "description": "Zipkin exporter."
+        }
+      ]
+    },
+    {
+      "name": "otel.traces.sampler",
+      "values": [
+        {
+          "value": "always_on",
+          "description": "Keep all spans."
+        },
+        {
+          "value": "always_off",
+          "description": "Drop all spans."
+        },
+        {
+          "value": "traceidratio",
+          "description": "Keep a ratio of <code>otel.traces.sampler.arg<code> of all spans."
+        },
+        {
+          "value": "parentbased_always_on",
+          "description": "Keep all spans where the parent is also kept. If there is no parent, keep all spans."
+        },
+        {
+          "value": "parentbased_always_off",
+          "description": "Keep all spans where the parent is also kept. If there is no parent, drop all spans."
+        },
+        {
+          "value": "parentbased_traceidratio",
+          "description": "Keep all spans where the parent is also kept. If there is no parent, keep a ratio of <code>otel.traces.sampler.arg<code> of all spans."
         }
       ]
     }
