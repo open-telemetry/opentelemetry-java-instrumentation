@@ -12,9 +12,9 @@ import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class FinagleCoreInstrumentationModule extends InstrumentationModule {
+public class FinagleHttpInstrumentationModule extends InstrumentationModule {
 
-  public FinagleCoreInstrumentationModule() {
+  public FinagleHttpInstrumentationModule() {
     super("finagle-http", "finagle-http-23.11");
   }
 
