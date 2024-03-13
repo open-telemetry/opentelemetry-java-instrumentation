@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.finagle.v23_11;
+package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static io.opentelemetry.javaagent.instrumentation.finagle.v23_11.Utils.createClient;
+import static io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.createClient;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.twitter.finagle.ConnectionFailedException;
@@ -27,7 +27,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.javaagent.instrumentation.finagle.v23_11.Utils.ClientType;
+import io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.ClientType;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.ConnectException;
 import java.net.URI;
