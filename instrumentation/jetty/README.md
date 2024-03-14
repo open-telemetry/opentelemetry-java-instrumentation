@@ -8,5 +8,3 @@ Jetty support is divided into the following sub-modules:
 - `jetty-11.0:javaagent` applies Jetty request handler instrumentation for versions `[11,12)`
 - `jetty-12.0:javaagent` applies Jetty request handler instrumentation for versions `[12,)`
 
-Instrumentations in `jetty-8.0`, `jetty-11.0` and `jetty-12.0` are mutually exclusive, this is guaranteed by the
-instrumentation requiring different parameter list respectively.
