@@ -35,7 +35,7 @@ class JarServiceNameDetectorTest {
 
   @BeforeEach
   void setUp() {
-    JarPathFinder.resetForTest();
+    MainJarPathFinder.resetForTest();
   }
 
   @Test
@@ -53,7 +53,7 @@ class JarServiceNameDetectorTest {
   private static JarServiceNameDetector getDetector(
       String[] processArgs, Function<String, String> getProperty, Predicate<Path> fileExists) {
     return new JarServiceNameDetector(
-        new JarPathFinder(() -> processArgs, getProperty, fileExists));
+        new MainJarPathFinder(() -> processArgs, getProperty, fileExists));
   }
 
   @Test

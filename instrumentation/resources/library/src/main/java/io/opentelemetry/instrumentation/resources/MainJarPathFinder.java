@@ -15,7 +15,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-class JarPathFinder {
+class MainJarPathFinder {
   private final Supplier<String[]> getProcessHandleArguments;
   private final Function<String, String> getSystemProperty;
   private final Predicate<Path> fileExists;
@@ -30,12 +30,12 @@ class JarPathFinder {
 
   private static Optional<DetectionResult> detectionResult = Optional.empty();
 
-  public JarPathFinder() {
+  public MainJarPathFinder() {
     this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
   }
 
   // visible for tests
-  JarPathFinder(
+  MainJarPathFinder(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
       Predicate<Path> fileExists) {

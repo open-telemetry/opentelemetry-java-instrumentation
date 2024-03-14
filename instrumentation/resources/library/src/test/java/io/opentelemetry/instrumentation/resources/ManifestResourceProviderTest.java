@@ -27,7 +27,7 @@ class ManifestResourceProviderTest {
 
   @BeforeEach
   void setUp() {
-    JarPathFinder.resetForTest();
+    MainJarPathFinder.resetForTest();
   }
 
   private static class TestCase {
@@ -60,7 +60,7 @@ class ManifestResourceProviderTest {
                     () -> {
                       ManifestResourceProvider provider =
                           new ManifestResourceProvider(
-                              new JarPathFinder(
+                              new MainJarPathFinder(
                                   () -> JarServiceNameDetectorTest.getArgs("app.jar"),
                                   prop -> null,
                                   JarServiceNameDetectorTest::failPath),

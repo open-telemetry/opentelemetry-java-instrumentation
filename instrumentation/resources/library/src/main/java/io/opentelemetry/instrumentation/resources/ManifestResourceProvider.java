@@ -10,11 +10,11 @@ import static java.util.logging.Level.WARNING;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.semconv.ResourceAttributes;
-import java.io.InputStream;
-import java.net.URL;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
 
@@ -29,12 +29,12 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
 
   @SuppressWarnings("unused") // SPI
   public ManifestResourceProvider() {
-    this(new JarPathFinder(), ManifestResourceProvider::readManifest);
+    this(new MainJarPathFinder(), ManifestResourceProvider::readManifest);
   }
 
   // Visible for testing
   ManifestResourceProvider(
-      JarPathFinder jarPathFinder, Function<Path, Optional<Manifest>> manifestReader) {
+      MainJarPathFinder jarPathFinder, Function<Path, Optional<Manifest>> manifestReader) {
     super(
         new AttributeProvider<Manifest>() {
           @Override
@@ -64,13 +64,10 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
   }
 
   private static Optional<Manifest> readManifest(Path jarPath) {
-    try (InputStream s =
-        new URL(String.format("jar:%s!/META-INF/MANIFEST.MF", jarPath.toUri())).openStream()) {
-      Manifest manifest = new Manifest();
-      manifest.read(s);
-      return Optional.of(manifest);
-    } catch (Exception e) {
-      logger.log(WARNING, "Error reading manifest", e);
+    try (JarFile jarFile = new JarFile(jarPath.toFile(), false)) {
+      return Optional.of(jarFile.getManifest());
+    } catch (IOException exception) {
+      logger.log(WARNING, "Error reading manifest", exception);
       return Optional.empty();
     }
   }

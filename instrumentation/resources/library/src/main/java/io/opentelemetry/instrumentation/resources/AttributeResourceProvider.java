@@ -25,7 +25,6 @@ import java.util.function.Function;
  *
  * <p>An example of how to use this interface can be found in {@link ManifestResourceProvider}.
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class AttributeResourceProvider<D> implements ConditionalResourceProvider {
 
   private final AttributeProvider<D> attributeProvider;
@@ -36,6 +35,7 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
 
     @CanIgnoreReturnValue
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> AttributeBuilder add(AttributeKey<T> key, Function<D, Optional<T>> getter) {
       attributeGetters.put((AttributeKey) key, Objects.requireNonNull((Function) getter));
       return this;
@@ -47,7 +47,7 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
   private final Map<AttributeKey<Object>, Function<D, Optional<?>>> attributeGetters =
       new HashMap<>();
 
-  public AttributeResourceProvider(AttributeProvider<D> attributeProvider) {
+  AttributeResourceProvider(AttributeProvider<D> attributeProvider) {
     this.attributeProvider = attributeProvider;
     attributeProvider.registerAttributes(new AttributeBuilder());
   }
