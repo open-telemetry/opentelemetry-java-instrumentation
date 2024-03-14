@@ -51,6 +51,12 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
             .and(named("sendAsync"))
             .and(takesArgument(1, named("org.apache.pulsar.client.impl.SendCallback"))),
         ProducerImplInstrumentation.class.getName() + "$ProducerSendAsyncMethodAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(isPublic())
+            .and(named("closeAsync")),
+        ProducerImplInstrumentation.class.getName() + "$ProducerCloseAsyncMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -63,6 +69,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       String brokerUrl = pulsarClient.getLookup().getServiceUrl();
       String topic = producer.getTopic();
       VirtualFieldStore.inject(producer, brokerUrl, topic);
+      PulsarMetricsUtil.getMetricsRegistry().registerProducer(producer);
     }
   }
 
@@ -83,6 +90,14 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
       Context context = producerInstrumenter().start(parent, request);
       callback = new SendCallbackWrapper(context, request, callback);
+    }
+  }
+
+  public static class ProducerCloseAsyncMethodAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void before(
+        @Advice.This ProducerImpl<?> producer) {
+      PulsarMetricsUtil.getMetricsRegistry().deleteProducer(producer);
     }
   }
 

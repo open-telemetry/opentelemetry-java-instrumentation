@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.PulsarConfigs.EXPERIMENTAL_SPAN_ATTRIBUTES_NAME;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -122,7 +124,7 @@ public final class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
     if (InstrumentationConfig.get()
-        .getBoolean("otel.instrumentation.pulsar.experimental-span-attributes", false)) {
+        .getBoolean(EXPERIMENTAL_SPAN_ATTRIBUTES_NAME, false)) {
       builder.addAttributesExtractor(ExperimentalProducerAttributesExtractor.INSTANCE);
     }
 
