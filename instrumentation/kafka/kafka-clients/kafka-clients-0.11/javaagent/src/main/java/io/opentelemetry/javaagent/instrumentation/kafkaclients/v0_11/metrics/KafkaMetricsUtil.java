@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -34,13 +35,13 @@ public final class KafkaMetricsUtil {
     }
     config.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        OpenTelemetryMetricsReporter.class.getName(),
+        Collections.singletonList(OpenTelemetryMetricsReporter.class),
         (class1, class2) -> {
           // class1 is either a class name or List of class names or classes
           if (class1 instanceof List) {
             List<Object> result = new ArrayList<>();
             result.addAll((List<Object>) class1);
-            result.add(class2);
+            result.addAll((List<Object>) class2);
             return result;
           } else if (class1 instanceof String) {
             String className1 = (String) class1;
@@ -48,7 +49,10 @@ public final class KafkaMetricsUtil {
               return class2;
             }
           }
-          return class1 + "," + class2;
+          List<Object> result = new ArrayList<>();
+          result.add(class1);
+          result.addAll((List<Object>) class2);
+          return result;
         });
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,

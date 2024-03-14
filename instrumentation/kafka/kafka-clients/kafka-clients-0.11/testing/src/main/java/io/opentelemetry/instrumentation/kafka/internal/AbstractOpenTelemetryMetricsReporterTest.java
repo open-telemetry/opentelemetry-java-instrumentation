@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -117,7 +118,12 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     producerConfig.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         TestMetricsReporter.class.getName(),
-        (o, o2) -> o + "," + o2);
+        (o, o2) -> {
+          List<Object> result = new ArrayList<>();
+          result.addAll((List<Object>) o);
+          result.add(o2);
+          return result;
+        });
     return producerConfig;
   }
 
@@ -134,7 +140,12 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     consumerConfig.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         TestMetricsReporter.class.getName(),
-        (o, o2) -> o + "," + o2);
+        (o, o2) -> {
+          List<Object> result = new ArrayList<>();
+          result.addAll((List<Object>) o);
+          result.add(o2);
+          return result;
+        });
     return consumerConfig;
   }
 

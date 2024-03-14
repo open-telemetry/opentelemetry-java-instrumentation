@@ -196,7 +196,7 @@ public final class KafkaTelemetry {
     Map<String, Object> config = new HashMap<>();
     config.put(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        OpenTelemetryMetricsReporter.class.getName());
+        Collections.singletonList(OpenTelemetryMetricsReporter.class));
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
         new OpenTelemetrySupplier(openTelemetry));
