@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.kafka.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
@@ -35,11 +36,11 @@ public final class KafkaMetricsUtil {
     }
     config.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        Collections.singletonList(OpenTelemetryMetricsReporter.class),
+        MetricsReporterList.singletonList(OpenTelemetryMetricsReporter.class),
         (class1, class2) -> {
           // class1 is either a class name or List of class names or classes
           if (class1 instanceof List) {
-            List<Object> result = new ArrayList<>();
+            List<Object> result = new MetricsReporterList<>();
             result.addAll((List<Object>) class1);
             result.addAll((List<Object>) class2);
             return result;
@@ -49,7 +50,7 @@ public final class KafkaMetricsUtil {
               return class2;
             }
           }
-          List<Object> result = new ArrayList<>();
+          List<Object> result = new MetricsReporterList<>();
           result.add(class1);
           result.addAll((List<Object>) class2);
           return result;

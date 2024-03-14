@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -141,7 +140,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
   @SuppressWarnings("unchecked")
   private static Object mergeValue(Object o1, Object o2) {
-    List<Object> result = new ArrayList<>();
+    List<Object> result = new MetricsReporterList<>();
     result.addAll((List<Object>) o1);
     result.add(o2);
     return result;
