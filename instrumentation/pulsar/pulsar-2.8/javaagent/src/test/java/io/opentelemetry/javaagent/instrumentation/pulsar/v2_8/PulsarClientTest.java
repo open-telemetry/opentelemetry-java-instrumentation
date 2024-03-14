@@ -671,7 +671,7 @@ class PulsarClientTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.sent.size",
+        "pulsar.client.producer.message.send.size",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -685,12 +685,12 @@ class PulsarClientTest {
                                         point -> {
                                           assertThat(point.getValue()).isPositive();
                                           assertThat(point.getAttributes())
-                                              .containsEntry("producer.name", "producer-0");
+                                              .containsEntry("pulsar.producer.name", "producer-0");
                                         }))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.sent.count",
+        "pulsar.client.producer.message.send.count",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -704,12 +704,12 @@ class PulsarClientTest {
                                         point -> {
                                           assertThat(point.getValue()).isPositive();
                                           assertThat(point.getAttributes())
-                                              .containsEntry("producer.name", "producer-0");
+                                              .containsEntry("pulsar.producer.name", "producer-0");
                                         }))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.sent.duration",
+        "pulsar.client.producer.message.send.duration",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -723,7 +723,7 @@ class PulsarClientTest {
                                         point -> {
                                           assertThat(point.getValue()).isPositive();
                                           assertThat(point.getAttributes())
-                                              .containsEntry("producer.name", "producer-0");
+                                              .containsEntry("pulsar.producer.name", "producer-0");
                                         }))));
 
     testing.waitAndAssertMetrics(
@@ -742,9 +742,9 @@ class PulsarClientTest {
                                         point -> {
                                           assertThat(point.getValue()).isPositive();
                                           assertThat(point.getAttributes())
-                                              .containsEntry("consumer.name", "consumer-0");
+                                              .containsEntry("pulsar.consumer.name", "consumer-0");
                                           assertThat(point.getAttributes())
-                                              .containsEntry("subscription", "sub");
+                                              .containsEntry("pulsar.subscription", "sub");
                                         }))));
 
     testing.waitAndAssertMetrics(
@@ -763,14 +763,14 @@ class PulsarClientTest {
                                         point -> {
                                           assertThat(point.getValue()).isPositive();
                                           assertThat(point.getAttributes())
-                                              .containsEntry("consumer.name", "consumer-0");
+                                              .containsEntry("pulsar.consumer.name", "consumer-0");
                                           assertThat(point.getAttributes())
-                                              .containsEntry("subscription", "sub");
+                                              .containsEntry("pulsar.subscription", "sub");
                                         }))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.acks.sent.count",
+        "pulsar.client.consumer.message.ack.count",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -784,9 +784,9 @@ class PulsarClientTest {
                                         point -> {
                                           assertThat(point.getValue()).isPositive();
                                           assertThat(point.getAttributes())
-                                              .containsEntry("consumer.name", "consumer-0");
+                                              .containsEntry("pulsar.consumer.name", "consumer-0");
                                           assertThat(point.getAttributes())
-                                              .containsEntry("subscription", "sub");
+                                              .containsEntry("pulsar.subscription", "sub");
                                         }))));
 
     testing.waitAndAssertMetrics(
@@ -805,9 +805,9 @@ class PulsarClientTest {
                                         point -> {
                                           assertThat(point.getValue()).isZero();
                                           assertThat(point.getAttributes())
-                                              .containsEntry("consumer.name", "consumer-0");
+                                              .containsEntry("pulsar.consumer.name", "consumer-0");
                                           assertThat(point.getAttributes())
-                                              .containsEntry("subscription", "sub");
+                                              .containsEntry("pulsar.subscription", "sub");
                                         }))));
 
     for (Producer<String> producer : producers) {

@@ -37,7 +37,7 @@ public class PulsarMetricsRegistry {
 
     // pulsar.client.producer.message.sent.size
     meter
-        .gaugeBuilder(PRODUCER_METRICS_PREFIX + "message.sent.size")
+        .gaugeBuilder(PRODUCER_METRICS_PREFIX + "message.send.size")
         .setUnit("bytes")
         .setDescription("Counts the size of sent messages")
         .ofLongs()
@@ -56,7 +56,7 @@ public class PulsarMetricsRegistry {
 
     // pulsar.client.producer.message.sent.count
     meter
-        .gaugeBuilder(PRODUCER_METRICS_PREFIX + "message.sent.count")
+        .gaugeBuilder(PRODUCER_METRICS_PREFIX + "message.send.count")
         .setUnit("messages")
         .setDescription("Counts the number of sent messages")
         .ofLongs()
@@ -86,7 +86,7 @@ public class PulsarMetricsRegistry {
 
     // pulsar.client.producer.message.sent.duration
     meter
-        .gaugeBuilder(PRODUCER_METRICS_PREFIX + "message.sent.duration")
+        .gaugeBuilder(PRODUCER_METRICS_PREFIX + "message.send.duration")
         .setUnit("ms")
         .setDescription("The duration of sent messages")
         .buildWithCallback(
@@ -208,7 +208,7 @@ public class PulsarMetricsRegistry {
 
     // pulsar.client.consumer.acks.sent.count
     meter
-        .gaugeBuilder(CONSUMER_METRICS_PREFIX + "acks.sent.count")
+        .gaugeBuilder(CONSUMER_METRICS_PREFIX + "message.ack.count")
         .setUnit("acks")
         .setDescription("Counts the number of sent message acknowledgements")
         .ofLongs()

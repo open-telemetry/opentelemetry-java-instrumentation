@@ -16,16 +16,16 @@ public class PulsarMetricsUtil {
   public static final String PULSAR_CLIENT_PREFIX = "pulsar.client.";
   public static final String PRODUCER_METRICS_PREFIX = PULSAR_CLIENT_PREFIX + "producer.";
   public static final String CONSUMER_METRICS_PREFIX = PULSAR_CLIENT_PREFIX + "consumer.";
-  public static final AttributeKey<String> ATTRIBUTE_TOPIC = AttributeKey.stringKey("topic");
+  public static final AttributeKey<String> ATTRIBUTE_TOPIC = AttributeKey.stringKey("pulsar.topic");
   public static final AttributeKey<String> ATTRIBUTE_SUBSCRIPTION =
-      AttributeKey.stringKey("subscription");
+      AttributeKey.stringKey("pulsar.subscription");
   public static final AttributeKey<String> ATTRIBUTE_PRODUCER_NAME =
-      AttributeKey.stringKey("producer.name");
+      AttributeKey.stringKey("pulsar.producer.name");
   public static final AttributeKey<String> ATTRIBUTE_CONSUMER_NAME =
-      AttributeKey.stringKey("consumer.name");
+      AttributeKey.stringKey("pulsar.consumer.name");
   public static final AttributeKey<String> ATTRIBUTE_QUANTILE = AttributeKey.stringKey("quantile");
   public static final AttributeKey<String> ATTRIBUTE_RESPONSE_STATUS =
-      AttributeKey.stringKey("response.status");
+      AttributeKey.stringKey("pulsar.response.status");
 
   private static volatile PulsarMetricsRegistry metricsRegistry;
 
