@@ -123,8 +123,7 @@ public final class PulsarSingletons {
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
-    if (InstrumentationConfig.get()
-        .getBoolean(EXPERIMENTAL_SPAN_ATTRIBUTES_NAME, false)) {
+    if (InstrumentationConfig.get().getBoolean(EXPERIMENTAL_SPAN_ATTRIBUTES_NAME, false)) {
       builder.addAttributesExtractor(ExperimentalProducerAttributesExtractor.INSTANCE);
     }
 

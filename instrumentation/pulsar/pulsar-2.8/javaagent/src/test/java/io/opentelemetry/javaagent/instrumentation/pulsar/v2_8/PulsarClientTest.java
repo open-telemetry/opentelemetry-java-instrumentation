@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -80,8 +80,11 @@ class PulsarClientTest {
 
     brokerHost = pulsar.getHost();
     brokerPort = pulsar.getMappedPort(6650);
-    client = PulsarClient.builder().serviceUrl(pulsar.getPulsarBrokerUrl())
-        .statsInterval(5, TimeUnit.SECONDS).build();
+    client =
+        PulsarClient.builder()
+            .serviceUrl(pulsar.getPulsarBrokerUrl())
+            .statsInterval(5, TimeUnit.SECONDS)
+            .build();
     admin = PulsarAdmin.builder().serviceHttpUrl(pulsar.getHttpServiceUrl()).build();
   }
 
@@ -100,8 +103,8 @@ class PulsarClientTest {
   void testSendNonPartitionedTopic() throws Exception {
     String topic = "persistent://public/default/testSendNonPartitionedTopic";
     admin.topics().createNonPartitionedTopic(topic);
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -124,21 +127,22 @@ class PulsarClientTest {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopic";
     CountDownLatch latch = new CountDownLatch(1);
     admin.topics().createNonPartitionedTopic(topic);
-    Consumer<String> c = client
-        .newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .messageListener(
-            (MessageListener<String>)
-                (consumer, msg) -> {
-                  acknowledgeMessage(consumer, msg);
-                  latch.countDown();
-                })
-        .subscribe();
+    Consumer<String> c =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      acknowledgeMessage(consumer, msg);
+                      latch.countDown();
+                    })
+            .subscribe();
 
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -175,13 +179,15 @@ class PulsarClientTest {
   void testConsumeNonPartitionedTopicUsingReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive";
     admin.topics().createNonPartitionedTopic(topic);
-    Consumer<String> consumer = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .subscribe();
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Consumer<String> consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -221,8 +227,8 @@ class PulsarClientTest {
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
 
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     CompletableFuture<Message<String>> result =
         consumer
@@ -268,14 +274,15 @@ class PulsarClientTest {
     String topic =
         "persistent://public/default/testConsumeNonPartitionedTopicCallReceiveWithTimeout";
     admin.topics().createNonPartitionedTopic(topic);
-    Consumer<String> consumer = client
-        .newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .subscribe();
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Consumer<String> consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -307,15 +314,16 @@ class PulsarClientTest {
   void testConsumeNonPartitionedTopicUsingBatchReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceive";
     admin.topics().createNonPartitionedTopic(topic);
-    Consumer<String> consumer = client
-        .newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .subscribe();
+    Consumer<String> consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
 
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -359,15 +367,16 @@ class PulsarClientTest {
     String topic =
         "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceiveAsync";
     admin.topics().createNonPartitionedTopic(topic);
-    Consumer<String> consumer = client
-        .newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .subscribe();
+    Consumer<String> consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
 
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -423,20 +432,22 @@ class PulsarClientTest {
     String topic = "persistent://public/default/testCaptureMessageHeaderTopic";
     CountDownLatch latch = new CountDownLatch(1);
     admin.topics().createNonPartitionedTopic(topic);
-    Consumer<String> c = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .topic(topic)
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .messageListener(
-            (MessageListener<String>)
-                (consumer, msg) -> {
-                  acknowledgeMessage(consumer, msg);
-                  latch.countDown();
-                })
-        .subscribe();
+    Consumer<String> c =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      acknowledgeMessage(consumer, msg);
+                      latch.countDown();
+                    })
+            .subscribe();
 
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId =
@@ -476,8 +487,8 @@ class PulsarClientTest {
   void testSendPartitionedTopic() throws Exception {
     String topic = "persistent://public/default/testSendPartitionedTopic";
     admin.topics().createPartitionedTopic(topic, 1);
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -500,20 +511,22 @@ class PulsarClientTest {
     String topic = "persistent://public/default/testConsumePartitionedTopic";
     admin.topics().createPartitionedTopic(topic, 1);
     CountDownLatch latch = new CountDownLatch(1);
-    Consumer<String> c = client.newConsumer(Schema.STRING)
-        .subscriptionName("test_sub")
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .topic(topic)
-        .messageListener(
-            (MessageListener<String>)
-                (consumer, msg) -> {
-                  acknowledgeMessage(consumer, msg);
-                  latch.countDown();
-                })
-        .subscribe();
+    Consumer<String> c =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .topic(topic)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      acknowledgeMessage(consumer, msg);
+                      latch.countDown();
+                    })
+            .subscribe();
 
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false)
-        .create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
 
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
@@ -552,24 +565,26 @@ class PulsarClientTest {
     String topic1 = topicNamePrefix + "1";
     String topic2 = topicNamePrefix + "2";
     CountDownLatch latch = new CountDownLatch(2);
-    Producer<String> producer = client.newProducer(Schema.STRING).topic(topic1)
-        .enableBatching(false).create();
-    Producer<String> producer2 = client.newProducer(Schema.STRING).topic(topic2)
-        .enableBatching(false).create();
+    Producer<String> producer =
+        client.newProducer(Schema.STRING).topic(topic1).enableBatching(false).create();
+    Producer<String> producer2 =
+        client.newProducer(Schema.STRING).topic(topic2).enableBatching(false).create();
 
     MessageId msgId1 = testing.runWithSpan("parent1", () -> producer.send("test1"));
     MessageId msgId2 = testing.runWithSpan("parent2", () -> producer2.send("test2"));
-    Consumer<String> c = client.newConsumer(Schema.STRING)
-        .topic(topic2, topic1)
-        .subscriptionName("test_sub")
-        .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
-        .messageListener(
-            (MessageListener<String>)
-                (consumer, msg) -> {
-                  acknowledgeMessage(consumer, msg);
-                  latch.countDown();
-                })
-        .subscribe();
+    Consumer<String> c =
+        client
+            .newConsumer(Schema.STRING)
+            .topic(topic2, topic1)
+            .subscriptionName("test_sub")
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      acknowledgeMessage(consumer, msg);
+                      latch.countDown();
+                    })
+            .subscribe();
 
     latch.await(1, TimeUnit.MINUTES);
 
@@ -636,12 +651,15 @@ class PulsarClientTest {
     MessageListener<String> listener = Consumer::acknowledgeAsync;
     List<Consumer<String>> consumers = new ArrayList<>(consumerCount);
     for (int i = 0; i < 2; i++) {
-      consumers.add(client.newConsumer(Schema.STRING).topic(topic)
-          .subscriptionName("sub")
-          .consumerName("consumer-" + i)
-          .subscriptionType(SubscriptionType.Shared)
-          .messageListener(listener)
-          .subscribe());
+      consumers.add(
+          client
+              .newConsumer(Schema.STRING)
+              .topic(topic)
+              .subscriptionName("sub")
+              .consumerName("consumer-" + i)
+              .subscriptionType(SubscriptionType.Shared)
+              .messageListener(listener)
+              .subscribe());
     }
 
     int messages = 100;
@@ -651,118 +669,146 @@ class PulsarClientTest {
       }
     }
 
-    testing.waitAndAssertMetrics("io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.sent.size", metrics ->
-            metrics.anySatisfy(metric ->
-                assertThat(metric)
-                    .hasDescription("Counts the size of sent messages")
-                    .hasUnit("bytes")
-                    .hasLongGaugeSatisfying(
-                        __ -> assertThat(metric.getLongGaugeData().getPoints()).anySatisfy(
-                            point -> {
-                              assertThat(point.getValue()).isPositive();
-                              assertThat(point.getAttributes()).containsEntry("producer.name",
-                                  "producer-0");
-                            }))
-            ));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-clients-java-2.8",
+        "pulsar.client.producer.message.sent.size",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("Counts the size of sent messages")
+                        .hasUnit("bytes")
+                        .hasLongGaugeSatisfying(
+                            __ ->
+                                assertThat(metric.getLongGaugeData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getValue()).isPositive();
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("producer.name", "producer-0");
+                                        }))));
 
-    testing.waitAndAssertMetrics("io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.sent.count", metrics ->
-            metrics.anySatisfy(metric ->
-                assertThat(metric)
-                    .hasDescription("Counts the number of sent messages")
-                    .hasUnit("messages")
-                    .hasLongGaugeSatisfying(
-                        __ -> assertThat(metric.getLongGaugeData().getPoints()).anySatisfy(
-                            point -> {
-                              assertThat(point.getValue()).isPositive();
-                              assertThat(point.getAttributes()).containsEntry("producer.name",
-                                  "producer-0");
-                            }))
-            ));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-clients-java-2.8",
+        "pulsar.client.producer.message.sent.count",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("Counts the number of sent messages")
+                        .hasUnit("messages")
+                        .hasLongGaugeSatisfying(
+                            __ ->
+                                assertThat(metric.getLongGaugeData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getValue()).isPositive();
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("producer.name", "producer-0");
+                                        }))));
 
-    testing.waitAndAssertMetrics("io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.sent.duration", metrics ->
-            metrics.anySatisfy(metric ->
-                assertThat(metric)
-                    .hasDescription("The duration of sent messages")
-                    .hasUnit("ms")
-                    .hasDoubleGaugeSatisfying(
-                        __ -> assertThat(metric.getDoubleGaugeData().getPoints()).anySatisfy(
-                            point -> {
-                              assertThat(point.getValue()).isPositive();
-                              assertThat(point.getAttributes()).containsEntry("producer.name",
-                                  "producer-0");
-                            }))
-            ));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-clients-java-2.8",
+        "pulsar.client.producer.message.sent.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("The duration of sent messages")
+                        .hasUnit("ms")
+                        .hasDoubleGaugeSatisfying(
+                            __ ->
+                                assertThat(metric.getDoubleGaugeData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getValue()).isPositive();
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("producer.name", "producer-0");
+                                        }))));
 
-    testing.waitAndAssertMetrics("io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.message.received.size", metrics ->
-            metrics.anySatisfy(metric ->
-                assertThat(metric)
-                    .hasDescription("Counts the size of received messages")
-                    .hasUnit("bytes")
-                    .hasLongGaugeSatisfying(
-                        __ -> assertThat(metric.getLongGaugeData().getPoints()).anySatisfy(
-                            point -> {
-                              assertThat(point.getValue()).isPositive();
-                              assertThat(point.getAttributes()).containsEntry("consumer.name",
-                                  "consumer-0");
-                              assertThat(point.getAttributes()).containsEntry("subscription",
-                                  "sub");
-                            }))
-            ));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-clients-java-2.8",
+        "pulsar.client.consumer.message.received.size",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("Counts the size of received messages")
+                        .hasUnit("bytes")
+                        .hasLongGaugeSatisfying(
+                            __ ->
+                                assertThat(metric.getLongGaugeData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getValue()).isPositive();
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("consumer.name", "consumer-0");
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("subscription", "sub");
+                                        }))));
 
-    testing.waitAndAssertMetrics("io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.message.received.count", metrics ->
-            metrics.anySatisfy(metric ->
-                assertThat(metric)
-                    .hasDescription("Counts the number of received messages")
-                    .hasUnit("messages")
-                    .hasLongGaugeSatisfying(
-                        __ -> assertThat(metric.getLongGaugeData().getPoints()).anySatisfy(
-                            point -> {
-                              assertThat(point.getValue()).isPositive();
-                              assertThat(point.getAttributes()).containsEntry("consumer.name",
-                                  "consumer-0");
-                              assertThat(point.getAttributes()).containsEntry("subscription",
-                                  "sub");
-                            }))
-            ));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-clients-java-2.8",
+        "pulsar.client.consumer.message.received.count",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("Counts the number of received messages")
+                        .hasUnit("messages")
+                        .hasLongGaugeSatisfying(
+                            __ ->
+                                assertThat(metric.getLongGaugeData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getValue()).isPositive();
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("consumer.name", "consumer-0");
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("subscription", "sub");
+                                        }))));
 
-    testing.waitAndAssertMetrics("io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.acks.sent.count", metrics ->
-            metrics.anySatisfy(metric ->
-                assertThat(metric)
-                    .hasDescription("Counts the number of sent message acknowledgements")
-                    .hasUnit("acks")
-                    .hasLongGaugeSatisfying(
-                        __ -> assertThat(metric.getLongGaugeData().getPoints()).anySatisfy(
-                            point -> {
-                              assertThat(point.getValue()).isPositive();
-                              assertThat(point.getAttributes()).containsEntry("consumer.name",
-                                  "consumer-0");
-                              assertThat(point.getAttributes()).containsEntry("subscription",
-                                  "sub");
-                            }))
-            ));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-clients-java-2.8",
+        "pulsar.client.consumer.acks.sent.count",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("Counts the number of sent message acknowledgements")
+                        .hasUnit("acks")
+                        .hasLongGaugeSatisfying(
+                            __ ->
+                                assertThat(metric.getLongGaugeData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getValue()).isPositive();
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("consumer.name", "consumer-0");
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("subscription", "sub");
+                                        }))));
 
-    testing.waitAndAssertMetrics("io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.receiver.queue.usage", metrics ->
-            metrics.anySatisfy(metric ->
-                assertThat(metric)
-                    .hasDescription("Number of the messages in the receiver queue")
-                    .hasUnit("messages")
-                    .hasLongGaugeSatisfying(
-                        __ -> assertThat(metric.getLongGaugeData().getPoints()).anySatisfy(
-                            point -> {
-                              assertThat(point.getValue()).isZero();
-                              assertThat(point.getAttributes()).containsEntry("consumer.name",
-                                  "consumer-0");
-                              assertThat(point.getAttributes()).containsEntry("subscription",
-                                  "sub");
-                            }))
-            ));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-clients-java-2.8",
+        "pulsar.client.consumer.receiver.queue.usage",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("Number of the messages in the receiver queue")
+                        .hasUnit("messages")
+                        .hasLongGaugeSatisfying(
+                            __ ->
+                                assertThat(metric.getLongGaugeData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getValue()).isZero();
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("consumer.name", "consumer-0");
+                                          assertThat(point.getAttributes())
+                                              .containsEntry("subscription", "sub");
+                                        }))));
 
     for (Producer<String> producer : producers) {
       producer.close();

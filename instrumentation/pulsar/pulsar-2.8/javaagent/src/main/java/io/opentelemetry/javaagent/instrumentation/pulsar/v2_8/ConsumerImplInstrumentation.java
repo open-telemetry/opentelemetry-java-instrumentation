@@ -73,9 +73,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
             .and(takesArguments(0)),
         className + "$ConsumerBatchAsyncReceiveAdvice");
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("closeAsync")),
+        isMethod().and(isPublic()).and(named("closeAsync")),
         className + "$ConsumerCloseAsyncMethodAdvice");
   }
 
@@ -177,8 +175,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   public static class ConsumerCloseAsyncMethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void before(
-        @Advice.This Consumer<?> consumer) {
+    public static void before(@Advice.This Consumer<?> consumer) {
       if (consumer instanceof ConsumerImpl<?>) {
         PulsarMetricsUtil.getMetricsRegistry().deleteConsumer((ConsumerImpl<?>) consumer);
       }

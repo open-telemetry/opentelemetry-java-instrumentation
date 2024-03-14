@@ -53,9 +53,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
         ProducerImplInstrumentation.class.getName() + "$ProducerSendAsyncMethodAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(named("closeAsync")),
+        isMethod().and(isPublic()).and(named("closeAsync")),
         ProducerImplInstrumentation.class.getName() + "$ProducerCloseAsyncMethodAdvice");
   }
 
@@ -95,8 +93,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
   public static class ProducerCloseAsyncMethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void before(
-        @Advice.This ProducerImpl<?> producer) {
+    public static void before(@Advice.This ProducerImpl<?> producer) {
       PulsarMetricsUtil.getMetricsRegistry().deleteProducer(producer);
     }
   }
