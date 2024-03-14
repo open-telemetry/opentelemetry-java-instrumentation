@@ -70,11 +70,6 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
         .readData()
         .map(
             data -> {
-              // what should we do here?
-              // we don't have access to the existing resource
-              // if the resource provider produces a single key, we can rely on shouldApply
-              // i.e. this method won't be called if the key is already present
-              // the thread local is a hack to work around this
               if (filteredKeys == null) {
                 throw new IllegalStateException("shouldApply should be called first");
               }
