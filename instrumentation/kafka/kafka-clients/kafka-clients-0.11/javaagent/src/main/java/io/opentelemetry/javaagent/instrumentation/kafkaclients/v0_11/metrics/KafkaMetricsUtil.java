@@ -11,8 +11,6 @@ import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsRepor
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
