@@ -17,7 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * An easier alternative to {@link io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider}, which
@@ -25,7 +27,6 @@ import java.util.function.Function;
  *
  * <p>An example of how to use this interface can be found in {@link ManifestResourceProvider}.
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class AttributeResourceProvider<D> implements ConditionalResourceProvider {
 
   private final AttributeProvider<D> attributeProvider;
@@ -36,29 +37,31 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
 
     @CanIgnoreReturnValue
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> AttributeBuilder add(AttributeKey<T> key, Function<D, Optional<T>> getter) {
       attributeGetters.put((AttributeKey) key, Objects.requireNonNull((Function) getter));
       return this;
     }
   }
 
-  private static final ThreadLocal<Resource> existingResource = new ThreadLocal<>();
+  private Set<AttributeKey<?>> filteredKeys;
 
   private final Map<AttributeKey<Object>, Function<D, Optional<?>>> attributeGetters =
       new HashMap<>();
 
-  public AttributeResourceProvider(AttributeProvider<D> attributeProvider) {
+  AttributeResourceProvider(AttributeProvider<D> attributeProvider) {
     this.attributeProvider = attributeProvider;
     attributeProvider.registerAttributes(new AttributeBuilder());
   }
 
   @Override
   public final boolean shouldApply(ConfigProperties config, Resource existing) {
-    existingResource.set(existing);
-
-    Map<String, String> resourceAttributes = getResourceAttributes(config);
-    return attributeGetters.keySet().stream()
-        .allMatch(key -> shouldUpdate(config, existing, key, resourceAttributes));
+    Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
+    filteredKeys =
+        attributeGetters.keySet().stream()
+            .filter(key -> shouldUpdate(config, existing, key, resourceAttributes))
+            .collect(Collectors.toSet());
+    return !filteredKeys.isEmpty();
   }
 
   @Override
@@ -67,17 +70,12 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
         .readData()
         .map(
             data -> {
-              // what should we do here?
-              // we don't have access to the existing resource
-              // if the resource provider produces a single key, we can rely on shouldApply
-              // i.e. this method won't be called if the key is already present
-              // the thread local is a hack to work around this
-              Resource existing =
-                  Objects.requireNonNull(existingResource.get(), "call shouldApply first");
-              Map<String, String> resourceAttributes = getResourceAttributes(config);
+              if (filteredKeys == null) {
+                throw new IllegalStateException("shouldApply should be called first");
+              }
               AttributesBuilder builder = Attributes.builder();
               attributeGetters.entrySet().stream()
-                  .filter(e -> shouldUpdate(config, existing, e.getKey(), resourceAttributes))
+                  .filter(e -> filteredKeys.contains(e.getKey()))
                   .forEach(
                       e ->
                           e.getValue()
@@ -90,10 +88,6 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
 
   private static <T> void putAttribute(AttributesBuilder builder, AttributeKey<T> key, T value) {
     builder.put(key, value);
-  }
-
-  private static Map<String, String> getResourceAttributes(ConfigProperties config) {
-    return config.getMap("otel.resource.attributes");
   }
 
   private static boolean shouldUpdate(
