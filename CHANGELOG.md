@@ -6,8 +6,6 @@
 
 - Remove deprecated spring properties
   ([#10454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10454))
-- Update suppression keys for finagle
-  ([#10579](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10579))
 
 ### 🌟 New javaagent instrumentation
 
