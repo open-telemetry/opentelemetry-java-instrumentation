@@ -67,6 +67,10 @@
   ([#10741](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10741))
 - Fix the logic to get container.id resource attribute
   ([#10737](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10737))
+- Configure kafka metrics reporter as class
+  ([#10855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10855))
+- Disable context propagation when virtual thread is switched to the carrier thread
+  ([#10854](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10854))
 
 ## Version 1.33.0 (2024-02-28)
 
