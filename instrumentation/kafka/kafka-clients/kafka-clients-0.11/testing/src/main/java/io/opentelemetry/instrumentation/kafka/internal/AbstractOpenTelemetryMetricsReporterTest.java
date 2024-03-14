@@ -117,7 +117,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     producerConfig.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         TestMetricsReporter.class.getName(),
-        (o, o2) -> o + "," + o2);
+        AbstractOpenTelemetryMetricsReporterTest::mergeValue);
     return producerConfig;
   }
 
@@ -134,8 +134,16 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     consumerConfig.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         TestMetricsReporter.class.getName(),
-        (o, o2) -> o + "," + o2);
+        AbstractOpenTelemetryMetricsReporterTest::mergeValue);
     return consumerConfig;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Object mergeValue(Object o1, Object o2) {
+    List<Object> result = new MetricsReporterList<>();
+    result.addAll((List<Object>) o1);
+    result.add(o2);
+    return result;
   }
 
   @Test
