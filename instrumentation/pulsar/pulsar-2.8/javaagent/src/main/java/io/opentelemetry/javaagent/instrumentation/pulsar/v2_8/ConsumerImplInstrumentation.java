@@ -90,7 +90,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       if (consumer instanceof ConsumerImpl) {
         // Skip the MultiTopicsConsumerImpl to avoid duplicated metrics since the
         // MultiTopicsConsumerImpl instance will contain a couple of internal ConsumerImpl instance
-        PulsarMetricsUtil.getMetricsRegistry().registerConsumer((ConsumerImpl<?>) consumer);
+        PulsarMetricsRegistry.getMetricsRegistry().registerConsumer((ConsumerImpl<?>) consumer);
       }
     }
   }
@@ -177,7 +177,7 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void before(@Advice.This Consumer<?> consumer) {
       if (consumer instanceof ConsumerImpl<?>) {
-        PulsarMetricsUtil.getMetricsRegistry().deleteConsumer((ConsumerImpl<?>) consumer);
+        PulsarMetricsRegistry.getMetricsRegistry().deleteConsumer((ConsumerImpl<?>) consumer);
       }
     }
   }

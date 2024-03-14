@@ -14,6 +14,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -670,14 +671,14 @@ class PulsarClientTest {
     }
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.send.size",
+        PulsarSingletons.INSTRUMENTATION_NAME,
+        "pulsarclient.producer.message.send.size",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
                         .hasDescription("Counts the size of sent messages")
-                        .hasUnit("bytes")
+                        .hasUnit("By")
                         .hasLongGaugeSatisfying(
                             __ ->
                                 assertThat(metric.getLongGaugeData().getPoints())
@@ -689,14 +690,14 @@ class PulsarClientTest {
                                         }))));
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.send.count",
+        PulsarSingletons.INSTRUMENTATION_NAME,
+        "pulsarclient.producer.message.send.count",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
                         .hasDescription("Counts the number of sent messages")
-                        .hasUnit("messages")
+                        .hasUnit("message")
                         .hasLongGaugeSatisfying(
                             __ ->
                                 assertThat(metric.getLongGaugeData().getPoints())
@@ -708,8 +709,8 @@ class PulsarClientTest {
                                         }))));
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.producer.message.send.duration",
+        PulsarSingletons.INSTRUMENTATION_NAME,
+        "pulsarclient.producer.message.send.duration",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -727,14 +728,14 @@ class PulsarClientTest {
                                         }))));
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.message.received.size",
+        PulsarSingletons.INSTRUMENTATION_NAME,
+        "pulsarclient.consumer.message.received.size",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
                         .hasDescription("Counts the size of received messages")
-                        .hasUnit("bytes")
+                        .hasUnit("By")
                         .hasLongGaugeSatisfying(
                             __ ->
                                 assertThat(metric.getLongGaugeData().getPoints())
@@ -748,14 +749,14 @@ class PulsarClientTest {
                                         }))));
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.message.received.count",
+        PulsarSingletons.INSTRUMENTATION_NAME,
+        "pulsarclient.consumer.message.received.count",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
                         .hasDescription("Counts the number of received messages")
-                        .hasUnit("messages")
+                        .hasUnit("message")
                         .hasLongGaugeSatisfying(
                             __ ->
                                 assertThat(metric.getLongGaugeData().getPoints())
@@ -769,14 +770,14 @@ class PulsarClientTest {
                                         }))));
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.message.ack.count",
+        PulsarSingletons.INSTRUMENTATION_NAME,
+        "pulsarclient.consumer.message.ack.count",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
                         .hasDescription("Counts the number of sent message acknowledgements")
-                        .hasUnit("acks")
+                        .hasUnit("ack")
                         .hasLongGaugeSatisfying(
                             __ ->
                                 assertThat(metric.getLongGaugeData().getPoints())
@@ -790,14 +791,14 @@ class PulsarClientTest {
                                         }))));
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.pulsar-clients-java-2.8",
-        "pulsar.client.consumer.receiver.queue.usage",
+        PulsarSingletons.INSTRUMENTATION_NAME,
+        "pulsarclient.consumer.receiver.queue.usage",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
                         .hasDescription("Number of the messages in the receiver queue")
-                        .hasUnit("messages")
+                        .hasUnit("message")
                         .hasLongGaugeSatisfying(
                             __ ->
                                 assertThat(metric.getLongGaugeData().getPoints())
@@ -816,8 +817,8 @@ class PulsarClientTest {
     for (Consumer<String> consumer : consumers) {
       consumer.close();
     }
-    assertThat(PulsarMetricsUtil.getMetricsRegistry().getProducerSize()).isZero();
-    assertThat(PulsarMetricsUtil.getMetricsRegistry().getConsumerSize()).isZero();
+    assertThat(PulsarMetricsRegistry.getMetricsRegistry().getProducerSize()).isZero();
+    assertThat(PulsarMetricsRegistry.getMetricsRegistry().getConsumerSize()).isZero();
   }
 
   private static List<AttributeAssertion> sendAttributes(

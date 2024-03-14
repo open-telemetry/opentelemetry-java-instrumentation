@@ -67,7 +67,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       String brokerUrl = pulsarClient.getLookup().getServiceUrl();
       String topic = producer.getTopic();
       VirtualFieldStore.inject(producer, brokerUrl, topic);
-      PulsarMetricsUtil.getMetricsRegistry().registerProducer(producer);
+      PulsarMetricsRegistry.getMetricsRegistry().registerProducer(producer);
     }
   }
 
@@ -94,7 +94,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   public static class ProducerCloseAsyncMethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void before(@Advice.This ProducerImpl<?> producer) {
-      PulsarMetricsUtil.getMetricsRegistry().deleteProducer(producer);
+      PulsarMetricsRegistry.getMetricsRegistry().deleteProducer(producer);
     }
   }
 
