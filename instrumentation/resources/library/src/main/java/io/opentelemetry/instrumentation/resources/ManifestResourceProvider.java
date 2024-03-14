@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
@@ -29,17 +30,16 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
 
   @SuppressWarnings("unused") // SPI
   public ManifestResourceProvider() {
-    this(new MainJarPathFinder(), ManifestResourceProvider::readManifest);
+    this(MainJarPathHolder::getJarPath, ManifestResourceProvider::readManifest);
   }
 
-  // Visible for testing
-  ManifestResourceProvider(
-      MainJarPathFinder jarPathFinder, Function<Path, Optional<Manifest>> manifestReader) {
+  private ManifestResourceProvider(
+      Supplier<Optional<Path>> jarPathSupplier, Function<Path, Optional<Manifest>> manifestReader) {
     super(
         new AttributeProvider<Manifest>() {
           @Override
           public Optional<Manifest> readData() {
-            return MainJarPathHolder.getJarPath(jarPathFinder).flatMap(manifestReader);
+            return jarPathSupplier.get().flatMap(manifestReader);
           }
 
           @Override
@@ -61,6 +61,12 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
                     });
           }
         });
+  }
+
+  // Visible for testing
+  ManifestResourceProvider(
+      MainJarPathFinder jarPathFinder, Function<Path, Optional<Manifest>> manifestReader) {
+    this(() -> Optional.ofNullable(jarPathFinder.detectJarPath()), manifestReader);
   }
 
   private static Optional<Manifest> readManifest(Path jarPath) {
