@@ -40,8 +40,7 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return jarPathFinder
-        .getJarPath()
+    return MainJarPathHolder.getJarPath(jarPathFinder)
         .map(
             jarPath -> {
               String serviceName = getServiceName(jarPath);

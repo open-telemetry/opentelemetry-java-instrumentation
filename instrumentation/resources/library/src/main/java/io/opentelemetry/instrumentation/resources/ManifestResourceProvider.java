@@ -39,7 +39,7 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
         new AttributeProvider<Manifest>() {
           @Override
           public Optional<Manifest> readData() {
-            return jarPathFinder.getJarPath().flatMap(manifestReader);
+            return MainJarPathHolder.getJarPath(jarPathFinder).flatMap(manifestReader);
           }
 
           @Override

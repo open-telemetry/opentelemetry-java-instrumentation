@@ -35,7 +35,7 @@ class JarServiceNameDetectorTest {
 
   @BeforeEach
   void setUp() {
-    MainJarPathFinder.resetForTest();
+    MainJarPathHolder.resetForTest();
   }
 
   @Test

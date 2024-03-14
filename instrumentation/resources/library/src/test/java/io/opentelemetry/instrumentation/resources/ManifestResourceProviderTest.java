@@ -28,7 +28,7 @@ class ManifestResourceProviderTest {
 
   @BeforeEach
   void setUp() {
-    MainJarPathFinder.resetForTest();
+    MainJarPathHolder.resetForTest();
   }
 
   private static class TestCase {
