@@ -16,6 +16,8 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
@@ -26,21 +28,26 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
 
   private static final Logger logger = Logger.getLogger(JarServiceNameDetector.class.getName());
 
-  private final MainJarPathFinder jarPathFinder;
+  private final Supplier<Optional<Path>> jarPathSupplier;
 
   @SuppressWarnings("unused") // SPI
   public JarServiceNameDetector() {
-    this(new MainJarPathFinder());
+    this(MainJarPathHolder::getJarPath);
+  }
+
+  private JarServiceNameDetector(Supplier<Optional<Path>> jarPathSupplier) {
+    this.jarPathSupplier = jarPathSupplier;
   }
 
   // visible for tests
   JarServiceNameDetector(MainJarPathFinder jarPathFinder) {
-    this.jarPathFinder = jarPathFinder;
+    this(() -> Optional.ofNullable(jarPathFinder.detectJarPath()));
   }
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return MainJarPathHolder.getJarPath(jarPathFinder)
+    return jarPathSupplier
+        .get()
         .map(
             jarPath -> {
               String serviceName = getServiceName(jarPath);
