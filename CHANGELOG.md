@@ -44,6 +44,10 @@
   ([#10453](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10453))
 - Add manifest resource detector
   ([#10621](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10621))
+- Add instrumentation for jetty 12
+  ([#10575](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10575))
+- add host.id resource provider
+  ([#10627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10627))
 
 ### 🛠️ Bug fixes
 
@@ -65,10 +69,6 @@
   ([#10741](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10741))
 - Fix the logic to get container.id resource attribute
   ([#10737](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10737))
-- Add instrumentation for jetty 12
-  ([#10575](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10575))
-- add host.id resource provider
-  ([#10627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10627))
 
 ## Version 1.33.0 (2024-02-28)
 
