@@ -99,6 +99,7 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // old semconv
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(

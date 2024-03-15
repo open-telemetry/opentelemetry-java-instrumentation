@@ -38,6 +38,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // old semconv
 public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
 

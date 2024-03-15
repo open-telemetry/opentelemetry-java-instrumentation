@@ -45,6 +45,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+@SuppressWarnings("deprecation") // old semconv
 public abstract class AbstractVertxKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractVertxKafkaTest.class);

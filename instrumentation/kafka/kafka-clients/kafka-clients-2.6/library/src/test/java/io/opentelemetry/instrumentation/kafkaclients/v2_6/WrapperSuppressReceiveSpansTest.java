@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 
+@SuppressWarnings("deprecation") // old semconv
 class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
 
   @Override

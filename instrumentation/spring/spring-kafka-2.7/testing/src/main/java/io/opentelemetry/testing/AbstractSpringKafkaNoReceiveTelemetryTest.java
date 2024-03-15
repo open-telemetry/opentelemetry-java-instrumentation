@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // old semconv
 public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaTest {
 
   @Test

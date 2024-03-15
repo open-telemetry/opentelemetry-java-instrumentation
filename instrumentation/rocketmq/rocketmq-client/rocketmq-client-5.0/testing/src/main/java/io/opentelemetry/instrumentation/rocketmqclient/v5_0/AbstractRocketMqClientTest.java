@@ -57,6 +57,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+@SuppressWarnings("deprecation") // old semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractRocketMqClientTest {
 

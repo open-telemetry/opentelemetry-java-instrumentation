@@ -57,6 +57,7 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
+@SuppressWarnings("deprecation") // old semconv
 class RabbitMqTest extends AbstractRabbitMqTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
