@@ -9,33 +9,22 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-class JarPathFinder {
+class MainJarPathFinder {
   private final Supplier<String[]> getProcessHandleArguments;
   private final Function<String, String> getSystemProperty;
   private final Predicate<Path> fileExists;
 
-  private static class DetectionResult {
-    private final Optional<Path> jarPath;
-
-    private DetectionResult(Optional<Path> jarPath) {
-      this.jarPath = jarPath;
-    }
-  }
-
-  private static Optional<DetectionResult> detectionResult = Optional.empty();
-
-  public JarPathFinder() {
+  public MainJarPathFinder() {
     this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
   }
 
   // visible for tests
-  JarPathFinder(
+  MainJarPathFinder(
       Supplier<String[]> getProcessHandleArguments,
       Function<String, String> getSystemProperty,
       Predicate<Path> fileExists) {
@@ -44,19 +33,7 @@ class JarPathFinder {
     this.fileExists = fileExists;
   }
 
-  // visible for testing
-  static void resetForTest() {
-    detectionResult = Optional.empty();
-  }
-
-  Optional<Path> getJarPath() {
-    if (!detectionResult.isPresent()) {
-      detectionResult = Optional.of(new DetectionResult(Optional.ofNullable(detectJarPath())));
-    }
-    return detectionResult.get().jarPath;
-  }
-
-  private Path detectJarPath() {
+  Path detectJarPath() {
     Path jarPath = getJarPathFromProcessHandle();
     if (jarPath != null) {
       return jarPath;

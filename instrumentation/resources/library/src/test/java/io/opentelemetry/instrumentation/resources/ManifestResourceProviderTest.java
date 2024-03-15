@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
@@ -19,28 +20,29 @@ import java.util.Optional;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
 class ManifestResourceProviderTest {
-
-  @BeforeEach
-  void setUp() {
-    JarPathFinder.resetForTest();
-  }
 
   private static class TestCase {
     private final String name;
     private final String expectedName;
     private final String expectedVersion;
     private final InputStream input;
+    private final Resource existing;
 
-    public TestCase(String name, String expectedName, String expectedVersion, InputStream input) {
+    public TestCase(
+        String name,
+        String expectedName,
+        String expectedVersion,
+        InputStream input,
+        Resource existing) {
       this.name = name;
       this.expectedName = expectedName;
       this.expectedVersion = expectedVersion;
       this.input = input;
+      this.existing = existing;
     }
   }
 
@@ -49,10 +51,25 @@ class ManifestResourceProviderTest {
     ConfigProperties config = DefaultConfigProperties.createFromMap(Collections.emptyMap());
 
     return Stream.of(
-            new TestCase("name ok", "demo", "0.0.1-SNAPSHOT", openClasspathResource("MANIFEST.MF")),
-            new TestCase("name - no resource", null, null, null),
             new TestCase(
-                "name - empty resource", null, null, openClasspathResource("empty-MANIFEST.MF")))
+                "name ok",
+                "demo",
+                "0.0.1-SNAPSHOT",
+                openClasspathResource("MANIFEST.MF"),
+                Resource.getDefault()),
+            new TestCase("name - no resource", null, null, null, Resource.getDefault()),
+            new TestCase(
+                "name - empty resource",
+                null,
+                null,
+                openClasspathResource("empty-MANIFEST.MF"),
+                Resource.getDefault()),
+            new TestCase(
+                "name already detected",
+                null,
+                "0.0.1-SNAPSHOT",
+                openClasspathResource("MANIFEST.MF"),
+                Resource.create(Attributes.of(SERVICE_NAME, "old"))))
         .map(
             t ->
                 DynamicTest.dynamicTest(
@@ -60,7 +77,7 @@ class ManifestResourceProviderTest {
                     () -> {
                       ManifestResourceProvider provider =
                           new ManifestResourceProvider(
-                              new JarPathFinder(
+                              new MainJarPathFinder(
                                   () -> JarServiceNameDetectorTest.getArgs("app.jar"),
                                   prop -> null,
                                   JarServiceNameDetectorTest::failPath),
@@ -73,7 +90,7 @@ class ManifestResourceProviderTest {
                                   return Optional.empty();
                                 }
                               });
-                      provider.shouldApply(config, Resource.getDefault());
+                      provider.shouldApply(config, t.existing);
 
                       Resource resource = provider.createResource(config);
                       assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(t.expectedName);

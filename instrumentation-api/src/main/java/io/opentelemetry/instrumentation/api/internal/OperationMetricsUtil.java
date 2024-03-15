@@ -44,7 +44,8 @@ public class OperationMetricsUtil {
             logger.log(
                 Level.WARNING,
                 "Disabling {0} metrics because {1} does not implement {2}. This prevents using "
-                    + "metrics advice, which could result in {0} having high cardinality attributes.",
+                    + "metrics advice, which could result in {0} metrics having high cardinality "
+                    + "attributes.",
                 new Object[] {
                   description,
                   histogramBuilder.getClass().getName(),
