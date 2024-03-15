@@ -561,7 +561,10 @@ include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:vibur-dbcp-11.0:javaagent")
 include(":instrumentation:vibur-dbcp-11.0:library")
 include(":instrumentation:vibur-dbcp-11.0:testing")
+include(":instrumentation:wicket-8.0:common-testing")
 include(":instrumentation:wicket-8.0:javaagent")
+include(":instrumentation:wicket-8.0:wicket8-testing")
+include(":instrumentation:wicket-8.0:wicket10-testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
 
 // benchmark

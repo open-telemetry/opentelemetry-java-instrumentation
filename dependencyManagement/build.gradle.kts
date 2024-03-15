@@ -12,7 +12,7 @@ val otelSdkVersion = "1.35.0"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.19"
+val groovyVersion = "4.0.20"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -26,9 +26,9 @@ val groovyVersion = "4.0.19"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.16.2",
-  "com.squareup.okio:okio-bom:3.8.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.0.0-jre",
+  "com.fasterxml.jackson:jackson-bom:2.17.0",
+  "com.squareup.okio:okio-bom:3.9.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.google.guava:guava-bom:33.1.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -39,7 +39,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.10.4"
-val errorProneVersion = "2.26.0"
+val errorProneVersion = "2.26.1"
 val byteBuddyVersion = "1.14.12"
 val asmVersion = "9.6"
 val jmhVersion = "1.37"
