@@ -16,7 +16,6 @@ import java.nio.file.Paths;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -33,11 +32,6 @@ class JarServiceNameDetectorTest {
 
   @Mock ConfigProperties config;
 
-  @BeforeEach
-  void setUp() {
-    JarPathFinder.resetForTest();
-  }
-
   @Test
   void createResource_empty() {
     String[] processArgs = new String[0];
@@ -53,7 +47,7 @@ class JarServiceNameDetectorTest {
   private static JarServiceNameDetector getDetector(
       String[] processArgs, Function<String, String> getProperty, Predicate<Path> fileExists) {
     return new JarServiceNameDetector(
-        new JarPathFinder(() -> processArgs, getProperty, fileExists));
+        new MainJarPathFinder(() -> processArgs, getProperty, fileExists));
   }
 
   @Test

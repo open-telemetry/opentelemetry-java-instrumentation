@@ -10,11 +10,12 @@ import static java.util.logging.Level.WARNING;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.semconv.ResourceAttributes;
-import java.io.InputStream;
-import java.net.URL;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
 
@@ -29,17 +30,16 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
 
   @SuppressWarnings("unused") // SPI
   public ManifestResourceProvider() {
-    this(new JarPathFinder(), ManifestResourceProvider::readManifest);
+    this(MainJarPathHolder::getJarPath, ManifestResourceProvider::readManifest);
   }
 
-  // Visible for testing
-  ManifestResourceProvider(
-      JarPathFinder jarPathFinder, Function<Path, Optional<Manifest>> manifestReader) {
+  private ManifestResourceProvider(
+      Supplier<Optional<Path>> jarPathSupplier, Function<Path, Optional<Manifest>> manifestReader) {
     super(
         new AttributeProvider<Manifest>() {
           @Override
           public Optional<Manifest> readData() {
-            return jarPathFinder.getJarPath().flatMap(manifestReader);
+            return jarPathSupplier.get().flatMap(manifestReader);
           }
 
           @Override
@@ -63,14 +63,17 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
         });
   }
 
+  // Visible for testing
+  ManifestResourceProvider(
+      MainJarPathFinder jarPathFinder, Function<Path, Optional<Manifest>> manifestReader) {
+    this(() -> Optional.ofNullable(jarPathFinder.detectJarPath()), manifestReader);
+  }
+
   private static Optional<Manifest> readManifest(Path jarPath) {
-    try (InputStream s =
-        new URL(String.format("jar:%s!/META-INF/MANIFEST.MF", jarPath.toUri())).openStream()) {
-      Manifest manifest = new Manifest();
-      manifest.read(s);
-      return Optional.of(manifest);
-    } catch (Exception e) {
-      logger.log(WARNING, "Error reading manifest", e);
+    try (JarFile jarFile = new JarFile(jarPath.toFile(), false)) {
+      return Optional.of(jarFile.getManifest());
+    } catch (IOException exception) {
+      logger.log(WARNING, "Error reading manifest", exception);
       return Optional.empty();
     }
   }
