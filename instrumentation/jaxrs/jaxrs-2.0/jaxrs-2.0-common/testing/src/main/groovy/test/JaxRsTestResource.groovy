@@ -112,11 +112,7 @@ class JaxRsTestResource {
     })
   }
 
-  static BARRIER = new CyclicBarrier(2)
-
-  static void reset() {
-    BARRIER = new CyclicBarrier(2)
-  }
+  static final BARRIER = new CyclicBarrier(2)
 
   @Path("async")
   @GET

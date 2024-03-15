@@ -10,7 +10,7 @@ abstract class JaxRsHttpServerTest<S> extends AbstractJaxRsHttpServerTest<S> {
 
   def setup() {
     // reset the barrier to avoid a failing test breaking subsequent tests
-    JaxRsTestResource.reset()
+    JaxRsTestResource.BARRIER.reset()
   }
 
   @Override
