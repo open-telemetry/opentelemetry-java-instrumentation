@@ -48,6 +48,8 @@
   ([#10575](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10575))
 - add host.id resource provider
   ([#10627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10627))
+- Spring starter includes annotation dependency
+  ([#10613](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10613))
 
 ### 🛠️ Bug fixes
 
