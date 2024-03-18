@@ -35,7 +35,8 @@ public final class ExecutorAdviceHelper {
     propagationDisabled.remove();
   }
 
-  private static boolean isPropagationDisabled() {
+  // visible for testing
+  public static boolean isPropagationDisabled() {
     return propagationDisabled.get() != null;
   }
 
