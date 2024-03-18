@@ -29,6 +29,7 @@ testing {
 
       dependencies {
         implementation(project(":instrumentation:executors:testing"))
+        compileOnly(project(":instrumentation:executors:bootstrap"))
       }
 
       targets {
