@@ -28,7 +28,6 @@ public final class GcUtils {
         throw new InterruptedException();
       }
       System.gc();
-      System.runFinalization();
     }
     if (ref.get() != null) {
       throw new TimeoutException("reference was not cleared in time");
