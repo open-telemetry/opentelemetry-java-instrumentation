@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
@@ -37,9 +35,9 @@ class CouchbaseClient31Test {
 
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
-  static CouchbaseContainer couchbase;
-  static Cluster cluster;
-  static Collection collection;
+  private static CouchbaseContainer couchbase;
+  private static Cluster cluster;
+  private static Collection collection;
 
   @BeforeAll
   static void setup() {
@@ -85,11 +83,6 @@ class CouchbaseClient31Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(spanAssert -> assertThat(spanAssert.getName()).endsWith("get")),
-                span ->
-                    span.satisfies(
-                        spanAssert ->
-                            assertThat(spanAssert.getName()).endsWith("dispatch_to_server"))));
+                span -> span.hasName("cb.get"), span -> span.hasName("cb.dispatch_to_server")));
   }
 }
