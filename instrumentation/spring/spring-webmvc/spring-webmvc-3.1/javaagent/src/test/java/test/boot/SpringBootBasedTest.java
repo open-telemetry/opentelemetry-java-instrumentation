@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package test.boot;
 
 import boot.AbstractSpringBootBasedTest;
@@ -27,11 +32,16 @@ public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @Override
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(AppConfig.class, securityConfigClass());
-    app.setDefaultProperties(ImmutableMap.of(
-        "server.port", port,
-        "server.context-path", getContextPath(),
-        "server.servlet.contextPath", getContextPath(),
-        "server.error.include-message", "always"));
+    app.setDefaultProperties(
+        ImmutableMap.of(
+            "server.port",
+            port,
+            "server.context-path",
+            getContextPath(),
+            "server.servlet.contextPath",
+            getContextPath(),
+            "server.error.include-message",
+            "always"));
     context = app.run();
     return context;
   }

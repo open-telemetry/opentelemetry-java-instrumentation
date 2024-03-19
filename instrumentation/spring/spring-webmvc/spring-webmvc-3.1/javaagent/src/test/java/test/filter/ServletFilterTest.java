@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package test.filter;
 
 import com.google.common.collect.ImmutableMap;
@@ -30,10 +35,10 @@ public class ServletFilterTest extends AbstractServletFilterTest {
 
   @Override
   protected ConfigurableApplicationContext setupServer() {
-    SpringApplication app = new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
-    app.setDefaultProperties(ImmutableMap.of(
-        "server.port", port,
-        "server.error.include-message", "always"));
+    SpringApplication app =
+        new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
+    app.setDefaultProperties(
+        ImmutableMap.of("server.port", port, "server.error.include-message", "always"));
     return app.run();
   }
 

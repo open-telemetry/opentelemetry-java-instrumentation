@@ -1,19 +1,9 @@
-package filter;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.function.Consumer;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
+package filter;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -25,7 +15,21 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public abstract class AbstractServletFilterTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Consumer;
+import org.springframework.context.ConfigurableApplicationContext;
+
+public abstract class AbstractServletFilterTest
+    extends AbstractHttpServerTest<ConfigurableApplicationContext> {
   protected abstract Class<?> securityConfigClass();
 
   protected abstract Class<?> filterConfigClass();
@@ -39,14 +43,16 @@ public abstract class AbstractServletFilterTest extends AbstractHttpServerTest<C
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setHasHandlerSpan(endpoint -> endpoint == NOT_FOUND);
-    options.setHasErrorPageSpans(endpoint -> endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND);
-    options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
+    options.setHasErrorPageSpans(
+        endpoint -> endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND);
+    options.setHasResponseSpan(
+        endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
-
   }
 
   @Override
-  protected SpanDataAssert assertResponseSpan(SpanDataAssert span, String method, ServerEndpoint endpoint) {
+  protected SpanDataAssert assertResponseSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     if (endpoint == REDIRECT) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
     } else if (endpoint == ERROR || endpoint == NOT_FOUND) {
@@ -57,7 +63,8 @@ public abstract class AbstractServletFilterTest extends AbstractHttpServerTest<C
   }
 
   @Override
-  protected SpanDataAssert assertHandlerSpan(SpanDataAssert span, String method, ServerEndpoint endpoint) {
+  protected SpanDataAssert assertHandlerSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     String handlerSpanName = getHandlerSpanName(endpoint);
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceHttpRequestHandler.handleRequest";
@@ -82,7 +89,8 @@ public abstract class AbstractServletFilterTest extends AbstractHttpServerTest<C
   }
 
   @Override
-  protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(String method, ServerEndpoint endpoint) {
+  protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
+      String method, ServerEndpoint endpoint) {
     List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
     spanAssertions.add(
         span ->

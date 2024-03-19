@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package filter;
 
 import java.io.IOException;
@@ -38,7 +43,8 @@ public class FilteredAppConfig implements WebMvcConfigurer {
 
   @Override
   public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-    configurer.favorPathExtension(false)
+    configurer
+        .favorPathExtension(false)
         .favorParameter(true)
         .ignoreAcceptHeader(true)
         .useJaf(false)
@@ -82,7 +88,8 @@ public class FilteredAppConfig implements WebMvcConfigurer {
   public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {}
 
   @Override
-  public void configureHandlerExceptionResolvers(List<HandlerExceptionResolver> exceptionResolvers) {}
+  public void configureHandlerExceptionResolvers(
+      List<HandlerExceptionResolver> exceptionResolvers) {}
 
   @Override
   public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> exceptionResolvers) {}
@@ -108,13 +115,18 @@ public class FilteredAppConfig implements WebMvcConfigurer {
 
       @Nullable
       @Override
-      protected Map<String, Object> readInternal(Class<? extends Map<String, Object>> clazz, HttpInputMessage inputMessage) {
+      protected Map<String, Object> readInternal(
+          Class<? extends Map<String, Object>> clazz, HttpInputMessage inputMessage) {
         return null;
       }
 
       @Override
-      protected void writeInternal(Map<String, Object> stringObjectMap, HttpOutputMessage outputMessage) throws IOException {
-        StreamUtils.copy((String) stringObjectMap.get("message"), StandardCharsets.UTF_8, outputMessage.getBody());
+      protected void writeInternal(
+          Map<String, Object> stringObjectMap, HttpOutputMessage outputMessage) throws IOException {
+        StreamUtils.copy(
+            (String) stringObjectMap.get("message"),
+            StandardCharsets.UTF_8,
+            outputMessage.getBody());
       }
     };
   }

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package test.boot;
 
 import boot.SavingAuthenticationProvider;
@@ -17,7 +22,8 @@ public class SecurityConfig {
   }
 
   /**
-   * Following configuration is required for unauthorised call tests (form would redirect, we need 401)
+   * Following configuration is required for unauthorised call tests (form would redirect, we need
+   * 401)
    */
   @Configuration
   @Order(1)
@@ -25,32 +31,36 @@ public class SecurityConfig {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-      http
-          .csrf().disable()
+      http.csrf()
+          .disable()
           .antMatcher("/basicsecured/**")
           .authorizeRequests()
-          .antMatchers("/basicsecured/**").authenticated()
+          .antMatchers("/basicsecured/**")
+          .authenticated()
           .and()
           .httpBasic()
-          .and().authenticationProvider(getApplicationContext().getBean(SavingAuthenticationProvider.class));
+          .and()
+          .authenticationProvider(
+              getApplicationContext().getBean(SavingAuthenticationProvider.class));
     }
   }
 
-  /**
-   * Following configuration is required in order to get form login, needed by password tests
-   */
+  /** Following configuration is required in order to get form login, needed by password tests */
   @Configuration
   static class FormLoginWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-      http
-          .csrf().disable()
+      http.csrf()
+          .disable()
           .authorizeRequests()
-          .antMatchers("/formsecured/**").authenticated()
+          .antMatchers("/formsecured/**")
+          .authenticated()
           .and()
           .formLogin()
-          .and().authenticationProvider(getApplicationContext().getBean(SavingAuthenticationProvider.class));
+          .and()
+          .authenticationProvider(
+              getApplicationContext().getBean(SavingAuthenticationProvider.class));
     }
   }
 }

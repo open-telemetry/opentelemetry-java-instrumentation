@@ -1,3 +1,16 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
+
 import boot.AbstractSpringBootBasedTest;
 import boot.AppConfig;
 import com.google.common.collect.ImmutableMap;
@@ -11,14 +24,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
 
 public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @RegisterExtension
@@ -41,17 +46,23 @@ public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @Override
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(AppConfig.class, securityConfigClass());
-    app.setDefaultProperties(ImmutableMap.of(
-        "server.port", port,
-        "server.context-path", getContextPath(),
-        "server.servlet.contextPath", getContextPath(),
-        "server.error.include-message", "always"));
+    app.setDefaultProperties(
+        ImmutableMap.of(
+            "server.port",
+            port,
+            "server.context-path",
+            getContextPath(),
+            "server.servlet.contextPath",
+            getContextPath(),
+            "server.error.include-message",
+            "always"));
     context = app.run();
     return context;
   }
 
   @Override
-  protected SpanDataAssert assertHandlerSpan(SpanDataAssert span, String method, ServerEndpoint endpoint) {
+  protected SpanDataAssert assertHandlerSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
       String handlerSpanName = "ResourceHttpRequestHandler.handleRequest";
       span.hasName(handlerSpanName)
@@ -62,7 +73,9 @@ public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
                   event
                       .hasName(EXCEPTION_EVENT_NAME)
                       .hasAttributesSatisfyingExactly(
-                          equalTo(EXCEPTION_TYPE, "org.springframework.web.servlet.resource.NoResourceFoundException"),
+                          equalTo(
+                              EXCEPTION_TYPE,
+                              "org.springframework.web.servlet.resource.NoResourceFoundException"),
                           equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;

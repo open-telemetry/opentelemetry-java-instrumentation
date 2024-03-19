@@ -1,4 +1,28 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package boot;
+
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.LOGIN;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.SemanticAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.SemanticAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -25,27 +49,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.web.util.OnCommittedResponseWrapper;
 import org.springframework.web.servlet.view.RedirectView;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.LOGIN;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_NAMESPACE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static org.assertj.core.api.Assertions.assertThat;
-
-public abstract class AbstractSpringBootBasedTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+public abstract class AbstractSpringBootBasedTest
+    extends AbstractHttpServerTest<ConfigurableApplicationContext> {
   protected abstract ConfigurableApplicationContext context();
+
   protected abstract Class<?> securityConfigClass();
 
   @Override
@@ -81,73 +88,68 @@ public abstract class AbstractSpringBootBasedTest extends AbstractHttpServerTest
     }
   }
 
-    @Test
-    void testSpansWithAuthError() {
-      SavingAuthenticationProvider authProvider = context().getBean(SavingAuthenticationProvider.class);
-      AggregatedHttpRequest request = request(AUTH_ERROR, "GET");
+  @Test
+  void testSpansWithAuthError() {
+    SavingAuthenticationProvider authProvider =
+        context().getBean(SavingAuthenticationProvider.class);
+    AggregatedHttpRequest request = request(AUTH_ERROR, "GET");
 
-      authProvider.latestAuthentications.clear();
-      AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    authProvider.latestAuthentications.clear();
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
-      assertThat(response.status().code()).isEqualTo(401); // not secured
+    assertThat(response.status().code()).isEqualTo(401); // not secured
 
-      testing().waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertServerSpan(
-                          span,
-                          "GET",
-                          AUTH_ERROR,
-                          AUTH_ERROR.getStatus()),
-                  span ->
-                      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
-                          .hasKind(SpanKind.INTERNAL),
-                  span ->
-                      errorPageSpanAssertions(null, null))
-      );
-    }
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertServerSpan(span, "GET", AUTH_ERROR, AUTH_ERROR.getStatus()),
+                    span ->
+                        span.satisfies(
+                                spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
+                            .hasKind(SpanKind.INTERNAL),
+                    span -> errorPageSpanAssertions(null, null)));
+  }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"password", "dfsdföääöüüä", "🤓"})
-    void testCharacterEncodingOfTestPassword(String testPassword) {
-      SavingAuthenticationProvider authProvider = context().getBean(SavingAuthenticationProvider.class);
+  @ParameterizedTest
+  @ValueSource(strings = {"password", "dfsdföääöüüä", "🤓"})
+  void testCharacterEncodingOfTestPassword(String testPassword) {
+    SavingAuthenticationProvider authProvider =
+        context().getBean(SavingAuthenticationProvider.class);
 
-      QueryParams form = QueryParams.of("username", "test", "password", testPassword);
-      AggregatedHttpRequest request = AggregatedHttpRequest.of(
-          request(LOGIN, "POST").headers().toBuilder().contentType(MediaType.FORM_DATA).build(),
-          HttpData.ofUtf8(form.toQueryString()));
+    QueryParams form = QueryParams.of("username", "test", "password", testPassword);
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(LOGIN, "POST").headers().toBuilder().contentType(MediaType.FORM_DATA).build(),
+            HttpData.ofUtf8(form.toQueryString()));
 
-      authProvider.latestAuthentications.clear();
-      AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    authProvider.latestAuthentications.clear();
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
-      assertThat(response.status().code()).isEqualTo(302); // redirect after success
-      assertThat(authProvider.latestAuthentications.get(0).getPassword()).isEqualTo(testPassword);
+    assertThat(response.status().code()).isEqualTo(302); // redirect after success
+    assertThat(authProvider.latestAuthentications.get(0).getPassword()).isEqualTo(testPassword);
 
-      testing().waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertServerSpan(
-                          span,
-                          "POST",
-                          LOGIN,
-                          LOGIN.getStatus()),
-                  span ->
-                      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"))
-                          .hasKind(SpanKind.INTERNAL))
-      );
-    }
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertServerSpan(span, "POST", LOGIN, LOGIN.getStatus()),
+                    span ->
+                        span.satisfies(
+                                spanData ->
+                                    assertThat(spanData.getName()).endsWith(".sendRedirect"))
+                            .hasKind(SpanKind.INTERNAL)));
+  }
 
   @Override
   protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
     List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-      spanAssertions.add(
-          span ->
-              span.hasName("BasicErrorController.error")
-                  .hasKind(SpanKind.INTERNAL)
-                  .hasAttributesSatisfying(Attributes::isEmpty));
+    spanAssertions.add(
+        span ->
+            span.hasName("BasicErrorController.error")
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfying(Attributes::isEmpty));
     return spanAssertions;
   }
 
@@ -180,18 +182,19 @@ public abstract class AbstractSpringBootBasedTest extends AbstractHttpServerTest
   }
 
   @Override
-  protected SpanDataAssert assertRenderSpan(SpanDataAssert span, String method,
-      ServerEndpoint endpoint) {
+  protected SpanDataAssert assertRenderSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     span.hasName("Render RedirectView")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("spring-webmvc.view.type"), RedirectView.class.getName()));
+            equalTo(
+                AttributeKey.stringKey("spring-webmvc.view.type"), RedirectView.class.getName()));
     return span;
   }
 
   @Override
-  protected SpanDataAssert assertHandlerSpan(SpanDataAssert span, String method,
-      ServerEndpoint endpoint) {
+  protected SpanDataAssert assertHandlerSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     String handlerSpanName = getHandlerSpanName(endpoint);
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceHttpRequestHandler.handleRequest";

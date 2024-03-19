@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package filter;
 
 import org.springframework.http.HttpStatus;
@@ -11,8 +16,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.view.RedirectView;
 
 /**
- * None of the methods in this controller should be called because they are intercepted
- * by the filter
+ * None of the methods in this controller should be called because they are intercepted by the
+ * filter
  */
 @Controller
 public class TestController {
@@ -60,7 +65,6 @@ public class TestController {
   ResponseEntity<Object> indexedChild(@RequestParam("id") String id) throws Exception {
     throw new Exception("This should not be called");
   }
-
 
   @ExceptionHandler
   ResponseEntity<String> handleException(Throwable throwable) {

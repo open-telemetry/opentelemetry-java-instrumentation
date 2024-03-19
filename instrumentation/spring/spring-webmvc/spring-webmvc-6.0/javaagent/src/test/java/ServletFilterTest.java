@@ -1,3 +1,17 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.common.collect.ImmutableMap;
 import filter.AbstractServletFilterTest;
 import filter.FilteredAppConfig;
@@ -12,17 +26,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class ServletFilterTest extends AbstractServletFilterTest {
   static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -38,28 +44,31 @@ public class ServletFilterTest extends AbstractServletFilterTest {
 
   @Override
   protected ConfigurableApplicationContext setupServer() {
-    SpringApplication app = new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
-    app.setDefaultProperties(ImmutableMap.of(
-        "server.port", port,
-        "server.error.include-message", "always"));
+    SpringApplication app =
+        new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
+    app.setDefaultProperties(
+        ImmutableMap.of("server.port", port, "server.error.include-message", "always"));
     return app.run();
   }
 
   @Override
-  protected SpanDataAssert assertHandlerSpan(SpanDataAssert span, String method, ServerEndpoint endpoint) {
+  protected SpanDataAssert assertHandlerSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
       String handlerSpanName = "ResourceHttpRequestHandler.handleRequest";
       span.hasName(handlerSpanName)
           .hasKind(SpanKind.INTERNAL)
           .hasStatus(StatusData.error())
           .hasEventsSatisfyingExactly(
-            event ->
-                event
-                    .hasName(EXCEPTION_EVENT_NAME)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(EXCEPTION_TYPE, "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                        equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+              event ->
+                  event
+                      .hasName(EXCEPTION_EVENT_NAME)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              EXCEPTION_TYPE,
+                              "org.springframework.web.servlet.resource.NoResourceFoundException"),
+                          equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {
       return super.assertHandlerSpan(span, method, endpoint);
@@ -67,11 +76,13 @@ public class ServletFilterTest extends AbstractServletFilterTest {
   }
 
   @Override
-  protected SpanDataAssert assertResponseSpan(SpanDataAssert span, String method, ServerEndpoint endpoint) {
+  protected SpanDataAssert assertResponseSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
     if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
       span.hasKind(SpanKind.INTERNAL);
-        // not verifying the parent span, in the latest version the responseSpan is the child of the SERVER span, not the handler span
+      // not verifying the parent span, in the latest version the responseSpan is the child of the
+      // SERVER span, not the handler span
       return span;
     } else {
       return super.assertResponseSpan(span, method, endpoint);
