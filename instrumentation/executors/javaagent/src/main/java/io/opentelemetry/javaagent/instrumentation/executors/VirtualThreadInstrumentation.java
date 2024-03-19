@@ -32,7 +32,8 @@ public class VirtualThreadInstrumentation implements TypeInstrumentation {
         named("switchToCarrierThread").and(takesArguments(0)),
         this.getClass().getName() + "$SwitchToCarrierAdvice");
     transformer.applyAdviceToMethod(
-        named("switchToVirtualThread").and(takesArguments(1)),
+        // takes an extra argument in jdk 21 ea versions
+        named("switchToVirtualThread").and(takesArguments(1).or(takesArguments(2))),
         this.getClass().getName() + "$SwitchToVirtualAdvice");
   }
 
