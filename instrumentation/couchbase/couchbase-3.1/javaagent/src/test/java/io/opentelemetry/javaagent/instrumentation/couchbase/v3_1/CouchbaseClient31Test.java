@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
@@ -76,6 +74,8 @@ class CouchbaseClient31Test {
 
   @Test
   void testEmitsSpans() {
+    boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+
     try {
       collection.get("id");
     } catch (DocumentNotFoundException e) {
@@ -85,11 +85,8 @@ class CouchbaseClient31Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(testLatestDeps ? "get" : "cb.get"),
                 span ->
-                    span.satisfies(spanAssert -> assertThat(spanAssert.getName()).endsWith("get")),
-                span ->
-                    span.satisfies(
-                        spanAssert ->
-                            assertThat(spanAssert.getName()).endsWith("dispatch_to_server"))));
+                    span.hasName(testLatestDeps ? "dispatch_to_server" : "cb.dispatch_to_server")));
   }
 }
