@@ -64,7 +64,7 @@ class CouchbaseClient31Test {
     Bucket bucket = cluster.bucket("test");
     collection = bucket.defaultCollection();
 
-    // Wait 1 minute due to slow startup contributing to flakyness
+    // Wait 1 minute due to slow startup contributing to flakiness
     bucket.waitUntilReady(Duration.ofMinutes(1));
   }
 
