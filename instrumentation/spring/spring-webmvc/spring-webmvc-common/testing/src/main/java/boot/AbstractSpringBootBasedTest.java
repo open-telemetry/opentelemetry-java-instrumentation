@@ -1,6 +1,5 @@
 package boot;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -22,7 +21,6 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.web.util.OnCommittedResponseWrapper;
 import org.springframework.web.servlet.view.RedirectView;
@@ -47,20 +45,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractSpringBootBasedTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
-  private ConfigurableApplicationContext appContext;
+  protected abstract ConfigurableApplicationContext context();
   protected abstract Class<?> securityConfigClass();
-
-  @Override
-  protected ConfigurableApplicationContext setupServer() {
-    SpringApplication app = new SpringApplication(AppConfig.class, securityConfigClass());
-    app.setDefaultProperties(ImmutableMap.of(
-        "server.port", port,
-        "server.context-path", getContextPath(),
-        "server.servlet.contextPath", getContextPath(),
-        "server.error.include-message", "always"));
-    appContext = app.run();
-    return appContext;
-  }
 
   @Override
   protected void stopServer(ConfigurableApplicationContext ctx) {
@@ -97,7 +83,7 @@ public abstract class AbstractSpringBootBasedTest extends AbstractHttpServerTest
 
     @Test
     void testSpansWithAuthError() {
-      SavingAuthenticationProvider authProvider = appContext.getBean(SavingAuthenticationProvider.class);
+      SavingAuthenticationProvider authProvider = context().getBean(SavingAuthenticationProvider.class);
       AggregatedHttpRequest request = request(AUTH_ERROR, "GET");
 
       authProvider.latestAuthentications.clear();
@@ -125,7 +111,7 @@ public abstract class AbstractSpringBootBasedTest extends AbstractHttpServerTest
     @ParameterizedTest
     @ValueSource(strings = {"password", "dfsdföääöüüä", "🤓"})
     void testCharacterEncodingOfTestPassword(String testPassword) {
-      SavingAuthenticationProvider authProvider = appContext.getBean(SavingAuthenticationProvider.class);
+      SavingAuthenticationProvider authProvider = context().getBean(SavingAuthenticationProvider.class);
 
       QueryParams form = QueryParams.of("username", "test", "password", testPassword);
       AggregatedHttpRequest request = AggregatedHttpRequest.of(

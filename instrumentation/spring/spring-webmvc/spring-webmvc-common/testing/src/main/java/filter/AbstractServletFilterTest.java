@@ -31,15 +31,6 @@ public abstract class AbstractServletFilterTest extends AbstractHttpServerTest<C
   protected abstract Class<?> filterConfigClass();
 
   @Override
-  protected ConfigurableApplicationContext setupServer() {
-    SpringApplication app = new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
-    app.setDefaultProperties(ImmutableMap.of(
-        "server.port", port,
-        "server.error.include-message", "always"));
-    return app.run();
-  }
-
-  @Override
   protected void stopServer(ConfigurableApplicationContext ctx) {
     ctx.close();
   }
