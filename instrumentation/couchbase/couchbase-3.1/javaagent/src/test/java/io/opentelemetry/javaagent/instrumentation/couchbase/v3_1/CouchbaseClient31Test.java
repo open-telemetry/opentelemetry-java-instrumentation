@@ -42,7 +42,7 @@ class CouchbaseClient31Test {
   @BeforeAll
   static void setup() {
     couchbase =
-        new CouchbaseContainer("couchbase/server:6.5.1")
+        new CouchbaseContainer("couchbase/server:7.6.0")
             .withExposedPorts(8091)
             .withEnabledServices(CouchbaseService.KV)
             .withBucket(new BucketDefinition("test"))
@@ -63,7 +63,7 @@ class CouchbaseClient31Test {
 
     Bucket bucket = cluster.bucket("test");
     collection = bucket.defaultCollection();
-    bucket.waitUntilReady(Duration.ofSeconds(30));
+    bucket.waitUntilReady(Duration.ofMinutes(1));
   }
 
   @AfterAll
@@ -74,8 +74,6 @@ class CouchbaseClient31Test {
 
   @Test
   void testEmitsSpans() {
-    boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
-
     try {
       collection.get("id");
     } catch (DocumentNotFoundException e) {
@@ -85,8 +83,6 @@ class CouchbaseClient31Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(testLatestDeps ? "get" : "cb.get"),
-                span ->
-                    span.hasName(testLatestDeps ? "dispatch_to_server" : "cb.dispatch_to_server")));
+                span -> span.hasName("get"), span -> span.hasName("dispatch_to_server")));
   }
 }
