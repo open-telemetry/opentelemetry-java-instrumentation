@@ -12,12 +12,8 @@ import java.net.InetSocketAddress;
 public abstract class InfluxDbRequest {
 
   public static InfluxDbRequest create(
-      InetSocketAddress address,
-      String connectionString,
-      String dbName,
-      String sql,
-      String spanName) {
-    return new AutoValue_InfluxDbRequest(address, connectionString, dbName, sql, spanName);
+      InetSocketAddress address, String connectionString, String dbName, String sql) {
+    return new AutoValue_InfluxDbRequest(address, connectionString, dbName, sql);
   }
 
   public abstract InetSocketAddress getAddress();
@@ -27,6 +23,4 @@ public abstract class InfluxDbRequest {
   public abstract String getDbName();
 
   public abstract String getSql();
-
-  public abstract String getSpanName();
 }
