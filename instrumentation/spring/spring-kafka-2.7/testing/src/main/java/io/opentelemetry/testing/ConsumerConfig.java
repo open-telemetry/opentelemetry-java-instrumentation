@@ -5,7 +5,6 @@
 
 package io.opentelemetry.testing;
 
-import java.lang.reflect.Method;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringBootConfiguration;
@@ -16,8 +15,6 @@ import org.springframework.kafka.config.ContainerCustomizer;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.util.backoff.BackOff;
-import org.springframework.util.backoff.FixedBackOff;
 
 @SpringBootConfiguration
 @EnableAutoConfiguration
@@ -52,14 +49,6 @@ public class ConsumerConfig {
           customizerProvider) {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
-    // do not retry failed records
-    try {
-      Class.forName("org.springframework.kafka.listener.BatchErrorHandler");
-      ErrorHandlerSetter.setBatchErrorHandler(factory);
-    } catch (ClassNotFoundException ignored) {
-      // org.springframework.kafka.listener.BatchErrorHandler is missing in latest
-      setCommonErrorHandler(factory);
-    }
     factory.setConsumerFactory(consumerFactory);
     factory.setBatchListener(true);
     factory.setAutoStartup(true);
@@ -76,35 +65,10 @@ public class ConsumerConfig {
           customizerProvider) {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
-    // do not retry failed records
-    try {
-      Class.forName("org.springframework.kafka.listener.ErrorHandler");
-      ErrorHandlerSetter.setErrorHandler(factory);
-    } catch (ClassNotFoundException ignored) {
-      // org.springframework.kafka.listener.ErrorHandler is missing in latest
-      setCommonErrorHandler(factory);
-    }
     factory.setConsumerFactory(consumerFactory);
     factory.setBatchListener(false);
     factory.setAutoStartup(true);
     customizerProvider.ifAvailable(factory::setContainerCustomizer);
     return factory;
-  }
-
-  private static void setCommonErrorHandler(
-      ConcurrentKafkaListenerContainerFactory<String, String> factory) {
-    try {
-      Class<?> handlerClass =
-          Class.forName("org.springframework.kafka.listener.CommonErrorHandler");
-      Class<?> defaultHandlerClass =
-          Class.forName("org.springframework.kafka.listener.DefaultErrorHandler");
-      BackOff backOff = new FixedBackOff(0, 0);
-      Object handler =
-          defaultHandlerClass.getDeclaredConstructor(BackOff.class).newInstance(backOff);
-      Method method = factory.getClass().getMethod("setCommonErrorHandler", handlerClass);
-      method.invoke(factory, handler);
-    } catch (Exception exception) {
-      // ignored
-    }
   }
 }

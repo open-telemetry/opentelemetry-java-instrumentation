@@ -14,7 +14,7 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       ServletHelper.class.getName() + ".AsyncListener";
   private static final String ASYNC_LISTENER_RESPONSE_ATTRIBUTE =
       ServletHelper.class.getName() + ".AsyncListenerResponse";
-  private static final String ASYNC_EXCEPTION_ATTRIBUTE =
+  public static final String ASYNC_EXCEPTION_ATTRIBUTE =
       ServletHelper.class.getName() + ".AsyncException";
   public static final String CONTEXT_ATTRIBUTE = ServletHelper.class.getName() + ".Context";
 

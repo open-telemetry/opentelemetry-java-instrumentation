@@ -23,6 +23,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jetty:jetty-12.0:javaagent"))
 
   testLibrary("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
 

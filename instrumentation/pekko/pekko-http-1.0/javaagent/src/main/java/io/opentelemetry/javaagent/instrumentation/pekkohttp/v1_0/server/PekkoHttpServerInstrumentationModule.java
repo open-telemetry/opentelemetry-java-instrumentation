@@ -28,6 +28,13 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule 
   }
 
   @Override
+  public boolean isIndyModule() {
+    // PekkoHttpServerInstrumentationModule and PekkoHttpServerRouteInstrumentationModule share
+    // PekkoRouteHolder class
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HttpExtServerInstrumentation(), new GraphInterpreterInstrumentation());
   }

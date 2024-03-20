@@ -71,6 +71,8 @@ dependencies {
   library("software.amazon.awssdk:sqs:2.2.0")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+  testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
+
   // Make sure these don't add HTTP headers
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))

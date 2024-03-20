@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -117,6 +118,7 @@ public class PekkoFlowWrapper
               if (PekkoHttpServerSingletons.instrumenter().shouldStart(parentContext, request)) {
                 Context context =
                     PekkoHttpServerSingletons.instrumenter().start(parentContext, request);
+                context = PekkoRouteHolder.init(context);
                 tracingRequest = new TracingRequest(context, request);
               }
               // event if span wasn't started we need to push TracingRequest to match response

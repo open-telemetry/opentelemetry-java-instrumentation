@@ -18,18 +18,10 @@ public final class MethodsConfigurationParser {
 
   private static final Logger logger = Logger.getLogger(MethodsConfigurationParser.class.getName());
 
-  static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
-  private static final String METHOD_LIST_REGEX = "\\s*(?:\\w+\\s*,)*\\s*(?:\\w+\\s*,?)\\s*";
+  private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
+  private static final String METHOD_LIST_REGEX = "(?:\\s*\\w+\\s*,)*+(?:\\s*\\w+)?\\s*";
   private static final String CONFIG_FORMAT =
-      "(?:\\s*"
-          + PACKAGE_CLASS_NAME_REGEX
-          + "\\["
-          + METHOD_LIST_REGEX
-          + "]\\s*;)*\\s*"
-          + PACKAGE_CLASS_NAME_REGEX
-          + "\\["
-          + METHOD_LIST_REGEX
-          + "]";
+      PACKAGE_CLASS_NAME_REGEX + "(?:\\[" + METHOD_LIST_REGEX + "])?";
 
   /**
    * This method takes a string in a form of {@code
@@ -52,6 +44,10 @@ public final class MethodsConfigurationParser {
       String[] classMethods = configString.split(";", -1);
       for (String classMethod : classMethods) {
         if (classMethod.trim().isEmpty()) {
+          continue;
+        }
+        if (!classMethod.contains("[")) {
+          toTrace.put(classMethod.trim(), Collections.emptySet());
           continue;
         }
         String[] splitClassMethod = classMethod.split("\\[", -1);

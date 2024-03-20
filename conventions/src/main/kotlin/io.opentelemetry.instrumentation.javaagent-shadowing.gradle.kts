@@ -35,7 +35,7 @@ tasks.withType<ShadowJar>().configureEach {
   // relocate(the OpenTelemetry extensions that are used by instrumentation modules)
   // these extensions live in the AgentClassLoader, and are injected into the user's class loader
   // by the instrumentation modules that use them
-  relocate("io.opentelemetry.extension.aws", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.aws")
+  relocate("io.opentelemetry.contrib.awsxray", "io.opentelemetry.javaagent.shaded.io.opentelemetry.contrib.awsxray")
   relocate("io.opentelemetry.extension.kotlin", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.kotlin")
 
   // this is for instrumentation of opentelemetry-api and opentelemetry-instrumentation-api

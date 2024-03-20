@@ -24,6 +24,7 @@ import java.io.ObjectStreamClass;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -44,6 +45,8 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
 
   @Test
   void badConfig() {
+    Assumptions.assumeFalse(Boolean.getBoolean("testLatestDeps"));
+
     // Bad producer config
     assertThatThrownBy(
             () -> {

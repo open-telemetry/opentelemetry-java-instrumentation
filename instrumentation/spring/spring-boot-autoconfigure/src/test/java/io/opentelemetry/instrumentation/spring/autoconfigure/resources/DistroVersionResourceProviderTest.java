@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +20,9 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 public class DistroVersionResourceProviderTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withConfiguration(AutoConfigurations.of(OtelResourceAutoConfiguration.class));
+          .withPropertyValues(
+              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none")
+          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class));
 
   @Test
   @DisplayName("distro version should be set")

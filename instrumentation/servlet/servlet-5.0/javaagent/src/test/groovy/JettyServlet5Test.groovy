@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.RequestDispatcherServlet
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -10,6 +11,8 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
 import spock.lang.IgnoreIf
+import test.AbstractServlet5Test
+import test.TestServlet5
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
@@ -120,6 +123,13 @@ class JettyServlet5TestAsync extends JettyServlet5Test {
   boolean errorEndpointUsesSendError() {
     false
   }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
+  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -128,6 +138,13 @@ class JettyServlet5TestFakeAsync extends JettyServlet5Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet5.FakeAsync
+  }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
   }
 }
 
@@ -220,6 +237,13 @@ class JettyServlet5TestDispatchImmediate extends JettyDispatchTest {
     addServlet(context, "/dispatch" + INDEXED_CHILD.path, TestServlet5.DispatchImmediate)
     addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive)
   }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
+  }
 }
 
 @IgnoreIf({ !jvm.java11Compatible })
@@ -250,6 +274,13 @@ class JettyServlet5TestDispatchAsync extends JettyDispatchTest {
   @Override
   boolean errorEndpointUsesSendError() {
     false
+  }
+
+  @Override
+  String getMetricsInstrumentationName() {
+    // with async requests the span is started in one instrumentation (server instrumentation)
+    // but ended from another (servlet instrumentation)
+    "io.opentelemetry.servlet-5.0"
   }
 }
 

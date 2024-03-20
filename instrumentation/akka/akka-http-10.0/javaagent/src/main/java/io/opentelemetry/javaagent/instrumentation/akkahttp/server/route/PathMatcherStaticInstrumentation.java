@@ -46,7 +46,8 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
           AkkaRouteHolder.endMatched();
           return;
         }
-        // for remember the matched path in PathMatcherInstrumentation, otherwise we just use a *
+        // if present use the matched path that was remembered in PathMatcherInstrumentation,
+        // otherwise just use a *
         String prefix = VirtualField.find(PathMatcher.class, String.class).get(pathMatcher);
         if (prefix == null) {
           if (PathMatchers.Slash$.class == pathMatcher.getClass()) {

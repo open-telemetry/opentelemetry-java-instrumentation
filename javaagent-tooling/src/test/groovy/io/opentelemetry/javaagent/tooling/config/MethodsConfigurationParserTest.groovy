@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.tooling.config
 
 import spock.lang.Specification
 
+import static java.util.Collections.emptySet
+
 class MethodsConfigurationParserTest extends Specification {
 
   def "test configuration #value"() {
@@ -18,7 +20,7 @@ class MethodsConfigurationParserTest extends Specification {
     value                                                           | expected
     null                                                            | [:]
     " "                                                             | [:]
-    "some.package.ClassName"                                        | [:]
+    "some.package.ClassName"                                        | ["some.package.ClassName":emptySet()]
     "some.package.ClassName[ , ]"                                   | [:]
     "some.package.ClassName[ , method]"                             | [:]
     "some.package.Class\$Name[ method , ]"                          | ["some.package.Class\$Name": ["method"].toSet()]

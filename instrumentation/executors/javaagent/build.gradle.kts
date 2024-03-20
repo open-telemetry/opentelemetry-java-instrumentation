@@ -13,8 +13,8 @@ dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
   testImplementation(project(":instrumentation:executors:testing"))
-
   testImplementation("org.scala-lang:scala-library:2.11.12")
+  testCompileOnly(project(":instrumentation:executors:bootstrap"))
 }
 
 testing {
@@ -29,6 +29,7 @@ testing {
 
       dependencies {
         implementation(project(":instrumentation:executors:testing"))
+        compileOnly(project(":instrumentation:executors:bootstrap"))
       }
 
       targets {
@@ -44,6 +45,10 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
+    // needed for VirtualThreadTest on jdk21
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
     jvmArgs(
       "-Dotel.instrumentation.executors.include=io.opentelemetry.javaagent.instrumentation.executors.ExecutorInstrumentationTest\$CustomThreadPoolExecutor,io.opentelemetry.javaagent.instrumentation.executors.ThreadPoolExecutorTest\$RunnableCheckingThreadPoolExecutor"
     )

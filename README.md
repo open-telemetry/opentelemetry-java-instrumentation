@@ -149,6 +149,10 @@ Debug logging negatively impacts the performance of your application.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
+
+- [Steve Rao](https://github.com/steverao), Alibaba
+
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
 - [Gregor Zietlinger](https://github.com/zeitlinger), Grafana
@@ -160,11 +164,11 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 
 - [Lauri Tulmin](https://github.com/laurit), Splunk
-- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
 Emeritus maintainers:
 
+- [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
 - [Tyler Benson](https://github.com/tylerbenson)
 

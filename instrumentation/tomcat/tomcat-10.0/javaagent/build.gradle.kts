@@ -21,6 +21,8 @@ dependencies {
 
   // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
+  // testing whether instrumentation still works when javax servlet api is also present
+  testImplementation("javax.servlet:javax.servlet-api:3.0.1")
 }
 
 tasks {

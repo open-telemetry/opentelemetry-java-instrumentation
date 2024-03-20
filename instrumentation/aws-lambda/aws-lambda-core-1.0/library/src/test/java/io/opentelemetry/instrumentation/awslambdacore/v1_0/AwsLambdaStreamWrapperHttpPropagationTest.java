@@ -146,7 +146,7 @@ public class AwsLambdaStreamWrapperHttpPropagationTest {
         parser.nextToken();
         while (parser.nextToken() != JsonToken.END_OBJECT) {
           parser.nextToken();
-          if (!parser.getCurrentName().equals("body")) {
+          if (!parser.currentName().equals("body")) {
             parser.skipChildren();
             continue;
           }

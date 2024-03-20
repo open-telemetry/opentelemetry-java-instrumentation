@@ -225,8 +225,8 @@ public class CassandraClientTest {
                     null,
                     "DROP KEYSPACE IF EXISTS sync_test",
                     "DROP KEYSPACE IF EXISTS sync_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -235,8 +235,8 @@ public class CassandraClientTest {
                     null,
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -245,9 +245,9 @@ public class CassandraClientTest {
                     "sync_test",
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
-                    "sync_test",
-                    null,
-                    null))),
+                    "CREATE TABLE sync_test.users",
+                    "CREATE TABLE",
+                    "sync_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -279,8 +279,8 @@ public class CassandraClientTest {
                     null,
                     "DROP KEYSPACE IF EXISTS async_test",
                     "DROP KEYSPACE IF EXISTS async_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -289,8 +289,8 @@ public class CassandraClientTest {
                     null,
                     "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -299,9 +299,9 @@ public class CassandraClientTest {
                     "async_test",
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
-                    "async_test",
-                    null,
-                    null))),
+                    "CREATE TABLE async_test.users",
+                    "CREATE TABLE",
+                    "async_test.users"))),
         Arguments.of(
             named(
                 "Insert data",

@@ -89,8 +89,7 @@ dependencies {
   testCompileOnly(project(":javaagent-bootstrap"))
   testCompileOnly(project(":javaagent-extension-api"))
 
-  testImplementation("com.google.guava:guava")
-  testImplementation("io.opentelemetry:opentelemetry-sdk")
+  testImplementation(project(":testing-common"))
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
 }
 

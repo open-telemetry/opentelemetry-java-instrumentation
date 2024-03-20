@@ -5,53 +5,76 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 
-import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import java.util.Collections;
+import java.util.Properties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.core.env.Environment;
 
 public class SpringResourceProviderTest {
+
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withPropertyValues("otel.springboot.resource.enabled=true")
-          .withConfiguration(
-              AutoConfigurations.of(
-                  OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class));
+          .withPropertyValues(
+              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none")
+          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class));
 
   @Test
-  @DisplayName("when attributes are SET should set OtelResourceProperties with given attributes")
-  void hasAttributes() {
-
-    this.contextRunner.run(
-        context -> {
-          ResourceProvider resource =
-              context.getBean("otelSpringResourceProvider", ResourceProvider.class);
-
-          assertThat(
-                  resource
-                      .createResource(
-                          DefaultConfigProperties.createFromMap(
-                              ImmutableMap.of("spring.application.name", "backend")))
-                      .getAttributes()
-                      .asMap())
-              .contains(entry(AttributeKey.stringKey("service.name"), "backend"));
-        });
+  @DisplayName(
+      "when spring.application.name is set value should be passed to service name attribute")
+  void shouldDetermineServiceNameBySpringApplicationName() {
+    this.contextRunner
+        .withPropertyValues("spring.application.name=myapp-backend")
+        .run(
+            context ->
+                assertResourceAttributes(context).containsEntry(SERVICE_NAME, "myapp-backend"));
   }
 
   @Test
-  @DisplayName("when attributes are DEFAULT should set OtelResourceProperties to default values")
-  void hasDefaultTypes() {
+  @DisplayName(
+      "when spring.application.name is set value should be passed to service name attribute")
+  void shouldDetermineServiceNameAndVersionBySpringApplicationVersion() {
+    Properties properties = new Properties();
+    properties.put("name", "demo");
+    properties.put("version", "0.3");
+    this.contextRunner
+        .withBean("buildProperties", BuildProperties.class, () -> new BuildProperties(properties))
+        .run(
+            context ->
+                assertResourceAttributes(context)
+                    .containsEntry(SERVICE_NAME, "demo")
+                    .containsEntry(SERVICE_VERSION, "0.3"));
+  }
 
-    this.contextRunner.run(
-        context ->
-            assertThat(context.getBean(OtelResourceProperties.class).getAttributes()).isEmpty());
+  private static AttributesAssert assertResourceAttributes(AssertableApplicationContext context) {
+    ConfigProperties configProperties =
+        SpringConfigProperties.create(
+            context.getBean(Environment.class),
+            new OtlpExporterProperties(),
+            new OtelResourceProperties(),
+            new PropagationProperties(),
+            DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+
+    return OpenTelemetryAssertions.assertThat(
+        context
+            .getBean(SpringResourceProvider.class)
+            .createResource(configProperties)
+            .getAttributes());
   }
 }

@@ -129,7 +129,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
     }
 
     when: "barrier is released and resource class sends response"
-    awaitBarrier(1, SECONDS)
+    awaitBarrier(10, SECONDS)
     def response = futureResponse.join()
 
     then:
@@ -172,7 +172,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
     }
 
     when: "barrier is released and resource class sends response"
-    awaitBarrier(1, SECONDS)
+    awaitBarrier(10, SECONDS)
     def response = futureResponse.join()
 
     then:

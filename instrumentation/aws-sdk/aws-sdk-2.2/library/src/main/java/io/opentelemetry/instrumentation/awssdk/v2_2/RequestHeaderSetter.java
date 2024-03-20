@@ -13,6 +13,6 @@ enum RequestHeaderSetter implements TextMapSetter<SdkHttpRequest.Builder> {
 
   @Override
   public void set(SdkHttpRequest.Builder builder, String name, String value) {
-    builder.appendHeader(name, value);
+    builder.putHeader(name, value);
   }
 }

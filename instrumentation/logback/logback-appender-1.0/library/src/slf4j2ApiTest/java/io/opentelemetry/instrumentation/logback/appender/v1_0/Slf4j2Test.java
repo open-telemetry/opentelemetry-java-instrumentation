@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -55,7 +56,18 @@ public class Slf4j2Test {
 
   @Test
   void keyValue() {
-    logger.atInfo().setMessage("log message 1").addKeyValue("key", "value").log();
+    logger
+        .atInfo()
+        .setMessage("log message 1")
+        .addKeyValue("string key", "string value")
+        .addKeyValue("boolean key", true)
+        .addKeyValue("byte key", (byte) 1)
+        .addKeyValue("short key", (short) 2)
+        .addKeyValue("int key", 3)
+        .addKeyValue("long key", 4L)
+        .addKeyValue("float key", 5.0f)
+        .addKeyValue("double key", 6.0)
+        .log();
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
@@ -63,10 +75,18 @@ public class Slf4j2Test {
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes().size()).isEqualTo(5); // 4 code attributes + 1 key value pair
-    assertThat(logData.getAttributes())
-        .hasEntrySatisfying(
-            AttributeKey.stringKey("key"), value -> assertThat(value).isEqualTo("value"));
+    assertThat(logData.getAttributes().size())
+        .isEqualTo(12); // 4 code attributes + 8 key value pairs
+    assertThat(logData)
+        .hasAttributesSatisfying(
+            equalTo(AttributeKey.stringKey("string key"), "string value"),
+            equalTo(AttributeKey.booleanKey("boolean key"), true),
+            equalTo(AttributeKey.longKey("byte key"), 1),
+            equalTo(AttributeKey.longKey("short key"), 2),
+            equalTo(AttributeKey.longKey("int key"), 3),
+            equalTo(AttributeKey.longKey("long key"), 4),
+            equalTo(AttributeKey.doubleKey("float key"), 5.0),
+            equalTo(AttributeKey.doubleKey("double key"), 6.0));
   }
 
   @Test

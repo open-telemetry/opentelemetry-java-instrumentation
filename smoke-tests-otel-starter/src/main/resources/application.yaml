@@ -5,3 +5,6 @@ otel:
         capture-code-attributes: true
   propagators:
     - b3
+  resource:
+    attributes:
+      attributeFromYaml: true # boolean will be automatically converted to string by spring

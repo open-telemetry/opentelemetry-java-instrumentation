@@ -344,23 +344,19 @@ compile time for it to work.
 Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
 ClassNotFoundException when trying to access the field.
 
-### Why we don't use ByteBuddy @Advice.Origin Method
+### Avoid using @Advice.Origin Method
 
-Instead of
+You shouldn't use ByteBuddy's @Advice.Origin Method method, as it
+inserts a call to `Class.getMethod(...)` in a transformed method.
 
-```
-@Advice.Origin Method method
-```
+Instead, get the declaring class and method name, as loading
+constants from a constant pool is a much simpler operation.
 
-we prefer to use
+For example:
 
 ```
 @Advice.Origin("#t") Class<?> declaringClass,
 @Advice.Origin("#m") String methodName
 ```
-
-because the former inserts a call to `Class.getMethod(...)` in transformed method. In contrast,
-getting the declaring class and method name is just loading constants from constant pool, which is
-a much simpler operation.
 
 [suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation

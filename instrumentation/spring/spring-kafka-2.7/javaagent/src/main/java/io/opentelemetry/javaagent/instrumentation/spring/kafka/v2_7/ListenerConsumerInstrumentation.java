@@ -5,9 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.batchProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -15,6 +22,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
@@ -29,6 +38,10 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(named("run"), this.getClass().getName() + "$RunLoopAdvice");
     transformer.applyAdviceToMethod(
         isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        named("invokeBatchOnMessageWithRecordsOrList")
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
+        this.getClass().getName() + "$InvokeBatchAdvice");
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
@@ -58,6 +71,43 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Enter boolean previousValue) {
       SpringSchedulingTaskTracing.setEnabled(previousValue);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InvokeBatchAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.Argument(0) ConsumerRecords<?, ?> records,
+        @Advice.FieldValue("consumer") Consumer<?, ?> consumer,
+        @Advice.Local("otelRequest") KafkaReceiveRequest request,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+      Context receiveContext = consumerContext.getContext();
+
+      // use the receive CONSUMER span as parent if it's available
+      Context parentContext = receiveContext != null ? receiveContext : Context.current();
+
+      request = KafkaReceiveRequest.create(records, consumer);
+      if (batchProcessInstrumenter().shouldStart(parentContext, request)) {
+        context = batchProcessInstrumenter().start(parentContext, request);
+        scope = context.makeCurrent();
+      }
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") KafkaReceiveRequest request,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+      batchProcessInstrumenter().end(context, request, null, throwable);
     }
   }
 }

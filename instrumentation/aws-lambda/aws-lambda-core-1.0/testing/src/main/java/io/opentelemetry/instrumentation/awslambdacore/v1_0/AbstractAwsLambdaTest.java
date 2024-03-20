@@ -53,6 +53,10 @@ public abstract class AbstractAwsLambdaTest {
     assertThat(testing().forceFlushCalled()).isTrue();
   }
 
+  protected Context context() {
+    return context;
+  }
+
   @Test
   void handlerTraced() {
     String result = handler().handleRequest("hello", context);
