@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### 📈 Enhancements
+
+- Backport: Capture `http.route` for akka-http
+  ([#10777](hhttps://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10777))
+- Update the OpenTelemetry SDK version to 1.36.0
+  ([#10866](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10866))
+
 ## Version 1.33.0 (2024-02-28)
 
 ### Migration notes
