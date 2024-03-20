@@ -29,6 +29,8 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Shared
   MongoClient client
+  @Shared
+  List<Closeable> cleanup = []
 
   def setupSpec() throws Exception {
     client = MongoClients.create("mongodb://localhost:$port")
@@ -37,6 +39,9 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   def cleanupSpec() throws Exception {
     client?.close()
     client = null
+    cleanup.forEach {
+      it.close()
+    }
   }
 
   @Override
@@ -49,12 +54,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   void createCollectionNoDescription(String dbName, String collectionName) {
-    MongoClients.create("mongodb://localhost:${port}").withCloseable {client ->
-      MongoDatabase db = client.getDatabase(dbName)
-      def latch = new CountDownLatch(1)
-      db.createCollection(collectionName).subscribe(toSubscriber { latch.countDown() })
-      latch.await(30, TimeUnit.SECONDS)
-    }
+    def tmpClient = MongoClients.create("mongodb://localhost:${port}")
+    cleanup.add(tmpClient)
+    MongoDatabase db = tmpClient.getDatabase(dbName)
+    def latch = new CountDownLatch(1)
+    db.createCollection(collectionName).subscribe(toSubscriber { latch.countDown() })
+    latch.await(30, TimeUnit.SECONDS)
   }
 
   @Override
@@ -70,12 +75,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
           new ServerAddress("localhost", port)))
       })
     settings.build()
-    MongoClients.create(settings.build()).withCloseable {client ->
-      MongoDatabase db = client.getDatabase(dbName)
-      def latch = new CountDownLatch(1)
-      db.createCollection(collectionName).subscribe(toSubscriber { latch.countDown() })
-      latch.await(30, TimeUnit.SECONDS)
-    }
+    def tmpClient = MongoClients.create(settings.build())
+    cleanup.add(tmpClient)
+    MongoDatabase db = tmpClient.getDatabase(dbName)
+    def latch = new CountDownLatch(1)
+    db.createCollection(collectionName).subscribe(toSubscriber { latch.countDown() })
+    latch.await(30, TimeUnit.SECONDS)
   }
 
   @Override
