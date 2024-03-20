@@ -71,26 +71,26 @@ class InfluxDbClientTest {
     String username = "root";
     String password = "root";
     influxDb = InfluxDBFactory.connect(serverURL, username, password);
+    influxDb.createDatabase(databaseName);
   }
 
   @AfterAll
   void cleanup() {
+    influxDb.deleteDatabase(databaseName);
     influxDb.close();
   }
 
   @BeforeEach
   void reset() {
-    // Method of deleteDatabase and createDatabase are deprecated (since 2.9, removed in 3.0), it's
-    // suggested to use, so we don't add relevant instrumentation.
-    influxDb.deleteDatabase(databaseName);
-    influxDb.createDatabase(databaseName);
     testing.clearData();
   }
 
   @Test
-  void testQueryAndWriteWithOneArgument() {
+  void testQueryAndModifyWithOneArgument() {
+    String dbName = databaseName + System.currentTimeMillis();
+    influxDb.createDatabase(dbName);
     BatchPoints batchPoints =
-        BatchPoints.database(databaseName).tag("async", "true").retentionPolicy("autogen").build();
+        BatchPoints.database(dbName).tag("async", "true").retentionPolicy("autogen").build();
     Point point1 =
         Point.measurement("cpu")
             .tag("atag", "test")
@@ -107,24 +107,42 @@ class InfluxDbClientTest {
     batchPoints.point(point1);
     batchPoints.point(point2);
     influxDb.write(batchPoints);
-    Query query = new Query("SELECT * FROM cpu GROUP BY *", databaseName);
+    Query query = new Query("SELECT * FROM cpu GROUP BY *", dbName);
     QueryResult result = influxDb.query(query);
     Assert.assertFalse(result.getResults().get(0).getSeries().get(0).getTags().isEmpty());
-
+    influxDb.deleteDatabase(dbName);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("write " + databaseName)
+                    span.hasName("CREATE " + dbName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions("write", "write"))),
+                        .hasAttributesSatisfying(
+                            attributeAssertions(
+                                String.format("CREATE DATABASE \"%s\"", dbName),
+                                "CREATE",
+                                dbName))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName("write " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(attributeAssertions("write", "write", dbName))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu GROUP BY *", "SELECT"))));
+                            attributeAssertions("SELECT * FROM cpu GROUP BY *", "SELECT", dbName))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("DROP " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            attributeAssertions(
+                                String.format("DROP DATABASE \"%s\"", dbName), "DROP", dbName))));
   }
 
   @Test
@@ -139,7 +157,8 @@ class InfluxDbClientTest {
                     span.hasName("SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu_load", "SELECT"))));
+                            attributeAssertions(
+                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
   }
 
   @Test
@@ -158,7 +177,8 @@ class InfluxDbClientTest {
                     span.hasName("SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu_load", "SELECT"))));
+                            attributeAssertions(
+                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
   }
 
   @Test
@@ -177,7 +197,8 @@ class InfluxDbClientTest {
                     span.hasName("SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu_load", "SELECT"))));
+                            attributeAssertions(
+                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
   }
 
   @Test
@@ -205,7 +226,8 @@ class InfluxDbClientTest {
                     span.hasName("SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu_load", "SELECT"))));
+                            attributeAssertions(
+                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
   }
 
   @Test
@@ -221,7 +243,8 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName("write " + databaseName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions("write", "write"))));
+                        .hasAttributesSatisfying(
+                            attributeAssertions("write", "write", databaseName))));
   }
 
   @Test
@@ -238,10 +261,31 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName("write " + databaseName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions("write", "write"))));
+                        .hasAttributesSatisfying(
+                            attributeAssertions("write", "write", databaseName))));
   }
 
-  private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
+  @Test
+  void testWriteWithUdp() {
+    List<String> lineProtocols = new ArrayList<String>();
+    for (int i = 0; i < 2000; i++) {
+      Point point = Point.measurement("udp_single_poit").addField("v", i).build();
+      lineProtocols.add(point.lineProtocol());
+    }
+    influxDb.write(port, lineProtocols);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("write unknown")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            attributeAssertions("write", "write", "unknown"))));
+  }
+
+  private static List<AttributeAssertion> attributeAssertions(
+      String statement, String operation, String databaseName) {
     return asList(
         equalTo(NETWORK_TYPE, "ipv4"),
         equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),

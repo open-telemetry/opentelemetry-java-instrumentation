@@ -6,10 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_METHOD_NAME;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_NEW;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_OLD;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_METHOD_NAME;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_STATEMENT;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -19,14 +25,13 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Query;
+import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
 public class InfluxDbImplInstrumentation implements TypeInstrumentation {
@@ -38,34 +43,8 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("query"))
-            .and(
-                takesArguments(1)
-                    .and(takesArgument(0, named("org.influxdb.dto.Query")))
-                    .or(
-                        takesArguments(2)
-                            .and(takesArgument(0, named("org.influxdb.dto.Query")))
-                            .and(takesArgument(1, named("java.util.concurrent.TimeUnit"))))
-                    .or(
-                        takesArguments(3)
-                            .and(takesArgument(0, named("org.influxdb.dto.Query")))
-                            .and(takesArgument(1, int.class))
-                            .and(takesArgument(2, Consumer.class)))
-                    .or(
-                        takesArguments(3)
-                            .and(takesArgument(0, named("org.influxdb.dto.Query")))
-                            .and(takesArgument(1, Consumer.class))
-                            .and(takesArgument(2, Consumer.class)))
-                    .or(
-                        takesArguments(5)
-                            .and(takesArgument(0, named("org.influxdb.dto.Query")))
-                            .and(takesArgument(1, int.class))
-                            .and(takesArgument(2, BiConsumer.class))
-                            .and(takesArgument(3, Runnable.class))
-                            .and(takesArgument(4, Consumer.class)))),
+        isMethod().and(named("query")).and(takesArgument(0, named("org.influxdb.dto.Query"))),
         this.getClass().getName() + "$InfluxDbQueryAdvice");
 
     transformer.applyAdviceToMethod(
@@ -74,6 +53,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
             .and(
                 takesArguments(1)
                     .and(takesArgument(0, named("org.influxdb.dto.BatchPoints")))
+                    .or(takesArguments(2).and(takesArgument(0, int.class)))
                     .or(
                         takesArguments(4)
                             .and(takesArgument(0, String.class))
@@ -86,6 +66,9 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(2, isEnum()))
                             .and(takesArgument(3, named("java.util.concurrent.TimeUnit"))))),
         this.getClass().getName() + "$InfluxDbModifyAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(namedOneOf("createDatabase", "deleteDatabase")),
+        this.getClass().getName() + "$InfluxDbModifyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -94,11 +77,16 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Query query,
-        @Advice.Origin("#m") String methodName,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      callDepth = CallDepth.forClass(Retrofit.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return;
+      }
+
       if (query == null) {
         return;
       }
@@ -108,11 +96,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       InetSocketAddress inetSocketAddress = new InetSocketAddress(httpUrl.host(), httpUrl.port());
       influxDbRequest =
           InfluxDbRequest.create(
-              inetSocketAddress,
-              httpUrl.uri().toString(),
-              query.getDatabase(),
-              query.getCommand(),
-              methodName);
+              inetSocketAddress, httpUrl.uri().toString(), query.getDatabase(), query.getCommand());
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;
@@ -125,9 +109,14 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
 
       if (scope == null) {
         return;
@@ -144,6 +133,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
+        @Advice.This InfluxDBImpl influxDbImpl,
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) Object arg0,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit,
@@ -165,11 +155,23 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       HttpUrl httpUrl = retrofit.baseUrl();
       InetSocketAddress inetSocketAddress = new InetSocketAddress(httpUrl.host(), httpUrl.port());
       String database =
-          (arg0 instanceof BatchPoints) ? ((BatchPoints) arg0).getDatabase() : String.valueOf(arg0);
+          (arg0 instanceof BatchPoints)
+              ? ((BatchPoints) arg0).getDatabase()
+              // write data by udp protocol, in this way, can't get database name.
+              : arg0 instanceof Integer ? "unknown" : String.valueOf(arg0);
+
+      String sql = methodName;
+      if (CREATE_DATABASE_METHOD_NAME.equals(methodName)) {
+        sql =
+            influxDbImpl.version().startsWith("0.")
+                ? String.format(CREATE_DATABASE_STATEMENT_OLD, database)
+                : String.format(CREATE_DATABASE_STATEMENT_NEW, database);
+      } else if (DELETE_DATABASE_METHOD_NAME.equals(methodName)) {
+        sql = String.format(DELETE_DATABASE_STATEMENT, database);
+      }
 
       influxDbRequest =
-          InfluxDbRequest.create(
-              inetSocketAddress, httpUrl.uri().toString(), database, methodName, methodName);
+          InfluxDbRequest.create(inetSocketAddress, httpUrl.uri().toString(), database, sql);
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;

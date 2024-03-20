@@ -21,7 +21,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Override
   public String getOperation(InfluxDbRequest request) {
     String sql = request.getSql();
-    return !StringUtils.isNullOrEmpty(sql) ? sql.split(" ")[0] : null;
+    return StringUtils.isNullOrEmpty(sql) ? null : sql.split(" ")[0];
   }
 
   @Nullable
