@@ -22,6 +22,8 @@ import com.twitter.util.Time;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -85,10 +87,11 @@ class ClientTest extends AbstractHttpClientTest<Request> {
     // push this onto a FuturePool for 2 reasons:
     //  1) forces the request handling onto a different thread, ensuring test accuracy
     //  2) using the default thread can mess with high concurrency scenarios
+    Context context = Context.current();
     return FuturePool.unboundedPool()
         .apply(
             () -> {
-              try {
+              try (Scope ignored = context.makeCurrent()) {
                 return Await.result(getClient(uri).apply(request));
               } catch (Exception e) {
                 throw new RuntimeException(e);
