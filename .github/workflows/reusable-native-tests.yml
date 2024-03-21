@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
-      - uses: graalvm/setup-graalvm@6c070772210314221f80d186f2d2d36bb39af41d # v1.2.0.1
+      - uses: graalvm/setup-graalvm@2f25c0caae5b220866f732832d5e3e29ff493338 # v1.2.1.1
         with:
           version: "latest"
           java-version: "17"
