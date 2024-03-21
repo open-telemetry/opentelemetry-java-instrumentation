@@ -24,6 +24,10 @@ jobs:
           distribution: temurin
           java-version: 17.0.6
 
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+
       - uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
         with:
           arguments: ":javaagent:dependencyCheckAnalyze"
