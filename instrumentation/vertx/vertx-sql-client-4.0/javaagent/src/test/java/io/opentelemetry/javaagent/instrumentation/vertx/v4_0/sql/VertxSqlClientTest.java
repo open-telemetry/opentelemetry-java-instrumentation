@@ -373,23 +373,22 @@ class VertxSqlClientTest {
     for (CompletableFuture<Object> future : futureList) {
       executorService.submit(
           () -> {
-            testing
-                .runWithSpan(
-                    "parent",
-                    () ->
-                        pool.withConnection(
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    pool.withConnection(
                             conn ->
                                 conn.preparedQuery("select * from test where id = $1")
-                                    .execute(Tuple.of(1))))
-                .onComplete(
-                    rowSetAsyncResult -> {
-                      if (rowSetAsyncResult.succeeded()) {
-                        future.complete(rowSetAsyncResult.result());
-                      } else {
-                        future.completeExceptionally(rowSetAsyncResult.cause());
-                      }
-                      latch.countDown();
-                    });
+                                    .execute(Tuple.of(1)))
+                        .onComplete(
+                            rowSetAsyncResult -> {
+                              if (rowSetAsyncResult.succeeded()) {
+                                future.complete(rowSetAsyncResult.result());
+                              } else {
+                                future.completeExceptionally(rowSetAsyncResult.cause());
+                              }
+                              latch.countDown();
+                            }));
           });
     }
     latch.await(30, TimeUnit.SECONDS);
