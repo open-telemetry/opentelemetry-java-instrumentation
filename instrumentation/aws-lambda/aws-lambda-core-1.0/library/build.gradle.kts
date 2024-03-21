@@ -11,8 +11,6 @@ dependencies {
 
   library("com.amazonaws:aws-lambda-java-core:1.0.0")
 
-  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
-
   // We do lightweight parsing of JSON to extract HTTP headers from requests for propagation.
   // This will be commonly needed even for users that don't use events, but luckily it's not too big.
   // Note that Lambda itself uses Jackson, but does not expose it to the function so we need to include
