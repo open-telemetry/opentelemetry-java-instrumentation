@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
@@ -185,7 +186,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent-client-span", "test-http-server"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent-client-span").hasKind(SpanKind.CLIENT).hasNoParent()),
