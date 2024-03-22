@@ -147,7 +147,7 @@ class InfluxDbClientTest {
 
   @Test
   void testQueryWithTwoArguments() {
-    Query query = new Query("SELECT * FROM cpu_load", databaseName);
+    Query query = new Query("SELECT * FROM cpu_load where test1 = 'influxDb'", databaseName);
     influxDb.query(query, TimeUnit.MILLISECONDS);
 
     testing.waitAndAssertTraces(
@@ -158,12 +158,17 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
+                                "SELECT * FROM cpu_load where test1 = ?",
+                                "SELECT",
+                                databaseName))));
   }
 
   @Test
   void testQueryWithThreeArguments() throws InterruptedException {
-    Query query = new Query("SELECT * FROM cpu_load", databaseName);
+    Query query =
+        new Query(
+            "SELECT * FROM cpu_load where time >= '2022-01-01T08:00:00Z' AND time <= '2022-01-01T20:00:00Z'",
+            databaseName);
     BlockingQueue<QueryResult> queue = new LinkedBlockingQueue<>();
 
     influxDb.query(query, 2, result -> queue.add(result));
@@ -178,7 +183,9 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
+                                "SELECT * FROM cpu_load where time >= ? AND time <= ?",
+                                "SELECT",
+                                databaseName))));
   }
 
   @Test
@@ -205,7 +212,10 @@ class InfluxDbClientTest {
   void testQueryWithFiveArguments() throws InterruptedException {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     CountDownLatch countDownLatchFailure = new CountDownLatch(1);
-    Query query = new Query("SELECT * FROM cpu_load", databaseName);
+    Query query =
+        new Query(
+            "SELECT MEAN(water_level) FROM h2o_feet where time = '2022-01-01T08:00:00Z'; SELECT water_level FROM h2o_feet LIMIT 2",
+            databaseName);
     influxDb.query(
         query,
         10,
@@ -227,7 +237,9 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
+                                "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?",
+                                "SELECT",
+                                databaseName))));
   }
 
   @Test
