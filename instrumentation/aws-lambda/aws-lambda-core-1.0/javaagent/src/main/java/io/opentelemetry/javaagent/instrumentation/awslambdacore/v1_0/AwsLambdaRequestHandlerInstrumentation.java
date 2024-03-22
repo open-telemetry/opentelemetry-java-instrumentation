@@ -10,7 +10,9 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaInstrumentationHelper.functionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -35,7 +37,8 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.amazonaws.services.lambda.runtime.RequestHandler"));
+    return implementsInterface(named("com.amazonaws.services.lambda.runtime.RequestHandler"))
+        .and(not(nameStartsWith("com.amazonaws.services.lambda.runtime.api.client")));
   }
 
   @Override

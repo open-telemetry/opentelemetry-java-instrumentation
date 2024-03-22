@@ -78,13 +78,11 @@ query($q: String!, $endCursor: String) {
   | sed 's/^\["//' \
   | sed 's/".*//')
 
-# TODO (trask) can remove dependabot line after next release
 echo "$contributors1" "$contributors2" \
   | sed 's/ /\n/g' \
   | sort -uf \
   | grep -v linux-foundation-easycla \
   | grep -v github-actions \
-  | grep -v dependabot \
   | grep -v renovate \
   | grep -v opentelemetrybot \
   | sed 's/^/@/'

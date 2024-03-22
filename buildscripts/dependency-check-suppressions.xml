@@ -6,4 +6,11 @@
     <packageUrl regex="true">^pkg:maven/io\.opentelemetry[./].*</packageUrl>
     <vulnerabilityName regex="true">^CVE-.*</vulnerabilityName>
   </suppress>
+  <suppress>
+    <!-- detected CVEs are for otel go and python -->
+    <packageUrl regex="true">^pkg:maven/com\.google\.cloud\.opentelemetry/detector-resources-support@.*</packageUrl>
+    <vulnerabilityName>CVE-2023-43810</vulnerabilityName>
+    <vulnerabilityName>CVE-2023-45142</vulnerabilityName>
+    <vulnerabilityName>CVE-2023-47108</vulnerabilityName>
+  </suppress>
 </suppressions>

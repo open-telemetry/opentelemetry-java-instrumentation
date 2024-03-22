@@ -5,19 +5,18 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.OtelResourceAutoConfiguration;
+import io.opentelemetry.exporter.otlp.internal.OtlpSpanExporterProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.logs.SdkLoggerProvider;
-import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.AutoConfigureListener;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -33,7 +32,10 @@ class OpenTelemetryAutoConfigurationTest {
     }
   }
 
-  private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
+  private final ApplicationContextRunner contextRunner =
+      new ApplicationContextRunner()
+          .withPropertyValues(
+              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none");
 
   @Test
   @DisplayName(
@@ -46,10 +48,7 @@ class OpenTelemetryAutoConfigurationTest {
             context ->
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
-                    .doesNotHaveBean("openTelemetry")
-                    .doesNotHaveBean("sdkTracerProvider")
-                    .doesNotHaveBean("sdkMeterProvider")
-                    .doesNotHaveBean("sdkLoggerProvider"));
+                    .doesNotHaveBean("openTelemetry"));
   }
 
   @Test
@@ -58,118 +57,32 @@ class OpenTelemetryAutoConfigurationTest {
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context)
-                    .hasBean("openTelemetry")
-                    .hasBean("sdkTracerProvider")
-                    .hasBean("sdkMeterProvider")
-                    .hasBean("sdkLoggerProvider"));
+        .run(context -> assertThat(context).hasBean("openTelemetry"));
   }
 
   @Test
   @DisplayName(
-      "when Application Context DOES NOT contain OpenTelemetry bean but TracerProvider should initialize openTelemetry")
+      "when Application Context DOES NOT contain OpenTelemetry bean but SpanExporter should initialize openTelemetry")
   void initializeOpenTelemetryWithCustomProviders() {
+    OtlpSpanExporterProvider spanExporterProvider =
+        Mockito.mock(
+            OtlpSpanExporterProvider.class,
+            withSettings().extraInterfaces(AutoConfigureListener.class));
+    Mockito.when(spanExporterProvider.getName()).thenReturn("custom");
+    Mockito.when(spanExporterProvider.createExporter(any()))
+        .thenReturn(Mockito.mock(SpanExporter.class));
+
     this.contextRunner
         .withBean(
-            "customTracerProvider",
-            SdkTracerProvider.class,
-            () -> SdkTracerProvider.builder().build(),
-            bd -> bd.setDestroyMethodName(""))
-        .withBean(
-            "customMeterProvider",
-            SdkMeterProvider.class,
-            () -> SdkMeterProvider.builder().build(),
-            bd -> bd.setDestroyMethodName(""))
-        .withBean(
-            "customLoggerProvider",
-            SdkLoggerProvider.class,
-            () -> SdkLoggerProvider.builder().build(),
+            "customSpanExporter",
+            OtlpSpanExporterProvider.class,
+            () -> spanExporterProvider,
             bd -> bd.setDestroyMethodName(""))
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context)
-                    .hasBean("openTelemetry")
-                    .hasBean("customTracerProvider")
-                    .doesNotHaveBean("sdkTracerProvider")
-                    .hasBean("customMeterProvider")
-                    .doesNotHaveBean("sdkMeterProvider")
-                    .hasBean("customLoggerProvider")
-                    .doesNotHaveBean("sdkLoggerProvider"));
-  }
+        .withPropertyValues("otel.traces.exporter=custom")
+        .run(context -> assertThat(context).hasBean("openTelemetry"));
 
-  @Test
-  @DisplayName(
-      "when spring.application.name is set value should be passed to service name attribute")
-  void shouldDetermineServiceNameBySpringApplicationName() {
-    this.contextRunner
-        .withPropertyValues("spring.application.name=myapp-backend")
-        .withConfiguration(
-            AutoConfigurations.of(
-                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .run(
-            context -> {
-              Resource otelResource = context.getBean("otelResource", Resource.class);
-
-              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("myapp-backend");
-            });
-  }
-
-  @Test
-  @DisplayName(
-      "when spring application name and otel service name are not set service name should be default")
-  void hasDefaultServiceName() {
-    this.contextRunner
-        .withConfiguration(
-            AutoConfigurations.of(
-                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .run(
-            context -> {
-              Resource otelResource = context.getBean("otelResource", Resource.class);
-
-              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("unknown_service:java");
-            });
-  }
-
-  @Test
-  @DisplayName("when otel service name is set it should be set as service name attribute")
-  void shouldDetermineServiceNameByOtelServiceName() {
-    this.contextRunner
-        .withConfiguration(
-            AutoConfigurations.of(
-                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .withPropertyValues("otel.resource.attributes.service.name=otel-name-backend")
-        .run(
-            context -> {
-              Resource otelResource = context.getBean("otelResource", Resource.class);
-
-              assertThat(otelResource.getAttribute(SERVICE_NAME)).isEqualTo("otel-name-backend");
-            });
-  }
-
-  @Test
-  @DisplayName("when otel attributes are set in properties they should be put in resource")
-  void shouldInitializeAttributes() {
-    this.contextRunner
-        .withConfiguration(
-            AutoConfigurations.of(
-                OtelResourceAutoConfiguration.class, OpenTelemetryAutoConfiguration.class))
-        .withPropertyValues(
-            "otel.resource.attributes.xyz=foo",
-            "otel.resource.attributes.environment=dev",
-            "otel.resource.attributes.service.instance.id=id-example")
-        .run(
-            context -> {
-              Resource otelResource = context.getBean("otelResource", Resource.class);
-
-              assertThat(otelResource.getAttribute(AttributeKey.stringKey("environment")))
-                  .isEqualTo("dev");
-              assertThat(otelResource.getAttribute(AttributeKey.stringKey("xyz"))).isEqualTo("foo");
-              assertThat(otelResource.getAttribute(AttributeKey.stringKey("service.instance.id")))
-                  .isEqualTo("id-example");
-            });
+    Mockito.verify(spanExporterProvider).afterAutoConfigure(any());
   }
 
   @Test
@@ -180,10 +93,7 @@ class OpenTelemetryAutoConfigurationTest {
         .run(
             context -> {
               assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class);
-              assertThat(context)
-                  .hasBean("openTelemetry")
-                  .hasBean("sdkTracerProvider")
-                  .hasBean("sdkMeterProvider");
+              assertThat(context).hasBean("openTelemetry");
             });
   }
 
@@ -193,11 +103,7 @@ class OpenTelemetryAutoConfigurationTest {
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withPropertyValues("otel.sdk.disabled=true")
         .run(
-            context -> {
-              assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
-              assertThat(context)
-                  .doesNotHaveBean("sdkTracerProvider")
-                  .doesNotHaveBean("sdkMeterProvider");
-            });
+            context ->
+                assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop()));
   }
 }

@@ -18,6 +18,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.PointData;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,13 +35,12 @@ import java.util.Set;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.KafkaConsumerAccess;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.KafkaProducerAccess;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.KafkaMetric;
+import org.apache.kafka.common.metrics.Metrics;
 import org.apache.kafka.common.metrics.MetricsReporter;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -116,7 +117,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     producerConfig.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         TestMetricsReporter.class.getName(),
-        (o, o2) -> o + "," + o2);
+        AbstractOpenTelemetryMetricsReporterTest::mergeValue);
     return producerConfig;
   }
 
@@ -133,18 +134,48 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     consumerConfig.merge(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
         TestMetricsReporter.class.getName(),
-        (o, o2) -> o + "," + o2);
+        AbstractOpenTelemetryMetricsReporterTest::mergeValue);
     return consumerConfig;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Object mergeValue(Object o1, Object o2) {
+    List<Object> result = new MetricsReporterList<>();
+    result.addAll((List<Object>) o1);
+    result.add(o2);
+    return result;
   }
 
   @Test
   void noDuplicateMetricsReporter() {
-    List<MetricsReporter> producerMetricsReporters =
-        KafkaProducerAccess.getMetricsReporters(producer);
+    List<MetricsReporter> producerMetricsReporters = getMetricsReporters(producer);
     assertThat(countOpenTelemetryMetricsReporters(producerMetricsReporters)).isEqualTo(1);
-    List<MetricsReporter> consumerMetricsReporters =
-        KafkaConsumerAccess.getMetricsReporters(consumer);
+    List<MetricsReporter> consumerMetricsReporters = getMetricsReporters(consumer);
     assertThat(countOpenTelemetryMetricsReporters(consumerMetricsReporters)).isEqualTo(1);
+  }
+
+  private static List<MetricsReporter> getMetricsReporters(Object producerOrConsumer) {
+    return getMetricsRegistry(producerOrConsumer).reporters();
+  }
+
+  private static Metrics getMetricsRegistry(Object producerOrConsumer) {
+    Class<?> clazz = producerOrConsumer.getClass();
+    try {
+      Field field = clazz.getDeclaredField("metrics");
+      field.setAccessible(true);
+      return (Metrics) field.get(producerOrConsumer);
+    } catch (Exception ignored) {
+      // Ignore
+    }
+    try {
+      Method method = clazz.getDeclaredMethod("metricsRegistry");
+      method.setAccessible(true);
+      return (Metrics) method.invoke(producerOrConsumer);
+    } catch (Exception ignored) {
+      // Ignore
+    }
+    throw new IllegalStateException(
+        "Failed to get metrics registry from " + producerOrConsumer.getClass().getName());
   }
 
   private static long countOpenTelemetryMetricsReporters(List<MetricsReporter> metricsReporters) {
@@ -176,8 +207,6 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 "kafka.consumer.join_total",
                 "kafka.consumer.last_heartbeat_seconds_ago",
                 "kafka.consumer.last_rebalance_seconds_ago",
-                "kafka.consumer.partition_assigned_latency_avg",
-                "kafka.consumer.partition_assigned_latency_max",
                 "kafka.consumer.rebalance_latency_avg",
                 "kafka.consumer.rebalance_latency_max",
                 "kafka.consumer.rebalance_latency_total",
