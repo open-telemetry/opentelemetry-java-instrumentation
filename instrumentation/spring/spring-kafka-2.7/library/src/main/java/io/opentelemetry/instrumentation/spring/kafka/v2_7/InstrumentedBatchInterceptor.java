@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -92,6 +93,22 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
       state.scope().close();
       batchProcessInstrumenter.end(state.context(), request, null, error);
       lastProcessed.set(new WeakReference<>(records));
+    }
+  }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void setupThreadState(Consumer<?, ?> consumer) {
+    if (decorated != null) {
+      decorated.setupThreadState(consumer);
+    }
+  }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void clearThreadState(Consumer<?, ?> consumer) {
+    if (decorated != null) {
+      decorated.clearThreadState(consumer);
     }
   }
 }

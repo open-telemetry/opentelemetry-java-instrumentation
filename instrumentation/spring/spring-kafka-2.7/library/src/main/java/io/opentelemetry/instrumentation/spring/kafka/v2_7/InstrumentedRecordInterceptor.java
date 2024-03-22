@@ -92,4 +92,12 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
       processInstrumenter.end(state.context(), request, null, error);
     }
   }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void afterRecord(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
+    if (decorated != null) {
+      decorated.afterRecord(record, consumer);
+    }
+  }
 }
