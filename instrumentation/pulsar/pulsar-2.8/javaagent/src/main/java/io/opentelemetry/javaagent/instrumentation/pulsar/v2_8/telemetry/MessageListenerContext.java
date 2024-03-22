@@ -6,26 +6,26 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 /**
- * Helper class for suppressing spans from the message "receive" operation when we know that the
- * received message will be passed to a message listener that would produce a span for the "process"
- * operation.
+ * Helper class used to determine whether message is going to be processed by a listener. If we know
+ * that message is going to be passed to a message listener, that would produce a span for the
+ * "process" operation, we are going to suppress the span from the message "receive" operation.
  */
 public final class MessageListenerContext {
-  private static final ThreadLocal<Boolean> active = new ThreadLocal<>();
+  private static final ThreadLocal<Boolean> processing = new ThreadLocal<>();
 
   private MessageListenerContext() {}
 
   /** Call on entry to a method that will pass the received message to a message listener. */
-  public static void enter() {
-    active.set(Boolean.TRUE);
+  public static void startProcessing() {
+    processing.set(Boolean.TRUE);
   }
 
-  public static void exit() {
-    active.remove();
+  public static void endProcessing() {
+    processing.remove();
   }
 
   /** Returns true if we expect a received message to be passed to a listener. */
-  public static boolean isActive() {
-    return active.get() != null;
+  public static boolean isProcessing() {
+    return processing.get() != null;
   }
 }

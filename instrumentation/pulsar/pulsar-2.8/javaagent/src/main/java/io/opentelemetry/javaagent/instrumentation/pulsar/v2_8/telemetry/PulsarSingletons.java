@@ -167,7 +167,7 @@ public final class PulsarSingletons {
     if (!receiveInstrumentationEnabled) {
       // suppress receive span when receive telemetry is not enabled and message is going to be
       // processed by a listener
-      if (MessageListenerContext.isActive()) {
+      if (MessageListenerContext.isProcessing()) {
         return null;
       }
       parent = PROPAGATOR.extract(parent, request, MessageTextMapGetter.INSTANCE);
@@ -208,7 +208,7 @@ public final class PulsarSingletons {
 
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
-    boolean listenerContextActive = MessageListenerContext.isActive();
+    boolean listenerContextActive = MessageListenerContext.isProcessing();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
     future.whenComplete(

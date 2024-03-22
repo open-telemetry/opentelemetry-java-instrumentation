@@ -37,12 +37,12 @@ public class ConsumerBaseInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter() {
-      MessageListenerContext.enter();
+      MessageListenerContext.startProcessing();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit() {
-      MessageListenerContext.exit();
+      MessageListenerContext.endProcessing();
     }
   }
 }
