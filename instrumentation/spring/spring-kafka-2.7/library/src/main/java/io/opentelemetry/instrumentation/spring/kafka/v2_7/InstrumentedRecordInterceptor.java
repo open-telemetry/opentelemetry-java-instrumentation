@@ -100,4 +100,20 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
       decorated.afterRecord(record, consumer);
     }
   }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void setupThreadState(Consumer<?, ?> consumer) {
+    if (decorated != null) {
+      decorated.setupThreadState(consumer);
+    }
+  }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void clearThreadState(Consumer<?, ?> consumer) {
+    if (decorated != null) {
+      decorated.clearThreadState(consumer);
+    }
+  }
 }
