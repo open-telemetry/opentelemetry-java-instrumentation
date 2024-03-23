@@ -1,5 +1,7 @@
 plugins {
   id("otel.java-conventions")
+
+  jacoco
 }
 
 dependencies {
@@ -69,4 +71,12 @@ configurations {
       it is ProjectDependency && it.dependencyProject == project
     }
   }
+}
+
+tasks.test {
+  finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+  dependsOn(tasks.test)
 }
