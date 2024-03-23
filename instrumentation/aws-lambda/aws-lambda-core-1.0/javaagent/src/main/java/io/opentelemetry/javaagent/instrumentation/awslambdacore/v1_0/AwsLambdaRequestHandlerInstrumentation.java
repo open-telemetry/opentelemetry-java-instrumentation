@@ -38,7 +38,8 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.amazonaws.services.lambda.runtime.RequestHandler"))
-        .and(not(nameStartsWith("com.amazonaws.services.lambda.runtime.api.client")));
+        .and(not(nameStartsWith("com.amazonaws.services.lambda.runtime.api.client")))
+        .and(not(nameStartsWith("lambdainternal")));
   }
 
   @Override
