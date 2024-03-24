@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2024-03-15 11:37:10 EET_
+_2024-03-24 10:32:01 EET_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -213,14 +213,14 @@ _2024-03-15 11:37:10 EET_
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**48** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.6`
+**48** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**49** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.6`
+**49** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -234,14 +234,14 @@ _2024-03-15 11:37:10 EET_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**51** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.6`
+**51** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**52** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.6`
+**52** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -272,14 +272,14 @@ _2024-03-15 11:37:10 EET_
 
 ## The 3-Clause BSD License
 
-**57** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.6`
+**57** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**58** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.6`
+**58** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -293,14 +293,14 @@ _2024-03-15 11:37:10 EET_
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**60** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.6`
+**60** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**61** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.6`
+**61** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.7`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
