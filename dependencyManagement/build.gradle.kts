@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-fileupload:commons-fileupload:1.5",
   "commons-io:commons-io:2.15.1",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.0",
+  "commons-logging:commons-logging:1.3.1",
   "commons-validator:commons-validator:1.8.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
