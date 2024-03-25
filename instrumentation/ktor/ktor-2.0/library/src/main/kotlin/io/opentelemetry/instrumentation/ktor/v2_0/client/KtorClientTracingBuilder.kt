@@ -7,7 +7,10 @@ package io.opentelemetry.instrumentation.ktor.v2_0.client
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.common.AttributesBuilder
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
@@ -37,15 +40,48 @@ class KtorClientTracingBuilder {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(headers)
   }
 
+  fun capturedRequestHeaders(vararg headers: String) {
+    capturedRequestHeaders(headers.asIterable())
+  }
+
+  fun capturedRequestHeaders(headers: Iterable<String>) {
+    setCapturedRequestHeaders(headers.toList())
+  }
+
   fun setCapturedResponseHeaders(vararg headers: String) = setCapturedResponseHeaders(headers.asList())
 
   fun setCapturedResponseHeaders(headers: List<String>) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers)
   }
 
+  fun capturedResponseHeaders(vararg headers: String) {
+    capturedResponseHeaders(headers.asIterable())
+  }
+
+  fun capturedResponseHeaders(headers: Iterable<String>) {
+    setCapturedResponseHeaders(headers.toList())
+  }
+
   fun setKnownMethods(knownMethods: Set<String>) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
     httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
+  }
+
+  fun knownMethods(vararg methods: String) {
+    setKnownMethods(methods.toSet())
+  }
+
+  fun knownMethods(methods: Iterable<String>) {
+    setKnownMethods(methods.toSet())
+  }
+
+  fun knownMethods(vararg methods: HttpMethod) {
+    knownMethods(methods.asIterable())
+  }
+
+  @JvmName("knownMethodsJvm")
+  fun knownMethods(methods: Iterable<HttpMethod>) {
+    setKnownMethods(methods.map { it.value }.toSet())
   }
 
   fun addAttributesExtractors(vararg extractors: AttributesExtractor<in HttpRequestData, in HttpResponse>) = addAttributesExtractors(extractors.asList())
@@ -54,6 +90,66 @@ class KtorClientTracingBuilder {
     additionalExtractors += extractors
   }
 
+  fun attributeExtractor(
+    extractorBuilder: ExtractorBuilder.() -> Unit = {}
+  ) {
+    val builder = ExtractorBuilder().apply(extractorBuilder).build()
+    addAttributesExtractors(
+      object : AttributesExtractor<HttpRequestData, HttpResponse> {
+        override fun onStart(
+          attributes: AttributesBuilder,
+          parentContext: Context,
+          request: HttpRequestData
+        ) {
+          builder.onStart(OnStartData(attributes, parentContext, request))
+        }
+
+        override fun onEnd(
+          attributes: AttributesBuilder,
+          context: Context,
+          request: HttpRequestData,
+          response: HttpResponse?,
+          error: Throwable?
+        ) {
+          builder.onEnd(OnEndData(attributes, context, request, response, error))
+        }
+      }
+    )
+  }
+
+  class ExtractorBuilder {
+    private var onStart: OnStartData.() -> Unit = {}
+    private var onEnd: OnEndData.() -> Unit = {}
+
+    fun onStart(block: OnStartData.() -> Unit) {
+      onStart = block
+    }
+
+    fun onEnd(block: OnEndData.() -> Unit) {
+      onEnd = block
+    }
+
+    internal fun build(): Extractor {
+      return Extractor(onStart, onEnd)
+    }
+  }
+
+  internal class Extractor(val onStart: OnStartData.() -> Unit, val onEnd: OnEndData.() -> Unit)
+
+  data class OnStartData(
+    val attributes: AttributesBuilder,
+    val parentContext: Context,
+    val request: HttpRequestData
+  )
+
+  data class OnEndData(
+    val attributes: AttributesBuilder,
+    val parentContext: Context,
+    val request: HttpRequestData,
+    val response: HttpResponse?,
+    val error: Throwable?
+  )
+
   /**
    * Configures the instrumentation to emit experimental HTTP client metrics.
    *
@@ -61,6 +157,10 @@ class KtorClientTracingBuilder {
    */
   fun setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics: Boolean) {
     this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics
+  }
+
+  fun emitExperimentalHttpClientMetrics() {
+    setEmitExperimentalHttpClientMetrics(true)
   }
 
   internal fun build(): KtorClientTracing {
