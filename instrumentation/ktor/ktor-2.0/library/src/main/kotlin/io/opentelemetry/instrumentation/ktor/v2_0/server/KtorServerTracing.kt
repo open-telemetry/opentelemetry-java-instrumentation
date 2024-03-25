@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.ktor.v2_0.server
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -12,11 +13,14 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.common.AttributesBuilder
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor
@@ -59,26 +63,141 @@ class KtorServerTracing private constructor(
       this.statusExtractor = extractor
     }
 
+    fun spanStatusExtractor(extract: SpanStatusData.() -> Unit) {
+      setStatusExtractor {
+        SpanStatusExtractor<ApplicationRequest, ApplicationResponse> { spanStatusBuilder: SpanStatusBuilder,
+                                                                       request: ApplicationRequest,
+                                                                       response: ApplicationResponse?,
+                                                                       throwable: Throwable? ->
+          extract(SpanStatusData(spanStatusBuilder, request, response, throwable))
+        }
+      }
+    }
+
+    data class SpanStatusData(
+      val spanStatusBuilder: SpanStatusBuilder,
+      val request: ApplicationRequest,
+      val response: ApplicationResponse?,
+      val error: Throwable?
+    )
+
     fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       this.spanKindExtractor = extractor
+    }
+
+    fun spanKindExtractor(extract: ApplicationRequest.() -> SpanKind) {
+      setSpanKindExtractor {
+        SpanKindExtractor<ApplicationRequest> { request: ApplicationRequest ->
+          extract(request)
+        }
+      }
     }
 
     fun addAttributeExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
       additionalExtractors.add(extractor)
     }
 
+    fun attributeExtractor(
+      extractorBuilder: ExtractorBuilder.() -> Unit = {}
+    ) {
+      val builder = ExtractorBuilder().apply(extractorBuilder).build()
+      addAttributeExtractor(
+        object : AttributesExtractor<ApplicationRequest, ApplicationResponse> {
+          override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: ApplicationRequest) {
+            builder.onStart(OnStartData(attributes, parentContext, request))
+          }
+
+          override fun onEnd(
+            attributes: AttributesBuilder,
+            context: Context,
+            request: ApplicationRequest,
+            response: ApplicationResponse?,
+            error: Throwable?
+          ) {
+            builder.onEnd(OnEndData(attributes, context, request, response, error))
+          }
+        }
+      )
+    }
+
+    class ExtractorBuilder {
+      private var onStart: OnStartData.() -> Unit = {}
+      private var onEnd: OnEndData.() -> Unit = {}
+
+      fun onStart(block: OnStartData.() -> Unit) {
+        onStart = block
+      }
+
+      fun onEnd(block: OnEndData.() -> Unit) {
+        onEnd = block
+      }
+
+      internal fun build(): Extractor {
+        return Extractor(onStart, onEnd)
+      }
+    }
+
+    internal class Extractor(val onStart: OnStartData.() -> Unit, val onEnd: OnEndData.() -> Unit)
+
+    data class OnStartData(
+      val attributes: AttributesBuilder,
+      val parentContext: Context,
+      val request: ApplicationRequest
+    )
+
+    data class OnEndData(
+      val attributes: AttributesBuilder,
+      val parentContext: Context,
+      val request: ApplicationRequest,
+      val response: ApplicationResponse?,
+      val error: Throwable?
+    )
+
     fun setCapturedRequestHeaders(requestHeaders: List<String>) {
       httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders)
+    }
+
+    fun capturedRequestHeaders(headers: Iterable<String>) {
+      setCapturedRequestHeaders(headers.toList())
+    }
+
+    fun capturedRequestHeaders(vararg headers: String) {
+      capturedRequestHeaders(headers.asIterable())
     }
 
     fun setCapturedResponseHeaders(responseHeaders: List<String>) {
       httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders)
     }
 
+    fun capturedResponseHeaders(headers: Iterable<String>) {
+      setCapturedResponseHeaders(headers.toList())
+    }
+
+    fun capturedResponseHeaders(vararg headers: String) {
+      capturedResponseHeaders(headers.asIterable())
+    }
+
     fun setKnownMethods(knownMethods: Set<String>) {
       httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
       httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
       httpServerRouteBuilder.setKnownMethods(knownMethods)
+    }
+
+    fun knownMethods(vararg methods: String) {
+      setKnownMethods(methods.toSet())
+    }
+
+    fun knownMethods(methods: Iterable<String>) {
+      setKnownMethods(methods.toSet())
+    }
+
+    @JvmName("knownMethodsJvm")
+    fun knownMethods(methods: Iterable<HttpMethod>) {
+      knownMethods(methods.map { it.value })
+    }
+
+    fun knownMethods(vararg methods: HttpMethod) {
+      knownMethods(methods.map { it.value })
     }
 
     internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
@@ -107,9 +226,7 @@ class KtorServerTracing private constructor(
     override fun install(pipeline: Application, configure: Configuration.() -> Unit): KtorServerTracing {
       val configuration = Configuration().apply(configure)
 
-      if (!configuration.isOpenTelemetryInitialized()) {
-        throw IllegalArgumentException("OpenTelemetry must be set")
-      }
+      require(configuration.isOpenTelemetryInitialized()) { "OpenTelemetry must be set" }
 
       val httpAttributesGetter = KtorHttpServerAttributesGetter.INSTANCE
 
