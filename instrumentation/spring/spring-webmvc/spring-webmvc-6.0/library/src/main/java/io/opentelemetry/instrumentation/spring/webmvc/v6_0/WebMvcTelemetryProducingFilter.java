@@ -60,9 +60,7 @@ final class WebMvcTelemetryProducingFilter extends OncePerRequestFilter implemen
       error = t;
       throw t;
     } finally {
-      if (httpRouteSupport.hasMappings()) {
-        HttpServerRoute.update(context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
-      }
+      HttpServerRoute.update(context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
       instrumenter.end(context, request, response, error);
     }
   }

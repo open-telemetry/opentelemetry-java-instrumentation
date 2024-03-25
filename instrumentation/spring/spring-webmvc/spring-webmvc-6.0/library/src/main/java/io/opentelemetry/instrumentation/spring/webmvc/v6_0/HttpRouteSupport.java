@@ -113,6 +113,8 @@ final class HttpRouteSupport {
         if (bestMatchingPattern != null) {
           return prependContextPath(request, bestMatchingPattern.toString());
         }
+      } else {
+        return request.getRequestURI();
       }
     } finally {
       // mimic spring DispatcherServlet and restore the previous value of PATH_ATTRIBUTE
