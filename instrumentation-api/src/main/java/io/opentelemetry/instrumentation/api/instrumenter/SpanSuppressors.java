@@ -71,16 +71,16 @@ final class SpanSuppressors {
 
     @Override
     public Context storeInContext(Context context, SpanKind spanKind, Span span) {
-      for (int i = 0; i < spanKeys.length; i++) {
-        context = spanKeys[i].storeInContext(context, span);
+      for (SpanKey spanKey : spanKeys) {
+        context = spanKey.storeInContext(context, span);
       }
       return context;
     }
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      for (int i = 0; i < spanKeys.length; i++) {
-        if (spanKeys[i].fromContextOrNull(parentContext) == null) {
+      for (SpanKey spanKey : spanKeys) {
+        if (spanKey.fromContextOrNull(parentContext) == null) {
           return false;
         }
       }
