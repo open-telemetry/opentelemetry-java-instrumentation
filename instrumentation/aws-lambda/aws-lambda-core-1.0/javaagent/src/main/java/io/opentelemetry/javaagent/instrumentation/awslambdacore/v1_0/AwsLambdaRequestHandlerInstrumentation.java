@@ -39,6 +39,8 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.amazonaws.services.lambda.runtime.RequestHandler"))
         .and(not(nameStartsWith("com.amazonaws.services.lambda.runtime.api.client")))
+        // In Java 8 and Java 11 runtimes, AWS Lambda runtime is packaged under `lambdainternal` package
+        // (it is `com.amazonaws.services.lambda.runtime.api.client` for new runtime likes Java 17 and Java 21)
         .and(not(nameStartsWith("lambdainternal")));
   }
 
