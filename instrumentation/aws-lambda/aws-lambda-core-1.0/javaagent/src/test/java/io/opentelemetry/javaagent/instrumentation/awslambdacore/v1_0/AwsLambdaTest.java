@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AbstractAwsLambdaTest
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import lambdainternal.AwsLambdaLegacyInternalRequestHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -43,6 +44,23 @@ public class AwsLambdaTest extends AbstractAwsLambdaTest {
   @Test
   void awsLambdaInternalHandlerIgnoredAndUserHandlerTraced() {
     RequestHandler<String, String> handler = new AwsLambdaInternalRequestHandler(handler());
+    String result = handler.handleRequest("hello", context());
+    assertThat(result).isEqualTo("world");
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("my_function")
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+  }
+
+  @Test
+  void awsLambdaLegacyInternalHandlerIgnoredAndUserHandlerTraced() {
+    RequestHandler<String, String> handler = new AwsLambdaLegacyInternalRequestHandler(handler());
     String result = handler.handleRequest("hello", context());
     assertThat(result).isEqualTo("world");
 
