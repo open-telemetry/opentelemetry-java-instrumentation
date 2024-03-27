@@ -71,11 +71,11 @@ if (useScansGradleCom) {
       }
     }
   }
+}
 
-  buildCache {
-    remote(gradleEnterprise.buildCache) {
-      isPush = isCI && geAccessKey.isNotEmpty()
-    }
+buildCache {
+  remote(gradleEnterprise.buildCache) {
+    isPush = isCI && geAccessKey.isNotEmpty()
   }
 }
 
