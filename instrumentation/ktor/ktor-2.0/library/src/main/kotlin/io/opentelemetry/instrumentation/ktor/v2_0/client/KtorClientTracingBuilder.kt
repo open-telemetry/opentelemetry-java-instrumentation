@@ -90,27 +90,15 @@ class KtorClientTracingBuilder {
     additionalExtractors += extractors
   }
 
-  fun attributeExtractor(
-    extractorBuilder: ExtractorBuilder.() -> Unit = {}
-  ) {
+  fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
     addAttributesExtractors(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
-        override fun onStart(
-          attributes: AttributesBuilder,
-          parentContext: Context,
-          request: HttpRequestData
-        ) {
+        override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))
         }
 
-        override fun onEnd(
-          attributes: AttributesBuilder,
-          context: Context,
-          request: HttpRequestData,
-          response: HttpResponse?,
-          error: Throwable?
-        ) {
+        override fun onEnd(attributes: AttributesBuilder, context: Context, request: HttpRequestData, response: HttpResponse?, error: Throwable?) {
           builder.onEnd(OnEndData(attributes, context, request, response, error))
         }
       }

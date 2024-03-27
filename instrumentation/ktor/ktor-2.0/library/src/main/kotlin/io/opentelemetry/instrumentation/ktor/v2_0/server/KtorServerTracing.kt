@@ -97,9 +97,7 @@ class KtorServerTracing private constructor(
       additionalExtractors.add(extractor)
     }
 
-    fun attributeExtractor(
-      extractorBuilder: ExtractorBuilder.() -> Unit = {}
-    ) {
+    fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
       val builder = ExtractorBuilder().apply(extractorBuilder).build()
       addAttributeExtractor(
         object : AttributesExtractor<ApplicationRequest, ApplicationResponse> {
@@ -107,13 +105,7 @@ class KtorServerTracing private constructor(
             builder.onStart(OnStartData(attributes, parentContext, request))
           }
 
-          override fun onEnd(
-            attributes: AttributesBuilder,
-            context: Context,
-            request: ApplicationRequest,
-            response: ApplicationResponse?,
-            error: Throwable?
-          ) {
+          override fun onEnd(attributes: AttributesBuilder, context: Context, request: ApplicationRequest, response: ApplicationResponse?, error: Throwable?) {
             builder.onEnd(OnEndData(attributes, context, request, response, error))
           }
         }
