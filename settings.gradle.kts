@@ -71,17 +71,10 @@ if (useScansGradleCom) {
       }
     }
   }
-}
 
-val geCacheUsername = System.getenv("GE_CACHE_USERNAME") ?: ""
-val geCachePassword = System.getenv("GE_CACHE_PASSWORD") ?: ""
-buildCache {
-  remote<HttpBuildCache> {
-    url = uri("$gradleEnterpriseServer/cache/")
-    isPush = isCI && geCacheUsername.isNotEmpty()
-    credentials {
-      username = geCacheUsername
-      password = geCachePassword
+  buildCache {
+    remote(gradleEnterprise.buildCache) {
+      isPush = isCI && geAccessKey.isNotEmpty()
     }
   }
 }

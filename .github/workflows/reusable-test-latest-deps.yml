@@ -12,10 +12,6 @@ on:
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY:
         required: false
-      GE_CACHE_USERNAME:
-        required: false
-      GE_CACHE_PASSWORD:
-        required: false
 
 jobs:
   test-latest-deps:
@@ -55,8 +51,6 @@ jobs:
       - name: List tests
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         uses: gradle/gradle-build-action@v3
         with:
           arguments: >
@@ -74,8 +68,6 @@ jobs:
         uses: gradle/gradle-build-action@v3
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           arguments: >
             ${{ env.test-tasks }}
