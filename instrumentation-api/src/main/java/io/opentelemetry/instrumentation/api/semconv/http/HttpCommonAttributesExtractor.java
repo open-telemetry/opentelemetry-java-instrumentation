@@ -64,12 +64,13 @@ abstract class HttpCommonAttributesExtractor<
       internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
 
-    for (String name : capturedRequestHeaders) {
-      List<String> values = getter.getHttpRequestHeader(request, name);
-      if (!values.isEmpty()) {
-        internalSet(attributes, requestAttributeKey(name), values);
-      }
-    }
+    capturedRequestHeaders.forEach(
+        name -> {
+          List<String> values = getter.getHttpRequestHeader(request, name);
+          if (!values.isEmpty()) {
+            internalSet(attributes, requestAttributeKey(name), values);
+          }
+        });
   }
 
   @Override
@@ -87,12 +88,13 @@ abstract class HttpCommonAttributesExtractor<
         internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
       }
 
-      for (String name : capturedResponseHeaders) {
-        List<String> values = getter.getHttpResponseHeader(request, response, name);
-        if (!values.isEmpty()) {
-          internalSet(attributes, responseAttributeKey(name), values);
-        }
-      }
+      capturedResponseHeaders.forEach(
+          name -> {
+            List<String> values = getter.getHttpResponseHeader(request, response, name);
+            if (!values.isEmpty()) {
+              internalSet(attributes, responseAttributeKey(name), values);
+            }
+          });
     }
 
     String errorType = null;
