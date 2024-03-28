@@ -14,8 +14,8 @@ class KtorTestUtil {
     fun installOpenTelemetry(application: Application, openTelemetry: OpenTelemetry) {
       application.install(KtorServerTracing) {
         setOpenTelemetry(openTelemetry)
-        setCapturedRequestHeaders(listOf(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        setCapturedResponseHeaders(listOf(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+        capturedRequestHeaders(AbstractHttpServerTest.TEST_REQUEST_HEADER)
+        capturedResponseHeaders(AbstractHttpServerTest.TEST_RESPONSE_HEADER)
       }
     }
   }

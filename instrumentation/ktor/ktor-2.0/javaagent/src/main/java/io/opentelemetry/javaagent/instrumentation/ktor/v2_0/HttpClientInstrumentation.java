@@ -56,9 +56,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public Unit invoke(KtorClientTracingBuilder builder) {
       OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
       builder.setOpenTelemetry(openTelemetry);
-      builder.setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders());
-      builder.setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders());
-      builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods());
+      builder.capturedRequestHeaders(CommonConfig.get().getClientRequestHeaders());
+      builder.capturedResponseHeaders(CommonConfig.get().getClientResponseHeaders());
+      builder.knownMethods(CommonConfig.get().getKnownHttpRequestMethods());
 
       return kotlin.Unit.INSTANCE;
     }

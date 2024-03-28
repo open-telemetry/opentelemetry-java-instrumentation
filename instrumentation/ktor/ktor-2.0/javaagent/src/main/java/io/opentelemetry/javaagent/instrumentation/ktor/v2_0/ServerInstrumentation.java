@@ -50,9 +50,9 @@ public class ServerInstrumentation implements TypeInstrumentation {
     public Unit invoke(KtorServerTracing.Configuration configuration) {
       OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
       configuration.setOpenTelemetry(openTelemetry);
-      configuration.setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders());
-      configuration.setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders());
-      configuration.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods());
+      configuration.capturedRequestHeaders(CommonConfig.get().getServerRequestHeaders());
+      configuration.capturedResponseHeaders(CommonConfig.get().getServerResponseHeaders());
+      configuration.knownMethods(CommonConfig.get().getKnownHttpRequestMethods());
 
       return kotlin.Unit.INSTANCE;
     }
