@@ -1949,7 +1949,7 @@ The `opentelemetry-instrumentation-api` artifact is declared stable in this rele
   - `otel.instrumentation.reactor-netty.always-create-connect-span`
     → `otel.instrumentation.reactor-netty.connection-telemetry.enabled`
 - Runtime memory metric names were updated to reflect
-  [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics)
+  [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.13.0/specification/metrics/semantic_conventions/runtime-environment-metrics.md#jvm-metrics)
 - Micrometer library instrumentation has been deprecated as it has been moved to the core repo and
   is now published under `io.opentelemetry:opentelemetry-micrometer1-shim`
 - Library instrumentation entry points have been renamed from `*Tracing` to `*Telemetry`
