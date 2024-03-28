@@ -25,12 +25,18 @@ class SpringWebInstrumentationAutoConfigurationTest {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=true")
         .run(
-            context ->
+            context -> {
                 assertThat(
                         context.getBean(
                             "otelRestTemplateBeanPostProcessor",
                             RestTemplateBeanPostProcessor.class))
-                    .isNotNull());
+                    .isNotNull(); 
+                 assertThat(
+                        context.getBean(
+                            "otelRestClientBeanPostProcessor",
+                            RestClientBeanPostProcessor.class))
+                    .isNotNull();
+           });
   }
 
   @Test
@@ -38,17 +44,24 @@ class SpringWebInstrumentationAutoConfigurationTest {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=false")
         .run(
-            context ->
-                assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse());
+            context -> {
+                assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse();
+                assertThat(context.containsBean("otelRestClientBeanPostProcessor")).isFalse()
+        });
   }
 
   @Test
   void defaultConfiguration() {
     contextRunner.run(
-        context ->
+        context -> {
             assertThat(
                     context.getBean(
                         "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
-                .isNotNull());
+                .isNotNull();
+            assertThat(
+                    context.getBean(
+                        "otelRestClientBeanPostProcessor", RestClientBeanPostProcessor.class))
+                .isNotNull()
+        });
   }
 }

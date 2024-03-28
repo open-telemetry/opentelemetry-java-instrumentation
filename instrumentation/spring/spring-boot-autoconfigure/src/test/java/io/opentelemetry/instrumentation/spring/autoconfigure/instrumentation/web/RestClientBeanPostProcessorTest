@@ -1,0 +1,62 @@
+package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.OpenTelemetry;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.web.client.RestClient;
+
+class RestClienteBeanPostProcessorTest {
+  private static final DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+
+  static {
+    beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
+  }
+
+  @Test
+  @DisplayName("when processed bean is not of type RestClient should return object")
+  void returnsObject() {
+    BeanPostProcessor underTest =
+        new RestClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
+
+    assertThat(underTest.postProcessAfterInitialization(new Object(), "testObject"))
+        .isExactlyInstanceOf(Object.class);
+  }
+
+  @Test
+  @DisplayName("when processed bean is of type RestClient should return RestClient")
+  void returnsRestClient() {
+    BeanPostProcessor underTest =
+        new RestClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
+
+    assertThat(underTest.postProcessAfterInitialization(new RestClient(), "testRestClient"))
+        .isInstanceOf(RestClient.class);
+  }
+
+  @Test
+  @DisplayName("when processed bean is of type RestClient should add ONE RestClientInterceptor")
+  void addsRestClientInterceptor() {
+    BeanPostProcessor underTest =
+        new RestClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
+
+    RestClient restClient = new RestClient();
+
+    underTest.postProcessAfterInitialization(restClient, "testRestClient");
+    underTest.postProcessAfterInitialization(restClient, "testRestClient");
+    underTest.postProcessAfterInitialization(restClient, "testRestClient");
+
+    assertThat(
+            restClient.getInterceptors().stream()
+                .filter(RestClientBeanPostProcessorTest::isOtelInstrumentationInterceptor)
+                .count())
+        .isEqualTo(1);
+  }
+
+  private static boolean isOtelInstrumentationInterceptor(ClientHttpRequestInterceptor rti) {
+    return rti.getClass().getName().startsWith("io.opentelemetry.instrumentation");
+  }
+}
