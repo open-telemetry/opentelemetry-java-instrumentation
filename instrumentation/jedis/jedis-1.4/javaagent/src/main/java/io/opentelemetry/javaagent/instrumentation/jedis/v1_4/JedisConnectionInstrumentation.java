@@ -46,6 +46,13 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command")))
             .and(takesArgument(1, is(byte[][].class))),
         this.getClass().getName() + "$SendCommandWithArgsAdvice");
+    // For version 2.7.2
+    transformer.applyAdviceToMethod(isMethod()
+            .and(named("sendCommand"))
+            .and(takesArguments(2))
+            .and(takesArgument(0, named("redis.clients.jedis.ProtocolCommand")))
+            .and(takesArgument(1, is(byte[][].class))),
+        this.getClass().getName() + "$SendCommandWithProtocolCommandArgsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -118,4 +125,46 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
   }
+
+  @SuppressWarnings("unused")
+  public static class SendCommandWithProtocolCommandArgsAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.This Connection connection,
+        @Advice.Argument(0) Object command,
+        @Advice.Argument(1) byte[][] args,
+        @Advice.Local("otelJedisRequest") JedisRequest request,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      Context parentContext = currentContext();
+      Protocol.Command cmd = null;
+      // It must be a Protocol.Command in redis 2.7.2
+      if (command instanceof Protocol.Command) {
+        cmd = (Protocol.Command) command;
+      }
+      request = JedisRequest.create(connection, cmd, asList(args));
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
+      scope = context.makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopSpan(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelJedisRequest") JedisRequest request,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
+
+      scope.close();
+      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+    }
+  }
+
 }

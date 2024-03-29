@@ -25,6 +25,16 @@ dependencies {
   latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
 }
 
+testing {
+  suites {
+    dependencies {
+      val test_2_7_2 by registering(JvmTestSuite::class) {
+        implementation("redis.clients:jedis:2.7.2")
+      }
+    }
+  }
+}
+
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
