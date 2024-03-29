@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.reactornetty.v1_0.InstrumentationContexts;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 import reactor.netty.Connection;
