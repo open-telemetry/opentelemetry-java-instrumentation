@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -21,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
@@ -37,27 +39,23 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("sendCommand"))
             .and(takesArguments(1))
-            .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command"))),
+            .and(
+                takesArgument(
+                    0,
+                    namedOneOf(
+                        "redis.clients.jedis.Protocol$Command",
+                        "redis.clients.jedis.ProtocolCommand"))),
         this.getClass().getName() + "$SendCommandNoArgsAdvice");
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("sendCommand"))
             .and(takesArguments(2))
-            .and(takesArgument(0, named("redis.clients.jedis.Protocol$Command")))
-            .and(takesArgument(1, is(byte[][].class))),
-        this.getClass().getName() + "$SendCommandWithArgsAdvice");
-    // For version 2.7.2
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendCommand"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("redis.clients.jedis.ProtocolCommand"))),
-        this.getClass().getName() + "$SendCommandNoArgsAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendCommand"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("redis.clients.jedis.ProtocolCommand")))
+            .and(
+                takesArgument(
+                    0,
+                    namedOneOf(
+                        "redis.clients.jedis.Protocol$Command",
+                        "redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         this.getClass().getName() + "$SendCommandWithArgsAdvice");
   }
@@ -68,15 +66,12 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(0) Object command,
+        @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command,
         @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      // Must be a Protocol.Command
-      if (command instanceof Protocol.Command) {
-        request = JedisRequest.create(connection, (Protocol.Command) command);
-      }
+      request = JedisRequest.create(connection, command);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
@@ -106,16 +101,13 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(0) Object command,
+        @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command,
         @Advice.Argument(1) byte[][] args,
         @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      // Must be a Protocol.Command
-      if (command instanceof Protocol.Command) {
-        request = JedisRequest.create(connection, (Protocol.Command) command, asList(args));
-      }
+      request = JedisRequest.create(connection, command, asList(args));
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
