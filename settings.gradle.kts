@@ -1,7 +1,7 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "2.6"
-    id("com.google.cloud.tools.jib") version "3.4.1"
+    id("com.google.cloud.tools.jib") version "3.4.2"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
     id("org.jetbrains.kotlin.jvm") version "1.9.23"
