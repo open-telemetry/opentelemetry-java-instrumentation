@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.reactornetty.v1_0;
 
-import javax.annotation.Nullable;
-
 import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientRequest;
 
 public enum HttpClientRequestHeadersSetter implements TextMapSetter<HttpClientRequest> {

@@ -18,7 +18,8 @@ import reactor.netty.http.client.HttpClientResponse;
 public final class ReactorNettyHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
 
-  public static final ReactorNettyHttpClientAttributesGetter INSTANCE = new ReactorNettyHttpClientAttributesGetter();
+  public static final ReactorNettyHttpClientAttributesGetter INSTANCE =
+      new ReactorNettyHttpClientAttributesGetter();
 
   @Override
   public String getUrlFull(HttpClientRequest request) {

@@ -40,11 +40,12 @@ public final class ReactorNettyTelemetryBuilder {
 
   private Consumer<HttpClientAttributesExtractorBuilder<HttpClientRequest, HttpClientResponse>>
       clientExtractorConfigurer = builder -> {};
-  private Consumer<HttpSpanNameExtractorBuilder<HttpClientRequest>> clientSpanNameExtractorConfigurer =
-      builder -> {};
-  
+  private Consumer<HttpSpanNameExtractorBuilder<HttpClientRequest>>
+      clientSpanNameExtractorConfigurer = builder -> {};
+
   private final HttpClientAttributesExtractorBuilder<HttpClientRequest, HttpClientResponse>
-      httpClientAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(ReactorNettyHttpClientAttributesGetter.INSTANCE);
+      httpClientAttributesExtractorBuilder =
+          HttpClientAttributesExtractor.builder(ReactorNettyHttpClientAttributesGetter.INSTANCE);
 
   public ReactorNettyTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -67,8 +68,7 @@ public final class ReactorNettyTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public ReactorNettyTelemetryBuilder setCapturedClientRequestHeaders(
-      List<String> requestHeaders) {
+  public ReactorNettyTelemetryBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
     clientExtractorConfigurer =
         clientExtractorConfigurer.andThen(
             builder -> builder.setCapturedRequestHeaders(requestHeaders));
@@ -88,7 +88,6 @@ public final class ReactorNettyTelemetryBuilder {
             builder -> builder.setCapturedResponseHeaders(responseHeaders));
     return this;
   }
-
 
   /**
    * Configures the instrumentation to recognize an alternative set of HTTP request methods.
@@ -130,7 +129,8 @@ public final class ReactorNettyTelemetryBuilder {
    * ReactorNettyTelemetryBuilder}.
    */
   public ReactorNettyTelemetry build() {
-    ReactorNettyHttpClientAttributesGetter httpAttributesGetter = ReactorNettyHttpClientAttributesGetter.INSTANCE;
+    ReactorNettyHttpClientAttributesGetter httpAttributesGetter =
+        ReactorNettyHttpClientAttributesGetter.INSTANCE;
 
     HttpClientAttributesExtractorBuilder<HttpClientRequest, HttpClientResponse> extractorBuilder =
         HttpClientAttributesExtractor.builder(httpAttributesGetter);
@@ -152,6 +152,8 @@ public final class ReactorNettyTelemetryBuilder {
     }
 
     // headers are injected elsewhere; ClientRequest is immutable
-    return new ReactorNettyTelemetry(new InstrumentationContexts(clientBuilder.buildInstrumenter(alwaysClient())), openTelemetry.getPropagators());
+    return new ReactorNettyTelemetry(
+        new InstrumentationContexts(clientBuilder.buildInstrumenter(alwaysClient())),
+        openTelemetry.getPropagators());
   }
 }

@@ -24,8 +24,8 @@ public final class InstrumentationContexts {
 
   private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Context>
       parentContextUpdater =
-      AtomicReferenceFieldUpdater.newUpdater(
-          InstrumentationContexts.class, Context.class, "parentContext");
+          AtomicReferenceFieldUpdater.newUpdater(
+              InstrumentationContexts.class, Context.class, "parentContext");
 
   private volatile Context parentContext;
   private volatile Timer timer;

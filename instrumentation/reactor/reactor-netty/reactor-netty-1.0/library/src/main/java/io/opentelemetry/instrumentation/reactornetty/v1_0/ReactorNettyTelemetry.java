@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.context.Context;
@@ -18,12 +23,19 @@ public class ReactorNettyTelemetry {
 
   public HttpClient tracingHttpClient(HttpClient httpClient) {
     AtomicReference<Context> clientContext = new AtomicReference<>();
-    return httpClient.doOnRequest((request, connection) -> {
-      // create span
-      contexts.startClientSpan(request);
-      propagators.getTextMapPropagator().inject(clientContext.get(), request, HttpClientRequestHeadersSetter.INSTANCE);
-    }).doOnResponse((response, connection) -> {
-      contexts.endClientSpan(response, null);
-    }).doOnResponseError(contexts::endClientSpan);
+    return httpClient
+        .doOnRequest(
+            (request, connection) -> {
+              // create span
+              contexts.startClientSpan(request);
+              propagators
+                  .getTextMapPropagator()
+                  .inject(clientContext.get(), request, HttpClientRequestHeadersSetter.INSTANCE);
+            })
+        .doOnResponse(
+            (response, connection) -> {
+              contexts.endClientSpan(response, null);
+            })
+        .doOnResponseError(contexts::endClientSpan);
   }
 }
