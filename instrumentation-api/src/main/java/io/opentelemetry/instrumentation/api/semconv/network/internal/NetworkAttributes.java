@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-
 import io.opentelemetry.api.common.AttributeKey;
 
 /**
@@ -17,13 +14,16 @@ import io.opentelemetry.api.common.AttributeKey;
 public final class NetworkAttributes {
 
   public static final AttributeKey<String> NETWORK_LOCAL_ADDRESS =
-      stringKey("network.local.address");
+      io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
 
-  public static final AttributeKey<Long> NETWORK_LOCAL_PORT = longKey("network.local.port");
+  public static final AttributeKey<Long> NETWORK_LOCAL_PORT =
+      io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 
-  public static final AttributeKey<String> NETWORK_PEER_ADDRESS = stringKey("network.peer.address");
+  public static final AttributeKey<String> NETWORK_PEER_ADDRESS =
+      io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 
-  public static final AttributeKey<Long> NETWORK_PEER_PORT = longKey("network.peer.port");
+  public static final AttributeKey<Long> NETWORK_PEER_PORT =
+      io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 
   private NetworkAttributes() {}
 }
