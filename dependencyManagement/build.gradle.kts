@@ -91,7 +91,7 @@ val DEPENDENCIES = listOf(
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.15.1",
+  "commons-io:commons-io:2.16.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.1",
   "commons-validator:commons-validator:1.8.0",
