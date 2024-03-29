@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.reactornetty.v1_0;
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -15,11 +15,8 @@ import reactor.netty.Connection;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
-public final class ReactorNettyHttpClientAttributesGetter
+final class ReactorNettyHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpClientRequest, HttpClientResponse> {
-
-  public static final ReactorNettyHttpClientAttributesGetter INSTANCE =
-      new ReactorNettyHttpClientAttributesGetter();
 
   @Override
   public String getUrlFull(HttpClientRequest request) {

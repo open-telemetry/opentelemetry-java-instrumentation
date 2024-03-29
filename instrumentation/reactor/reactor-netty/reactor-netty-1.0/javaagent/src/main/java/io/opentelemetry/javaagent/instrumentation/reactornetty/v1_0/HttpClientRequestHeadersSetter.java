@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.reactornetty.v1_0;
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientRequest;
 
-public enum HttpClientRequestHeadersSetter implements TextMapSetter<HttpClientRequest> {
+enum HttpClientRequestHeadersSetter implements TextMapSetter<HttpClientRequest> {
   INSTANCE;
 
   @Override

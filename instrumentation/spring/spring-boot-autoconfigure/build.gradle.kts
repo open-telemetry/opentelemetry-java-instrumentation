@@ -21,7 +21,6 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library"))
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
-  implementation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:library"))
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
   implementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library"))

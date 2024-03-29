@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.reactornetty.v1_0;
+package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import javax.annotation.Nullable;
 

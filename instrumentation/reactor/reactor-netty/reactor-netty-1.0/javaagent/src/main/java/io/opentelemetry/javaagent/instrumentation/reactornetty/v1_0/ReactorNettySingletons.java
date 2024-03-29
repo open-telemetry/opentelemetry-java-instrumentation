@@ -18,8 +18,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
-import io.opentelemetry.instrumentation.reactornetty.v1_0.HttpClientRequestHeadersSetter;
-import io.opentelemetry.instrumentation.reactornetty.v1_0.ReactorNettyHttpClientAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import reactor.netty.http.client.HttpClientRequest;

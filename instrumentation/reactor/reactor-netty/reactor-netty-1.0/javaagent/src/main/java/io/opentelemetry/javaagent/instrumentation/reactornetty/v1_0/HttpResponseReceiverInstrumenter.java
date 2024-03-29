@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorContextKeys.CONTEXTS_HOLDER_KEY;
-import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
@@ -36,7 +35,7 @@ public final class HttpResponseReceiverInstrumenter {
       HttpClient client = (HttpClient) receiver;
       HttpClientConfig config = client.configuration();
 
-      InstrumentationContexts instrumentationContexts = new InstrumentationContexts(instrumenter());
+      InstrumentationContexts instrumentationContexts = new InstrumentationContexts();
 
       HttpClient modified =
           client
