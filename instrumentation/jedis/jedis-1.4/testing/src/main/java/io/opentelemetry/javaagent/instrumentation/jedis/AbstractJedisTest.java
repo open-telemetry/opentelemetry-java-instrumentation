@@ -22,25 +22,25 @@ import redis.clients.jedis.Jedis;
 
 public abstract class AbstractJedisTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static GenericContainer<?> redisServer =
+  private static final GenericContainer<?> REDIS_SERVER =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
-  static int port;
+  private static int port;
 
-  static Jedis jedis;
+  private static Jedis jedis;
 
   @BeforeAll
   static void setup() {
-    redisServer.start();
-    port = redisServer.getMappedPort(6379);
+    REDIS_SERVER.start();
+    port = REDIS_SERVER.getMappedPort(6379);
     jedis = new Jedis("localhost", port);
   }
 
   @AfterAll
   static void cleanup() {
-    redisServer.stop();
+    REDIS_SERVER.stop();
   }
 
   @BeforeEach

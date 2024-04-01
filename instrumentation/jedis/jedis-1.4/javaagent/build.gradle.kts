@@ -32,13 +32,6 @@ testing {
       dependencies {
         implementation("redis.clients:jedis:2.7.2")
         implementation(project(":instrumentation:jedis:jedis-1.4:testing"))
-        targets {
-          all {
-            testTask.configure {
-              usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-            }
-          }
-        }
       }
     }
   }
