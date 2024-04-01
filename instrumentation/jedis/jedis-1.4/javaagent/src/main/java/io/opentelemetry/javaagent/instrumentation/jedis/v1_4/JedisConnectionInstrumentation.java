@@ -52,14 +52,14 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(named("sendCommand"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("redis.clients.jedis.ProtocolCommand"))),
-        this.getClass().getName() + "$SendCommandWithProtocolNoArgsAdvice");
+        this.getClass().getName() + "$SendCommandNoArgsAdvice");
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("sendCommand"))
             .and(takesArguments(2))
             .and(takesArgument(0, named("redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
-        this.getClass().getName() + "$SendCommandWithProtocolCommandArgsAdvice");
+        this.getClass().getName() + "$SendCommandWithArgsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -68,12 +68,15 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(0) Protocol.Command command,
+        @Advice.Argument(0) Object command,
         @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      request = JedisRequest.create(connection, command);
+      // Must be a Protocol.Command
+      if (command instanceof Protocol.Command) {
+        request = JedisRequest.create(connection, (Protocol.Command) command);
+      }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
@@ -103,94 +106,16 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(0) Protocol.Command command,
-        @Advice.Argument(1) byte[][] args,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      request = JedisRequest.create(connection, command, asList(args));
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
-      scope.close();
-      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SendCommandWithProtocolNoArgsAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Connection connection,
-        @Advice.Argument(0) Object command,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      Protocol.Command cmd = null;
-      // It must be a Protocol.Command in redis 2.7.2
-      if (command instanceof Protocol.Command) {
-        cmd = (Protocol.Command) command;
-      }
-      request = JedisRequest.create(connection, cmd);
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelJedisRequest") JedisRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-
-      scope.close();
-      JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SendCommandWithProtocolCommandArgsAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Connection connection,
         @Advice.Argument(0) Object command,
         @Advice.Argument(1) byte[][] args,
         @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      Protocol.Command cmd = null;
-      // It must be a Protocol.Command in redis 2.7.2
+      // Must be a Protocol.Command
       if (command instanceof Protocol.Command) {
-        cmd = (Protocol.Command) command;
+        request = JedisRequest.create(connection, (Protocol.Command) command, asList(args));
       }
-      request = JedisRequest.create(connection, cmd, asList(args));
       if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }

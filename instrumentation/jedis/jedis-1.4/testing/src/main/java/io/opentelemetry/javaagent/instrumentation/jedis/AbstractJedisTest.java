@@ -22,7 +22,7 @@ import redis.clients.jedis.Jedis;
 
 public abstract class AbstractJedisTest {
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final GenericContainer<?> REDIS_SERVER =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);

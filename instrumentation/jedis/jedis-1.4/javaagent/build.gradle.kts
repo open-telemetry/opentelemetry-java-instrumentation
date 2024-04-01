@@ -18,6 +18,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+
   testImplementation(project(":instrumentation:jedis:jedis-1.4:testing"))
 
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
@@ -28,7 +29,7 @@ dependencies {
 
 testing {
   suites {
-    val test_2_7_2 by registering(JvmTestSuite::class) {
+    val version272 by registering(JvmTestSuite::class) {
       dependencies {
         implementation("redis.clients:jedis:2.7.2")
         implementation(project(":instrumentation:jedis:jedis-1.4:testing"))
