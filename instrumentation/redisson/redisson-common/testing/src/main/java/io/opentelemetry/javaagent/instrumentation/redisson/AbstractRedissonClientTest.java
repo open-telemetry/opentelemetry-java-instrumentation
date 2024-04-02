@@ -17,8 +17,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,9 +115,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET"))),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -127,9 +127,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
   }
 
   @Test
@@ -153,9 +153,10 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                SemanticAttributes.DB_STATEMENT, "SET batch1 ?;SET batch2 ?"))));
+                                DbIncubatingAttributes.DB_STATEMENT,
+                                "SET batch1 ?;SET batch2 ?"))));
   }
 
   private static void invokeExecute(RBatch batch)
@@ -194,8 +195,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
@@ -204,9 +205,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET batch2 ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET"))
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET batch2 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("EXEC")
@@ -215,9 +216,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "EXEC"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "EXEC"))
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "EXEC"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EXEC"))
                         .hasParent(trace.getSpan(0))));
   }
 
@@ -237,9 +238,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "RPUSH list1 ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "RPUSH"))
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "RPUSH list1 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RPUSH"))
                         .hasNoParent()));
   }
 
@@ -262,11 +263,11 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 String.format("EVAL %s 1 map1 ? ?", script)),
-                            equalTo(SemanticAttributes.DB_OPERATION, "EVAL"))),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -276,9 +277,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "HGET map1 key1"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "HGET"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "HGET map1 key1"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "HGET"))));
   }
 
   @Test
@@ -297,9 +298,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SADD set1 ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SADD"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"))));
   }
 
   @Test
@@ -325,9 +326,10 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "ZADD sort_set1 ? ? ? ? ? ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "ZADD"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(
+                                DbIncubatingAttributes.DB_STATEMENT, "ZADD sort_set1 ? ? ? ? ? ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "ZADD"))));
   }
 
   private static void invokeAddAll(RScoredSortedSet<String> object, Map<String, Double> arg)
@@ -351,9 +353,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "INCR AtomicLong"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "INCR"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "INCR AtomicLong"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INCR"))));
   }
 
   @Test
@@ -377,10 +379,10 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "EVAL"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
                             satisfies(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     traceAsserts.add(
         trace ->
@@ -392,10 +394,10 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "EVAL"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
                             satisfies(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     if (lockHas3Traces()) {
       traceAsserts.add(
@@ -408,10 +410,10 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                              equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                              equalTo(SemanticAttributes.DB_OPERATION, "DEL"),
+                              equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION, "DEL"),
                               satisfies(
-                                  SemanticAttributes.DB_STATEMENT,
+                                  DbIncubatingAttributes.DB_STATEMENT,
                                   stringAssert -> stringAssert.startsWith("DEL")))));
     }
 

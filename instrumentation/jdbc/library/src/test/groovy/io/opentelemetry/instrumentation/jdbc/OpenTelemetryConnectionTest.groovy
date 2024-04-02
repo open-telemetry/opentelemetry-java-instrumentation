@@ -17,6 +17,13 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 
@@ -49,15 +56,15 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" dbInfo.system
-            "$SemanticAttributes.DB_NAME" dbInfo.name
-            "$SemanticAttributes.DB_USER" dbInfo.user
-            "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
+            "$DbIncubatingAttributes.DB_SYSTEM" dbInfo.system
+            "$DbIncubatingAttributes.DB_NAME" dbInfo.name
+            "$DbIncubatingAttributes.DB_USER" dbInfo.user
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
             "$ServerAttributes.SERVER_ADDRESS" dbInfo.host
             "$ServerAttributes.SERVER_PORT" dbInfo.port
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "users"
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "users"
           }
         }
       }
@@ -105,15 +112,15 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" dbInfo.system
-            "$SemanticAttributes.DB_NAME" dbInfo.name
-            "$SemanticAttributes.DB_USER" dbInfo.user
-            "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
+            "$DbIncubatingAttributes.DB_SYSTEM" dbInfo.system
+            "$DbIncubatingAttributes.DB_NAME" dbInfo.name
+            "$DbIncubatingAttributes.DB_USER" dbInfo.user
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
             "$ServerAttributes.SERVER_ADDRESS" dbInfo.host
             "$ServerAttributes.SERVER_PORT" dbInfo.port
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "users"
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "users"
           }
         }
       }
@@ -165,15 +172,15 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" dbInfo.system
-            "$SemanticAttributes.DB_NAME" dbInfo.name
-            "$SemanticAttributes.DB_USER" dbInfo.user
-            "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
+            "$DbIncubatingAttributes.DB_SYSTEM" dbInfo.system
+            "$DbIncubatingAttributes.DB_NAME" dbInfo.name
+            "$DbIncubatingAttributes.DB_USER" dbInfo.user
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
             "$ServerAttributes.SERVER_ADDRESS" dbInfo.host
             "$ServerAttributes.SERVER_PORT" dbInfo.port
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "users"
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "users"
           }
         }
       }

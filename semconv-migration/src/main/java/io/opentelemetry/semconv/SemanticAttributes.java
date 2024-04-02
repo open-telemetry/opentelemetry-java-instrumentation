@@ -21,20 +21,6 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final AttributeKey<String> DB_CONNECTION_STRING =
-      DbIncubatingAttributes.DB_CONNECTION_STRING;
-  public static final AttributeKey<String> DB_NAME = DbIncubatingAttributes.DB_NAME;
-  public static final AttributeKey<String> DB_OPERATION = DbIncubatingAttributes.DB_OPERATION;
-  public static final AttributeKey<Long> DB_REDIS_DATABASE_INDEX =
-      DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
-  public static final AttributeKey<String> DB_SQL_TABLE = DbIncubatingAttributes.DB_SQL_TABLE;
-  public static final AttributeKey<String> DB_STATEMENT = DbIncubatingAttributes.DB_STATEMENT;
-  public static final AttributeKey<String> DB_SYSTEM = DbIncubatingAttributes.DB_SYSTEM;
-  public static final AttributeKey<String> DB_USER = DbIncubatingAttributes.DB_USER;
-
-  public static final AttributeKey<String> DB_MONGODB_COLLECTION =
-      DbIncubatingAttributes.DB_MONGODB_COLLECTION;
-
   public static final class DbSystemValues {
     public static final String OTHER_SQL = DbIncubatingAttributes.DbSystemValues.OTHER_SQL;
     public static final String MSSQL = DbIncubatingAttributes.DbSystemValues.MSSQL;

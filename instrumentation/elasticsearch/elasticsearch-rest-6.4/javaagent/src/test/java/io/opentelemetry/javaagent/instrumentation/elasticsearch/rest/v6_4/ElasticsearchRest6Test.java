@@ -11,9 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
@@ -87,7 +87,7 @@ class ElasticsearchRest6Test {
                     .hasKind(SpanKind.CLIENT)
                     .hasNoParent()
                     .hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
+                        equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
                         equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
@@ -162,7 +162,7 @@ class ElasticsearchRest6Test {
                     .hasKind(SpanKind.CLIENT)
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
+                        equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
                         equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),

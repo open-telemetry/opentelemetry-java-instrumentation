@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v2_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 

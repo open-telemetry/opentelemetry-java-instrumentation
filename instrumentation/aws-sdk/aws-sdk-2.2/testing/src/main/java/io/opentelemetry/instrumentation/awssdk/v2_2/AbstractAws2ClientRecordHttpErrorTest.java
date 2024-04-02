@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -175,8 +176,8 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                               .containsEntry("aws.agent", "java-aws-sdk")
                               .containsEntry("aws.requestId", requestId)
                               .containsEntry("aws.table.name", "sometable")
-                              .containsEntry(SemanticAttributes.DB_SYSTEM, "dynamodb")
-                              .containsEntry(SemanticAttributes.DB_OPERATION, operation);
+                              .containsEntry(DbIncubatingAttributes.DB_SYSTEM, "dynamodb")
+                              .containsEntry(DbIncubatingAttributes.DB_OPERATION, operation);
                         });
                     if (isRecordIndividualHttpErrorEnabled()) {
                       span.hasEventsSatisfyingExactly(

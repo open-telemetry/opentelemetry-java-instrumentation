@@ -14,11 +14,11 @@ import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_CASSANDRA_IDEMP
 import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
 import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
 import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;

@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,8 +69,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                equalTo(SemanticAttributes.DB_STATEMENT, "AUTH ?"))
+                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

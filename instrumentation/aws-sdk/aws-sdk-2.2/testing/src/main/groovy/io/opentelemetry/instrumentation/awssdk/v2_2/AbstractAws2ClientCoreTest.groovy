@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -149,8 +151,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
-            "$SemanticAttributes.DB_SYSTEM" "dynamodb"
-            "$SemanticAttributes.DB_OPERATION" "CreateTable"
+            "$DbIncubatingAttributes.DB_SYSTEM" "dynamodb"
+            "$DbIncubatingAttributes.DB_OPERATION" "CreateTable"
             "aws.dynamodb.global_secondary_indexes" "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"
             "aws.dynamodb.provisioned_throughput.read_capacity_units" "1"
             "aws.dynamodb.provisioned_throughput.write_capacity_units" "1"
@@ -182,8 +184,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
-            "$SemanticAttributes.DB_SYSTEM" "dynamodb"
-            "$SemanticAttributes.DB_OPERATION" "Query"
+            "$DbIncubatingAttributes.DB_SYSTEM" "dynamodb"
+            "$DbIncubatingAttributes.DB_OPERATION" "Query"
             "aws.dynamodb.limit" "10"
             "aws.dynamodb.select" "ALL_ATTRIBUTES"
           }
@@ -214,8 +216,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
-            "$SemanticAttributes.DB_SYSTEM" "dynamodb"
-            "$SemanticAttributes.DB_OPERATION" "${operation}"
+            "$DbIncubatingAttributes.DB_SYSTEM" "dynamodb"
+            "$DbIncubatingAttributes.DB_OPERATION" "${operation}"
           }
         }
       }

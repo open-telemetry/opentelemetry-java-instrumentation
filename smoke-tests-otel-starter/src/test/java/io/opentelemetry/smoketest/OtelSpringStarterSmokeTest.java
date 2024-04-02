@@ -32,6 +32,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
@@ -188,7 +189,7 @@ class OtelSpringStarterSmokeTest {
                         spanDataAssert
                             .hasKind(SpanKind.CLIENT)
                             .hasAttribute(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 "create table test_table (id bigint not null, primary key (id))")),
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(

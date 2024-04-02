@@ -5,6 +5,13 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
 import org.hibernate.Version
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
@@ -60,13 +67,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-            "$SemanticAttributes.DB_NAME" "test"
-            "$SemanticAttributes.DB_USER" "sa"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName(.*)from Customer(.*)/
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+            "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName(.*)from Customer(.*)/
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
           }
         }
         span(3) {
@@ -116,12 +123,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf span(1)
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" "test"
-              "$SemanticAttributes.DB_USER" "sa"
-              "$SemanticAttributes.DB_STATEMENT" "call next value for Customer_SEQ"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_OPERATION" "CALL"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_STATEMENT" "call next value for Customer_SEQ"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_OPERATION" "CALL"
             }
           }
           span(3) {
@@ -137,13 +144,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf span(3)
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" "test"
-              "$SemanticAttributes.DB_USER" "sa"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
-              "$SemanticAttributes.DB_OPERATION" "INSERT"
-              "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
+              "$DbIncubatingAttributes.DB_OPERATION" "INSERT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
             }
           }
         } else {
@@ -152,13 +159,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf span(1)
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" "test"
-              "$SemanticAttributes.DB_USER" "sa"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
-              "$SemanticAttributes.DB_OPERATION" "INSERT"
-              "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
+              "$DbIncubatingAttributes.DB_OPERATION" "INSERT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
             }
           }
           span(3) {
@@ -207,13 +214,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "SELECT test.Customer"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-            "$SemanticAttributes.DB_NAME" "test"
-            "$SemanticAttributes.DB_USER" "sa"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+            "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
           }
         }
         span(3) {
@@ -228,13 +235,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "UPDATE test.Customer"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-            "$SemanticAttributes.DB_NAME" "test"
-            "$SemanticAttributes.DB_USER" "sa"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" ~/update Customer set firstName=\?,(.*)lastName=\? where id=\?/
-            "$SemanticAttributes.DB_OPERATION" "UPDATE"
-            "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+            "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$DbIncubatingAttributes.DB_STATEMENT" ~/update Customer set firstName=\?,(.*)lastName=\? where id=\?/
+            "$DbIncubatingAttributes.DB_OPERATION" "UPDATE"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
           }
         }
       }
@@ -271,13 +278,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-            "$SemanticAttributes.DB_NAME" "test"
-            "$SemanticAttributes.DB_USER" "sa"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)(where ([^.]+)\.lastName( ?)=( ?)\?|)/
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+            "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)(where ([^.]+)\.lastName( ?)=( ?)\?|)/
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
           }
         }
       }
@@ -315,13 +322,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf span(1)
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" "test"
-              "$SemanticAttributes.DB_USER" "sa"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
-              "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
+              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
             }
           }
         }
@@ -340,13 +347,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf span(1)
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" "test"
-              "$SemanticAttributes.DB_USER" "sa"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
-              "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
+              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
             }
           }
         }
@@ -370,13 +377,13 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           name "DELETE test.Customer"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-            "$SemanticAttributes.DB_NAME" "test"
-            "$SemanticAttributes.DB_USER" "sa"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" "delete from Customer where id=?"
-            "$SemanticAttributes.DB_OPERATION" "DELETE"
-            "$SemanticAttributes.DB_SQL_TABLE" "Customer"
+            "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$DbIncubatingAttributes.DB_STATEMENT" "delete from Customer where id=?"
+            "$DbIncubatingAttributes.DB_OPERATION" "DELETE"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
           }
         }
       }

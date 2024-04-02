@@ -11,6 +11,13 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.DbIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ClientAttributes
@@ -101,13 +108,13 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(2)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-            "$SemanticAttributes.DB_NAME" "test"
-            "$SemanticAttributes.DB_USER" "SA"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" "SELECT id, name, price, weight FROM products"
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "products"
+            "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_USER" "SA"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$DbIncubatingAttributes.DB_STATEMENT" "SELECT id, name, price, weight FROM products"
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "products"
           }
         }
       }
@@ -200,13 +207,13 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf(span(3))
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" "test"
-              "$SemanticAttributes.DB_USER" "SA"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" "SELECT id AS request$requestId, name, price, weight FROM products"
-              "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "products"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_USER" "SA"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_STATEMENT" "SELECT id AS request$requestId, name, price, weight FROM products"
+              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "products"
             }
           }
         }

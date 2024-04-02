@@ -9,6 +9,7 @@ import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
@@ -16,11 +17,11 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
-    attributes.put(SemanticAttributes.DB_SYSTEM, SemanticAttributes.DbSystemValues.REDIS);
+    attributes.put(DbIncubatingAttributes.DB_SYSTEM, SemanticAttributes.DbSystemValues.REDIS);
 
     int database = redisUri.getDatabase();
     if (database != 0) {
-      attributes.put(SemanticAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
+      attributes.put(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
     }
   }
 

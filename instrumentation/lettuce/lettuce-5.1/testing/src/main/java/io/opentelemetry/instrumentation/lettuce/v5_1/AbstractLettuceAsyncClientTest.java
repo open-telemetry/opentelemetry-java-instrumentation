@@ -21,8 +21,8 @@ import io.lettuce.core.codec.StringCodec;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -148,8 +148,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
+                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -194,8 +194,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                       equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(ServerAttributes.SERVER_PORT, port),
-                                      equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(SemanticAttributes.DB_STATEMENT, "GET TESTKEY"))
+                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET TESTKEY"))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -272,9 +272,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                       equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(ServerAttributes.SERVER_PORT, port),
-                                      equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                       equalTo(
-                                          SemanticAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"))
+                                          DbIncubatingAttributes.DB_STATEMENT,
+                                          "GET NON_EXISTENT_KEY"))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -338,8 +339,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                       equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(ServerAttributes.SERVER_PORT, port),
-                                      equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"))
+                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -397,9 +398,9 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
+                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
-                                    SemanticAttributes.DB_STATEMENT,
+                                    DbIncubatingAttributes.DB_STATEMENT,
                                     "HMSET TESTHM firstname ? lastname ? age ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -415,8 +416,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                equalTo(SemanticAttributes.DB_STATEMENT, "HGETALL TESTHM"))
+                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "HGETALL TESTHM"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

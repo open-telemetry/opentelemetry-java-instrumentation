@@ -7,9 +7,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
@@ -93,9 +93,9 @@ public class OpenSearchRestTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "opensearch"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "opensearch"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -158,9 +158,9 @@ public class OpenSearchRestTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "opensearch"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET _cluster/health")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "opensearch"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)

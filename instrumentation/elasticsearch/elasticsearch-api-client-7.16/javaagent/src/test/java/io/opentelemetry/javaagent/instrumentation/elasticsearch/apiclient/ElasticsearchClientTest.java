@@ -18,9 +18,9 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
@@ -89,8 +89,8 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "info"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "info"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
@@ -125,8 +125,8 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "index"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "index"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "PUT"),
@@ -186,8 +186,8 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "info"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "info"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),

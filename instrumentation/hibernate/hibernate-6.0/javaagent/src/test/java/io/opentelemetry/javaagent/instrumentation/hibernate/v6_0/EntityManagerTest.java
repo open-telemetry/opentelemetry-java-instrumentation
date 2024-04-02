@@ -13,7 +13,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
@@ -137,15 +137,15 @@ public class EntityManagerTest extends AbstractHibernateTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-                            equalTo(SemanticAttributes.DB_NAME, "db1"),
-                            equalTo(SemanticAttributes.DB_USER, "sa"),
-                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
                 span ->
                     assertTransactionCommitSpan(
                         span,
@@ -291,13 +291,13 @@ public class EntityManagerTest extends AbstractHibernateTest {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-            equalTo(SemanticAttributes.DB_NAME, "db1"),
-            equalTo(SemanticAttributes.DB_USER, "sa"),
-            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-            satisfies(SemanticAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
-            satisfies(SemanticAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
-            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"));
+            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+            satisfies(DbIncubatingAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
+            satisfies(DbIncubatingAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
+            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"));
   }
 
   private static SpanDataAssert assertClientSpan(
@@ -306,13 +306,13 @@ public class EntityManagerTest extends AbstractHibernateTest {
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-            equalTo(SemanticAttributes.DB_NAME, "db1"),
-            equalTo(SemanticAttributes.DB_USER, "sa"),
-            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-            satisfies(SemanticAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
-            satisfies(SemanticAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
-            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"));
+            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+            satisfies(DbIncubatingAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
+            satisfies(DbIncubatingAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
+            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"));
   }
 
   private static SpanDataAssert assertSessionSpan(
