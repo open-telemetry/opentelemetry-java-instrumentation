@@ -32,6 +32,9 @@ import com.amazonaws.services.sns.model.PublishRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes
@@ -117,9 +120,9 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" { it.contains(service) }
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
@@ -212,9 +215,9 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$ServerAttributes.SERVER_PORT" 61
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" { it.contains(service) }
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "http://127.0.0.1:${UNUSABLE_PORT}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
@@ -268,9 +271,9 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
-            "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "Amazon S3"
+            "$RpcIncubatingAttributes.RPC_METHOD" "GetObject"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"

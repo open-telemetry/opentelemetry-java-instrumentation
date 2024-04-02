@@ -25,6 +25,9 @@ import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes
@@ -119,9 +122,9 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" { it.contains(service) }
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
@@ -179,9 +182,9 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$ServerAttributes.SERVER_PORT" 61
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" { it.contains(service) }
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
@@ -226,9 +229,9 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_FULL" "https://s3.amazonaws.com"
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$ServerAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
-            "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "Amazon S3"
+            "$RpcIncubatingAttributes.RPC_METHOD" "GetObject"
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
@@ -270,9 +273,9 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
-            "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "Amazon S3"
+            "$RpcIncubatingAttributes.RPC_METHOD" "GetObject"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"

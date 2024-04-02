@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -82,17 +83,17 @@ class RmiTest {
                                 .hasKind(SpanKind.CLIENT)
                                 .hasParentSpanId(trace.get(0).getSpanId())
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "hello")),
+                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "rmi.app.Greeter"),
+                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "hello")),
                         span ->
                             assertThat(span)
                                 .hasName("rmi.app.Server/hello")
                                 .hasKind(SpanKind.SERVER)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Server"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "hello"))));
+                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "rmi.app.Server"),
+                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "hello"))));
   }
 
   @Test
@@ -158,9 +159,9 @@ class RmiTest {
                                                     SemanticAttributes.EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "exceptional")),
+                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "rmi.app.Greeter"),
+                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "exceptional")),
                         span ->
                             assertThat(span)
                                 .hasName("rmi.app.Server/exceptional")
@@ -180,8 +181,8 @@ class RmiTest {
                                                     SemanticAttributes.EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Server"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "exceptional"))));
+                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "rmi.app.Server"),
+                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "exceptional"))));
   }
 }

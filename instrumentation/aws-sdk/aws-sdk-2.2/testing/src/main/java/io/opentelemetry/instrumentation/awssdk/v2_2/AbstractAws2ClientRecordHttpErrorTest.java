@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -170,9 +170,9 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                               .containsEntry(ServerAttributes.SERVER_PORT, server.httpPort())
                               .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method)
                               .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-                              .containsEntry(SemanticAttributes.RPC_SYSTEM, "aws-api")
-                              .containsEntry(SemanticAttributes.RPC_SERVICE, service)
-                              .containsEntry(SemanticAttributes.RPC_METHOD, operation)
+                              .containsEntry(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api")
+                              .containsEntry(RpcIncubatingAttributes.RPC_SERVICE, service)
+                              .containsEntry(RpcIncubatingAttributes.RPC_METHOD, operation)
                               .containsEntry("aws.agent", "java-aws-sdk")
                               .containsEntry("aws.requestId", requestId)
                               .containsEntry("aws.table.name", "sometable")

@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;

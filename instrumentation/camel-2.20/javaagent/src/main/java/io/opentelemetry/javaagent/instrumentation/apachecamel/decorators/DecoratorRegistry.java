@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,13 +36,14 @@ public class DecoratorRegistry {
     result.put("https4", new Https4SpanDecorator());
     result.put("http", new HttpSpanDecorator());
     result.put("ironmq", new MessagingSpanDecorator("ironmq"));
-    result.put("jdbc", new DbSpanDecorator("jdbc", DbIncubatingAttributes.DbSystemValues.OTHER_SQL));
+    result.put(
+        "jdbc", new DbSpanDecorator("jdbc", DbIncubatingAttributes.DbSystemValues.OTHER_SQL));
     result.put("jetty", new HttpSpanDecorator());
     result.put("jms", new MessagingSpanDecorator("jms"));
     result.put("kafka", new KafkaSpanDecorator());
     result.put("log", new LogSpanDecorator());
-    result.put("mongodb", new DbSpanDecorator("mongodb",
-        DbIncubatingAttributes.DbSystemValues.MONGODB));
+    result.put(
+        "mongodb", new DbSpanDecorator("mongodb", DbIncubatingAttributes.DbSystemValues.MONGODB));
     result.put("mqtt", new MessagingSpanDecorator("mqtt"));
     result.put("netty-http4", new HttpSpanDecorator());
     result.put("netty-http", new HttpSpanDecorator());

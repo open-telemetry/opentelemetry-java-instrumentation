@@ -18,8 +18,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -35,9 +35,9 @@ class RpcClientMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.RPC_SYSTEM, "grpc")
-            .put(SemanticAttributes.RPC_SERVICE, "myservice.EchoService")
-            .put(SemanticAttributes.RPC_METHOD, "exampleMethod")
+            .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
+            .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
+            .put(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod")
             .build();
 
     Attributes responseAttributes1 =
@@ -87,11 +87,13 @@ class RpcClientMetricsTest {
                                     point
                                         .hasSum(150 /* millis */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
-                                                SemanticAttributes.RPC_SERVICE,
+                                                RpcIncubatingAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
-                                            equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
+                                            equalTo(
+                                                RpcIncubatingAttributes.RPC_METHOD,
+                                                "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
                                             equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
@@ -117,11 +119,13 @@ class RpcClientMetricsTest {
                                     point
                                         .hasSum(150 /* millis */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
-                                                SemanticAttributes.RPC_SERVICE,
+                                                RpcIncubatingAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
-                                            equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
+                                            equalTo(
+                                                RpcIncubatingAttributes.RPC_METHOD,
+                                                "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp")))));
   }

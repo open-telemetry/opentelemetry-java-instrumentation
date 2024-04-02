@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.DbIncubatingAttributes
 import io.opentelemetry.semconv.DbIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
@@ -145,9 +148,9 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
-            "$SemanticAttributes.RPC_METHOD" "CreateTable"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "DynamoDb"
+            "$RpcIncubatingAttributes.RPC_METHOD" "CreateTable"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -178,9 +181,9 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
-            "$SemanticAttributes.RPC_METHOD" "Query"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "DynamoDb"
+            "$RpcIncubatingAttributes.RPC_METHOD" "Query"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"
@@ -210,9 +213,9 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "$service"
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             "aws.table.name" "sometable"

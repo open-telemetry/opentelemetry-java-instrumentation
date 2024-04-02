@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 
 import io.opentelemetry.semconv.SemanticAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -132,9 +135,9 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "$service"
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             if (service == "S3") {
@@ -292,9 +295,9 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "$service"
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
             "aws.requestId" "$requestId"
             if (service == "S3") {
@@ -455,9 +458,9 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$UrlAttributes.URL_FULL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
             "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "S3"
-            "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "S3"
+            "$RpcIncubatingAttributes.RPC_METHOD" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
           }

@@ -12,19 +12,12 @@ import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.List;
 
 public class SemanticAttributes {
 
   private SemanticAttributes() {}
-
-  public static final AttributeKey<String> RPC_METHOD = RpcIncubatingAttributes.RPC_METHOD;
-  public static final AttributeKey<String> RPC_SERVICE = RpcIncubatingAttributes.RPC_SERVICE;
-  public static final AttributeKey<String> RPC_SYSTEM = RpcIncubatingAttributes.RPC_SYSTEM;
-  public static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
-      RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 
   public static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
       MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;

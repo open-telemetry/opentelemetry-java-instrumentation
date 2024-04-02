@@ -12,6 +12,9 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.SemanticAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes
@@ -103,9 +106,9 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
-            "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
-            "$SemanticAttributes.RPC_METHOD" "\$invoke"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "apache_dubbo"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
+            "$RpcIncubatingAttributes.RPC_METHOD" "\$invoke"
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" Long
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == null || it instanceof String}
@@ -118,9 +121,9 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(1)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
-            "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
-            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "apache_dubbo"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
+            "$RpcIncubatingAttributes.RPC_METHOD" "hello"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
@@ -179,9 +182,9 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
-            "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
-            "$SemanticAttributes.RPC_METHOD" "\$invokeAsync"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "apache_dubbo"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
+            "$RpcIncubatingAttributes.RPC_METHOD" "\$invokeAsync"
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" Long
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == null || it instanceof String}
@@ -194,9 +197,9 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
           kind SERVER
           childOf span(1)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
-            "$SemanticAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
-            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "apache_dubbo"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
+            "$RpcIncubatingAttributes.RPC_METHOD" "hello"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }

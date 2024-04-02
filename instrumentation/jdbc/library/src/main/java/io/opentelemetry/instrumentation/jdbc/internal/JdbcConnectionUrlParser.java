@@ -12,7 +12,6 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;

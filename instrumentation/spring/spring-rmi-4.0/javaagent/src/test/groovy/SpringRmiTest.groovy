@@ -7,6 +7,9 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
@@ -94,9 +97,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           kind SpanKind.CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
-            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
+            "$RpcIncubatingAttributes.RPC_METHOD" "hello"
           }
         }
         span(2) {
@@ -104,9 +107,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           kind SpanKind.SERVER
           childOf span(1)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
-            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
+            "$RpcIncubatingAttributes.RPC_METHOD" "hello"
           }
         }
       }
@@ -150,9 +153,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
             }
           }
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
-            "$SemanticAttributes.RPC_METHOD" "exceptional"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
+            "$RpcIncubatingAttributes.RPC_METHOD" "exceptional"
           }
         }
         span(2) {
@@ -169,9 +172,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
             }
           }
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
-            "$SemanticAttributes.RPC_METHOD" "exceptional"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
+            "$RpcIncubatingAttributes.RPC_METHOD" "exceptional"
           }
         }
       }
