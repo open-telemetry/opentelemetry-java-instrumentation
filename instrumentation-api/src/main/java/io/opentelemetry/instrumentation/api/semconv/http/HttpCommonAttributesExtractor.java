@@ -15,9 +15,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -112,7 +112,7 @@ abstract class HttpCommonAttributesExtractor<
         errorType = _OTHER;
       }
     }
-    internalSet(attributes, SemanticAttributes.ERROR_TYPE, errorType);
+    internalSet(attributes, ErrorAttributes.ERROR_TYPE, errorType);
 
     String protocolName = lowercaseStr(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercaseStr(getter.getNetworkProtocolVersion(request, response));

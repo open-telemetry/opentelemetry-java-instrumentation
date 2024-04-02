@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
@@ -55,7 +56,7 @@ class HttpServerMetricsTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-            .put(SemanticAttributes.ERROR_TYPE, "500")
+            .put(ErrorAttributes.ERROR_TYPE, "500")
             .put(HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
             .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
@@ -101,7 +102,7 @@ class HttpServerMetricsTest {
                                         .hasAttributesSatisfying(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(SemanticAttributes.ERROR_TYPE, "500"),
+                                            equalTo(ErrorAttributes.ERROR_TYPE, "500"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(

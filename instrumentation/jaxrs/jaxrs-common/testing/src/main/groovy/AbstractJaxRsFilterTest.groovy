@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import org.junit.jupiter.api.Assumptions
@@ -134,7 +135,7 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
             attributes {
               "$HttpAttributes.HTTP_REQUEST_METHOD" method
               "$HttpAttributes.HTTP_ROUTE" route
-              "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+              "$ErrorAttributes.ERROR_TYPE" "_OTHER"
             }
           }
         }

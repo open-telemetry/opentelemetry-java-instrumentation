@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import spock.lang.Unroll
@@ -39,7 +40,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
           attributes {
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_ROUTE" paramName
-            "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+            "$ErrorAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(1) {
@@ -128,7 +129,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
           kind SERVER
           attributes {
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+            "$ErrorAttributes.ERROR_TYPE" "_OTHER"
           }
         }
       }

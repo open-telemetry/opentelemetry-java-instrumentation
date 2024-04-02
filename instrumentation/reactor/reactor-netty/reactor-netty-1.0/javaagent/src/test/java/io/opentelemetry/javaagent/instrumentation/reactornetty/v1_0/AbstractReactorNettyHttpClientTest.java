@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -312,7 +313,7 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(UrlAttributes.URL_FULL, uri.toString()),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                            equalTo(SemanticAttributes.ERROR_TYPE, "cancelled")),
+                            equalTo(ErrorAttributes.ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

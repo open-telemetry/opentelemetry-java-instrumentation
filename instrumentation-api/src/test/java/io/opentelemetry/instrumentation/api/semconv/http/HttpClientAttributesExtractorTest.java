@@ -18,6 +18,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -300,7 +301,7 @@ class HttpClientAttributesExtractorTest {
 
     assertThat(attributes.build())
         .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 400)
-        .containsEntry(SemanticAttributes.ERROR_TYPE, "400");
+        .containsEntry(ErrorAttributes.ERROR_TYPE, "400");
   }
 
   @Test
@@ -316,8 +317,7 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), emptyMap());
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
-    assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.ERROR_TYPE, "custom error type");
+    assertThat(attributes.build()).containsEntry(ErrorAttributes.ERROR_TYPE, "custom error type");
   }
 
   @Test
@@ -330,7 +330,7 @@ class HttpClientAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), new ConnectException());
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.ERROR_TYPE, "java.net.ConnectException");
+        .containsEntry(ErrorAttributes.ERROR_TYPE, "java.net.ConnectException");
   }
 
   @Test
@@ -342,8 +342,7 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), emptyMap());
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
 
-    assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.ERROR_TYPE, HttpConstants._OTHER);
+    assertThat(attributes.build()).containsEntry(ErrorAttributes.ERROR_TYPE, HttpConstants._OTHER);
   }
 
   @Test

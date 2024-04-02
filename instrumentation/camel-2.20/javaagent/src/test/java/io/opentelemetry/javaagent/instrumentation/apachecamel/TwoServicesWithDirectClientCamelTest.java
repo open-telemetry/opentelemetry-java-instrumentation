@@ -19,6 +19,7 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
@@ -153,7 +154,7 @@ class TwoServicesWithDirectClientCamelTest
                             equalTo(UrlAttributes.URL_SCHEME, "http"),
                             equalTo(UrlAttributes.URL_PATH, "/serviceTwo"),
                             equalTo(
-                                SemanticAttributes.USER_AGENT_ORIGINAL,
+                                UserAgentAttributes.USER_AGENT_ORIGINAL,
                                 "Jakarta Commons-HttpClient/3.1"),
                             equalTo(HttpAttributes.HTTP_ROUTE, "/serviceTwo"),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),

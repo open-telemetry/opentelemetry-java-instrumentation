@@ -32,10 +32,12 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -770,11 +772,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           assertThat(attrs).containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
           if (statusCode >= 500) {
-            assertThat(attrs)
-                .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(statusCode));
+            assertThat(attrs).containsEntry(ErrorAttributes.ERROR_TYPE, String.valueOf(statusCode));
           }
 
-          assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
+          assertThat(attrs).containsEntry(UserAgentAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
           assertThat(attrs).containsEntry(UrlAttributes.URL_SCHEME, "http");
           if (endpoint != INDEXED_CHILD) {

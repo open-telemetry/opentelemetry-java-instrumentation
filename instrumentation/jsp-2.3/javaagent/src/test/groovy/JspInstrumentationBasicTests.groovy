@@ -7,6 +7,8 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
+import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -99,7 +101,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_PATH" route
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -157,7 +159,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_QUERY" queryString
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -210,7 +212,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_PATH" route
             "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -273,7 +275,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_PATH" route
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 500
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -281,7 +283,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.ERROR_TYPE" "500"
+            "$ErrorAttributes.ERROR_TYPE" "500"
           }
         }
         span(1) {
@@ -341,7 +343,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_PATH" route
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -389,7 +391,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_PATH" route
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -469,7 +471,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_PATH" route
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 500
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -477,7 +479,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.ERROR_TYPE" "500"
+            "$ErrorAttributes.ERROR_TYPE" "500"
           }
         }
         span(1) {
@@ -519,7 +521,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_PATH" "/$jspWebappContext/$staticFile"
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"

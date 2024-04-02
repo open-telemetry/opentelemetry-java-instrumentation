@@ -11,6 +11,7 @@ import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -27,7 +28,7 @@ final class HttpExperimentalMetricsAdvice {
             asList(
                 HttpAttributes.HTTP_REQUEST_METHOD,
                 HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-                SemanticAttributes.ERROR_TYPE,
+                ErrorAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                 SemanticAttributes.SERVER_ADDRESS,
@@ -45,7 +46,7 @@ final class HttpExperimentalMetricsAdvice {
                 HttpAttributes.HTTP_ROUTE,
                 HttpAttributes.HTTP_REQUEST_METHOD,
                 HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-                SemanticAttributes.ERROR_TYPE,
+                ErrorAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                 UrlAttributes.URL_SCHEME));

@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -318,7 +319,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
                 equalTo(UrlAttributes.URL_FULL, uri),
                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                equalTo(SemanticAttributes.ERROR_TYPE, "java.net.ConnectException")));
+                equalTo(ErrorAttributes.ERROR_TYPE, "java.net.ConnectException")));
 
     testing.waitAndAssertTraces(
         trace ->

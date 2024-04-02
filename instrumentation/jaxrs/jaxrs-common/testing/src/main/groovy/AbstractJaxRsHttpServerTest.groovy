@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
+import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -293,7 +295,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         "$UrlAttributes.URL_QUERY" fullUrl.getQuery()
         "$HttpAttributes.HTTP_REQUEST_METHOD" method
         "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
-        "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+        "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
         "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
         // Optional
         "$HttpAttributes.HTTP_ROUTE" path
@@ -302,7 +304,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
           "http.response.header.x-test-response" { it == ["test"] }
         }
         if (statusCode >= 500) {
-          "$SemanticAttributes.ERROR_TYPE" "$statusCode"
+          "$ErrorAttributes.ERROR_TYPE" "$statusCode"
         }
       }
     }

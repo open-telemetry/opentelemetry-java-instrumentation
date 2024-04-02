@@ -32,6 +32,7 @@ import com.amazonaws.services.sns.model.PublishRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
@@ -217,7 +218,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
-            "$SemanticAttributes.ERROR_TYPE" SdkClientException.name
+            "$ErrorAttributes.ERROR_TYPE" SdkClientException.name
           }
         }
       }
@@ -271,7 +272,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            "$SemanticAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
+            "$ErrorAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
           }
         }
       }

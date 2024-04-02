@@ -18,6 +18,7 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.AfterAll;
@@ -65,7 +66,7 @@ public class SparkJavaBasedTest {
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(
-                                SemanticAttributes.USER_AGENT_ORIGINAL,
+                                UserAgentAttributes.USER_AGENT_ORIGINAL,
                                 val -> val.isInstanceOf(String.class)),
                             equalTo(HttpAttributes.HTTP_ROUTE, "/param/:param"),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),

@@ -11,6 +11,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -78,7 +79,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
             "$HttpAttributes.HTTP_ROUTE" "/listProducts"
           }
         }
@@ -170,7 +171,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
               "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$UrlAttributes.URL_SCHEME" "http"
-              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
+              "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
               "$HttpAttributes.HTTP_ROUTE" "/listProducts"
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId
             }

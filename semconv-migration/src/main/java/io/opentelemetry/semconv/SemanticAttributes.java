@@ -21,11 +21,6 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final AttributeKey<String> ERROR_TYPE = ErrorAttributes.ERROR_TYPE;
-
-  public static final AttributeKey<String> USER_AGENT_ORIGINAL =
-      UserAgentAttributes.USER_AGENT_ORIGINAL;
-
   public static final AttributeKey<String> CLIENT_ADDRESS = ClientAttributes.CLIENT_ADDRESS;
   public static final AttributeKey<Long> CLIENT_PORT = ClientAttributes.CLIENT_PORT;
 

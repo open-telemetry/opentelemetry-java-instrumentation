@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
@@ -97,7 +98,7 @@ class ReactorNettyClientSslTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(
-                                SemanticAttributes.ERROR_TYPE,
+                                ErrorAttributes.ERROR_TYPE,
                                 SSLHandshakeException.class.getCanonicalName())),
                 span ->
                     span.hasName("RESOLVE")

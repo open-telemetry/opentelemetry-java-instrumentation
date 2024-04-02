@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractAws1ClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
 
@@ -110,7 +111,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            "$SemanticAttributes.ERROR_TYPE" IllegalStateException.name
+            "$ErrorAttributes.ERROR_TYPE" IllegalStateException.name
           }
         }
       }

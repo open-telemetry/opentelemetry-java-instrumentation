@@ -18,6 +18,7 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -111,7 +112,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
-                                SemanticAttributes.USER_AGENT_ORIGINAL,
+                                UserAgentAttributes.USER_AGENT_ORIGINAL,
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,

@@ -24,10 +24,12 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -1014,19 +1016,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               }
 
               // opt-in, not collected by default
-              assertThat(attrs).doesNotContainKey(SemanticAttributes.USER_AGENT_ORIGINAL);
+              assertThat(attrs).doesNotContainKey(UserAgentAttributes.USER_AGENT_ORIGINAL);
 
               if (responseCode != null) {
                 assertThat(attrs)
                     .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
                 if (responseCode >= 400) {
                   assertThat(attrs)
-                      .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(responseCode));
+                      .containsEntry(ErrorAttributes.ERROR_TYPE, String.valueOf(responseCode));
                 }
               } else {
                 assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
                 // TODO: add more detailed assertions, per url
-                assertThat(attrs).containsKey(SemanticAttributes.ERROR_TYPE);
+                assertThat(attrs).containsKey(ErrorAttributes.ERROR_TYPE);
               }
 
               if (resendCount != null) {

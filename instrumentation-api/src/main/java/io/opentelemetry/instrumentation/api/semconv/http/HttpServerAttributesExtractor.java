@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNet
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.InternalUrlAttributesExtractor;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -82,7 +82,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalClientExtractor.onStart(attributes, request);
 
     internalSet(attributes, HttpAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
-    internalSet(attributes, SemanticAttributes.USER_AGENT_ORIGINAL, userAgent(request));
+    internalSet(attributes, UserAgentAttributes.USER_AGENT_ORIGINAL, userAgent(request));
   }
 
   @Override

@@ -18,8 +18,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
+import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -94,7 +94,7 @@ class ContextBridgeTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_ROUTE, "/test/server/*"),
-                            equalTo(SemanticAttributes.ERROR_TYPE, "_OTHER"))));
+                            equalTo(ErrorAttributes.ERROR_TYPE, "_OTHER"))));
   }
 
   @Test
@@ -115,6 +115,6 @@ class ContextBridgeTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_ROUTE, "/test/controller/:id"),
-                            equalTo(SemanticAttributes.ERROR_TYPE, "_OTHER"))));
+                            equalTo(ErrorAttributes.ERROR_TYPE, "_OTHER"))));
   }
 }

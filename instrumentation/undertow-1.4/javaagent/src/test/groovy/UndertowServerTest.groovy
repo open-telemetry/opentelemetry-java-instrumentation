@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -154,7 +155,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$UrlAttributes.URL_PATH" uri.getPath()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" uri.host
             "$SemanticAttributes.SERVER_PORT" uri.port
@@ -203,7 +204,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$UrlAttributes.URL_PATH" uri.getPath()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" uri.host
             "$SemanticAttributes.SERVER_PORT" uri.port

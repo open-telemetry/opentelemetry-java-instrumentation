@@ -21,6 +21,7 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -105,7 +106,7 @@ public class AwsLambdaApiGatewayWrapperTest {
                             equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(SemanticAttributes.FAAS_TRIGGER, "http"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, "Test Client"),
+                            equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, "Test Client"),
                             equalTo(
                                 UrlAttributes.URL_FULL, "http://localhost:123/hello/world?a=b&c=d"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
