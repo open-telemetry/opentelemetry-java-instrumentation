@@ -12,6 +12,7 @@ import com.datastax.driver.core.Session;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -110,7 +111,8 @@ public class CassandraClientTest {
                               equalTo(SemanticAttributes.DB_NAME, parameter.keyspace),
                               equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
                               equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                              equalTo(
+                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -128,7 +130,8 @@ public class CassandraClientTest {
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
                               equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                              equalTo(
+                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     }
 
     session.close();
@@ -184,7 +187,7 @@ public class CassandraClientTest {
                               equalTo(SemanticAttributes.DB_NAME, parameter.keyspace),
                               equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
                               equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -207,7 +210,7 @@ public class CassandraClientTest {
                               equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
                               equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)

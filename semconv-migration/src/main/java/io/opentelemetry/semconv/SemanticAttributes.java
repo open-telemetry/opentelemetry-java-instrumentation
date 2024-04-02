@@ -21,20 +21,6 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final AttributeKey<String> DB_CASSANDRA_CONSISTENCY_LEVEL =
-      DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
-  public static final AttributeKey<String> DB_CASSANDRA_COORDINATOR_DC =
-      DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC;
-  public static final AttributeKey<String> DB_CASSANDRA_COORDINATOR_ID =
-      DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID;
-  public static final AttributeKey<Boolean> DB_CASSANDRA_IDEMPOTENCE =
-      DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
-  public static final AttributeKey<Long> DB_CASSANDRA_PAGE_SIZE =
-      DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
-  public static final AttributeKey<Long> DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT =
-      DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-  public static final AttributeKey<String> DB_CASSANDRA_TABLE =
-      DbIncubatingAttributes.DB_CASSANDRA_TABLE;
   public static final AttributeKey<String> DB_CONNECTION_STRING =
       DbIncubatingAttributes.DB_CONNECTION_STRING;
   public static final AttributeKey<String> DB_NAME = DbIncubatingAttributes.DB_NAME;

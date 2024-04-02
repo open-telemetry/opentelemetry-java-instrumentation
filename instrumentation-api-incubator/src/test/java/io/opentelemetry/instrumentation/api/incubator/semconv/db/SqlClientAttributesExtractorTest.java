@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.semconv.DbIncubatingAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -117,7 +118,7 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
-            .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
+            .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
             .build();
 
     // when
@@ -129,7 +130,7 @@ class SqlClientAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM table"),
             entry(SemanticAttributes.DB_OPERATION, "SELECT"),
-            entry(SemanticAttributes.DB_CASSANDRA_TABLE, "table"));
+            entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
   }
 
   @Test
