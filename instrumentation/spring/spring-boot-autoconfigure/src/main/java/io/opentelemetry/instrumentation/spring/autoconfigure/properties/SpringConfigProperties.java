@@ -10,6 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -117,27 +118,43 @@ public class SpringConfigProperties implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String name) {
+    Map<String, String> fallbackMap = fallback.getMap(name);
     // maps from config properties are not supported by Environment, so we have to fake it
     switch (name) {
       case "otel.resource.attributes":
-        return resourceProperties.getAttributes();
+        return mergeWithFallback(resourceProperties.getAttributes(), fallbackMap);
       case "otel.exporter.otlp.headers":
-        return otlpExporterProperties.getHeaders();
+        return mergeWithFallback(otlpExporterProperties.getHeaders(), fallbackMap);
       case "otel.exporter.otlp.logs.headers":
-        return otlpExporterProperties.getLogs().getHeaders();
+        return mergeWithFallback(otlpExporterProperties.getLogs().getHeaders(), fallbackMap);
       case "otel.exporter.otlp.metrics.headers":
-        return otlpExporterProperties.getMetrics().getHeaders();
+        return mergeWithFallback(otlpExporterProperties.getMetrics().getHeaders(), fallbackMap);
       case "otel.exporter.otlp.traces.headers":
-        return otlpExporterProperties.getTraces().getHeaders();
+        return mergeWithFallback(otlpExporterProperties.getTraces().getHeaders(), fallbackMap);
       default:
         break;
     }
 
     String value = environment.getProperty(name);
     if (value == null) {
-      return fallback.getMap(name);
+      return fallbackMap;
     }
     return (Map<String, String>) parser.parseExpression(value).getValue();
+  }
+
+  /**
+   * If you specify the environment variable <code>OTEL_RESOURCE_ATTRIBUTES_POD_NAME</code>, then
+   * Spring Boot will ignore <code>OTEL_RESOURCE_ATTRIBUTES</code>, which violates the principle of
+   * least surprise. This method merges the two maps, giving precedence to <code>
+   * OTEL_RESOURCE_ATTRIBUTES_POD_NAME</code>, which is more specific and which is also the value
+   * that Spring Boot will use (and which will honor <a
+   * href="https://docs.spring.io/spring-framework/docs/3.2.x/spring-framework-reference/html/expressions.html">SpEL</a>).
+   */
+  private static Map<String, String> mergeWithFallback(
+      Map<String, String> attributes, Map<String, String> fallbackMap) {
+    Map<String, String> merged = new HashMap<>(fallbackMap);
+    merged.putAll(attributes);
+    return merged;
   }
 
   @Nullable
