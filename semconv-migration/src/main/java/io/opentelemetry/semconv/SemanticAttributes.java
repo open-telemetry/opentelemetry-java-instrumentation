@@ -10,7 +10,6 @@ import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 
 public class SemanticAttributes {
@@ -33,8 +32,6 @@ public class SemanticAttributes {
 
     private MessagingRocketmqMessageTypeValues() {}
   }
-
-  public static final AttributeKey<String> PEER_SERVICE = PeerIncubatingAttributes.PEER_SERVICE;
 
   public static final AttributeKey<Long> MESSAGE_ID = MessageIncubatingAttributes.MESSAGE_ID;
   public static final AttributeKey<String> MESSAGE_TYPE = MessageIncubatingAttributes.MESSAGE_TYPE;

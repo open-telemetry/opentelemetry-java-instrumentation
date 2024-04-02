@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -60,7 +60,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     Integer serverPort = attributesGetter.getServerPort(request);
     String peerService = mapToPeerService(serverAddress, serverPort);
     if (peerService != null) {
-      attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
+      attributes.put(PeerIncubatingAttributes.PEER_SERVICE, peerService);
     }
   }
 

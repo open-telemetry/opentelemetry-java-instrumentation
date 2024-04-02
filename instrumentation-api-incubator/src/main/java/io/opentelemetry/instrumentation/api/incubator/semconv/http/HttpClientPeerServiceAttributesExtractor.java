@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceRes
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -67,7 +67,7 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
     Supplier<String> pathSupplier = () -> getUrlPath(attributesGetter, request);
     String peerService = mapToPeerService(serverAddress, serverPort, pathSupplier);
     if (peerService != null) {
-      attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
+      attributes.put(PeerIncubatingAttributes.PEER_SERVICE, peerService);
     }
   }
 
