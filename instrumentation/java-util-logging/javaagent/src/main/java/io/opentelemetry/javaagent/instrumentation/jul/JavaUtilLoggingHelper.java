@@ -14,6 +14,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
@@ -95,8 +96,8 @@ public final class JavaUtilLoggingHelper {
 
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
+      attributes.put(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
     }
 
     builder.setAllAttributes(attributes.build());

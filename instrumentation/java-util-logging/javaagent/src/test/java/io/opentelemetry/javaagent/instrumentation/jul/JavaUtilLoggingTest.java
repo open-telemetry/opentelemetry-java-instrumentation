@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -114,8 +115,8 @@ class JavaUtilLoggingTest {
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                 equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
                 equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
                 satisfies(
@@ -124,8 +125,8 @@ class JavaUtilLoggingTest {
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()));
       }
 
       if (withParent) {

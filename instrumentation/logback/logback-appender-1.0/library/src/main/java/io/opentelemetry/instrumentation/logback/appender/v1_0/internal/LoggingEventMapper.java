@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -125,9 +126,9 @@ public final class LoggingEventMapper {
     captureMdcAttributes(attributes, loggingEvent.getMDCPropertyMap());
 
     if (captureExperimentalAttributes) {
-      attributes.put(SemanticAttributes.THREAD_NAME, loggingEvent.getThreadName());
+      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, loggingEvent.getThreadName());
       if (threadId != -1) {
-        attributes.put(SemanticAttributes.THREAD_ID, threadId);
+        attributes.put(ThreadIncubatingAttributes.THREAD_ID, threadId);
       }
     }
 
