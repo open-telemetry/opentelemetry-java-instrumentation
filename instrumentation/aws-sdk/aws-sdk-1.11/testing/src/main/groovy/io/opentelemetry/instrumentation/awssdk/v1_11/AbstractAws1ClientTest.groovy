@@ -32,6 +32,7 @@ import com.amazonaws.services.sns.model.PublishRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
@@ -104,7 +105,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           kind operation == "SendMessage" ? PRODUCER : CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$UrlAttributes.URL_FULL" "${server.httpUri()}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -201,7 +202,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "http://127.0.0.1:${UNUSABLE_PORT}"
+            "$UrlAttributes.URL_FULL" "http://127.0.0.1:${UNUSABLE_PORT}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.SERVER_PORT" 61
@@ -257,7 +258,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           }
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$UrlAttributes.URL_FULL" "${server.httpUri()}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"

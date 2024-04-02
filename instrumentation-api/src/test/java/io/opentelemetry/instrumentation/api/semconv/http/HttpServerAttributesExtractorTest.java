@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -196,9 +197,9 @@ class HttpServerAttributesExtractorTest {
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
             entry(SemanticAttributes.SERVER_PORT, 443L),
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(SemanticAttributes.URL_SCHEME, "https"),
-            entry(SemanticAttributes.URL_PATH, "/repositories/1"),
-            entry(SemanticAttributes.URL_QUERY, "details=true"),
+            entry(UrlAttributes.URL_SCHEME, "https"),
+            entry(UrlAttributes.URL_PATH, "/repositories/1"),
+            entry(UrlAttributes.URL_QUERY, "details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
@@ -388,7 +389,7 @@ class HttpServerAttributesExtractorTest {
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build()).containsOnly(entry(SemanticAttributes.URL_SCHEME, "https"));
+    assertThat(startAttributes.build()).containsOnly(entry(UrlAttributes.URL_SCHEME, "https"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

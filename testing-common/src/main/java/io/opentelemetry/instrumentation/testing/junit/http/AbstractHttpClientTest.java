@@ -18,14 +18,15 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -1004,8 +1005,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 }
               }
 
-              if (httpClientAttributes.contains(SemanticAttributes.URL_FULL)) {
-                assertThat(attrs).containsEntry(SemanticAttributes.URL_FULL, uri.toString());
+              if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
+                assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
               }
               if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_METHOD)) {
                 assertThat(attrs).containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method);

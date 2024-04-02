@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -169,7 +170,7 @@ class HttpClientAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(SemanticAttributes.URL_FULL, "http://github.com"),
+            entry(UrlAttributes.URL_FULL, "http://github.com"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")),

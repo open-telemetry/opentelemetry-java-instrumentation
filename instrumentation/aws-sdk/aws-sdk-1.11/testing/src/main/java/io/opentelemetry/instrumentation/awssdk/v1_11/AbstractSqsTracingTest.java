@@ -31,6 +31,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -130,7 +131,7 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "CreateQueue"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
@@ -150,8 +151,7 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(SemanticAttributes.RPC_METHOD, "SendMessage"),
                                   equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(
-                                      SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                  equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                   equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                   equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                   equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -191,8 +191,7 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
                                   equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(
-                                      SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                  equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                   equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                   equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                   equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -228,8 +227,7 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
                                   equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(
-                                      SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                  equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                   equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                   equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                   equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -295,7 +293,7 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "CreateQueue"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
@@ -316,7 +314,7 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "SendMessage"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -357,8 +355,7 @@ public abstract class AbstractSqsTracingTest {
                                       equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                       equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(
-                                          SemanticAttributes.URL_FULL,
-                                          "http://localhost:" + sqsPort),
+                                          UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                       equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
@@ -381,8 +378,7 @@ public abstract class AbstractSqsTracingTest {
                                       equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                       equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(
-                                          SemanticAttributes.URL_FULL,
-                                          "http://localhost:" + sqsPort),
+                                          UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                       equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -411,8 +407,7 @@ public abstract class AbstractSqsTracingTest {
                                       equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                       equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(
-                                          SemanticAttributes.URL_FULL,
-                                          "http://localhost:" + sqsPort),
+                                          UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                       equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),

@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
@@ -306,7 +307,7 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.URL_FULL, uri.toString()),
+                            equalTo(UrlAttributes.URL_FULL, uri.toString()),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
                             equalTo(SemanticAttributes.ERROR_TYPE, "cancelled")),

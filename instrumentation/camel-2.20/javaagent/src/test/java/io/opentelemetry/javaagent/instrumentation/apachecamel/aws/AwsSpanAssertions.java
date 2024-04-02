@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -67,7 +68,7 @@ class AwsSpanAssertions {
                         v -> assertThat(v).isEqualTo(queueUrl), v -> assertThat(v).isNull())),
             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(SemanticAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
+            satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             satisfies(
                 SemanticAttributes.SERVER_ADDRESS,
                 stringAssert -> stringAssert.isInstanceOf(String.class)),
@@ -118,7 +119,7 @@ class AwsSpanAssertions {
             equalTo(stringKey("aws.bucket.name"), bucketName),
             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, method),
             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(SemanticAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
+            satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             satisfies(SemanticAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
             satisfies(
@@ -140,7 +141,7 @@ class AwsSpanAssertions {
             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicArn),
             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(SemanticAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
+            satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             satisfies(SemanticAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
             satisfies(

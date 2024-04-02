@@ -10,10 +10,10 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.lettuce.core.RedisClient;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

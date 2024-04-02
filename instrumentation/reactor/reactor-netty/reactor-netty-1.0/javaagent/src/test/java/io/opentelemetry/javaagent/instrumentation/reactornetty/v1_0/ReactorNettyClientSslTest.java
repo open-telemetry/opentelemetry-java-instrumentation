@@ -15,13 +15,14 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.ssl.SslContextBuilder;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
@@ -91,7 +92,7 @@ class ReactorNettyClientSslTest {
                         .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.URL_FULL, uri),
+                            equalTo(UrlAttributes.URL_FULL, uri),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(
@@ -189,7 +190,7 @@ class ReactorNettyClientSslTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.URL_FULL, uri),
+                            equalTo(UrlAttributes.URL_FULL, uri),
                             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),

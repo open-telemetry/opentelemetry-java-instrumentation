@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -97,7 +98,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "CreateQueue"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
@@ -118,7 +119,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "SendMessage"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -144,7 +145,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -198,7 +199,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "CreateQueue"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
@@ -219,7 +220,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "SendMessage"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -245,7 +246,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
@@ -282,7 +283,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
                                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))));

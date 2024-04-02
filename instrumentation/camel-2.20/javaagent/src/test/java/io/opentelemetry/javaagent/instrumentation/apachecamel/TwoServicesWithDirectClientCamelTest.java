@@ -11,12 +11,13 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
@@ -109,7 +110,7 @@ class TwoServicesWithDirectClientCamelTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 "http://localhost:" + portOne + "/serviceOne"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
@@ -122,7 +123,7 @@ class TwoServicesWithDirectClientCamelTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 "http://localhost:" + portOne + "/serviceOne"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
@@ -135,7 +136,7 @@ class TwoServicesWithDirectClientCamelTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
@@ -148,8 +149,8 @@ class TwoServicesWithDirectClientCamelTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.URL_SCHEME, "http"),
-                            equalTo(SemanticAttributes.URL_PATH, "/serviceTwo"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_PATH, "/serviceTwo"),
                             equalTo(
                                 SemanticAttributes.USER_AGENT_ORIGINAL,
                                 "Jakarta Commons-HttpClient/3.1"),
@@ -169,7 +170,7 @@ class TwoServicesWithDirectClientCamelTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo"),
                             equalTo(
                                 stringKey("camel.uri"),

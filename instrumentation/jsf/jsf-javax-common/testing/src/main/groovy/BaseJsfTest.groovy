@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpData
@@ -104,8 +105,8 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" "/jetty-context/" + path
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" "/jetty-context/" + path
             "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.HTTP_ROUTE" "/jetty-context/" + route

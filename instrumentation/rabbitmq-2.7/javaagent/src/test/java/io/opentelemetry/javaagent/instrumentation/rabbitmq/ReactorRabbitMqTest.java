@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

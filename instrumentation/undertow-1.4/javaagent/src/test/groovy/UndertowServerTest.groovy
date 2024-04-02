@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.undertow.Handlers
 import io.undertow.Undertow
@@ -145,8 +146,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
 
           attributes {
             "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-            "$SemanticAttributes.URL_SCHEME" uri.getScheme()
-            "$SemanticAttributes.URL_PATH" uri.getPath()
+            "$UrlAttributes.URL_SCHEME" uri.getScheme()
+            "$UrlAttributes.URL_PATH" uri.getPath()
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
@@ -194,8 +195,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
 
           attributes {
             "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-            "$SemanticAttributes.URL_SCHEME" uri.getScheme()
-            "$SemanticAttributes.URL_PATH" uri.getPath()
+            "$UrlAttributes.URL_SCHEME" uri.getScheme()
+            "$UrlAttributes.URL_PATH" uri.getPath()
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT

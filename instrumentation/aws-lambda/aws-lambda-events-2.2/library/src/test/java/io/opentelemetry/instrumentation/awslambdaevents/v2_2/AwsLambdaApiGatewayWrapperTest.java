@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -105,8 +106,7 @@ public class AwsLambdaApiGatewayWrapperTest {
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, "Test Client"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
-                                "http://localhost:123/hello/world?a=b&c=d"),
+                                UrlAttributes.URL_FULL, "http://localhost:123/hello/world?a=b&c=d"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 

@@ -20,6 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -60,7 +61,7 @@ final class ApiGatewayProxyAttributesExtractor
       attributes.put(USER_AGENT_ORIGINAL, userAgent);
     }
 
-    internalSet(attributes, SemanticAttributes.URL_FULL, getHttpUrl(request, headers));
+    internalSet(attributes, UrlAttributes.URL_FULL, getHttpUrl(request, headers));
   }
 
   private static String getHttpUrl(

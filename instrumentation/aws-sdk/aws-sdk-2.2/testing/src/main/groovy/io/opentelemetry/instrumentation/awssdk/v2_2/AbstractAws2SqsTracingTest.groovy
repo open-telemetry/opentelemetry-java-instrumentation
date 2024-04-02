@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
@@ -133,7 +134,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.method" "CreateQueue"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
           }
@@ -153,7 +154,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.service" "Sqs"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
@@ -192,7 +193,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "rpc.service" "Sqs"
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
               "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" sqsPort
             }
@@ -214,7 +215,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.service" "Sqs"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
@@ -238,7 +239,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.service" "Sqs"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
@@ -389,7 +390,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.service" "Sqs"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
@@ -413,7 +414,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "rpc.service" "Sqs"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
@@ -452,7 +453,7 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "rpc.service" "Sqs"
               "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
               "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" sqsPort
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"

@@ -19,6 +19,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -88,7 +89,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                             equalTo(SemanticAttributes.DB_OPERATION, "info"),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/"),
+                            equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort())),
                 span ->
@@ -100,7 +101,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/"),
+                            equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
@@ -127,7 +128,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
                                 AttributeKey.stringKey("db.elasticsearch.path_parts.index"),
@@ -145,7 +146,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
@@ -187,7 +188,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/")),
+                            equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -197,7 +198,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/"),
+                            equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->
                     span.hasName("callback")

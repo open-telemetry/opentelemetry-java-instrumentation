@@ -31,7 +31,7 @@ import javax.inject.Singleton
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE
 import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH
 
 class RatpackServerApplicationTest extends Specification {
 

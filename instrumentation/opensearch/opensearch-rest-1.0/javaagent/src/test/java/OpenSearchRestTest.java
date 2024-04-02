@@ -8,6 +8,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -101,8 +102,7 @@ public class OpenSearchRestTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
@@ -167,8 +167,7 @@ public class OpenSearchRestTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(
-                                SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->
                     span.hasName("callback")

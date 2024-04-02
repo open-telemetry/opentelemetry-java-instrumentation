@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
@@ -95,7 +96,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    internalSet(attributes, SemanticAttributes.URL_FULL, getHttpUrl(exchange, endpoint));
+    internalSet(attributes, UrlAttributes.URL_FULL, getHttpUrl(exchange, endpoint));
 
     String method = getHttpMethod(exchange, endpoint);
     if (method == null || knownMethods.contains(method)) {

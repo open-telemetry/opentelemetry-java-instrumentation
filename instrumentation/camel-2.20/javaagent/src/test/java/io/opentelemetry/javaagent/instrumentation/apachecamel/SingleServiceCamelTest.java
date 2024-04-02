@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.URI;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,7 +70,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(SemanticAttributes.URL_FULL, requestUrl.toString()),
+                            equalTo(UrlAttributes.URL_FULL, requestUrl.toString()),
                             equalTo(
                                 stringKey("camel.uri"),
                                 requestUrl.toString().replace("localhost", "0.0.0.0")))));

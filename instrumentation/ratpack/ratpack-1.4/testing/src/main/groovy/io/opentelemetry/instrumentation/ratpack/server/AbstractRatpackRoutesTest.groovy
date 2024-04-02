@@ -9,6 +9,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import ratpack.path.PathBinding
 import ratpack.server.RatpackServer
@@ -104,9 +105,9 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" "/$path"
-            "$SemanticAttributes.URL_QUERY" { it == "" || it == null }
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" "/$path"
+            "$UrlAttributes.URL_QUERY" { it == "" || it == null }
             "$SemanticAttributes.HTTP_ROUTE" "/$route"
           }
         }

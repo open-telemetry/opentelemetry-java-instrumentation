@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
@@ -54,7 +55,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.service" "AmazonSQS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" String
+            "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -76,7 +77,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.service" "AmazonSQS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" String
+            "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -98,7 +99,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.service" "AmazonSQS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" String
+            "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -119,7 +120,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.service" "AmazonSNS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" String
+            "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -140,7 +141,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.service" "AmazonSNS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" String
+            "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -161,7 +162,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.service" "AmazonSNS"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" String
+            "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
@@ -181,7 +182,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "ReceiveMessage"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" String
+            "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
             "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"

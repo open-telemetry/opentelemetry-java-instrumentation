@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
@@ -119,10 +120,10 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
               "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
             } else {
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:${server.httpPort()}") }
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:${server.httpPort()}") }
             }
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
@@ -279,10 +280,10 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
               "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
             } else {
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-              "$SemanticAttributes.URL_FULL" { it == "http://localhost:${server.httpPort()}" || it == "http://localhost:${server.httpPort()}/" }
+              "$UrlAttributes.URL_FULL" { it == "http://localhost:${server.httpPort()}" || it == "http://localhost:${server.httpPort()}/" }
             }
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
@@ -447,7 +448,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
             // Our test assert both cases so that we don't need to know what version is being tested.
             "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
-            "$SemanticAttributes.URL_FULL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
+            "$UrlAttributes.URL_FULL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"

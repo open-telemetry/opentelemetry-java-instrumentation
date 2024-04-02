@@ -12,6 +12,7 @@ import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 
 final class HttpExperimentalMetricsAdvice {
 
@@ -45,7 +46,7 @@ final class HttpExperimentalMetricsAdvice {
                 SemanticAttributes.ERROR_TYPE,
                 SemanticAttributes.NETWORK_PROTOCOL_NAME,
                 SemanticAttributes.NETWORK_PROTOCOL_VERSION,
-                SemanticAttributes.URL_SCHEME));
+                UrlAttributes.URL_SCHEME));
   }
 
   static void applyServerActiveRequestsAdvice(LongUpDownCounterBuilder builder) {
@@ -56,7 +57,7 @@ final class HttpExperimentalMetricsAdvice {
         .setAttributesAdvice(
             asList(
                 // https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#metric-httpserveractive_requests
-                SemanticAttributes.HTTP_REQUEST_METHOD, SemanticAttributes.URL_SCHEME));
+                SemanticAttributes.HTTP_REQUEST_METHOD, UrlAttributes.URL_SCHEME));
   }
 
   private HttpExperimentalMetricsAdvice() {}

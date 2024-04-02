@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -87,8 +88,7 @@ class ElasticsearchRest6Test {
                         equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(
-                            SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
+                        equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")
@@ -99,7 +99,7 @@ class ElasticsearchRest6Test {
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                         equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                        equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                        equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                         equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
               });
         });
@@ -163,8 +163,7 @@ class ElasticsearchRest6Test {
                         equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(
-                            SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
+                        equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
               },
               span -> {
                 span.hasName("GET")
@@ -175,7 +174,7 @@ class ElasticsearchRest6Test {
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                         equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                        equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                        equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                         equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200));
               },
               span -> {

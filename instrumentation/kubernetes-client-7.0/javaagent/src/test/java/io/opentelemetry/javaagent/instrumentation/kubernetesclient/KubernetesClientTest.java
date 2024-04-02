@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -77,7 +78,7 @@ class KubernetesClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
@@ -124,7 +125,7 @@ class KubernetesClientTest {
                         .hasException(apiException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
@@ -178,7 +179,7 @@ class KubernetesClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
@@ -239,7 +240,7 @@ class KubernetesClientTest {
                         .hasException(exceptionReference.get())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),

@@ -284,9 +284,9 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         "$SemanticAttributes.SERVER_PORT" fullUrl.port
         "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
         "$NetworkAttributes.NETWORK_PEER_PORT" Long
-        "$SemanticAttributes.URL_SCHEME" fullUrl.getScheme()
-        "$SemanticAttributes.URL_PATH" fullUrl.getPath()
-        "$SemanticAttributes.URL_QUERY" fullUrl.getQuery()
+        "$UrlAttributes.URL_SCHEME" fullUrl.getScheme()
+        "$UrlAttributes.URL_PATH" fullUrl.getPath()
+        "$UrlAttributes.URL_QUERY" fullUrl.getQuery()
         "$SemanticAttributes.HTTP_REQUEST_METHOD" method
         "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
         "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT

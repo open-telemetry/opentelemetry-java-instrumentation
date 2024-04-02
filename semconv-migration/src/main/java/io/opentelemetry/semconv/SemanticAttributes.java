@@ -22,11 +22,6 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final AttributeKey<String> URL_FULL = UrlAttributes.URL_FULL;
-  public static final AttributeKey<String> URL_PATH = UrlAttributes.URL_PATH;
-  public static final AttributeKey<String> URL_QUERY = UrlAttributes.URL_QUERY;
-  public static final AttributeKey<String> URL_SCHEME = UrlAttributes.URL_SCHEME;
-
   public static final AttributeKey<String> NETWORK_PEER_ADDRESS =
       NetworkAttributes.NETWORK_PEER_ADDRESS;
   public static final AttributeKey<Long> NETWORK_PEER_PORT = NetworkAttributes.NETWORK_PEER_PORT;
@@ -117,6 +112,8 @@ public class SemanticAttributes {
   public static final AttributeKey<String> RPC_METHOD = RpcIncubatingAttributes.RPC_METHOD;
   public static final AttributeKey<String> RPC_SERVICE = RpcIncubatingAttributes.RPC_SERVICE;
   public static final AttributeKey<String> RPC_SYSTEM = RpcIncubatingAttributes.RPC_SYSTEM;
+  public static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
+      RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 
   public static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
       MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;

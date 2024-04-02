@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,7 +100,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
             Arrays.asList(
                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                 satisfies(SemanticAttributes.SERVER_PORT, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.URL_FULL, uri.toString()),
+                equalTo(UrlAttributes.URL_FULL, uri.toString()),
                 equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                 equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
                 equalTo(SemanticAttributes.ERROR_TYPE, "500")));

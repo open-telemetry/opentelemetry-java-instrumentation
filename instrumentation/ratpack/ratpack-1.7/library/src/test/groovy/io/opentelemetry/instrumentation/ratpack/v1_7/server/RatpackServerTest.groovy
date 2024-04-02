@@ -14,6 +14,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import ratpack.exec.Blocking
 import ratpack.registry.Registry
 import ratpack.test.embed.EmbeddedApp
@@ -56,7 +57,7 @@ class RatpackServerTest extends Specification {
 
         spanData.kind == SpanKind.SERVER
         attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[UrlAttributes.URL_PATH] == "/foo"
         attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
         attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
@@ -95,7 +96,7 @@ class RatpackServerTest extends Specification {
 
         def attributes = spanData.attributes.asMap()
         attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[UrlAttributes.URL_PATH] == "/foo"
         attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
         attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
@@ -153,7 +154,7 @@ class RatpackServerTest extends Specification {
 
         def attributes = spanData.attributes.asMap()
         attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[UrlAttributes.URL_PATH] == "/foo"
         attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
         attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }

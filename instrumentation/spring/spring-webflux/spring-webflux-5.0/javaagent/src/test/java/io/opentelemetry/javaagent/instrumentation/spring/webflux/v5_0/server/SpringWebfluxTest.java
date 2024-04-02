@@ -21,18 +21,17 @@ import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH;
-import static io.opentelemetry.semconv.SemanticAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -121,10 +120,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -242,10 +241,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -350,10 +349,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -423,10 +422,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/notfoundgreet"),
+                            equalTo(UrlAttributes.URL_PATH, "/notfoundgreet"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/**")),
                 span ->
@@ -484,10 +483,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/echo"),
+                            equalTo(UrlAttributes.URL_PATH, "/echo"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 202),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/echo")),
                 span ->
@@ -525,10 +524,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
                             equalTo(ERROR_TYPE, "500")),
@@ -606,10 +605,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/double-greet-redirect"),
+                            equalTo(UrlAttributes.URL_PATH, "/double-greet-redirect"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 307),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/double-greet-redirect")),
                 span ->
@@ -635,10 +634,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/double-greet"),
+                            equalTo(UrlAttributes.URL_PATH, "/double-greet"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/double-greet")),
                 span -> {
@@ -687,10 +686,10 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
+                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -769,9 +768,9 @@ public class SpringWebfluxTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/slow"),
+                            equalTo(UrlAttributes.URL_PATH, "/slow"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/slow"),
                             equalTo(ERROR_TYPE, "_OTHER")),

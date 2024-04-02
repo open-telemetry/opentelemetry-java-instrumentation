@@ -7,6 +7,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
@@ -90,8 +91,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -147,9 +148,9 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
-            "$SemanticAttributes.URL_QUERY" queryString
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
+            "$UrlAttributes.URL_QUERY" queryString
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -201,8 +202,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           name "POST $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -264,8 +265,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             }
           }
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -332,8 +333,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -380,8 +381,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -460,8 +461,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(JasperException, String)
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -510,8 +511,8 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" "/$jspWebappContext/$staticFile"
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" "/$jspWebappContext/$staticFile"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String

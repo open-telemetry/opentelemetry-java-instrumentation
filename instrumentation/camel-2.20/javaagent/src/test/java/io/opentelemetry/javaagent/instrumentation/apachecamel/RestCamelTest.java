@@ -11,11 +11,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -98,8 +99,8 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.URL_SCHEME, "http"),
-                            equalTo(SemanticAttributes.URL_PATH, "/api/firstModule/unit/unitOne"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_PATH, "/api/firstModule/unit/unitOne"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
@@ -121,7 +122,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(
-                                SemanticAttributes.URL_FULL,
+                                UrlAttributes.URL_FULL,
                                 "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
                             satisfies(
                                 stringKey("camel.uri"), val -> val.isInstanceOf(String.class))),

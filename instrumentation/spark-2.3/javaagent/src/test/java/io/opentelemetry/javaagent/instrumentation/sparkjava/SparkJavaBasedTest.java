@@ -11,11 +11,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.AfterAll;
@@ -58,8 +59,8 @@ public class SparkJavaBasedTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.URL_SCHEME, "http"),
-                            equalTo(SemanticAttributes.URL_PATH, "/param/asdf1234"),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_PATH, "/param/asdf1234"),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(

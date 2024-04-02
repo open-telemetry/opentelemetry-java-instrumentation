@@ -7,6 +7,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import org.apache.catalina.Context
@@ -88,8 +89,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -157,8 +158,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -205,8 +206,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -301,8 +302,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           name "GET $route"
           kind SERVER
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -383,8 +384,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           status ERROR
           errorEvent(JasperException, String)
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
@@ -445,8 +446,8 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           kind SERVER
           status UNSET
           attributes {
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" route
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" route
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 404
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String

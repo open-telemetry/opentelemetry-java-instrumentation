@@ -25,6 +25,7 @@ import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
@@ -106,7 +107,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$UrlAttributes.URL_FULL" "${server.httpUri()}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -168,7 +169,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "http://localhost:${UNUSABLE_PORT}"
+            "$UrlAttributes.URL_FULL" "http://localhost:${UNUSABLE_PORT}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
             "$SemanticAttributes.SERVER_PORT" 61
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -216,7 +217,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "https://s3.amazonaws.com"
+            "$UrlAttributes.URL_FULL" "https://s3.amazonaws.com"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -259,7 +260,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           errorEvent AmazonClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
+            "$UrlAttributes.URL_FULL" "${server.httpUri()}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"

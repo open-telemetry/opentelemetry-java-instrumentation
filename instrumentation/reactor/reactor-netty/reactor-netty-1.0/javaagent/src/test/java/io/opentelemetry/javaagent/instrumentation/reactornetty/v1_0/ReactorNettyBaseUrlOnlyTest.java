@@ -16,11 +16,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -110,7 +111,7 @@ class ReactorNettyBaseUrlOnlyTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.URL_FULL, uri + "/"),
+                            equalTo(UrlAttributes.URL_FULL, uri + "/"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),

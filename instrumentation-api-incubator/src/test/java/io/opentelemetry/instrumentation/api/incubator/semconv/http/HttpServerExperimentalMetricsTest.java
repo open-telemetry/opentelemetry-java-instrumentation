@@ -15,10 +15,11 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -36,9 +37,9 @@ class HttpServerExperimentalMetricsTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
-            .put(SemanticAttributes.URL_SCHEME, "https")
-            .put(SemanticAttributes.URL_PATH, "/")
-            .put(SemanticAttributes.URL_QUERY, "q=a")
+            .put(UrlAttributes.URL_SCHEME, "https")
+            .put(UrlAttributes.URL_PATH, "/")
+            .put(UrlAttributes.URL_QUERY, "q=a")
             .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
             .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
             .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
@@ -90,7 +91,7 @@ class HttpServerExperimentalMetricsTest {
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -113,7 +114,7 @@ class HttpServerExperimentalMetricsTest {
                                         .hasValue(2)
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -135,7 +136,7 @@ class HttpServerExperimentalMetricsTest {
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
                                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -161,7 +162,7 @@ class HttpServerExperimentalMetricsTest {
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -187,7 +188,7 @@ class HttpServerExperimentalMetricsTest {
                                                 SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
+                                            equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

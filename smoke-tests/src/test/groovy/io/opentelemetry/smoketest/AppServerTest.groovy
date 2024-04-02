@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -119,13 +120,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/headers')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/greeting") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/greeting") == 1
 
     and: "Client span for the remote call"
-    traces.countFilteredAttributes(SemanticAttributes.URL_FULL.key, "http://localhost:8080/app/headers") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_FULL.key, "http://localhost:8080/app/headers") == 1
 
     and: "Server span for the remote call"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/headers") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/headers") == 1
 
     and: "Number of spans with client address"
     traces.countFilteredAttributes(SemanticAttributes.CLIENT_ADDRESS.key, "127.0.0.1") == 1
@@ -166,7 +167,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/hello.txt')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/hello.txt") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/hello.txt") == 1
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 1
@@ -200,7 +201,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/file-that-does-not-exist')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/file-that-does-not-exist") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/file-that-does-not-exist") == 1
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
@@ -236,7 +237,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/WEB-INF/web.xml')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/WEB-INF/web.xml") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/WEB-INF/web.xml") == 1
 
     and: "Number of spans with http protocol version"
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
@@ -278,7 +279,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredEventAttributes('exception.message', 'This is expected') == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/exception") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/exception") == 1
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
@@ -313,7 +314,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless") == 1
 
     and: "Number of spans with http protocol version"
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
@@ -354,13 +355,13 @@ abstract class AppServerTest extends SmokeTest {
     traces.countSpansByName(getSpanName('/app/headers')) == 1
 
     and: "The span for the initial web request"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/asyncgreeting") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/asyncgreeting") == 1
 
     and: "Client span for the remote call"
-    traces.countFilteredAttributes(SemanticAttributes.URL_FULL.key, "http://localhost:8080/app/headers") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_FULL.key, "http://localhost:8080/app/headers") == 1
 
     and: "Server span for the remote call"
-    traces.countFilteredAttributes(SemanticAttributes.URL_PATH.key, "/app/headers") == 1
+    traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
     traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3

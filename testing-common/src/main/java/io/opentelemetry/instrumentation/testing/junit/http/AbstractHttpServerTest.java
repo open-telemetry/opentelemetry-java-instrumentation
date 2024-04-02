@@ -27,13 +27,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -774,13 +775,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
-          assertThat(attrs).containsEntry(SemanticAttributes.URL_SCHEME, "http");
+          assertThat(attrs).containsEntry(UrlAttributes.URL_SCHEME, "http");
           if (endpoint != INDEXED_CHILD) {
             assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
+                .containsEntry(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
             if (endpoint.getQuery() != null) {
-              assertThat(attrs).containsEntry(SemanticAttributes.URL_QUERY, endpoint.getQuery());
+              assertThat(attrs).containsEntry(UrlAttributes.URL_QUERY, endpoint.getQuery());
             }
           }
 
@@ -810,8 +810,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     String method = "GET";
     return assertServerSpan(span, method, endpoint, endpoint.status)
         .hasAttributesSatisfying(
-            equalTo(SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath()),
-            equalTo(SemanticAttributes.URL_QUERY, "id=" + requestId));
+            equalTo(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath()),
+            equalTo(UrlAttributes.URL_QUERY, "id=" + requestId));
   }
 
   @CanIgnoreReturnValue
