@@ -19,8 +19,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 

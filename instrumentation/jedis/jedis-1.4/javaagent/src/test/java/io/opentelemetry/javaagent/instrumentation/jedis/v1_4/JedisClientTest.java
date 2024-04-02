@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,8 +64,8 @@ class JedisClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, port))));
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, port))));
   }
 
   @Test
@@ -84,8 +85,8 @@ class JedisClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, port))),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -95,8 +96,8 @@ class JedisClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "GET foo"),
                             equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, port))));
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, port))));
   }
 
   @Test
@@ -116,8 +117,8 @@ class JedisClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(SemanticAttributes.DB_OPERATION, "SET"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, port))),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -127,7 +128,7 @@ class JedisClientTest {
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                             equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"),
                             equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, port))));
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, port))));
   }
 }

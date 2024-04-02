@@ -12,6 +12,8 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -158,8 +160,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -207,8 +209,8 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }

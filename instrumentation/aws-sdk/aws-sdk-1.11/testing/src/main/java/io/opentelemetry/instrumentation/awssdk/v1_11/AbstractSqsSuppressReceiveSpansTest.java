@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -101,8 +102,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
@@ -122,8 +123,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
@@ -148,8 +149,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
@@ -202,8 +203,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
@@ -223,8 +224,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
@@ -249,8 +250,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
                                     SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
@@ -286,8 +287,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))));
   }
 

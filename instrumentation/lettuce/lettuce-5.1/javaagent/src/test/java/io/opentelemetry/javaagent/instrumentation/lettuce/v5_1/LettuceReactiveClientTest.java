@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -54,8 +55,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"))
                             .hasEventsSatisfyingExactly(
@@ -69,8 +70,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "GET a"))
                             .hasEventsSatisfyingExactly(

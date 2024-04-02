@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -119,8 +120,8 @@ class LettuceSyncClientTest {
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
-                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                            equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
   }
 
@@ -142,8 +143,8 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasException(exception)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
-                            equalTo(SemanticAttributes.SERVER_PORT, incorrectPort),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                            equalTo(ServerAttributes.SERVER_PORT, incorrectPort),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
   }
 

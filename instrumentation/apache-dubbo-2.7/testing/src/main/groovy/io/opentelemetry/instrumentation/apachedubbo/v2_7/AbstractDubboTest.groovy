@@ -12,6 +12,8 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import org.apache.dubbo.common.utils.NetUtils
 import org.apache.dubbo.config.ApplicationConfig
@@ -104,8 +106,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
             "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
             "$SemanticAttributes.RPC_METHOD" "\$invoke"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-            "$SemanticAttributes.SERVER_PORT" Long
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
+            "$ServerAttributes.SERVER_PORT" Long
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == null || it instanceof String}
             "$NetworkAttributes.NETWORK_PEER_PORT" { it == null || it instanceof Long}
             "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
@@ -180,8 +182,8 @@ abstract class AbstractDubboTest extends InstrumentationSpecification {
             "$SemanticAttributes.RPC_SYSTEM" "apache_dubbo"
             "$SemanticAttributes.RPC_SERVICE" "org.apache.dubbo.rpc.service.GenericService"
             "$SemanticAttributes.RPC_METHOD" "\$invokeAsync"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-            "$SemanticAttributes.SERVER_PORT" Long
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
+            "$ServerAttributes.SERVER_PORT" Long
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == null || it instanceof String}
             "$NetworkAttributes.NETWORK_PEER_PORT" { it == null || it instanceof Long}
             "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }

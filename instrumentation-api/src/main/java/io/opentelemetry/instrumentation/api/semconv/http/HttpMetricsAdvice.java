@@ -13,7 +13,7 @@ import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuild
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.List;
 
@@ -35,8 +35,8 @@ final class HttpMetricsAdvice {
                 ErrorAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT));
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
   }
 
   static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {

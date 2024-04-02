@@ -11,8 +11,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;

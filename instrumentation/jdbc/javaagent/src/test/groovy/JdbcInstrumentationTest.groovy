@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jdbc.test.ProxyStatementFactory
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -651,7 +652,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_SYSTEM" "other_sql"
             "$SemanticAttributes.DB_STATEMENT" "testing ?"
             "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -695,7 +696,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
             "$SemanticAttributes.DB_OPERATION" operation
             "$SemanticAttributes.DB_SQL_TABLE" table
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -800,7 +801,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
             "$SemanticAttributes.DB_OPERATION" "SELECT"
             "$SemanticAttributes.DB_SQL_TABLE" "table"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }

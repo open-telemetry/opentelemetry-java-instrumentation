@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -86,16 +87,16 @@ class ElasticsearchRest7Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
@@ -156,16 +157,16 @@ class ElasticsearchRest7Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),

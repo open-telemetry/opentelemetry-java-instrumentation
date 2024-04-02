@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -184,9 +185,8 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(events.toArray(new Consumer[0])),
                     span ->
                         span.hasName("example.Greeter/Conversation")
@@ -199,8 +199,8 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -222,7 +222,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_METHOD, "Conversation"),
                                                 equalTo(
@@ -247,10 +247,9 @@ public abstract class AbstractGrpcStreamingTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_PORT,
-                                                    server.getPort()),
+                                                    ServerAttributes.SERVER_PORT, server.getPort()),
                                                 equalTo(
                                                     SemanticAttributes.RPC_METHOD, "Conversation"),
                                                 equalTo(

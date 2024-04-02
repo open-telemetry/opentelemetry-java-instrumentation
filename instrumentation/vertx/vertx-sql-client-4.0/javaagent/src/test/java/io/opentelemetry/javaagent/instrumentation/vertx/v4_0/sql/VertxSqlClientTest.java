@@ -16,8 +16,8 @@ import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;

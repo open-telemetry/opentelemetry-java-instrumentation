@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -145,8 +146,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
                             .hasEventsSatisfyingExactly(
@@ -191,8 +192,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, port),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                      equalTo(ServerAttributes.SERVER_PORT, port),
                                       equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                       equalTo(SemanticAttributes.DB_STATEMENT, "GET TESTKEY"))
                                   .hasEventsSatisfyingExactly(
@@ -269,8 +270,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, port),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                      equalTo(ServerAttributes.SERVER_PORT, port),
                                       equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                       equalTo(
                                           SemanticAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"))
@@ -335,8 +336,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, port),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                      equalTo(ServerAttributes.SERVER_PORT, port),
                                       equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                       equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"))
                                   .hasEventsSatisfyingExactly(
@@ -394,8 +395,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
                                     SemanticAttributes.DB_STATEMENT,
@@ -412,8 +413,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
                                 equalTo(SemanticAttributes.DB_STATEMENT, "HGETALL TESTHM"))
                             .hasEventsSatisfyingExactly(

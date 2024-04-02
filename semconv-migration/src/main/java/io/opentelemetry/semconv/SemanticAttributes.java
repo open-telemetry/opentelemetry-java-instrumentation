@@ -21,9 +21,6 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final AttributeKey<String> SERVER_ADDRESS = ServerAttributes.SERVER_ADDRESS;
-  public static final AttributeKey<Long> SERVER_PORT = ServerAttributes.SERVER_PORT;
-
   public static final AttributeKey<String> DB_CASSANDRA_CONSISTENCY_LEVEL =
       DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
   public static final AttributeKey<String> DB_CASSANDRA_COORDINATOR_DC =

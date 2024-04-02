@@ -22,7 +22,7 @@ import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 import java.net.ConnectException;
@@ -198,8 +198,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 443L),
+            entry(ServerAttributes.SERVER_ADDRESS, "github.com"),
+            entry(ServerAttributes.SERVER_PORT, 443L),
             entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(UrlAttributes.URL_SCHEME, "https"),
             entry(UrlAttributes.URL_PATH, "/repositories/1"),
@@ -418,8 +418,8 @@ class HttpServerAttributesExtractorTest {
 
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "example.com"),
-            entry(SemanticAttributes.SERVER_PORT, 42L));
+            entry(ServerAttributes.SERVER_ADDRESS, "example.com"),
+            entry(ServerAttributes.SERVER_PORT, 42L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -445,8 +445,8 @@ class HttpServerAttributesExtractorTest {
 
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(SemanticAttributes.SERVER_PORT, 987L));
+            entry(ServerAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(ServerAttributes.SERVER_PORT, 987L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -471,8 +471,8 @@ class HttpServerAttributesExtractorTest {
 
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(SemanticAttributes.SERVER_PORT, 42L));
+            entry(ServerAttributes.SERVER_ADDRESS, "opentelemetry.io"),
+            entry(ServerAttributes.SERVER_PORT, 42L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -496,8 +496,8 @@ class HttpServerAttributesExtractorTest {
 
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L));
+            entry(ServerAttributes.SERVER_ADDRESS, "github.com"),
+            entry(ServerAttributes.SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

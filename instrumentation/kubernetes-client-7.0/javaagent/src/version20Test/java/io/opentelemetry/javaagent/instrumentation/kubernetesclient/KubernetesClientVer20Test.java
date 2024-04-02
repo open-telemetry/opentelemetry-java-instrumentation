@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -89,8 +89,8 @@ class KubernetesClientVer20Test {
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(ServerAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name"))));
@@ -136,8 +136,8 @@ class KubernetesClientVer20Test {
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(ServerAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(ErrorAttributes.ERROR_TYPE, "451"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
@@ -189,8 +189,8 @@ class KubernetesClientVer20Test {
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(ServerAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name")),
@@ -249,8 +249,8 @@ class KubernetesClientVer20Test {
                                     + "/api/v1/namespaces/namespace/pods/name/proxy/path"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(ServerAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(ErrorAttributes.ERROR_TYPE, "451"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),

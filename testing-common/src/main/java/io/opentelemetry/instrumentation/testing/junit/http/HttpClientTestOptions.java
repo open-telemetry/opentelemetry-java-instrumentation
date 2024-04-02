@@ -11,7 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import java.net.URI;
@@ -31,8 +31,8 @@ public abstract class HttpClientTestOptions {
           new HashSet<>(
               Arrays.asList(
                   NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                  SemanticAttributes.SERVER_ADDRESS,
-                  SemanticAttributes.SERVER_PORT,
+                  ServerAttributes.SERVER_ADDRESS,
+                  ServerAttributes.SERVER_PORT,
                   UrlAttributes.URL_FULL,
                   HttpAttributes.HTTP_REQUEST_METHOD)));
 

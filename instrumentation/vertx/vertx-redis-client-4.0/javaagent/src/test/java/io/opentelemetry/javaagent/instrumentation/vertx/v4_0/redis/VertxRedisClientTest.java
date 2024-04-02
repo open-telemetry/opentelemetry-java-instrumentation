@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
@@ -198,8 +199,8 @@ class VertxRedisClientTest {
       equalTo(SemanticAttributes.DB_STATEMENT, statement),
       equalTo(SemanticAttributes.DB_OPERATION, operation),
       equalTo(SemanticAttributes.DB_REDIS_DATABASE_INDEX, 1),
-      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-      equalTo(SemanticAttributes.SERVER_PORT, port),
+      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+      equalTo(ServerAttributes.SERVER_PORT, port),
       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")
     };

@@ -17,6 +17,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,10 +73,10 @@ class AwsSpanAssertions {
             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             satisfies(
-                SemanticAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_ADDRESS,
                 stringAssert -> stringAssert.isInstanceOf(String.class)),
             satisfies(
-                SemanticAttributes.SERVER_PORT,
+                ServerAttributes.SERVER_PORT,
                 val ->
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isNull(),
@@ -123,9 +124,9 @@ class AwsSpanAssertions {
             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-            satisfies(SemanticAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
+            satisfies(ServerAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
             satisfies(
-                SemanticAttributes.SERVER_PORT,
+                ServerAttributes.SERVER_PORT,
                 val ->
                     val.satisfiesAnyOf(
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
@@ -145,9 +146,9 @@ class AwsSpanAssertions {
             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-            satisfies(SemanticAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
+            satisfies(ServerAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
             satisfies(
-                SemanticAttributes.SERVER_PORT,
+                ServerAttributes.SERVER_PORT,
                 val ->
                     val.satisfiesAnyOf(
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));

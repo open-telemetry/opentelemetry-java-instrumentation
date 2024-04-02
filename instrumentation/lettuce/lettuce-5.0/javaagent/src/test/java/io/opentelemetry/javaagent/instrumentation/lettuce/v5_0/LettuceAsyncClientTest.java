@@ -29,6 +29,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -109,8 +110,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
-                            equalTo(SemanticAttributes.SERVER_PORT, port),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                            equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))));
   }
 
@@ -140,8 +141,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, host),
-                            equalTo(SemanticAttributes.SERVER_PORT, incorrectPort),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                            equalTo(ServerAttributes.SERVER_PORT, incorrectPort),
                             equalTo(SemanticAttributes.DB_SYSTEM, "redis"))
                         .hasEventsSatisfyingExactly(
                             event ->

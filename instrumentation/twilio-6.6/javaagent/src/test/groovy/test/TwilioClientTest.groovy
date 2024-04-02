@@ -18,6 +18,7 @@ import com.twilio.type.PhoneNumber
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -255,7 +256,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
+            "$ServerAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
@@ -321,7 +322,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           status ERROR
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
+            "$ServerAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
@@ -334,7 +335,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
+            "$ServerAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
@@ -407,7 +408,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           status ERROR
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
+            "$ServerAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
@@ -420,7 +421,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
+            "$ServerAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200

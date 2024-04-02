@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -411,8 +413,8 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-        "$SemanticAttributes.SERVER_PORT" port
+        "$ServerAttributes.SERVER_ADDRESS" "localhost"
+        "$ServerAttributes.SERVER_PORT" port
         "$SemanticAttributes.DB_STATEMENT" {
           statementEval.call(it.replaceAll(" ", ""))
         }

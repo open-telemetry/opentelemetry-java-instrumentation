@@ -9,6 +9,8 @@ import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -119,8 +121,8 @@ abstract class JaxRsClientTest extends HttpClientTest<Invocation.Builder> implem
           status ERROR
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 }
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port > 0 ? uri.port : { it == null || it == 443 }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
             "$UrlAttributes.URL_FULL" "${uri}"
             "$HttpAttributes.HTTP_REQUEST_METHOD" method

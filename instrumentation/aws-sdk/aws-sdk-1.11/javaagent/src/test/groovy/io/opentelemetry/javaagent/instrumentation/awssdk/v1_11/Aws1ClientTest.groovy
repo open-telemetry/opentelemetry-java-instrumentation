@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractAws1ClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
@@ -104,7 +105,7 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
           attributes {
             "$UrlAttributes.URL_FULL" "https://s3.amazonaws.com"
             "$HttpAttributes.HTTP_REQUEST_METHOD" "HEAD"
-            "$SemanticAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
+            "$ServerAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
             "$SemanticAttributes.RPC_METHOD" "HeadBucket"

@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,8 +42,8 @@ public class ElasticsearchClientAttributeExtractor
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
     if (host != null) {
-      internalSet(attributes, SemanticAttributes.SERVER_ADDRESS, host.getHostName());
-      internalSet(attributes, SemanticAttributes.SERVER_PORT, (long) host.getPort());
+      internalSet(attributes, ServerAttributes.SERVER_ADDRESS, host.getHostName());
+      internalSet(attributes, ServerAttributes.SERVER_PORT, (long) host.getPort());
     }
   }
 

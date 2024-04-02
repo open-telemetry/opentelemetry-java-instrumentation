@@ -24,6 +24,7 @@ import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -95,8 +96,8 @@ class ReactorNettyClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UrlAttributes.URL_FULL, uri),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(
                                 ErrorAttributes.ERROR_TYPE,
                                 SSLHandshakeException.class.getCanonicalName())),
@@ -105,8 +106,8 @@ class ReactorNettyClientSslTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -114,8 +115,8 @@ class ReactorNettyClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
@@ -162,8 +163,8 @@ class ReactorNettyClientSslTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort())),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpsPort())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -171,8 +172,8 @@ class ReactorNettyClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
@@ -195,8 +196,8 @@ class ReactorNettyClientSslTest {
                             equalTo(UrlAttributes.URL_FULL, uri),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpsPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpsPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,

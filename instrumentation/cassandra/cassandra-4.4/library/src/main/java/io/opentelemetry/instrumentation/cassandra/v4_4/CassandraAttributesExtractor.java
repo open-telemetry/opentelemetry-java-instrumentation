@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.util.logging.Level;
@@ -93,8 +94,8 @@ final class CassandraAttributesExtractor
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
-      attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostString());
-      attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
+      attributes.put(ServerAttributes.SERVER_ADDRESS, address.getHostString());
+      attributes.put(ServerAttributes.SERVER_PORT, address.getPort());
     } else if (endPoint instanceof SniEndPoint && proxyAddressField != null) {
       SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
       Object object = null;
@@ -108,8 +109,8 @@ final class CassandraAttributesExtractor
       }
       if (object instanceof InetSocketAddress) {
         InetSocketAddress address = (InetSocketAddress) object;
-        attributes.put(SemanticAttributes.SERVER_ADDRESS, address.getHostString());
-        attributes.put(SemanticAttributes.SERVER_PORT, address.getPort());
+        attributes.put(ServerAttributes.SERVER_ADDRESS, address.getHostString());
+        attributes.put(ServerAttributes.SERVER_PORT, address.getPort());
       }
     }
   }

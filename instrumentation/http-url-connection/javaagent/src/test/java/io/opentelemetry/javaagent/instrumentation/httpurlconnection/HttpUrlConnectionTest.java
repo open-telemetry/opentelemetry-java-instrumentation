@@ -24,7 +24,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -124,8 +124,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(ServerAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
@@ -169,8 +169,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(ServerAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
@@ -220,8 +220,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(ServerAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
@@ -273,8 +273,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
+                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(ServerAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, STATUS)));
@@ -315,8 +315,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
+                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(ServerAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
                 equalTo(UrlAttributes.URL_FULL, uri),
                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                 equalTo(ErrorAttributes.ERROR_TYPE, "java.net.ConnectException")));

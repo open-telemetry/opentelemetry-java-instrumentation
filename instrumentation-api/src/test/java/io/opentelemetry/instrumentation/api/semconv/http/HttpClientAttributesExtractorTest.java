@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.net.ConnectException;
 import java.util.HashMap;
@@ -176,8 +176,8 @@ class HttpClientAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")),
-            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 80L),
+            entry(ServerAttributes.SERVER_ADDRESS, "github.com"),
+            entry(ServerAttributes.SERVER_PORT, 80L),
             entry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, 2L));
 
     AttributesBuilder endAttributes = Attributes.builder();
@@ -360,8 +360,8 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L));
+            entry(ServerAttributes.SERVER_ADDRESS, "github.com"),
+            entry(ServerAttributes.SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -387,8 +387,8 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "1.2.3.4"),
-            entry(SemanticAttributes.SERVER_PORT, 123L));
+            entry(ServerAttributes.SERVER_ADDRESS, "1.2.3.4"),
+            entry(ServerAttributes.SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

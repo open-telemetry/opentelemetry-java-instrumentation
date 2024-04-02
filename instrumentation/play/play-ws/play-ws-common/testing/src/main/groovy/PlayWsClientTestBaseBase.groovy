@@ -10,6 +10,8 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import play.shaded.ahc.io.netty.resolver.InetNameResolver
 import play.shaded.ahc.io.netty.util.concurrent.EventExecutor
@@ -88,8 +90,8 @@ abstract class PlayWsClientTestBaseBase<REQUEST> extends HttpClientTest<REQUEST>
     def attributes = super.httpAttributes(uri)
     attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION)
     if (uri.toString().endsWith("/circular-redirect")) {
-      attributes.remove(SemanticAttributes.SERVER_ADDRESS)
-      attributes.remove(SemanticAttributes.SERVER_PORT)
+      attributes.remove(ServerAttributes.SERVER_ADDRESS)
+      attributes.remove(ServerAttributes.SERVER_PORT)
     }
     return attributes
   }

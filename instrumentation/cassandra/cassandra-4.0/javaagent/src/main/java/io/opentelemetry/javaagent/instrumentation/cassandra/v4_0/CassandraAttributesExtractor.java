@@ -14,6 +14,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -41,8 +42,8 @@ final class CassandraAttributesExtractor
       SocketAddress address = coordinator.getEndPoint().resolve();
       if (address instanceof InetSocketAddress) {
         attributes.put(
-            SemanticAttributes.SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
-        attributes.put(SemanticAttributes.SERVER_PORT, ((InetSocketAddress) address).getPort());
+            ServerAttributes.SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
+        attributes.put(ServerAttributes.SERVER_PORT, ((InetSocketAddress) address).getPort());
       }
       if (coordinator.getDatacenter() != null) {
         attributes.put(SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());

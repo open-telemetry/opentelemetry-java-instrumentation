@@ -50,6 +50,7 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -140,9 +141,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -167,8 +167,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -202,7 +202,7 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -226,10 +226,9 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_PORT,
-                                                    server.getPort()),
+                                                    ServerAttributes.SERVER_PORT, server.getPort()),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -302,9 +301,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -329,8 +327,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -368,7 +366,7 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -392,10 +390,9 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_PORT,
-                                                    server.getPort()),
+                                                    ServerAttributes.SERVER_PORT, server.getPort()),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -476,9 +473,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -503,8 +499,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -542,7 +538,7 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -566,10 +562,9 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_PORT,
-                                                    server.getPort()),
+                                                    ServerAttributes.SERVER_PORT, server.getPort()),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -625,9 +620,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) status.getCode().value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -647,8 +641,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) status.getCode().value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -684,7 +678,7 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -708,10 +702,9 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_PORT,
-                                                    server.getPort()),
+                                                    ServerAttributes.SERVER_PORT, server.getPort()),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -775,9 +768,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.UNKNOWN.getCode().value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -797,8 +789,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.UNKNOWN.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -829,7 +821,7 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -853,10 +845,9 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_ADDRESS, "localhost"),
+                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
                                                 equalTo(
-                                                    SemanticAttributes.SERVER_PORT,
-                                                    server.getPort()),
+                                                    ServerAttributes.SERVER_PORT, server.getPort()),
                                                 equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
                                                 equalTo(
                                                     SemanticAttributes.RPC_SERVICE,
@@ -1021,9 +1012,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1048,8 +1038,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -1139,9 +1129,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.CANCELLED.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(3);
@@ -1168,8 +1157,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.CANCELLED.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -1257,9 +1246,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1287,8 +1275,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
@@ -1362,9 +1350,8 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1389,8 +1376,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     SemanticAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(

@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -101,8 +102,8 @@ public class OpenSearchRestTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
@@ -166,8 +167,8 @@ public class OpenSearchRestTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),

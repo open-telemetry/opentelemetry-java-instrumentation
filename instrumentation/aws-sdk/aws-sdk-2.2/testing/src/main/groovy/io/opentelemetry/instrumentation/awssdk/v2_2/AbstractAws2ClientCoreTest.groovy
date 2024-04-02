@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
@@ -136,8 +138,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
@@ -169,8 +171,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
@@ -201,8 +203,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
           kind CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200

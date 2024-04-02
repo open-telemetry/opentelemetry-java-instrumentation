@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -41,15 +42,15 @@ class RpcClientMetricsTest {
 
     Attributes responseAttributes1 =
         Attributes.builder()
-            .put(SemanticAttributes.SERVER_ADDRESS, "example.com")
-            .put(SemanticAttributes.SERVER_PORT, 8080)
+            .put(ServerAttributes.SERVER_ADDRESS, "example.com")
+            .put(ServerAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
             .build();
 
     Attributes responseAttributes2 =
         Attributes.builder()
-            .put(SemanticAttributes.SERVER_PORT, 8080)
+            .put(ServerAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .build();
 
@@ -91,9 +92,8 @@ class RpcClientMetricsTest {
                                                 SemanticAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
-                                            equalTo(
-                                                SemanticAttributes.SERVER_ADDRESS, "example.com"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 8080),
+                                            equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
@@ -122,7 +122,7 @@ class RpcClientMetricsTest {
                                                 SemanticAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 8080),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp")))));
   }
 

@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.ErrorAttributes
@@ -287,8 +289,8 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
       }
       attributes {
         "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-        "$SemanticAttributes.SERVER_ADDRESS" fullUrl.host
-        "$SemanticAttributes.SERVER_PORT" fullUrl.port
+        "$ServerAttributes.SERVER_ADDRESS" fullUrl.host
+        "$ServerAttributes.SERVER_PORT" fullUrl.port
         "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
         "$NetworkAttributes.NETWORK_PEER_PORT" Long
         "$UrlAttributes.URL_SCHEME" fullUrl.getScheme()

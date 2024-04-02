@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -620,8 +621,8 @@ class PulsarClientTest {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, brokerHost),
-                equalTo(SemanticAttributes.SERVER_PORT, brokerPort),
+                equalTo(ServerAttributes.SERVER_ADDRESS, brokerHost),
+                equalTo(ServerAttributes.SERVER_PORT, brokerPort),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
@@ -654,8 +655,8 @@ class PulsarClientTest {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, brokerHost),
-                equalTo(SemanticAttributes.SERVER_PORT, brokerPort),
+                equalTo(ServerAttributes.SERVER_ADDRESS, brokerHost),
+                equalTo(ServerAttributes.SERVER_PORT, brokerPort),
                 equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
                 equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                 equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),

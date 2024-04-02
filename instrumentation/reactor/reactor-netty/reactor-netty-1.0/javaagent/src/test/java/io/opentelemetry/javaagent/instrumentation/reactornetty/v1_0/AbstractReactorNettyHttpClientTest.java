@@ -29,7 +29,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -140,8 +140,8 @@ abstract class AbstractReactorNettyHttpClientTest
 
     if (uri.toString().contains("/read-timeout")) {
       attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
-      attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-      attributes.remove(SemanticAttributes.SERVER_PORT);
+      attributes.remove(ServerAttributes.SERVER_ADDRESS);
+      attributes.remove(ServerAttributes.SERVER_PORT);
     }
     return attributes;
   }
@@ -311,8 +311,8 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UrlAttributes.URL_FULL, uri.toString()),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
                             equalTo(ErrorAttributes.ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")

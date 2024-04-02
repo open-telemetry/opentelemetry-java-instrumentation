@@ -21,7 +21,7 @@ import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
@@ -45,8 +45,8 @@ class HttpClientMetricsTest {
             .put(UrlAttributes.URL_FULL, "https://localhost:1234/")
             .put(UrlAttributes.URL_PATH, "/")
             .put(UrlAttributes.URL_QUERY, "q=a")
-            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
-            .put(SemanticAttributes.SERVER_PORT, 1234)
+            .put(ServerAttributes.SERVER_ADDRESS, "localhost")
+            .put(ServerAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
@@ -102,8 +102,8 @@ class HttpClientMetricsTest {
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 1234))
+                                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 1234))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

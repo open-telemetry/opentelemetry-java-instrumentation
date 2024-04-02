@@ -21,7 +21,7 @@ import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
@@ -49,8 +49,8 @@ class HttpServerMetricsTest {
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
             .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
             .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
-            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
-            .put(SemanticAttributes.SERVER_PORT, 1234)
+            .put(ServerAttributes.SERVER_ADDRESS, "localhost")
+            .put(ServerAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
@@ -146,7 +146,7 @@ class HttpServerMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.SERVER_ADDRESS, "host")
+            .put(ServerAttributes.SERVER_ADDRESS, "host")
             .put(UrlAttributes.URL_SCHEME, "https")
             .build();
 

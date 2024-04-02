@@ -27,7 +27,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 import java.net.URI;
@@ -976,19 +976,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
               }
 
-              if (httpClientAttributes.contains(SemanticAttributes.SERVER_ADDRESS)) {
-                assertThat(attrs).containsEntry(SemanticAttributes.SERVER_ADDRESS, uri.getHost());
+              if (httpClientAttributes.contains(ServerAttributes.SERVER_ADDRESS)) {
+                assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, uri.getHost());
               }
-              if (httpClientAttributes.contains(SemanticAttributes.SERVER_PORT)) {
+              if (httpClientAttributes.contains(ServerAttributes.SERVER_PORT)) {
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
-                  if (attrs.get(SemanticAttributes.SERVER_PORT) != null) {
+                  if (attrs.get(ServerAttributes.SERVER_PORT) != null) {
                     int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
-                    assertThat(attrs).containsEntry(SemanticAttributes.SERVER_PORT, effectivePort);
+                    assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, effectivePort);
                   }
                   // alternatively, peer port is not emitted -- and that's fine too
                 } else {
-                  assertThat(attrs).containsEntry(SemanticAttributes.SERVER_PORT, uriPort);
+                  assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, uriPort);
                 }
               }
 

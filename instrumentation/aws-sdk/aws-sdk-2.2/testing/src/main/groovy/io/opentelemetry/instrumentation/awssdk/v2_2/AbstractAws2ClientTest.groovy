@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
@@ -121,13 +123,13 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
-              "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+              "$ServerAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
               "$UrlAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
             } else {
-              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$ServerAttributes.SERVER_ADDRESS" "localhost"
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:${server.httpPort()}") }
             }
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -281,13 +283,13 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
-              "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+              "$ServerAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
               "$UrlAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
             } else {
-              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+              "$ServerAttributes.SERVER_ADDRESS" "localhost"
               "$UrlAttributes.URL_FULL" { it == "http://localhost:${server.httpPort()}" || it == "http://localhost:${server.httpPort()}/" }
             }
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -449,9 +451,9 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
             // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
             // Our test assert both cases so that we don't need to know what version is being tested.
-            "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+            "$ServerAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
             "$UrlAttributes.URL_FULL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "S3"

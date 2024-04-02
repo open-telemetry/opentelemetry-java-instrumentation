@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -77,8 +77,8 @@ class ReactorNettyConnectionSpanTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpPort())),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpPort())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -86,8 +86,8 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
@@ -137,8 +137,8 @@ class ReactorNettyConnectionSpanTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT)),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT)),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -149,8 +149,8 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                             satisfies(
                                 NetworkAttributes.NETWORK_TYPE, val -> val.isIn(null, "ipv4")),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_ADDRESS,
                                 val -> val.isIn(null, "127.0.0.1")),

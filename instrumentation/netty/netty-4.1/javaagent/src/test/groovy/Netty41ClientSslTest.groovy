@@ -25,6 +25,8 @@ import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import spock.lang.Shared
@@ -96,8 +98,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -107,8 +109,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           attributes {
             "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
             "$NetworkAttributes.NETWORK_TYPE" "ipv4"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
@@ -165,8 +167,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -176,8 +178,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           attributes {
             "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
             "$NetworkAttributes.NETWORK_TYPE" "ipv4"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }

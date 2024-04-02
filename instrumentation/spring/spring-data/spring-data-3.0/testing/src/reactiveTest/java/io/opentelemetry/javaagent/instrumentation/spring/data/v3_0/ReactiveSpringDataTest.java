@@ -13,7 +13,7 @@ import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;

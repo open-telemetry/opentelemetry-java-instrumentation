@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -164,8 +165,8 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                     span.hasAttributesSatisfying(
                         attributes -> {
                           assertThat(attributes)
-                              .containsEntry(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1")
-                              .containsEntry(SemanticAttributes.SERVER_PORT, server.httpPort())
+                              .containsEntry(ServerAttributes.SERVER_ADDRESS, "127.0.0.1")
+                              .containsEntry(ServerAttributes.SERVER_PORT, server.httpPort())
                               .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method)
                               .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
                               .containsEntry(SemanticAttributes.RPC_SYSTEM, "aws-api")

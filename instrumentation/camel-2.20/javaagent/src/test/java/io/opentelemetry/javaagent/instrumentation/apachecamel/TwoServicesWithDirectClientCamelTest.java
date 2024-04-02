@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 import org.apache.camel.CamelContext;
@@ -159,8 +159,8 @@ class TwoServicesWithDirectClientCamelTest
                                 "Jakarta Commons-HttpClient/3.1"),
                             equalTo(HttpAttributes.HTTP_ROUTE, "/serviceTwo"),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, portTwo),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(ServerAttributes.SERVER_PORT, portTwo),
                             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(

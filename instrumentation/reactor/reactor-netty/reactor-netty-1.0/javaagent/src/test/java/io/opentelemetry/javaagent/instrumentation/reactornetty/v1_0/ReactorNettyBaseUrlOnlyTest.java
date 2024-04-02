@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
@@ -115,8 +115,8 @@ class ReactorNettyBaseUrlOnlyTest {
                             equalTo(UrlAttributes.URL_FULL, uri + "/"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, server.httpPort()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, server.httpPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,

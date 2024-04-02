@@ -36,7 +36,7 @@ import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
@@ -743,11 +743,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     entry -> assertThat(entry).isIn("1.1", "2.0"));
           }
 
-          assertThat(attrs).containsEntry(SemanticAttributes.SERVER_ADDRESS, "localhost");
+          assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost");
           // TODO: Move to test knob rather than always treating as optional
           // TODO: once httpAttributes test knob is used, verify default port values
-          if (attrs.get(SemanticAttributes.SERVER_PORT) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.SERVER_PORT, port);
+          if (attrs.get(ServerAttributes.SERVER_PORT) != null) {
+            assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, port);
           }
 
           if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
