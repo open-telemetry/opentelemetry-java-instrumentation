@@ -23,6 +23,8 @@ import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
@@ -117,8 +119,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           kind INTERNAL
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
-            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
+            "$NetworkAttributes.NETWORK_TYPE" "ipv4"
             "$SemanticAttributes.SERVER_ADDRESS" uri.host
             "$SemanticAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
@@ -178,8 +180,8 @@ class Netty41ConnectionSpanTest extends InstrumentationSpecification implements 
           status ERROR
           errorEvent(thrownException.class, thrownException.message)
           attributes {
-            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
-            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
+            "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
+            "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
             "$SemanticAttributes.SERVER_ADDRESS" uri.host
             "$SemanticAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }

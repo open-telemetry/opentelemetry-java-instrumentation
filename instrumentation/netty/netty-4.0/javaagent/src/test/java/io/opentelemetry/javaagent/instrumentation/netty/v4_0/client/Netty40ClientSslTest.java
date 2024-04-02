@@ -90,8 +90,8 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
                       equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
@@ -103,8 +103,8 @@ class Netty40ClientSslTest {
                       .hasParent(trace.getSpan(0))
                       .hasStatus(StatusData.error());
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 }));
@@ -182,8 +182,8 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
                       equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
@@ -192,8 +192,8 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("SSL handshake").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },

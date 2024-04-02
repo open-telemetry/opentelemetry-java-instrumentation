@@ -63,7 +63,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                         span.hasName("AUTH")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),

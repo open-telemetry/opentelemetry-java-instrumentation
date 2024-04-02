@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -132,7 +133,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(SemanticAttributes.CLIENT_ADDRESS.key, "127.0.0.1") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
+    traces.countFilteredAttributes(NetworkAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 3
@@ -240,7 +241,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/WEB-INF/web.xml") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
+    traces.countFilteredAttributes(NetworkAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
@@ -317,7 +318,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/this-is-definitely-not-there-but-there-should-be-a-trace-nevertheless") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
+    traces.countFilteredAttributes(NetworkAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 1
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == traces.countSpans()
@@ -364,7 +365,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/headers") == 1
 
     and: "Number of spans with http protocol version"
-    traces.countFilteredAttributes(SemanticAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
+    traces.countFilteredAttributes(NetworkAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3
 
     and: "Number of spans tagged with current otel library version"
     traces.countFilteredResourceAttributes(TELEMETRY_DISTRO_VERSION, currentAgentVersion) == 3

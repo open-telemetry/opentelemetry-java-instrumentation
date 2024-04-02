@@ -56,7 +56,7 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
                                             .isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null);
 
                                         String networkType =
-                                            attrs.get(SemanticAttributes.NETWORK_TYPE);
+                                            attrs.get(NetworkAttributes.NETWORK_TYPE);
                                         assertThat(networkType).isIn("ipv4", "ipv6", null);
 
                                         assertNotNull(

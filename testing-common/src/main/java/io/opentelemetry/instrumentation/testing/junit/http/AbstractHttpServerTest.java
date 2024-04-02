@@ -728,14 +728,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         attrs -> {
           // we're opting out of these attributes in the new semconv
           assertThat(attrs)
-              .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
-              .doesNotContainKey(SemanticAttributes.NETWORK_TYPE)
-              .doesNotContainKey(SemanticAttributes.NETWORK_PROTOCOL_NAME);
+              .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
+              .doesNotContainKey(NetworkAttributes.NETWORK_TYPE)
+              .doesNotContainKey(NetworkAttributes.NETWORK_PROTOCOL_NAME);
 
-          if (attrs.get(SemanticAttributes.NETWORK_PROTOCOL_VERSION) != null) {
+          if (attrs.get(NetworkAttributes.NETWORK_PROTOCOL_VERSION) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                    NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                     entry -> assertThat(entry).isIn("1.1", "2.0"));
           }
 

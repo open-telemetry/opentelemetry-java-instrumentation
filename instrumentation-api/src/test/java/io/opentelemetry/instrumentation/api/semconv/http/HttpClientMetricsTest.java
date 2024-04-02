@@ -52,8 +52,8 @@ class HttpClientMetricsTest {
             .put(SemanticAttributes.ERROR_TYPE, "400")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
             .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
-            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
             .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
             .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
             .build();
@@ -97,9 +97,9 @@ class HttpClientMetricsTest {
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(SemanticAttributes.ERROR_TYPE, "400"),
                                             equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                             equalTo(SemanticAttributes.SERVER_PORT, 1234))
                                         .hasExemplarsSatisfying(

@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Shared
 
@@ -57,7 +58,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
@@ -79,7 +80,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
@@ -101,7 +102,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
@@ -122,7 +123,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
           }
         }
@@ -143,7 +144,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
@@ -164,7 +165,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
@@ -189,7 +190,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
             "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(2) {

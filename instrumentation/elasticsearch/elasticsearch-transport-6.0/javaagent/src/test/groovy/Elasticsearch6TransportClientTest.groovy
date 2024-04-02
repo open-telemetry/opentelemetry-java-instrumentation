@@ -5,6 +5,7 @@
 
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
@@ -106,7 +107,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
+            "$NetworkAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -225,7 +226,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6"  }
+            "$NetworkAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6"  }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -241,7 +242,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
+            "$NetworkAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -272,7 +273,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "IndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
+            "$NetworkAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
@@ -294,7 +295,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
+            "$NetworkAttributes.NETWORK_TYPE" {  it == "ipv4" || it == "ipv6" }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$SemanticAttributes.DB_SYSTEM" "elasticsearch"

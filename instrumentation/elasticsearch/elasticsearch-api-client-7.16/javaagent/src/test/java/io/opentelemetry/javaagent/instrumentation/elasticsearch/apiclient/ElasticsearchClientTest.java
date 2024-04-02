@@ -18,6 +18,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
@@ -100,7 +101,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -144,7 +145,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "PUT"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
                                 UrlAttributes.URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
@@ -197,7 +198,7 @@ class ElasticsearchClientTest {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

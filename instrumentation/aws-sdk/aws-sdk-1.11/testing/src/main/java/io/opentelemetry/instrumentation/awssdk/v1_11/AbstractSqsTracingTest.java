@@ -30,6 +30,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.ArrayList;
@@ -134,7 +135,7 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
@@ -161,7 +162,7 @@ public abstract class AbstractSqsTracingTest {
                                   satisfies(
                                       SemanticAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
-                                  equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
+                                  equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
                         attributes.add(
@@ -199,7 +200,7 @@ public abstract class AbstractSqsTracingTest {
                                       SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                   equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                                   equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1),
-                                  equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
+                                  equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
                         attributes.add(
@@ -237,7 +238,7 @@ public abstract class AbstractSqsTracingTest {
                                   satisfies(
                                       SemanticAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
-                                  equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
+                                  equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
                         attributes.add(
@@ -296,7 +297,7 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -324,7 +325,7 @@ public abstract class AbstractSqsTracingTest {
                                 satisfies(
                                     SemanticAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace -> {
               AtomicReference<SpanData> receiveSpan = new AtomicReference<>();
               AtomicReference<SpanData> processSpan = new AtomicReference<>();
@@ -358,7 +359,7 @@ public abstract class AbstractSqsTracingTest {
                                           UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                      equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                      equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
                               span.hasName("testSdkSqs receive")
                                   .hasKind(SpanKind.CONSUMER)
@@ -387,7 +388,7 @@ public abstract class AbstractSqsTracingTest {
                                           "testSdkSqs"),
                                       equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
                                       equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1),
-                                      equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                      equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
                               span.hasName("testSdkSqs process")
                                   .hasKind(SpanKind.CONSUMER)
@@ -418,7 +419,7 @@ public abstract class AbstractSqsTracingTest {
                                       satisfies(
                                           SemanticAttributes.MESSAGING_MESSAGE_ID,
                                           val -> val.isInstanceOf(String.class)),
-                                      equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                      equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
                               span.hasName("process child")
                                   .hasParent(processSpan.get())

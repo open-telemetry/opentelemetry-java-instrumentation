@@ -106,7 +106,7 @@ public class ContextPropagationTest {
       assertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, operation));
     }
     if (peerAddress != null) {
-      assertions.add(equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"));
+      assertions.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
       assertions.add(equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, peerAddress));
       assertions.add(
           satisfies(NetworkAttributes.NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
@@ -207,7 +207,7 @@ public class ContextPropagationTest {
                       span.hasName("basic.ack")
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
-                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               satisfies(
                                   NetworkAttributes.NETWORK_PEER_PORT,

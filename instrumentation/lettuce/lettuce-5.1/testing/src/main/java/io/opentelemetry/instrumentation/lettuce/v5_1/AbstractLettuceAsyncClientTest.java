@@ -142,7 +142,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                         span.hasName("SET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
@@ -188,7 +188,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
@@ -266,7 +266,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
@@ -332,7 +332,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                       equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
@@ -391,7 +391,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                         span.hasName("HMSET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
@@ -409,7 +409,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                         span.hasName("HGETALL")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),

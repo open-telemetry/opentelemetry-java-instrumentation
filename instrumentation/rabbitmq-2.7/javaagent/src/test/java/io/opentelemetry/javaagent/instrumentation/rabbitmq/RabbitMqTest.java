@@ -873,7 +873,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                             || "0:0:0:0:0:0:0:1".equals(peerAddr)
                             || peerAddr == null);
 
-                    String networkType = attrs.get(SemanticAttributes.NETWORK_TYPE);
+                    String networkType = attrs.get(NetworkAttributes.NETWORK_TYPE);
                     assertThat(networkType).isIn("ipv4", "ipv6", null);
 
                     assertNotNull(attrs.get(NetworkAttributes.NETWORK_PEER_PORT));

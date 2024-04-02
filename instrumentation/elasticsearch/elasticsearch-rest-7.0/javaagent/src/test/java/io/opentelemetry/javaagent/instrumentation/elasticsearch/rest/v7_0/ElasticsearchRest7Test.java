@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.Map;
@@ -95,7 +96,7 @@ class ElasticsearchRest7Test {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -165,7 +166,7 @@ class ElasticsearchRest7Test {
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

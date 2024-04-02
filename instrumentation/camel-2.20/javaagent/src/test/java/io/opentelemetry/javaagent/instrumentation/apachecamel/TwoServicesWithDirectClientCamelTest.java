@@ -155,7 +155,7 @@ class TwoServicesWithDirectClientCamelTest
                                 SemanticAttributes.USER_AGENT_ORIGINAL,
                                 "Jakarta Commons-HttpClient/3.1"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/serviceTwo"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SemanticAttributes.SERVER_PORT, portTwo),
                             equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),

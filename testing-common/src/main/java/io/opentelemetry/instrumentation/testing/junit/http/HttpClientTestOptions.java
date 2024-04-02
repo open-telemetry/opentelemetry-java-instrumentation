@@ -9,6 +9,7 @@ import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -28,7 +29,7 @@ public abstract class HttpClientTestOptions {
       Collections.unmodifiableSet(
           new HashSet<>(
               Arrays.asList(
-                  SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                  NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                   SemanticAttributes.SERVER_ADDRESS,
                   SemanticAttributes.SERVER_PORT,
                   UrlAttributes.URL_FULL,

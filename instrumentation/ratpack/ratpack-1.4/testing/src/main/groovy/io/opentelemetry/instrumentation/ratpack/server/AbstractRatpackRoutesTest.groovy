@@ -9,6 +9,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import ratpack.path.PathBinding
@@ -96,7 +97,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" { it == "localhost" || it == null }
             "$SemanticAttributes.SERVER_PORT" { it == app.bindPort || it == null }
             "$SemanticAttributes.CLIENT_ADDRESS" { it == "127.0.0.1" || it == null }

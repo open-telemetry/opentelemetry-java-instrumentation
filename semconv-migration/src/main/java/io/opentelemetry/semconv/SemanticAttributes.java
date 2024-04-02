@@ -22,16 +22,6 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final AttributeKey<String> NETWORK_PEER_ADDRESS =
-      NetworkAttributes.NETWORK_PEER_ADDRESS;
-  public static final AttributeKey<Long> NETWORK_PEER_PORT = NetworkAttributes.NETWORK_PEER_PORT;
-  public static final AttributeKey<String> NETWORK_PROTOCOL_NAME =
-      NetworkAttributes.NETWORK_PROTOCOL_NAME;
-  public static final AttributeKey<String> NETWORK_PROTOCOL_VERSION =
-      NetworkAttributes.NETWORK_PROTOCOL_VERSION;
-  public static final AttributeKey<String> NETWORK_TRANSPORT = NetworkAttributes.NETWORK_TRANSPORT;
-  public static final AttributeKey<String> NETWORK_TYPE = NetworkAttributes.NETWORK_TYPE;
-
   public static final AttributeKeyTemplate<List<String>> HTTP_REQUEST_HEADER =
       HttpAttributes.HTTP_REQUEST_HEADER;
   public static final AttributeKey<String> HTTP_REQUEST_METHOD = HttpAttributes.HTTP_REQUEST_METHOD;

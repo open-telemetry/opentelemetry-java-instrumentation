@@ -201,7 +201,7 @@ public abstract class AbstractGrpcStreamingTest {
                                     (long) Status.Code.OK.value()),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,

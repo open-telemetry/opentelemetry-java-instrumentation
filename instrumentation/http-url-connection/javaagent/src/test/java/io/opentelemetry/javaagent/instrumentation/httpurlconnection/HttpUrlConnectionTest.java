@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.DataOutputStream;
@@ -120,7 +121,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                 equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
@@ -165,7 +166,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                 equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
@@ -216,7 +217,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                 equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
@@ -269,7 +270,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                 equalTo(SemanticAttributes.SERVER_PORT, url.getPort()),
                 equalTo(UrlAttributes.URL_FULL, url.toString()),
@@ -311,7 +312,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                 equalTo(SemanticAttributes.SERVER_PORT, PortUtils.UNUSABLE_PORT),
                 equalTo(UrlAttributes.URL_FULL, uri),

@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
@@ -88,7 +89,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
           kind SpanKind.SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"

@@ -25,6 +25,7 @@ import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
@@ -110,7 +111,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_FULL" "${server.httpUri()}"
             "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
             "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"

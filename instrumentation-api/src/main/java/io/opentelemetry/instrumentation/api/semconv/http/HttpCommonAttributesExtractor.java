@@ -15,6 +15,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashSet;
 import java.util.List;
@@ -117,9 +118,9 @@ abstract class HttpCommonAttributesExtractor<
 
     if (protocolVersion != null) {
       if (!"http".equals(protocolName)) {
-        internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_NAME, protocolName);
+        internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
       }
-      internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
+      internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }
   }
 

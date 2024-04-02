@@ -87,8 +87,8 @@ class ReactorNettyConnectionSpanTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpPort()),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
@@ -102,7 +102,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UrlAttributes.URL_FULL, uri),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, server.httpPort()),

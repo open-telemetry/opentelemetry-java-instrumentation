@@ -11,6 +11,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
@@ -64,7 +65,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
@@ -155,7 +156,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
-              "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+              "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
               "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
               "$NetworkAttributes.NETWORK_PEER_PORT" Long
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"

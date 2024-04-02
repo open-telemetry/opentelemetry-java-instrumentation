@@ -40,10 +40,10 @@ class HttpServerExperimentalMetricsTest {
             .put(UrlAttributes.URL_SCHEME, "https")
             .put(UrlAttributes.URL_PATH, "/")
             .put(UrlAttributes.URL_QUERY, "q=a")
-            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
-            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
-            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
-            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http")
+            .put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
             .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
             .put(SemanticAttributes.SERVER_PORT, 1234)
             .build();
@@ -159,9 +159,9 @@ class HttpServerExperimentalMetricsTest {
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(SemanticAttributes.ERROR_TYPE, "500"),
                                             equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
@@ -185,9 +185,9 @@ class HttpServerExperimentalMetricsTest {
                                                 SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(SemanticAttributes.ERROR_TYPE, "500"),
                                             equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
+                                                NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                                             equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+                                                NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                                             equalTo(UrlAttributes.URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->

@@ -44,15 +44,15 @@ class RpcServerMetricsTest {
             .put(SemanticAttributes.SERVER_ADDRESS, "example.com")
             .put(SemanticAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
-            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
-            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
+            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
             .build();
 
     Attributes responseAttributes2 =
         Attributes.builder()
             .put(SemanticAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
-            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .build();
 
     Context parent =
@@ -95,8 +95,8 @@ class RpcServerMetricsTest {
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
                                             equalTo(
                                                 SemanticAttributes.SERVER_ADDRESS, "example.com"),
-                                            equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"))
+                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -123,8 +123,7 @@ class RpcServerMetricsTest {
                                                 SemanticAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
                                             equalTo(SemanticAttributes.RPC_METHOD, "exampleMethod"),
-                                            equalTo(
-                                                SemanticAttributes.NETWORK_TRANSPORT, "tcp")))));
+                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp")))));
   }
 
   private static long nanos(int millis) {

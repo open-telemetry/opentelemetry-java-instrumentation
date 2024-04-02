@@ -965,12 +965,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             attrs -> {
               // we're opting out of these attributes in the new semconv
               assertThat(attrs)
-                  .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
-                  .doesNotContainKey(SemanticAttributes.NETWORK_TYPE)
-                  .doesNotContainKey(SemanticAttributes.NETWORK_PROTOCOL_NAME);
-              if (httpClientAttributes.contains(SemanticAttributes.NETWORK_PROTOCOL_VERSION)) {
+                  .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
+                  .doesNotContainKey(NetworkAttributes.NETWORK_TYPE)
+                  .doesNotContainKey(NetworkAttributes.NETWORK_PROTOCOL_NAME);
+              if (httpClientAttributes.contains(NetworkAttributes.NETWORK_PROTOCOL_VERSION)) {
                 // TODO(anuraaga): Support HTTP/2
-                assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
+                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
               }
 
               if (httpClientAttributes.contains(SemanticAttributes.SERVER_ADDRESS)) {

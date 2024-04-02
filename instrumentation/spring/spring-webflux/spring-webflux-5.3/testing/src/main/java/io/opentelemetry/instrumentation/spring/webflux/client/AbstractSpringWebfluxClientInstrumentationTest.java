@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.lang.invoke.MethodHandle;
@@ -86,7 +87,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
 

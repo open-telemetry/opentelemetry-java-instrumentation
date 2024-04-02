@@ -24,6 +24,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import org.elasticmq.rest.sqs.SQSRestServer;
@@ -101,7 +102,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -129,7 +130,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     SemanticAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("testSdkSqs process")
                             .hasKind(SpanKind.CONSUMER)
@@ -155,7 +156,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     SemanticAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
@@ -202,7 +203,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -230,7 +231,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     SemanticAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("testSdkSqs process")
                             .hasKind(SpanKind.CONSUMER)
@@ -256,7 +257,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     SemanticAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
@@ -286,7 +287,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))));
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))));
   }
 
   @Test

@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
@@ -279,7 +280,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         spanId spanID
       }
       attributes {
-        "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+        "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
         "$SemanticAttributes.SERVER_ADDRESS" fullUrl.host
         "$SemanticAttributes.SERVER_PORT" fullUrl.port
         "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"

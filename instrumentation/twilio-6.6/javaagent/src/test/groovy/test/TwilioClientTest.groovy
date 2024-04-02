@@ -18,6 +18,7 @@ import com.twilio.type.PhoneNumber
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
@@ -250,7 +251,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -316,7 +317,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -329,7 +330,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -402,7 +403,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
@@ -415,7 +416,7 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(1)
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
             "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"

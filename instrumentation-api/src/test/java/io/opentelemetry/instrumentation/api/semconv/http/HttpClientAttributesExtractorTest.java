@@ -186,7 +186,7 @@ class HttpClientAttributesExtractorTest {
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
   }
@@ -420,7 +420,7 @@ class HttpClientAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
   }
 }

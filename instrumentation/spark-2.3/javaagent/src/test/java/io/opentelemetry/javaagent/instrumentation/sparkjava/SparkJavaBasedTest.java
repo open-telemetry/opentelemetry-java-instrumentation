@@ -67,7 +67,7 @@ public class SparkJavaBasedTest {
                                 SemanticAttributes.USER_AGENT_ORIGINAL,
                                 val -> val.isInstanceOf(String.class)),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, port),
                             equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),

@@ -104,7 +104,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, Long.valueOf(port)),
                             equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),

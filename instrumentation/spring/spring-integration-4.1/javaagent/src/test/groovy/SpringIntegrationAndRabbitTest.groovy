@@ -6,6 +6,7 @@
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER
@@ -46,7 +47,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
+            "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
           }
         }
@@ -58,7 +59,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
+            "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
             "$SemanticAttributes.MESSAGING_OPERATION" "publish"
@@ -76,7 +77,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
+            "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
             "$SemanticAttributes.MESSAGING_OPERATION" "process"
@@ -113,7 +114,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == "0:0:0:0:0:0:0:1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
+            "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
             "$SemanticAttributes.MESSAGING_SYSTEM" "rabbitmq"
           }
         }

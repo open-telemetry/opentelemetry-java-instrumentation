@@ -211,7 +211,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L),
             entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
@@ -551,7 +551,7 @@ class HttpServerAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
+            entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
+            entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
   }
 }
