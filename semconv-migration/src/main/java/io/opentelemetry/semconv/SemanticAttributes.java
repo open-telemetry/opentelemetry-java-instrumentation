@@ -7,7 +7,6 @@ package io.opentelemetry.semconv;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
@@ -20,28 +19,6 @@ import java.util.List;
 public class SemanticAttributes {
 
   private SemanticAttributes() {}
-
-  public static final class DbSystemValues {
-    public static final String OTHER_SQL = DbIncubatingAttributes.DbSystemValues.OTHER_SQL;
-    public static final String MSSQL = DbIncubatingAttributes.DbSystemValues.MSSQL;
-    public static final String MYSQL = DbIncubatingAttributes.DbSystemValues.MYSQL;
-    public static final String ORACLE = DbIncubatingAttributes.DbSystemValues.ORACLE;
-    public static final String DB2 = DbIncubatingAttributes.DbSystemValues.DB2;
-    public static final String POSTGRESQL = DbIncubatingAttributes.DbSystemValues.POSTGRESQL;
-    public static final String HANADB = DbIncubatingAttributes.DbSystemValues.HANADB;
-    public static final String DERBY = DbIncubatingAttributes.DbSystemValues.DERBY;
-    public static final String MARIADB = DbIncubatingAttributes.DbSystemValues.MARIADB;
-    public static final String H2 = DbIncubatingAttributes.DbSystemValues.H2;
-    public static final String CASSANDRA = DbIncubatingAttributes.DbSystemValues.CASSANDRA;
-    public static final String MONGODB = DbIncubatingAttributes.DbSystemValues.MONGODB;
-    public static final String REDIS = DbIncubatingAttributes.DbSystemValues.REDIS;
-    public static final String COUCHBASE = DbIncubatingAttributes.DbSystemValues.COUCHBASE;
-    public static final String GEODE = DbIncubatingAttributes.DbSystemValues.GEODE;
-    public static final String ELASTICSEARCH = DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
-    public static final String OPENSEARCH = DbIncubatingAttributes.DbSystemValues.OPENSEARCH;
-
-    private DbSystemValues() {}
-  }
 
   public static final AttributeKey<String> RPC_METHOD = RpcIncubatingAttributes.RPC_METHOD;
   public static final AttributeKey<String> RPC_SERVICE = RpcIncubatingAttributes.RPC_SERVICE;

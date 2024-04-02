@@ -6,14 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+
 import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter implements DbClientAttributesGetter<CouchbaseRequestInfo> {
 
   @Override
   public String getSystem(CouchbaseRequestInfo couchbaseRequest) {
-    return SemanticAttributes.DbSystemValues.COUCHBASE;
+    return DbIncubatingAttributes.DbSystemValues.COUCHBASE;
   }
 
   @Override
