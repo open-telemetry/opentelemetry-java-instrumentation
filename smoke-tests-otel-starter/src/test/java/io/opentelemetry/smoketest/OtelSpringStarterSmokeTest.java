@@ -163,9 +163,8 @@ class OtelSpringStarterSmokeTest {
             otlpExporterProperties,
             otelResourceProperties,
             propagationProperties,
-            DefaultConfigProperties.createFromMap(Collections.singletonMap(
-                "otel.exporter.otlp.headers", "a=1,b=2"
-            )));
+            DefaultConfigProperties.createFromMap(
+                Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
         .containsEntry("a", "1")
         .containsEntry("b", "2")
