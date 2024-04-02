@@ -7,6 +7,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -106,7 +107,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -164,7 +165,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -217,7 +218,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
 
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
@@ -280,7 +281,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$ErrorAttributes.ERROR_TYPE" "500"
@@ -348,7 +349,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -396,7 +397,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -476,7 +477,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$ErrorAttributes.ERROR_TYPE" "500"
@@ -526,7 +527,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }

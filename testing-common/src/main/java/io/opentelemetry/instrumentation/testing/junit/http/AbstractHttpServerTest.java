@@ -32,6 +32,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
@@ -764,9 +765,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs).containsEntry(SemanticAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP);
+          assertThat(attrs).containsEntry(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP);
           // client.port is opt-in
-          assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
+          assertThat(attrs).doesNotContainKey(ClientAttributes.CLIENT_PORT);
 
           assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
 

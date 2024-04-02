@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -104,7 +105,7 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
             "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$HttpAttributes.HTTP_ROUTE" "/jetty-context/" + route
-            "$SemanticAttributes.CLIENT_ADDRESS" { it == null || it == TEST_CLIENT_IP }
+            "$ClientAttributes.CLIENT_ADDRESS" { it == null || it == TEST_CLIENT_IP }
           }
         }
       }

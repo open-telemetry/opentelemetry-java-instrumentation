@@ -11,6 +11,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -74,7 +75,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" Long
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$UrlAttributes.URL_PATH" "/listProducts"
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
@@ -165,7 +166,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$NetworkAttributes.NETWORK_PEER_PORT" Long
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" Long
-              "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
+              "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
               "$UrlAttributes.URL_PATH" baseUrl
               "$UrlAttributes.URL_QUERY" "$TEST_REQUEST_ID_PARAMETER=$requestId"
               "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"

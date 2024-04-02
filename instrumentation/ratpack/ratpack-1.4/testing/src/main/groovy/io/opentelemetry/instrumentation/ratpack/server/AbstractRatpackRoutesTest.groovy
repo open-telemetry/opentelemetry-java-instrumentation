@@ -9,6 +9,7 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -104,7 +105,7 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" { it == "localhost" || it == null }
             "$SemanticAttributes.SERVER_PORT" { it == app.bindPort || it == null }
-            "$SemanticAttributes.CLIENT_ADDRESS" { it == "127.0.0.1" || it == null }
+            "$ClientAttributes.CLIENT_ADDRESS" { it == "127.0.0.1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Long || it == null }
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"

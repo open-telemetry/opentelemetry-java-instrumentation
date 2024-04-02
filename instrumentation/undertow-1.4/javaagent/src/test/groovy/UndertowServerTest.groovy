@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -150,7 +151,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           }
 
           attributes {
-            "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+            "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
             "$UrlAttributes.URL_SCHEME" uri.getScheme()
             "$UrlAttributes.URL_PATH" uri.getPath()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
@@ -199,7 +200,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           errorEvent(Exception, "exception after sending response", 2)
 
           attributes {
-            "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+            "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
             "$UrlAttributes.URL_SCHEME" uri.getScheme()
             "$UrlAttributes.URL_PATH" uri.getPath()
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"

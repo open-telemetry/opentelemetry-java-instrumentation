@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Shared
@@ -130,7 +131,7 @@ abstract class AppServerTest extends SmokeTest {
     traces.countFilteredAttributes(UrlAttributes.URL_PATH.key, "/app/headers") == 1
 
     and: "Number of spans with client address"
-    traces.countFilteredAttributes(SemanticAttributes.CLIENT_ADDRESS.key, "127.0.0.1") == 1
+    traces.countFilteredAttributes(ClientAttributes.CLIENT_ADDRESS.key, "127.0.0.1") == 1
 
     and: "Number of spans with http protocol version"
     traces.countFilteredAttributes(NetworkAttributes.NETWORK_PROTOCOL_VERSION.key, "1.1") == 3

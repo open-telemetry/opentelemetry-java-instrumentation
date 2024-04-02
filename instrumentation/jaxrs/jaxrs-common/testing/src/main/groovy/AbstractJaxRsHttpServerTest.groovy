@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -296,7 +297,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         "$HttpAttributes.HTTP_REQUEST_METHOD" method
         "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
         "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-        "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+        "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
         // Optional
         "$HttpAttributes.HTTP_ROUTE" path
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {

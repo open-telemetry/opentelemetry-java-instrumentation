@@ -18,6 +18,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
@@ -205,7 +206,7 @@ class HttpServerAttributesExtractorTest {
             entry(UrlAttributes.URL_QUERY, "details=true"),
             entry(UserAgentAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
             entry(HttpAttributes.HTTP_ROUTE, "/repositories/{id}"),
-            entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
+            entry(ClientAttributes.CLIENT_ADDRESS, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")));
@@ -520,7 +521,7 @@ class HttpServerAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(entry(SemanticAttributes.CLIENT_ADDRESS, "1.2.3.4"));
+        .containsOnly(entry(ClientAttributes.CLIENT_ADDRESS, "1.2.3.4"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);

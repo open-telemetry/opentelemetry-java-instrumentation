@@ -21,9 +21,6 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final AttributeKey<String> CLIENT_ADDRESS = ClientAttributes.CLIENT_ADDRESS;
-  public static final AttributeKey<Long> CLIENT_PORT = ClientAttributes.CLIENT_PORT;
-
   public static final AttributeKey<String> SERVER_ADDRESS = ServerAttributes.SERVER_ADDRESS;
   public static final AttributeKey<Long> SERVER_PORT = ServerAttributes.SERVER_PORT;
 
