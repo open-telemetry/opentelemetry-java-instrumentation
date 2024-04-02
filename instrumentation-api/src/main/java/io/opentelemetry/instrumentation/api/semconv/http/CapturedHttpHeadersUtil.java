@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
-import static java.util.Collections.unmodifiableList;
-
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.List;
 import java.util.Locale;
@@ -24,9 +22,11 @@ final class CapturedHttpHeadersUtil {
   private static final ConcurrentMap<String, AttributeKey<List<String>>> responseKeysCache =
       new ConcurrentHashMap<>();
 
-  static List<String> lowercase(List<String> names) {
-    return unmodifiableList(
-        names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.toList()));
+  static String[] lowercase(List<String> names) {
+    return names.stream()
+        .map(s -> s.toLowerCase(Locale.ROOT))
+        .collect(Collectors.toList())
+        .toArray(new String[0]);
   }
 
   static AttributeKey<List<String>> requestAttributeKey(String headerName) {

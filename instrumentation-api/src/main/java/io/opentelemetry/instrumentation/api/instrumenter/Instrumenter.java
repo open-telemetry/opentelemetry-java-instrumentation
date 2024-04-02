@@ -16,9 +16,6 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -72,25 +69,25 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
-  private final List<? extends SpanLinksExtractor<? super REQUEST>> spanLinksExtractors;
-  private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
-      attributesExtractors;
-  private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
-  private final List<? extends OperationListener> operationListeners;
+  private final SpanLinksExtractor<? super REQUEST>[] spanLinksExtractors;
+  private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[] attributesExtractors;
+  private final ContextCustomizer<? super REQUEST>[] contextCustomizers;
+  private final OperationListener[] operationListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer = builder.buildTracer();
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
-    this.spanLinksExtractors = new ArrayList<>(builder.spanLinksExtractors);
-    this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
-    this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
-    this.operationListeners = builder.buildOperationListeners();
+    this.spanLinksExtractors = builder.spanLinksExtractors.toArray(new SpanLinksExtractor[0]);
+    this.attributesExtractors = builder.attributesExtractors.toArray(new AttributesExtractor[0]);
+    this.contextCustomizers = builder.contextCustomizers.toArray(new ContextCustomizer[0]);
+    this.operationListeners = builder.buildOperationListeners().toArray(new OperationListener[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
@@ -170,19 +167,21 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
-    spanLinksExtractors.forEach(
-        spanLinksExtractor -> spanLinksExtractor.extract(spanLinksBuilder, parentContext, request));
+    for (SpanLinksExtractor<? super REQUEST> spanLinksExtractor : spanLinksExtractors) {
+      spanLinksExtractor.extract(spanLinksBuilder, parentContext, request);
+    }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
-    attributesExtractors.forEach(
-        extractor -> extractor.onStart(attributes, parentContext, request));
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
+      extractor.onStart(attributes, parentContext, request);
+    }
 
     Context context = parentContext;
 
     // context customizers run before span start, so that they can have access to the parent span
     // context, and so that their additions to the context will be visible to span processors
-    for (int i = 0; i < contextCustomizers.size(); i++) {
-      context = contextCustomizers.get(i).onStart(context, request, attributes);
+    for (ContextCustomizer<? super REQUEST> contextCustomizer : contextCustomizers) {
+      context = contextCustomizer.onStart(context, request, attributes);
     }
 
     boolean localRoot = LocalRootSpan.isLocalRoot(context);
@@ -191,12 +190,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Span span = spanBuilder.setParent(context).startSpan();
     context = context.with(span);
 
-    if (!operationListeners.isEmpty()) {
+    if (operationListeners.length != 0) {
       // operation listeners run after span start, so that they have access to the current span
       // for capturing exemplars
       long startNanos = getNanos(startTime);
-      for (int i = 0; i < operationListeners.size(); i++) {
-        context = operationListeners.get(i).onStart(context, attributes, startNanos);
+      for (int i = 0; i < operationListeners.length; i++) {
+        context = operationListeners[i].onStart(context, attributes, startNanos);
       }
     }
 
@@ -224,17 +223,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
-    for (int i = 0; i < attributesExtractors.size(); i++) {
-      attributesExtractors.get(i).onEnd(attributes, context, request, response, error);
+    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
+      extractor.onEnd(attributes, context, request, response, error);
     }
     span.setAllAttributes(attributes);
 
-    if (!operationListeners.isEmpty()) {
+    if (operationListeners.length != 0) {
       long endNanos = getNanos(endTime);
-      ListIterator<? extends OperationListener> i =
-          operationListeners.listIterator(operationListeners.size());
-      while (i.hasPrevious()) {
-        i.previous().onEnd(context, attributes, endNanos);
+      for (int i = operationListeners.length - 1; i >= 0; i--) {
+        operationListeners[i].onEnd(context, attributes, endNanos);
       }
     }
 

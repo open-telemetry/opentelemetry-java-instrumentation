@@ -37,8 +37,8 @@ abstract class HttpCommonAttributesExtractor<
 
   final GETTER getter;
   private final HttpStatusCodeConverter statusCodeConverter;
-  private final List<String> capturedRequestHeaders;
-  private final List<String> capturedResponseHeaders;
+  private final String[] capturedRequestHeaders;
+  private final String[] capturedResponseHeaders;
   private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
@@ -64,13 +64,12 @@ abstract class HttpCommonAttributesExtractor<
       internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
 
-    capturedRequestHeaders.forEach(
-        name -> {
-          List<String> values = getter.getHttpRequestHeader(request, name);
-          if (!values.isEmpty()) {
-            internalSet(attributes, requestAttributeKey(name), values);
-          }
-        });
+    for (String name : capturedRequestHeaders) {
+      List<String> values = getter.getHttpRequestHeader(request, name);
+      if (!values.isEmpty()) {
+        internalSet(attributes, requestAttributeKey(name), values);
+      }
+    }
   }
 
   @Override
@@ -88,13 +87,12 @@ abstract class HttpCommonAttributesExtractor<
         internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
       }
 
-      capturedResponseHeaders.forEach(
-          name -> {
-            List<String> values = getter.getHttpResponseHeader(request, response, name);
-            if (!values.isEmpty()) {
-              internalSet(attributes, responseAttributeKey(name), values);
-            }
-          });
+      for (String name : capturedResponseHeaders) {
+        List<String> values = getter.getHttpResponseHeader(request, response, name);
+        if (!values.isEmpty()) {
+          internalSet(attributes, responseAttributeKey(name), values);
+        }
+      }
     }
 
     String errorType = null;

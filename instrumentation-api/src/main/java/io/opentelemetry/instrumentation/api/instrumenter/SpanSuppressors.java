@@ -66,7 +66,7 @@ final class SpanSuppressors {
     private final SpanKey[] spanKeys;
 
     BySpanKey(Set<SpanKey> spanKeys) {
-      this.spanKeys = spanKeys.toArray(new SpanKey[spanKeys.size()]);
+      this.spanKeys = spanKeys.toArray(new SpanKey[0]);
     }
 
     @Override
