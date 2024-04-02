@@ -17,6 +17,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -38,7 +40,7 @@ class HttpServerMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
+            .put(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
             .put(UrlAttributes.URL_SCHEME, "https")
             .put(UrlAttributes.URL_PATH, "/")
             .put(UrlAttributes.URL_QUERY, "q=a")
@@ -52,10 +54,10 @@ class HttpServerMetricsTest {
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(SemanticAttributes.ERROR_TYPE, "500")
-            .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
-            .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE, 100)
+            .put(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
             .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
             .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "4.3.2.1")
@@ -97,9 +99,8 @@ class HttpServerMetricsTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(
-                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(SemanticAttributes.ERROR_TYPE, "500"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
@@ -149,7 +150,7 @@ class HttpServerMetricsTest {
             .build();
 
     Attributes responseAttributes =
-        Attributes.builder().put(SemanticAttributes.HTTP_ROUTE, "/test/{id}").build();
+        Attributes.builder().put(HttpAttributes.HTTP_ROUTE, "/test/{id}").build();
 
     Context parentContext = Context.root();
 
@@ -172,8 +173,7 @@ class HttpServerMetricsTest {
                                         .hasSum(0.100 /* seconds */)
                                         .hasAttributesSatisfying(
                                             equalTo(UrlAttributes.URL_SCHEME, "https"),
-                                            equalTo(
-                                                SemanticAttributes.HTTP_ROUTE, "/test/{id}")))));
+                                            equalTo(HttpAttributes.HTTP_ROUTE, "/test/{id}")))));
   }
 
   private static long nanos(int millis) {

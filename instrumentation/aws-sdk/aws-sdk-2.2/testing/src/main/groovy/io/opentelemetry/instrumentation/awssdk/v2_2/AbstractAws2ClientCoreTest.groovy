@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
@@ -137,8 +139,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "CreateTable"
@@ -170,8 +172,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "DynamoDb"
             "$SemanticAttributes.RPC_METHOD" "Query"
@@ -202,8 +204,8 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$UrlAttributes.URL_FULL" { it.startsWith("${server.httpUri()}${path}") }
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "$service"
             "$SemanticAttributes.RPC_METHOD" "${operation}"

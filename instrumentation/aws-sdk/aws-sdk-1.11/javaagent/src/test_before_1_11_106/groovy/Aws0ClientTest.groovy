@@ -25,6 +25,8 @@ import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
@@ -109,8 +111,8 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$UrlAttributes.URL_FULL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
@@ -171,7 +173,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$UrlAttributes.URL_FULL" "http://localhost:${UNUSABLE_PORT}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$SemanticAttributes.SERVER_PORT" 61
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -219,7 +221,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$UrlAttributes.URL_FULL" "https://s3.amazonaws.com"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
             "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
@@ -262,7 +264,7 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
           hasNoParent()
           attributes {
             "$UrlAttributes.URL_FULL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"

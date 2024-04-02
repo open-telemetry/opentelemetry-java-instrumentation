@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.net.URI;
 import org.junit.jupiter.api.AfterAll;
@@ -69,7 +69,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                     span.hasName("POST /camelService")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
                             equalTo(UrlAttributes.URL_FULL, requestUrl.toString()),
                             equalTo(
                                 stringKey("camel.uri"),

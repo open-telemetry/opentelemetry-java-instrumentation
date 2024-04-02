@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.Map;
@@ -84,7 +85,7 @@ class ElasticsearchRest7Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(
@@ -144,7 +145,7 @@ class ElasticsearchRest7Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health")),

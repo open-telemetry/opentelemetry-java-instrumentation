@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import org.elasticmq.rest.sqs.SQSRestServerBuilder
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -130,8 +132,8 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
             "rpc.method" "CreateQueue"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -150,8 +152,8 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "Sqs"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -171,8 +173,8 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -211,8 +213,8 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -322,8 +324,8 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "rpc.system" "aws-api"
             "rpc.method" "SendMessageBatch"
             "rpc.service" "Sqs"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -344,8 +346,8 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "rpc.method" "ReceiveMessage"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" sqsPort
@@ -372,8 +374,8 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "rpc.method" "ReceiveMessage"
               "rpc.system" "aws-api"
               "rpc.service" "Sqs"
-              "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$SemanticAttributes.SERVER_ADDRESS" "localhost"
               "$SemanticAttributes.SERVER_PORT" sqsPort

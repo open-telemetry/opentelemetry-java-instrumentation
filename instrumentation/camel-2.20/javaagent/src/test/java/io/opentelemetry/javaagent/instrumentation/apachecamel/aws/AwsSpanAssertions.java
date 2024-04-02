@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -67,8 +68,8 @@ class AwsSpanAssertions {
                 val ->
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isEqualTo(queueUrl), v -> assertThat(v).isNull())),
-            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             satisfies(
                 SemanticAttributes.SERVER_ADDRESS,
@@ -118,8 +119,8 @@ class AwsSpanAssertions {
             equalTo(stringKey("rpc.method"), spanName.substring(3)),
             equalTo(stringKey("rpc.service"), "Amazon S3"),
             equalTo(stringKey("aws.bucket.name"), bucketName),
-            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, method),
-            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, method),
+            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             satisfies(SemanticAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
@@ -140,8 +141,8 @@ class AwsSpanAssertions {
             equalTo(stringKey("rpc.method"), spanName.substring(4)),
             equalTo(stringKey("rpc.service"), "AmazonSNS"),
             equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicArn),
-            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             satisfies(SemanticAttributes.SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),

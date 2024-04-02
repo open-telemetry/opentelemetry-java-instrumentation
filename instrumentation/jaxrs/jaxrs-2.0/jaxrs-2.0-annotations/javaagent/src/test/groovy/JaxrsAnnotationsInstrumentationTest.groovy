@@ -5,6 +5,8 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import spock.lang.Unroll
 
 import javax.ws.rs.DELETE
@@ -35,8 +37,8 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_ROUTE" paramName
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_ROUTE" paramName
             "$SemanticAttributes.ERROR_TYPE" "_OTHER"
           }
         }
@@ -125,7 +127,7 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
           name "GET"
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.ERROR_TYPE" "_OTHER"
           }
         }

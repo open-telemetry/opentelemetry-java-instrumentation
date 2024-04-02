@@ -11,6 +11,9 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
@@ -72,11 +75,11 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.SERVER_PORT" Long
             "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
             "$UrlAttributes.URL_PATH" "/listProducts"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_SCHEME" "http"
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+            "$HttpAttributes.HTTP_ROUTE" "/listProducts"
           }
         }
         span(1) {
@@ -164,11 +167,11 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
               "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
               "$UrlAttributes.URL_PATH" baseUrl
               "$UrlAttributes.URL_QUERY" "$TEST_REQUEST_ID_PARAMETER=$requestId"
-              "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
               "$UrlAttributes.URL_SCHEME" "http"
               "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-              "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+              "$HttpAttributes.HTTP_ROUTE" "/listProducts"
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId
             }
           }

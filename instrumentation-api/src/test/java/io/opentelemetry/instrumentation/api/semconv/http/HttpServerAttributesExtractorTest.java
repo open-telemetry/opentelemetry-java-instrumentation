@@ -18,6 +18,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -196,12 +197,12 @@ class HttpServerAttributesExtractorTest {
         .containsOnly(
             entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
             entry(SemanticAttributes.SERVER_PORT, 443L),
-            entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
+            entry(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             entry(UrlAttributes.URL_SCHEME, "https"),
             entry(UrlAttributes.URL_PATH, "/repositories/1"),
             entry(UrlAttributes.URL_QUERY, "details=true"),
             entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
+            entry(HttpAttributes.HTTP_ROUTE, "/repositories/{id}"),
             entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
@@ -214,8 +215,8 @@ class HttpServerAttributesExtractorTest {
             entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
+            entry(HttpAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));
@@ -235,8 +236,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, requestMethod)
-        .doesNotContainKey(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
@@ -253,8 +254,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @ParameterizedTest
@@ -271,8 +272,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @ParameterizedTest
@@ -291,8 +292,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, requestMethod)
-        .doesNotContainKey(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
@@ -311,8 +312,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @Test
@@ -328,7 +329,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500)
+        .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500)
         .containsEntry(SemanticAttributes.ERROR_TYPE, "500");
   }
 
@@ -394,7 +395,7 @@ class HttpServerAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L));
+        .containsOnly(entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 202L));
   }
 
   @Test
@@ -422,7 +423,7 @@ class HttpServerAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -449,7 +450,7 @@ class HttpServerAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -475,7 +476,7 @@ class HttpServerAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -500,7 +501,7 @@ class HttpServerAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+        .containsOnly(entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -525,7 +526,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
             entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
   }
@@ -550,7 +551,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
             entry(NetworkAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
             entry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
   }

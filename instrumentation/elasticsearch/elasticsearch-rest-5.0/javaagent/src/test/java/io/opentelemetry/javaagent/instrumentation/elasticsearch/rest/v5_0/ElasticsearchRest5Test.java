@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -95,7 +96,7 @@ class ElasticsearchRest5Test {
                     .hasNoParent()
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                         equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
@@ -107,10 +108,10 @@ class ElasticsearchRest5Test {
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                         equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                        equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200));
+                        equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200));
               });
         });
   }
@@ -171,7 +172,7 @@ class ElasticsearchRest5Test {
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
                         equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
@@ -183,10 +184,10 @@ class ElasticsearchRest5Test {
                     .hasAttributesSatisfyingExactly(
                         equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                         equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                         equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                        equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200));
+                        equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200));
               },
               span -> {
                 span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0));

@@ -24,6 +24,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -135,7 +136,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 span ->
                     assertClientSpan(span, uri, HttpConstants._OTHER, responseCode, null)
                         .hasNoParent()
-                        .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
   }
 
   @ParameterizedTest
@@ -254,7 +255,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -294,7 +295,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -353,7 +354,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
               .collect(Collectors.toList()));
@@ -400,7 +401,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -1008,8 +1009,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
                 assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_METHOD)) {
-                assertThat(attrs).containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method);
+              if (httpClientAttributes.contains(HttpAttributes.HTTP_REQUEST_METHOD)) {
+                assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
               }
 
               // opt-in, not collected by default
@@ -1017,24 +1018,22 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
               if (responseCode != null) {
                 assertThat(attrs)
-                    .containsEntry(
-                        SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
+                    .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
                 if (responseCode >= 400) {
                   assertThat(attrs)
                       .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(responseCode));
                 }
               } else {
-                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE);
+                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
                 // TODO: add more detailed assertions, per url
                 assertThat(attrs).containsKey(SemanticAttributes.ERROR_TYPE);
               }
 
               if (resendCount != null) {
                 assertThat(attrs)
-                    .containsEntry(
-                        SemanticAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
+                    .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
-                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT);
+                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
               }
             });
   }

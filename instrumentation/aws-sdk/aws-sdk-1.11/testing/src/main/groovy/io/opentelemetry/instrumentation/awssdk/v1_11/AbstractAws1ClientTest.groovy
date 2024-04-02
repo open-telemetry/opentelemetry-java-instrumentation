@@ -32,6 +32,8 @@ import com.amazonaws.services.sns.model.PublishRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
@@ -107,8 +109,8 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           hasNoParent()
           attributes {
             "$UrlAttributes.URL_FULL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
@@ -204,7 +206,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           hasNoParent()
           attributes {
             "$UrlAttributes.URL_FULL" "http://127.0.0.1:${UNUSABLE_PORT}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.SERVER_PORT" 61
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"
@@ -260,7 +262,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           hasNoParent()
           attributes {
             "$UrlAttributes.URL_FULL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$SemanticAttributes.SERVER_PORT" server.httpPort()
             "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
             "$SemanticAttributes.RPC_SYSTEM" "aws-api"

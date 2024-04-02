@@ -18,6 +18,8 @@ import com.twilio.type.PhoneNumber
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import org.apache.http.HttpEntity
@@ -253,9 +255,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
+            "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
           }
         }
       }
@@ -319,9 +321,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
+            "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
             "$SemanticAttributes.ERROR_TYPE" "500"
           }
         }
@@ -332,9 +334,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
+            "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
           }
         }
       }
@@ -405,9 +407,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
+            "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 500
             "$SemanticAttributes.ERROR_TYPE" "500"
           }
         }
@@ -418,9 +420,9 @@ class TwilioClientTest extends AgentInstrumentationSpecification {
           attributes {
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS.key" "api.twilio.com"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD.key" "POST"
+            "$HttpAttributes.HTTP_REQUEST_METHOD.key" "POST"
             "$UrlAttributes.URL_FULL.key" "https://api.twilio.com/2010-04-01/Accounts/abc/Messages.json"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE.key" 200
           }
         }
       }

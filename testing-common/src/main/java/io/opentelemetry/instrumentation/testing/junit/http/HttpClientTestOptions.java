@@ -9,6 +9,7 @@ import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -33,7 +34,7 @@ public abstract class HttpClientTestOptions {
                   SemanticAttributes.SERVER_ADDRESS,
                   SemanticAttributes.SERVER_PORT,
                   UrlAttributes.URL_FULL,
-                  SemanticAttributes.HTTP_REQUEST_METHOD)));
+                  HttpAttributes.HTTP_REQUEST_METHOD)));
 
   public static final BiFunction<URI, String, String> DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER =
       (uri, method) -> HttpConstants._OTHER.equals(method) ? "HTTP" : method;

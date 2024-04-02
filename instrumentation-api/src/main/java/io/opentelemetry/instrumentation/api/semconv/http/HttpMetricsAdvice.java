@@ -10,6 +10,7 @@ import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -28,8 +29,8 @@ final class HttpMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                SemanticAttributes.HTTP_REQUEST_METHOD,
-                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.HTTP_REQUEST_METHOD,
+                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
                 SemanticAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
@@ -44,9 +45,9 @@ final class HttpMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                SemanticAttributes.HTTP_ROUTE,
-                SemanticAttributes.HTTP_REQUEST_METHOD,
-                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.HTTP_ROUTE,
+                HttpAttributes.HTTP_REQUEST_METHOD,
+                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
                 SemanticAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,

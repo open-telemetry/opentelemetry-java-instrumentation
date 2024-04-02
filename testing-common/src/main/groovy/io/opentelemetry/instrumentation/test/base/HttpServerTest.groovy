@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import spock.lang.Shared
@@ -58,7 +59,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
-    if (!httpAttributes(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+    if (!httpAttributes(endpoint).contains(HttpAttributes.HTTP_ROUTE)) {
       return null
     }
 
@@ -175,7 +176,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   /** A list of additional HTTP server span attributes extracted by the instrumentation per URI. */
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     [
-      SemanticAttributes.HTTP_ROUTE,
+      HttpAttributes.HTTP_ROUTE,
       NetworkAttributes.NETWORK_PEER_PORT
     ] as Set
   }

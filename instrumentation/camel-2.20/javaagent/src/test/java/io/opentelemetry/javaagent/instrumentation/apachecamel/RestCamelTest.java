@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -92,8 +93,8 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 stringKey("camel.uri"),
                                 "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->
                     span.hasName("GET /api/{module}/unit/{unitId}")
                         .hasKind(SpanKind.SERVER)
@@ -101,9 +102,9 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                         .hasAttributesSatisfyingExactly(
                             equalTo(UrlAttributes.URL_SCHEME, "http"),
                             equalTo(UrlAttributes.URL_PATH, "/api/firstModule/unit/unitOne"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, Long.valueOf(port)),
@@ -120,7 +121,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(
                                 UrlAttributes.URL_FULL,
                                 "http://localhost:" + port + "/api/firstModule/unit/unitOne"),

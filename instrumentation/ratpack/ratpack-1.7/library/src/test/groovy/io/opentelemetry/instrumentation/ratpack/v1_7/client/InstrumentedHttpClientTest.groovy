@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE
 
 class InstrumentedHttpClientTest extends Specification {
 

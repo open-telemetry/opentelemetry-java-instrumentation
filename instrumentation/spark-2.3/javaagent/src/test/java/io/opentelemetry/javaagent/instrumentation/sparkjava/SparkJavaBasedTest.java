@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -61,12 +62,12 @@ public class SparkJavaBasedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(UrlAttributes.URL_SCHEME, "http"),
                             equalTo(UrlAttributes.URL_PATH, "/param/asdf1234"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(
                                 SemanticAttributes.USER_AGENT_ORIGINAL,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
+                            equalTo(HttpAttributes.HTTP_ROUTE, "/param/:param"),
                             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(SemanticAttributes.SERVER_PORT, port),

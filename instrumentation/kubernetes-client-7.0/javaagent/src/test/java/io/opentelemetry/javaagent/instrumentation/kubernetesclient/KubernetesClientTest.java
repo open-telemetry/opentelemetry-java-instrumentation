@@ -18,6 +18,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
@@ -81,8 +82,8 @@ class KubernetesClientTest {
                                 UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(
@@ -128,8 +129,8 @@ class KubernetesClientTest {
                                 UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(SemanticAttributes.ERROR_TYPE, "451"),
@@ -182,8 +183,8 @@ class KubernetesClientTest {
                                 UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(
@@ -243,8 +244,8 @@ class KubernetesClientTest {
                                 UrlAttributes.URL_FULL,
                                 mockWebServer.httpUri()
                                     + "/api/v1/namespaces/namespace/pods/name/proxy?path=path"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SemanticAttributes.SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(SemanticAttributes.ERROR_TYPE, "451"),

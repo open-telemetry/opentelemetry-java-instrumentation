@@ -7,6 +7,9 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
@@ -92,10 +95,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           attributes {
             "$UrlAttributes.URL_SCHEME" "http"
             "$UrlAttributes.URL_PATH" route
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" route
+            "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -161,10 +164,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           attributes {
             "$UrlAttributes.URL_SCHEME" "http"
             "$UrlAttributes.URL_PATH" route
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" route
+            "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -209,10 +212,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           attributes {
             "$UrlAttributes.URL_SCHEME" "http"
             "$UrlAttributes.URL_PATH" route
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" route
+            "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -305,10 +308,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           attributes {
             "$UrlAttributes.URL_SCHEME" "http"
             "$UrlAttributes.URL_PATH" route
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" route
+            "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -387,10 +390,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           attributes {
             "$UrlAttributes.URL_SCHEME" "http"
             "$UrlAttributes.URL_PATH" route
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 500
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 500
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" route
+            "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port
@@ -449,10 +452,10 @@ class JspInstrumentationForwardTests extends AgentInstrumentationSpecification {
           attributes {
             "$UrlAttributes.URL_SCHEME" "http"
             "$UrlAttributes.URL_PATH" route
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 404
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 404
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" route
+            "$HttpAttributes.HTTP_ROUTE" route
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$SemanticAttributes.SERVER_ADDRESS" "localhost"
             "$SemanticAttributes.SERVER_PORT" port

@@ -5,6 +5,8 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Shared
@@ -54,8 +56,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.name" queueName
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -76,8 +78,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -98,8 +100,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.queue.url" queueUrl
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -119,8 +121,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "CreateTopic"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -140,8 +142,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "Subscribe"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -161,8 +163,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.method" "Publish"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
@@ -181,8 +183,8 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "ReceiveMessage"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UrlAttributes.URL_FULL" String
             "$SemanticAttributes.SERVER_ADDRESS" String
             "$SemanticAttributes.SERVER_PORT" { it == null || Number }

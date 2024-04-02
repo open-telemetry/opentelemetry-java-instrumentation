@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.HashSet;
@@ -76,10 +77,10 @@ public class ElasticsearchClientAttributeExtractor
       AttributesBuilder attributes, Context parentContext, ElasticsearchRestRequest request) {
     String method = request.getMethod();
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
     setPathPartsAttributes(attributes, request);
   }

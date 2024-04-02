@@ -9,6 +9,9 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
@@ -103,13 +106,13 @@ abstract class AbstractRatpackRoutesTest extends InstrumentationSpecification {
             "$SemanticAttributes.CLIENT_ADDRESS" { it == "127.0.0.1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
             "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Long || it == null }
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$SemanticAttributes.USER_AGENT_ORIGINAL" String
             "$UrlAttributes.URL_SCHEME" "http"
             "$UrlAttributes.URL_PATH" "/$path"
             "$UrlAttributes.URL_QUERY" { it == "" || it == null }
-            "$SemanticAttributes.HTTP_ROUTE" "/$route"
+            "$HttpAttributes.HTTP_ROUTE" "/$route"
           }
         }
         if (hasHandlerSpan()) {

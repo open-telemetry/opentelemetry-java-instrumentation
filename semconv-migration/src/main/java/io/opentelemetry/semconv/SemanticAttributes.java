@@ -10,7 +10,6 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
@@ -21,22 +20,6 @@ import java.util.List;
 public class SemanticAttributes {
 
   private SemanticAttributes() {}
-
-  public static final AttributeKeyTemplate<List<String>> HTTP_REQUEST_HEADER =
-      HttpAttributes.HTTP_REQUEST_HEADER;
-  public static final AttributeKey<String> HTTP_REQUEST_METHOD = HttpAttributes.HTTP_REQUEST_METHOD;
-  public static final AttributeKey<String> HTTP_REQUEST_METHOD_ORIGINAL =
-      HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
-  public static final AttributeKey<Long> HTTP_REQUEST_RESEND_COUNT =
-      HttpAttributes.HTTP_REQUEST_RESEND_COUNT;
-  public static final AttributeKey<Long> HTTP_RESPONSE_STATUS_CODE =
-      HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-  public static final AttributeKey<String> HTTP_ROUTE = HttpAttributes.HTTP_ROUTE;
-
-  public static final AttributeKey<Long> HTTP_REQUEST_BODY_SIZE =
-      HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE;
-  public static final AttributeKey<Long> HTTP_RESPONSE_BODY_SIZE =
-      HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE;
 
   public static final AttributeKey<String> ERROR_TYPE = ErrorAttributes.ERROR_TYPE;
 

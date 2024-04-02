@@ -11,6 +11,7 @@ import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -24,8 +25,8 @@ final class HttpExperimentalMetricsAdvice {
     ((ExtendedLongHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                SemanticAttributes.HTTP_REQUEST_METHOD,
-                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.HTTP_REQUEST_METHOD,
+                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
                 SemanticAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
@@ -41,9 +42,9 @@ final class HttpExperimentalMetricsAdvice {
         .setAttributesAdvice(
             asList(
                 // stable attributes
-                SemanticAttributes.HTTP_ROUTE,
-                SemanticAttributes.HTTP_REQUEST_METHOD,
-                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE,
+                HttpAttributes.HTTP_ROUTE,
+                HttpAttributes.HTTP_REQUEST_METHOD,
+                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
                 SemanticAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
@@ -58,7 +59,7 @@ final class HttpExperimentalMetricsAdvice {
         .setAttributesAdvice(
             asList(
                 // https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#metric-httpserveractive_requests
-                SemanticAttributes.HTTP_REQUEST_METHOD, UrlAttributes.URL_SCHEME));
+                HttpAttributes.HTTP_REQUEST_METHOD, UrlAttributes.URL_SCHEME));
   }
 
   private HttpExperimentalMetricsAdvice() {}

@@ -32,6 +32,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -514,7 +515,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                               HttpConstants._OTHER,
                               SUCCESS,
                               options.responseCodeOnNonStandardHttpMethod)
-                          .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                          .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
     } finally {
       eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
     }
@@ -765,9 +766,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           // client.port is opt-in
           assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
 
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method);
+          assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
 
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
+          assertThat(attrs).containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
           if (statusCode >= 500) {
             assertThat(attrs)
                 .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(statusCode));
@@ -784,8 +785,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             }
           }
 
-          if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
+          if (httpAttributes.contains(HttpAttributes.HTTP_ROUTE) && expectedRoute != null) {
+            assertThat(attrs).containsEntry(HttpAttributes.HTTP_ROUTE, expectedRoute);
           }
 
           if (endpoint == CAPTURE_HEADERS) {
@@ -831,7 +832,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
-    if (!options.httpAttributes.apply(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+    if (!options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE)) {
       return null;
     }
 

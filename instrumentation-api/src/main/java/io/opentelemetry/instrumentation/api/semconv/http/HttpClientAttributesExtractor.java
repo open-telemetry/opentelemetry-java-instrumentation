@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
@@ -78,7 +78,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     int resendCount = resendCountIncrementer.applyAsInt(parentContext);
     if (resendCount > 0) {
-      attributes.put(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT, resendCount);
+      attributes.put(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, resendCount);
     }
   }
 
