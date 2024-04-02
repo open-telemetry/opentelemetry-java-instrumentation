@@ -10,7 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -56,10 +56,12 @@ class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                destinationName),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
                     span.hasName(destinationName + " receive")
@@ -67,10 +69,12 @@ class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
                         .hasParent(trace.getSpan(1))
                         .hasTotalRecordedLinks(0)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                destinationName),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));

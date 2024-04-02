@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 /** A builder of {@link CassandraTelemetry}. */
 public class CassandraTelemetryBuilder {

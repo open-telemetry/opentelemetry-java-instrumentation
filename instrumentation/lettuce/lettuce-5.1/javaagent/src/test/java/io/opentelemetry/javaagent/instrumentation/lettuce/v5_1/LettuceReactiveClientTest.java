@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import org.junit.jupiter.api.Test;

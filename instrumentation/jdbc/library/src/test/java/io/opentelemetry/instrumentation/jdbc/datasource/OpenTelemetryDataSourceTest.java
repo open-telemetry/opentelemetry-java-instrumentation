@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.sql.Connection;
 import java.sql.SQLException;

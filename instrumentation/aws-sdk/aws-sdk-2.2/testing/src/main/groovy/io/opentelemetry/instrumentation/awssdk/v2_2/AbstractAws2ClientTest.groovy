@@ -7,9 +7,13 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 
 import io.opentelemetry.semconv.SemanticAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -146,14 +150,14 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
-              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+              "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             } else if (service == "Sns") {
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somearn"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somearn"
             }
           }
         }
@@ -306,14 +310,14 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
-              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+              "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             } else if (service == "Sns") {
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somearn"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somearn"
             }
           }
         }

@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

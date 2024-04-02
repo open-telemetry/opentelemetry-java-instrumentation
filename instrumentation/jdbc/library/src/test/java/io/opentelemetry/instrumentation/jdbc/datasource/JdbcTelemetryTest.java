@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

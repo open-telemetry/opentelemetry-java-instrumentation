@@ -7,10 +7,10 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT

@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,13 +97,13 @@ public class ContextPropagationTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destination),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (operation != null) {
-      assertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, operation));
+      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation));
     }
     if (peerAddress != null) {
       assertions.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
@@ -114,7 +114,7 @@ public class ContextPropagationTest {
     if (routingKey) {
       assertions.add(
           satisfies(
-              SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+              MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
               AbstractStringAssert::isNotBlank));
     }
     if (testHeaders) {
@@ -212,7 +212,7 @@ public class ContextPropagationTest {
                               satisfies(
                                   NetworkAttributes.NETWORK_PEER_PORT,
                                   AbstractLongAssert::isNotNegative),
-                              equalTo(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")));
+                              equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq")));
             });
       }
     }

@@ -12,7 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.hibernate.Criteria;

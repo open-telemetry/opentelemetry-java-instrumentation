@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -23,20 +23,21 @@ final class KafkaConsumerAttributesExtractor
     ConsumerRecord<?, ?> record = request.getRecord();
 
     attributes.put(
-        SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, (long) record.partition());
-    attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
+        MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+        (long) record.partition());
+    attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
 
     Object key = record.key();
     if (key != null && canSerialize(key.getClass())) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
+      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
     }
     if (record.value() == null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
+      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
 
     String consumerGroup = request.getConsumerGroup();
     if (consumerGroup != null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
+      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
     }
   }
 

@@ -14,9 +14,9 @@ import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes

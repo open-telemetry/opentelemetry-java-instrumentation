@@ -8,6 +8,11 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -161,10 +166,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -222,10 +227,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "receive"
+            "$MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -246,10 +251,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             if (captureHeaders) {
               "messaging.header.test_message_header" { it == ["test"] }
             }
@@ -397,9 +402,9 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
           }
         }
         publishSpan = span(0)
@@ -421,10 +426,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 3
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "receive"
+            "$MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 3
           }
         }
         if (!xrayInjectionEnabled) {
@@ -460,10 +465,10 @@ abstract class AbstractAws2SqsTracingTest extends InstrumentationSpecification {
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$ServerAttributes.SERVER_ADDRESS" "localhost"
               "$ServerAttributes.SERVER_PORT" sqsPort
-              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-              "$SemanticAttributes.MESSAGING_OPERATION" "process"
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+              "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             }
           }
           span(1 + 2*i + 1) {

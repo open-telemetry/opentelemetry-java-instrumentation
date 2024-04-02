@@ -28,7 +28,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

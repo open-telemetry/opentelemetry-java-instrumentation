@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
 import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
 import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
 import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;

@@ -11,7 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,17 +56,17 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                 satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
+                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                     AbstractLongAssert::isNotNegative),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
@@ -81,24 +81,24 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                 equalTo(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     greeting.getBytes(StandardCharsets.UTF_8).length),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                     AbstractLongAssert::isNotNegative),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative),
                 satisfies(
                     AttributeKey.longKey("kafka.record.queue_time_ms"),
                     AbstractLongAssert::isNotNegative),
-                equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
+                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer"))));
     if (testHeaders) {
       assertions.add(

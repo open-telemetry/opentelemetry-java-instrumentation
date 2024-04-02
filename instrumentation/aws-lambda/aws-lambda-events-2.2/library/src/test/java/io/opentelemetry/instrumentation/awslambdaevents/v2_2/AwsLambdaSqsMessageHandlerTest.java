@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,8 +86,8 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -105,10 +106,11 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, "message1"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "queue1"))
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message1"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, "queue1"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -121,10 +123,11 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, "message2"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, "queue1"))
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message2"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, "queue1"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(

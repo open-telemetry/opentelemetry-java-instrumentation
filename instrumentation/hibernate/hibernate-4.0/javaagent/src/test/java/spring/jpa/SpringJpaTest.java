@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.regex.Pattern;
 import org.hibernate.Version;
 import org.junit.jupiter.api.Test;

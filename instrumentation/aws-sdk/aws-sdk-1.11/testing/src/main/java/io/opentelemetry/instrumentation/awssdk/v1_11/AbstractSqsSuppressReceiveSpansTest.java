@@ -26,9 +26,9 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -126,12 +126,15 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSdkSqs"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
@@ -152,12 +155,15 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSdkSqs"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
@@ -227,12 +233,15 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSdkSqs"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
@@ -253,12 +262,15 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSdkSqs"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->

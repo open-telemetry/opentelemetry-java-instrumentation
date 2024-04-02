@@ -31,6 +31,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -754,7 +755,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                               assertTrue(deliveryMode == null || deliveryMode == 2);
 
                               assertNotNull(
-                                  attrs.get(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE));
+                                  attrs.get(
+                                      MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE));
                             });
                   });
           break;
@@ -774,7 +776,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                                       || queue.equals("some-routing-queue")
                                       || queue.startsWith("amq.gen-"));
 
-                              attrs.get(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE);
+                              attrs.get(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE);
                             });
                   });
           break;
@@ -785,7 +787,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     assertThat(attributes)
                         .satisfies(
                             attrs -> {
-                              attrs.get(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE);
+                              attrs.get(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE);
                             });
                   });
           break;
@@ -817,7 +819,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @SuppressWarnings("deprecation")
   private static void verifyMessagingAttributes(
       SpanDataAssert span, String exchange, String routingKey, String operation) {
-    span.hasAttribute(SemanticAttributes.MESSAGING_SYSTEM, "rabbitmq")
+    span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq")
         .hasAttributesSatisfying(
             attributes -> {
               assertThat(attributes)
@@ -828,7 +830,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         assertTrue(destinationName == null || destinationName.equals(exchange));
                         String routingKeyAttr =
                             attrs.get(
-                                SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY);
+                                MessagingIncubatingAttributes
+                                    .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY);
                         assertTrue(
                             routingKeyAttr == null
                                 || routingKeyAttr.equals(routingKey)
@@ -837,7 +840,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             });
 
     if (operation != null && !operation.equals("publish")) {
-      span.hasAttribute(SemanticAttributes.MESSAGING_OPERATION, operation);
+      span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation);
     }
   }
 

@@ -20,10 +20,10 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit

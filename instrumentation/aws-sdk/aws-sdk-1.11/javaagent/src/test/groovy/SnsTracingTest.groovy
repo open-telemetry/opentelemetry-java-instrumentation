@@ -5,6 +5,10 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -150,7 +154,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$ServerAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
       }
@@ -171,7 +175,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$ServerAttributes.SERVER_ADDRESS" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
         span(1) {
@@ -190,10 +194,10 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_FULL" String
             "$ServerAttributes.SERVER_ADDRESS" String
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }

@@ -25,9 +25,9 @@ import com.amazonaws.services.s3.S3ClientOptions
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes

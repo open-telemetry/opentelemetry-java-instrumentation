@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
@@ -83,8 +84,9 @@ public class AwsLambdaSqsEventWrapperTest {
                     span.hasName("otel process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))));
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))));
   }
 
   public static final class TestRequestHandler implements RequestHandler<SQSEvent, Void> {

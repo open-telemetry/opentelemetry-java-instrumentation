@@ -10,7 +10,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 /** A builder of {@link SqlClientAttributesExtractor}. */
 public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {

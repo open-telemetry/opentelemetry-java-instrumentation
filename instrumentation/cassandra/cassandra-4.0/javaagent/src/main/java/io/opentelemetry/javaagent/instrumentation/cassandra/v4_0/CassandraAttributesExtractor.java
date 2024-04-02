@@ -13,7 +13,7 @@ import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

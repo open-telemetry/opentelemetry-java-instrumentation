@@ -5,8 +5,8 @@
 
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings

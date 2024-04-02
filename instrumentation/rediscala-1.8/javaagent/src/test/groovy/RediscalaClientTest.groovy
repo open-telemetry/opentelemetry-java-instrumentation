@@ -5,8 +5,8 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.testcontainers.containers.GenericContainer
 import redis.ByteStringDeserializerDefault
 import redis.ByteStringSerializerLowPriority

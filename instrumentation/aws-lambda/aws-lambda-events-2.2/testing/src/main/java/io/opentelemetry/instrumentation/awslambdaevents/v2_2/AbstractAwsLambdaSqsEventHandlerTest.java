@@ -15,6 +15,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collections;
@@ -79,8 +80,10 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
@@ -125,8 +128,10 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)

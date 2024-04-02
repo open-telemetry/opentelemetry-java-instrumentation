@@ -17,8 +17,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -620,14 +620,14 @@ class PulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "pulsar"),
                 equalTo(ServerAttributes.SERVER_ADDRESS, brokerHost),
                 equalTo(ServerAttributes.SERVER_PORT, brokerPort),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGE_TYPE, "normal")));
     if (testHeaders) {
@@ -654,14 +654,14 @@ class PulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "pulsar"),
                 equalTo(ServerAttributes.SERVER_ADDRESS, brokerHost),
                 equalTo(ServerAttributes.SERVER_PORT, brokerPort),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
@@ -672,7 +672,8 @@ class PulsarClientTest {
     if (isBatch) {
       assertions.add(
           satisfies(
-              SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
+              MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+              AbstractLongAssert::isPositive));
     }
     return assertions;
   }
@@ -682,12 +683,12 @@ class PulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "pulsar"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                 satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(

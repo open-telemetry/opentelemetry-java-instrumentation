@@ -7,8 +7,8 @@ package springdata
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
-import io.opentelemetry.semconv.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.junit.jupiter.api.Assumptions
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared

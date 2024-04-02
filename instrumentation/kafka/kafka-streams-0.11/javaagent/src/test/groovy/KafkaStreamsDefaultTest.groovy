@@ -9,6 +9,16 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapGetter
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.Headers
 import org.apache.kafka.common.serialization.Serdes
@@ -97,13 +107,13 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind PRODUCER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-            "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.startsWith("producer") }
-            "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
-            "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
-            "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("producer") }
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
           }
         }
 
@@ -116,13 +126,13 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind CONSUMER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
-            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "receive"
+            "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
+            "$MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (Boolean.getBoolean("testLatestDeps")) {
-              "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
+              "$MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
             }
           }
         }
@@ -133,18 +143,18 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           childOf span(0)
           hasLink(producerPending)
           attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
-            "$SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
-            "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
-            "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
-            "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
+            "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             "kafka.record.queue_time_ms" { it >= 0 }
             "asdf" "testing"
             if (Boolean.getBoolean("testLatestDeps")) {
-              "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
+              "$MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test-application"
             }
           }
         }
@@ -154,12 +164,12 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind PRODUCER
           childOf span(1)
           attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-            "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.endsWith("producer") }
-            "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
-            "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("producer") }
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
           }
         }
 
@@ -172,13 +182,13 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           kind CONSUMER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$SemanticAttributes.MESSAGING_OPERATION" "receive"
-            "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
-            "$SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "receive"
+            "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
+            "$MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (Boolean.getBoolean("testLatestDeps")) {
-              "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
+              "$MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
             }
           }
         }
@@ -189,16 +199,16 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           childOf span(0)
           hasLink producerProcessed
           attributes {
-            "$SemanticAttributes.MESSAGING_SYSTEM" "kafka"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
-            "$SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
-            "$SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
-            "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
-            "$SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
+            "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
+            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             if (Boolean.getBoolean("testLatestDeps")) {
-              "$SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
+              "$MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP" "test"
             }
             "kafka.record.queue_time_ms" { it >= 0 }
             "testing" 123

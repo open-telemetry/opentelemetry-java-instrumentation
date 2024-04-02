@@ -16,9 +16,9 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -91,18 +91,25 @@ class AwsSpanAssertions {
         || spanName.endsWith("publish")) {
       attributeAssertions.addAll(
           Arrays.asList(
-              equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, queueName),
-              equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS")));
+              equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, queueName),
+              equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS")));
       if (spanName.endsWith("receive")) {
-        attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"));
+        attributeAssertions.add(
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"));
       } else if (spanName.endsWith("process")) {
-        attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"));
         attributeAssertions.add(
-            satisfies(SemanticAttributes.MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"));
+        attributeAssertions.add(
+            satisfies(
+                MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
+                val -> assertThat(val).isNotNull()));
       } else if (spanName.endsWith("publish")) {
-        attributeAssertions.add(equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"));
         attributeAssertions.add(
-            satisfies(SemanticAttributes.MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"));
+        attributeAssertions.add(
+            satisfies(
+                MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
+                val -> assertThat(val).isNotNull()));
       }
     }
 
@@ -141,7 +148,7 @@ class AwsSpanAssertions {
             equalTo(stringKey("rpc.system"), "aws-api"),
             equalTo(stringKey("rpc.method"), spanName.substring(4)),
             equalTo(stringKey("rpc.service"), "AmazonSNS"),
-            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicArn),
+            equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topicArn),
             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),

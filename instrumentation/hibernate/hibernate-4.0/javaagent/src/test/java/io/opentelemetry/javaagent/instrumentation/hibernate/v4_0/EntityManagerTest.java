@@ -13,7 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.semconv.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;

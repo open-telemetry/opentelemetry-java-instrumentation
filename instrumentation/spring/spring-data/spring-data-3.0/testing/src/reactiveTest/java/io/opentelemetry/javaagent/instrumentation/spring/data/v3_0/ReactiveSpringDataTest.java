@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -32,9 +32,9 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -158,12 +158,15 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                   equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                   equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                  equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                   equalTo(
-                                      SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                  equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                                      MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                      "testSdkSqs"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                   satisfies(
-                                      SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                      MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
                                   equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
@@ -198,11 +201,16 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                   equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                   equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                  equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                   equalTo(
-                                      SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                  equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                                  equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                                      MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                      "testSdkSqs"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+                                      1),
                                   equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
@@ -234,12 +242,15 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                   equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                   equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                  equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                   equalTo(
-                                      SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                  equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                      MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                      "testSdkSqs"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                                   satisfies(
-                                      SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                      MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
                                   equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
@@ -321,12 +332,15 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSdkSqs"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
                                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace -> {
@@ -385,12 +399,19 @@ public abstract class AbstractSqsTracingTest {
                                           UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                       equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                      equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                       equalTo(
-                                          SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                          MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                          "AmazonSQS"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                           "testSdkSqs"),
-                                      equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                                      equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_OPERATION,
+                                          "receive"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes
+                                              .MESSAGING_BATCH_MESSAGE_COUNT,
+                                          1),
                                       equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
                               span.hasName("testSdkSqs process")
@@ -414,13 +435,17 @@ public abstract class AbstractSqsTracingTest {
                                           UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
                                       equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                       equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                      equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                       equalTo(
-                                          SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                          MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                          "AmazonSQS"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                           "testSdkSqs"),
-                                      equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_OPERATION,
+                                          "process"),
                                       satisfies(
-                                          SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                          MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                           val -> val.isInstanceOf(String.class)),
                                       equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
