@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 
 import java.lang.reflect.Proxy
 
@@ -24,8 +26,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceClass.doSomethingPublic"
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceClass"
-            "$SemanticAttributes.CODE_FUNCTION" "doSomethingPublic"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceClass"
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "doSomethingPublic"
           }
         }
       }
@@ -44,8 +46,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
-            "$SemanticAttributes.CODE_FUNCTION" "partOfPublicInterface"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "partOfPublicInterface"
           }
         }
       }
@@ -68,8 +70,8 @@ class JwsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "WebServiceFromInterface.partOfPublicInterface"
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
-            "$SemanticAttributes.CODE_FUNCTION" "partOfPublicInterface"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1.WebServiceFromInterface"
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "partOfPublicInterface"
           }
         }
       }

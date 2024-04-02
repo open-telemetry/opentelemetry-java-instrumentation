@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.stream.Stream;
@@ -51,8 +51,9 @@ class OpenTelemetryDataSourceTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.CODE_NAMESPACE, TestDataSource.class.getName()),
-                            equalTo(SemanticAttributes.CODE_FUNCTION, "getConnection"),
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                TestDataSource.class.getName()),
+                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "postgresql"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "dbname"),
                             equalTo(

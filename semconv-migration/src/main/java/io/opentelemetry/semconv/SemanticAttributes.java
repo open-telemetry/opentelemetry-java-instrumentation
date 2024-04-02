@@ -6,7 +6,6 @@
 package io.opentelemetry.semconv;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
@@ -34,11 +33,6 @@ public class SemanticAttributes {
 
     private MessagingRocketmqMessageTypeValues() {}
   }
-
-  public static final AttributeKey<String> CODE_FILEPATH = CodeIncubatingAttributes.CODE_FILEPATH;
-  public static final AttributeKey<String> CODE_FUNCTION = CodeIncubatingAttributes.CODE_FUNCTION;
-  public static final AttributeKey<Long> CODE_LINENO = CodeIncubatingAttributes.CODE_LINENO;
-  public static final AttributeKey<String> CODE_NAMESPACE = CodeIncubatingAttributes.CODE_NAMESPACE;
 
   public static final AttributeKey<String> PEER_SERVICE = PeerIncubatingAttributes.PEER_SERVICE;
 

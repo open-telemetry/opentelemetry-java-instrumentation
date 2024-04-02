@@ -21,6 +21,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -136,13 +137,13 @@ public final class LoggingEventMapper {
         StackTraceElement firstStackElement = callerData[0];
         String fileName = firstStackElement.getFileName();
         if (fileName != null) {
-          attributes.put(SemanticAttributes.CODE_FILEPATH, fileName);
+          attributes.put(CodeIncubatingAttributes.CODE_FILEPATH, fileName);
         }
-        attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
-        attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
+        attributes.put(CodeIncubatingAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
+        attributes.put(CodeIncubatingAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
         if (lineNumber > 0) {
-          attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
+          attributes.put(CodeIncubatingAttributes.CODE_LINENO, lineNumber);
         }
       }
     }

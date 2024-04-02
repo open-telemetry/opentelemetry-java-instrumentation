@@ -32,9 +32,9 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import java.util.Collections;
@@ -227,6 +227,6 @@ class OtelSpringStarterSmokeTest {
     assertThat(firstLog.getAttributes().asMap())
         .as("Should capture code attributes")
         .containsEntry(
-            SemanticAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
   }
 }

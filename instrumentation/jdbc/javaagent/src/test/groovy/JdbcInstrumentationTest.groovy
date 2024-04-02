@@ -12,6 +12,8 @@ import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jdbc.test.ProxyStatementFactory
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
@@ -590,8 +592,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
-            "$SemanticAttributes.CODE_FUNCTION" "getConnection"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
             "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
@@ -604,8 +606,8 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             childOf span(1)
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
-              "$SemanticAttributes.CODE_FUNCTION" "getConnection"
+              "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
+              "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
               "$DbIncubatingAttributes.DB_SYSTEM" system
               "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
               "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"

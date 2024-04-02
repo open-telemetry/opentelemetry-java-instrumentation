@@ -4,9 +4,8 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.ErrorAttributes
-import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import spock.lang.Unroll
 
@@ -47,8 +46,8 @@ class JaxRsAnnotations1InstrumentationTest extends AgentInstrumentationSpecifica
           name "${className}.call"
           childOf span(0)
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" obj.getClass().getName()
-            "$SemanticAttributes.CODE_FUNCTION" "call"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" obj.getClass().getName()
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "call"
           }
         }
       }

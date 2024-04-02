@@ -10,7 +10,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {

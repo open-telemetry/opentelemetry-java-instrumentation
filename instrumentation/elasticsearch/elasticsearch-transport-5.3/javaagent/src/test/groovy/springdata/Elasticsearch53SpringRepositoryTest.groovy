@@ -7,6 +7,8 @@ package springdata
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.junit.jupiter.api.Assumptions
@@ -91,8 +93,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findAll"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findAll"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findAll"
           }
         }
         span(1) {
@@ -129,8 +131,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.index"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "index"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "index"
           }
         }
         span(1) {
@@ -180,8 +182,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findById"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findById"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findById"
           }
         }
         span(1) {
@@ -217,8 +219,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.index"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "index"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "index"
           }
         }
         span(1) {
@@ -260,8 +262,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findById"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findById"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findById"
           }
         }
         span(1) {
@@ -296,8 +298,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.deleteById"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "deleteById"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "deleteById"
           }
         }
         span(1) {
@@ -339,8 +341,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findAll"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findAll"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findAll"
           }
         }
         span(1) {

@@ -6,6 +6,8 @@
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -53,8 +55,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           childOf span(0)
           name controllerName
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-            "$SemanticAttributes.CODE_FUNCTION" "hello"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "hello"
           }
         }
       }
@@ -94,8 +96,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name controller1Name
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-            "$SemanticAttributes.CODE_FUNCTION" "nested"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "nested"
           }
         }
       }

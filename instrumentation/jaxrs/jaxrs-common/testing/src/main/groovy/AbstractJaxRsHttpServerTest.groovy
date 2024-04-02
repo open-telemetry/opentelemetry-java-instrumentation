@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ClientAttributes
@@ -342,8 +344,8 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
       }
       childOf((SpanData) parent)
       attributes {
-        "$SemanticAttributes.CODE_NAMESPACE" "test.JaxRsTestResource"
-        "$SemanticAttributes.CODE_FUNCTION" methodName
+        "$CodeIncubatingAttributes.CODE_NAMESPACE" "test.JaxRsTestResource"
+        "$CodeIncubatingAttributes.CODE_FUNCTION" methodName
         if (isCancelled) {
           "jaxrs.canceled" true
         }

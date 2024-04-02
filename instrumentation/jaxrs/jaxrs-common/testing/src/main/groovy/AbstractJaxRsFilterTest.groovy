@@ -5,6 +5,8 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.ErrorAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
@@ -82,13 +84,13 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
           name controllerName
           if (abortPrematch) {
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" "JaxRsFilterTest\$PrematchRequestFilter"
-              "$SemanticAttributes.CODE_FUNCTION" "filter"
+              "$CodeIncubatingAttributes.CODE_NAMESPACE" "JaxRsFilterTest\$PrematchRequestFilter"
+              "$CodeIncubatingAttributes.CODE_FUNCTION" "filter"
             }
           } else {
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-              "$SemanticAttributes.CODE_FUNCTION" "hello"
+              "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+              "$CodeIncubatingAttributes.CODE_FUNCTION" "hello"
             }
           }
         }
@@ -144,8 +146,8 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
           name controller1Name
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-            "$SemanticAttributes.CODE_FUNCTION" "nested"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "nested"
           }
         }
       }

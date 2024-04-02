@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
+import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
@@ -19,9 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
