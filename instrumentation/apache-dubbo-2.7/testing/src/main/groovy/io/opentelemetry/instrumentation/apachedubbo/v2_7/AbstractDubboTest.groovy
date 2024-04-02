@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.SemanticAttributes
 import org.apache.dubbo.common.utils.NetUtils
 import org.apache.dubbo.config.ApplicationConfig
