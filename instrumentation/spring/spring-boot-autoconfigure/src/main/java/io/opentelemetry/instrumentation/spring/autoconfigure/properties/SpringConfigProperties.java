@@ -25,7 +25,7 @@ public class SpringConfigProperties implements ConfigProperties {
   private final OtlpExporterProperties otlpExporterProperties;
   private final OtelResourceProperties resourceProperties;
   private final PropagationProperties propagationProperties;
-  private final ConfigProperties fallback;
+  private final ConfigProperties otelSdkProperties;
 
   public SpringConfigProperties(
       Environment environment,
@@ -33,13 +33,13 @@ public class SpringConfigProperties implements ConfigProperties {
       OtlpExporterProperties otlpExporterProperties,
       OtelResourceProperties resourceProperties,
       PropagationProperties propagationProperties,
-      ConfigProperties fallback) {
+      ConfigProperties otelSdkProperties) {
     this.environment = environment;
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
     this.propagationProperties = propagationProperties;
-    this.fallback = fallback;
+    this.otelSdkProperties = otelSdkProperties;
   }
 
   // visible for testing
@@ -67,31 +67,31 @@ public class SpringConfigProperties implements ConfigProperties {
       // in specification to default to `http/protobuf`
       return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
     }
-    return or(value, fallback.getString(name));
+    return or(value, otelSdkProperties.getString(name));
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
-    return or(environment.getProperty(name, Boolean.class), fallback.getBoolean(name));
+    return or(environment.getProperty(name, Boolean.class), otelSdkProperties.getBoolean(name));
   }
 
   @Nullable
   @Override
   public Integer getInt(String name) {
-    return or(environment.getProperty(name, Integer.class), fallback.getInt(name));
+    return or(environment.getProperty(name, Integer.class), otelSdkProperties.getInt(name));
   }
 
   @Nullable
   @Override
   public Long getLong(String name) {
-    return or(environment.getProperty(name, Long.class), fallback.getLong(name));
+    return or(environment.getProperty(name, Long.class), otelSdkProperties.getLong(name));
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    return or(environment.getProperty(name, Double.class), fallback.getDouble(name));
+    return or(environment.getProperty(name, Double.class), otelSdkProperties.getDouble(name));
   }
 
   @SuppressWarnings("unchecked")
@@ -101,7 +101,7 @@ public class SpringConfigProperties implements ConfigProperties {
       return propagationProperties.getPropagators();
     }
 
-    return or(environment.getProperty(name, List.class), fallback.getList(name));
+    return or(environment.getProperty(name, List.class), otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -109,7 +109,7 @@ public class SpringConfigProperties implements ConfigProperties {
   public Duration getDuration(String name) {
     String value = getString(name);
     if (value == null) {
-      return fallback.getDuration(name);
+      return otelSdkProperties.getDuration(name);
     }
     return DefaultConfigProperties.createFromMap(Collections.singletonMap(name, value))
         .getDuration(name);
@@ -118,26 +118,26 @@ public class SpringConfigProperties implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String name) {
-    Map<String, String> fallbackMap = fallback.getMap(name);
+    Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);
     // maps from config properties are not supported by Environment, so we have to fake it
     switch (name) {
       case "otel.resource.attributes":
-        return mergeWithFallback(resourceProperties.getAttributes(), fallbackMap);
+        return mergeWithOtel(resourceProperties.getAttributes(), otelSdkMap);
       case "otel.exporter.otlp.headers":
-        return mergeWithFallback(otlpExporterProperties.getHeaders(), fallbackMap);
+        return mergeWithOtel(otlpExporterProperties.getHeaders(), otelSdkMap);
       case "otel.exporter.otlp.logs.headers":
-        return mergeWithFallback(otlpExporterProperties.getLogs().getHeaders(), fallbackMap);
+        return mergeWithOtel(otlpExporterProperties.getLogs().getHeaders(), otelSdkMap);
       case "otel.exporter.otlp.metrics.headers":
-        return mergeWithFallback(otlpExporterProperties.getMetrics().getHeaders(), fallbackMap);
+        return mergeWithOtel(otlpExporterProperties.getMetrics().getHeaders(), otelSdkMap);
       case "otel.exporter.otlp.traces.headers":
-        return mergeWithFallback(otlpExporterProperties.getTraces().getHeaders(), fallbackMap);
+        return mergeWithOtel(otlpExporterProperties.getTraces().getHeaders(), otelSdkMap);
       default:
         break;
     }
 
     String value = environment.getProperty(name);
     if (value == null) {
-      return fallbackMap;
+      return otelSdkMap;
     }
     return (Map<String, String>) parser.parseExpression(value).getValue();
   }
@@ -150,10 +150,10 @@ public class SpringConfigProperties implements ConfigProperties {
    * that Spring Boot will use (and which will honor <a
    * href="https://docs.spring.io/spring-framework/docs/3.2.x/spring-framework-reference/html/expressions.html">SpEL</a>).
    */
-  private static Map<String, String> mergeWithFallback(
-      Map<String, String> attributes, Map<String, String> fallbackMap) {
-    Map<String, String> merged = new HashMap<>(fallbackMap);
-    merged.putAll(attributes);
+  private static Map<String, String> mergeWithOtel(
+      Map<String, String> springMap, Map<String, String> otelSdkMap) {
+    Map<String, String> merged = new HashMap<>(otelSdkMap);
+    merged.putAll(springMap);
     return merged;
   }
 
