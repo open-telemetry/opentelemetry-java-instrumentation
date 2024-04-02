@@ -8,7 +8,6 @@ package io.opentelemetry.semconv;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 
@@ -31,16 +30,6 @@ public class SemanticAttributes {
         MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.TRANSACTION;
 
     private MessagingRocketmqMessageTypeValues() {}
-  }
-
-  public static final AttributeKey<Long> MESSAGE_ID = MessageIncubatingAttributes.MESSAGE_ID;
-  public static final AttributeKey<String> MESSAGE_TYPE = MessageIncubatingAttributes.MESSAGE_TYPE;
-
-  public static final class MessageTypeValues {
-    public static final String SENT = MessageIncubatingAttributes.MessageTypeValues.SENT;
-    public static final String RECEIVED = MessageIncubatingAttributes.MessageTypeValues.RECEIVED;
-
-    private MessageTypeValues() {}
   }
 
   public static final AttributeKey<Long> THREAD_ID = ThreadIncubatingAttributes.THREAD_ID;
