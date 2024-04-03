@@ -4,11 +4,8 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.ErrorAttributes
-import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import org.junit.jupiter.api.Assumptions
 import spock.lang.Unroll

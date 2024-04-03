@@ -16,15 +16,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryStatement
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT

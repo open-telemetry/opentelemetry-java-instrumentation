@@ -20,14 +20,10 @@ import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
-import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.ServerAttributes
-import io.opentelemetry.semconv.ServerAttributes
-import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import spock.lang.Shared
 

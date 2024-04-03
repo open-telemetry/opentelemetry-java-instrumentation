@@ -11,15 +11,7 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jdbc.test.ProxyStatementFactory
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource

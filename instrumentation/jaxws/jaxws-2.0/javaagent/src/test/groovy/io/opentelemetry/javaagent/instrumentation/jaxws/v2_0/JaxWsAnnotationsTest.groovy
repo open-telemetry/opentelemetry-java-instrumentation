@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 
 class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {

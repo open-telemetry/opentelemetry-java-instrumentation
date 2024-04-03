@@ -6,8 +6,6 @@
 package springdata
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.action.search.SearchResponse

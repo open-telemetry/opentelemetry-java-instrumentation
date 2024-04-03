@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest
 import org.elasticsearch.client.Client

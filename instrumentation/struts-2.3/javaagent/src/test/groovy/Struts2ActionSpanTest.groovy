@@ -11,8 +11,6 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.struts.GreetingServlet
 import org.eclipse.jetty.server.Server

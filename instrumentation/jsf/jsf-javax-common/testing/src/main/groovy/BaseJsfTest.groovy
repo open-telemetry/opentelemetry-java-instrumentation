@@ -4,18 +4,13 @@
  */
 
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
-import io.opentelemetry.semconv.HttpAttributes
-import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes

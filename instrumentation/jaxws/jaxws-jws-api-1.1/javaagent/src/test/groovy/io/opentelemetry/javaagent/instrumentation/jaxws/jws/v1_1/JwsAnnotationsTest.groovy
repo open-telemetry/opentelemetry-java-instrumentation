@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 
 import java.lang.reflect.Proxy

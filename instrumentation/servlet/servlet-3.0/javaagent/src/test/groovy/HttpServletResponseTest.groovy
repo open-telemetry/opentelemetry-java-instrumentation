@@ -5,8 +5,6 @@
 
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 
 import javax.servlet.http.HttpServlet

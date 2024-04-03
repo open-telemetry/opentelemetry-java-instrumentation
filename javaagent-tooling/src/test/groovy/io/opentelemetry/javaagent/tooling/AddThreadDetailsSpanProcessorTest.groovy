@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.tooling
 
 import io.opentelemetry.context.Context
 import io.opentelemetry.sdk.trace.ReadWriteSpan
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes
 import spock.lang.Specification
 

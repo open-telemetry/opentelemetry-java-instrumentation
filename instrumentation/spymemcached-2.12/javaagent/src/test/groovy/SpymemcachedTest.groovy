@@ -6,8 +6,6 @@
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory

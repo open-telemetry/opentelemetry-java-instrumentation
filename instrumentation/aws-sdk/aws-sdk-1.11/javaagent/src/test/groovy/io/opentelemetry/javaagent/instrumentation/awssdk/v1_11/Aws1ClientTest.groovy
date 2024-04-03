@@ -19,9 +19,6 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractAws1ClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes

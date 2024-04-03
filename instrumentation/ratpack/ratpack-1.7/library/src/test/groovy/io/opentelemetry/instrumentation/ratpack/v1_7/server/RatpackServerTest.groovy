@@ -13,9 +13,6 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.HttpAttributes
-import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import ratpack.exec.Blocking

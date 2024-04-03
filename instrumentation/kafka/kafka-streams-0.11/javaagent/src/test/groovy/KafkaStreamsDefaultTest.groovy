@@ -3,21 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.TextMapGetter
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.header.Headers

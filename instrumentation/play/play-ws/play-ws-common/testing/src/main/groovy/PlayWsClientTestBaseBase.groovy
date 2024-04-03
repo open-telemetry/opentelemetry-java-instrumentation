@@ -9,8 +9,6 @@ import akka.stream.ActorMaterializerSettings
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import play.shaded.ahc.io.netty.resolver.InetNameResolver

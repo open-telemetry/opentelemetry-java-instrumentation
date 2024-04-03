@@ -31,15 +31,10 @@ import com.amazonaws.services.sns.AmazonSNSClientBuilder
 import com.amazonaws.services.sns.model.PublishRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ErrorAttributes
-import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes

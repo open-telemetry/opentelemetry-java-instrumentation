@@ -4,14 +4,8 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
-import io.opentelemetry.semconv.ServerAttributes
-import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes

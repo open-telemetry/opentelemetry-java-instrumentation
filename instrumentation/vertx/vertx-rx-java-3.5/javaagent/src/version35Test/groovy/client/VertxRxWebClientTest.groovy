@@ -10,8 +10,6 @@ import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.vertx.core.VertxOptions

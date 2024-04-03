@@ -10,14 +10,9 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.MiddleServiceImpl
-import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import org.apache.dubbo.common.utils.NetUtils

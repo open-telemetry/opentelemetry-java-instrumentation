@@ -6,11 +6,6 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import listener.AnnotatedListenerConfig
 import listener.ManualListenerConfig

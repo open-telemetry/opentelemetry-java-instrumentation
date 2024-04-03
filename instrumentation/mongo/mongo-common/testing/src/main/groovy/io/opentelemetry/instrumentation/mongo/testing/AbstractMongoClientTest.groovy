@@ -9,14 +9,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer

@@ -4,13 +4,6 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.hibernate.Version
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
