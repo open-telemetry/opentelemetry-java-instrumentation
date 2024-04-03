@@ -743,7 +743,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                             attrs -> {
                               String routingKeyAttr =
                                   attrs.get(
-                                      SemanticAttributes
+                                      MessagingIncubatingAttributes
                                           .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY);
                               assertTrue(
                                   routingKeyAttr == null
@@ -817,7 +817,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   // Ignoring deprecation warning for use of SemanticAttributes
-  @SuppressWarnings("deprecation")
   private static void verifyMessagingAttributes(
       SpanDataAssert span, String exchange, String routingKey, String operation) {
     span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq")
@@ -827,7 +826,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                   .satisfies(
                       attrs -> {
                         String destinationName =
-                            attrs.get(SemanticAttributes.MESSAGING_DESTINATION);
+                            attrs.get(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME);
                         assertTrue(destinationName == null || destinationName.equals(exchange));
                         String routingKeyAttr =
                             attrs.get(
