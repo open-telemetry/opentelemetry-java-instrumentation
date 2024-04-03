@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -20,6 +18,8 @@ import java.util.Optional;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -69,7 +69,7 @@ class ManifestResourceProviderTest {
                 null,
                 "0.0.1-SNAPSHOT",
                 openClasspathResource("MANIFEST.MF"),
-                Resource.create(Attributes.of(SERVICE_NAME, "old"))))
+                Resource.create(Attributes.of(ServiceIncubatingAttributes.SERVICE_NAME, "old"))))
         .map(
             t ->
                 DynamicTest.dynamicTest(
@@ -93,8 +93,8 @@ class ManifestResourceProviderTest {
                       provider.shouldApply(config, t.existing);
 
                       Resource resource = provider.createResource(config);
-                      assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(t.expectedName);
-                      assertThat(resource.getAttribute(SERVICE_VERSION))
+                      assertThat(resource.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME)).isEqualTo(t.expectedName);
+                      assertThat(resource.getAttribute(ServiceIncubatingAttributes.SERVICE_VERSION))
                           .isEqualTo(t.expectedVersion);
                     }))
         .collect(Collectors.toList());

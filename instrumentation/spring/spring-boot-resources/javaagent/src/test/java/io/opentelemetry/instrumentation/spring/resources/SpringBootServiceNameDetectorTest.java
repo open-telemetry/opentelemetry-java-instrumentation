@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +19,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -173,7 +174,7 @@ class SpringBootServiceNameDetectorTest {
   void shouldNotApplyWhenResourceHasServiceName() {
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource resource =
-        Resource.getDefault().merge(Resource.create(Attributes.of(SERVICE_NAME, "test-service")));
+        Resource.getDefault().merge(Resource.create(Attributes.of(ServiceIncubatingAttributes.SERVICE_NAME, "test-service")));
     assertThat(guesser.shouldApply(config, resource)).isFalse();
   }
 
@@ -188,12 +189,12 @@ class SpringBootServiceNameDetectorTest {
   void shouldNotApplyIfConfigHasServiceNameResourceAttribute() {
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     when(config.getMap("otel.resource.attributes"))
-        .thenReturn(singletonMap(SERVICE_NAME.getKey(), "test-service"));
+        .thenReturn(singletonMap(ServiceIncubatingAttributes.SERVICE_NAME.getKey(), "test-service"));
     assertThat(guesser.shouldApply(config, Resource.getDefault())).isFalse();
   }
 
   private static void expectServiceName(Resource result, String expected) {
-    assertThat(result.getAttribute(SERVICE_NAME)).isEqualTo(expected);
+    assertThat(result.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME)).isEqualTo(expected);
   }
 
   private static void writeString(Path path, String value) throws Exception {

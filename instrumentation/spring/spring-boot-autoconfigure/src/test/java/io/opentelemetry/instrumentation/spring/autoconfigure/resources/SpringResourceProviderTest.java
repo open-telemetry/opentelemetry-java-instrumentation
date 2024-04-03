@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_NAME;
-import static io.opentelemetry.semconv.ResourceAttributes.SERVICE_VERSION;
-
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
@@ -19,6 +16,8 @@ import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.util.Collections;
 import java.util.Properties;
+
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -43,7 +42,7 @@ public class SpringResourceProviderTest {
         .withPropertyValues("spring.application.name=myapp-backend")
         .run(
             context ->
-                assertResourceAttributes(context).containsEntry(SERVICE_NAME, "myapp-backend"));
+                assertResourceAttributes(context).containsEntry(ServiceIncubatingAttributes.SERVICE_NAME, "myapp-backend"));
   }
 
   @Test
@@ -58,8 +57,8 @@ public class SpringResourceProviderTest {
         .run(
             context ->
                 assertResourceAttributes(context)
-                    .containsEntry(SERVICE_NAME, "demo")
-                    .containsEntry(SERVICE_VERSION, "0.3"));
+                    .containsEntry(ServiceIncubatingAttributes.SERVICE_NAME, "demo")
+                    .containsEntry(ServiceIncubatingAttributes.SERVICE_VERSION, "0.3"));
   }
 
   private static AttributesAssert assertResourceAttributes(AssertableApplicationContext context) {

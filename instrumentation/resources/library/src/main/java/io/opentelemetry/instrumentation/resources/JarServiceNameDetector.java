@@ -13,7 +13,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +54,7 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
               String serviceName = getServiceName(jarPath);
               logger.log(
                   FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
-              return Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, serviceName));
+              return Resource.create(Attributes.of(ServiceIncubatingAttributes.SERVICE_NAME, serviceName));
             })
         .orElseGet(Resource::empty);
   }
@@ -63,8 +64,8 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     String serviceName = config.getString("otel.service.name");
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
-        && !resourceAttributes.containsKey(ResourceAttributes.SERVICE_NAME.getKey())
-        && "unknown_service:java".equals(existing.getAttribute(ResourceAttributes.SERVICE_NAME));
+        && !resourceAttributes.containsKey(ServiceIncubatingAttributes.SERVICE_NAME.getKey())
+        && "unknown_service:java".equals(existing.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME));
   }
 
   private static String getServiceName(Path jarPath) {

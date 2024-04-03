@@ -9,17 +9,12 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.List;
 
 public final class ResourceAttributes {
   private ResourceAttributes() {}
 
   public static final String SCHEMA_URL = SchemaUrls.V1_24_0;
-
-  public static final AttributeKey<String> SERVICE_NAME = ServiceIncubatingAttributes.SERVICE_NAME;
-  public static final AttributeKey<String> SERVICE_VERSION =
-      ServiceIncubatingAttributes.SERVICE_VERSION;
 
   public static final AttributeKey<String> OS_DESCRIPTION = OsIncubatingAttributes.OS_DESCRIPTION;
   public static final AttributeKey<String> OS_TYPE = OsIncubatingAttributes.OS_TYPE;
