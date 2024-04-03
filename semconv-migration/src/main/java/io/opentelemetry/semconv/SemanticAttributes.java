@@ -6,7 +6,6 @@
 package io.opentelemetry.semconv;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 
 public class SemanticAttributes {
@@ -32,8 +31,4 @@ public class SemanticAttributes {
 
   public static final String EXCEPTION_EVENT_NAME = "exception";
 
-  public static final AttributeKey<String> ENDUSER_ID = EnduserIncubatingAttributes.ENDUSER_ID;
-  public static final AttributeKey<String> ENDUSER_ROLE = EnduserIncubatingAttributes.ENDUSER_ROLE;
-  public static final AttributeKey<String> ENDUSER_SCOPE =
-      EnduserIncubatingAttributes.ENDUSER_SCOPE;
 }
