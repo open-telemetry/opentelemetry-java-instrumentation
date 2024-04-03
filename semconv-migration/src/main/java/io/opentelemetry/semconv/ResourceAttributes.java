@@ -7,7 +7,6 @@ package io.opentelemetry.semconv;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import java.util.List;
 
@@ -15,25 +14,6 @@ public final class ResourceAttributes {
   private ResourceAttributes() {}
 
   public static final String SCHEMA_URL = SchemaUrls.V1_24_0;
-
-  public static final AttributeKey<String> OS_DESCRIPTION = OsIncubatingAttributes.OS_DESCRIPTION;
-  public static final AttributeKey<String> OS_TYPE = OsIncubatingAttributes.OS_TYPE;
-
-  public static final class OsTypeValues {
-    public static final String WINDOWS = OsIncubatingAttributes.OsTypeValues.WINDOWS;
-    public static final String LINUX = OsIncubatingAttributes.OsTypeValues.LINUX;
-    public static final String DARWIN = OsIncubatingAttributes.OsTypeValues.DARWIN;
-    public static final String FREEBSD = OsIncubatingAttributes.OsTypeValues.FREEBSD;
-    public static final String NETBSD = OsIncubatingAttributes.OsTypeValues.NETBSD;
-    public static final String OPENBSD = OsIncubatingAttributes.OsTypeValues.OPENBSD;
-    public static final String DRAGONFLYBSD = OsIncubatingAttributes.OsTypeValues.DRAGONFLYBSD;
-    public static final String HPUX = OsIncubatingAttributes.OsTypeValues.HPUX;
-    public static final String AIX = OsIncubatingAttributes.OsTypeValues.AIX;
-    public static final String SOLARIS = OsIncubatingAttributes.OsTypeValues.SOLARIS;
-    public static final String Z_OS = OsIncubatingAttributes.OsTypeValues.Z_OS;
-
-    private OsTypeValues() {}
-  }
 
   public static final AttributeKey<List<String>> PROCESS_COMMAND_ARGS =
       ProcessIncubatingAttributes.PROCESS_COMMAND_ARGS;
