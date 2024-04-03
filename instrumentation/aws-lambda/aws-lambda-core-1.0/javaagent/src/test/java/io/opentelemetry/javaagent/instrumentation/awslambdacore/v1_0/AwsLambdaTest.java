@@ -15,7 +15,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AbstractAwsLambdaTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import lambdainternal.AwsLambdaLegacyInternalRequestHandler;
 import org.junit.jupiter.api.AfterEach;
