@@ -10,9 +10,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.Optional;
-
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import java.util.Optional;
 import org.springframework.boot.info.BuildProperties;
 
 public class SpringResourceProvider implements ResourceProvider {

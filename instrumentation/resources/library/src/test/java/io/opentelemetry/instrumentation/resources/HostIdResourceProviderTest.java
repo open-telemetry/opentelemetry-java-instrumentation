@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,8 +20,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;

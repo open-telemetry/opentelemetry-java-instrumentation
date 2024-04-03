@@ -10,9 +10,8 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import java.io.InputStream;
-
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

@@ -38,7 +38,7 @@ public final class ProcessRuntimeResource {
               name,
               ProcessIncubatingAttributes.PROCESS_RUNTIME_VERSION,
               version,
-                  ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION,
+              ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION,
               description),
           SchemaUrls.V1_24_0);
     } catch (SecurityException ignored) {

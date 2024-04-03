@@ -14,10 +14,9 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.Collections;
 import java.util.Properties;
-
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -42,7 +41,8 @@ public class SpringResourceProviderTest {
         .withPropertyValues("spring.application.name=myapp-backend")
         .run(
             context ->
-                assertResourceAttributes(context).containsEntry(ServiceIncubatingAttributes.SERVICE_NAME, "myapp-backend"));
+                assertResourceAttributes(context)
+                    .containsEntry(ServiceIncubatingAttributes.SERVICE_NAME, "myapp-backend"));
   }
 
   @Test

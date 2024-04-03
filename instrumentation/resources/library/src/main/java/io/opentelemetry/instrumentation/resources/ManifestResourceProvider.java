@@ -10,7 +10,6 @@ import static java.util.logging.Level.WARNING;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -47,7 +46,7 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
           public void registerAttributes(Builder<Manifest> builder) {
             builder
                 .add(
-                        ServiceIncubatingAttributes.SERVICE_NAME,
+                    ServiceIncubatingAttributes.SERVICE_NAME,
                     manifest -> {
                       String serviceName =
                           manifest.getMainAttributes().getValue("Implementation-Title");

@@ -10,7 +10,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
-
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -79,7 +78,8 @@ public final class ProcessResource {
         executablePath.append(".exe");
       }
 
-      attributes.put(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH, executablePath.toString());
+      attributes.put(
+          ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH, executablePath.toString());
 
       String[] args = ProcessArguments.getProcessArguments();
       // This will only work with Java 9+ but provides everything except the executablePath.

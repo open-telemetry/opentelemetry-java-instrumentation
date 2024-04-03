@@ -10,7 +10,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 

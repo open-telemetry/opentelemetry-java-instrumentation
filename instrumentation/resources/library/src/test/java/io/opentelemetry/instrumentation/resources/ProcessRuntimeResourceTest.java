@@ -29,7 +29,8 @@ class ProcessRuntimeResourceTest {
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_NAME)).isNotBlank();
     assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_VERSION)).isNotBlank();
-    assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION)).isNotBlank();
+    assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION))
+        .isNotBlank();
   }
 
   @Nested

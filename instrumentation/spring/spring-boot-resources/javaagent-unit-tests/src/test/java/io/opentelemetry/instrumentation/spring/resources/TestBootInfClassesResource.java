@@ -28,6 +28,7 @@ class TestBootInfClassesResource {
 
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector();
     Resource result = guesser.createResource(config);
-    assertThat(result.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME)).isEqualTo("otel-spring-test-app");
+    assertThat(result.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME))
+        .isEqualTo("otel-spring-test-app");
   }
 }

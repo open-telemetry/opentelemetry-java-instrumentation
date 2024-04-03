@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;

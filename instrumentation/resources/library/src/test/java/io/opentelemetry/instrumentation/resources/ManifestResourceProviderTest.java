@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,8 +19,6 @@ import java.util.Optional;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -93,7 +92,8 @@ class ManifestResourceProviderTest {
                       provider.shouldApply(config, t.existing);
 
                       Resource resource = provider.createResource(config);
-                      assertThat(resource.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME)).isEqualTo(t.expectedName);
+                      assertThat(resource.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME))
+                          .isEqualTo(t.expectedName);
                       assertThat(resource.getAttribute(ServiceIncubatingAttributes.SERVICE_VERSION))
                           .isEqualTo(t.expectedVersion);
                     }))

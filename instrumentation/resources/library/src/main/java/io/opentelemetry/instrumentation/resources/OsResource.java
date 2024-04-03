@@ -10,7 +10,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
-
 import java.util.Locale;
 import javax.annotation.Nullable;
 

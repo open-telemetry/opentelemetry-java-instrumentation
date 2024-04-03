@@ -13,6 +13,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -25,8 +26,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import org.snakeyaml.engine.v2.api.Load;
 import org.snakeyaml.engine.v2.api.LoadSettings;
 
@@ -100,7 +99,9 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
         .map(
             serviceName -> {
               logger.log(FINE, "Auto-detected Spring Boot service name: {0}", serviceName);
-              return Resource.builder().put(ServiceIncubatingAttributes.SERVICE_NAME, serviceName).build();
+              return Resource.builder()
+                  .put(ServiceIncubatingAttributes.SERVICE_NAME, serviceName)
+                  .build();
             })
         .orElseGet(Resource::empty);
   }
@@ -113,7 +114,8 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
         && !resourceAttributes.containsKey(ServiceIncubatingAttributes.SERVICE_NAME.getKey())
-        && "unknown_service:java".equals(resource.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME));
+        && "unknown_service:java"
+            .equals(resource.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME));
   }
 
   @Override
