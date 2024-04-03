@@ -41,8 +41,8 @@ final class ApiGatewayProxyAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, AwsLambdaRequest request) {
     if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
-      attributes.put(FaasIncubatingAttributes.FAAS_TRIGGER,
-          FaasIncubatingAttributes.FaasTriggerValues.HTTP);
+      attributes.put(
+          FaasIncubatingAttributes.FAAS_TRIGGER, FaasIncubatingAttributes.FaasTriggerValues.HTTP);
       onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
     }
   }

@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
-
 import java.security.Principal;
 import javax.annotation.Nullable;
 

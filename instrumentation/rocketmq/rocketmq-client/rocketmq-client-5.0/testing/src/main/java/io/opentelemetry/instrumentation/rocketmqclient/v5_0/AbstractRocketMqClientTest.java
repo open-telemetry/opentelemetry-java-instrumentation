@@ -29,6 +29,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -39,8 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
@@ -414,7 +413,9 @@ public abstract class AbstractRocketMqClientTest {
             Arrays.asList(
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.NORMAL),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_TYPE,
+                    MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.NORMAL),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -443,7 +444,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE,
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_TYPE,
                     MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.FIFO),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
@@ -473,7 +475,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE,
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_TYPE,
                     MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.DELAY),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),

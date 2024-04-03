@@ -10,10 +10,9 @@ import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.util.Arrays;
 import java.util.Collections;
-
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;

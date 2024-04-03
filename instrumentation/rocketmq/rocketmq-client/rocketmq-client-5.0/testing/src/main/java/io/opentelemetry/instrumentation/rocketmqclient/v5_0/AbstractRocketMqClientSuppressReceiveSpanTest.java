@@ -20,12 +20,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
-
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -115,7 +114,10 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
-                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.NORMAL),
+                                    equalTo(
+                                        MESSAGING_ROCKETMQ_MESSAGE_TYPE,
+                                        MessagingIncubatingAttributes
+                                            .MessagingRocketmqMessageTypeValues.NORMAL),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(
