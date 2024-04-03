@@ -7,27 +7,11 @@ package io.opentelemetry.semconv;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
-import java.util.List;
 
 public final class ResourceAttributes {
   private ResourceAttributes() {}
 
   public static final String SCHEMA_URL = SchemaUrls.V1_24_0;
-
-  public static final AttributeKey<List<String>> PROCESS_COMMAND_ARGS =
-      ProcessIncubatingAttributes.PROCESS_COMMAND_ARGS;
-  public static final AttributeKey<String> PROCESS_COMMAND_LINE =
-      ProcessIncubatingAttributes.PROCESS_COMMAND_LINE;
-  public static final AttributeKey<String> PROCESS_EXECUTABLE_PATH =
-      ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
-  public static final AttributeKey<Long> PROCESS_PID = ProcessIncubatingAttributes.PROCESS_PID;
-  public static final AttributeKey<String> PROCESS_RUNTIME_DESCRIPTION =
-      ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION;
-  public static final AttributeKey<String> PROCESS_RUNTIME_NAME =
-      ProcessIncubatingAttributes.PROCESS_RUNTIME_NAME;
-  public static final AttributeKey<String> PROCESS_RUNTIME_VERSION =
-      ProcessIncubatingAttributes.PROCESS_RUNTIME_VERSION;
 
   public static final AttributeKey<String> HOST_ARCH = HostIncubatingAttributes.HOST_ARCH;
 
