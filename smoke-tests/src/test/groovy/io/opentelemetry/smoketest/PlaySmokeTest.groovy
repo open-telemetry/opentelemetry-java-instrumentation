@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import spock.lang.IgnoreIf
 

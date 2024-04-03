@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
@@ -443,7 +442,7 @@ public class SpringWebfluxTest {
   private static void resource404Exception(EventDataAssert event) {
     if (Boolean.getBoolean("testLatestDeps")) {
       event
-          .hasName(EXCEPTION_EVENT_NAME)
+          .hasName("exception")
           .hasAttributesSatisfyingExactly(
               equalTo(
                   EXCEPTION_TYPE,
@@ -452,7 +451,7 @@ public class SpringWebfluxTest {
               satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
     } else {
       event
-          .hasName(EXCEPTION_EVENT_NAME)
+          .hasName("exception")
           .hasAttributesSatisfyingExactly(
               equalTo(EXCEPTION_TYPE, "org.springframework.web.server.ResponseStatusException"),
               equalTo(EXCEPTION_MESSAGE, "Response status 404"),
@@ -547,7 +546,7 @@ public class SpringWebfluxTest {
                       .hasEventsSatisfyingExactly(
                           event ->
                               event
-                                  .hasName(EXCEPTION_EVENT_NAME)
+                                  .hasName("exception")
                                   .hasAttributesSatisfyingExactly(
                                       equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
                                       equalTo(EXCEPTION_MESSAGE, "bad things happen"),

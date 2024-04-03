@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes
 
 import java.util.regex.Pattern
@@ -148,7 +147,7 @@ class SpanAssert {
 
   def errorEventWithAnyMessage(Class<Throwable> expectedClass) {
     event(0) {
-      eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+      eventName("exception")
       attributes {
         "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" expectedClass.canonicalName
         "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
@@ -163,7 +162,7 @@ class SpanAssert {
 
   def errorEvent(Class<Throwable> errorClass, expectedMessage, int index) {
     event(index) {
-      eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+      eventName("exception")
       attributes {
         "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" errorClass.canonicalName
         "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String

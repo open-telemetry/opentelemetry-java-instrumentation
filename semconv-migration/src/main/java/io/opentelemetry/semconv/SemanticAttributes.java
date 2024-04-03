@@ -9,5 +9,4 @@ public class SemanticAttributes {
 
   private SemanticAttributes() {}
 
-  public static final String EXCEPTION_EVENT_NAME = "exception";
 }

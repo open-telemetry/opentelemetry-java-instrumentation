@@ -164,7 +164,7 @@ class SpringSchedulingTest {
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
-                                      .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                      .hasName("exception")
                                       .hasAttributesSatisfying(
                                           equalTo(
                                               ExceptionIncubatingAttributes.EXCEPTION_TYPE,

@@ -10,7 +10,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -182,7 +181,7 @@ class VertxSqlClientTest {
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
-                                    .hasName(EXCEPTION_EVENT_NAME)
+                                    .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(EXCEPTION_TYPE, PgException.class.getName()),
                                         satisfies(

@@ -100,7 +100,7 @@ public final class OpenTelemetryInstrumentationHelper {
                 ExceptionIncubatingAttributes.EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
             attributes.put(ExceptionIncubatingAttributes.EXCEPTION_MESSAGE, error.getMessage());
 
-            span.addEvent(SemanticAttributes.EXCEPTION_EVENT_NAME, attributes.build());
+            span.addEvent("exception", attributes.build());
           }
 
           instrumenter.end(context, state, result, throwable);

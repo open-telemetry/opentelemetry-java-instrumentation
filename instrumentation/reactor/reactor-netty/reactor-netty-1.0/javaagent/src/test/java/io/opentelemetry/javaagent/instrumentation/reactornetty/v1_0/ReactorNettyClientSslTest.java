@@ -223,7 +223,7 @@ class ReactorNettyClientSslTest {
 
   private static void isSslHandshakeException(List<? extends EventData> events) {
     assertThat(events)
-        .filteredOn(event -> event.getName().equals(SemanticAttributes.EXCEPTION_EVENT_NAME))
+        .filteredOn(event -> event.getName().equals("exception"))
         .satisfiesExactly(
             event ->
                 assertThat(event)

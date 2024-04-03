@@ -130,7 +130,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           status ERROR
           hasNoParent()
           event(0) {
-            eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
+            eventName("exception")
             attributes {
               "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
               "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
@@ -144,7 +144,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           status ERROR
           childOf span(0)
           event(0) {
-            eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
+            eventName("exception")
             attributes {
               "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
               "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
@@ -163,7 +163,7 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           event(0) {
-            eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
+            eventName("exception")
             attributes {
               "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
               "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()

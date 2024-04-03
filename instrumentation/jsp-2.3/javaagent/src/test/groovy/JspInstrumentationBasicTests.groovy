@@ -259,7 +259,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           kind SERVER
           status ERROR
           event(0) {
-            eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+            eventName("exception")
             attributes {
               "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
@@ -299,7 +299,7 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           name "Render /$jspFileName"
           status ERROR
           event(0) {
-            eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+            eventName("exception")
             attributes {
               "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())

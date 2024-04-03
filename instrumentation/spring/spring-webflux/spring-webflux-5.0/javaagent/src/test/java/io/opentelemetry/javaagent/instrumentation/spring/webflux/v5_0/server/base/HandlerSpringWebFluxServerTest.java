@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -36,7 +35,7 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
       span.hasEventsSatisfyingExactly(
           event ->
               event
-                  .hasName(EXCEPTION_EVENT_NAME)
+                  .hasName("exception")
                   .hasAttributesSatisfyingExactly(
                       equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
                       equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
@@ -47,7 +46,7 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
         span.hasEventsSatisfyingExactly(
             event ->
                 event
-                    .hasName(EXCEPTION_EVENT_NAME)
+                    .hasName("exception")
                     .hasAttributesSatisfyingExactly(
                         equalTo(
                             EXCEPTION_TYPE,
@@ -59,7 +58,7 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
         span.hasEventsSatisfyingExactly(
             event ->
                 event
-                    .hasName(EXCEPTION_EVENT_NAME)
+                    .hasName("exception")
                     .hasAttributesSatisfyingExactly(
                         equalTo(
                             EXCEPTION_TYPE,

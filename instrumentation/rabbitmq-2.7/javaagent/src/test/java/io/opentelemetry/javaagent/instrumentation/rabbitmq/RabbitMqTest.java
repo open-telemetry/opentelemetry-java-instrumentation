@@ -889,7 +889,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         .hasEventsSatisfying(
             events -> {
               assertThat(events.get(0))
-                  .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                  .hasName("exception")
                   .hasAttributesSatisfying(
                       equalTo(
                           ExceptionIncubatingAttributes.EXCEPTION_TYPE,

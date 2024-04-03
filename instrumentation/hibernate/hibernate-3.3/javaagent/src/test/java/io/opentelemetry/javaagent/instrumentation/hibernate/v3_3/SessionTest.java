@@ -10,7 +10,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -160,7 +159,7 @@ class SessionTest extends AbstractHibernateTest {
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
-                                    .hasName(EXCEPTION_EVENT_NAME)
+                                    .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(EXCEPTION_TYPE, "org.hibernate.MappingException"),
                                         equalTo(

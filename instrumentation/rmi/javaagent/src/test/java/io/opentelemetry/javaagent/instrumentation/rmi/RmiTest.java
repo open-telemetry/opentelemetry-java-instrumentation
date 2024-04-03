@@ -148,7 +148,7 @@ class RmiTest {
                                 .hasEventsSatisfyingExactly(
                                     event ->
                                         event
-                                            .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                            .hasName("exception")
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     ExceptionIncubatingAttributes.EXCEPTION_TYPE,
@@ -171,7 +171,7 @@ class RmiTest {
                                 .hasEventsSatisfyingExactly(
                                     event ->
                                         event
-                                            .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                            .hasName("exception")
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     ExceptionIncubatingAttributes.EXCEPTION_TYPE,

@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.trace.v1.Span
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
