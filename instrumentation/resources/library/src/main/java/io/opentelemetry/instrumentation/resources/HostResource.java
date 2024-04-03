@@ -9,6 +9,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -26,7 +28,7 @@ public final class HostResource {
   static Resource buildResource() {
     AttributesBuilder attributes = Attributes.builder();
     try {
-      attributes.put(ResourceAttributes.HOST_NAME, InetAddress.getLocalHost().getHostName());
+      attributes.put(HostIncubatingAttributes.HOST_NAME, InetAddress.getLocalHost().getHostName());
     } catch (UnknownHostException e) {
       // Ignore
     }
@@ -37,7 +39,7 @@ public final class HostResource {
       // Ignore
     }
     if (hostArch != null) {
-      attributes.put(ResourceAttributes.HOST_ARCH, hostArch);
+      attributes.put(HostIncubatingAttributes.HOST_ARCH, hostArch);
     }
 
     return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
