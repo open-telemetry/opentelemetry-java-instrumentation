@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import org.junit.jupiter.api.extension.RegisterExtension
 

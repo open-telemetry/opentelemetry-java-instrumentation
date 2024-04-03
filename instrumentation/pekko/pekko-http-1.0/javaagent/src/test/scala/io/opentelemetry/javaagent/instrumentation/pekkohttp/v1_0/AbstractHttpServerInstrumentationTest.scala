@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerTestOptions,
   ServerEndpoint
 }
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.HttpAttributes
 
 import java.util

@@ -35,7 +35,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import java.util.Locale;
 

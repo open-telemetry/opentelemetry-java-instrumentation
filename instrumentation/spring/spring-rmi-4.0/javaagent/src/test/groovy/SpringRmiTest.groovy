@@ -6,7 +6,6 @@
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.SemanticAttributes
 import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import org.springframework.boot.SpringApplication
