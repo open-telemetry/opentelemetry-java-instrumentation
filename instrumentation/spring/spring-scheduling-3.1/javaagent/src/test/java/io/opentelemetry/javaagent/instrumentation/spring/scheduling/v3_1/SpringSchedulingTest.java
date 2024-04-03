@@ -27,6 +27,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.service.LambdaTaskConfigurer;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
@@ -166,11 +167,13 @@ class SpringSchedulingTest {
                                       .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
                                       .hasAttributesSatisfying(
                                           equalTo(
-                                              SemanticAttributes.EXCEPTION_TYPE,
+                                              ExceptionIncubatingAttributes.EXCEPTION_TYPE,
                                               IllegalStateException.class.getName()),
-                                          equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "failure"),
+                                          equalTo(
+                                              ExceptionIncubatingAttributes.EXCEPTION_MESSAGE,
+                                              "failure"),
                                           satisfies(
-                                              SemanticAttributes.EXCEPTION_STACKTRACE,
+                                              ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE,
                                               value -> value.isInstanceOf(String.class)))),
                   span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
     }

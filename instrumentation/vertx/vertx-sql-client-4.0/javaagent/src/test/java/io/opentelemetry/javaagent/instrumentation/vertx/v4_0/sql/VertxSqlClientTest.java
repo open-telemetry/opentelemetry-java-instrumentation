@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;

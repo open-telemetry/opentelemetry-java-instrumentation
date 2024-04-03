@@ -31,6 +31,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -891,10 +892,12 @@ class RabbitMqTest extends AbstractRabbitMqTest {
               assertThat(events.get(0))
                   .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
                   .hasAttributesSatisfying(
-                      equalTo(SemanticAttributes.EXCEPTION_TYPE, exception.getClass().getName()),
-                      equalTo(SemanticAttributes.EXCEPTION_MESSAGE, errorMsg),
+                      equalTo(
+                          ExceptionIncubatingAttributes.EXCEPTION_TYPE,
+                          exception.getClass().getName()),
+                      equalTo(ExceptionIncubatingAttributes.EXCEPTION_MESSAGE, errorMsg),
                       satisfies(
-                          SemanticAttributes.EXCEPTION_STACKTRACE,
+                          ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE,
                           val -> val.isInstanceOf(String.class)));
             });
   }

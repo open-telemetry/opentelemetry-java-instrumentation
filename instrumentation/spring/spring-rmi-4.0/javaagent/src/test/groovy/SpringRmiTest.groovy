@@ -7,8 +7,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
@@ -133,9 +132,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$SemanticAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
             }
           }
         }
@@ -147,9 +146,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$SemanticAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
@@ -166,9 +165,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$SemanticAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {

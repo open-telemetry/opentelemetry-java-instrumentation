@@ -7,7 +7,6 @@ package io.opentelemetry.semconv;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 
 public class SemanticAttributes {
@@ -30,13 +29,6 @@ public class SemanticAttributes {
 
     private MessagingRocketmqMessageTypeValues() {}
   }
-
-  public static final AttributeKey<String> EXCEPTION_MESSAGE =
-      ExceptionIncubatingAttributes.EXCEPTION_MESSAGE;
-  public static final AttributeKey<String> EXCEPTION_STACKTRACE =
-      ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE;
-  public static final AttributeKey<String> EXCEPTION_TYPE =
-      ExceptionIncubatingAttributes.EXCEPTION_TYPE;
 
   public static final String EXCEPTION_EVENT_NAME = "exception";
 

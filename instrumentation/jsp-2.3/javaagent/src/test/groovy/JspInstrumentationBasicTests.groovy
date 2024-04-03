@@ -3,17 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
 import io.opentelemetry.semconv.ErrorAttributes
-import io.opentelemetry.semconv.HttpAttributes
-import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.semconv.UrlAttributes
@@ -264,13 +261,13 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
+              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
               }
-              "$SemanticAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
+              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
                 return errorMessageOptional || tagErrorMsg instanceof String
               }
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
@@ -304,13 +301,13 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           event(0) {
             eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
+              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
               }
-              "$SemanticAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
+              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
                 return errorMessageOptional || tagErrorMsg instanceof String
               }
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {

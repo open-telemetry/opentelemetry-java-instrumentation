@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -150,13 +151,14 @@ class RmiTest {
                                             .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
-                                                    SemanticAttributes.EXCEPTION_TYPE,
+                                                    ExceptionIncubatingAttributes.EXCEPTION_TYPE,
                                                     thrown.getClass().getCanonicalName()),
                                                 equalTo(
-                                                    SemanticAttributes.EXCEPTION_MESSAGE,
+                                                    ExceptionIncubatingAttributes.EXCEPTION_MESSAGE,
                                                     thrown.getMessage()),
                                                 satisfies(
-                                                    SemanticAttributes.EXCEPTION_STACKTRACE,
+                                                    ExceptionIncubatingAttributes
+                                                        .EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),
@@ -172,13 +174,14 @@ class RmiTest {
                                             .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
-                                                    SemanticAttributes.EXCEPTION_TYPE,
+                                                    ExceptionIncubatingAttributes.EXCEPTION_TYPE,
                                                     thrown.getClass().getCanonicalName()),
                                                 equalTo(
-                                                    SemanticAttributes.EXCEPTION_MESSAGE,
+                                                    ExceptionIncubatingAttributes.EXCEPTION_MESSAGE,
                                                     thrown.getMessage()),
                                                 satisfies(
-                                                    SemanticAttributes.EXCEPTION_STACKTRACE,
+                                                    ExceptionIncubatingAttributes
+                                                        .EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),

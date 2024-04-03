@@ -18,8 +18,8 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
@@ -126,11 +126,11 @@ abstract class AbstractOpenTelemetryAppenderTest {
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
     assertThat(logData.getAttributes().size())
         .isEqualTo(3 + 4 + 1); // 3 exception attributes, 4 code attributes, 1 marker attribute
-    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_TYPE))
+    assertThat(logData.getAttributes().get(ExceptionIncubatingAttributes.EXCEPTION_TYPE))
         .isEqualTo(IllegalStateException.class.getName());
-    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_MESSAGE))
+    assertThat(logData.getAttributes().get(ExceptionIncubatingAttributes.EXCEPTION_MESSAGE))
         .isEqualTo("Error!");
-    assertThat(logData.getAttributes().get(SemanticAttributes.EXCEPTION_STACKTRACE))
+    assertThat(logData.getAttributes().get(ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE))
         .contains("logWithExtras");
 
     String file = logData.getAttributes().get(CodeIncubatingAttributes.CODE_FILEPATH);

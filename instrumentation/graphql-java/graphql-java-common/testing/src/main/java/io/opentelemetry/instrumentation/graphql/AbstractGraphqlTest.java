@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -207,9 +208,10 @@ public abstract class AbstractGraphqlTest {
                                         .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                SemanticAttributes.EXCEPTION_TYPE, "InvalidSyntax"),
+                                                ExceptionIncubatingAttributes.EXCEPTION_TYPE,
+                                                "InvalidSyntax"),
                                             satisfies(
-                                                SemanticAttributes.EXCEPTION_MESSAGE,
+                                                ExceptionIncubatingAttributes.EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWithIgnoringCase(
                                                         "Invalid Syntax"))))));
@@ -248,10 +250,10 @@ public abstract class AbstractGraphqlTest {
                                         .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                SemanticAttributes.EXCEPTION_TYPE,
+                                                ExceptionIncubatingAttributes.EXCEPTION_TYPE,
                                                 "ValidationError"),
                                             satisfies(
-                                                SemanticAttributes.EXCEPTION_MESSAGE,
+                                                ExceptionIncubatingAttributes.EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWith("Validation error"))))));
   }
