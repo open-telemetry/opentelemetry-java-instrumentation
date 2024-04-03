@@ -11,9 +11,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionIncubatingAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
