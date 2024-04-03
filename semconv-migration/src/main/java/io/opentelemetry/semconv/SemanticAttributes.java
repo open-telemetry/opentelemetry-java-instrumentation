@@ -32,16 +32,6 @@ public class SemanticAttributes {
 
   public static final String EXCEPTION_EVENT_NAME = "exception";
 
-  public static final AttributeKey<String> FAAS_TRIGGER = ResourceAttributes.FAAS_TRIGGER;
-  public static final AttributeKey<String> FAAS_INVOCATION_ID =
-      ResourceAttributes.FAAS_INVOCATION_ID;
-
-  public static final class FaasTriggerValues {
-    private FaasTriggerValues() {}
-
-    public static final String HTTP = ResourceAttributes.FaasTriggerValues.HTTP;
-  }
-
   public static final AttributeKey<String> ENDUSER_ID = EnduserIncubatingAttributes.ENDUSER_ID;
   public static final AttributeKey<String> ENDUSER_ROLE = EnduserIncubatingAttributes.ENDUSER_ROLE;
   public static final AttributeKey<String> ENDUSER_SCOPE =

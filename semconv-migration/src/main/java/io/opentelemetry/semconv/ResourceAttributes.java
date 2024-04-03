@@ -247,54 +247,6 @@ public final class ResourceAttributes {
     private HostArchValues() {}
   }
 
-  public static final AttributeKey<Boolean> FAAS_COLDSTART =
-      FaasIncubatingAttributes.FAAS_COLDSTART;
-  public static final AttributeKey<String> FAAS_CRON = FaasIncubatingAttributes.FAAS_CRON;
-  public static final AttributeKey<String> FAAS_DOCUMENT_COLLECTION =
-      FaasIncubatingAttributes.FAAS_DOCUMENT_COLLECTION;
-  public static final AttributeKey<String> FAAS_DOCUMENT_NAME =
-      FaasIncubatingAttributes.FAAS_DOCUMENT_NAME;
-  public static final AttributeKey<String> FAAS_DOCUMENT_OPERATION =
-      FaasIncubatingAttributes.FAAS_DOCUMENT_OPERATION;
-  public static final AttributeKey<String> FAAS_DOCUMENT_TIME =
-      FaasIncubatingAttributes.FAAS_DOCUMENT_TIME;
-  public static final AttributeKey<String> FAAS_INSTANCE = FaasIncubatingAttributes.FAAS_INSTANCE;
-  public static final AttributeKey<String> FAAS_INVOCATION_ID =
-      FaasIncubatingAttributes.FAAS_INVOCATION_ID;
-  public static final AttributeKey<String> FAAS_INVOKED_NAME =
-      FaasIncubatingAttributes.FAAS_INVOKED_NAME;
-  public static final AttributeKey<String> FAAS_INVOKED_PROVIDER =
-      FaasIncubatingAttributes.FAAS_INVOKED_PROVIDER;
-  public static final AttributeKey<String> FAAS_INVOKED_REGION =
-      FaasIncubatingAttributes.FAAS_INVOKED_REGION;
-  public static final AttributeKey<Long> FAAS_MAX_MEMORY = FaasIncubatingAttributes.FAAS_MAX_MEMORY;
-  public static final AttributeKey<String> FAAS_NAME = FaasIncubatingAttributes.FAAS_NAME;
-  public static final AttributeKey<String> FAAS_TIME = FaasIncubatingAttributes.FAAS_TIME;
-  public static final AttributeKey<String> FAAS_TRIGGER = FaasIncubatingAttributes.FAAS_TRIGGER;
-  public static final AttributeKey<String> FAAS_VERSION = FaasIncubatingAttributes.FAAS_VERSION;
-
-  public static final class FaasTriggerValues {
-    public static final String DATASOURCE = FaasIncubatingAttributes.FaasTriggerValues.DATASOURCE;
-    public static final String HTTP = FaasIncubatingAttributes.FaasTriggerValues.HTTP;
-    public static final String PUBSUB = FaasIncubatingAttributes.FaasTriggerValues.PUBSUB;
-    public static final String TIMER = FaasIncubatingAttributes.FaasTriggerValues.TIMER;
-    public static final String OTHER = FaasIncubatingAttributes.FaasTriggerValues.OTHER;
-
-    private FaasTriggerValues() {}
-  }
-
-  public static final class FaasInvokedProviderValues {
-    public static final String ALIBABA_CLOUD =
-        FaasIncubatingAttributes.FaasInvokedProviderValues.ALIBABA_CLOUD;
-    public static final String AWS = FaasIncubatingAttributes.FaasInvokedProviderValues.AWS;
-    public static final String AZURE = FaasIncubatingAttributes.FaasInvokedProviderValues.AZURE;
-    public static final String GCP = FaasIncubatingAttributes.FaasInvokedProviderValues.GCP;
-    public static final String TENCENT_CLOUD =
-        FaasIncubatingAttributes.FaasInvokedProviderValues.TENCENT_CLOUD;
-
-    private FaasInvokedProviderValues() {}
-  }
-
   public static final class FaasDocumentOperationValues {
     public static final String INSERT = FaasIncubatingAttributes.FaasDocumentOperationValues.INSERT;
     public static final String EDIT = FaasIncubatingAttributes.FaasDocumentOperationValues.EDIT;

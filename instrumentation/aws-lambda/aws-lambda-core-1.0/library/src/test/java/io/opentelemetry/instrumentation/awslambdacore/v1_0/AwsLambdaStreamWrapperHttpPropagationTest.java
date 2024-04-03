@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ResourceAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -94,7 +93,7 @@ public class AwsLambdaStreamWrapperHttpPropagationTest {
                                 ResourceAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -131,7 +130,7 @@ public class AwsLambdaStreamWrapperHttpPropagationTest {
                                 ResourceAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   public static final class TestRequestHandler implements RequestStreamHandler {

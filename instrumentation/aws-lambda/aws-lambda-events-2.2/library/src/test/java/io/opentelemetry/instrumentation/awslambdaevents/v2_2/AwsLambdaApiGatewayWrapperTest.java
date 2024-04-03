@@ -19,11 +19,11 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ResourceAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 import java.util.HashMap;
 import java.util.Map;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -103,8 +103,8 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 ResourceAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(SemanticAttributes.FAAS_TRIGGER, "http"),
+                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, "Test Client"),
                             equalTo(
@@ -139,8 +139,8 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 ResourceAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(SemanticAttributes.FAAS_TRIGGER, "http"))));
+                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
   @Test
@@ -170,8 +170,8 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 ResourceAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(SemanticAttributes.FAAS_TRIGGER, "http"))));
+                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
   @Test
@@ -201,8 +201,8 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 ResourceAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(SemanticAttributes.FAAS_TRIGGER, "http"))));
+                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
   @Test
@@ -235,8 +235,8 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 ResourceAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(SemanticAttributes.FAAS_TRIGGER, "http"))));
+                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
   public static class TestRequestHandlerApiGateway
