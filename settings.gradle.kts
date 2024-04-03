@@ -87,8 +87,6 @@ include(":custom-checks")
 
 include(":muzzle")
 
-include(":semconv-migration")
-
 // agent projects
 include(":opentelemetry-api-shaded-for-instrumenting")
 include(":opentelemetry-ext-annotations-shaded-for-instrumenting")
