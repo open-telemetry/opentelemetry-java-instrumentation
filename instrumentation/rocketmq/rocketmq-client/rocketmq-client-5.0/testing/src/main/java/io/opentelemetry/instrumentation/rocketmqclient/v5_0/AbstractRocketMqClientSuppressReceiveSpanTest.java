@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -25,6 +24,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -114,7 +115,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
-                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.NORMAL),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(

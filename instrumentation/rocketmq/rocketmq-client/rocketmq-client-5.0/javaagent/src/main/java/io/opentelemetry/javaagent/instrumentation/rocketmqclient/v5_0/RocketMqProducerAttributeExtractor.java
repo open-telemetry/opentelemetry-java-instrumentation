@@ -5,10 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.DELAY;
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.FIFO;
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.NORMAL;
-import static io.opentelemetry.semconv.SemanticAttributes.MessagingRocketmqMessageTypeValues.TRANSACTION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
@@ -20,6 +16,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.ArrayList;
 import javax.annotation.Nullable;
+
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
@@ -38,16 +36,19 @@ enum RocketMqProducerAttributeExtractor
     attributes.put(MESSAGING_ROCKETMQ_MESSAGE_KEYS, new ArrayList<>(message.getKeys()));
     switch (message.getMessageType()) {
       case FIFO:
-        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE, FIFO);
+        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE,
+            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.FIFO);
         break;
       case DELAY:
-        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE, DELAY);
+        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE,
+            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.DELAY);
         break;
       case TRANSACTION:
-        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE, TRANSACTION);
+        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE,
+            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.TRANSACTION);
         break;
       default:
-        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL);
+        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TYPE, MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.NORMAL);
     }
   }
 
