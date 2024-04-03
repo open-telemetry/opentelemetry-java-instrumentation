@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.resources;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 
 /** Factory of a {@link Resource} which provides information about the Java runtime. */
@@ -40,7 +40,7 @@ public final class ProcessRuntimeResource {
               version,
                   ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION,
               description),
-          ResourceAttributes.SCHEMA_URL);
+          SchemaUrls.V1_24_0);
     } catch (SecurityException ignored) {
       return Resource.empty();
     }

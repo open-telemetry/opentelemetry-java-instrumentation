@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.resources;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 
 import java.net.InetAddress;
@@ -42,7 +42,7 @@ public final class HostResource {
       attributes.put(HostIncubatingAttributes.HOST_ARCH, hostArch);
     }
 
-    return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
+    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
   }
 
   private HostResource() {}

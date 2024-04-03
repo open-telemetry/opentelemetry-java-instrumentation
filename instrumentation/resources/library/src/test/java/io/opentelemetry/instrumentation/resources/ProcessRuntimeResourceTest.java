@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ class ProcessRuntimeResourceTest {
     Attributes attributes = resource.getAttributes();
 
     // then
-    assertThat(resource.getSchemaUrl()).isEqualTo(ResourceAttributes.SCHEMA_URL);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_NAME)).isNotBlank();
     assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_VERSION)).isNotBlank();
     assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_RUNTIME_DESCRIPTION)).isNotBlank();

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.resources;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 
 import java.util.Locale;
@@ -58,7 +58,7 @@ public final class OsResource {
     String osDescription = version != null ? os + ' ' + version : os;
     attributes.put(OsIncubatingAttributes.OS_DESCRIPTION, osDescription);
 
-    return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
+    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
   }
 
   @Nullable

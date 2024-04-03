@@ -8,7 +8,5 @@ package io.opentelemetry.semconv;
 public final class ResourceAttributes {
   private ResourceAttributes() {}
 
-  public static final String SCHEMA_URL = SchemaUrls.V1_24_0;
-
 
 }
