@@ -26,7 +26,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the extractor to set the table value extracted by the {@link
    * SqlClientAttributesExtractor} under the {@code dbTableAttribute} key. By default, the <code>
-   * {@linkplain DbIncubatingAttributes.DB_SQL_TABLE db.sql.table}</code> attribute is used.
+   * {@link DbIncubatingAttributes#DB_SQL_TABLE}</code> attribute is used.
    *
    * @param dbTableAttribute The {@link AttributeKey} under which the table extracted by the {@link
    *     SqlClientAttributesExtractor} will be stored.
