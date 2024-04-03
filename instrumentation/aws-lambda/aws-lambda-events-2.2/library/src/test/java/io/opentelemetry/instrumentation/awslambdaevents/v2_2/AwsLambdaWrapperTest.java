@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,9 +71,9 @@ public class AwsLambdaWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
@@ -100,9 +101,9 @@ public class AwsLambdaWrapperTest {
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
@@ -128,9 +129,9 @@ public class AwsLambdaWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
@@ -159,9 +160,9 @@ public class AwsLambdaWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
