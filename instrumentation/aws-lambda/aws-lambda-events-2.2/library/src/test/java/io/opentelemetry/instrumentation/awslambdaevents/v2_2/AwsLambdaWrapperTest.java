@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,7 @@ public class AwsLambdaWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -104,7 +105,7 @@ public class AwsLambdaWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -132,7 +133,7 @@ public class AwsLambdaWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -163,7 +164,7 @@ public class AwsLambdaWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   public static final class TestRequestHandlerString implements RequestHandler<String, String> {

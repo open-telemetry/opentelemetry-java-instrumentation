@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -80,7 +81,7 @@ public class AwsLambdaSqsMessageHandlerTest {
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("queue1 process")
                         .hasKind(SpanKind.CONSUMER)

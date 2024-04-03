@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AbstractAwsLambdaTest
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import lambdainternal.AwsLambdaLegacyInternalRequestHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ public class AwsLambdaTest extends AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -72,7 +73,7 @@ public class AwsLambdaTest extends AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   private static final class TestRequestHandler implements RequestHandler<String, String> {

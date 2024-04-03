@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.ResourceAttributes;
 import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Collections;
@@ -79,7 +80,7 @@ public class AwsLambdaSqsEventWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("otel process")
                         .hasKind(SpanKind.CONSUMER)

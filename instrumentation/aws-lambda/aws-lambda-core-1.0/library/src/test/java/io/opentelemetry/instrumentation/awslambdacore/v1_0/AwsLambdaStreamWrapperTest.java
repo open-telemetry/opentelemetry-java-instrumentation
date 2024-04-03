@@ -30,6 +30,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
 import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,7 +86,7 @@ public class AwsLambdaStreamWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -113,7 +114,7 @@ public class AwsLambdaStreamWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   public static final class TestRequestHandler implements RequestStreamHandler {

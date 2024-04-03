@@ -104,7 +104,7 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, "Test Client"),
@@ -140,7 +140,7 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
@@ -171,7 +171,7 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
@@ -202,7 +202,7 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
@@ -236,7 +236,7 @@ public class AwsLambdaApiGatewayWrapperTest {
                                 CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(ResourceAttributes.FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"))));
   }
 
