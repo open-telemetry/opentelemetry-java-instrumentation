@@ -35,7 +35,7 @@ jobs:
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Build Docker image
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+        uses: gradle/actions/setup-gradle@e24011a3b5db78bd5ab798036042d9312002f252 # v3.2.0
         with:
           arguments: ":smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}"
 
@@ -67,7 +67,7 @@ jobs:
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Build Docker image
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+        uses: gradle/actions/setup-gradle@e24011a3b5db78bd5ab798036042d9312002f252 # v3.2.0
         with:
           arguments: ":smoke-tests:images:fake-backend:dockerPush -PextraTag=${{ env.TAG }}"
 
