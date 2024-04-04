@@ -95,6 +95,7 @@ include(":javaagent-tooling:javaagent-tooling-java9")
 include(":javaagent-internal-logging-application")
 include(":javaagent-internal-logging-simple")
 include(":javaagent")
+include(":sdk-autoconfigure-support")
 
 include(":bom")
 include(":bom-alpha")
