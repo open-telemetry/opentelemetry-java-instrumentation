@@ -22,11 +22,11 @@ dependencies {
   api(project(":instrumentation-annotations"))
 
   implementation("io.opentelemetry.contrib:opentelemetry-aws-resources:1.33.0-alpha") {
-      exclude("com.fasterxml.jackson.core", "jackson-core")
-      exclude("com.squareup.okhttp3", "okhttp")
+    exclude("com.fasterxml.jackson.core", "jackson-core")
+    exclude("com.squareup.okhttp3", "okhttp")
   }
 
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources:1.33.0-alpha") {
-      exclude("com.fasterxml.jackson.core", "jackson-core")
+    exclude("com.fasterxml.jackson.core", "jackson-core")
   }
 }
