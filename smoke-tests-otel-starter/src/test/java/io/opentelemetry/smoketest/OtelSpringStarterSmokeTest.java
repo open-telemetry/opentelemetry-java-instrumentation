@@ -53,16 +53,13 @@ import org.springframework.core.env.Environment;
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
-      "otel.traces.exporter=none",
-      "otel.metrics.exporter=none",
-      "otel.logs.exporter=none",
+      // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
+      // the headers are simply set here to make sure that headers can be parsed
       "otel.metric.export.interval=100",
       "otel.exporter.otlp.headers=a=1,b=2",
       "otel.traces.exporter=memory",
       "otel.metrics.exporter=memory",
       "otel.logs.exporter=memory"
-      // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
-      // the headers are simply set here to make sure that headers can be parsed
     })
 class OtelSpringStarterSmokeTest {
 
