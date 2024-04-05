@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.autoconfigure;
+package io.opentelemetry.instrumentation.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,7 +58,7 @@ public class ResourceProviderPropertiesCustomizerTest {
   @TestFactory
   Stream<DynamicTest> enabledTestCases() {
     String className =
-        "io.opentelemetry.javaagent.tooling.config.ResourceProviderPropertiesCustomizerTest$Provider";
+        "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider";
     return Stream.of(
             new EnabledTestCase(
                 "explicitEnabled", true, Collections.emptySet(), Collections.emptySet(), true),
@@ -118,6 +118,10 @@ public class ResourceProviderPropertiesCustomizerTest {
                             "otel.resource.providers.test.enabled",
                             Boolean.toString(tc.explicitEnabled));
                       }
+
+                      props.put("otel.traces.exporter", "none");
+                      props.put("otel.metrics.exporter", "none");
+                      props.put("otel.logs.exporter", "none");
 
                       Attributes attributes =
                           SdkAutoconfigureAccess.getResourceAttributes(
