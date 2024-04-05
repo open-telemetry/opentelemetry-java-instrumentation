@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -35,6 +36,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -169,11 +171,13 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  void shouldSendTelemetry() throws InterruptedException {
+  void shouldSendTelemetry() {
 
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.URL, String.class);
 
-    Thread.sleep(300);
+    await()
+        .atMost(Duration.ofSeconds(1))
+        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == 2);
 
     List<SpanData> exportedSpans = SPAN_EXPORTER.getFinishedSpanItems();
 
