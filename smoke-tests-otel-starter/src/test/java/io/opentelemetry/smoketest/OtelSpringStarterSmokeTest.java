@@ -194,8 +194,15 @@ class OtelSpringStarterSmokeTest {
                                 "create table test_table (id bigint not null, primary key (id))")),
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
-                    spanDataAssert ->
-                        spanDataAssert
+                    clientSpan ->
+                        clientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                        .endsWith("/ping")),
+                    serverSpan ->
+                        serverSpan
                             .hasKind(SpanKind.SERVER)
                             .hasResourceSatisfying(
                                 r ->
@@ -206,7 +213,18 @@ class OtelSpringStarterSmokeTest {
                                             AttributeKey.stringKey("attributeFromYaml"), "true"))
                             .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
                             .hasAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                            .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/ping")));
+                            .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/ping"),
+                    nestedClientSpan ->
+                        nestedClientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                        .endsWith("/pong")),
+                    nestedServerSpan ->
+                        nestedServerSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/pong")));
 
     // Metric
     List<MetricData> exportedMetrics = METRIC_EXPORTER.getFinishedMetricItems();
