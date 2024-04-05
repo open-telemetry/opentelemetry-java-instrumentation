@@ -54,8 +54,12 @@ import org.springframework.core.env.Environment;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
       // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
-      // the headers are simply set here to make sure that headers can be parsed
       "otel.metric.export.interval=100",
+      // We set the export interval of the spans to 100 ms. The default value is 5 seconds.
+      "otel.bsp.schedule.delay=100",
+      // We set the export interval of the logs to 100 ms. The default value is 1 second.
+      "otel.blrp.schedule.delay=100",
+      // The headers are simply set here to make sure that headers can be parsed
       "otel.exporter.otlp.headers=a=1,b=2",
       "otel.traces.exporter=memory",
       "otel.metrics.exporter=memory",
@@ -169,9 +173,7 @@ class OtelSpringStarterSmokeTest {
 
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.URL, String.class);
 
-    Thread.sleep(5_000); // Sleep time could be potentially reduced and perhaps removed with
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8962
-    // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8963
+    Thread.sleep(300);
 
     List<SpanData> exportedSpans = SPAN_EXPORTER.getFinishedSpanItems();
 
