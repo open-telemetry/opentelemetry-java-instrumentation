@@ -5,18 +5,22 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -63,6 +67,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
+  private static final ContextKey<State> INSTRUMENTER_STATE_CONTEXT_KEY =
+      ContextKey.named("instrumenter-state");
+  private static final Logger logger = Logger.getLogger(Instrumenter.class.getName());
 
   private final String instrumentationName;
   private final Tracer tracer;
@@ -186,14 +193,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     boolean localRoot = LocalRootSpan.isLocalRoot(context);
 
-    spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();
     context = context.with(span);
+
+    long startNanos = getNanos(startTime);
+    context = context.with(INSTRUMENTER_STATE_CONTEXT_KEY, new AutoValue_Instrumenter_State(attributes, startNanos));
 
     if (operationListeners.length != 0) {
       // operation listeners run after span start, so that they have access to the current span
       // for capturing exemplars
-      long startNanos = getNanos(startTime);
       for (int i = 0; i < operationListeners.length; i++) {
         context = operationListeners[i].onStart(context, attributes, startNanos);
       }
@@ -222,16 +230,20 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.recordException(error);
     }
 
-    UnsafeAttributes attributes = new UnsafeAttributes();
+    State state = context.get(INSTRUMENTER_STATE_CONTEXT_KEY);
+    UnsafeAttributes attributes = state == null ? new UnsafeAttributes() : state.attributes();
+    if (state == null) {
+      logger.log(Level.FINE, "No instrumenter state present when ending context {0}.  Cannot run operationListeners; metrics may not be recorded", context);
+    }
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
       extractor.onEnd(attributes, context, request, response, error);
     }
     span.setAllAttributes(attributes);
 
-    if (operationListeners.length != 0) {
+    if (operationListeners.length != 0 && state != null) {
       long endNanos = getNanos(endTime);
       for (int i = operationListeners.length - 1; i >= 0; i--) {
-        operationListeners[i].onEnd(context, attributes, endNanos);
+        operationListeners[i].onEnd(context, attributes, state.startTimeNanos(), endNanos);
       }
     }
 
@@ -251,6 +263,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
+
+  @AutoValue
+  abstract static class State {
+    abstract UnsafeAttributes attributes();
+    abstract  long startTimeNanos();
+  }
+
 
   static {
     InstrumenterUtil.setInstrumenterAccess(

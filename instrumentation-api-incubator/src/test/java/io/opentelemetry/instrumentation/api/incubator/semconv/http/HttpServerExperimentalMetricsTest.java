@@ -49,6 +49,7 @@ class HttpServerExperimentalMetricsTest {
 
     Attributes responseAttributes =
         Attributes.builder()
+            .putAll(requestAttributes)
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(SemanticAttributes.ERROR_TYPE, "500")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
@@ -120,7 +121,7 @@ class HttpServerExperimentalMetricsTest {
                                                     .hasTraceId(spanContext2.getTraceId())
                                                     .hasSpanId(spanContext2.getSpanId())))));
 
-    listener.onEnd(context1, responseAttributes, nanos(250));
+    listener.onEnd(context1, responseAttributes, nanos(100), nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -194,7 +195,7 @@ class HttpServerExperimentalMetricsTest {
                                                     .hasTraceId(spanContext1.getTraceId())
                                                     .hasSpanId(spanContext1.getSpanId())))));
 
-    listener.onEnd(context2, responseAttributes, nanos(300));
+    listener.onEnd(context2, responseAttributes, nanos(150), nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(

@@ -7,18 +7,15 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpMessageBodySizeUtil.getHttpRequestBodySize;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpMessageBodySizeUtil.getHttpResponseBodySize;
-import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import java.util.logging.Logger;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -30,13 +27,6 @@ import java.util.logging.Logger;
  * the response size</a>.
  */
 public final class HttpClientExperimentalMetrics implements OperationListener {
-
-  private static final ContextKey<Attributes> HTTP_CLIENT_REQUEST_METRICS_START_ATTRIBUTES =
-      ContextKey.named("http-client-experimental-metrics-start-attributes");
-
-  private static final Logger logger =
-      Logger.getLogger(HttpClientExperimentalMetrics.class.getName());
-
   /**
    * Returns a {@link OperationMetrics} which can be used to enable recording of {@link
    * HttpClientExperimentalMetrics} on an {@link
@@ -70,31 +60,21 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
   }
 
   @Override
+  @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    return context.with(HTTP_CLIENT_REQUEST_METRICS_START_ATTRIBUTES, startAttributes);
+    return context;
   }
 
   @Override
-  public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    Attributes startAttributes = context.get(HTTP_CLIENT_REQUEST_METRICS_START_ATTRIBUTES);
-    if (startAttributes == null) {
-      logger.log(
-          FINE,
-          "No state present when ending context {0}. Cannot record HTTP request metrics.",
-          context);
-      return;
-    }
-
-    Attributes sizeAttributes = startAttributes.toBuilder().putAll(endAttributes).build();
-
-    Long requestBodySize = getHttpRequestBodySize(endAttributes, startAttributes);
+  public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
+    Long requestBodySize = getHttpRequestBodySize(startAndEndAttributes);
     if (requestBodySize != null) {
-      requestSize.record(requestBodySize, sizeAttributes, context);
+      requestSize.record(requestBodySize, startAndEndAttributes, context);
     }
 
-    Long responseBodySize = getHttpResponseBodySize(endAttributes, startAttributes);
+    Long responseBodySize = getHttpResponseBodySize(startAndEndAttributes);
     if (responseBodySize != null) {
-      responseSize.record(responseBodySize, sizeAttributes, context);
+      responseSize.record(responseBodySize, startAndEndAttributes, context);
     }
   }
 }

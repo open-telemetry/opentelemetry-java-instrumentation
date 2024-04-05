@@ -51,6 +51,7 @@ class HttpServerMetricsTest {
 
     Attributes responseAttributes =
         Attributes.builder()
+            .putAll(requestAttributes)
             .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(SemanticAttributes.ERROR_TYPE, "500")
             .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
@@ -80,7 +81,7 @@ class HttpServerMetricsTest {
     Context parent2 = Context.root().with(Span.wrap(spanContext2));
     Context context2 = listener.onStart(parent2, requestAttributes, nanos(150));
 
-    listener.onEnd(context1, responseAttributes, nanos(250));
+    listener.onEnd(context1, responseAttributes, nanos(100), nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -112,7 +113,7 @@ class HttpServerMetricsTest {
                                                     .hasSpanId(spanContext1.getSpanId()))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
 
-    listener.onEnd(context2, responseAttributes, nanos(300));
+    listener.onEnd(context2, responseAttributes, nanos(150), nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -148,13 +149,13 @@ class HttpServerMetricsTest {
             .build();
 
     Attributes responseAttributes =
-        Attributes.builder().put(SemanticAttributes.HTTP_ROUTE, "/test/{id}").build();
+        Attributes.builder().putAll(requestAttributes).put(SemanticAttributes.HTTP_ROUTE, "/test/{id}").build();
 
     Context parentContext = Context.root();
 
     // when
     Context context = listener.onStart(parentContext, requestAttributes, nanos(100));
-    listener.onEnd(context, responseAttributes, nanos(200));
+    listener.onEnd(context, responseAttributes, nanos(100), nanos(200));
 
     // then
     assertThat(metricReader.collectAllMetrics())

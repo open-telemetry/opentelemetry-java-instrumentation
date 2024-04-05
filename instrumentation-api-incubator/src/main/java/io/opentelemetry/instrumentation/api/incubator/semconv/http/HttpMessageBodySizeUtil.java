@@ -11,6 +11,7 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 final class HttpMessageBodySizeUtil {
+  // FIXME JBLEY can be inlined and removed I think
 
   @Nullable
   static Long getHttpRequestBodySize(Attributes... attributesList) {
