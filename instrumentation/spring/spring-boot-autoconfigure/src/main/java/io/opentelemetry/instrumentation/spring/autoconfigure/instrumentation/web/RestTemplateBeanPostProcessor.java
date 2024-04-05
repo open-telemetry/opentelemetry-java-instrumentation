@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import java.util.List;
@@ -31,6 +32,7 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
         (RestTemplate) bean, openTelemetryProvider.getObject());
   }
 
+  @CanIgnoreReturnValue
   static RestTemplate addRestTemplateInterceptorIfNotPresent(
       RestTemplate restTemplate, OpenTelemetry openTelemetry) {
     ClientHttpRequestInterceptor instrumentationInterceptor =

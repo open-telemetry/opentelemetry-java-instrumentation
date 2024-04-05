@@ -18,6 +18,4 @@ public class OtelSpringStarterSmokeTestApplication {
   public static void main(String[] args) {
     SpringApplication.run(OtelSpringStarterSmokeTestApplication.class);
   }
-
-
 }
