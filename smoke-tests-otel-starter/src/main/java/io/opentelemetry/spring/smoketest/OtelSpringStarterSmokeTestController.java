@@ -13,29 +13,30 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class OtelSpringStarterSmokeTestController {
 
   public static final String PING = "/ping";
+  public static final String REST_CLIENT = "/rest-client";
   public static final String REST_TEMPLATE = "/rest-template";
   public static final String TEST_HISTOGRAM = "histogram-test-otel-spring-starter";
   private final LongHistogram histogram;
   private final Optional<RestTemplate> restTemplate;
+  private final Optional<RestClient> restClient;
 
   public OtelSpringStarterSmokeTestController(
       OpenTelemetry openTelemetry,
+      RestClient.Builder restClientBuilder,
       RestTemplateBuilder restTemplateBuilder,
       Optional<ServletWebServerApplicationContext> server) {
     Meter meter = openTelemetry.getMeter(OtelSpringStarterSmokeTestApplication.class.getName());
     histogram = meter.histogramBuilder(TEST_HISTOGRAM).ofLongs().build();
-    restTemplate =
-        server.map(
-            s ->
-                restTemplateBuilder
-                    .rootUri("http://localhost:" + s.getWebServer().getPort())
-                    .build());
+    Optional<String> rootUri = server.map(s -> "http://localhost:" + s.getWebServer().getPort());
+    restClient = rootUri.map(uri -> restClientBuilder.baseUrl(uri).build());
+    restTemplate = rootUri.map(uri -> restTemplateBuilder.rootUri(uri).build());
   }
 
   @GetMapping(PING)
@@ -44,10 +45,17 @@ public class OtelSpringStarterSmokeTestController {
     return "pong";
   }
 
+  @GetMapping(REST_CLIENT)
+  public String restClient() {
+    return restClient
+        .map(c -> c.get().uri(PING).retrieve().body(String.class))
+        .orElseThrow(() -> new IllegalStateException("RestClient not available"));
+  }
+
   @GetMapping(REST_TEMPLATE)
   public String restTemplate() {
     return restTemplate
-        .map(t -> t.getForObject("/ping", String.class))
+        .map(t -> t.getForObject(PING, String.class))
         .orElseThrow(() -> new IllegalStateException("RestTemplate not available"));
   }
 }

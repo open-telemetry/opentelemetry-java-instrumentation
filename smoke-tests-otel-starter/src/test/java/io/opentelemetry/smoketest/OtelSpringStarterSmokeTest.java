@@ -259,10 +259,20 @@ class OtelSpringStarterSmokeTest {
 
   @Test
   @org.junit.jupiter.api.Order(2)
-  void restTemplateClient() {
+  void restTemplate() {
+    assertClient(OtelSpringStarterSmokeTestController.REST_TEMPLATE);
+  }
+
+  @Test
+  @org.junit.jupiter.api.Order(3)
+  void restClient() {
+    assertClient(OtelSpringStarterSmokeTestController.REST_CLIENT);
+  }
+
+  private void assertClient(String url) {
     resetExporters(); // ignore the telemetry from application startup
 
-    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.REST_TEMPLATE, String.class);
+    testRestTemplate.getForObject(url, String.class);
 
     TracesAssert.assertThat(expectSpans(4))
         .hasTracesSatisfyingExactly(
@@ -272,13 +282,11 @@ class OtelSpringStarterSmokeTest {
                         clientSpan
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
-                                a ->
-                                    assertThat(a.get(UrlAttributes.URL_FULL))
-                                        .endsWith("/rest-template")),
+                                a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
                     serverSpan ->
                         serverSpan
                             .hasKind(SpanKind.SERVER)
-                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/rest-template"),
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, url),
                     nestedClientSpan ->
                         nestedClientSpan
                             .hasKind(SpanKind.CLIENT)
