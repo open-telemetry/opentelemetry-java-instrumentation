@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 
 /**
  * A helper class that models the <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/database-metrics.md#connection-pools">database
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md#connection-pools">database
  * client connection pool metrics semantic conventions</a>.
  */
 public final class DbConnectionPoolMetrics {
