@@ -45,12 +45,16 @@ configurations.configureEach {
   exclude("org.spockframework", "spock-core")
 }
 
-configurations.configureEach {
-  if (!name.contains("muzzle")) {
-    resolutionStrategy {
-      eachDependency {
-        if (requested.group == "org.codehaus.groovy") {
-          useVersion("3.0.9")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (!latestDepTest) {
+  configurations.configureEach {
+    if (!name.contains("muzzle")) {
+      resolutionStrategy {
+        eachDependency {
+          if (requested.group == "org.codehaus.groovy") {
+            useVersion("3.0.9")
+          }
         }
       }
     }
@@ -64,8 +68,6 @@ configurations.testRuntimeClasspath {
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 tasks {
   val testStableSemconv by registering(Test::class) {
