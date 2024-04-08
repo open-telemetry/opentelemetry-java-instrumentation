@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Arrays;
 

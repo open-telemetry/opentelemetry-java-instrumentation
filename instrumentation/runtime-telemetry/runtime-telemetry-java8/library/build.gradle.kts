@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   implementation(project(":instrumentation-api"))
-  implementation("io.opentelemetry:opentelemetry-extension-incubator")
+  implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   testImplementation(project(":testing-common"))
 }

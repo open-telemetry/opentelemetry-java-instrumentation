@@ -9,8 +9,8 @@ import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.semconv.SemanticAttributes;
 
 final class HttpExperimentalMetricsAdvice {
