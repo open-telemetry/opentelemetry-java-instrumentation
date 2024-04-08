@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 
 /**
  * {@link OperationListener} which keeps track of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-client">RPC
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client">RPC
  * client metrics</a>.
  */
 public final class RpcClientMetrics implements OperationListener {
