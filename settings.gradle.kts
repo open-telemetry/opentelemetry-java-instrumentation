@@ -41,7 +41,7 @@ if (useScansGradleCom) {
   develocity {
     buildScan {
       termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-      termsOfUseUrl = "yes"
+      termsOfUseAgree = "yes"
       uploadInBackground = !isCI
 
       capture {
