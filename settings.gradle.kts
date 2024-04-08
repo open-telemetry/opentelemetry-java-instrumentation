@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.enterprise") version "3.17"
+  id("com.gradle.develocity") version "3.17"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
@@ -38,30 +38,26 @@ val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
 val useScansGradleCom = isCI && geAccessKey.isEmpty()
 
 if (useScansGradleCom) {
-  gradleEnterprise {
+  develocity {
     buildScan {
-      termsOfServiceUrl = "https://gradle.com/terms-of-service"
-      termsOfServiceAgree = "yes"
-      isUploadInBackground = !isCI
-      publishAlways()
+      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+      termsOfUseAgree = "yes"
+      uploadInBackground = !isCI
 
       capture {
-        isTaskInputFiles = true
+        fileFingerprints = true
       }
     }
   }
 } else {
-  gradleEnterprise {
+  develocity {
     server = gradleEnterpriseServer
     buildScan {
-      isUploadInBackground = !isCI
-
-      this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
-      publishIfAuthenticated()
-      publishAlways()
+      uploadInBackground = !isCI
+      publishing.onlyIf { it.isAuthenticated }
 
       capture {
-        isTaskInputFiles = true
+        fileFingerprints = true
       }
 
       gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
@@ -73,7 +69,7 @@ if (useScansGradleCom) {
   }
 
   buildCache {
-    remote(gradleEnterprise.buildCache) {
+    remote(develocity.buildCache) {
       isPush = isCI && geAccessKey.isNotEmpty()
     }
   }
