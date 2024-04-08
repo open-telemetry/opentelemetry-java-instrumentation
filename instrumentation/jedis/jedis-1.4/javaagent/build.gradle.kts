@@ -19,10 +19,23 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
 
+  testImplementation(project(":instrumentation:jedis:jedis-1.4:testing"))
+
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
   latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
+}
+
+testing {
+  suites {
+    val version272 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("redis.clients:jedis:2.7.2")
+        implementation(project(":instrumentation:jedis:jedis-1.4:testing"))
+      }
+    }
+  }
 }
 
 tasks {
