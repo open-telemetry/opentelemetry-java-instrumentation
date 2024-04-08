@@ -62,7 +62,7 @@ import org.springframework.core.env.Environment;
       // We set the export interval of the logs to 100 ms. The default value is 1 second.
       "otel.blrp.schedule.delay=100",
       // The headers are simply set here to make sure that headers can be parsed
-      "otel.exporter.otlp.headers=a=1,b=2",
+      "otel.exporter.otlp.headers.c=3",
       "otel.traces.exporter=memory",
       "otel.metrics.exporter=memory",
       "otel.logs.exporter=memory"
@@ -163,10 +163,12 @@ class OtelSpringStarterSmokeTest {
             otlpExporterProperties,
             otelResourceProperties,
             propagationProperties,
-            DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+            DefaultConfigProperties.createFromMap(
+                Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
         .containsEntry("a", "1")
-        .containsEntry("b", "2");
+        .containsEntry("b", "2")
+        .containsEntry("c", "3");
     assertThat(configProperties.getList("otel.propagators")).containsExactly("b3");
   }
 
