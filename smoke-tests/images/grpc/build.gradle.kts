@@ -16,7 +16,7 @@ dependencies {
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
-  implementation("io.opentelemetry.proto:opentelemetry-proto:1.1.0-alpha")
+  implementation("io.opentelemetry.proto:opentelemetry-proto:1.2.0-alpha")
   implementation(project(":instrumentation-annotations"))
   implementation("org.apache.logging.log4j:log4j-core")
 
