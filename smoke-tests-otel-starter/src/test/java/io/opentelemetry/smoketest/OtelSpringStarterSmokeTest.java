@@ -184,7 +184,7 @@ class OtelSpringStarterSmokeTest {
 
     await()
         .atMost(Duration.ofSeconds(1))
-        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == 2);
+        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == 5);
 
     List<SpanData> exportedSpans = SPAN_EXPORTER.getFinishedSpanItems();
 
@@ -201,8 +201,15 @@ class OtelSpringStarterSmokeTest {
                                 "create table test_table (id bigint not null, primary key (id))")),
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
-                    spanDataAssert ->
-                        spanDataAssert
+                    clientSpan ->
+                        clientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                        .endsWith("/ping")),
+                    serverSpan ->
+                        serverSpan
                             .hasKind(SpanKind.SERVER)
                             .hasResourceSatisfying(
                                 r ->
@@ -217,7 +224,18 @@ class OtelSpringStarterSmokeTest {
                                                 AbstractCharSequenceAssert::isNotBlank)))
                             .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
                             .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                    nestedClientSpan ->
+                        nestedClientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                        .endsWith("/pong")),
+                    nestedServerSpan ->
+                        nestedServerSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/pong")));
 
     // Metric
     List<MetricData> exportedMetrics = METRIC_EXPORTER.getFinishedMetricItems();

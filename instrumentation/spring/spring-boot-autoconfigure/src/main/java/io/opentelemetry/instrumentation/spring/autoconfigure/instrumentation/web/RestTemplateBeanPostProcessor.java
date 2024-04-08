@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import java.util.List;
@@ -27,20 +28,22 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
       return bean;
     }
 
-    RestTemplate restTemplate = (RestTemplate) bean;
-    ClientHttpRequestInterceptor interceptor =
-        SpringWebTelemetry.create(openTelemetryProvider.getObject()).newInterceptor();
-    addRestTemplateInterceptorIfNotPresent(restTemplate, interceptor);
-    return restTemplate;
+    return addRestTemplateInterceptorIfNotPresent(
+        (RestTemplate) bean, openTelemetryProvider.getObject());
   }
 
-  private static void addRestTemplateInterceptorIfNotPresent(
-      RestTemplate restTemplate, ClientHttpRequestInterceptor instrumentationInterceptor) {
+  @CanIgnoreReturnValue
+  static RestTemplate addRestTemplateInterceptorIfNotPresent(
+      RestTemplate restTemplate, OpenTelemetry openTelemetry) {
+    ClientHttpRequestInterceptor instrumentationInterceptor =
+        SpringWebTelemetry.create(openTelemetry).newInterceptor();
+
     List<ClientHttpRequestInterceptor> restTemplateInterceptors = restTemplate.getInterceptors();
     if (restTemplateInterceptors.stream()
         .noneMatch(
             interceptor -> interceptor.getClass() == instrumentationInterceptor.getClass())) {
       restTemplateInterceptors.add(0, instrumentationInterceptor);
     }
+    return restTemplate;
   }
 }
