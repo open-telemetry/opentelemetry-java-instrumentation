@@ -109,6 +109,19 @@ jobs:
           arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
           build-root-directory: gradle-plugins
 
+      - shell: bash
+        name: Collect SBOM's
+        run: |
+          mkdir sboms
+          find . -path ./sboms -prune -o -name "*.spdx.json" -exec mv {} ./sboms/ \;
+          zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
+
+      - uses: actions/upload-artifact@v4
+        name: Save SBOM's to build
+        with:
+          name: opentelemetry-java-instrumentation-SBOM.zip
+          path: "sboms/*.json"
+
       - name: Generate release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -162,6 +175,7 @@ jobs:
                             --title "Version $VERSION" \
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
+                            opentelemetry-java-instrumentation-SBOM.zip \
                             opentelemetry-javaagent.jar
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT

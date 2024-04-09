@@ -172,6 +172,18 @@ jobs:
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
           if-no-files-found: ignore
 
+      - shell: bash
+        name: Collect SBOM's
+        run: |
+          mkdir sboms
+          find . -path ./sboms -prune -o -name "*.spdx.json" -exec mv {} ./sboms/ \;
+
+      - uses: actions/upload-artifact@v4
+        name: Save SBOM's to build
+        with:
+          name: opentelemetry-java-instrumentation-SBOM-${{ matrix.os }}-${{ matrix.test-java-version }}.zip
+          path: "sboms/*.json"
+
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     runs-on: ubuntu-latest
