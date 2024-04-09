@@ -20,6 +20,8 @@ import org.assertj.core.api.AbstractLongAssert;
 
 class InterceptorsTest extends AbstractInterceptorsTest {
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   void assertTraces() {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();

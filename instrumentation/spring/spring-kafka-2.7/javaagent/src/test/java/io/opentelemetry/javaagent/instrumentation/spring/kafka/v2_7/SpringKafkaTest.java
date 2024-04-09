@@ -48,6 +48,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     return emptyList();
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldCreateSpansForSingleRecordProcess() {
     testing.runWithSpan(
@@ -261,6 +263,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldCreateSpansForBatchReceiveAndProcess() throws InterruptedException {
     Map<String, String> batchMessages = new HashMap<>();
@@ -364,6 +368,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
+  @SuppressWarnings(
+      "deprecation") // TODO MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION
+  // deprecation
   @Test
   void shouldHandleFailureInKafkaBatchListener() {
     testing.runWithSpan(

@@ -15,6 +15,8 @@ import org.assertj.core.api.AbstractLongAssert;
 
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   void assertTraces() {
     testing.waitAndAssertTraces(

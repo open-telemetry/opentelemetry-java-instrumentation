@@ -52,6 +52,8 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(0))));
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -77,6 +79,8 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(

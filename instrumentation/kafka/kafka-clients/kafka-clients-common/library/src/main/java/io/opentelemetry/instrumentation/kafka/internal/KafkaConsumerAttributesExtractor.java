@@ -16,6 +16,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 final class KafkaConsumerAttributesExtractor
     implements AttributesExtractor<KafkaProcessRequest, Void> {
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaProcessRequest request) {

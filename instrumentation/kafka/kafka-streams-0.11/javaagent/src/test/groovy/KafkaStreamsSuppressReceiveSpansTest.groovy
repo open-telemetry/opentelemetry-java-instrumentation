@@ -24,6 +24,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
 
+  @SuppressWarnings("deprecation") // TODO  MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   def "test kafka produce and consume with streams in-between"() {
     setup:
     def config = new Properties()

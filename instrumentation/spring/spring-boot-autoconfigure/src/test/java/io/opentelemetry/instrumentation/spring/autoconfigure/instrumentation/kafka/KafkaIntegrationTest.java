@@ -84,6 +84,7 @@ class KafkaIntegrationTest {
   // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
   // ops.send, although with different return type.
   @SuppressWarnings({"unchecked", "deprecation"})
+  // TODO  MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   private static void runShouldInstrumentProducerAndConsumer(
       ConfigurableApplicationContext applicationContext) {
     KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);

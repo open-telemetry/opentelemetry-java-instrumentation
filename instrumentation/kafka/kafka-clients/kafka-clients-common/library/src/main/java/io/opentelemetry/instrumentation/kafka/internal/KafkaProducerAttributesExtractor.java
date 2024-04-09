@@ -35,6 +35,8 @@ final class KafkaProducerAttributesExtractor
     return !(keyClass.isArray() || keyClass == ByteBuffer.class);
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   public void onEnd(
       AttributesBuilder attributes,

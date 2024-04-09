@@ -52,6 +52,8 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     return topic != null ? topic : super.getDestination(exchange, endpoint);
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   public void pre(
       AttributesBuilder attributes,

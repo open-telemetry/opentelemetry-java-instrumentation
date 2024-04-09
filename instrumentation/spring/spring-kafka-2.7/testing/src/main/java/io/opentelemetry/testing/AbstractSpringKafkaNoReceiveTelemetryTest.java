@@ -27,6 +27,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
 
   protected abstract boolean isLibraryInstrumentationTest();
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldCreateSpansForSingleRecordProcess() {
     testing()
@@ -102,6 +104,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldHandleFailureInKafkaListener() {
     testing()
@@ -190,6 +194,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(6))));
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldCreateSpansForBatchReceiveAndProcess() throws InterruptedException {
     Map<String, String> batchMessages = new HashMap<>();
@@ -284,6 +290,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldHandleFailureInKafkaBatchListener() {
     testing()

@@ -194,6 +194,8 @@ public abstract class AbstractVertxKafkaTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> sendAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
@@ -247,6 +249,8 @@ public abstract class AbstractVertxKafkaTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> processAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =

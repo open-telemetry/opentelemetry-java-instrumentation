@@ -152,6 +152,8 @@ public abstract class KafkaClientBaseTest {
     consumer.seekToBeginning(Collections.emptyList());
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> sendAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -212,6 +214,8 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> processAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =

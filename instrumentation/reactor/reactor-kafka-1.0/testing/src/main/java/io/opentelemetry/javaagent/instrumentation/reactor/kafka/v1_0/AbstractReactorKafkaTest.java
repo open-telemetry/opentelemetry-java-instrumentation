@@ -174,6 +174,8 @@ public abstract class AbstractReactorKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -215,6 +217,8 @@ public abstract class AbstractReactorKafkaTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> processAttributes(
       ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
