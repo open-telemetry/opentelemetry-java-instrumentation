@@ -7,11 +7,15 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ClientAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.undertow.Handlers
 import io.undertow.Undertow
@@ -110,7 +114,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes.remove(HttpAttributes.HTTP_ROUTE)
     attributes
   }
 
@@ -144,15 +148,15 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           }
 
           attributes {
-            "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-            "$SemanticAttributes.URL_SCHEME" uri.getScheme()
-            "$SemanticAttributes.URL_PATH" uri.getPath()
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+            "$UrlAttributes.URL_SCHEME" uri.getScheme()
+            "$UrlAttributes.URL_PATH" uri.getPath()
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }
@@ -193,15 +197,15 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           errorEvent(Exception, "exception after sending response", 2)
 
           attributes {
-            "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-            "$SemanticAttributes.URL_SCHEME" uri.getScheme()
-            "$SemanticAttributes.URL_PATH" uri.getPath()
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+            "$UrlAttributes.URL_SCHEME" uri.getScheme()
+            "$UrlAttributes.URL_PATH" uri.getPath()
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
           }

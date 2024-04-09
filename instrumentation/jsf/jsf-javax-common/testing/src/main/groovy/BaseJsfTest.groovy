@@ -4,12 +4,16 @@
  */
 
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ClientAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpData
@@ -98,18 +102,18 @@ abstract class BaseJsfTest extends AgentInstrumentationSpecification implements 
           kind SpanKind.SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-            "$SemanticAttributes.SERVER_PORT" port
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
+            "$ServerAttributes.SERVER_PORT" port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.URL_PATH" "/jetty-context/" + path
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.HTTP_ROUTE" "/jetty-context/" + route
-            "$SemanticAttributes.CLIENT_ADDRESS" { it == null || it == TEST_CLIENT_IP }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UrlAttributes.URL_PATH" "/jetty-context/" + path
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$HttpAttributes.HTTP_ROUTE" "/jetty-context/" + route
+            "$ClientAttributes.CLIENT_ADDRESS" { it == null || it == TEST_CLIENT_IP }
           }
         }
       }

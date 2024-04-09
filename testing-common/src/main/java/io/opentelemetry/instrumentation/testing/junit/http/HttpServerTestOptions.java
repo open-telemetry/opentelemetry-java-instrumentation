@@ -10,7 +10,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,8 +26,7 @@ public final class HttpServerTestOptions {
 
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
-          new HashSet<>(
-              Arrays.asList(SemanticAttributes.HTTP_ROUTE, SemanticAttributes.SERVER_PORT)));
+          new HashSet<>(Arrays.asList(HttpAttributes.HTTP_ROUTE, ServerAttributes.SERVER_PORT)));
 
   public static final SpanNameMapper DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER =
       (uri, method, route) -> {

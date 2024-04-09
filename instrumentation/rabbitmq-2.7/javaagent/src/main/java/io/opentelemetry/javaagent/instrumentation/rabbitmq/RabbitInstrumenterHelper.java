@@ -14,7 +14,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.Map;
 
 public class RabbitInstrumenterHelper {
@@ -33,10 +33,11 @@ public class RabbitInstrumenterHelper {
 
   public void onPublish(Span span, String exchange, String routingKey) {
     String exchangeName = normalizeExchangeName(exchange);
-    span.setAttribute(SemanticAttributes.MESSAGING_DESTINATION_NAME, exchangeName);
+    span.setAttribute(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, exchangeName);
     span.updateName(exchangeName + " publish");
     if (routingKey != null && !routingKey.isEmpty()) {
-      span.setAttribute(SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      span.setAttribute(
+          MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute(RABBITMQ_COMMAND, "basic.publish");

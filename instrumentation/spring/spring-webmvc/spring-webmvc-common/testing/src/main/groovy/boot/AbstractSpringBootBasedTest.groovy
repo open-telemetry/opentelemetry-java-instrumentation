@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.MediaType
@@ -172,12 +172,12 @@ abstract class AbstractSpringBootBasedTest extends HttpServerTest<ConfigurableAp
       name namePattern
       kind INTERNAL
       attributes {
-        "$SemanticAttributes.CODE_NAMESPACE" {
+        "$CodeIncubatingAttributes.CODE_NAMESPACE" {
           it == OnCommittedResponseWrapper.name
             || it == "org.springframework.security.web.firewall.FirewalledResponse"
             || it == "jakarta.servlet.http.HttpServletResponseWrapper"
         }
-        "$SemanticAttributes.CODE_FUNCTION" methodName
+        "$CodeIncubatingAttributes.CODE_FUNCTION" methodName
       }
     }
   }

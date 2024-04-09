@@ -18,7 +18,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.function.Function;
 
@@ -128,8 +128,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture {@link SemanticAttributes#ENDUSER_ID} as span attributes when SERVER span is not create
-   * by servlet instrumentation.
+   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
+   * not create by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
@@ -144,7 +144,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     if (principal != null) {
       String name = principal.getName();
       if (name != null) {
-        serverSpan.setAttribute(SemanticAttributes.ENDUSER_ID, name);
+        serverSpan.setAttribute(EnduserIncubatingAttributes.ENDUSER_ID, name);
       }
     }
   }

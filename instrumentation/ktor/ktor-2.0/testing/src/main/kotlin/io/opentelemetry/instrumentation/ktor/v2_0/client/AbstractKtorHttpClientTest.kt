@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import kotlinx.coroutines.*
 import java.net.URI
 
@@ -64,7 +64,7 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
       // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
       disableTestRedirects()
 
-      setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(SemanticAttributes.NETWORK_PROTOCOL_VERSION) }
+      setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(NetworkAttributes.NETWORK_PROTOCOL_VERSION) }
 
       setSingleConnectionFactory { host, port ->
         KtorHttpClientSingleConnection(host, port) { installTracing() }

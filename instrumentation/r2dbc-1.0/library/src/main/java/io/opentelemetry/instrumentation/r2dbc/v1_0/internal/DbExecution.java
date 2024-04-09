@@ -13,7 +13,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
@@ -45,7 +45,7 @@ public final class DbExecution {
                 .getDatabaseProductName()
                 .toLowerCase(Locale.ROOT)
                 .split(" ")[0]
-            : SemanticAttributes.DbSystemValues.OTHER_SQL;
+            : DbIncubatingAttributes.DbSystemValues.OTHER_SQL;
     this.user = factoryOptions.hasOption(USER) ? (String) factoryOptions.getValue(USER) : null;
     this.name =
         factoryOptions.hasOption(DATABASE)

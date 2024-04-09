@@ -12,6 +12,7 @@ ext.relocatePackages = { shadowJar ->
   // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
   shadowJar.relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
   shadowJar.relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
+  shadowJar.relocate("io.opentelemetry.semconv.incubating", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv.incubating")
   shadowJar.relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
   shadowJar.relocate("io.opentelemetry.extension.incubator", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.incubator")
 

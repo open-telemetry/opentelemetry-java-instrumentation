@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
@@ -28,7 +28,7 @@ enum RocketMqProducerExperimentalAttributeExtractor
     if (request.getMessage() != null) {
       String tags = request.getMessage().getTags();
       if (tags != null) {
-        attributes.put(SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG, tags);
+        attributes.put(MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG, tags);
       }
     }
     String brokerAddr = request.getBrokerAddr();

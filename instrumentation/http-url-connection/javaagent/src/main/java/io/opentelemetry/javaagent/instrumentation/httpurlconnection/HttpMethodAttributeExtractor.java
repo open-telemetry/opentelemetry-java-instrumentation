@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
 import java.net.HttpURLConnection;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -50,11 +50,11 @@ public class HttpMethodAttributeExtractor<
       String method = connection.getRequestMethod();
       // The getOutputStream() has transformed "GET" into "POST"
       if (knownMethods.contains(method)) {
-        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
-        attributes.remove(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+        attributes.remove(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
       } else {
-        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
-        internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+        internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
       }
       Span span = Span.fromContext(context);
       span.updateName(method);

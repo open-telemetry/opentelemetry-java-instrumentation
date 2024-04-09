@@ -12,7 +12,10 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -163,18 +166,18 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                     span.hasAttributesSatisfying(
                         attributes -> {
                           assertThat(attributes)
-                              .containsEntry(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1")
-                              .containsEntry(SemanticAttributes.SERVER_PORT, server.httpPort())
-                              .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method)
-                              .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-                              .containsEntry(SemanticAttributes.RPC_SYSTEM, "aws-api")
-                              .containsEntry(SemanticAttributes.RPC_SERVICE, service)
-                              .containsEntry(SemanticAttributes.RPC_METHOD, operation)
+                              .containsEntry(ServerAttributes.SERVER_ADDRESS, "127.0.0.1")
+                              .containsEntry(ServerAttributes.SERVER_PORT, server.httpPort())
+                              .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method)
+                              .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
+                              .containsEntry(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api")
+                              .containsEntry(RpcIncubatingAttributes.RPC_SERVICE, service)
+                              .containsEntry(RpcIncubatingAttributes.RPC_METHOD, operation)
                               .containsEntry("aws.agent", "java-aws-sdk")
                               .containsEntry("aws.requestId", requestId)
                               .containsEntry("aws.table.name", "sometable")
-                              .containsEntry(SemanticAttributes.DB_SYSTEM, "dynamodb")
-                              .containsEntry(SemanticAttributes.DB_OPERATION, operation);
+                              .containsEntry(DbIncubatingAttributes.DB_SYSTEM, "dynamodb")
+                              .containsEntry(DbIncubatingAttributes.DB_OPERATION, operation);
                         });
                     if (isRecordIndividualHttpErrorEnabled()) {
                       span.hasEventsSatisfyingExactly(
@@ -182,7 +185,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                               event
                                   .hasName("HTTP request failure")
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
+                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
                                       equalTo(
                                           AttributeKey.stringKey("aws.http.error_message"),
                                           "DynamoDB could not process your request")),
@@ -190,7 +193,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                               event
                                   .hasName("HTTP request failure")
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 503),
+                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 503),
                                       equalTo(
                                           AttributeKey.stringKey("aws.http.error_message"),
                                           "DynamoDB is currently unavailable")));

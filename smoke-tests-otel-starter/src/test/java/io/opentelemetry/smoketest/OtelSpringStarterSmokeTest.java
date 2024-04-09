@@ -33,7 +33,9 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import java.time.Duration;
@@ -192,7 +194,7 @@ class OtelSpringStarterSmokeTest {
                         spanDataAssert
                             .hasKind(SpanKind.CLIENT)
                             .hasAttribute(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 "create table test_table (id bigint not null, primary key (id))")),
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
@@ -206,9 +208,9 @@ class OtelSpringStarterSmokeTest {
                                             true)
                                         .hasAttribute(
                                             AttributeKey.stringKey("attributeFromYaml"), "true"))
-                            .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
-                            .hasAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                            .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/ping")));
+                            .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+                            .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
 
     // Metric
     List<MetricData> exportedMetrics = METRIC_EXPORTER.getFinishedMetricItems();
@@ -230,6 +232,6 @@ class OtelSpringStarterSmokeTest {
     assertThat(firstLog.getAttributes().asMap())
         .as("Should capture code attributes")
         .containsEntry(
-            SemanticAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
   }
 }

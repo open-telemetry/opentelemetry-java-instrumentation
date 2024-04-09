@@ -15,7 +15,9 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.Arrays;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractLongAssert;
@@ -142,26 +144,26 @@ class LogbackTest {
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
-                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"),
-                equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "performLogging"),
+                satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+                equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java"),
+                equalTo(ExceptionAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "hello"),
                 satisfies(
-                    SemanticAttributes.EXCEPTION_STACKTRACE,
+                    ExceptionAttributes.EXCEPTION_STACKTRACE,
                     v -> v.contains(LogbackTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
-                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "performLogging"),
+                satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+                equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java"));
       }
 
       if (withParent) {
@@ -195,12 +197,12 @@ class LogbackTest {
         .hasAttributesSatisfyingExactly(
             equalTo(AttributeKey.stringKey("key1"), "val1"),
             equalTo(AttributeKey.stringKey("key2"), "val2"),
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-            equalTo(SemanticAttributes.CODE_FUNCTION, "testMdc"),
-            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+            equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMdc"),
+            satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+            equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java"));
   }
 
   @Test
@@ -214,13 +216,13 @@ class LogbackTest {
     LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
+            equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
             equalTo(AttributeKey.stringArrayKey("logback.marker"), Arrays.asList(markerName)),
-            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-            equalTo(SemanticAttributes.CODE_FUNCTION, "testMarker"),
-            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMarker"),
+            satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+            equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java"));
   }
 
   private static void performLogging(

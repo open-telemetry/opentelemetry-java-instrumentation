@@ -11,11 +11,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.AfterAll;
@@ -58,18 +62,18 @@ public class SparkJavaBasedTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.URL_SCHEME, "http"),
-                            equalTo(SemanticAttributes.URL_PATH, "/param/asdf1234"),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_PATH, "/param/asdf1234"),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(
-                                SemanticAttributes.USER_AGENT_ORIGINAL,
+                                UserAgentAttributes.USER_AGENT_ORIGINAL,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(SemanticAttributes.HTTP_ROUTE, "/param/:param"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, port),
-                            equalTo(SemanticAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(HttpAttributes.HTTP_ROUTE, "/param/:param"),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, port),
+                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,

@@ -22,7 +22,7 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import java.time.Instant;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
@@ -138,9 +138,9 @@ abstract class AbstractOpenTelemetryAppenderTest {
         .hasSeverity(Severity.INFO)
         .hasSeverityText("INFO")
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-            equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "Error!"),
-            satisfies(SemanticAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
+            equalTo(ExceptionAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
+            equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "Error!"),
+            satisfies(ExceptionAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
 
     assertThat(logDataList.get(0).getTimestampEpochNanos())
         .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
