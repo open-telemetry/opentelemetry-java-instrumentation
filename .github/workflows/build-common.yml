@@ -18,10 +18,6 @@ on:
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY:
         required: false
-      GE_CACHE_USERNAME:
-        required: false
-      GE_CACHE_PASSWORD:
-        required: false
 
 permissions:
   contents: read
@@ -42,11 +38,9 @@ jobs:
           java-version: 17.0.6
 
       - name: Spotless
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           arguments: spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
@@ -58,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
 
-      - uses: gradle/wrapper-validation-action@699bb18358f12c5b78b37bb0111d3a0e2276e0e2 # v2.1.1
+      - uses: gradle/wrapper-validation-action@b231772637bb498f11fdbc86052b6e8a8dc9fc92 # v2.1.2
 
   license-check:
     runs-on: ubuntu-latest
@@ -75,11 +69,9 @@ jobs:
           java-version: 17.0.6
 
       - name: Generate license report
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           # currently ignoring inputs.no-build-cache and always running with --no-build-cache
           # see https://github.com/jk1/Gradle-License-Report/issues/231
@@ -149,11 +141,9 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Build
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         with:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
           arguments: check -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
@@ -244,9 +234,7 @@ jobs:
       - name: List tests
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         with:
           # "check" is needed to activate all tests for listing purposes
           # listTestsInPartition writes test tasks that apply to the given partition to a file named
@@ -264,9 +252,7 @@ jobs:
       - name: Test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         with:
           # spotless is checked separately since it's a common source of failure
           arguments: >
@@ -340,7 +326,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Set up Gradle cache
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
@@ -350,16 +336,12 @@ jobs:
       - name: Build
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         # running suite "none" compiles everything needed by smoke tests without executing any tests
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-          GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-          GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Upload jvm crash dump files if any
@@ -397,7 +379,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Build
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         with:
           arguments: build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           build-root-directory: gradle-plugins
@@ -418,7 +400,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Set up Gradle cache
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 

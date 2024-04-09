@@ -12,8 +12,6 @@ jobs:
     uses: ./.github/workflows/build-common.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   test-latest-deps:
     # release branches are excluded
@@ -23,8 +21,6 @@ jobs:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     secrets:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
 
   muzzle:
     # release branches are excluded
@@ -83,7 +79,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         with:
           arguments: assemble publishToSonatype
           # gradle enterprise is used for the build cache
@@ -96,7 +92,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@29c0906b64b8fc82467890bfb7a0a7ef34bda89e # v3.1.0
+        uses: gradle/actions/setup-gradle@1168cd3d07c1876a65e1724114de42ccbdfa7b78 # v3.2.1
         with:
           build-root-directory: gradle-plugins
           arguments: build publishToSonatype

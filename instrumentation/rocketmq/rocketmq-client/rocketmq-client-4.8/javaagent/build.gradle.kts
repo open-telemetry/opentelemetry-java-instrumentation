@@ -31,4 +31,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+  // with default settings tests will fail when disk is 90% full
+  jvmArgs("-Drocketmq.broker.diskSpaceWarningLevelRatio=1.0")
 }

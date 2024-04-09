@@ -37,8 +37,8 @@ abstract class HttpCommonAttributesExtractor<
 
   final GETTER getter;
   private final HttpStatusCodeConverter statusCodeConverter;
-  private final List<String> capturedRequestHeaders;
-  private final List<String> capturedResponseHeaders;
+  private final String[] capturedRequestHeaders;
+  private final String[] capturedResponseHeaders;
   private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(

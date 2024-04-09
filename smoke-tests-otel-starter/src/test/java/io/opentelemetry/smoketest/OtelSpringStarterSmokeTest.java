@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -35,6 +36,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -53,16 +55,17 @@ import org.springframework.core.env.Environment;
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
-      "otel.traces.exporter=none",
-      "otel.metrics.exporter=none",
-      "otel.logs.exporter=none",
+      // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
       "otel.metric.export.interval=100",
-      "otel.exporter.otlp.headers=a=1,b=2",
+      // We set the export interval of the spans to 100 ms. The default value is 5 seconds.
+      "otel.bsp.schedule.delay=100",
+      // We set the export interval of the logs to 100 ms. The default value is 1 second.
+      "otel.blrp.schedule.delay=100",
+      // The headers are simply set here to make sure that headers can be parsed
+      "otel.exporter.otlp.headers.c=3",
       "otel.traces.exporter=memory",
       "otel.metrics.exporter=memory",
       "otel.logs.exporter=memory"
-      // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
-      // the headers are simply set here to make sure that headers can be parsed
     })
 class OtelSpringStarterSmokeTest {
 
@@ -160,21 +163,23 @@ class OtelSpringStarterSmokeTest {
             otlpExporterProperties,
             otelResourceProperties,
             propagationProperties,
-            DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+            DefaultConfigProperties.createFromMap(
+                Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
         .containsEntry("a", "1")
-        .containsEntry("b", "2");
+        .containsEntry("b", "2")
+        .containsEntry("c", "3");
     assertThat(configProperties.getList("otel.propagators")).containsExactly("b3");
   }
 
   @Test
-  void shouldSendTelemetry() throws InterruptedException {
+  void shouldSendTelemetry() {
 
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.URL, String.class);
 
-    Thread.sleep(5_000); // Sleep time could be potentially reduced and perhaps removed with
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8962
-    // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8963
+    await()
+        .atMost(Duration.ofSeconds(1))
+        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == 2);
 
     List<SpanData> exportedSpans = SPAN_EXPORTER.getFinishedSpanItems();
 

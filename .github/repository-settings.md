@@ -59,8 +59,6 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
 
 ## Secrets and variables > Actions
 
-- `GE_CACHE_PASSWORD`
-- `GE_CACHE_USERNAME`
 - `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
 - `GRADLE_ENTERPRISE_ACCESS_KEY` - owned by [@trask](https://github.com/trask)

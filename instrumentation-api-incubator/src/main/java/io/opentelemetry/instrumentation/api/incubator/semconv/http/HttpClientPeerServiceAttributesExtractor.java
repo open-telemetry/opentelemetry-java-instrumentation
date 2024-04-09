@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of the {@code peer.service} span attribute, described in <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes">the
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-remote-service-attributes">the
  * specification</a>.
  */
 public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>

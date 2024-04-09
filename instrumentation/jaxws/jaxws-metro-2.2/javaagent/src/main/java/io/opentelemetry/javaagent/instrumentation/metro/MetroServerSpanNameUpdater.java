@@ -90,7 +90,7 @@ final class MetroServerSpanNameUpdater {
             httpServletRequestAdapterEntry.getValue();
         if (httpServletRequestAdapter.canHandle(request)) {
           String servletPath = httpServletRequestAdapter.getServletPath(request);
-          if (!servletPath.isEmpty()) {
+          if (servletPath != null && !servletPath.isEmpty()) {
             String pathInfo = httpServletRequestAdapter.getPathInfo(request);
             if (pathInfo != null) {
               spanName = servletPath + "/" + spanName;
@@ -147,6 +147,11 @@ final class MetroServerSpanNameUpdater {
     private static String invokeSafely(MethodHandle methodHandle, Object httpServletRequest) {
       try {
         return (String) methodHandle.invoke(httpServletRequest);
+      } catch (UnsupportedOperationException e) {
+        // when request wrapper throws UnsupportedOperationException return null to skip adding
+        // servlet path to the span name
+        // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10986
+        return null;
       } catch (RuntimeException | Error e) {
         throw e;
       } catch (Throwable t) {

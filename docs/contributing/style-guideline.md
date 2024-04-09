@@ -137,7 +137,14 @@ It is ok to use `Optional` in places where it does not leak into public API sign
 Also, avoid `Optional` usage on the hot path (instrumentation code), unless the instrumented library
 itself uses it.
 
-## `java.util.stream.Stream` usage
+## Hot path constraints
 
-Avoid streams on the hot path (instrumentation code), unless the instrumented library itself uses
-them.
+Avoid allocations whenever possible on the hot path (instrumentation code).
+This includes `Iterator` allocations from collections; note that
+`for(SomeType t : plainJavaArray)` does not allocate an iterator object.
+Non-allocating stream api usage on the hot path is acceptable but may not
+fit the surrounding code style; this is a judgement call.  Note that
+some stream apis make it much more difficult to allocate efficiently
+(e.g., `collect` with presized sink data structures involves
+convoluted `Supplier` code, or lambdas passed to `forEach` might be
+capturing/allocating lambdas).
