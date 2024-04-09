@@ -24,7 +24,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -207,10 +207,10 @@ public abstract class AbstractGraphqlTest {
                                         .hasName("exception")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                ExceptionIncubatingAttributes.EXCEPTION_TYPE,
+                                                ExceptionAttributes.EXCEPTION_TYPE,
                                                 "InvalidSyntax"),
                                             satisfies(
-                                                ExceptionIncubatingAttributes.EXCEPTION_MESSAGE,
+                                                ExceptionAttributes.EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWithIgnoringCase(
                                                         "Invalid Syntax"))))));
@@ -249,10 +249,10 @@ public abstract class AbstractGraphqlTest {
                                         .hasName("exception")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                ExceptionIncubatingAttributes.EXCEPTION_TYPE,
+                                                ExceptionAttributes.EXCEPTION_TYPE,
                                                 "ValidationError"),
                                             satisfies(
-                                                ExceptionIncubatingAttributes.EXCEPTION_MESSAGE,
+                                                ExceptionAttributes.EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWith("Validation error"))))));
   }

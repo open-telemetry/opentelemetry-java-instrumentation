@@ -21,11 +21,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
@@ -228,12 +228,9 @@ class ReactorNettyClientSslTest {
                 assertThat(event)
                     .hasAttributesSatisfyingExactly(
                         equalTo(
-                            ExceptionIncubatingAttributes.EXCEPTION_TYPE,
+                            ExceptionAttributes.EXCEPTION_TYPE,
                             SSLHandshakeException.class.getCanonicalName()),
-                        satisfies(
-                            ExceptionIncubatingAttributes.EXCEPTION_MESSAGE, s -> s.isNotEmpty()),
-                        satisfies(
-                            ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE,
-                            s -> s.isNotEmpty())));
+                        satisfies(ExceptionAttributes.EXCEPTION_MESSAGE, s -> s.isNotEmpty()),
+                        satisfies(ExceptionAttributes.EXCEPTION_STACKTRACE, s -> s.isNotEmpty())));
   }
 }

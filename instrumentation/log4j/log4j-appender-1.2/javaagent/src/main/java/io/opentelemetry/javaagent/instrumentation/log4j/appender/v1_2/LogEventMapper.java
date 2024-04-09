@@ -16,7 +16,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -89,11 +89,11 @@ public final class LogEventMapper {
     if (throwable != null) {
       // TODO (trask) extract method for recording exception into
       // io.opentelemetry:opentelemetry-api
-      attributes.put(ExceptionIncubatingAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      attributes.put(ExceptionIncubatingAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();
       throwable.printStackTrace(new PrintWriter(writer));
-      attributes.put(ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
     }
 
     captureMdcAttributes(attributes);

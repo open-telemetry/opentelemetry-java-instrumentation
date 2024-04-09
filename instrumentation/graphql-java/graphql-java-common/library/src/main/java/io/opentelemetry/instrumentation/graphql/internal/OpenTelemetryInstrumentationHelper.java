@@ -35,7 +35,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import java.util.Locale;
 
 /**
@@ -96,8 +96,8 @@ public final class OpenTelemetryInstrumentationHelper {
           for (GraphQLError error : result.getErrors()) {
             AttributesBuilder attributes = Attributes.builder();
             attributes.put(
-                ExceptionIncubatingAttributes.EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
-            attributes.put(ExceptionIncubatingAttributes.EXCEPTION_MESSAGE, error.getMessage());
+                ExceptionAttributes.EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
+            attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, error.getMessage());
 
             span.addEvent("exception", attributes.build());
           }

@@ -6,7 +6,7 @@
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes
+import io.opentelemetry.semconv.ExceptionAttributes
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
@@ -131,9 +131,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
         }
@@ -145,9 +145,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
@@ -164,9 +164,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {

@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -143,12 +143,10 @@ class JbossLogmanagerTest {
             .hasAttributesSatisfyingExactly(
                 equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
                 equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(
-                    ExceptionIncubatingAttributes.EXCEPTION_TYPE,
-                    IllegalStateException.class.getName()),
-                equalTo(ExceptionIncubatingAttributes.EXCEPTION_MESSAGE, "hello"),
+                equalTo(ExceptionAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "hello"),
                 satisfies(
-                    ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE,
+                    ExceptionAttributes.EXCEPTION_STACKTRACE,
                     v -> v.contains(JbossLogmanagerTest.class.getName())));
       } else {
         assertThat(log)

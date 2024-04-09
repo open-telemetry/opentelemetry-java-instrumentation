@@ -5,7 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.incubating.ExceptionIncubatingAttributes
+import io.opentelemetry.semconv.ExceptionAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.ClientAttributes
 import io.opentelemetry.semconv.UserAgentAttributes
@@ -260,13 +260,13 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
+              "$ExceptionAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
               }
-              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
                 return errorMessageOptional || tagErrorMsg instanceof String
               }
-              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
@@ -300,13 +300,13 @@ class JspInstrumentationBasicTests extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "$ExceptionIncubatingAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
+              "$ExceptionAttributes.EXCEPTION_TYPE" { String tagExceptionType ->
                 return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
               }
-              "$ExceptionIncubatingAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" { String tagErrorMsg ->
                 return errorMessageOptional || tagErrorMsg instanceof String
               }
-              "$ExceptionIncubatingAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
