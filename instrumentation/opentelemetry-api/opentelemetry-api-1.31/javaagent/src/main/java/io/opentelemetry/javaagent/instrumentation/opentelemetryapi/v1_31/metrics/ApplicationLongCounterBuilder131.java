@@ -29,7 +29,7 @@ final class ApplicationLongCounterBuilder131 extends ApplicationLongCounterBuild
 
   @Override
   public ExtendedLongCounterBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
-    ((io.opentelemetry.extension.incubator.metrics.ExtendedLongCounterBuilder) agentBuilder)
+    ((io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

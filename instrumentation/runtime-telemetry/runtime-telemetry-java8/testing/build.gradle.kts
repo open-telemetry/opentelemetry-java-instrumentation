@@ -7,7 +7,6 @@ plugins {
 dependencies {
   testImplementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent"))
 
-  testImplementation("io.opentelemetry:opentelemetry-api-events")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 
   // Bring in various archives to test introspection logic

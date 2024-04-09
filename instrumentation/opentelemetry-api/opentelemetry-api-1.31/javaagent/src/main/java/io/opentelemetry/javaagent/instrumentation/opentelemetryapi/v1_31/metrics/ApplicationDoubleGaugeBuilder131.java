@@ -31,8 +31,8 @@ final class ApplicationDoubleGaugeBuilder131 extends ApplicationDoubleGaugeBuild
 
   @Override
   public DoubleGauge build() {
-    io.opentelemetry.extension.incubator.metrics.DoubleGauge agentDoubleGauge =
-        ((io.opentelemetry.extension.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder)
+    io.opentelemetry.api.incubator.metrics.DoubleGauge agentDoubleGauge =
+        ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder)
             .build();
     return new DoubleGauge() {
 
@@ -50,7 +50,7 @@ final class ApplicationDoubleGaugeBuilder131 extends ApplicationDoubleGaugeBuild
 
   @Override
   public ExtendedDoubleGaugeBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
-    ((io.opentelemetry.extension.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder)
+    ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

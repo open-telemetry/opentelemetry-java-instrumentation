@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator.metrics;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics;
 
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
@@ -11,12 +11,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongHistogramBuilder;
 import java.util.List;
 
-class ApplicationLongHistogramBuilder132Incubator extends ApplicationLongHistogramBuilder
+class ApplicationLongHistogramBuilder137Incubator extends ApplicationLongHistogramBuilder
     implements ExtendedLongHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder;
 
-  ApplicationLongHistogramBuilder132Incubator(
+  ApplicationLongHistogramBuilder137Incubator(
       io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;

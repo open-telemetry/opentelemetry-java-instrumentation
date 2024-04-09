@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -17,12 +17,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class OpenTelemetryApiIncubatorInstrumentationModule extends InstrumentationModule {
   public OpenTelemetryApiIncubatorInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.32", "opentelemetry-api-incubator-1.32");
+    super("opentelemetry-api", "opentelemetry-api-1.37", "opentelemetry-api-incubator-1.37");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // skip instrumentation when opentelemetry-extension-incubator is not present, instrumentation
+    // skip instrumentation when opentelemetry-api-incubator is not present, instrumentation
     // is handled by OpenTelemetryApiInstrumentationModule
     return hasClassesNamed(
         "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder");
