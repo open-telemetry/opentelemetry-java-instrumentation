@@ -21,6 +21,7 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, DataSource dataSource) {}
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Override
   public void onEnd(
       AttributesBuilder attributes,

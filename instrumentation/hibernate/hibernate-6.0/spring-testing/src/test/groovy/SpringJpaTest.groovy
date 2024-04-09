@@ -23,6 +23,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
   @Shared
   def repo = context.getBean(CustomerRepository)
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "test CRUD"() {
     setup:
     def isHibernate4 = Version.getVersionString().startsWith("4.")

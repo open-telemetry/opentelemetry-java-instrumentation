@@ -167,6 +167,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "basic statement with #connection.getClass().getCanonicalName() on #system generates spans"() {
     setup:
     Statement statement = connection.createStatement()

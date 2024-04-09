@@ -49,6 +49,7 @@ class ReactiveSpringDataTest {
     applicationContext.close();
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testFindAll() {
     long count =

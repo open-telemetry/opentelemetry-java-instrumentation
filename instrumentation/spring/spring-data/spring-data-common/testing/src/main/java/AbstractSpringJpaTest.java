@@ -66,6 +66,7 @@ public abstract class AbstractSpringJpaTest<
                 span -> span.hasName("toString test").hasTotalAttributeCount(0)));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   static void assertHibernate4Trace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
@@ -89,6 +90,7 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   static void assertHibernateTrace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
@@ -124,6 +126,7 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testCrud() {
     boolean isHibernate4 = Version.getVersionString().startsWith("4.");
@@ -278,6 +281,7 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testCustomRepositoryMethod() {
     REPOSITORY repo = repository();
@@ -312,6 +316,7 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testFailedRepositoryMethod() {
     // given

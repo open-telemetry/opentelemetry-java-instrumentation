@@ -34,6 +34,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // 'lock' is a deprecated method in the Session class
 class SessionTest extends AbstractHibernateTest {
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateAction")
   void testHibernateAction(Parameter parameter) {
@@ -143,6 +144,7 @@ class SessionTest extends AbstractHibernateTest {
                     null))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateActionStateless")
   void testHibernateActionStateless(Parameter parameter) {
@@ -290,6 +292,7 @@ class SessionTest extends AbstractHibernateTest {
                     }))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateReplicate")
   void testHibernateReplicate(Parameter parameter) {
@@ -437,6 +440,7 @@ class SessionTest extends AbstractHibernateTest {
                                     .get(stringKey("hibernate.session_id"))))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateCommitAction")
   void testHibernateCommitAction(Parameter parameter) {
@@ -626,6 +630,7 @@ class SessionTest extends AbstractHibernateTest {
                     null))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsStateQuery")
   void testAttachesStateToQueryCreated(Consumer<Session> queryBuilder) {
@@ -698,6 +703,7 @@ class SessionTest extends AbstractHibernateTest {
                             session -> session.createSQLQuery("SELECT * FROM Value").list())))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testHibernateOverlappingSessions() {
     testing.runWithSpan(

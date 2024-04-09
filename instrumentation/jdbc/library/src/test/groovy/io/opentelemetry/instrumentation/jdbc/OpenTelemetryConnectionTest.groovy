@@ -24,6 +24,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFac
 
 class OpenTelemetryConnectionTest extends InstrumentationSpecification implements LibraryTestTrait {
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "verify create statement"() {
     setup:
     def instr = createStatementInstrumenter(openTelemetry)
@@ -80,6 +81,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     connection.createStatement().instrumenter == instr
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "verify prepare statement"() {
     setup:
     def instr = createStatementInstrumenter(openTelemetry)
@@ -140,6 +142,7 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     connection.prepareStatement(query).instrumenter == instr
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "verify prepare call"() {
     setup:
     def instr = createStatementInstrumenter(openTelemetry)

@@ -56,6 +56,9 @@ class SlickTest {
     Duration.Inf
   )
 
+  @SuppressWarnings(
+    "deprecation"
+  ) // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   def basicStatement(): Unit = {
     val result = getResults(startQuery(TestQuery))

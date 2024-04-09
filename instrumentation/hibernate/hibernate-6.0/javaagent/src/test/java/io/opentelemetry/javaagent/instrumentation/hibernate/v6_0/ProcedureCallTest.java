@@ -69,6 +69,7 @@ public class ProcedureCallTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testProcedureCall() {
     testing.runWithSpan(

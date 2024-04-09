@@ -399,6 +399,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
     return "testCollection-${collectionIndex.getAndIncrement()}"
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def mongoSpan(TraceAssert trace, int index,
                 String operation, String collection,
                 String dbName, Object parentSpan,

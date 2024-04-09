@@ -49,6 +49,7 @@ class SqlClientAttributesExtractorTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void shouldExtractAllAttributes() {
     // given

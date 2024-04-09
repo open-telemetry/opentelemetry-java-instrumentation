@@ -31,6 +31,7 @@ class SpringJpaTest {
       new AnnotationConfigApplicationContext(PersistenceConfig.class);
   CustomerRepository repo = context.getBean(CustomerRepository.class);
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testCrud() {
     String version = Version.getVersionString();

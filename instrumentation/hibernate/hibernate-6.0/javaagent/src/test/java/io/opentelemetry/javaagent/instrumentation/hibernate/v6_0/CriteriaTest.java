@@ -36,6 +36,7 @@ public class CriteriaTest extends AbstractHibernateTest {
         Arguments.of(named("getSingleResultOrNull", interactions.get(2))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testCriteriaQuery(Consumer<Query<Value>> interaction) {

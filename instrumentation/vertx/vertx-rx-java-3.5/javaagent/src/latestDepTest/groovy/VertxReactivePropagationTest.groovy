@@ -53,6 +53,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
 
   //Verifies that context is correctly propagated and sql query span has correct parent.
   //Tests io.opentelemetry.javaagent.instrumentation.vertx.reactive.VertxRxInstrumentation
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "should propagate context over vert.x rx-java framework"() {
     setup:
     def response = client.get("/listProducts").aggregate().join()
@@ -110,6 +111,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "should propagate context correctly over vert.x rx-java framework with high concurrency"() {
     setup:
     int count = 100

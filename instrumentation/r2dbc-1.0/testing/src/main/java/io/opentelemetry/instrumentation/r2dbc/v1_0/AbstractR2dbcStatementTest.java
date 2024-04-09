@@ -124,6 +124,7 @@ public abstract class AbstractR2dbcStatementTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testQueries(Parameter parameter) {

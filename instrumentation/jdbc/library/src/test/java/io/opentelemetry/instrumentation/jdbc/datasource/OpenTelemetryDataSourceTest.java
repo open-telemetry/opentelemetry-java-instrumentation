@@ -33,6 +33,7 @@ class OpenTelemetryDataSourceTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
