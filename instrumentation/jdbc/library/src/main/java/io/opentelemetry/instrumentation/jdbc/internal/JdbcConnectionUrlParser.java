@@ -989,7 +989,7 @@ public enum JdbcConnectionUrlParser {
   }
 
   // see
-  // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md
   private static String toDbSystem(String type) {
     switch (type) {
       case "as400": // IBM AS400 Database

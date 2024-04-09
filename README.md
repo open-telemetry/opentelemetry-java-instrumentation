@@ -169,7 +169,7 @@ Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.c
 Emeritus maintainers:
 
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
-- [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Splunk
+- [Nikita Salnikov-Tarnovski](https://github.com/iNikem)
 - [Tyler Benson](https://github.com/tylerbenson)
 
 Learn more about roles in
