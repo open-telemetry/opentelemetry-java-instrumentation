@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -73,8 +73,8 @@ class EnduserAttributesCapturingWebFilterTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
-                        .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
-                        .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2")));
+                    span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
+                        .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
+                        .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2")));
   }
 }

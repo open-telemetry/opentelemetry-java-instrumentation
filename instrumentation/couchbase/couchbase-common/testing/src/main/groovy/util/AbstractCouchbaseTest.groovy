@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
@@ -120,10 +120,10 @@ abstract class AbstractCouchbaseTest extends AgentInstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.DB_SYSTEM" "couchbase"
-        "$SemanticAttributes.DB_NAME" bucketName
-        "$SemanticAttributes.DB_STATEMENT" statement
-        "$SemanticAttributes.DB_OPERATION"(operation ?: spanName)
+        "$DbIncubatingAttributes.DB_SYSTEM" "couchbase"
+        "$DbIncubatingAttributes.DB_NAME" bucketName
+        "$DbIncubatingAttributes.DB_STATEMENT" statement
+        "$DbIncubatingAttributes.DB_OPERATION"(operation ?: spanName)
       }
     }
   }

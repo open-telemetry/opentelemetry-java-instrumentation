@@ -10,13 +10,13 @@ import static java.util.Objects.requireNonNull;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 /** A builder of {@link SqlClientAttributesExtractor}. */
 public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final SqlClientAttributesGetter<REQUEST> getter;
-  AttributeKey<String> dbTableAttribute = SemanticAttributes.DB_SQL_TABLE;
+  AttributeKey<String> dbTableAttribute = DbIncubatingAttributes.DB_SQL_TABLE;
   boolean statementSanitizationEnabled = true;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST> getter) {
@@ -26,7 +26,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the extractor to set the table value extracted by the {@link
    * SqlClientAttributesExtractor} under the {@code dbTableAttribute} key. By default, the <code>
-   * {@linkplain SemanticAttributes#DB_SQL_TABLE db.sql.table}</code> attribute is used.
+   * {@link DbIncubatingAttributes#DB_SQL_TABLE}</code> attribute is used.
    *
    * @param dbTableAttribute The {@link AttributeKey} under which the table extracted by the {@link
    *     SqlClientAttributesExtractor} will be stored.

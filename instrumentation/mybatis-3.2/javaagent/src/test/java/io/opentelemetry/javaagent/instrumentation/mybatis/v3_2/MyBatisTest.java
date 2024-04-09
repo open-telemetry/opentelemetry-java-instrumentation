@@ -10,7 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
@@ -58,7 +58,9 @@ class MyBatisTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestMapper.select")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.CODE_NAMESPACE, TestMapper.class.getName()),
-                            equalTo(SemanticAttributes.CODE_FUNCTION, "select"))));
+                            equalTo(
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                TestMapper.class.getName()),
+                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "select"))));
   }
 }

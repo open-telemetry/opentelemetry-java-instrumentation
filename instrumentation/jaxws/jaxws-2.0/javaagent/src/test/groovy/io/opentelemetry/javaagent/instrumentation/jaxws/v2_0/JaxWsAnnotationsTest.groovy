@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 
 class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
 
@@ -20,8 +20,8 @@ class JaxWsAnnotationsTest extends AgentInstrumentationSpecification {
         span(0) {
           name "SoapProvider.invoke"
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.SoapProvider"
-            "$SemanticAttributes.CODE_FUNCTION" "invoke"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" "io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.SoapProvider"
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "invoke"
           }
         }
       }

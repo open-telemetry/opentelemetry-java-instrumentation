@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTestTrait
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.test.hello_web_service.HelloRequest
 import io.opentelemetry.test.hello_web_service.HelloRequestSoapAction
 import io.opentelemetry.test.hello_web_service.HelloRequestWsAction
@@ -152,8 +152,8 @@ class SpringWsTest extends AgentInstrumentationSpecification implements HttpServ
         errorEvent(exception.class, exception.message)
       }
       attributes {
-        "$SemanticAttributes.CODE_NAMESPACE" "test.boot.HelloEndpoint"
-        "$SemanticAttributes.CODE_FUNCTION" methodName
+        "$CodeIncubatingAttributes.CODE_NAMESPACE" "test.boot.HelloEndpoint"
+        "$CodeIncubatingAttributes.CODE_FUNCTION" methodName
       }
     }
   }

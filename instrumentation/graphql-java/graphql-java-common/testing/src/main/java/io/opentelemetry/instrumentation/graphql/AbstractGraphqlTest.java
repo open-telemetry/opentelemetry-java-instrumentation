@@ -24,7 +24,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -204,12 +204,13 @@ public abstract class AbstractGraphqlTest {
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
-                                        .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                        .hasName("exception")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                SemanticAttributes.EXCEPTION_TYPE, "InvalidSyntax"),
+                                                ExceptionAttributes.EXCEPTION_TYPE,
+                                                "InvalidSyntax"),
                                             satisfies(
-                                                SemanticAttributes.EXCEPTION_MESSAGE,
+                                                ExceptionAttributes.EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWithIgnoringCase(
                                                         "Invalid Syntax"))))));
@@ -245,13 +246,13 @@ public abstract class AbstractGraphqlTest {
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
-                                        .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                        .hasName("exception")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                SemanticAttributes.EXCEPTION_TYPE,
+                                                ExceptionAttributes.EXCEPTION_TYPE,
                                                 "ValidationError"),
                                             satisfies(
-                                                SemanticAttributes.EXCEPTION_MESSAGE,
+                                                ExceptionAttributes.EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWith("Validation error"))))));
   }

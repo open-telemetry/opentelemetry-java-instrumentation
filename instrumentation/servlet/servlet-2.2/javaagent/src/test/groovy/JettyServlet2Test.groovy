@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import org.eclipse.jetty.server.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
@@ -126,8 +126,8 @@ class JettyServlet2Test extends HttpServerTest<Server> implements AgentTestTrait
       kind INTERNAL
       childOf((SpanData) parent)
       attributes {
-        "$SemanticAttributes.CODE_NAMESPACE" Response.name
-        "$SemanticAttributes.CODE_FUNCTION" responseMethod
+        "$CodeIncubatingAttributes.CODE_NAMESPACE" Response.name
+        "$CodeIncubatingAttributes.CODE_FUNCTION" responseMethod
       }
     }
   }

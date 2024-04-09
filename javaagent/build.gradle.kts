@@ -35,6 +35,7 @@ listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("io.opentelemetry", "opentelemetry-api")
     exclude("io.opentelemetry.semconv", "opentelemetry-semconv")
+    exclude("io.opentelemetry.semconv", "opentelemetry-semconv-incubating")
     // events API and metrics advice API
     exclude("io.opentelemetry", "opentelemetry-api-incubator")
   }

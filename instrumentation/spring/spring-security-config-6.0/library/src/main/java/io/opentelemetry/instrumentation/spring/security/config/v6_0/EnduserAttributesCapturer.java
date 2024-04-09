@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.security.config.v6_0;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.util.Objects;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -67,7 +67,8 @@ public final class EnduserAttributesCapturer {
       Span localRootSpan = LocalRootSpan.fromContext(otelContext);
 
       if (enduserIdEnabled && authentication.getName() != null) {
-        localRootSpan.setAttribute(SemanticAttributes.ENDUSER_ID, authentication.getName());
+        localRootSpan.setAttribute(
+            EnduserIncubatingAttributes.ENDUSER_ID, authentication.getName());
       }
 
       StringBuilder roleBuilder = null;
@@ -84,10 +85,12 @@ public final class EnduserAttributesCapturer {
         }
       }
       if (roleBuilder != null) {
-        localRootSpan.setAttribute(SemanticAttributes.ENDUSER_ROLE, roleBuilder.toString());
+        localRootSpan.setAttribute(
+            EnduserIncubatingAttributes.ENDUSER_ROLE, roleBuilder.toString());
       }
       if (scopeBuilder != null) {
-        localRootSpan.setAttribute(SemanticAttributes.ENDUSER_SCOPE, scopeBuilder.toString());
+        localRootSpan.setAttribute(
+            EnduserIncubatingAttributes.ENDUSER_SCOPE, scopeBuilder.toString());
       }
     }
   }

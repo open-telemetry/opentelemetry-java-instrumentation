@@ -5,7 +5,7 @@
 
 package io.opentelemetry.smoketest
 
-import io.opentelemetry.semconv.ResourceAttributes
+import io.opentelemetry.semconv.ServiceAttributes
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
@@ -50,7 +50,7 @@ class QuarkusSmokeTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.distro.version", currentAgentVersion) == 1
 
     and: "service.name is detected from manifest"
-    traces.countFilteredResourceAttributes(ResourceAttributes.SERVICE_NAME.key, "smoke-test-quarkus-images") == 1
+    traces.countFilteredResourceAttributes(ServiceAttributes.SERVICE_NAME.key, "smoke-test-quarkus-images") == 1
 
     cleanup:
     stopTarget()

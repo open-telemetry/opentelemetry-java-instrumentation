@@ -26,7 +26,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
 import org.apache.camel.Endpoint;
@@ -59,11 +59,12 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
     attributes.put(
-        SemanticAttributes.MESSAGING_DESTINATION_NAME, getDestination(exchange, endpoint));
+        MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+        getDestination(exchange, endpoint));
 
     String messageId = getMessageId(exchange);
     if (messageId != null) {
-      attributes.put(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId);
+      attributes.put(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId);
     }
   }
 

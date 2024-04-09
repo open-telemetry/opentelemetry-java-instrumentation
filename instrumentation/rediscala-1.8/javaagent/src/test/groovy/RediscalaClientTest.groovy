@@ -4,7 +4,7 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.testcontainers.containers.GenericContainer
 import redis.ByteStringDeserializerDefault
 import redis.ByteStringSerializerLowPriority
@@ -89,8 +89,8 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           name "SET"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.DB_OPERATION" "SET"
+            "$DbIncubatingAttributes.DB_SYSTEM" "redis"
+            "$DbIncubatingAttributes.DB_OPERATION" "SET"
           }
         }
       }
@@ -124,8 +124,8 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.DB_OPERATION" "SET"
+            "$DbIncubatingAttributes.DB_SYSTEM" "redis"
+            "$DbIncubatingAttributes.DB_OPERATION" "SET"
           }
         }
         span(2) {
@@ -133,8 +133,8 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "redis"
-            "$SemanticAttributes.DB_OPERATION" "GET"
+            "$DbIncubatingAttributes.DB_SYSTEM" "redis"
+            "$DbIncubatingAttributes.DB_OPERATION" "GET"
           }
         }
       }

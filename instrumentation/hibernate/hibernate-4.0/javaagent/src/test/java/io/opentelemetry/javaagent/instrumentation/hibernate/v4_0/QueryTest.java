@@ -13,7 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class QueryTest extends AbstractHibernateTest {
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testHibernateQueryExecuteUpdateWithTransaction() {
     testing.runWithSpan(
@@ -60,17 +61,17 @@ class QueryTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-                            equalTo(SemanticAttributes.DB_NAME, "db1"),
-                            equalTo(SemanticAttributes.DB_USER, "sa"),
-                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                SemanticAttributes.DB_OPERATION,
+                                DbIncubatingAttributes.DB_OPERATION,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -84,6 +85,7 @@ class QueryTest extends AbstractHibernateTest {
                                     .get(stringKey("hibernate.session_id"))))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("providesArgumentsSingleCall")
   void testHibernateQuerySingleCall(Parameter parameter) {
@@ -117,14 +119,15 @@ class QueryTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-                            equalTo(SemanticAttributes.DB_NAME, "db1"),
-                            equalTo(SemanticAttributes.DB_USER, "sa"),
-                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                SemanticAttributes.DB_STATEMENT, val -> val.startsWith("select ")),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"))));
+                                DbIncubatingAttributes.DB_STATEMENT,
+                                val -> val.startsWith("select ")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"))));
   }
 
   private static Stream<Arguments> providesArgumentsSingleCall() {
@@ -152,6 +155,7 @@ class QueryTest extends AbstractHibernateTest {
                 new Parameter("SELECT Value", sess -> sess.createQuery("from Value").scroll()))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testHibernateQueryIterate() {
     testing.runWithSpan(
@@ -189,14 +193,15 @@ class QueryTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-                            equalTo(SemanticAttributes.DB_NAME, "db1"),
-                            equalTo(SemanticAttributes.DB_USER, "sa"),
-                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                SemanticAttributes.DB_STATEMENT, val -> val.startsWith("select ")),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                                DbIncubatingAttributes.DB_STATEMENT,
+                                val -> val.startsWith("select ")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)

@@ -9,7 +9,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -49,7 +49,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Override
   public String getSystem(CommandStartedEvent event) {
-    return SemanticAttributes.DbSystemValues.MONGODB;
+    return DbIncubatingAttributes.DbSystemValues.MONGODB;
   }
 
   @Override

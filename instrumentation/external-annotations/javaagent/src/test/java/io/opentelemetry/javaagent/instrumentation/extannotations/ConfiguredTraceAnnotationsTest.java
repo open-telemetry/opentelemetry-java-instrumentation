@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.concurrent.Callable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -36,9 +36,9 @@ class ConfiguredTraceAnnotationsTest {
                     span.hasName("AnnotationTracedCallable.call")
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.CODE_NAMESPACE,
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
                                 AnnotationTracedCallable.class.getName()),
-                            equalTo(SemanticAttributes.CODE_FUNCTION, "call"))));
+                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "call"))));
   }
 
   static class AnnotationTracedCallable implements Callable<String> {

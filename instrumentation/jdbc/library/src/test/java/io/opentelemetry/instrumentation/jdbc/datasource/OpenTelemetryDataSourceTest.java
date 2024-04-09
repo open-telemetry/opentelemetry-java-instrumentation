@@ -15,7 +15,8 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.stream.Stream;
@@ -32,6 +33,7 @@ class OpenTelemetryDataSourceTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
@@ -50,12 +52,13 @@ class OpenTelemetryDataSourceTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.CODE_NAMESPACE, TestDataSource.class.getName()),
-                            equalTo(SemanticAttributes.CODE_FUNCTION, "getConnection"),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "postgresql"),
-                            equalTo(SemanticAttributes.DB_NAME, "dbname"),
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                TestDataSource.class.getName()),
+                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "postgresql"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "dbname"),
                             equalTo(
-                                SemanticAttributes.DB_CONNECTION_STRING,
+                                DbIncubatingAttributes.DB_CONNECTION_STRING,
                                 "postgresql://127.0.0.1:5432"))));
 
     assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);

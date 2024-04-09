@@ -27,13 +27,18 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -513,7 +518,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                               HttpConstants._OTHER,
                               SUCCESS,
                               options.responseCodeOnNonStandardHttpMethod)
-                          .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                          .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
     } finally {
       eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
     }
@@ -727,22 +732,22 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         attrs -> {
           // we're opting out of these attributes in the new semconv
           assertThat(attrs)
-              .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
-              .doesNotContainKey(SemanticAttributes.NETWORK_TYPE)
-              .doesNotContainKey(SemanticAttributes.NETWORK_PROTOCOL_NAME);
+              .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
+              .doesNotContainKey(NetworkAttributes.NETWORK_TYPE)
+              .doesNotContainKey(NetworkAttributes.NETWORK_PROTOCOL_NAME);
 
-          if (attrs.get(SemanticAttributes.NETWORK_PROTOCOL_VERSION) != null) {
+          if (attrs.get(NetworkAttributes.NETWORK_PROTOCOL_VERSION) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    SemanticAttributes.NETWORK_PROTOCOL_VERSION,
+                    NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                     entry -> assertThat(entry).isIn("1.1", "2.0"));
           }
 
-          assertThat(attrs).containsEntry(SemanticAttributes.SERVER_ADDRESS, "localhost");
+          assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost");
           // TODO: Move to test knob rather than always treating as optional
           // TODO: once httpAttributes test knob is used, verify default port values
-          if (attrs.get(SemanticAttributes.SERVER_PORT) != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.SERVER_PORT, port);
+          if (attrs.get(ServerAttributes.SERVER_PORT) != null) {
+            assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, port);
           }
 
           if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
@@ -760,32 +765,30 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs).containsEntry(SemanticAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP);
+          assertThat(attrs).containsEntry(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP);
           // client.port is opt-in
-          assertThat(attrs).doesNotContainKey(SemanticAttributes.CLIENT_PORT);
+          assertThat(attrs).doesNotContainKey(ClientAttributes.CLIENT_PORT);
 
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method);
+          assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
 
-          assertThat(attrs).containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
+          assertThat(attrs).containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
           if (statusCode >= 500) {
-            assertThat(attrs)
-                .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(statusCode));
+            assertThat(attrs).containsEntry(ErrorAttributes.ERROR_TYPE, String.valueOf(statusCode));
           }
 
-          assertThat(attrs).containsEntry(SemanticAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
+          assertThat(attrs).containsEntry(UserAgentAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
-          assertThat(attrs).containsEntry(SemanticAttributes.URL_SCHEME, "http");
+          assertThat(attrs).containsEntry(UrlAttributes.URL_SCHEME, "http");
           if (endpoint != INDEXED_CHILD) {
             assertThat(attrs)
-                .containsEntry(
-                    SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
+                .containsEntry(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
             if (endpoint.getQuery() != null) {
-              assertThat(attrs).containsEntry(SemanticAttributes.URL_QUERY, endpoint.getQuery());
+              assertThat(attrs).containsEntry(UrlAttributes.URL_QUERY, endpoint.getQuery());
             }
           }
 
-          if (httpAttributes.contains(SemanticAttributes.HTTP_ROUTE) && expectedRoute != null) {
-            assertThat(attrs).containsEntry(SemanticAttributes.HTTP_ROUTE, expectedRoute);
+          if (httpAttributes.contains(HttpAttributes.HTTP_ROUTE) && expectedRoute != null) {
+            assertThat(attrs).containsEntry(HttpAttributes.HTTP_ROUTE, expectedRoute);
           }
 
           if (endpoint == CAPTURE_HEADERS) {
@@ -810,8 +813,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     String method = "GET";
     return assertServerSpan(span, method, endpoint, endpoint.status)
         .hasAttributesSatisfying(
-            equalTo(SemanticAttributes.URL_PATH, endpoint.resolvePath(address).getPath()),
-            equalTo(SemanticAttributes.URL_QUERY, "id=" + requestId));
+            equalTo(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath()),
+            equalTo(UrlAttributes.URL_QUERY, "id=" + requestId));
   }
 
   @CanIgnoreReturnValue
@@ -831,7 +834,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
-    if (!options.httpAttributes.apply(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+    if (!options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE)) {
       return null;
     }
 

@@ -16,7 +16,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -88,9 +88,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET TESTSETKEY ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -119,9 +119,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET TESTKEY"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET TESTKEY"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -158,9 +158,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -188,9 +188,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                     span.hasName("RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "RANDOMKEY"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"))));
   }
 
   @Test
@@ -204,9 +204,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                     span.hasName("COMMAND")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "COMMAND"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "COMMAND"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "COMMAND"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "COMMAND"),
                             satisfies(
                                 AttributeKey.longKey("lettuce.command.results.count"),
                                 val -> val.isGreaterThan(100)))));
@@ -223,9 +223,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                     span.hasName("COMMAND")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "COMMAND"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "COMMAND"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "COMMAND"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "COMMAND"),
                             satisfies(
                                 AttributeKey.booleanKey("lettuce.command.cancelled"),
                                 AbstractBooleanAssert::isTrue),
@@ -257,9 +257,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                     span.hasName("DEBUG")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "DEBUG SEGFAULT"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "DEBUG"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "DEBUG SEGFAULT"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DEBUG"))));
   }
 
   @Test
@@ -277,9 +277,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                     span.hasName("SHUTDOWN")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SHUTDOWN"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SHUTDOWN"))));
   }
 
   @Test
@@ -297,17 +297,17 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET a ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET a"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
   }
 
   @Test
@@ -325,17 +325,17 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET a ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET a"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
   }
 
   @Test
@@ -358,16 +358,16 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "SET a ?"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SET")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET a ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "GET a"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
   }
 }

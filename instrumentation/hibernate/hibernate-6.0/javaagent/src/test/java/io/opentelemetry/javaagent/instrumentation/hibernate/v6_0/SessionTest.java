@@ -15,7 +15,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -219,6 +219,7 @@ public class SessionTest extends AbstractHibernateTest {
                 span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAttachesStateToQueryParameters")
   void testAttachesStateToQuery(Parameter parameter) {
@@ -242,15 +243,15 @@ public class SessionTest extends AbstractHibernateTest {
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-                            equalTo(SemanticAttributes.DB_NAME, "db1"),
-                            equalTo(SemanticAttributes.DB_USER, "sa"),
-                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -802,33 +803,35 @@ public class SessionTest extends AbstractHibernateTest {
             equalTo(AttributeKey.stringKey("hibernate.session_id"), sessionId));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent) {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-            equalTo(SemanticAttributes.DB_NAME, "db1"),
-            equalTo(SemanticAttributes.DB_USER, "sa"),
-            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-            satisfies(SemanticAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
-            satisfies(SemanticAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
-            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"));
+            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+            satisfies(DbIncubatingAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
+            satisfies(DbIncubatingAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
+            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(
       SpanDataAssert span, SpanData parent, String verb) {
     return span.hasName(verb.concat(" db1.Value"))
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-            equalTo(SemanticAttributes.DB_NAME, "db1"),
-            equalTo(SemanticAttributes.DB_USER, "sa"),
-            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
+            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
             satisfies(
-                SemanticAttributes.DB_STATEMENT,
+                DbIncubatingAttributes.DB_STATEMENT,
                 stringAssert -> stringAssert.startsWith(verb.toLowerCase(Locale.ROOT))),
-            equalTo(SemanticAttributes.DB_OPERATION, verb),
-            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"));
+            equalTo(DbIncubatingAttributes.DB_OPERATION, verb),
+            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"));
   }
 }

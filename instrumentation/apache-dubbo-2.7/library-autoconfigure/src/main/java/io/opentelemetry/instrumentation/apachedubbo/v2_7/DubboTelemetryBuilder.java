@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -82,7 +82,7 @@ public final class DubboTelemetryBuilder {
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
+          AttributesExtractor.constant(PeerIncubatingAttributes.PEER_SERVICE, peerService));
     }
 
     return new DubboTelemetry(

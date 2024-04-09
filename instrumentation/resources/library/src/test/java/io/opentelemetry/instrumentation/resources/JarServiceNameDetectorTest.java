@@ -10,7 +10,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.ServiceAttributes;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
@@ -70,7 +70,7 @@ class JarServiceNameDetectorTest {
 
     assertThat(resource.getAttributes())
         .hasSize(1)
-        .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
+        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
   }
 
   @Test
@@ -82,7 +82,7 @@ class JarServiceNameDetectorTest {
 
     assertThat(resource.getAttributes())
         .hasSize(1)
-        .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
+        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
   }
 
   static String[] getArgs(String jarName) {
@@ -104,7 +104,7 @@ class JarServiceNameDetectorTest {
 
     assertThat(resource.getAttributes())
         .hasSize(1)
-        .containsEntry(ResourceAttributes.SERVICE_NAME, "my-service");
+        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
   }
 
   // regression test for

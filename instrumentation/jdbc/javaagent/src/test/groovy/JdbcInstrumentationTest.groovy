@@ -11,7 +11,9 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jdbc.test.ProxyStatementFactory
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -165,6 +167,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "basic statement with #connection.getClass().getCanonicalName() on #system generates spans"() {
     setup:
     Statement statement = connection.createStatement()
@@ -187,15 +190,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -247,15 +250,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -299,15 +302,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -351,15 +354,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbName.toLowerCase()
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbName.toLowerCase()
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -403,15 +406,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_OPERATION" "CREATE TABLE"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -458,15 +461,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbName.toLowerCase()
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbName.toLowerCase()
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_OPERATION" "CREATE TABLE"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -525,15 +528,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -582,12 +585,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
-            "$SemanticAttributes.CODE_FUNCTION" "getConnection"
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_USER" { user == null | user == it }
-            "$SemanticAttributes.DB_NAME" "jdbcunittest"
-            "$SemanticAttributes.DB_CONNECTION_STRING" connectionString
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
+            "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
           }
         }
         if (recursive) {
@@ -596,12 +599,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             childOf span(1)
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
-              "$SemanticAttributes.CODE_FUNCTION" "getConnection"
-              "$SemanticAttributes.DB_SYSTEM" system
-              "$SemanticAttributes.DB_USER" { user == null | user == it }
-              "$SemanticAttributes.DB_NAME" "jdbcunittest"
-              "$SemanticAttributes.DB_CONNECTION_STRING" connectionString
+              "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
+              "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
+              "$DbIncubatingAttributes.DB_SYSTEM" system
+              "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
+              "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
             }
           }
         }
@@ -648,10 +651,10 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "other_sql"
-            "$SemanticAttributes.DB_STATEMENT" "testing ?"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
+            "$DbIncubatingAttributes.DB_STATEMENT" "testing ?"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -689,13 +692,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "other_sql"
-            "$SemanticAttributes.DB_NAME" databaseName
-            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" operation
-            "$SemanticAttributes.DB_SQL_TABLE" table
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
+            "$DbIncubatingAttributes.DB_NAME" databaseName
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" operation
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -746,13 +749,13 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             name "SELECT INFORMATION_SCHEMA.SYSTEM_USERS"
             kind CLIENT
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" dbNameLower
-              "$SemanticAttributes.DB_USER" "SA"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-              "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" dbNameLower
+              "$DbIncubatingAttributes.DB_USER" "SA"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_STATEMENT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "INFORMATION_SCHEMA.SYSTEM_USERS"
             }
           }
         }
@@ -795,12 +798,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "other_sql"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "table"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
+            "$DbIncubatingAttributes.DB_STATEMENT" "SELECT * FROM table"
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "table"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }

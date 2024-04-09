@@ -5,14 +5,12 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
-import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_ACCOUNT_ID;
-import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.FAAS_INVOCATION_ID;
-
 import com.amazonaws.services.lambda.runtime.Context;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
+import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -49,11 +47,11 @@ public final class AwsLambdaFunctionAttributesExtractor
       io.opentelemetry.context.Context parentContext,
       AwsLambdaRequest request) {
     Context awsContext = request.getAwsContext();
-    attributes.put(FAAS_INVOCATION_ID, awsContext.getAwsRequestId());
+    attributes.put(FaasIncubatingAttributes.FAAS_INVOCATION_ID, awsContext.getAwsRequestId());
     String arn = getFunctionArn(awsContext);
     if (arn != null) {
-      attributes.put(CLOUD_RESOURCE_ID, arn);
-      attributes.put(CLOUD_ACCOUNT_ID, getAccountId(arn));
+      attributes.put(CloudIncubatingAttributes.CLOUD_RESOURCE_ID, arn);
+      attributes.put(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, getAccountId(arn));
     }
   }
 

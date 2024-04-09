@@ -13,7 +13,7 @@ val otelContribVersion = "1.34.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.20"
+val groovyVersion = "4.0.21"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -46,9 +46,11 @@ val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.12"
+val semConvVersion = "1.25.0-alpha"
 
 val CORE_DEPENDENCIES = listOf(
-  "io.opentelemetry.semconv:opentelemetry-semconv:1.23.1-alpha",
+  "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
+  "io.opentelemetry.semconv:opentelemetry-semconv-incubating:${semConvVersion}",
   "com.google.auto.service:auto-service:${autoServiceVersion}",
   "com.google.auto.service:auto-service-annotations:${autoServiceVersion}",
   "com.google.auto.value:auto-value:${autoValueVersion}",
@@ -100,7 +102,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.1.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.2.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.25.3",
   "org.awaitility:awaitility:4.2.1",

@@ -30,7 +30,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -243,7 +243,7 @@ public final class ArmeriaTelemetryBuilder {
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
+          AttributesExtractor.constant(PeerIncubatingAttributes.PEER_SERVICE, peerService));
     }
     if (emitExperimentalHttpClientMetrics) {
       clientInstrumenterBuilder

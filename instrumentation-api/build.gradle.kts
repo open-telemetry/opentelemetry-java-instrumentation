@@ -15,6 +15,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
+  implementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

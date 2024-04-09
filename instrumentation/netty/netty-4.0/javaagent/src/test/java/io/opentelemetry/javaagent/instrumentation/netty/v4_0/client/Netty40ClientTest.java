@@ -27,7 +27,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -176,8 +176,8 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
         return Collections.emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-    attributes.remove(SemanticAttributes.SERVER_PORT);
+    attributes.remove(ServerAttributes.SERVER_ADDRESS);
+    attributes.remove(ServerAttributes.SERVER_PORT);
     return attributes;
   }
 }
