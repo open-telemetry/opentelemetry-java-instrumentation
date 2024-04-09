@@ -32,8 +32,7 @@ final class ApplicationDoubleGaugeBuilder131 extends ApplicationDoubleGaugeBuild
   @Override
   public DoubleGauge build() {
     io.opentelemetry.api.incubator.metrics.DoubleGauge agentDoubleGauge =
-        ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder)
-            .build();
+        ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder).build();
     return new DoubleGauge() {
 
       @Override

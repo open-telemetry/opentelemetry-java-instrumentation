@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics;
 
 import application.io.opentelemetry.api.common.AttributeKey;
-import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
 import application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleHistogramBuilder;
 import java.util.List;

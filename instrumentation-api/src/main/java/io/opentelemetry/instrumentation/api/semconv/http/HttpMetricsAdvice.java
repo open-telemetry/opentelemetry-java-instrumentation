@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
-import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.List;
 

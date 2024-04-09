@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.metric
 
 import application.io.opentelemetry.api.common.AttributeKey;
 import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
 import application.io.opentelemetry.api.incubator.metrics.DoubleGauge;
 import application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder;
+import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleGaugeBuilder;
 import java.util.List;
@@ -32,8 +32,7 @@ final class ApplicationDoubleGaugeBuilder137 extends ApplicationDoubleGaugeBuild
   @Override
   public DoubleGauge build() {
     io.opentelemetry.api.incubator.metrics.DoubleGauge agentDoubleGauge =
-        ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder)
-            .build();
+        ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder) agentBuilder).build();
     return new DoubleGauge() {
 
       @Override

@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.metrics;
 
 import application.io.opentelemetry.api.common.AttributeKey;
-import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 import application.io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder;
+import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongUpDownCounterBuilder;
 import java.util.List;
