@@ -25,27 +25,6 @@ import org.junit.jupiter.api.Test;
 class PulsarClientTest extends AbstractPulsarClientTest {
 
   @Test
-  void testSendNonPartitionedTopic() throws Exception {
-    String topic = "persistent://public/default/testSendNonPartitionedTopic";
-    admin.topics().createNonPartitionedTopic(topic);
-    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
-
-    String msg = "test";
-    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(topic + " publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            sendAttributes(topic, msgId.toString(), false))));
-  }
-
-  @Test
   void testConsumeNonPartitionedTopic() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopic";
     CountDownLatch latch = new CountDownLatch(1);
@@ -314,27 +293,6 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic, msgId.toString(), true))));
-  }
-
-  @Test
-  void testSendPartitionedTopic() throws Exception {
-    String topic = "persistent://public/default/testSendPartitionedTopic";
-    admin.topics().createPartitionedTopic(topic, 1);
-    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
-
-    String msg = "test";
-    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(topic + "-partition-0 publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            sendAttributes(topic + "-partition-0", msgId.toString(), false))));
   }
 
   @Test
