@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics;
 
 import application.io.opentelemetry.api.metrics.DoubleHistogramBuilder;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.metrics.ApplicationMeter131;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.metrics.ApplicationMeter137;
 
-class ApplicationMeter137Incubator extends ApplicationMeter131 {
+class ApplicationMeter137Incubator extends ApplicationMeter137 {
 
   private final io.opentelemetry.api.metrics.Meter agentMeter;
 

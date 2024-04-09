@@ -13,6 +13,20 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent"))
   //implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent"))
+}
 
-  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
+testing {
+  suites {
+    val incubatorTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }

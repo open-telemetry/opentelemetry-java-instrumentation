@@ -32,7 +32,7 @@ public class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentatio
   public static class InitAdvice {
     @Advice.OnMethodEnter
     public static void init() {
-      // the sole purpose of this advice is to ensure that ApplicationMeterFactory132Incubator
+      // the sole purpose of this advice is to ensure that ApplicationMeterFactory137Incubator
       // is recognized as helper class and injected into class loader
       ApplicationMeterFactory137Incubator.class.getName();
     }
