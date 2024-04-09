@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import io.opentelemetry.semconv.ServiceAttributes;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
@@ -174,9 +174,7 @@ class SpringBootServiceNameDetectorTest {
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource resource =
         Resource.getDefault()
-            .merge(
-                Resource.create(
-                    Attributes.of(ServiceIncubatingAttributes.SERVICE_NAME, "test-service")));
+            .merge(Resource.create(Attributes.of(ServiceAttributes.SERVICE_NAME, "test-service")));
     assertThat(guesser.shouldApply(config, resource)).isFalse();
   }
 
@@ -191,13 +189,12 @@ class SpringBootServiceNameDetectorTest {
   void shouldNotApplyIfConfigHasServiceNameResourceAttribute() {
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     when(config.getMap("otel.resource.attributes"))
-        .thenReturn(
-            singletonMap(ServiceIncubatingAttributes.SERVICE_NAME.getKey(), "test-service"));
+        .thenReturn(singletonMap(ServiceAttributes.SERVICE_NAME.getKey(), "test-service"));
     assertThat(guesser.shouldApply(config, Resource.getDefault())).isFalse();
   }
 
   private static void expectServiceName(Resource result, String expected) {
-    assertThat(result.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME)).isEqualTo(expected);
+    assertThat(result.getAttribute(ServiceAttributes.SERVICE_NAME)).isEqualTo(expected);
   }
 
   private static void writeString(Path path, String value) throws Exception {

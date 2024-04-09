@@ -10,7 +10,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import io.opentelemetry.semconv.ServiceAttributes;
 import java.util.Optional;
 import org.springframework.boot.info.BuildProperties;
 
@@ -27,16 +27,16 @@ public class SpringResourceProvider implements ResourceProvider {
     AttributesBuilder attributesBuilder = Attributes.builder();
     buildProperties
         .map(BuildProperties::getName)
-        .ifPresent(v -> attributesBuilder.put(ServiceIncubatingAttributes.SERVICE_NAME, v));
+        .ifPresent(v -> attributesBuilder.put(ServiceAttributes.SERVICE_NAME, v));
 
     String springApplicationName = configProperties.getString("spring.application.name");
     if (springApplicationName != null) {
-      attributesBuilder.put(ServiceIncubatingAttributes.SERVICE_NAME, springApplicationName);
+      attributesBuilder.put(ServiceAttributes.SERVICE_NAME, springApplicationName);
     }
 
     buildProperties
         .map(BuildProperties::getVersion)
-        .ifPresent(v -> attributesBuilder.put(ServiceIncubatingAttributes.SERVICE_VERSION, v));
+        .ifPresent(v -> attributesBuilder.put(ServiceAttributes.SERVICE_VERSION, v));
 
     return Resource.create(attributesBuilder.build());
   }

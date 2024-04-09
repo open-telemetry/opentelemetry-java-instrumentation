@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import io.opentelemetry.semconv.ServiceAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,7 +28,7 @@ class TestBootInfClassesResource {
 
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector();
     Resource result = guesser.createResource(config);
-    assertThat(result.getAttribute(ServiceIncubatingAttributes.SERVICE_NAME))
+    assertThat(result.getAttribute(ServiceAttributes.SERVICE_NAME))
         .isEqualTo("otel-spring-test-app");
   }
 }
