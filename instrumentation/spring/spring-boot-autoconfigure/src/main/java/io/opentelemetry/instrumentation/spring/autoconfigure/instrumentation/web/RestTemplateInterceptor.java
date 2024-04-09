@@ -12,7 +12,7 @@ import java.util.List;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
-public class RestTemplateInterceptor {
+class RestTemplateInterceptor {
 
   private RestTemplateInterceptor() {}
 
