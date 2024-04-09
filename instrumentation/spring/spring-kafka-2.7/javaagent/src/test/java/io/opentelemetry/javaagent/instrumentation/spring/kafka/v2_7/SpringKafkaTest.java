@@ -146,7 +146,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
-  @SuppressWarnings("deprecation") // TODO MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
+  @SuppressWarnings(
+      "deprecation") // TODO MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION
+  // deprecation
   @Test
   void shouldHandleFailureInKafkaListener() {
     testing.runWithSpan(
