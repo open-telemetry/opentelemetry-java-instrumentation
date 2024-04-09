@@ -79,6 +79,7 @@ class OtelSpringStarterSmokeTest {
   private static final InMemoryLogRecordExporter LOG_RECORD_EXPORTER =
       InMemoryLogRecordExporter.create();
   public static final InMemorySpanExporter SPAN_EXPORTER = InMemorySpanExporter.create();
+  private static boolean initialized = false;
 
   @Autowired private TestRestTemplate testRestTemplate;
 
@@ -160,6 +161,43 @@ class OtelSpringStarterSmokeTest {
     }
   }
 
+  @BeforeEach
+  void setUp() {
+    if (!initialized) {
+      initialized = true;
+      assertFirstTimeSetup();
+    }
+
+    SPAN_EXPORTER.reset();
+    METRIC_EXPORTER.reset();
+    LOG_RECORD_EXPORTER.reset();
+  }
+
+  private void assertFirstTimeSetup() {
+    // Span
+    TracesAssert.assertThat(SPAN_EXPORTER.getFinishedSpanItems())
+        .hasTracesSatisfyingExactly(
+            traceAssert ->
+                traceAssert.hasSpansSatisfyingExactly(
+                    spanDataAssert ->
+                        spanDataAssert
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttribute(
+                                DbIncubatingAttributes.DB_STATEMENT,
+                                "create table test_table (id bigint not null, primary key (id))")));
+
+    // Log
+    LogRecordData firstLog = LOG_RECORD_EXPORTER.getFinishedLogRecordItems().get(0);
+    assertThat(firstLog.getBody().asString())
+        .as("Should instrument logs")
+        .startsWith("Starting ")
+        .contains(this.getClass().getSimpleName());
+    assertThat(firstLog.getAttributes().asMap())
+        .as("Should capture code attributes")
+        .containsEntry(
+            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+  }
+
   @Test
   void propertyConversion() {
     ConfigProperties configProperties =
@@ -178,27 +216,12 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  void shouldSendTelemetry() {
-
-    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.URL, String.class);
-
-    await()
-        .atMost(Duration.ofSeconds(1))
-        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == 5);
-
-    List<SpanData> exportedSpans = SPAN_EXPORTER.getFinishedSpanItems();
+  void shouldSendTelemetry() throws InterruptedException {
+    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
 
     // Span
-    TracesAssert.assertThat(exportedSpans)
+    TracesAssert.assertThat(expectSpans(2))
         .hasTracesSatisfyingExactly(
-            traceAssert ->
-                traceAssert.hasSpansSatisfyingExactly(
-                    spanDataAssert ->
-                        spanDataAssert
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttribute(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                "create table test_table (id bigint not null, primary key (id))")),
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
                     clientSpan ->
@@ -206,7 +229,7 @@ class OtelSpringStarterSmokeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 a ->
-                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                    assertThat(a.get(HttpAttributes.URL_FULL))
                                         .endsWith("/ping")),
                     serverSpan ->
                         serverSpan
@@ -224,18 +247,7 @@ class OtelSpringStarterSmokeTest {
                                                 AbstractCharSequenceAssert::isNotBlank)))
                             .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
                             .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
-                    nestedClientSpan ->
-                        nestedClientSpan
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                a ->
-                                    assertThat(a.get(SemanticAttributes.URL_FULL))
-                                        .endsWith("/pong")),
-                    nestedServerSpan ->
-                        nestedServerSpan
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttribute(SemanticAttributes.HTTP_ROUTE, "/pong")));
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
 
     // Metric
     List<MetricData> exportedMetrics = METRIC_EXPORTER.getFinishedMetricItems();
@@ -246,17 +258,45 @@ class OtelSpringStarterSmokeTest {
               String metricName = metric.getName();
               assertThat(metricName).isEqualTo(OtelSpringStarterSmokeTestController.TEST_HISTOGRAM);
             });
+  }
 
-    // Log
-    List<LogRecordData> logs = LOG_RECORD_EXPORTER.getFinishedLogRecordItems();
-    LogRecordData firstLog = logs.get(0);
-    assertThat(firstLog.getBody().asString())
-        .as("Should instrument logs")
-        .startsWith("Starting ")
-        .contains(this.getClass().getSimpleName());
-    assertThat(firstLog.getAttributes().asMap())
-        .as("Should capture code attributes")
-        .containsEntry(
-            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+  @Test
+  void restTemplateClient() throws InterruptedException {
+    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.REST_TEMPLATE, String.class);
+
+    TracesAssert.assertThat(expectSpans(4))
+        .hasTracesSatisfyingExactly(
+            traceAssert ->
+                traceAssert.hasSpansSatisfyingExactly(
+                    clientSpan ->
+                        clientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                        .endsWith("/rest-template")),
+                    serverSpan ->
+                        serverSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/rest-template"),
+                    nestedClientSpan ->
+                        nestedClientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                        .endsWith("/ping")),
+                    nestedServerSpan ->
+                        nestedServerSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+  }
+
+  private static List<SpanData> expectSpans(int spans) {
+    await()
+        .atMost(Duration.ofSeconds(1))
+        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == spans);
+
+    return SPAN_EXPORTER.getFinishedSpanItems();
   }
 }

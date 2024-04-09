@@ -18,7 +18,8 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 public class OtelSpringStarterSmokeTestController {
 
-  public static final String URL = "/ping";
+  public static final String PING = "/ping";
+  public static final String REST_TEMPLATE = "/rest-template";
   public static final String TEST_HISTOGRAM = "histogram-test-otel-spring-starter";
   private final LongHistogram histogram;
   private final Optional<RestTemplate> restTemplate;
@@ -37,16 +38,16 @@ public class OtelSpringStarterSmokeTestController {
                     .build());
   }
 
-  @GetMapping(URL)
+  @GetMapping(PING)
   public String ping() {
     histogram.record(10);
-    return restTemplate
-        .map(t -> t.getForObject("/pong", String.class))
-        .orElseThrow(() -> new IllegalStateException("RestTemplate not available"));
+    return "pong";
   }
 
-  @GetMapping("/pong")
-  public String pong() {
-    return "pong";
+  @GetMapping(REST_TEMPLATE)
+  public String restTemplate() {
+    return restTemplate
+        .map(t -> t.getForObject("/ping", String.class))
+        .orElseThrow(() -> new IllegalStateException("RestTemplate not available"));
   }
 }
