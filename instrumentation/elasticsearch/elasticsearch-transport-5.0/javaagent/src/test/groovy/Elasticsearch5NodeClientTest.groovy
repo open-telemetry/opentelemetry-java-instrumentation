@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.elasticsearch.client.Client
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -113,8 +113,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -160,8 +160,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
           kind CLIENT
           childOf(span(0))
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -226,8 +226,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
           name "CreateIndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "CreateIndexAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -239,8 +239,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
           name "ClusterHealthAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -251,8 +251,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -267,8 +267,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
           name "IndexAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -285,8 +285,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
           name "GetAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

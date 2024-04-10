@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafka.internal;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -22,10 +22,10 @@ final class KafkaProducerAttributesExtractor
 
     Object key = request.getRecord().key();
     if (key != null && canSerialize(key.getClass())) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
+      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
     }
     if (request.getRecord().value() == null) {
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
+      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
   }
 
@@ -35,6 +35,8 @@ final class KafkaProducerAttributesExtractor
     return !(keyClass.isArray() || keyClass == ByteBuffer.class);
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -45,8 +47,10 @@ final class KafkaProducerAttributesExtractor
 
     if (recordMetadata != null) {
       attributes.put(
-          SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, recordMetadata.partition());
-      attributes.put(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
+          MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+          recordMetadata.partition());
+      attributes.put(
+          MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
     }
   }
 }

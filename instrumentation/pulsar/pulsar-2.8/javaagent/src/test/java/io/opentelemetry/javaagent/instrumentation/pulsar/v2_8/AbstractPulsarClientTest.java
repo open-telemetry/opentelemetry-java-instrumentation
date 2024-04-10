@@ -7,6 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,7 +24,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -226,16 +233,15 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, brokerHost),
-                equalTo(SemanticAttributes.SERVER_PORT, brokerPort),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
-                    AbstractLongAssert::isNotNegative),
+                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(SERVER_ADDRESS, brokerHost),
+                equalTo(SERVER_PORT, brokerPort),
+                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MESSAGING_OPERATION, "publish"),
+                equalTo(MESSAGING_MESSAGE_ID, messageId),
+                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGE_TYPE, "normal")));
+
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -260,15 +266,13 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
-                equalTo(SemanticAttributes.SERVER_ADDRESS, brokerHost),
-                equalTo(SemanticAttributes.SERVER_PORT, brokerPort),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
-                    AbstractLongAssert::isNotNegative)));
+                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(SERVER_ADDRESS, brokerHost),
+                equalTo(SERVER_PORT, brokerPort),
+                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MESSAGING_OPERATION, "receive"),
+                equalTo(MESSAGING_MESSAGE_ID, messageId),
+                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -276,9 +280,7 @@ abstract class AbstractPulsarClientTest {
               Collections.singletonList("test")));
     }
     if (isBatch) {
-      assertions.add(
-          satisfies(
-              SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
+      assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
     }
     return assertions;
   }
@@ -288,13 +290,11 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "pulsar"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destination),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
-                satisfies(
-                    SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
-                    AbstractLongAssert::isNotNegative)));
+                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_MESSAGE_ID, messageId),
+                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
           equalTo(

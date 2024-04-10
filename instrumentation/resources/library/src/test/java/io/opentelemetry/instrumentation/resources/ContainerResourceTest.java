@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.semconv.ResourceAttributes.CONTAINER_ID;
+import static io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes.CONTAINER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;

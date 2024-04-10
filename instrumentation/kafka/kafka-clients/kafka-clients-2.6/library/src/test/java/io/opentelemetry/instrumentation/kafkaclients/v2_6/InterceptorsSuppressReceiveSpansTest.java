@@ -9,12 +9,14 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractLongAssert;
 
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   void assertTraces() {
     testing.waitAndAssertTraces(
@@ -26,32 +28,38 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                SHARED_TOPIC),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer"))),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
-                                SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                SHARED_TOPIC),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 greeting.getBytes(StandardCharsets.UTF_8).length),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                                MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                                MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                 AbstractLongAssert::isNotNegative),
-                            equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
+                                "test"),
                             satisfies(
-                                SemanticAttributes.MESSAGING_CLIENT_ID,
+                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer"))),
                 span ->
                     span.hasName("process child")

@@ -13,7 +13,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -194,26 +194,29 @@ public abstract class AbstractVertxKafkaTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> sendAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                 satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
+                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                     AbstractLongAssert::isNotNegative),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative)));
     String messageKey = record.key();
     if (messageKey != null) {
-      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+      assertions.add(
+          equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
     return assertions;
   }
@@ -230,38 +233,40 @@ public abstract class AbstractVertxKafkaTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topic),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, operation),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation),
                 satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
+                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
-                    SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+                    MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
                     AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
-      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // TODO
+  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> processAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                 satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
+                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
                     AbstractLongAssert::isNotNegative),
                 satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
+                    MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative)));
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
       assertions.add(
@@ -271,17 +276,18 @@ public abstract class AbstractVertxKafkaTest {
     }
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
-      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     String messageKey = record.key();
     if (messageKey != null) {
-      assertions.add(equalTo(SemanticAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+      assertions.add(
+          equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
     String messageValue = record.value();
     if (messageValue != null) {
       assertions.add(
           equalTo(
-              SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+              MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
               messageValue.getBytes(StandardCharsets.UTF_8).length));
     }
     return assertions;

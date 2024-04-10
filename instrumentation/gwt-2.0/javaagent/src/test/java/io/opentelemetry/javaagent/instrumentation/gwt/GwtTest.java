@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -157,10 +157,11 @@ class GwtTest {
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.RPC_SYSTEM, "gwt"),
+                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "gwt"),
                             equalTo(
-                                SemanticAttributes.RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(SemanticAttributes.RPC_METHOD, "sendMessage"))));
+                                RpcIncubatingAttributes.RPC_SERVICE,
+                                "test.gwt.shared.MessageService"),
+                            equalTo(RpcIncubatingAttributes.RPC_METHOD, "sendMessage"))));
 
     testing.clearData();
 
@@ -181,10 +182,11 @@ class GwtTest {
                         .hasParent(trace.getSpan(0))
                         .hasException(new IOException())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.RPC_SYSTEM, "gwt"),
+                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "gwt"),
                             equalTo(
-                                SemanticAttributes.RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(SemanticAttributes.RPC_METHOD, "sendMessage"))));
+                                RpcIncubatingAttributes.RPC_SERVICE,
+                                "test.gwt.shared.MessageService"),
+                            equalTo(RpcIncubatingAttributes.RPC_METHOD, "sendMessage"))));
 
     driver.close();
   }

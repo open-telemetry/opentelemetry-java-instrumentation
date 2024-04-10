@@ -26,12 +26,12 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.ssl.SslHandler;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -90,10 +90,10 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
@@ -103,8 +103,8 @@ class Netty40ClientSslTest {
                       .hasParent(trace.getSpan(0))
                       .hasStatus(StatusData.error());
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 }));
@@ -182,18 +182,18 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> {
                   span.hasName("SSL handshake").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },

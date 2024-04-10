@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
@@ -104,7 +104,7 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+            attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
           }
           return attributes;
         });

@@ -31,7 +31,13 @@ import com.amazonaws.services.sns.AmazonSNSClientBuilder
 import com.amazonaws.services.sns.model.PublishRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ErrorAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
@@ -104,15 +110,15 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           kind operation == "SendMessage" ? PRODUCER : CLIENT
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
-            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$UrlAttributes.URL_FULL" "${server.httpUri()}"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" { it.contains(service) }
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
@@ -155,7 +161,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
       """
-    "SNS"        | "Publish"           | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | AmazonSNSClientBuilder.standard()                 | { c -> c.publish(new PublishRequest().withMessage("somemessage").withTopicArn("somearn")) } | ["$SemanticAttributes.MESSAGING_DESTINATION_NAME": "somearn"] | """
+    "SNS"        | "Publish"           | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | AmazonSNSClientBuilder.standard()                 | { c -> c.publish(new PublishRequest().withMessage("somemessage").withTopicArn("somearn")) } | ["$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME": "somearn"] | """
           <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
               <PublishResult>
                   <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>
@@ -165,7 +171,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
               </ResponseMetadata>
           </PublishResponse>
       """
-      "SNS"      | "Publish"            | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | AmazonSNSClientBuilder.standard()                 | { c -> c.publish(new PublishRequest().withMessage("somemessage").withTargetArn("somearn")) } | ["$SemanticAttributes.MESSAGING_DESTINATION_NAME": "somearn"] | """
+      "SNS"      | "Publish"            | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | AmazonSNSClientBuilder.standard()                 | { c -> c.publish(new PublishRequest().withMessage("somemessage").withTargetArn("somearn")) } | ["$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME": "somearn"] | """
           <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
               <PublishResult>
                   <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>
@@ -201,19 +207,19 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           errorEvent SdkClientException, ~/Unable to execute HTTP request/
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "http://127.0.0.1:${UNUSABLE_PORT}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.SERVER_PORT" 61
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" { it.contains(service) }
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$UrlAttributes.URL_FULL" "http://127.0.0.1:${UNUSABLE_PORT}"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$ServerAttributes.SERVER_PORT" 61
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" { it.contains(service) }
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "http://127.0.0.1:${UNUSABLE_PORT}"
             "aws.agent" "java-aws-sdk"
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
-            "$SemanticAttributes.ERROR_TYPE" SdkClientException.name
+            "$ErrorAttributes.ERROR_TYPE" SdkClientException.name
           }
         }
       }
@@ -257,17 +263,17 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           }
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "${server.httpUri()}"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
-            "$SemanticAttributes.SERVER_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
-            "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$UrlAttributes.URL_FULL" "${server.httpUri()}"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
+            "$ServerAttributes.SERVER_ADDRESS" "127.0.0.1"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "Amazon S3"
+            "$RpcIncubatingAttributes.RPC_METHOD" "GetObject"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            "$SemanticAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
+            "$ErrorAttributes.ERROR_TYPE" {it == SdkClientException.name || it == AmazonClientException.name }
           }
         }
       }

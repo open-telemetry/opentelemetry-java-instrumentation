@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -62,40 +62,46 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.getSystem(request));
+    internalSet(
+        attributes, MessagingIncubatingAttributes.MESSAGING_SYSTEM, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
-      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true);
-      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
+      internalSet(attributes, MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, true);
+      internalSet(
+          attributes,
+          MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+          TEMP_DESTINATION_NAME);
     } else {
       internalSet(
           attributes,
-          SemanticAttributes.MESSAGING_DESTINATION_NAME,
+          MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
           getter.getDestination(request));
       internalSet(
           attributes,
-          SemanticAttributes.MESSAGING_DESTINATION_TEMPLATE,
+          MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE,
           getter.getDestinationTemplate(request));
     }
     boolean isAnonymousDestination = getter.isAnonymousDestination(request);
     if (isAnonymousDestination) {
-      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_ANONYMOUS, true);
+      internalSet(attributes, MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS, true);
     }
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_CONVERSATION_ID,
+        MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID,
         getter.getConversationId(request));
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+        MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
         getter.getMessageBodySize(request));
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE,
+        MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE,
         getter.getMessageEnvelopeSize(request));
-    internalSet(attributes, SemanticAttributes.MESSAGING_CLIENT_ID, getter.getClientId(request));
+    internalSet(
+        attributes, MessagingIncubatingAttributes.MESSAGING_CLIENT_ID, getter.getClientId(request));
     if (operation != null) {
-      internalSet(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
+      internalSet(
+          attributes, MessagingIncubatingAttributes.MESSAGING_OPERATION, operation.operationName());
     }
   }
 
@@ -108,11 +114,11 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_ID,
+        MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
         getter.getMessageId(request, response));
     internalSet(
         attributes,
-        SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+        MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
         getter.getBatchMessageCount(request, response));
 
     for (String name : capturedHeaders) {

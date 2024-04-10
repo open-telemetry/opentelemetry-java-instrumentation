@@ -46,7 +46,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
@@ -212,7 +212,7 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.HTTP_ROUTE);
+          attributes.remove(HttpAttributes.HTTP_ROUTE);
           return attributes;
         });
 

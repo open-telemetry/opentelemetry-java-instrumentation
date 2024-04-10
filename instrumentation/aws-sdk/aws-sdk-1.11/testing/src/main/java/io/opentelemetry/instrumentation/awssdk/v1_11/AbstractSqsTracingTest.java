@@ -30,7 +30,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -125,15 +130,15 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "CreateQueue"),
-                                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
+                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
@@ -145,23 +150,25 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(
                                       stringKey("aws.queue.url"),
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                  equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                  equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(SemanticAttributes.RPC_METHOD, "SendMessage"),
-                                  equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                  equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                  equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
+                                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                  equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                  equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                   equalTo(
-                                      SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                  equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                  equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                  equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                      MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                   equalTo(
-                                      SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                  equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                                      MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                      "testSdkSqs"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                   satisfies(
-                                      SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                      MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
-                                  equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
+                                  equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
                         attributes.add(
@@ -186,21 +193,25 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(
                                       stringKey("aws.queue.url"),
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                  equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                  equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
-                                  equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                  equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                  equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                  equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                  equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                   equalTo(
-                                      SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                  equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                  equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                  equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                      MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                   equalTo(
-                                      SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                  equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                                  equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1),
-                                  equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
+                                      MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                      "testSdkSqs"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
+                                      1),
+                                  equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
                         attributes.add(
@@ -223,23 +234,25 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(
                                       stringKey("aws.queue.url"),
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                  equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                  equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
-                                  equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                  equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                  equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                  equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                  equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                   equalTo(
-                                      SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                  equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                  equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                  equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                      MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
                                   equalTo(
-                                      SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                  equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                      MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                      "testSdkSqs"),
+                                  equalTo(
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                                   satisfies(
-                                      SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                      MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
-                                  equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
+                                  equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
                         attributes.add(
@@ -290,15 +303,15 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "CreateQueue"),
-                                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
+                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -311,22 +324,25 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SendMessage"),
-                                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(SemanticAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
+                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
-                                    SemanticAttributes.MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                    "testSdkSqs"),
+                                equalTo(
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace -> {
               AtomicReference<SpanData> receiveSpan = new AtomicReference<>();
               AtomicReference<SpanData> processSpan = new AtomicReference<>();
@@ -351,17 +367,16 @@ public abstract class AbstractSqsTracingTest {
                                           "http://localhost:"
                                               + sqsPort
                                               + "/000000000000/testSdkSqs"),
-                                      equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                      equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                      equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
-                                      equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                      equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                      equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                      equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                      equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                      equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(
-                                          SemanticAttributes.URL_FULL,
-                                          "http://localhost:" + sqsPort),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                      equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                          UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                      equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                      equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
                               span.hasName("testSdkSqs receive")
                                   .hasKind(SpanKind.CONSUMER)
@@ -375,23 +390,29 @@ public abstract class AbstractSqsTracingTest {
                                           "http://localhost:"
                                               + sqsPort
                                               + "/000000000000/testSdkSqs"),
-                                      equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                      equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                      equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
-                                      equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                      equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                      equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                      equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                      equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                      equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(
-                                          SemanticAttributes.URL_FULL,
-                                          "http://localhost:" + sqsPort),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                      equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                          UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                      equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                       equalTo(
-                                          SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                          MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                          "AmazonSQS"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                           "testSdkSqs"),
-                                      equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                                      equalTo(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1),
-                                      equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_OPERATION,
+                                          "receive"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes
+                                              .MESSAGING_BATCH_MESSAGE_COUNT,
+                                          1),
+                                      equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
                               span.hasName("testSdkSqs process")
                                   .hasKind(SpanKind.CONSUMER)
@@ -405,25 +426,28 @@ public abstract class AbstractSqsTracingTest {
                                           "http://localhost:"
                                               + sqsPort
                                               + "/000000000000/testSdkSqs"),
-                                      equalTo(SemanticAttributes.RPC_SYSTEM, "aws-api"),
-                                      equalTo(SemanticAttributes.RPC_SERVICE, "AmazonSQS"),
-                                      equalTo(SemanticAttributes.RPC_METHOD, "ReceiveMessage"),
-                                      equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                      equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                      equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+                                      equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
+                                      equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                      equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
+                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(
-                                          SemanticAttributes.URL_FULL,
-                                          "http://localhost:" + sqsPort),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, sqsPort),
-                                      equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                          UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                      equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                       equalTo(
-                                          SemanticAttributes.MESSAGING_DESTINATION_NAME,
+                                          MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                          "AmazonSQS"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                           "testSdkSqs"),
-                                      equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                                      equalTo(
+                                          MessagingIncubatingAttributes.MESSAGING_OPERATION,
+                                          "process"),
                                       satisfies(
-                                          SemanticAttributes.MESSAGING_MESSAGE_ID,
+                                          MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                           val -> val.isInstanceOf(String.class)),
-                                      equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                      equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
                           span ->
                               span.hasName("process child")
                                   .hasParent(processSpan.get())

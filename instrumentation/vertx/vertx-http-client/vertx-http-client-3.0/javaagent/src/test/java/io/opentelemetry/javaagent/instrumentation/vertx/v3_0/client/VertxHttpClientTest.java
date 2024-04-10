@@ -13,7 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpClient;
@@ -89,9 +90,9 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
-          attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-          attributes.remove(SemanticAttributes.SERVER_PORT);
+          attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(ServerAttributes.SERVER_ADDRESS);
+          attributes.remove(ServerAttributes.SERVER_PORT);
           return attributes;
         });
 

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
@@ -128,8 +128,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "ClusterHealthAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -174,8 +174,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           childOf(span(0))
           errorEvent RemoteTransportException, String
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -244,8 +244,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "CreateIndexAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -259,8 +259,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -275,8 +275,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           name "PutMappingAction"
           kind CLIENT
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "PutMappingAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "PutMappingAction"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -289,8 +289,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -309,8 +309,8 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
           attributes {
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

@@ -6,7 +6,7 @@
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import listener.AnnotatedListenerConfig
 import listener.ManualListenerConfig
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -54,13 +54,13 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
       kind PRODUCER
       hasNoParent()
       attributes {
-        "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
-        "$SemanticAttributes.MESSAGING_OPERATION" "publish"
+        "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "jms"
+        "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" destinationName
+        "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
         if (destinationName == "(temporary)") {
-          "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
+          "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
-        "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
+        "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
         if (testHeaders) {
           "messaging.header.test_message_header" { it == ["test"] }
           "messaging.header.test_message_int_header" { it == ["1234"] }
@@ -87,15 +87,15 @@ class SpringListenerTest extends AgentInstrumentationSpecification {
         hasNoLinks()
       }
       attributes {
-        "$SemanticAttributes.MESSAGING_SYSTEM" "jms"
-        "$SemanticAttributes.MESSAGING_DESTINATION_NAME" destinationName
-        "$SemanticAttributes.MESSAGING_OPERATION" operation
+        "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "jms"
+        "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" destinationName
+        "$MessagingIncubatingAttributes.MESSAGING_OPERATION" operation
         if (messageId != null) {
           //In some tests we don't know exact messageId, so we pass "" and verify just the existence of the attribute
-          "$SemanticAttributes.MESSAGING_MESSAGE_ID" { it == messageId || messageId == "" }
+          "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" { it == messageId || messageId == "" }
         }
         if (destinationName == "(temporary)") {
-          "$SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY" true
+          "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY" true
         }
         if (testHeaders) {
           "messaging.header.test_message_header" { it == ["test"] }
