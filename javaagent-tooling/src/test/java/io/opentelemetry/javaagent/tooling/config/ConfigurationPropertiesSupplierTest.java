@@ -10,7 +10,7 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.events.GlobalEventEmitterProvider;
+import io.opentelemetry.api.incubator.events.GlobalEventLoggerProvider;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
@@ -33,7 +33,7 @@ class ConfigurationPropertiesSupplierTest {
   @AfterAll
   static void cleanUp() {
     GlobalOpenTelemetry.resetForTest();
-    GlobalEventEmitterProvider.resetForTest();
+    GlobalEventLoggerProvider.resetForTest();
   }
 
   // regression for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6696
