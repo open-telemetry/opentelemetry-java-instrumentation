@@ -19,9 +19,28 @@ dependencies {
   testImplementation("org.apache.pulsar:pulsar-client-admin:2.8.0")
 }
 
+tasks {
+  val testReceiveSpanDisabled by registering(Test::class) {
+    filter {
+      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    }
+    include("**/PulsarClientSuppressReceiveSpansTest.*")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testReceiveSpanDisabled)
+  }
+}
+
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-  jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 }
