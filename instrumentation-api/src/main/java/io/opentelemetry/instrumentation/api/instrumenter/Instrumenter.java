@@ -197,7 +197,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     context = context.with(span);
 
     long startNanos = getNanos(startTime);
-    context = context.with(INSTRUMENTER_STATE_CONTEXT_KEY, new AutoValue_Instrumenter_State(attributes, startNanos));
+    context =
+        context.with(
+            INSTRUMENTER_STATE_CONTEXT_KEY,
+            new AutoValue_Instrumenter_State(attributes, startNanos));
 
     if (operationListeners.length != 0) {
       // operation listeners run after span start, so that they have access to the current span
@@ -233,7 +236,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     State state = context.get(INSTRUMENTER_STATE_CONTEXT_KEY);
     UnsafeAttributes attributes = state == null ? new UnsafeAttributes() : state.attributes();
     if (state == null) {
-      logger.log(Level.FINE, "No instrumenter state present when ending context {0}.  Cannot run operationListeners; metrics may not be recorded", context);
+      logger.log(
+          Level.FINE,
+          "No instrumenter state present when ending context {0}.  Cannot run operationListeners; metrics may not be recorded",
+          context);
     }
     for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor : attributesExtractors) {
       extractor.onEnd(attributes, context, request, response, error);
@@ -267,9 +273,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
   @AutoValue
   abstract static class State {
     abstract UnsafeAttributes attributes();
-    abstract  long startTimeNanos();
-  }
 
+    abstract long startTimeNanos();
+  }
 
   static {
     InstrumenterUtil.setInstrumenterAccess(

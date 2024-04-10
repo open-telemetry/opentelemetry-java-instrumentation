@@ -57,7 +57,8 @@ public final class HttpClientMetrics implements OperationListener {
   }
 
   @Override
-  public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
+  public void onEnd(
+      Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
     duration.record((endNanos - startNanos) / NANOS_PER_S, startAndEndAttributes, context);
   }
 }

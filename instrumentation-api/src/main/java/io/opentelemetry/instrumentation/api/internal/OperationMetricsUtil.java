@@ -32,7 +32,8 @@ public class OperationMetricsUtil {
         }
 
         @Override
-        public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {}
+        public void onEnd(
+            Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {}
       };
 
   public static OperationMetrics create(

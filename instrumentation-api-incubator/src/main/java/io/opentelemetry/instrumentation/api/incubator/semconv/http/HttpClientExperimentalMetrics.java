@@ -66,7 +66,8 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
   }
 
   @Override
-  public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
+  public void onEnd(
+      Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
     Long requestBodySize = getHttpRequestBodySize(startAndEndAttributes);
     if (requestBodySize != null) {
       requestSize.record(requestBodySize, startAndEndAttributes, context);

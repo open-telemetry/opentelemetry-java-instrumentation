@@ -83,14 +83,16 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
 
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    // Have to clone the startAttributes because the same object is reused for startAndEndAttributes in onEnd
+    // Have to clone the startAttributes because the same object is reused for startAndEndAttributes
+    // in onEnd
     activeRequests.add(1, startAttributes.toBuilder().build(), context);
 
     return context.with(HTTP_SERVER_EXPERIMENTAL_METRICS_START_ATTRIBUTES, startAttributes);
   }
 
   @Override
-  public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
+  public void onEnd(
+      Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
     Attributes startAttributes = context.get(HTTP_SERVER_EXPERIMENTAL_METRICS_START_ATTRIBUTES);
     if (startAttributes == null) {
       logger.log(

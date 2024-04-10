@@ -453,7 +453,8 @@ class InstrumenterTest {
           }
 
           @Override
-          public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
+          public void onEnd(
+              Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
             endContext.set(true);
           }
         };
@@ -485,7 +486,8 @@ class InstrumenterTest {
           }
 
           @Override
-          public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
+          public void onEnd(
+              Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
             endContext.set(context);
           }
         };

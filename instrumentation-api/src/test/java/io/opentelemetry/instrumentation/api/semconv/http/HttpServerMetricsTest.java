@@ -149,7 +149,10 @@ class HttpServerMetricsTest {
             .build();
 
     Attributes responseAttributes =
-        Attributes.builder().putAll(requestAttributes).put(SemanticAttributes.HTTP_ROUTE, "/test/{id}").build();
+        Attributes.builder()
+            .putAll(requestAttributes)
+            .put(SemanticAttributes.HTTP_ROUTE, "/test/{id}")
+            .build();
 
     Context parentContext = Context.root();
 

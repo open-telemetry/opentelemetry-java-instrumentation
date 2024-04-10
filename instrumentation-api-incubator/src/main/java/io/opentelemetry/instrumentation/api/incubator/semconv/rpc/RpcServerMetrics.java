@@ -52,10 +52,9 @@ public final class RpcServerMetrics implements OperationListener {
   }
 
   @Override
-  public void onEnd(Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
+  public void onEnd(
+      Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
     serverDurationHistogram.record(
-        (endNanos - startNanos) / NANOS_PER_MS,
-        startAndEndAttributes,
-        context);
+        (endNanos - startNanos) / NANOS_PER_MS, startAndEndAttributes, context);
   }
 }

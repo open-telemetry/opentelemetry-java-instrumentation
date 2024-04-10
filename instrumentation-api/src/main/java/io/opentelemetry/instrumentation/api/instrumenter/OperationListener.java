@@ -11,8 +11,8 @@ import io.opentelemetry.context.Context;
 /**
  * A listener of the start and end of an instrumented operation. The {@link #onStart(Context,
  * Attributes, long)} methods will be called as early as possible in the processing of a request;
- * and the {@link #onEnd(Context, Attributes, long, long)} method will be called as late as possible when
- * finishing the processing of a response. These correspond to the start and end of a span when
+ * and the {@link #onEnd(Context, Attributes, long, long)} method will be called as late as possible
+ * when finishing the processing of a response. These correspond to the start and end of a span when
  * tracing.
  */
 public interface OperationListener {
