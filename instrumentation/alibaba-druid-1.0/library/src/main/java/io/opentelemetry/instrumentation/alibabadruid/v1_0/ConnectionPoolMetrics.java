@@ -40,9 +40,7 @@ final class ConnectionPoolMetrics {
         metrics.batchCallback(
             () -> {
               connections.record(dataSource.getActiveCount(), usedConnectionsAttributes);
-              connections.record(
-                  dataSource.getPoolingCount() - dataSource.getActiveCount(),
-                  idleConnectionsAttributes);
+              connections.record(dataSource.getPoolingCount(), idleConnectionsAttributes);
               pendingRequestsForConnection.record(dataSource.getWaitThreadCount(), attributes);
               minIdleConnections.record(dataSource.getMinIdle(), attributes);
               maxIdleConnections.record(dataSource.getMaxIdle(), attributes);
