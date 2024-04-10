@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.with;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -44,8 +44,13 @@ import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import org.awaitility.core.ConditionEvaluationLogger;
+import org.awaitility.core.EvaluatedCondition;
+import org.awaitility.core.TimeoutEvent;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -80,6 +85,7 @@ class OtelSpringStarterSmokeTest {
   private static final InMemoryLogRecordExporter LOG_RECORD_EXPORTER =
       InMemoryLogRecordExporter.create();
   public static final InMemorySpanExporter SPAN_EXPORTER = InMemorySpanExporter.create();
+  private static final Logger logger = LoggerFactory.getLogger(OtelSpringStarterSmokeTest.class);
   private static boolean initialized = false;
 
   @Autowired private TestRestTemplate testRestTemplate;
@@ -290,7 +296,18 @@ class OtelSpringStarterSmokeTest {
   }
 
   private static List<SpanData> expectSpans(int spans) {
-    await()
+    with()
+        .conditionEvaluationListener(
+            new ConditionEvaluationLogger() {
+              @Override
+              public void conditionEvaluated(EvaluatedCondition<Object> condition) {}
+
+              @Override
+              public void onTimeout(TimeoutEvent timeoutEvent) {
+                logger.info("Spans: {}", SPAN_EXPORTER.getFinishedSpanItems());
+              }
+            })
+        .await()
         .atMost(Duration.ofSeconds(5))
         .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == spans);
 
