@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: gradle/wrapper-validation-action@v2.1.2
+      - uses: gradle/wrapper-validation-action@v2.1.3
 
   license-check:
     runs-on: ubuntu-latest
