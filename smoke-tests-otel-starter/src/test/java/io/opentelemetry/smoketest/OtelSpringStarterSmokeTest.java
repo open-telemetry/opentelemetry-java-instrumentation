@@ -48,7 +48,9 @@ import org.awaitility.core.ConditionEvaluationLogger;
 import org.awaitility.core.EvaluatedCondition;
 import org.awaitility.core.TimeoutEvent;
 import org.assertj.core.api.AbstractCharSequenceAssert;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +80,7 @@ import org.springframework.core.env.Environment;
       "otel.metrics.exporter=memory",
       "otel.logs.exporter=memory"
     })
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class OtelSpringStarterSmokeTest {
 
   public static final InMemoryMetricExporter METRIC_EXPORTER =
@@ -86,7 +89,6 @@ class OtelSpringStarterSmokeTest {
       InMemoryLogRecordExporter.create();
   public static final InMemorySpanExporter SPAN_EXPORTER = InMemorySpanExporter.create();
   private static final Logger logger = LoggerFactory.getLogger(OtelSpringStarterSmokeTest.class);
-  private static boolean initialized = false;
 
   @Autowired private TestRestTemplate testRestTemplate;
 
@@ -168,44 +170,19 @@ class OtelSpringStarterSmokeTest {
     }
   }
 
-  @BeforeEach
-  void setUp() {
-    if (!initialized) {
-      initialized = true;
-      assertFirstTimeSetup();
-    }
+  @AfterEach
+  void tearDown() {
+    reset();
+  }
 
+  private static void reset() {
     SPAN_EXPORTER.reset();
     METRIC_EXPORTER.reset();
     LOG_RECORD_EXPORTER.reset();
   }
 
-  private void assertFirstTimeSetup() {
-    // Span
-    TracesAssert.assertThat(SPAN_EXPORTER.getFinishedSpanItems())
-        .hasTracesSatisfyingExactly(
-            traceAssert ->
-                traceAssert.hasSpansSatisfyingExactly(
-                    spanDataAssert ->
-                        spanDataAssert
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttribute(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                "create table test_table (id bigint not null, primary key (id))")));
-
-    // Log
-    LogRecordData firstLog = LOG_RECORD_EXPORTER.getFinishedLogRecordItems().get(0);
-    assertThat(firstLog.getBody().asString())
-        .as("Should instrument logs")
-        .startsWith("Starting ")
-        .contains(this.getClass().getSimpleName());
-    assertThat(firstLog.getAttributes().asMap())
-        .as("Should capture code attributes")
-        .containsEntry(
-            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
-  }
-
   @Test
+  @org.junit.jupiter.api.Order(10)
   void propertyConversion() {
     ConfigProperties configProperties =
         SpringConfigProperties.create(
@@ -223,12 +200,21 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
+  @org.junit.jupiter.api.Order(1)
   void shouldSendTelemetry() {
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
 
     // Span
-    TracesAssert.assertThat(expectSpans(2))
+    TracesAssert.assertThat(expectSpans(3))
         .hasTracesSatisfyingExactly(
+            traceAssert ->
+                traceAssert.hasSpansSatisfyingExactly(
+                    spanDataAssert ->
+                        spanDataAssert
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttribute(
+                                DbIncubatingAttributes.DB_STATEMENT,
+                                "create table test_table (id bigint not null, primary key (id))")),
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
                     clientSpan ->
@@ -263,10 +249,24 @@ class OtelSpringStarterSmokeTest {
               String metricName = metric.getName();
               assertThat(metricName).isEqualTo(OtelSpringStarterSmokeTestController.TEST_HISTOGRAM);
             });
+
+    // Log
+    LogRecordData firstLog = LOG_RECORD_EXPORTER.getFinishedLogRecordItems().get(0);
+    assertThat(firstLog.getBody().asString())
+        .as("Should instrument logs")
+        .startsWith("Starting ")
+        .contains(this.getClass().getSimpleName());
+    assertThat(firstLog.getAttributes().asMap())
+        .as("Should capture code attributes")
+        .containsEntry(
+            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
   }
 
   @Test
+  @org.junit.jupiter.api.Order(2)
   void restTemplateClient() {
+    reset(); //ignore the telemetry from application startup
+
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.REST_TEMPLATE, String.class);
 
     TracesAssert.assertThat(expectSpans(4))
