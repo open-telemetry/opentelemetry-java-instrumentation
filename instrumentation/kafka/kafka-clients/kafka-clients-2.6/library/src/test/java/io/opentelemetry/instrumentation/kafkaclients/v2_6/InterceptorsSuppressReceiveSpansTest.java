@@ -12,11 +12,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   void assertTraces() {
     testing.waitAndAssertTraces(
@@ -50,8 +49,8 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 greeting.getBytes(StandardCharsets.UTF_8).length),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                AbstractLongAssert::isNotNegative),
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                 AbstractLongAssert::isNotNegative),
