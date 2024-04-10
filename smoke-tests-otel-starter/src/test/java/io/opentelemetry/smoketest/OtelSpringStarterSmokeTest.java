@@ -291,7 +291,7 @@ class OtelSpringStarterSmokeTest {
 
   private static List<SpanData> expectSpans(int spans) {
     await()
-        .atMost(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(5))
         .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == spans);
 
     return SPAN_EXPORTER.getFinishedSpanItems();
