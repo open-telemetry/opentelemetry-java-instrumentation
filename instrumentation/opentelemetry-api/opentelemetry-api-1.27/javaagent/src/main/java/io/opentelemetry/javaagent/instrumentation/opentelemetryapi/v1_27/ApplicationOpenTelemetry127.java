@@ -63,10 +63,16 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
   }
 
   private static ApplicationMeterFactory getMeterFactory() {
-    // this class is defined in opentelemetry-api-1.32
+    // this class is defined in opentelemetry-api-1.37
     ApplicationMeterFactory meterFactory =
         getMeterFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator.metrics.ApplicationMeterFactory132Incubator");
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics.ApplicationMeterFactory137Incubator");
+    if (meterFactory == null) {
+      // this class is defined in opentelemetry-api-1.32
+      meterFactory =
+          getMeterFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.incubator.metrics.ApplicationMeterFactory132Incubator");
+    }
     if (meterFactory == null) {
       // this class is defined in opentelemetry-api-1.32
       meterFactory =
