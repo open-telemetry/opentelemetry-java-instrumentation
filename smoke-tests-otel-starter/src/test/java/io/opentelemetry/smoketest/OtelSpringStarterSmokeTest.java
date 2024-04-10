@@ -44,10 +44,11 @@ import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.awaitility.core.ConditionEvaluationLogger;
 import org.awaitility.core.EvaluatedCondition;
 import org.awaitility.core.TimeoutEvent;
-import org.assertj.core.api.AbstractCharSequenceAssert;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -265,7 +266,7 @@ class OtelSpringStarterSmokeTest {
   @Test
   @org.junit.jupiter.api.Order(2)
   void restTemplateClient() {
-    reset(); //ignore the telemetry from application startup
+    reset(); // ignore the telemetry from application startup
 
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.REST_TEMPLATE, String.class);
 
