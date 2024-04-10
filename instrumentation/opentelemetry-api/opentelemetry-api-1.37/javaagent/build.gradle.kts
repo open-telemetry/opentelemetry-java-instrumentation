@@ -15,11 +15,25 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent"))
 }
 
+configurations.configureEach {
+  if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
+    resolutionStrategy {
+      force("io.opentelemetry:opentelemetry-api:1.37.0")
+    }
+  }
+}
+
 testing {
   suites {
     val incubatorTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
+      }
+    }
+    val oldAndNewIncubatorTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
+        implementation("io.opentelemetry:opentelemetry-extension-incubator:1.32.0-alpha")
       }
     }
   }

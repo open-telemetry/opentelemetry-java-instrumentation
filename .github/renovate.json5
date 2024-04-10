@@ -27,6 +27,13 @@
       "allowedVersions": "!/\\-SNAPSHOT$/"
     },
     {
+      // we are not going to update the semconv in 1.x branch
+      "matchPackageNames": ["io.opentelemetry.semconv:opentelemetry-semconv"],
+      "matchUpdateTypes": ["minor"],
+      "matchBaseBranches": ["release/v1.33.x"],
+      "enabled": false
+    },
+    {
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "groupName": "logback packages"
     },
