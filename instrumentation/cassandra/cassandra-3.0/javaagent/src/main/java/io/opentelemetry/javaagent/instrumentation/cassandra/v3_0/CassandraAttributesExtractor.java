@@ -9,7 +9,7 @@ import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import javax.annotation.Nullable;
 
 public class CassandraAttributesExtractor
@@ -28,10 +28,9 @@ public class CassandraAttributesExtractor
       return;
     }
     attributes.put(
-        SemanticAttributes.SERVER_ADDRESS,
+        ServerAttributes.SERVER_ADDRESS,
         executionInfo.getQueriedHost().getSocketAddress().getHostString());
     attributes.put(
-        SemanticAttributes.SERVER_PORT,
-        executionInfo.getQueriedHost().getSocketAddress().getPort());
+        ServerAttributes.SERVER_PORT, executionInfo.getQueriedHost().getSocketAddress().getPort());
   }
 }

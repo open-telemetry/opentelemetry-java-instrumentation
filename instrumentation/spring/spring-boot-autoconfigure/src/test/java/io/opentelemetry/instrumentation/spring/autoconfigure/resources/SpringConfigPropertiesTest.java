@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -28,29 +30,33 @@ class SpringConfigPropertiesTest {
   @DisplayName("when map is set in properties in a row it should be available in config")
   void shouldInitializeAttributesByMapInArow() {
     this.contextRunner
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withPropertyValues(
-            "otel.springboot.test.map={'environment':'dev','xyz':'foo','service.instance.id':'id-example'}")
+            "otel.resource.attributes.environment=dev",
+            "otel.resource.attributes.xyz=foo",
+            "otel.resource.attributes.service.instance.id=id-example")
         .run(
             context -> {
               Environment env = context.getBean("environment", Environment.class);
               Map<String, String> fallback = new HashMap<>();
               fallback.put("fallback", "fallbackVal");
-              fallback.put("otel.springboot.test.map", "hidden");
+              fallback.put("otel.resource.attributes", "foo=fallback");
 
               SpringConfigProperties config =
                   new SpringConfigProperties(
                       env,
                       new SpelExpressionParser(),
-                      new OtlpExporterProperties(),
-                      new OtelResourceProperties(),
-                      new PropagationProperties(),
+                      context.getBean(OtlpExporterProperties.class),
+                      context.getBean(OtelResourceProperties.class),
+                      context.getBean(PropagationProperties.class),
                       DefaultConfigProperties.createFromMap(fallback));
 
-              assertThat(config.getMap("otel.springboot.test.map"))
+              assertThat(config.getMap("otel.resource.attributes"))
                   .contains(
                       entry("environment", "dev"),
                       entry("xyz", "foo"),
-                      entry("service.instance.id", "id-example"));
+                      entry("service.instance.id", "id-example"),
+                      entry("foo", "fallback"));
 
               assertThat(config.getString("fallback")).isEqualTo("fallbackVal");
             });

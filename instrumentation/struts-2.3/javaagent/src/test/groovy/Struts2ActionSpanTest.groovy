@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.opentelemetry.struts.GreetingServlet
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.session.HashSessionIdManager
@@ -91,8 +91,8 @@ class Struts2ActionSpanTest extends HttpServerTest<Server> implements AgentTestT
       }
       def expectedMethodName = endpoint.name().toLowerCase()
       attributes {
-        "$SemanticAttributes.CODE_NAMESPACE" "io.opentelemetry.struts.GreetingAction"
-        "$SemanticAttributes.CODE_FUNCTION" expectedMethodName
+        "$CodeIncubatingAttributes.CODE_NAMESPACE" "io.opentelemetry.struts.GreetingAction"
+        "$CodeIncubatingAttributes.CODE_FUNCTION" expectedMethodName
       }
       childOf((SpanData) parent)
     }

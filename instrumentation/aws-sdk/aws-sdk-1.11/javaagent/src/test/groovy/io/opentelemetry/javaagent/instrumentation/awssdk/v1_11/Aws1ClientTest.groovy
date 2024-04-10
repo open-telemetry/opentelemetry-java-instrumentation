@@ -19,7 +19,11 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractAws1ClientTest
 import io.opentelemetry.instrumentation.test.AgentTestTrait
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ErrorAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.UrlAttributes
 
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 
@@ -99,16 +103,16 @@ class Aws1ClientTest extends AbstractAws1ClientTest implements AgentTestTrait {
           errorEvent IllegalStateException, "bad handler"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.URL_FULL" "https://s3.amazonaws.com"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "HEAD"
-            "$SemanticAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "Amazon S3"
-            "$SemanticAttributes.RPC_METHOD" "HeadBucket"
+            "$UrlAttributes.URL_FULL" "https://s3.amazonaws.com"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "HEAD"
+            "$ServerAttributes.SERVER_ADDRESS" "s3.amazonaws.com"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "Amazon S3"
+            "$RpcIncubatingAttributes.RPC_METHOD" "HeadBucket"
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "someBucket"
-            "$SemanticAttributes.ERROR_TYPE" IllegalStateException.name
+            "$ErrorAttributes.ERROR_TYPE" IllegalStateException.name
           }
         }
       }

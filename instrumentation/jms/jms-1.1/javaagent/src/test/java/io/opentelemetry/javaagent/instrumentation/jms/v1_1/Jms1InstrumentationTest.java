@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -60,10 +60,12 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                          equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                          equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                          equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                              destinationName),
+                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                          equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
           producerSpan.set(trace.getSpan(1));
@@ -77,10 +79,12 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                destinationName),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
 }

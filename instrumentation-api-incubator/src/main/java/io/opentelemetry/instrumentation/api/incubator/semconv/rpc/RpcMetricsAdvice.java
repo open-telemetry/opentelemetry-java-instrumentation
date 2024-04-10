@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.Arrays;
 
 final class RpcMetricsAdvice {
@@ -21,14 +23,14 @@ final class RpcMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             Arrays.asList(
-                SemanticAttributes.RPC_SYSTEM,
-                SemanticAttributes.RPC_SERVICE,
-                SemanticAttributes.RPC_METHOD,
-                SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                SemanticAttributes.NETWORK_TYPE,
-                SemanticAttributes.NETWORK_TRANSPORT,
-                SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT));
+                RpcIncubatingAttributes.RPC_SYSTEM,
+                RpcIncubatingAttributes.RPC_SERVICE,
+                RpcIncubatingAttributes.RPC_METHOD,
+                RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
+                NetworkAttributes.NETWORK_TYPE,
+                NetworkAttributes.NETWORK_TRANSPORT,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
   }
 
   static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {
@@ -40,14 +42,14 @@ final class RpcMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             Arrays.asList(
-                SemanticAttributes.RPC_SYSTEM,
-                SemanticAttributes.RPC_SERVICE,
-                SemanticAttributes.RPC_METHOD,
-                SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                SemanticAttributes.NETWORK_TYPE,
-                SemanticAttributes.NETWORK_TRANSPORT,
-                SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT));
+                RpcIncubatingAttributes.RPC_SYSTEM,
+                RpcIncubatingAttributes.RPC_SERVICE,
+                RpcIncubatingAttributes.RPC_METHOD,
+                RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
+                NetworkAttributes.NETWORK_TYPE,
+                NetworkAttributes.NETWORK_TRANSPORT,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
   }
 
   private RpcMetricsAdvice() {}

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,7 +36,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Override
   public String getSystem(ElasticsearchRestRequest request) {
-    return SemanticAttributes.DbSystemValues.ELASTICSEARCH;
+    return DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
   }
 
   @Override

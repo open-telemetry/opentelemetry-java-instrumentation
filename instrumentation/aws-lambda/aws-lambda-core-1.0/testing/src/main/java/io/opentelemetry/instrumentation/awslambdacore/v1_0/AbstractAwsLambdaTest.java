@@ -15,7 +15,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,7 +68,7 @@ public abstract class AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -86,7 +86,7 @@ public abstract class AbstractAwsLambdaTest {
                             .hasStatus(StatusData.error())
                             .hasException(thrown)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   /**
@@ -111,6 +111,6 @@ public abstract class AbstractAwsLambdaTest {
                             .hasNoParent()
                             .hasLinks()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 }

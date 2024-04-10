@@ -20,11 +20,11 @@ import io.netty.handler.codec.http.HttpVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslHandler
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import spock.lang.Shared
 
 import javax.net.ssl.SSLEngine
@@ -94,8 +94,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -103,10 +103,10 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
-            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
+            "$NetworkAttributes.NETWORK_TYPE" "ipv4"
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
@@ -119,8 +119,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           // netty swallows the exception, it doesn't make any sense to hard-code the message
           errorEventWithAnyMessage(SSLHandshakeException)
           attributes {
-            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
-            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
+            "$NetworkAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
@@ -163,8 +163,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
           }
         }
         span(2) {
@@ -172,10 +172,10 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
-            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
-            "$SemanticAttributes.SERVER_ADDRESS" uri.host
-            "$SemanticAttributes.SERVER_PORT" uri.port
+            "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
+            "$NetworkAttributes.NETWORK_TYPE" "ipv4"
+            "$ServerAttributes.SERVER_ADDRESS" uri.host
+            "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }
@@ -185,8 +185,8 @@ class Netty41ClientSslTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.NETWORK_TRANSPORT" "tcp"
-            "$SemanticAttributes.NETWORK_TYPE" "ipv4"
+            "$NetworkAttributes.NETWORK_TRANSPORT" "tcp"
+            "$NetworkAttributes.NETWORK_TYPE" "ipv4"
             "$NetworkAttributes.NETWORK_PEER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
           }

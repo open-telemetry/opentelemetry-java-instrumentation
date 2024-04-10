@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import spock.lang.IgnoreIf
 
 import java.time.Duration
@@ -37,7 +37,7 @@ class PlaySmokeTest extends SmokeTest {
     countSpansByName(traces, 'GET /welcome') == 1 // SERVER span
     countSpansByName(traces, '/welcome') == 1 // INTERNAL span
 
-    new TraceInspector(traces).countFilteredAttributes(SemanticAttributes.HTTP_ROUTE.key, "/welcome") == 1
+    new TraceInspector(traces).countFilteredAttributes(HttpAttributes.HTTP_ROUTE.key, "/welcome") == 1
 
     cleanup:
     stopTarget()

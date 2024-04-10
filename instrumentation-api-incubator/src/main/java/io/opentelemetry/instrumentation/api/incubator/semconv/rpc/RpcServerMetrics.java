@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * {@link OperationListener} which keeps track of <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/rpc.md#rpc-server">RPC
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server">RPC
  * server metrics</a>.
  */
 public final class RpcServerMetrics implements OperationListener {

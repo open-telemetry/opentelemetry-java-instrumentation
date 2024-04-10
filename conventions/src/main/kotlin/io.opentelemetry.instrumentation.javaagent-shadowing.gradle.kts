@@ -28,6 +28,7 @@ tasks.withType<ShadowJar>().configureEach {
     // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
     relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
     relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
+    relocate("io.opentelemetry.semconv.incubating", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv.incubating")
     relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
     relocate("io.opentelemetry.extension.incubator", "io.opentelemetry.javaagent.shaded.io.opentelemetry.extension.incubator")
   }

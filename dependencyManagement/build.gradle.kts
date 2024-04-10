@@ -8,12 +8,12 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.36.0"
+val otelSdkVersion = "1.37.0"
 val otelContribVersion = "1.34.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.20"
+val groovyVersion = "4.0.21"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -46,9 +46,11 @@ val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.12"
+val semConvVersion = "1.25.0-alpha"
 
 val CORE_DEPENDENCIES = listOf(
-  "io.opentelemetry.semconv:opentelemetry-semconv:1.23.1-alpha",
+  "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
+  "io.opentelemetry.semconv:opentelemetry-semconv-incubating:${semConvVersion}",
   "com.google.auto.service:auto-service:${autoServiceVersion}",
   "com.google.auto.service:auto-service-annotations:${autoServiceVersion}",
   "com.google.auto.value:auto-value:${autoValueVersion}",
@@ -92,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.16.0",
+  "commons-io:commons-io:2.16.1",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.1",
   "commons-validator:commons-validator:1.8.0",
@@ -100,7 +102,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.1.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.2.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.25.3",
   "org.awaitility:awaitility:4.2.1",

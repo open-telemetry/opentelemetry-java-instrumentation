@@ -31,7 +31,7 @@ final class ApplicationLongHistogramBuilder131 extends ApplicationLongHistogramB
 
   @Override
   public ExtendedLongHistogramBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
-    ((io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder) agentBuilder)
+    ((io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

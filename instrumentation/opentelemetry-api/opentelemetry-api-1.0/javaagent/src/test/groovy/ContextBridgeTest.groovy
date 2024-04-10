@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -62,8 +62,8 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
           name "test"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" runnable.class.name
-            "$SemanticAttributes.CODE_FUNCTION" "run"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" runnable.class.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "run"
             "cat" "yes"
           }
         }
@@ -125,8 +125,8 @@ class ContextBridgeTest extends AgentInstrumentationSpecification {
           name "test"
           hasNoParent()
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" runnable.class.name
-            "$SemanticAttributes.CODE_FUNCTION" "run"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" runnable.class.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "run"
             "cat" "yes"
           }
         }
