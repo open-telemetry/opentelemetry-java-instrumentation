@@ -35,6 +35,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
@@ -216,7 +217,7 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  void shouldSendTelemetry() throws InterruptedException {
+  void shouldSendTelemetry() {
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
 
     // Span
@@ -228,9 +229,7 @@ class OtelSpringStarterSmokeTest {
                         clientSpan
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
-                                a ->
-                                    assertThat(a.get(HttpAttributes.URL_FULL))
-                                        .endsWith("/ping")),
+                                a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
                     serverSpan ->
                         serverSpan
                             .hasKind(SpanKind.SERVER)
@@ -261,7 +260,7 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  void restTemplateClient() throws InterruptedException {
+  void restTemplateClient() {
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.REST_TEMPLATE, String.class);
 
     TracesAssert.assertThat(expectSpans(4))
@@ -273,7 +272,7 @@ class OtelSpringStarterSmokeTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 a ->
-                                    assertThat(a.get(SemanticAttributes.URL_FULL))
+                                    assertThat(a.get(UrlAttributes.URL_FULL))
                                         .endsWith("/rest-template")),
                     serverSpan ->
                         serverSpan
@@ -283,9 +282,7 @@ class OtelSpringStarterSmokeTest {
                         nestedClientSpan
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
-                                a ->
-                                    assertThat(a.get(SemanticAttributes.URL_FULL))
-                                        .endsWith("/ping")),
+                                a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
                     nestedServerSpan ->
                         nestedServerSpan
                             .hasKind(SpanKind.SERVER)
