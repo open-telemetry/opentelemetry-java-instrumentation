@@ -34,12 +34,6 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Override
   @Nullable
-  public String getConnectionString(GeodeRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getStatement(GeodeRequest request) {
     // sanitized statement is cached
     return sanitizer.sanitize(request.getQuery()).getFullStatement();

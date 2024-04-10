@@ -887,36 +887,13 @@ public enum JdbcConnectionUrlParser {
     try {
       if (typeParsers.containsKey(type)) {
         // Delegate to specific parser
-        return withUrl(typeParsers.get(type).doParse(jdbcUrl, parsedProps), type);
+        return typeParsers.get(type).doParse(jdbcUrl, parsedProps).build();
       }
-      return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
+      return GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps).build();
     } catch (RuntimeException e) {
       logger.log(FINE, "Error parsing URL", e);
       return parsedProps.build();
     }
-  }
-
-  private static DbInfo withUrl(DbInfo.Builder builder, String type) {
-    DbInfo info = builder.build();
-    StringBuilder url = new StringBuilder();
-    url.append(type);
-    url.append(':');
-    String subtype = info.getSubtype();
-    if (subtype != null) {
-      url.append(subtype);
-      url.append(':');
-    }
-    String host = info.getHost();
-    if (host != null) {
-      url.append("//");
-      url.append(host);
-      Integer port = info.getPort();
-      if (port != null) {
-        url.append(':');
-        url.append(port);
-      }
-    }
-    return builder.shortUrl(url.toString()).build();
   }
 
   // Source: https://stackoverflow.com/a/13592567

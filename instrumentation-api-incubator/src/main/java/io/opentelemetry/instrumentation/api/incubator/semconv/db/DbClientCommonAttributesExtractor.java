@@ -25,16 +25,11 @@ abstract class DbClientCommonAttributesExtractor<
     this.getter = getter;
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, DbIncubatingAttributes.DB_SYSTEM, getter.getSystem(request));
     internalSet(attributes, DbIncubatingAttributes.DB_USER, getter.getUser(request));
     internalSet(attributes, DbIncubatingAttributes.DB_NAME, getter.getName(request));
-    internalSet(
-        attributes,
-        DbIncubatingAttributes.DB_CONNECTION_STRING,
-        getter.getConnectionString(request));
   }
 
   @Override

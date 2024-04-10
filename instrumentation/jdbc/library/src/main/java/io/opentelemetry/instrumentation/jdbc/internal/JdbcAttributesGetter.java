@@ -36,12 +36,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getConnectionString(DbRequest request) {
-    return request.getDbInfo().getShortUrl();
-  }
-
-  @Nullable
-  @Override
   public String getRawStatement(DbRequest request) {
     return request.getStatement();
   }

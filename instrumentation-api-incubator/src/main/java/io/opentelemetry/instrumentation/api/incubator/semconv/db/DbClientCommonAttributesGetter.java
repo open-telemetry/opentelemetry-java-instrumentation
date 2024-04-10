@@ -19,6 +19,10 @@ public interface DbClientCommonAttributesGetter<REQUEST> {
   @Nullable
   String getName(REQUEST request);
 
+  // to be removed in the next release, use `server.address` and `server.port` instead
   @Nullable
-  String getConnectionString(REQUEST request);
+  @Deprecated
+  default String getConnectionString(REQUEST request) {
+    return null;
+  }
 }

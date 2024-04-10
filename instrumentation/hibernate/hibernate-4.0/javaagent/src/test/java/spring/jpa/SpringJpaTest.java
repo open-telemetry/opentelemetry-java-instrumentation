@@ -31,7 +31,6 @@ class SpringJpaTest {
       new AnnotationConfigApplicationContext(PersistenceConfig.class);
   CustomerRepository repo = context.getBean(CustomerRepository.class);
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testCrud() {
     String version = Version.getVersionString();
@@ -69,7 +68,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val ->
@@ -124,7 +122,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val ->
@@ -170,7 +167,6 @@ class SpringJpaTest {
                             equalTo(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 "call next value for hibernate_sequence"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
@@ -191,7 +187,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val ->
@@ -238,7 +233,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val ->
@@ -266,7 +260,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 "update Customer set firstName=?, lastName=? where id=?"),
@@ -304,7 +297,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val ->
@@ -342,7 +334,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val ->
@@ -374,7 +365,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 "delete from Customer where id=?"),
@@ -407,7 +397,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val ->
@@ -447,7 +436,6 @@ class SpringJpaTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 "delete from Customer where id=?"),
