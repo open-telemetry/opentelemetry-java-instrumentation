@@ -42,6 +42,7 @@ class RpcClientMetricsTest {
 
     Attributes responseAttributes1 =
         Attributes.builder()
+            .putAll(requestAttributes)
             .put(ServerAttributes.SERVER_ADDRESS, "example.com")
             .put(ServerAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
