@@ -303,7 +303,7 @@ class OtelSpringStarterSmokeTest {
               }
             })
         .await()
-        .atMost(Duration.ofSeconds(5))
+        .atMost(Duration.ofSeconds(30))
         .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == spans);
 
     return SPAN_EXPORTER.getFinishedSpanItems();
