@@ -18,6 +18,10 @@
   ([#11086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11086))
 - Support `service.instance.id` in spring starter
   ([#11071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11071))
+- Add library instrumentation for RestTemplateBuilder
+  ([#11054](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11054))
+- Add cloud resource providers in spring starter
+  ([#11014](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11014))
 
 ### 🛠️ Bug fixes
 
