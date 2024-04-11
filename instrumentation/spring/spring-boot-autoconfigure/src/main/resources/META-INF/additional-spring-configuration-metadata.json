@@ -525,8 +525,8 @@
       "name": "otel.logs.exporter",
       "values": [
         {
-          "value": "logging",
-          "description": "The logging exporter prints exported logs to stdout. It's mainly used for testing and debugging."
+          "value": "console",
+          "description": "The console exporter prints exported logs to stdout. It's mainly used for testing and debugging."
         },
         {
           "value": "none",
@@ -559,8 +559,8 @@
       "name": "otel.metrics.exporter",
       "values": [
         {
-          "value": "logging",
-          "description": "The logging exporter prints exported metrics to stdout. It's mainly used for testing and debugging."
+          "value": "console",
+          "description": "The console exporter prints exported metrics to stdout. It's mainly used for testing and debugging."
         },
         {
           "value": "none",
@@ -609,8 +609,8 @@
       "name": "otel.traces.exporter",
       "values": [
         {
-          "value": "logging",
-          "description": "The logging exporter prints the name of the span along with its attributes to stdout. It's mainly used for testing and debugging."
+          "value": "console",
+          "description": "The console exporter prints the name of the span along with its attributes to stdout. It's mainly used for testing and debugging."
         },
         {
           "value": "none",
