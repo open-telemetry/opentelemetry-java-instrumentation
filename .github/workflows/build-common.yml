@@ -262,6 +262,10 @@ jobs:
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
 
+      - name: Build scan
+        if: ${{ hashFiles('build-scan.txt') != '' }}
+        run: cat build-scan.txt
+
       - name: Upload deadlock detector artifacts if any
         if: failure()
         uses: actions/upload-artifact@v4

@@ -48,6 +48,12 @@ if (useScansGradleCom) {
       capture {
         isTaskInputFiles = true
       }
+
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
+        }
+      }
     }
   }
 } else {
@@ -68,6 +74,12 @@ if (useScansGradleCom) {
       gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
       gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
         value("Smoke test suite", it)
+      }
+
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
+        }
       }
     }
   }
