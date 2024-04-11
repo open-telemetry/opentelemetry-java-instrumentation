@@ -21,14 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaTest {
 
   protected abstract boolean isLibraryInstrumentationTest();
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldCreateSpansForSingleRecordProcess() {
     testing()
@@ -63,8 +62,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     stringAssert -> stringAssert.startsWith("producer")),
                                 satisfies(
                                     MessagingIncubatingAttributes
-                                        .MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                    AbstractLongAssert::isNotNegative),
+                                        .MESSAGING_DESTINATION_PARTITION_ID,
+                                    AbstractStringAssert::isNotEmpty),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                     AbstractLongAssert::isNotNegative),
@@ -87,8 +86,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     AbstractLongAssert::isNotNegative),
                                 satisfies(
                                     MessagingIncubatingAttributes
-                                        .MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                    AbstractLongAssert::isNotNegative),
+                                        .MESSAGING_DESTINATION_PARTITION_ID,
+                                    AbstractStringAssert::isNotEmpty),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                     AbstractLongAssert::isNotNegative),
@@ -104,8 +103,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldHandleFailureInKafkaListener() {
     testing()
@@ -128,8 +125,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                 AbstractLongAssert::isNotNegative),
             satisfies(
-                MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                AbstractLongAssert::isNotNegative),
+                MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                AbstractStringAssert::isNotEmpty),
             satisfies(
                 MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                 AbstractLongAssert::isNotNegative),
@@ -161,8 +158,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     stringAssert -> stringAssert.startsWith("producer")),
                                 satisfies(
                                     MessagingIncubatingAttributes
-                                        .MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                    AbstractLongAssert::isNotNegative),
+                                        .MESSAGING_DESTINATION_PARTITION_ID,
+                                    AbstractStringAssert::isNotEmpty),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                     AbstractLongAssert::isNotNegative),
@@ -194,8 +191,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(6))));
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldCreateSpansForBatchReceiveAndProcess() throws InterruptedException {
     Map<String, String> batchMessages = new HashMap<>();
@@ -226,9 +221,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
-                                  MessagingIncubatingAttributes
-                                      .MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                  AbstractLongAssert::isNotNegative),
+                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                  AbstractStringAssert::isNotEmpty),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                   AbstractLongAssert::isNotNegative),
@@ -248,9 +242,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
-                                  MessagingIncubatingAttributes
-                                      .MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                  AbstractLongAssert::isNotNegative),
+                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                  AbstractStringAssert::isNotEmpty),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                   AbstractLongAssert::isNotNegative),
@@ -290,8 +283,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Test
   void shouldHandleFailureInKafkaBatchListener() {
     testing()
@@ -339,9 +330,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
-                                  MessagingIncubatingAttributes
-                                      .MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                  AbstractLongAssert::isNotNegative),
+                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                  AbstractStringAssert::isNotEmpty),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                   AbstractLongAssert::isNotNegative),

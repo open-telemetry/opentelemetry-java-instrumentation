@@ -16,8 +16,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 final class KafkaConsumerAttributesExtractor
     implements AttributesExtractor<KafkaProcessRequest, Void> {
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaProcessRequest request) {
@@ -25,8 +23,8 @@ final class KafkaConsumerAttributesExtractor
     ConsumerRecord<?, ?> record = request.getRecord();
 
     attributes.put(
-        MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-        (long) record.partition());
+        MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+        String.valueOf(record.partition()));
     attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
 
     Object key = record.key();

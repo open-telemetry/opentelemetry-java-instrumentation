@@ -35,8 +35,6 @@ final class KafkaProducerAttributesExtractor
     return !(keyClass.isArray() || keyClass == ByteBuffer.class);
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -47,8 +45,8 @@ final class KafkaProducerAttributesExtractor
 
     if (recordMetadata != null) {
       attributes.put(
-          MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-          recordMetadata.partition());
+          MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+          String.valueOf(recordMetadata.partition()));
       attributes.put(
           MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
     }

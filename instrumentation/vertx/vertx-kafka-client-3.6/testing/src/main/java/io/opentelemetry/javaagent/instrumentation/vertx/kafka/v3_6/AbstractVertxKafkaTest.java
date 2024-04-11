@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -194,8 +195,6 @@ public abstract class AbstractVertxKafkaTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> sendAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
@@ -208,8 +207,8 @@ public abstract class AbstractVertxKafkaTest {
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
+                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                    AbstractStringAssert::isNotEmpty),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative)));
@@ -249,8 +248,6 @@ public abstract class AbstractVertxKafkaTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> processAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
@@ -263,8 +260,8 @@ public abstract class AbstractVertxKafkaTest {
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
+                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                    AbstractStringAssert::isNotEmpty),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative)));
