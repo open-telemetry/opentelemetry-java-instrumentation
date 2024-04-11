@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.3.0 (2024-04-11)
+
 ### 📈 Enhancements
 
 - Handle async requests in spring mvc library instrumentation
