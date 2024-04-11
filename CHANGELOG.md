@@ -14,6 +14,10 @@
   ([#11000](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11000))
 - Pulsar: use span links when receive telemetry is enabled
   ([#10650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10650))
+- Rename `messaging.kafka.destination.partition` to `messaging.destination.partition.id`
+  ([#11086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11086))
+- Support `service.instance.id` in spring starter
+  ([#11071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11071))
 
 ### 🛠️ Bug fixes
 
