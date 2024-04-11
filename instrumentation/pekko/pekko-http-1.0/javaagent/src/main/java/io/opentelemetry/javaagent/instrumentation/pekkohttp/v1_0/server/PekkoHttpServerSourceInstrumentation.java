@@ -31,7 +31,7 @@ public class PekkoHttpServerSourceInstrumentation implements TypeInstrumentation
   }
 
   @SuppressWarnings("unused")
-  public static class AkkaBindAndHandleAdvice {
+  public static class PekkoBindAndHandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
