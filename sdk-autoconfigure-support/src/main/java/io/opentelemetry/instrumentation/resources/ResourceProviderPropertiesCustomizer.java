@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-@AutoService(AutoConfigurationCustomizerProvider.class)
 public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCustomizerProvider {
 
   private static final Map<String, String> DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS = new HashMap<>();
