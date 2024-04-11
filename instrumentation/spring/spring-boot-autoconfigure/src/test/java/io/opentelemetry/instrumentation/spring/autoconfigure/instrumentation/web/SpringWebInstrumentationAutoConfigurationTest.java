@@ -23,7 +23,7 @@ class SpringWebInstrumentationAutoConfigurationTest {
               AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class));
 
   /**
-   * Tests the case that users create a {@link RestTemplate} bean themselves.
+   * Tests that users create {@link RestTemplate} bean is instrumented.
    *
    * <pre>{@code
    * @Bean public RestTemplate restTemplate() {
