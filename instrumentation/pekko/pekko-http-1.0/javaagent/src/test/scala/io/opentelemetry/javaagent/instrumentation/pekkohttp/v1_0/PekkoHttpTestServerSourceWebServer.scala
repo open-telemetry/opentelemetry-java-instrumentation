@@ -95,8 +95,14 @@ object PekkoHttpTestServerSourceWebServer {
   def start(port: Int): Unit = synchronized {
     if (null == binding) {
       import scala.concurrent.duration._
-      binding =
-        Await.result(Http().bind("localhost", port).map(_.handleWith(route)).to(Sink.ignore).run(), 10.seconds)
+      binding = Await.result(
+        Http()
+          .bind("localhost", port)
+          .map(_.handleWith(route))
+          .to(Sink.ignore)
+          .run(),
+        10.seconds
+      )
     }
   }
 
