@@ -48,7 +48,6 @@ import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.awaitility.core.ConditionEvaluationLogger;
 import org.awaitility.core.EvaluatedCondition;
 import org.awaitility.core.TimeoutEvent;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -84,11 +83,11 @@ import org.springframework.core.env.Environment;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class OtelSpringStarterSmokeTest {
 
-  public static final InMemoryMetricExporter METRIC_EXPORTER =
+  private static final InMemoryMetricExporter METRIC_EXPORTER =
       InMemoryMetricExporter.create(AggregationTemporality.DELTA);
   private static final InMemoryLogRecordExporter LOG_RECORD_EXPORTER =
       InMemoryLogRecordExporter.create();
-  public static final InMemorySpanExporter SPAN_EXPORTER = InMemorySpanExporter.create();
+  private static final InMemorySpanExporter SPAN_EXPORTER = InMemorySpanExporter.create();
   private static final Logger logger = LoggerFactory.getLogger(OtelSpringStarterSmokeTest.class);
 
   @Autowired private TestRestTemplate testRestTemplate;
@@ -171,12 +170,7 @@ class OtelSpringStarterSmokeTest {
     }
   }
 
-  @AfterEach
-  void tearDown() {
-    reset();
-  }
-
-  private static void reset() {
+  private static void resetExporters() {
     SPAN_EXPORTER.reset();
     METRIC_EXPORTER.reset();
     LOG_RECORD_EXPORTER.reset();
@@ -266,7 +260,7 @@ class OtelSpringStarterSmokeTest {
   @Test
   @org.junit.jupiter.api.Order(2)
   void restTemplateClient() {
-    reset(); // ignore the telemetry from application startup
+    resetExporters(); // ignore the telemetry from application startup
 
     testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.REST_TEMPLATE, String.class);
 

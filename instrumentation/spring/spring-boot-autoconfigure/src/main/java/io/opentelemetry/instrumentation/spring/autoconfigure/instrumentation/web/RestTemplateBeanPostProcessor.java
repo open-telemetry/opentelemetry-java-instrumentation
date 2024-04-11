@@ -24,7 +24,7 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
       return bean;
     }
 
-    return RestTemplateInterceptor.addIfNotPresent(
+    return RestTemplateInstrumentation.addIfNotPresent(
         (RestTemplate) bean, openTelemetryProvider.getObject());
   }
 }

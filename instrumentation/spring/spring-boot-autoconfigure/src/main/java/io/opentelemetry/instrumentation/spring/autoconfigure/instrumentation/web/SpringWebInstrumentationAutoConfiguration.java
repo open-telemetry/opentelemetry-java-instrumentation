@@ -41,6 +41,6 @@ public class SpringWebInstrumentationAutoConfiguration {
   static RestTemplateCustomizer otelRestTemplateCustomizer(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return restTemplate ->
-        RestTemplateInterceptor.addIfNotPresent(restTemplate, openTelemetryProvider.getObject());
+        RestTemplateInstrumentation.addIfNotPresent(restTemplate, openTelemetryProvider.getObject());
   }
 }

@@ -12,9 +12,9 @@ import java.util.List;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
 
-class RestTemplateInterceptor {
+class RestTemplateInstrumentation {
 
-  private RestTemplateInterceptor() {}
+  private RestTemplateInstrumentation() {}
 
   @CanIgnoreReturnValue
   static RestTemplate addIfNotPresent(RestTemplate restTemplate, OpenTelemetry openTelemetry) {
