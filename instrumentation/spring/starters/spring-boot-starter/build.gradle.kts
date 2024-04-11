@@ -21,4 +21,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-exporter-otlp")
   api("io.opentelemetry:opentelemetry-sdk")
   api(project(":instrumentation-annotations"))
+
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
 }

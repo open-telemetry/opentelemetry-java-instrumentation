@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.instrumentation.resources;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-@AutoService(AutoConfigurationCustomizerProvider.class)
 public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCustomizerProvider {
 
   private static final Map<String, String> DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS = new HashMap<>();
@@ -38,7 +36,7 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
         "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider", "gcp");
     // for testing
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
-        "io.opentelemetry.javaagent.tooling.config.ResourceProviderPropertiesCustomizerTest$Provider",
+        "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider",
         "test");
   }
 
