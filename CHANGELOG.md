@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Handle async requests in spring mvc library instrumentation
+  ([#10868](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10868))
+- Support statement sanitizer enabled flag in lettuce 5.1 instrumentation
+  ([#10922](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10922))
+- Remove AWS Active Tracing span linking
+  ([#10930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10930))
+- Make spring boot honor the standard environment variables for maps
+  ([#11000](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11000))
+- Pulsar: use span links when receive telemetry is enabled
+  ([#10650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10650))
+- Rename `messaging.kafka.destination.partition` to `messaging.destination.partition.id`
+  ([#11086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11086))
+- Support `service.instance.id` in spring starter
+  ([#11071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11071))
+- Add library instrumentation for RestTemplateBuilder
+  ([#11054](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11054))
+- Add cloud resource providers in spring starter
+  ([#11014](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11014))
+
+### 🛠️ Bug fixes
+
+- Fix disabling virtual thread context propagation
+  ([#10881](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10881))
+- Fix virtual thread instrumentation for jdk 21 ea versions
+  ([#10887](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10887))
+- Fix spring kafka interceptor wrappers not delegating some methods
+  ([#10935](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10935))
+- AWS Lambda Runtime legacy internal handlers need to be ignored from being instrumented and so traced …
+  ([#10942](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10942))
+- Metro: ignore UnsupportedOperationException when updating span name
+  ([#10996](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10996))
+- Fix jedis plugin for 2.7.2
+  ([#10982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10982))
+- Fix idle in druid instrumentation
+  ([#11079](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11079))
+
 ## Version 1.33.1 (2024-03-20)
 
 ### 📈 Enhancements
