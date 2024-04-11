@@ -52,8 +52,6 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     return topic != null ? topic : super.getDestination(exchange, endpoint);
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   @Override
   public void pre(
       AttributesBuilder attributes,
@@ -67,7 +65,7 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
     if (partition != null) {
       attributes.put(
-          MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION, partition);
+          MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID, partition.toString());
     }
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

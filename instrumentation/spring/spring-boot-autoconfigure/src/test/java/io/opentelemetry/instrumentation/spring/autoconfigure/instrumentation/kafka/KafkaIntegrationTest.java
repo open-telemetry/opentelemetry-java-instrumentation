@@ -16,6 +16,7 @@ import java.time.Duration;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +85,6 @@ class KafkaIntegrationTest {
   // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
   // ops.send, although with different return type.
   @SuppressWarnings({"unchecked", "deprecation"})
-  // TODO  MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   private static void runShouldInstrumentProducerAndConsumer(
       ConfigurableApplicationContext applicationContext) {
     KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
@@ -117,8 +117,8 @@ class KafkaIntegrationTest {
                                 MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                AbstractLongAssert::isNotNegative),
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                 AbstractLongAssert::isNotNegative),
@@ -138,8 +138,8 @@ class KafkaIntegrationTest {
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                                AbstractLongAssert::isNotNegative),
+                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                 AbstractLongAssert::isNotNegative),

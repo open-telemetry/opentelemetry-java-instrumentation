@@ -24,7 +24,6 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 
 class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
-  @SuppressWarnings("deprecation") // TODO MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   def "test kafka produce and consume with streams in-between"() {
     setup:
     def config = new Properties()
@@ -102,7 +101,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("producer") }
-            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
           }
@@ -139,7 +138,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
-            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             "kafka.record.queue_time_ms" { it >= 0 }
@@ -159,7 +158,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("producer") }
-            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
           }
         }
@@ -195,7 +194,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
-            "$MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION" { it >= 0 }
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY" "10"
             if (Boolean.getBoolean("testLatestDeps")) {

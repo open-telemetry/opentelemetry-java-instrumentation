@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 
 class WrapperTest extends AbstractWrapperTest {
 
@@ -74,8 +75,6 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(1))));
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -87,8 +86,8 @@ class WrapperTest extends AbstractWrapperTest {
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
+                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                    AbstractStringAssert::isNotEmpty),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative)));
@@ -101,8 +100,6 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // TODO
-  // MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION deprecation
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -114,8 +111,8 @@ class WrapperTest extends AbstractWrapperTest {
                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     greeting.getBytes(StandardCharsets.UTF_8).length),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
+                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                    AbstractStringAssert::isNotEmpty),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                     AbstractLongAssert::isNotNegative),
