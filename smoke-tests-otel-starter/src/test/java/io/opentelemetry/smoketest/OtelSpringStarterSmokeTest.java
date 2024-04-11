@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.with;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -35,6 +35,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
@@ -44,7 +45,14 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
+import org.awaitility.core.ConditionEvaluationLogger;
+import org.awaitility.core.EvaluatedCondition;
+import org.awaitility.core.TimeoutEvent;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -72,13 +80,15 @@ import org.springframework.core.env.Environment;
       "otel.metrics.exporter=memory",
       "otel.logs.exporter=memory"
     })
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class OtelSpringStarterSmokeTest {
 
-  public static final InMemoryMetricExporter METRIC_EXPORTER =
+  private static final InMemoryMetricExporter METRIC_EXPORTER =
       InMemoryMetricExporter.create(AggregationTemporality.DELTA);
   private static final InMemoryLogRecordExporter LOG_RECORD_EXPORTER =
       InMemoryLogRecordExporter.create();
-  public static final InMemorySpanExporter SPAN_EXPORTER = InMemorySpanExporter.create();
+  private static final InMemorySpanExporter SPAN_EXPORTER = InMemorySpanExporter.create();
+  private static final Logger logger = LoggerFactory.getLogger(OtelSpringStarterSmokeTest.class);
 
   @Autowired private TestRestTemplate testRestTemplate;
 
@@ -160,7 +170,14 @@ class OtelSpringStarterSmokeTest {
     }
   }
 
+  private static void resetExporters() {
+    SPAN_EXPORTER.reset();
+    METRIC_EXPORTER.reset();
+    LOG_RECORD_EXPORTER.reset();
+  }
+
   @Test
+  @org.junit.jupiter.api.Order(10)
   void propertyConversion() {
     ConfigProperties configProperties =
         SpringConfigProperties.create(
@@ -178,18 +195,12 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
+  @org.junit.jupiter.api.Order(1)
   void shouldSendTelemetry() {
-
-    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.URL, String.class);
-
-    await()
-        .atMost(Duration.ofSeconds(1))
-        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == 2);
-
-    List<SpanData> exportedSpans = SPAN_EXPORTER.getFinishedSpanItems();
+    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
 
     // Span
-    TracesAssert.assertThat(exportedSpans)
+    TracesAssert.assertThat(expectSpans(3))
         .hasTracesSatisfyingExactly(
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
@@ -201,8 +212,13 @@ class OtelSpringStarterSmokeTest {
                                 "create table test_table (id bigint not null, primary key (id))")),
             traceAssert ->
                 traceAssert.hasSpansSatisfyingExactly(
-                    spanDataAssert ->
-                        spanDataAssert
+                    clientSpan ->
+                        clientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
+                    serverSpan ->
+                        serverSpan
                             .hasKind(SpanKind.SERVER)
                             .hasResourceSatisfying(
                                 r ->
@@ -230,8 +246,7 @@ class OtelSpringStarterSmokeTest {
             });
 
     // Log
-    List<LogRecordData> logs = LOG_RECORD_EXPORTER.getFinishedLogRecordItems();
-    LogRecordData firstLog = logs.get(0);
+    LogRecordData firstLog = LOG_RECORD_EXPORTER.getFinishedLogRecordItems().get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
         .startsWith("Starting ")
@@ -240,5 +255,57 @@ class OtelSpringStarterSmokeTest {
         .as("Should capture code attributes")
         .containsEntry(
             CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+  }
+
+  @Test
+  @org.junit.jupiter.api.Order(2)
+  void restTemplateClient() {
+    resetExporters(); // ignore the telemetry from application startup
+
+    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.REST_TEMPLATE, String.class);
+
+    TracesAssert.assertThat(expectSpans(4))
+        .hasTracesSatisfyingExactly(
+            traceAssert ->
+                traceAssert.hasSpansSatisfyingExactly(
+                    clientSpan ->
+                        clientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(UrlAttributes.URL_FULL))
+                                        .endsWith("/rest-template")),
+                    serverSpan ->
+                        serverSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/rest-template"),
+                    nestedClientSpan ->
+                        nestedClientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
+                    nestedServerSpan ->
+                        nestedServerSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+  }
+
+  private static List<SpanData> expectSpans(int spans) {
+    with()
+        .conditionEvaluationListener(
+            new ConditionEvaluationLogger() {
+              @Override
+              public void conditionEvaluated(EvaluatedCondition<Object> condition) {}
+
+              @Override
+              public void onTimeout(TimeoutEvent timeoutEvent) {
+                logger.info("Spans: {}", SPAN_EXPORTER.getFinishedSpanItems());
+              }
+            })
+        .await()
+        .atMost(Duration.ofSeconds(30))
+        .until(() -> SPAN_EXPORTER.getFinishedSpanItems().size() == spans);
+
+    return SPAN_EXPORTER.getFinishedSpanItems();
   }
 }
