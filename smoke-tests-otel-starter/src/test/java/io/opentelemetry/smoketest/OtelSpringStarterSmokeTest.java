@@ -27,6 +27,7 @@ import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
@@ -36,11 +37,13 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -207,7 +210,11 @@ class OtelSpringStarterSmokeTest {
                                             AttributeKey.booleanKey("keyFromResourceCustomizer"),
                                             true)
                                         .hasAttribute(
-                                            AttributeKey.stringKey("attributeFromYaml"), "true"))
+                                            AttributeKey.stringKey("attributeFromYaml"), "true")
+                                        .hasAttribute(
+                                            OpenTelemetryAssertions.satisfies(
+                                                ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
+                                                AbstractCharSequenceAssert::isNotBlank)))
                             .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
                             .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
                             .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
