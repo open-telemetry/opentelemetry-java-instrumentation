@@ -79,10 +79,10 @@ See [Understanding Muzzle](docs/contributing/muzzle.md)
 ## Troubleshooting PR build failures
 
 The build logs are very long and there is a lot of parallelization, so the logs can be hard to
-decipher, but if you scroll to the bottom you should see something like:
+decipher, but if you expand the "Build scan" step, you should see something like:
 
 ```
-Publishing build scan...
+Run cat build-scan.txt
 https://gradle.com/s/ila4qwp5lcf5s
 ```
 
