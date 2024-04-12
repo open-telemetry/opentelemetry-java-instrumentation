@@ -6,9 +6,12 @@ plugins {
 base.archivesName.set("opentelemetry-spring-boot-3")
 group = "io.opentelemetry.instrumentation"
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
   val springBootVersion = "3.2.4"
-//  implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
   implementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
