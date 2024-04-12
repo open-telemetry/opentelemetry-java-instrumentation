@@ -29,6 +29,12 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
     options.setHasResponseCustomizer(
         endpoint -> ServerEndpoint.NOT_FOUND != endpoint && ServerEndpoint.EXCEPTION != endpoint);
     options.setTestHttpPipelining(false);
-    options.setResponseCodeOnNonStandardHttpMethod(405);
+    // span for non-standard request is created by netty instrumentation when not running latest
+    // dep tests
+    if (Boolean.getBoolean("testLatestDeps")) {
+      options.disableTestNonStandardHttpMethod();
+    } else {
+      options.setResponseCodeOnNonStandardHttpMethod(405);
+    }
   }
 }
