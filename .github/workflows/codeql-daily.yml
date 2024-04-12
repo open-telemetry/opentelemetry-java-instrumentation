@@ -37,7 +37,7 @@ jobs:
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
           tools: latest
 
-      - uses: gradle/actions/setup-gradle@d0f2f0387e6ef0dce1fca38d0482617633e9d63a # v3.3.0
+      - uses: gradle/actions/setup-gradle@6cec5d49d4d6d4bb982fbed7047db31ea6d38f11 # v3.3.0
         with:
           # skipping build cache is needed so that all modules will be analyzed
           arguments: assemble -x javadoc --no-build-cache --no-daemon
