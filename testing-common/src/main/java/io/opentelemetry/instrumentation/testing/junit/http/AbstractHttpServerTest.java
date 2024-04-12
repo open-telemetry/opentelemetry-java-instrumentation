@@ -651,9 +651,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                     span.hasParent(trace.getSpan(finalParentIndex));
                   });
               if (options.hasRenderSpan.test(endpoint)) {
-                spanAssertions.add(
-                    span -> assertRenderSpan(span, method, endpoint)
-                );
+                spanAssertions.add(span -> assertRenderSpan(span, method, endpoint));
               }
             }
 
