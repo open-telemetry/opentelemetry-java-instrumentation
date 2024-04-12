@@ -20,7 +20,7 @@ muzzle {
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.13")
-    versions.set("[2.5.23,2.6)") //Scala 2.13 support was added in the middle of the 2.5 release
+    versions.set("[2.5.23,2.6)") // Scala 2.13 support was added in the middle of the 2.5 release
     assertInverse.set(true)
   }
 }
