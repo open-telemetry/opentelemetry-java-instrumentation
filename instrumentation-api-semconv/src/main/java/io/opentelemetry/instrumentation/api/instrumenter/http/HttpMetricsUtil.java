@@ -10,7 +10,6 @@ import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import java.util.List;
 
 final class HttpMetricsUtil {
@@ -24,10 +23,7 @@ final class HttpMetricsUtil {
     DoubleHistogramBuilder durationBuilder =
         meter.histogramBuilder(name).setUnit("s").setDescription(description);
     // don't set custom buckets if milliseconds are still used
-    if (durationBuilder instanceof ExtendedDoubleHistogramBuilder) {
-      ((ExtendedDoubleHistogramBuilder) durationBuilder)
-          .setExplicitBucketBoundariesAdvice(DURATION_SECONDS_BUCKETS);
-    }
+    durationBuilder.setExplicitBucketBoundariesAdvice(DURATION_SECONDS_BUCKETS);
     return durationBuilder;
   }
 

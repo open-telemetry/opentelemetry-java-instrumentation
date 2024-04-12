@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.api.instrumenter.http;
 
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.http.internal.HttpAttributes;
 import io.opentelemetry.semconv.SemanticAttributes;
 
