@@ -38,12 +38,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   }
 
   @Override
-  @Nullable
-  public String getConnectionString(RedisCommand<?, ?, ?> request) {
-    return null;
-  }
-
-  @Override
   public String getStatement(RedisCommand<?, ?, ?> request) {
     String command = LettuceInstrumentationUtil.getCommandName(request);
     List<String> args =

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
-import com.mongodb.ServerAddress;
-import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -62,24 +60,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   public String getName(CommandStartedEvent event) {
     return event.getDatabaseName();
-  }
-
-  @Override
-  @Nullable
-  public String getConnectionString(CommandStartedEvent event) {
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    if (connectionDescription != null) {
-      ServerAddress sa = connectionDescription.getServerAddress();
-      if (sa != null) {
-        // https://docs.mongodb.com/manual/reference/connection-string/
-        String host = sa.getHost();
-        int port = sa.getPort();
-        if (host != null && port != 0) {
-          return "mongodb://" + host + ":" + port;
-        }
-      }
-    }
-    return null;
   }
 
   @Override

@@ -85,10 +85,6 @@ class SlickTest {
                     ),
                     equalTo(DbIncubatingAttributes.DB_NAME, Db),
                     equalTo(DbIncubatingAttributes.DB_USER, Username),
-                    equalTo(
-                      DbIncubatingAttributes.DB_CONNECTION_STRING,
-                      "h2:mem:"
-                    ),
                     equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT ?"),
                     equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT")
                   )

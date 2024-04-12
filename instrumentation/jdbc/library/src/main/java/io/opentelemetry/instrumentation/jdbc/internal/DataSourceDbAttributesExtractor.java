@@ -21,7 +21,6 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, DataSource dataSource) {}
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -35,7 +34,6 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
     internalSet(attributes, DbIncubatingAttributes.DB_SYSTEM, dbInfo.getSystem());
     internalSet(attributes, DbIncubatingAttributes.DB_USER, dbInfo.getUser());
     internalSet(attributes, DbIncubatingAttributes.DB_NAME, getName(dbInfo));
-    internalSet(attributes, DbIncubatingAttributes.DB_CONNECTION_STRING, dbInfo.getShortUrl());
   }
 
   private static String getName(DbInfo dbInfo) {

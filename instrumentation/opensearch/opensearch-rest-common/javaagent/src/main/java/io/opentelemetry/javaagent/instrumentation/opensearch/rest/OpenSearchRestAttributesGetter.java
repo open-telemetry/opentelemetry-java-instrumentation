@@ -31,12 +31,6 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   @Nullable
-  public String getConnectionString(OpenSearchRestRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getStatement(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }

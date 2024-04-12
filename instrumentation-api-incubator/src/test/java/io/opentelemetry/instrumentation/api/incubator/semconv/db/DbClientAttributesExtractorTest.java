@@ -37,11 +37,6 @@ class DbClientAttributesExtractorTest {
     }
 
     @Override
-    public String getConnectionString(Map<String, String> map) {
-      return map.get("db.connection_string");
-    }
-
-    @Override
     public String getStatement(Map<String, String> map) {
       return map.get("db.statement");
     }
@@ -52,7 +47,6 @@ class DbClientAttributesExtractorTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void shouldExtractAllAvailableAttributes() {
     // given
@@ -60,7 +54,6 @@ class DbClientAttributesExtractorTest {
     request.put("db.system", "myDb");
     request.put("db.user", "username");
     request.put("db.name", "potatoes");
-    request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.statement", "SELECT * FROM potato");
     request.put("db.operation", "SELECT");
 
@@ -82,7 +75,6 @@ class DbClientAttributesExtractorTest {
             entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
             entry(DbIncubatingAttributes.DB_USER, "username"),
             entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
-            entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
             entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
             entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
 

@@ -66,7 +66,6 @@ public abstract class AbstractSpringJpaTest<
                 span -> span.hasName("toString test").hasTotalAttributeCount(0)));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   static void assertHibernate4Trace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
@@ -83,14 +82,12 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                     equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                     equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                    equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                     satisfies(
                         DbIncubatingAttributes.DB_STATEMENT, val -> val.startsWith("insert ")),
                     equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
                     equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   static void assertHibernateTrace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
@@ -106,7 +103,6 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                     equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                     equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                    equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                     satisfies(
                         DbIncubatingAttributes.DB_STATEMENT,
                         val -> val.startsWith("call next value for ")),
@@ -119,14 +115,12 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                     equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                     equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                    equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                     satisfies(
                         DbIncubatingAttributes.DB_STATEMENT, val -> val.startsWith("insert ")),
                     equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
                     equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testCrud() {
     boolean isHibernate4 = Version.getVersionString().startsWith("4.");
@@ -155,7 +149,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("select ")),
@@ -193,7 +186,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("select ")),
@@ -207,7 +199,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("update ")),
@@ -233,7 +224,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("select ")),
@@ -259,7 +249,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("select ")),
@@ -273,7 +262,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("delete ")),
@@ -281,7 +269,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testCustomRepositoryMethod() {
     REPOSITORY repo = repository();
@@ -308,7 +295,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("select ")),
@@ -316,7 +302,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testFailedRepositoryMethod() {
     // given
@@ -355,7 +340,6 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 val -> val.startsWith("select ")),

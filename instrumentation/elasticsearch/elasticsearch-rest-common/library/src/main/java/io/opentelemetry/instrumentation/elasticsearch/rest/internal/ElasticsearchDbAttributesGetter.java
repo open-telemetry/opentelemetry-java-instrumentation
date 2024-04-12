@@ -53,12 +53,6 @@ final class ElasticsearchDbAttributesGetter
 
   @Override
   @Nullable
-  public String getConnectionString(ElasticsearchRestRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getStatement(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
     HttpEntity httpEntity = request.getHttpEntity();
