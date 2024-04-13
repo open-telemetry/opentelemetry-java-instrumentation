@@ -32,12 +32,8 @@ public class SecurityConfig {
       throws Exception {
     return http.csrf(AbstractHttpConfigurer::disable)
         .securityMatcher("/basicsecured/**")
-        .authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers("/basicsecured/**")
-                    .authenticated()
-                    .and()
-                    .authenticationProvider(savingAuthenticationProvider))
+        .authorizeHttpRequests(auth -> auth.requestMatchers("/basicsecured/**").authenticated())
+        .authenticationProvider(savingAuthenticationProvider)
         .httpBasic(Customizer.withDefaults())
         .build();
   }
@@ -50,12 +46,8 @@ public class SecurityConfig {
     return http.csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/formsecured/**")
-                    .authenticated()
-                    .anyRequest()
-                    .permitAll()
-                    .and()
-                    .authenticationProvider(savingAuthenticationProvider))
+                auth.requestMatchers("/formsecured/**").authenticated().anyRequest().permitAll())
+        .authenticationProvider(savingAuthenticationProvider)
         .formLogin(Customizer.withDefaults())
         .build();
   }
