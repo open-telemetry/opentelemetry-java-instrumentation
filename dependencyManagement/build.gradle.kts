@@ -44,7 +44,7 @@ val byteBuddyVersion = "1.14.13"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.12"
+val slf4jVersion = "2.0.13"
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:1.23.1-alpha",
