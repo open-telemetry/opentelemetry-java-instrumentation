@@ -7,8 +7,10 @@ import boot.SavingAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -28,16 +30,15 @@ public class SecurityConfig {
   SecurityFilterChain apiWebSecurity(
       HttpSecurity http, SavingAuthenticationProvider savingAuthenticationProvider)
       throws Exception {
-    return http.csrf()
-        .disable()
+    return http.csrf(AbstractHttpConfigurer::disable)
         .securityMatcher("/basicsecured/**")
-        .authorizeHttpRequests()
-        .requestMatchers("/basicsecured/**")
-        .authenticated()
-        .and()
-        .httpBasic()
-        .and()
-        .authenticationProvider(savingAuthenticationProvider)
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers("/basicsecured/**")
+                    .authenticated()
+                    .and()
+                    .authenticationProvider(savingAuthenticationProvider))
+        .httpBasic(Customizer.withDefaults())
         .build();
   }
 
@@ -46,17 +47,16 @@ public class SecurityConfig {
   SecurityFilterChain formLoginWebSecurity(
       HttpSecurity http, SavingAuthenticationProvider savingAuthenticationProvider)
       throws Exception {
-    return http.csrf()
-        .disable()
-        .authorizeHttpRequests()
-        .requestMatchers("/formsecured/**")
-        .authenticated()
-        .anyRequest()
-        .permitAll()
-        .and()
-        .formLogin()
-        .and()
-        .authenticationProvider(savingAuthenticationProvider)
+    return http.csrf(AbstractHttpConfigurer::disable)
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers("/formsecured/**")
+                    .authenticated()
+                    .anyRequest()
+                    .permitAll()
+                    .and()
+                    .authenticationProvider(savingAuthenticationProvider))
+        .formLogin(Customizer.withDefaults())
         .build();
   }
 }
