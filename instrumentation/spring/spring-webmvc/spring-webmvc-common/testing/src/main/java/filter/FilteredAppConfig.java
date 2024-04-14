@@ -38,6 +38,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
 public class FilteredAppConfig implements WebMvcConfigurer {
+
   @Override
   public void configurePathMatch(PathMatchConfigurer configurer) {}
 
@@ -106,6 +107,7 @@ public class FilteredAppConfig implements WebMvcConfigurer {
 
   @Bean
   HttpMessageConverter<Map<String, Object>> createPlainMapMessageConverter() {
+
     return new AbstractHttpMessageConverter<Map<String, Object>>(MediaType.TEXT_PLAIN) {
 
       @Override

@@ -30,6 +30,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public abstract class AbstractServletFilterTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+
   protected abstract Class<?> securityConfigClass();
 
   protected abstract Class<?> filterConfigClass();

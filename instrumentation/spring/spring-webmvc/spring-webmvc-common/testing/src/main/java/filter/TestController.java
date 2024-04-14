@@ -21,6 +21,7 @@ import org.springframework.web.servlet.view.RedirectView;
  */
 @Controller
 public class TestController {
+
   @RequestMapping("/success")
   @ResponseBody
   String success() throws Exception {

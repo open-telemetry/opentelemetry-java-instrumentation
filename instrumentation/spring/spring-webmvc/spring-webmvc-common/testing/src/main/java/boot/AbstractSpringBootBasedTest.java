@@ -50,6 +50,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 public abstract class AbstractSpringBootBasedTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+
   protected abstract ConfigurableApplicationContext context();
 
   protected abstract Class<?> securityConfigClass();
