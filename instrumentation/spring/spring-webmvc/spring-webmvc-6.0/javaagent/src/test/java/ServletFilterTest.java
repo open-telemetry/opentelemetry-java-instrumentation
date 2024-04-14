@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
@@ -77,7 +78,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
 
   @Override
   protected SpanDataAssert assertResponseSpan(
-      SpanDataAssert span, String method, ServerEndpoint endpoint) {
+      SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
     if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
       span.hasKind(SpanKind.INTERNAL);
@@ -85,7 +86,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
       // SERVER span, not the handler span
       return span;
     } else {
-      return super.assertResponseSpan(span, method, endpoint);
+      return super.assertResponseSpan(span, parentSpan, method, endpoint);
     }
   }
 

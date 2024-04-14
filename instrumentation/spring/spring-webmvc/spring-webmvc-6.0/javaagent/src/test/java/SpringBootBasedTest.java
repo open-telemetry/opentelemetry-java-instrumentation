@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
@@ -83,6 +84,20 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
       return span;
     } else {
       return super.assertHandlerSpan(span, method, endpoint);
+    }
+  }
+
+  @Override
+  protected SpanDataAssert assertResponseSpan(
+      SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
+    if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
+      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
+      span.hasKind(SpanKind.INTERNAL);
+      // not verifying the parent span, in the latest version the responseSpan is the child of the
+      // SERVER span, not the handler span
+      return span;
+    } else {
+      return super.assertResponseSpan(span, parentSpan, method, endpoint);
     }
   }
 
