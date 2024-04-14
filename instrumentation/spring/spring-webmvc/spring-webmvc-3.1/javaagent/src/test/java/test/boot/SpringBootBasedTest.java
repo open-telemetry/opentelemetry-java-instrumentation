@@ -15,12 +15,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
+class SpringBootBasedTest extends AbstractSpringBootBasedTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
-
-  static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+  private static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
   private ConfigurableApplicationContext context;
 
@@ -54,6 +53,7 @@ public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps ? 500 : 200);
+    options.setResponseCodeOnNonStandardHttpMethod(
+        Boolean.getBoolean("testLatestDeps") ? 500 : 200);
   }
 }

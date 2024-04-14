@@ -12,7 +12,8 @@ import org.springframework.security.authentication.dao.AbstractUserDetailsAuthen
 import org.springframework.security.core.userdetails.UserDetails;
 
 public class SavingAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
-  public List<TestUserDetails> latestAuthentications = new ArrayList<>();
+
+  List<TestUserDetails> latestAuthentications = new ArrayList<>();
 
   @Override
   protected void additionalAuthenticationChecks(

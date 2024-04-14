@@ -16,12 +16,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import test.boot.SecurityConfig;
 
-public class ServletFilterTest extends AbstractServletFilterTest {
+class ServletFilterTest extends AbstractServletFilterTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
-
-  static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+  private static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected Class<?> securityConfigClass() {
@@ -45,6 +44,7 @@ public class ServletFilterTest extends AbstractServletFilterTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps ? 500 : 200);
+    options.setResponseCodeOnNonStandardHttpMethod(
+        Boolean.getBoolean("testLatestDeps") ? 500 : 200);
   }
 }

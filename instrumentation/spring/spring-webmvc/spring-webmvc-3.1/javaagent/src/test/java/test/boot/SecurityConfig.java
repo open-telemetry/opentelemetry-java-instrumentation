@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
   @Bean
   SavingAuthenticationProvider savingAuthenticationProvider() {
     return new SavingAuthenticationProvider();

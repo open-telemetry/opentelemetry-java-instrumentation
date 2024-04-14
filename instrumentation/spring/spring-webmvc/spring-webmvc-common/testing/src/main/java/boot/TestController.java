@@ -29,6 +29,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 @Controller
 public class TestController {
+
   @RequestMapping("/basicsecured/endpoint")
   @ResponseBody
   String secureEndpoint() {

@@ -24,11 +24,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
-  @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+class SpringBootBasedTest extends AbstractSpringBootBasedTest {
 
-  static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+  @RegisterExtension
+  private static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
+
+  private static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
 
   private ConfigurableApplicationContext context;
 

@@ -25,11 +25,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class ServletFilterTest extends AbstractServletFilterTest {
-  static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+class ServletFilterTest extends AbstractServletFilterTest {
+
+  private static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  private static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected Class<?> securityConfigClass() {
