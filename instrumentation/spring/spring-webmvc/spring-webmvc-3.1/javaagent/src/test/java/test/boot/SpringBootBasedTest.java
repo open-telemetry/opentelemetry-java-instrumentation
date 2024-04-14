@@ -5,6 +5,8 @@
 
 package test.boot;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+
 import boot.AbstractSpringBootBasedTest;
 import boot.AppConfig;
 import com.google.common.collect.ImmutableMap;
@@ -55,5 +57,6 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
     super.configure(options);
     options.setResponseCodeOnNonStandardHttpMethod(
         Boolean.getBoolean("testLatestDeps") ? 500 : 200);
+    options.setExpectedException(new RuntimeException(EXCEPTION.getBody()));
   }
 }
