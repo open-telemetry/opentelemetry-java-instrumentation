@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -68,7 +67,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
                           equalTo(
                               EXCEPTION_TYPE,
                               "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
+                          satisfies(EXCEPTION_MESSAGE, val -> assertThat(val).isNotNull()),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {

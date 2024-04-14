@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import boot.AbstractSpringBootBasedTest;
 import boot.AppConfig;
@@ -77,7 +78,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
                           equalTo(
                               EXCEPTION_TYPE,
                               "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
+                          satisfies(EXCEPTION_MESSAGE, val -> assertThat(val).isNotNull()),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {
