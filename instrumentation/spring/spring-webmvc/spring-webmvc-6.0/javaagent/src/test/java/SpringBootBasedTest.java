@@ -87,5 +87,6 @@ public class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setResponseCodeOnNonStandardHttpMethod(400);
+    options.setExpectedException(new RuntimeException(EXCEPTION.getBody()));
   }
 }

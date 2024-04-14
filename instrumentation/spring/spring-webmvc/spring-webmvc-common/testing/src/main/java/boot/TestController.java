@@ -5,6 +5,7 @@
 
 package boot;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -14,7 +15,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,45 +32,49 @@ public class TestController {
   @RequestMapping("/basicsecured/endpoint")
   @ResponseBody
   String secureEndpoint() {
-    return HttpServerTest.controller(SUCCESS, SUCCESS::getBody);
+    return controller(SUCCESS, SUCCESS::getBody);
   }
 
   @RequestMapping("/success")
   @ResponseBody
   String success() {
-    return HttpServerTest.controller(SUCCESS, SUCCESS::getBody);
+    return controller(SUCCESS, SUCCESS::getBody);
   }
 
   @RequestMapping("/query")
   @ResponseBody
   String queryParam(@RequestParam("some") String param) {
-    return HttpServerTest.controller(QUERY_PARAM, () -> "some=" + param);
+    return controller(QUERY_PARAM, () -> "some=" + param);
   }
 
   @RequestMapping("/redirect")
   @ResponseBody
   RedirectView redirect() {
-    return HttpServerTest.controller(REDIRECT, () -> new RedirectView(REDIRECT.getBody()));
+    return controller(REDIRECT, () -> new RedirectView(REDIRECT.getBody()));
   }
 
   @RequestMapping("/error-status")
   ResponseEntity<String> error() {
-    return HttpServerTest.controller(
-        ERROR, () -> new ResponseEntity<>(ERROR.getBody(), HttpStatus.valueOf(ERROR.getStatus())));
+    return controller(
+        ERROR,
+        () ->
+            ResponseEntity.status(HttpStatus.valueOf(ERROR.getStatus()).value())
+                .body(ERROR.getBody()));
   }
 
+  @SuppressWarnings("ThrowSpecificExceptions")
   @RequestMapping("/exception")
   ResponseEntity<String> exception() {
-    return HttpServerTest.controller(
+    return controller(
         EXCEPTION,
         () -> {
-          throw new Exception(EXCEPTION.getBody());
+          throw new RuntimeException(EXCEPTION.getBody());
         });
   }
 
   @RequestMapping("/captureHeaders")
   ResponseEntity<String> captureHeaders(@RequestHeader("X-Test-Request") String testRequestHeader) {
-    return HttpServerTest.controller(
+    return controller(
         CAPTURE_HEADERS,
         () ->
             ResponseEntity.ok()
@@ -81,13 +85,13 @@ public class TestController {
   @RequestMapping("/path/{id}/param")
   @ResponseBody
   String pathParam(@PathVariable("id") int id) {
-    return HttpServerTest.controller(PATH_PARAM, () -> String.valueOf(id));
+    return controller(PATH_PARAM, () -> String.valueOf(id));
   }
 
   @RequestMapping("/child")
   @ResponseBody
   String indexedChild(@RequestParam("id") String id) {
-    return HttpServerTest.controller(
+    return controller(
         INDEXED_CHILD,
         () -> {
           INDEXED_CHILD.collectSpanAttributes(it -> Objects.equals(it, "id") ? id : null);
@@ -97,6 +101,7 @@ public class TestController {
 
   @ExceptionHandler
   ResponseEntity<String> handleException(Throwable throwable) {
-    return new ResponseEntity<>(throwable.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+        .body(throwable.getMessage());
   }
 }

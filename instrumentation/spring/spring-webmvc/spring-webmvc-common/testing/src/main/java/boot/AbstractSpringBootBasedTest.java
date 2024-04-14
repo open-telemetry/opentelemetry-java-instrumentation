@@ -206,7 +206,7 @@ public abstract class AbstractSpringBootBasedTest
               event
                   .hasName("exception")
                   .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, "java.lang.Exception"),
+                      equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
                       equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
                       satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
