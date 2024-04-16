@@ -10,9 +10,11 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import io.opentelemetry.testing.internal.armeria.client.RestClient;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration;
 import org.springframework.boot.web.client.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -27,10 +29,11 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(name = "otel.instrumentation.spring-web.enabled", matchIfMissing = true)
 @ConditionalOnClass(RestClient.class)
 @Conditional(SdkEnabled.class)
+@AutoConfiguration(after = RestClientAutoConfiguration.class)
 @Configuration
-public class SpringWeb6InstrumentationAutoConfiguration {
+public class RestClientInstrumentationAutoConfiguration {
 
-  public SpringWeb6InstrumentationAutoConfiguration() {}
+  public RestClientInstrumentationAutoConfiguration() {}
 
   @Bean
   static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(

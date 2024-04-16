@@ -13,14 +13,14 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.web.client.RestClient;
 
-class SpringWeb6InstrumentationAutoConfigurationTest {
+class RestClientInstrumentationAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withBean(RestClient.class, RestClient::create)
           .withConfiguration(
-              AutoConfigurations.of(SpringWeb6InstrumentationAutoConfiguration.class));
+              AutoConfigurations.of(RestClientInstrumentationAutoConfiguration.class));
 
   /**
    * Tests the case that users create a {@link RestClient} bean themselves.
