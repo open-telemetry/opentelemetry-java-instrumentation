@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_NEW;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_STATEMENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_TYPE;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -32,9 +32,7 @@ import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +41,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 
-// ignore @Deprecated annotation warning.
+// ignore using deprecated createDatabase and deleteDatabase methods warning.
 @SuppressWarnings("deprecation")
 @TestInstance(Lifecycle.PER_CLASS)
 class InfluxDbClientTest {
@@ -87,7 +85,7 @@ class InfluxDbClientTest {
 
   @Test
   void testQueryAndModifyWithOneArgument() {
-    String dbName = databaseName + System.currentTimeMillis();
+    String dbName = databaseName + "2";
     influxDb.createDatabase(dbName);
     BatchPoints batchPoints =
         BatchPoints.database(dbName).tag("async", "true").retentionPolicy("autogen").build();
@@ -109,7 +107,7 @@ class InfluxDbClientTest {
     influxDb.write(batchPoints);
     Query query = new Query("SELECT * FROM cpu GROUP BY *", dbName);
     QueryResult result = influxDb.query(query);
-    Assert.assertFalse(result.getResults().get(0).getSeries().get(0).getTags().isEmpty());
+    assertThat(result.getResults().get(0).getSeries().get(0).getTags()).isNotEmpty();
     influxDb.deleteDatabase(dbName);
     testing.waitAndAssertTraces(
         trace ->
@@ -119,7 +117,7 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                String.format("CREATE DATABASE \"%s\"", dbName),
+                                String.format(CREATE_DATABASE_STATEMENT_NEW, dbName),
                                 "CREATE",
                                 dbName))),
         trace ->
@@ -142,7 +140,9 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                String.format("DROP DATABASE \"%s\"", dbName), "DROP", dbName))));
+                                String.format(DELETE_DATABASE_STATEMENT, dbName),
+                                "DROP",
+                                dbName))));
   }
 
   @Test
@@ -172,7 +172,6 @@ class InfluxDbClientTest {
     BlockingQueue<QueryResult> queue = new LinkedBlockingQueue<>();
 
     influxDb.query(query, 2, result -> queue.add(result));
-    Thread.sleep(2000);
     queue.poll(20, TimeUnit.SECONDS);
 
     testing.waitAndAssertTraces(
@@ -194,7 +193,6 @@ class InfluxDbClientTest {
     BlockingQueue<QueryResult> queue = new LinkedBlockingQueue<>();
 
     influxDb.query(query, 2, result -> queue.add(result));
-    Thread.sleep(2000);
     queue.poll(20, TimeUnit.SECONDS);
 
     testing.waitAndAssertTraces(
@@ -211,35 +209,75 @@ class InfluxDbClientTest {
   @Test
   void testQueryWithFiveArguments() throws InterruptedException {
     CountDownLatch countDownLatch = new CountDownLatch(1);
-    CountDownLatch countDownLatchFailure = new CountDownLatch(1);
     Query query =
         new Query(
             "SELECT MEAN(water_level) FROM h2o_feet where time = '2022-01-01T08:00:00Z'; SELECT water_level FROM h2o_feet LIMIT 2",
             databaseName);
-    influxDb.query(
-        query,
-        10,
-        (cancellable, queryResult) -> {
-          countDownLatch.countDown();
-        },
-        () -> {},
-        throwable -> {
-          countDownLatchFailure.countDown();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          influxDb.query(
+              query,
+              10,
+              (cancellable, queryResult) -> {
+                countDownLatch.countDown();
+              },
+              () -> {
+                testing.runWithSpan("child", () -> {});
+              },
+              throwable -> {});
         });
-    Assertions.assertFalse(countDownLatchFailure.await(1, TimeUnit.SECONDS));
-    Assertions.assertTrue(countDownLatch.await(1, TimeUnit.SECONDS));
+    assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             attributeAssertions(
                                 "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?",
                                 "SELECT",
-                                databaseName))));
+                                databaseName)),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(1))));
+  }
+
+  @Test
+  void testQueryFailedWithFiveArguments() throws InterruptedException {
+    CountDownLatch countDownLatchFailure = new CountDownLatch(1);
+    Query query = new Query("SELECT MEAN(water_level) FROM;", databaseName);
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          influxDb.query(
+              query,
+              10,
+              (cancellable, queryResult) -> {},
+              () -> {},
+              throwable -> {
+                testing.runWithSpan("child", () -> {});
+                countDownLatchFailure.countDown();
+              });
+        });
+    assertThat(countDownLatchFailure.await(10, TimeUnit.SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT " + databaseName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfying(
+                            attributeAssertions(
+                                "SELECT MEAN(water_level) FROM;", "SELECT", databaseName)),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -279,7 +317,7 @@ class InfluxDbClientTest {
 
   @Test
   void testWriteWithUdp() {
-    List<String> lineProtocols = new ArrayList<String>();
+    List<String> lineProtocols = new ArrayList<>();
     for (int i = 0; i < 2000; i++) {
       Point point = Point.measurement("udp_single_poit").addField("v", i).build();
       lineProtocols.add(point.lineProtocol());
@@ -290,18 +328,14 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("write unknown")
+                    span.hasName("write")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions("write", "write", "unknown"))));
+                        .hasAttributesSatisfying(attributeAssertions("write", "write", null))));
   }
 
   private static List<AttributeAssertion> attributeAssertions(
       String statement, String operation, String databaseName) {
     return asList(
-        equalTo(NETWORK_TYPE, "ipv4"),
-        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-        equalTo(NETWORK_PEER_PORT, port),
         equalTo(DB_SYSTEM, "influxdb"),
         equalTo(DB_CONNECTION_STRING, serverURL),
         equalTo(DB_NAME, databaseName),

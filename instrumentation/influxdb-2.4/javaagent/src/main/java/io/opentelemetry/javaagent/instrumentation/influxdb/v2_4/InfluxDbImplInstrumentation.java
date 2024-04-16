@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_METHOD_NAME;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_NEW;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_OLD;
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_METHOD_NAME;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_STATEMENT;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
@@ -24,7 +22,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -93,10 +90,8 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      InetSocketAddress inetSocketAddress = new InetSocketAddress(httpUrl.host(), httpUrl.port());
       influxDbRequest =
-          InfluxDbRequest.create(
-              inetSocketAddress, httpUrl.uri().toString(), query.getDatabase(), query.getCommand());
+          InfluxDbRequest.create(httpUrl.uri().toString(), query.getDatabase(), query.getCommand());
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;
@@ -153,25 +148,23 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      InetSocketAddress inetSocketAddress = new InetSocketAddress(httpUrl.host(), httpUrl.port());
       String database =
           (arg0 instanceof BatchPoints)
               ? ((BatchPoints) arg0).getDatabase()
-              // write data by udp protocol, in this way, can't get database name.
-              : arg0 instanceof Integer ? "unknown" : String.valueOf(arg0);
+              // write data by UDP protocol, in this way, can't get database name.
+              : arg0 instanceof Integer ? "" : String.valueOf(arg0);
 
       String sql = methodName;
-      if (CREATE_DATABASE_METHOD_NAME.equals(methodName)) {
+      if ("createDatabase".equals(methodName)) {
         sql =
             influxDbImpl.version().startsWith("0.")
                 ? String.format(CREATE_DATABASE_STATEMENT_OLD, database)
                 : String.format(CREATE_DATABASE_STATEMENT_NEW, database);
-      } else if (DELETE_DATABASE_METHOD_NAME.equals(methodName)) {
+      } else if ("deleteDatabase".equals(methodName)) {
         sql = String.format(DELETE_DATABASE_STATEMENT, database);
       }
 
-      influxDbRequest =
-          InfluxDbRequest.create(inetSocketAddress, httpUrl.uri().toString(), database, sql);
+      influxDbRequest = InfluxDbRequest.create(httpUrl.uri().toString(), database, sql);
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;

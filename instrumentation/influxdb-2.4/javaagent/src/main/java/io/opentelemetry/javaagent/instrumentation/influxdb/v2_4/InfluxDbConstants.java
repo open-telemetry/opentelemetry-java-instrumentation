@@ -9,10 +9,6 @@ final class InfluxDbConstants {
 
   private InfluxDbConstants() {}
 
-  public static final String DELETE_DATABASE_METHOD_NAME = "deleteDatabase";
-
-  public static final String CREATE_DATABASE_METHOD_NAME = "createDatabase";
-
   public static final String CREATE_DATABASE_STATEMENT_NEW = "CREATE DATABASE \"%s\"";
 
   /** In influxDB 0.x version, it uses below statement format to create a database. */
