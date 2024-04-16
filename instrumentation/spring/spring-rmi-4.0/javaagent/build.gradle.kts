@@ -19,7 +19,10 @@ dependencies {
 
   library("org.springframework:spring-context:4.0.0.RELEASE")
   library("org.springframework:spring-aop:4.0.0.RELEASE")
+  testLibrary("org.springframework:spring-test:4.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
+  testLibrary("org.apache.openejb:javaee-api:5.0-1") // Added to test remote-slsb functionality
+  testLibrary(project(":instrumentation:rmi:bootstrap")) // Used in EJB mock, see comments in springrmi.app.ejb.SpringRmiEjbMock
 
   // rmi remoting was removed in spring 6
   latestDepTestLibrary("org.springframework:spring-context:5.+") // documented limitation
