@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.reactor.v3_1;
+package io.opentelemetry.instrumentation.reactor.v3.common;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
-public final class ReactorAsyncOperationEndStrategyBuilder {
+public final class ContextPropagationOperatorBuilder {
   private boolean captureExperimentalSpanAttributes;
 
-  ReactorAsyncOperationEndStrategyBuilder() {}
+  ContextPropagationOperatorBuilder() {}
 
   @CanIgnoreReturnValue
-  public ReactorAsyncOperationEndStrategyBuilder setCaptureExperimentalSpanAttributes(
+  public ContextPropagationOperatorBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
-  public ReactorAsyncOperationEndStrategy build() {
-    return new ReactorAsyncOperationEndStrategy(captureExperimentalSpanAttributes);
+  public ContextPropagationOperator build() {
+    return new ContextPropagationOperator(captureExperimentalSpanAttributes);
   }
 }

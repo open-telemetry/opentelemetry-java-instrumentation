@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.reactor.v3_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.reactor.v3.common.TracingSubscriber;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;

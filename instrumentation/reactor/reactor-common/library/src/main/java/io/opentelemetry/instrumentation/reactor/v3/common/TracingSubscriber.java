@@ -18,7 +18,7 @@
  * the License.
  */
 
-package io.opentelemetry.instrumentation.reactor.v3_1;
+package io.opentelemetry.instrumentation.reactor.v3.common;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;

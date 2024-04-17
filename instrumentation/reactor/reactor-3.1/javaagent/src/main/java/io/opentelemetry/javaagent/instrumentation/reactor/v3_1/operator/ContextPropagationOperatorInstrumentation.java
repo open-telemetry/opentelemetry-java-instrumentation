@@ -26,7 +26,7 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
-        "application.io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator");
+        "application.io.opentelemetry.instrumentation.reactor.v3.common.ContextPropagationOperator");
   }
 
   @Override

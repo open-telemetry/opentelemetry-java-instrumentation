@@ -20,14 +20,28 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.reactor.v3_1;
+package io.opentelemetry.instrumentation.reactor.v3_4;
 
-/** Based on Spring Sleuth's Reactor instrumentation. */
-public class ContextPropagationOperator
+import io.opentelemetry.context.Context;
+
+public final class ContextPropagationOperator
     extends io.opentelemetry.instrumentation.reactor.v3.common.ContextPropagationOperator {
 
   public ContextPropagationOperator(boolean captureExperimentalSpanAttributes) {
     super(captureExperimentalSpanAttributes);
+  }
+
+  /**
+   * Gets Trace {@link Context} from Reactor {@link reactor.util.context.ContextView}.
+   *
+   * @param contextView Reactor's context to get trace context from.
+   * @param defaultTraceContext Default value to be returned if no trace context is found on Reactor
+   *     context.
+   * @return Trace context or default value.
+   */
+  public static Context getOpenTelemetryContextByContextView(
+      reactor.util.context.ContextView contextView, Context defaultTraceContext) {
+    return contextView.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 
   public static ContextPropagationOperator create() {
