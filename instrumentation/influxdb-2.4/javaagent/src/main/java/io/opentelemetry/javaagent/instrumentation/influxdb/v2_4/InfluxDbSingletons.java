@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
 public final class InfluxDbSingletons {
 
@@ -24,6 +25,8 @@ public final class InfluxDbSingletons {
                 "io.opentelemetry.influxdb-2.4",
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(
+                ServerAttributesExtractor.create(new InfluxDbNetworkAttributesGetter()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

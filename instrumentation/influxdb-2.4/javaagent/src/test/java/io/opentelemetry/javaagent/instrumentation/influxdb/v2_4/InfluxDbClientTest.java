@@ -8,11 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_NEW;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_STATEMENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,6 +15,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -56,7 +53,7 @@ class InfluxDbClientTest {
 
   private static final String databaseName = "mydb";
 
-  private static String serverURL;
+  private static String host;
 
   private static int port;
 
@@ -64,8 +61,8 @@ class InfluxDbClientTest {
   void setup() {
     influxDbServer.start();
     port = influxDbServer.getMappedPort(8086);
-    String host = influxDbServer.getHost();
-    serverURL = "http://" + host + ":" + port + "/";
+    host = influxDbServer.getHost();
+    String serverURL = "http://" + host + ":" + port + "/";
     String username = "root";
     String password = "root";
     influxDb = InfluxDBFactory.connect(serverURL, username, password);
@@ -336,10 +333,11 @@ class InfluxDbClientTest {
   private static List<AttributeAssertion> attributeAssertions(
       String statement, String operation, String databaseName) {
     return asList(
-        equalTo(DB_SYSTEM, "influxdb"),
-        equalTo(DB_CONNECTION_STRING, serverURL),
-        equalTo(DB_NAME, databaseName),
-        equalTo(DB_STATEMENT, statement),
-        equalTo(DB_OPERATION, operation));
+        equalTo(DbIncubatingAttributes.DB_SYSTEM, "influxdb"),
+        equalTo(DbIncubatingAttributes.DB_NAME, databaseName),
+        equalTo(ServerAttributes.SERVER_ADDRESS, host),
+        equalTo(ServerAttributes.SERVER_PORT, port),
+        equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
+        equalTo(DbIncubatingAttributes.DB_OPERATION, operation));
   }
 }

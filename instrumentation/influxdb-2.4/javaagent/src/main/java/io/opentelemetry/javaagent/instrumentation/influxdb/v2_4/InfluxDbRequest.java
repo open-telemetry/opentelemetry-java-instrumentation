@@ -10,11 +10,13 @@ import com.google.auto.value.AutoValue;
 @AutoValue
 public abstract class InfluxDbRequest {
 
-  public static InfluxDbRequest create(String connectionString, String dbName, String sql) {
-    return new AutoValue_InfluxDbRequest(connectionString, dbName, sql);
+  public static InfluxDbRequest create(String host, Integer port, String dbName, String sql) {
+    return new AutoValue_InfluxDbRequest(host, port, dbName, sql);
   }
 
-  public abstract String getConnectionString();
+  public abstract String getHost();
+
+  public abstract Integer getPort();
 
   public abstract String getDbName();
 

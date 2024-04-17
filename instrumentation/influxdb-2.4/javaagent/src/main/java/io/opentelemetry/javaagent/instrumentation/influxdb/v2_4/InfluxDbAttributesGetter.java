@@ -47,10 +47,4 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     String dbName = request.getDbName();
     return StringUtils.isNullOrEmpty(dbName) ? null : dbName;
   }
-
-  @Nullable
-  @Override
-  public String getConnectionString(InfluxDbRequest request) {
-    return request.getConnectionString();
-  }
 }

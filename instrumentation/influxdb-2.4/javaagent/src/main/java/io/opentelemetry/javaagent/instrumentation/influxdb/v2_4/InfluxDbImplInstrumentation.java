@@ -91,7 +91,8 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
       HttpUrl httpUrl = retrofit.baseUrl();
       influxDbRequest =
-          InfluxDbRequest.create(httpUrl.uri().toString(), query.getDatabase(), query.getCommand());
+          InfluxDbRequest.create(
+              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;
@@ -164,7 +165,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         sql = String.format(DELETE_DATABASE_STATEMENT, database);
       }
 
-      influxDbRequest = InfluxDbRequest.create(httpUrl.uri().toString(), database, sql);
+      influxDbRequest = InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, sql);
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;
