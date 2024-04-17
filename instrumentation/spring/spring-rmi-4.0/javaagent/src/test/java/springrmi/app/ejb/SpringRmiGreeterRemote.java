@@ -20,7 +20,6 @@ class SpringRmiGreeterRemote implements Remote {
   public String hello(String name) throws RemoteException {
     return impl.hello(name);
   }
-  ;
 
   public void exceptional() throws RemoteException {
     impl.exceptional();

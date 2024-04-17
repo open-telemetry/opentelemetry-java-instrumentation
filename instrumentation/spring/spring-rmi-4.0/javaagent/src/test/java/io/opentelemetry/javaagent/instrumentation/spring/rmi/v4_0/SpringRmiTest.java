@@ -58,7 +58,7 @@ class SpringRmiTest {
   @Component
   private static class ServerConfig {
     @Bean
-    static RemoteExporter registerRMIExporter() throws NamingException {
+    static RemoteExporter registerRmiExporter() throws NamingException {
       SpringRmiGreeter greeter = new SpringRmiGreeterImpl();
 
       RmiServiceExporter exporter = new RmiServiceExporter();
