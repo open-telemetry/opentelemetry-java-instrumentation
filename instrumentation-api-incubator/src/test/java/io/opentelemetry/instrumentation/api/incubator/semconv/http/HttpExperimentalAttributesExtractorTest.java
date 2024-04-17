@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -55,7 +55,7 @@ class HttpExperimentalAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), "request", "response", null);
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 123L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 42L));
+            entry(HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE, 123L),
+            entry(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, 42L));
   }
 }

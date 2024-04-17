@@ -11,7 +11,9 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection
 import io.opentelemetry.instrumentation.jdbc.TestDriver
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.javaagent.instrumentation.jdbc.test.ProxyStatementFactory
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -187,15 +189,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -247,15 +248,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -299,15 +299,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -351,15 +350,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbName.toLowerCase()
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbName.toLowerCase()
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -399,17 +397,18 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         span(1) {
-          name dbNameLower
+          name spanName
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -420,19 +419,19 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     connection.close()
 
     where:
-    system   | connection                                                | username | query                                                                           | url
-    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"                   | "h2:mem:"
-    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"                | "derby:memory:"
-    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)    | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE S_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "h2:mem:"
-    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "derby:memory:"
-    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection() | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE S_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "h2:mem:"
-    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "derby:memory:"
-    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection() | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "hsqldb:mem:"
-    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE S_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"              | "h2:mem:"
-    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE S_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "derby:memory:"
-    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()   | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "hsqldb:mem:"
+    system   | connection                                                           | username | query                                                                           | spanName                                   | url             | table
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"                   | "CREATE TABLE jdbcunittest.S_H2"           | "h2:mem:"       | "S_H2"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"                | "CREATE TABLE jdbcunittest.S_DERBY"        | "derby:memory:" | "S_DERBY"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "CREATE TABLE PUBLIC.S_HSQLDB"             | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB"
+    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | "CREATE TABLE S_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "CREATE TABLE jdbcunittest.S_H2_TOMCAT"    | "h2:mem:"       | "S_H2_TOMCAT"
+    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | "CREATE TABLE S_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "CREATE TABLE jdbcunittest.S_DERBY_TOMCAT" | "derby:memory:" | "S_DERBY_TOMCAT"
+    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT"      | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB_TOMCAT"
+    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | "CREATE TABLE S_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"            | "CREATE TABLE jdbcunittest.S_H2_HIKARI"    | "h2:mem:"       | "S_H2_HIKARI"
+    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | "CREATE TABLE S_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"         | "CREATE TABLE jdbcunittest.S_DERBY_HIKARI" | "derby:memory:" | "S_DERBY_HIKARI"
+    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI"      | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB_HIKARI"
+    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | "CREATE TABLE S_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"              | "CREATE TABLE jdbcunittest.S_H2_C3P0"      | "h2:mem:"       | "S_H2_C3P0"
+    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | "CREATE TABLE S_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "CREATE TABLE jdbcunittest.S_DERBY_C3P0"   | "derby:memory:" | "S_DERBY_C3P0"
+    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0"        | "hsqldb:mem:"   | "PUBLIC.S_HSQLDB_C3P0"
   }
 
   def "prepared statement update on #system with #connection.getClass().getCanonicalName() generates a span"() {
@@ -452,17 +451,18 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           hasNoParent()
         }
         span(1) {
-          name dbNameLower
+          name spanName
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbName.toLowerCase()
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbName.toLowerCase()
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -473,15 +473,15 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     connection.close()
 
     where:
-    system  | connection                                                | username | query                                                                    | url
-    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "h2:mem:"
-    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "derby:memory:"
-    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "h2:mem:"
-    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "derby:memory:"
-    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "h2:mem:"
-    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "derby:memory:"
-    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE PS_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"      | "h2:mem:"
-    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "derby:memory:"
+    system  | connection                                                | username | query                                                                    | spanName                                    | url             | table
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"           | "CREATE TABLE jdbcunittest.PS_H2"           | "h2:mem:"       | "PS_H2"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"        | "CREATE TABLE jdbcunittest.PS_DERBY"        | "derby:memory:" | "PS_DERBY"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "CREATE TABLE jdbcunittest.PS_H2_TOMCAT"    | "h2:mem:"       | "PS_H2_TOMCAT"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE jdbcunittest.PS_DERBY_TOMCAT" | "derby:memory:" | "PS_DERBY_TOMCAT"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"    | "CREATE TABLE jdbcunittest.PS_H2_HIKARI"    | "h2:mem:"       | "PS_H2_HIKARI"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))" | "CREATE TABLE jdbcunittest.PS_DERBY_HIKARI" | "derby:memory:" | "PS_DERBY_HIKARI"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE PS_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"      | "CREATE TABLE jdbcunittest.PS_H2_C3P0"      | "h2:mem:"       | "PS_H2_C3P0"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"   | "CREATE TABLE jdbcunittest.PS_DERBY_C3P0"   | "derby:memory:" | "PS_DERBY_C3P0"
   }
 
   def "connection constructor throwing then generating correct spans after recovery using #driver connection (prepare statement = #prepareStatement)"() {
@@ -521,15 +521,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_NAME" dbNameLower
             if (username != null) {
-              "$SemanticAttributes.DB_USER" username
+              "$DbIncubatingAttributes.DB_USER" username
             }
-            "$SemanticAttributes.DB_CONNECTION_STRING" url
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
         }
       }
@@ -578,12 +577,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind INTERNAL
           childOf span(0)
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
-            "$SemanticAttributes.CODE_FUNCTION" "getConnection"
-            "$SemanticAttributes.DB_SYSTEM" system
-            "$SemanticAttributes.DB_USER" { user == null | user == it }
-            "$SemanticAttributes.DB_NAME" "jdbcunittest"
-            "$SemanticAttributes.DB_CONNECTION_STRING" connectionString
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
+            "$DbIncubatingAttributes.DB_SYSTEM" system
+            "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
+            "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
           }
         }
         if (recursive) {
@@ -592,12 +590,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             kind INTERNAL
             childOf span(1)
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" datasource.class.name
-              "$SemanticAttributes.CODE_FUNCTION" "getConnection"
-              "$SemanticAttributes.DB_SYSTEM" system
-              "$SemanticAttributes.DB_USER" { user == null | user == it }
-              "$SemanticAttributes.DB_NAME" "jdbcunittest"
-              "$SemanticAttributes.DB_CONNECTION_STRING" connectionString
+              "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
+              "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
+              "$DbIncubatingAttributes.DB_SYSTEM" system
+              "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
+              "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
             }
           }
         }
@@ -644,10 +641,9 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "other_sql"
-            "$SemanticAttributes.DB_STATEMENT" "testing ?"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
+            "$DbIncubatingAttributes.DB_STATEMENT" "testing ?"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
@@ -685,25 +681,24 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "other_sql"
-            "$SemanticAttributes.DB_NAME" databaseName
-            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.DB_STATEMENT" sanitizedQuery
-            "$SemanticAttributes.DB_OPERATION" operation
-            "$SemanticAttributes.DB_SQL_TABLE" table
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
+            "$DbIncubatingAttributes.DB_NAME" databaseName
+            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION" operation
+            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }
     }
 
     where:
-    url                                         | query                 | sanitizedQuery        | spanName            | databaseName | operation | table
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT test.table" | "test"       | "SELECT"  | "table"
-    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT ?"            | "SELECT test"       | "test"       | "SELECT"  | null
-    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT table"      | null         | "SELECT"  | "table"
-    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "CREATE TABLE table"  | "test"              | "test"       | null      | null
-    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "CREATE TABLE table"  | "DB Query"          | null         | null      | null
+    url                                         | query                 | sanitizedQuery        | spanName                  | databaseName | operation      | table
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT test.table"       | "test"       | "SELECT"       | "table"
+    "jdbc:testdb://localhost?databaseName=test" | "SELECT 42"           | "SELECT ?"            | "SELECT test"             | "test"       | "SELECT"       | null
+    "jdbc:testdb://localhost"                   | "SELECT * FROM table" | "SELECT * FROM table" | "SELECT table"            | null         | "SELECT"       | "table"
+    "jdbc:testdb://localhost?databaseName=test" | "CREATE TABLE table"  | "CREATE TABLE table"  | "CREATE TABLE test.table" | "test"       | "CREATE TABLE" | "table"
+    "jdbc:testdb://localhost"                   | "CREATE TABLE table"  | "CREATE TABLE table"  | "CREATE TABLE table"      | null         | "CREATE TABLE" | "table"
   }
 
   def "#connectionPoolName connections should be cached in case of wrapped connections"() {
@@ -742,13 +737,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             name "SELECT INFORMATION_SCHEMA.SYSTEM_USERS"
             kind CLIENT
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" dbNameLower
-              "$SemanticAttributes.DB_USER" "SA"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-              "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" dbNameLower
+              "$DbIncubatingAttributes.DB_USER" "SA"
+              "$DbIncubatingAttributes.DB_STATEMENT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "INFORMATION_SCHEMA.SYSTEM_USERS"
             }
           }
         }
@@ -791,12 +785,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "other_sql"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$SemanticAttributes.DB_STATEMENT" "SELECT * FROM table"
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "table"
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
+            "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
+            "$DbIncubatingAttributes.DB_STATEMENT" "SELECT * FROM table"
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "table"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
       }

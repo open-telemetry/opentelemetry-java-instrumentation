@@ -5,7 +5,7 @@
 
 package io.opentelemetry.smoketest
 
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
+import io.opentelemetry.semconv.ServiceAttributes
 import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
@@ -14,7 +14,6 @@ import java.util.jar.Attributes
 import java.util.jar.JarFile
 
 import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
-import static java.util.stream.Collectors.toSet
 
 @IgnoreIf({ useWindowsContainers() })
 class QuarkusSmokeTest extends SmokeTest {
@@ -28,6 +27,11 @@ class QuarkusSmokeTest extends SmokeTest {
     return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*")
   }
 
+  @Override
+  protected boolean getSetServiceName() {
+    return false
+  }
+
   @Unroll
   def "quarkus smoke test on JDK #jdk"(int jdk) {
     setup:
@@ -37,14 +41,16 @@ class QuarkusSmokeTest extends SmokeTest {
 
     when:
     client().get("/hello").aggregate().join()
-    Collection<ExportTraceServiceRequest> traces = waitForTraces()
+    TraceInspector traces = new TraceInspector(waitForTraces())
 
-    then:
-    countSpansByName(traces, 'GET /hello') == 1
+    then: "Expected span names"
+    traces.countSpansByName('GET /hello') == 1
 
-      [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.distro.version")
-      .map { it.stringValue }
-      .collect(toSet())
+    and: "telemetry.distro.version is set"
+    traces.countFilteredResourceAttributes("telemetry.distro.version", currentAgentVersion) == 1
+
+    and: "service.name is detected from manifest"
+    traces.countFilteredResourceAttributes(ServiceAttributes.SERVICE_NAME.key, "smoke-test-quarkus-images") == 1
 
     cleanup:
     stopTarget()

@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -512,16 +512,16 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("a1")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "annotated1")
+                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated1")
               )
           },
           {
             it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
               .hasParent(trace.getSpan(0))
               .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "annotated2"),
+                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated2"),
                 equalTo(AttributeKey.longKey("byteValue"), 1),
                 equalTo(AttributeKey.longKey("intValue"), 4),
                 equalTo(AttributeKey.longKey("longValue"), 5),
@@ -574,8 +574,8 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.CODE_NAMESPACE, ClazzWithDefaultConstructorArguments::class.qualifiedName),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "sayHello")
+                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, ClazzWithDefaultConstructorArguments::class.qualifiedName),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHello")
               )
           }
         )

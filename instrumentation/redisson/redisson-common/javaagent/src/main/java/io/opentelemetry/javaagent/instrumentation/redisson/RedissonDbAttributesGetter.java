@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest> {
 
   @Override
   public String getSystem(RedissonRequest request) {
-    return SemanticAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
   @Nullable
@@ -25,11 +25,6 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   @Override
   public String getName(RedissonRequest request) {
-    return null;
-  }
-
-  @Override
-  public String getConnectionString(RedissonRequest request) {
     return null;
   }
 

@@ -16,7 +16,8 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryStatement
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.LibraryTestTrait
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter
@@ -47,15 +48,14 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" dbInfo.system
-            "$SemanticAttributes.DB_NAME" dbInfo.name
-            "$SemanticAttributes.DB_USER" dbInfo.user
-            "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
-            "$SemanticAttributes.SERVER_ADDRESS" dbInfo.host
-            "$SemanticAttributes.SERVER_PORT" dbInfo.port
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "users"
+            "$DbIncubatingAttributes.DB_SYSTEM" dbInfo.system
+            "$DbIncubatingAttributes.DB_NAME" dbInfo.name
+            "$DbIncubatingAttributes.DB_USER" dbInfo.user
+            "$ServerAttributes.SERVER_ADDRESS" dbInfo.host
+            "$ServerAttributes.SERVER_PORT" dbInfo.port
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "users"
           }
         }
       }
@@ -103,15 +103,14 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" dbInfo.system
-            "$SemanticAttributes.DB_NAME" dbInfo.name
-            "$SemanticAttributes.DB_USER" dbInfo.user
-            "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
-            "$SemanticAttributes.SERVER_ADDRESS" dbInfo.host
-            "$SemanticAttributes.SERVER_PORT" dbInfo.port
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "users"
+            "$DbIncubatingAttributes.DB_SYSTEM" dbInfo.system
+            "$DbIncubatingAttributes.DB_NAME" dbInfo.name
+            "$DbIncubatingAttributes.DB_USER" dbInfo.user
+            "$ServerAttributes.SERVER_ADDRESS" dbInfo.host
+            "$ServerAttributes.SERVER_PORT" dbInfo.port
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "users"
           }
         }
       }
@@ -163,15 +162,14 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" dbInfo.system
-            "$SemanticAttributes.DB_NAME" dbInfo.name
-            "$SemanticAttributes.DB_USER" dbInfo.user
-            "$SemanticAttributes.DB_CONNECTION_STRING" dbInfo.shortUrl
-            "$SemanticAttributes.SERVER_ADDRESS" dbInfo.host
-            "$SemanticAttributes.SERVER_PORT" dbInfo.port
-            "$SemanticAttributes.DB_STATEMENT" query
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "users"
+            "$DbIncubatingAttributes.DB_SYSTEM" dbInfo.system
+            "$DbIncubatingAttributes.DB_NAME" dbInfo.name
+            "$DbIncubatingAttributes.DB_USER" dbInfo.user
+            "$ServerAttributes.SERVER_ADDRESS" dbInfo.host
+            "$ServerAttributes.SERVER_PORT" dbInfo.port
+            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "users"
           }
         }
       }
@@ -200,7 +198,6 @@ class OpenTelemetryConnectionTest extends InstrumentationSpecification implement
     DbInfo.builder()
       .system("my_system")
       .subtype("my_sub_type")
-      .shortUrl("my_connection_string")
       .user("my_user")
       .name("my_name")
       .db("my_db")

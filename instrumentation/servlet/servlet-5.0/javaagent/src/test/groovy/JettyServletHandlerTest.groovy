@@ -5,7 +5,7 @@
 
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import jakarta.servlet.Servlet
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -13,6 +13,8 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletHandler
 import spock.lang.IgnoreIf
+import test.AbstractServlet5Test
+import test.TestServlet5
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
 
@@ -22,7 +24,7 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Object, Object> {
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes.remove(HttpAttributes.HTTP_ROUTE)
     attributes
   }
 

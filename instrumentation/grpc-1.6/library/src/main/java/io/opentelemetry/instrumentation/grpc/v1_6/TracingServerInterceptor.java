@@ -19,7 +19,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingServerInterceptor implements ServerInterceptor {
@@ -92,9 +92,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
       Span span = Span.fromContext(context);
       Attributes attributes =
           Attributes.of(
-              SemanticAttributes.MESSAGE_TYPE,
-              SemanticAttributes.MessageTypeValues.SENT,
-              SemanticAttributes.MESSAGE_ID,
+              MessageIncubatingAttributes.MESSAGE_TYPE,
+              MessageIncubatingAttributes.MessageTypeValues.SENT,
+              MessageIncubatingAttributes.MESSAGE_ID,
               MESSAGE_ID_UPDATER.incrementAndGet(this));
       span.addEvent("message", attributes);
     }
@@ -125,9 +125,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
       public void onMessage(REQUEST message) {
         Attributes attributes =
             Attributes.of(
-                SemanticAttributes.MESSAGE_TYPE,
-                SemanticAttributes.MessageTypeValues.RECEIVED,
-                SemanticAttributes.MESSAGE_ID,
+                MessageIncubatingAttributes.MESSAGE_TYPE,
+                MessageIncubatingAttributes.MessageTypeValues.RECEIVED,
+                MessageIncubatingAttributes.MESSAGE_ID,
                 MESSAGE_ID_UPDATER.incrementAndGet(TracingServerCall.this));
         Span.fromContext(context).addEvent("message", attributes);
         delegate().onMessage(message);

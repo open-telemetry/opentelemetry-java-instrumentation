@@ -7,20 +7,20 @@ package io.opentelemetry.cassandra.v4.common;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_PAGE_SIZE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -30,8 +30,8 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.stream.Stream;
@@ -200,8 +200,8 @@ public abstract class AbstractCassandraTest {
                     null,
                     "DROP KEYSPACE IF EXISTS sync_test",
                     "DROP KEYSPACE IF EXISTS sync_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -210,8 +210,8 @@ public abstract class AbstractCassandraTest {
                     null,
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -220,9 +220,9 @@ public abstract class AbstractCassandraTest {
                     "sync_test",
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
-                    "sync_test",
-                    null,
-                    null))),
+                    "CREATE TABLE sync_test.users",
+                    "CREATE TABLE",
+                    "sync_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -254,8 +254,8 @@ public abstract class AbstractCassandraTest {
                     null,
                     "DROP KEYSPACE IF EXISTS async_test",
                     "DROP KEYSPACE IF EXISTS async_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -264,8 +264,8 @@ public abstract class AbstractCassandraTest {
                     null,
                     "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -274,9 +274,9 @@ public abstract class AbstractCassandraTest {
                     "async_test",
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
-                    "async_test",
-                    null,
-                    null))),
+                    "CREATE TABLE async_test.users",
+                    "CREATE TABLE",
+                    "async_test.users"))),
         Arguments.of(
             named(
                 "Insert data",

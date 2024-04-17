@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerTestOptions,
   ServerEndpoint
 }
+import io.opentelemetry.semconv.HttpAttributes
 
 import java.util
 import java.util.Collections
@@ -25,8 +26,13 @@ abstract class AbstractHttpServerInstrumentationTest
     options.setTestCaptureHttpHeaders(false)
     options.setHttpAttributes(
       new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] =
-          Collections.emptySet()
+        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
+          val set = new util.HashSet[AttributeKey[_]](
+            HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
+          )
+          set.remove(HttpAttributes.HTTP_ROUTE)
+          set
+        }
       }
     )
     options.setHasResponseCustomizer(

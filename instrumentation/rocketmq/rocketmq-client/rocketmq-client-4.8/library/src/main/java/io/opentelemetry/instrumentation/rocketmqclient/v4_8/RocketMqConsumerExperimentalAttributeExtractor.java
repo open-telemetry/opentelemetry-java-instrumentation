@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -29,7 +29,7 @@ enum RocketMqConsumerExperimentalAttributeExtractor
   public void onStart(AttributesBuilder attributes, Context parentContext, MessageExt msg) {
     String tags = msg.getTags();
     if (tags != null) {
-      attributes.put(SemanticAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG, tags);
+      attributes.put(MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG, tags);
     }
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_ID, msg.getQueueId());
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());

@@ -26,6 +26,14 @@ Implemented attributes:
 - `host.name`
 - `host.arch`
 
+Provider: `io.opentelemetry.instrumentation.resources.HostIdResourceProvider`
+
+Specification: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/host.md>
+
+Implemented attributes:
+
+- `host.id`
+
 ### Operating System
 
 Provider: `io.opentelemetry.instrumentation.resources.OsResource`

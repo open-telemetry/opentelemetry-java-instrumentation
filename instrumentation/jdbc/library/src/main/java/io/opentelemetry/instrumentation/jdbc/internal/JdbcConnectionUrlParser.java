@@ -11,7 +11,7 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
-import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -819,15 +819,15 @@ public enum JdbcConnectionUrlParser {
       builder.subtype(subtype);
 
       if (subtype.equals("sqlserver")) {
-        builder.system(DbSystemValues.MSSQL);
+        builder.system(DbIncubatingAttributes.DbSystemValues.MSSQL);
       } else if (subtype.equals("oracle")) {
-        builder.system(DbSystemValues.ORACLE);
+        builder.system(DbIncubatingAttributes.DbSystemValues.ORACLE);
       } else if (subtype.equals("mysql")) {
-        builder.system(DbSystemValues.MYSQL);
+        builder.system(DbIncubatingAttributes.DbSystemValues.MYSQL);
       } else if (subtype.equals("postgresql")) {
-        builder.system(DbSystemValues.POSTGRESQL);
+        builder.system(DbIncubatingAttributes.DbSystemValues.POSTGRESQL);
       } else if (subtype.equals("db2")) {
-        builder.system(DbSystemValues.DB2);
+        builder.system(DbIncubatingAttributes.DbSystemValues.DB2);
       }
 
       return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
@@ -887,36 +887,13 @@ public enum JdbcConnectionUrlParser {
     try {
       if (typeParsers.containsKey(type)) {
         // Delegate to specific parser
-        return withUrl(typeParsers.get(type).doParse(jdbcUrl, parsedProps), type);
+        return typeParsers.get(type).doParse(jdbcUrl, parsedProps).build();
       }
-      return withUrl(GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps), type);
+      return GENERIC_URL_LIKE.doParse(jdbcUrl, parsedProps).build();
     } catch (RuntimeException e) {
       logger.log(FINE, "Error parsing URL", e);
       return parsedProps.build();
     }
-  }
-
-  private static DbInfo withUrl(DbInfo.Builder builder, String type) {
-    DbInfo info = builder.build();
-    StringBuilder url = new StringBuilder();
-    url.append(type);
-    url.append(':');
-    String subtype = info.getSubtype();
-    if (subtype != null) {
-      url.append(subtype);
-      url.append(':');
-    }
-    String host = info.getHost();
-    if (host != null) {
-      url.append("//");
-      url.append(host);
-      Integer port = info.getPort();
-      if (port != null) {
-        url.append(':');
-        url.append(port);
-      }
-    }
-    return builder.shortUrl(url.toString()).build();
   }
 
   // Source: https://stackoverflow.com/a/13592567
@@ -989,34 +966,34 @@ public enum JdbcConnectionUrlParser {
   }
 
   // see
-  // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md
   private static String toDbSystem(String type) {
     switch (type) {
       case "as400": // IBM AS400 Database
       case "db2": // IBM Db2
-        return DbSystemValues.DB2;
+        return DbIncubatingAttributes.DbSystemValues.DB2;
       case "derby": // Apache Derby
-        return DbSystemValues.DERBY;
+        return DbIncubatingAttributes.DbSystemValues.DERBY;
       case "h2": // H2 Database
-        return DbSystemValues.H2;
+        return DbIncubatingAttributes.DbSystemValues.H2;
       case "hsqldb": // Hyper SQL Database
         return "hsqldb";
       case "mariadb": // MariaDB
-        return DbSystemValues.MARIADB;
+        return DbIncubatingAttributes.DbSystemValues.MARIADB;
       case "mysql": // MySQL
-        return DbSystemValues.MYSQL;
+        return DbIncubatingAttributes.DbSystemValues.MYSQL;
       case "oracle": // Oracle Database
-        return DbSystemValues.ORACLE;
+        return DbIncubatingAttributes.DbSystemValues.ORACLE;
       case "postgresql": // PostgreSQL
-        return DbSystemValues.POSTGRESQL;
+        return DbIncubatingAttributes.DbSystemValues.POSTGRESQL;
       case "jtds": // jTDS - the pure Java JDBC 3.0 driver for Microsoft SQL Server
       case "microsoft":
       case "sqlserver": // Microsoft SQL Server
-        return DbSystemValues.MSSQL;
+        return DbIncubatingAttributes.DbSystemValues.MSSQL;
       case "sap": // SAP Hana
-        return DbSystemValues.HANADB;
+        return DbIncubatingAttributes.DbSystemValues.HANADB;
       default:
-        return DbSystemValues.OTHER_SQL; // Unknown DBMS
+        return DbIncubatingAttributes.DbSystemValues.OTHER_SQL; // Unknown DBMS
     }
   }
 }

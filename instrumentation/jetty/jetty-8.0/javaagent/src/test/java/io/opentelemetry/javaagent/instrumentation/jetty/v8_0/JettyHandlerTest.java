@@ -25,7 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
@@ -40,7 +40,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
+class JettyHandlerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -62,25 +62,17 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   private static final TestHandler testHandler = new TestHandler();
 
   @Override
-  protected Server setupServer() {
+  protected Server setupServer() throws Exception {
     Server server = new Server(port);
     server.setHandler(testHandler);
     server.addBean(errorHandler);
-    try {
-      server.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    server.start();
     return server;
   }
 
   @Override
-  protected void stopServer(Server server) {
-    try {
-      server.stop();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  protected void stopServer(Server server) throws Exception {
+    server.stop();
   }
 
   @Override
@@ -88,7 +80,7 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
     options.setHttpAttributes(
         unused ->
             Sets.difference(
-                DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
+                DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HttpAttributes.HTTP_ROUTE)));
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);

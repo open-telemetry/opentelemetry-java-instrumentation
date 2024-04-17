@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {
@@ -18,7 +18,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getSystem(JedisRequest request) {
-    return SemanticAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
   @Override
@@ -29,11 +29,6 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getName(JedisRequest request) {
-    return null;
-  }
-
-  @Override
-  public String getConnectionString(JedisRequest request) {
     return null;
   }
 

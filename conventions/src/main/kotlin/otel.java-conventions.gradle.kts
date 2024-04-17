@@ -122,7 +122,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.107.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.109.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -140,7 +140,7 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:3.4.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.20"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.21"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -344,7 +344,7 @@ tasks.withType<Test>().configureEach {
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout.set(Duration.ofMinutes(15))
 
-  retry {
+  develocity.testRetry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
     if (System.getenv().containsKey("CI") || rootProject.hasProperty("retryTests")) {
       maxRetries.set(5)
@@ -407,7 +407,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.14.0"
+  toolVersion = "10.15.0"
   maxWarnings = 0
 }
 

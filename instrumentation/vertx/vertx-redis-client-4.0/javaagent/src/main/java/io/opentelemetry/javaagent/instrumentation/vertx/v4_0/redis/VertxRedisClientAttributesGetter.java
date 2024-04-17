@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 public enum VertxRedisClientAttributesGetter
@@ -20,7 +20,7 @@ public enum VertxRedisClientAttributesGetter
 
   @Override
   public String getSystem(VertxRedisClientRequest request) {
-    return SemanticAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
   @Override
@@ -33,12 +33,6 @@ public enum VertxRedisClientAttributesGetter
   @Nullable
   public String getName(VertxRedisClientRequest request) {
     return null;
-  }
-
-  @Override
-  @Nullable
-  public String getConnectionString(VertxRedisClientRequest request) {
-    return request.getConnectionString();
   }
 
   @Override

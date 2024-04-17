@@ -7,7 +7,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import io.undertow.Handlers
 import io.undertow.Undertow
 import io.undertow.util.Headers
@@ -105,7 +105,7 @@ class UndertowServerDispatchTest extends HttpServerTest<Undertow> implements Age
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes.remove(HttpAttributes.HTTP_ROUTE)
     attributes
   }
 }

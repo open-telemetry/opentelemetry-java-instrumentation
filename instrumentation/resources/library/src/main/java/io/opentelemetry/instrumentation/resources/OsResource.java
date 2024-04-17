@@ -8,7 +8,8 @@ package io.opentelemetry.instrumentation.resources;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
@@ -44,7 +45,7 @@ public final class OsResource {
 
     String osName = getOs(os);
     if (osName != null) {
-      attributes.put(ResourceAttributes.OS_TYPE, osName);
+      attributes.put(OsIncubatingAttributes.OS_TYPE, osName);
     }
 
     String version = null;
@@ -54,36 +55,36 @@ public final class OsResource {
       // Ignore
     }
     String osDescription = version != null ? os + ' ' + version : os;
-    attributes.put(ResourceAttributes.OS_DESCRIPTION, osDescription);
+    attributes.put(OsIncubatingAttributes.OS_DESCRIPTION, osDescription);
 
-    return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
+    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
   }
 
   @Nullable
   private static String getOs(String os) {
     os = os.toLowerCase(Locale.ROOT);
     if (os.startsWith("windows")) {
-      return ResourceAttributes.OsTypeValues.WINDOWS;
+      return OsIncubatingAttributes.OsTypeValues.WINDOWS;
     } else if (os.startsWith("linux")) {
-      return ResourceAttributes.OsTypeValues.LINUX;
+      return OsIncubatingAttributes.OsTypeValues.LINUX;
     } else if (os.startsWith("mac")) {
-      return ResourceAttributes.OsTypeValues.DARWIN;
+      return OsIncubatingAttributes.OsTypeValues.DARWIN;
     } else if (os.startsWith("freebsd")) {
-      return ResourceAttributes.OsTypeValues.FREEBSD;
+      return OsIncubatingAttributes.OsTypeValues.FREEBSD;
     } else if (os.startsWith("netbsd")) {
-      return ResourceAttributes.OsTypeValues.NETBSD;
+      return OsIncubatingAttributes.OsTypeValues.NETBSD;
     } else if (os.startsWith("openbsd")) {
-      return ResourceAttributes.OsTypeValues.OPENBSD;
+      return OsIncubatingAttributes.OsTypeValues.OPENBSD;
     } else if (os.startsWith("dragonflybsd")) {
-      return ResourceAttributes.OsTypeValues.DRAGONFLYBSD;
+      return OsIncubatingAttributes.OsTypeValues.DRAGONFLYBSD;
     } else if (os.startsWith("hp-ux")) {
-      return ResourceAttributes.OsTypeValues.HPUX;
+      return OsIncubatingAttributes.OsTypeValues.HPUX;
     } else if (os.startsWith("aix")) {
-      return ResourceAttributes.OsTypeValues.AIX;
+      return OsIncubatingAttributes.OsTypeValues.AIX;
     } else if (os.startsWith("solaris")) {
-      return ResourceAttributes.OsTypeValues.SOLARIS;
+      return OsIncubatingAttributes.OsTypeValues.SOLARIS;
     } else if (os.startsWith("z/os")) {
-      return ResourceAttributes.OsTypeValues.Z_OS;
+      return OsIncubatingAttributes.OsTypeValues.Z_OS;
     }
     return null;
   }

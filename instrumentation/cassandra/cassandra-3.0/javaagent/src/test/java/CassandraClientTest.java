@@ -10,10 +10,11 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.concurrent.Executor;
@@ -85,14 +86,15 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  SemanticAttributes.DB_STATEMENT, "USE " + parameter.keyspace))),
+                                  DbIncubatingAttributes.DB_STATEMENT,
+                                  "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -100,16 +102,18 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(SemanticAttributes.DB_NAME, parameter.keyspace),
-                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                              equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(DbIncubatingAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(
+                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(
+                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -119,15 +123,17 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                              equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(
+                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(
+                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     }
 
     session.close();
@@ -158,14 +164,15 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  SemanticAttributes.DB_STATEMENT, "USE " + parameter.keyspace))),
+                                  DbIncubatingAttributes.DB_STATEMENT,
+                                  "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -174,16 +181,17 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(SemanticAttributes.DB_NAME, parameter.keyspace),
-                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(DbIncubatingAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(
+                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -198,15 +206,16 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(SemanticAttributes.SERVER_PORT, cassandraPort),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                              equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(SemanticAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(SemanticAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(SemanticAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
+                              equalTo(
+                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -225,8 +234,8 @@ public class CassandraClientTest {
                     null,
                     "DROP KEYSPACE IF EXISTS sync_test",
                     "DROP KEYSPACE IF EXISTS sync_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -235,8 +244,8 @@ public class CassandraClientTest {
                     null,
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -245,9 +254,9 @@ public class CassandraClientTest {
                     "sync_test",
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
-                    "sync_test",
-                    null,
-                    null))),
+                    "CREATE TABLE sync_test.users",
+                    "CREATE TABLE",
+                    "sync_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -279,8 +288,8 @@ public class CassandraClientTest {
                     null,
                     "DROP KEYSPACE IF EXISTS async_test",
                     "DROP KEYSPACE IF EXISTS async_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -289,8 +298,8 @@ public class CassandraClientTest {
                     null,
                     "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -299,9 +308,9 @@ public class CassandraClientTest {
                     "async_test",
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
-                    "async_test",
-                    null,
-                    null))),
+                    "CREATE TABLE async_test.users",
+                    "CREATE TABLE",
+                    "async_test.users"))),
         Arguments.of(
             named(
                 "Insert data",

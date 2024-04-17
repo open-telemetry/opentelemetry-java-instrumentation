@@ -5,7 +5,9 @@
 
 import io.dropwizard.testing.junit.ResourceTestRule
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.ErrorAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import org.junit.ClassRule
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -40,9 +42,9 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name "GET " + expectedRoute
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_ROUTE" expectedRoute
-            "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_ROUTE" expectedRoute
+            "$ErrorAttributes.ERROR_TYPE" "_OTHER"
           }
         }
 
@@ -50,8 +52,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           childOf span(0)
           name controllerName
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-            "$SemanticAttributes.CODE_FUNCTION" "hello"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "hello"
           }
         }
       }
@@ -81,9 +83,9 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name "GET " + expectedRoute
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_ROUTE" expectedRoute
-            "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_ROUTE" expectedRoute
+            "$ErrorAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(1) {
@@ -91,8 +93,8 @@ class JerseyTest extends AgentInstrumentationSpecification {
           name controller1Name
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-            "$SemanticAttributes.CODE_FUNCTION" "nested"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "nested"
           }
         }
       }

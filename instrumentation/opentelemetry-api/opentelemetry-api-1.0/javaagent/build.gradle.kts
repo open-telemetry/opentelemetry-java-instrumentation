@@ -42,3 +42,12 @@ dependencies {
   // @WithSpan annotation is used to generate spans in ContextBridgeTest
   testImplementation(project(":instrumentation-annotations"))
 }
+
+configurations.configureEach {
+  if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
+    resolutionStrategy {
+      // earliest version that works with out test harness
+      force("io.opentelemetry:opentelemetry-api:1.4.0")
+    }
+  }
+}

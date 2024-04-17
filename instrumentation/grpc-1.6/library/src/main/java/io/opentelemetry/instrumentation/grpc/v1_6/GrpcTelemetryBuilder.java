@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -197,7 +197,7 @@ public final class GrpcTelemetryBuilder {
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(SemanticAttributes.PEER_SERVICE, peerService));
+          AttributesExtractor.constant(PeerIncubatingAttributes.PEER_SERVICE, peerService));
     }
 
     return new GrpcTelemetry(

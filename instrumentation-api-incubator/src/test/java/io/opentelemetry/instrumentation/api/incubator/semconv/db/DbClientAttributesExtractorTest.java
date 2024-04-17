@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,11 +37,6 @@ class DbClientAttributesExtractorTest {
     }
 
     @Override
-    public String getConnectionString(Map<String, String> map) {
-      return map.get("db.connection_string");
-    }
-
-    @Override
     public String getStatement(Map<String, String> map) {
       return map.get("db.statement");
     }
@@ -59,7 +54,6 @@ class DbClientAttributesExtractorTest {
     request.put("db.system", "myDb");
     request.put("db.user", "username");
     request.put("db.name", "potatoes");
-    request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.statement", "SELECT * FROM potato");
     request.put("db.operation", "SELECT");
 
@@ -78,12 +72,11 @@ class DbClientAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.DB_SYSTEM, "myDb"),
-            entry(SemanticAttributes.DB_USER, "username"),
-            entry(SemanticAttributes.DB_NAME, "potatoes"),
-            entry(SemanticAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM potato"),
-            entry(SemanticAttributes.DB_OPERATION, "SELECT"));
+            entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+            entry(DbIncubatingAttributes.DB_USER, "username"),
+            entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
+            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }

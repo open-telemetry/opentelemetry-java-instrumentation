@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import redis.RedisCommand;
@@ -15,7 +15,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Override
   public String getSystem(RedisCommand<?, ?> redisCommand) {
-    return SemanticAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
   @Override
@@ -27,12 +27,6 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
   @Override
   @Nullable
   public String getName(RedisCommand<?, ?> redisCommand) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getConnectionString(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 

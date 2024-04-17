@@ -28,8 +28,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
-import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -155,7 +154,8 @@ final class OpenTelemetryTracing implements Tracing {
               .spanBuilder("redis")
               .setSpanKind(SpanKind.CLIENT)
               .setParent(context)
-              .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.REDIS);
+              .setAttribute(
+                  DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.REDIS);
       return new OpenTelemetrySpan(context, spanBuilder, sanitizer);
     }
   }
@@ -333,7 +333,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (name != null) {
         String statement =
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
-        span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
+        span.setAttribute(DbIncubatingAttributes.DB_STATEMENT, statement);
       }
       span.end();
     }

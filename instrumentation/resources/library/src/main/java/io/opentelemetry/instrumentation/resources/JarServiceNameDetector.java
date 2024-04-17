@@ -13,17 +13,12 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
+import io.opentelemetry.semconv.ServiceAttributes;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * A {@link ResourceProvider} that will attempt to detect the application name from the jar name.
@@ -33,37 +28,34 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
 
   private static final Logger logger = Logger.getLogger(JarServiceNameDetector.class.getName());
 
-  private final Supplier<String[]> getProcessHandleArguments;
-  private final Function<String, String> getSystemProperty;
-  private final Predicate<Path> fileExists;
+  private final Supplier<Optional<Path>> jarPathSupplier;
 
   @SuppressWarnings("unused") // SPI
   public JarServiceNameDetector() {
-    this(ProcessArguments::getProcessArguments, System::getProperty, Files::isRegularFile);
+    this(MainJarPathHolder::getJarPath);
+  }
+
+  private JarServiceNameDetector(Supplier<Optional<Path>> jarPathSupplier) {
+    this.jarPathSupplier = jarPathSupplier;
   }
 
   // visible for tests
-  JarServiceNameDetector(
-      Supplier<String[]> getProcessHandleArguments,
-      Function<String, String> getSystemProperty,
-      Predicate<Path> fileExists) {
-    this.getProcessHandleArguments = getProcessHandleArguments;
-    this.getSystemProperty = getSystemProperty;
-    this.fileExists = fileExists;
+  JarServiceNameDetector(MainJarPathFinder jarPathFinder) {
+    this(() -> Optional.ofNullable(jarPathFinder.detectJarPath()));
   }
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    Path jarPath = getJarPathFromProcessHandle();
-    if (jarPath == null) {
-      jarPath = getJarPathFromSunCommandLine();
-    }
-    if (jarPath == null) {
-      return Resource.empty();
-    }
-    String serviceName = getServiceName(jarPath);
-    logger.log(FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
-    return Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, serviceName));
+    return jarPathSupplier
+        .get()
+        .map(
+            jarPath -> {
+              String serviceName = getServiceName(jarPath);
+              logger.log(
+                  FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
+              return Resource.create(Attributes.of(ServiceAttributes.SERVICE_NAME, serviceName));
+            })
+        .orElseGet(Resource::empty);
   }
 
   @Override
@@ -71,54 +63,8 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     String serviceName = config.getString("otel.service.name");
     Map<String, String> resourceAttributes = config.getMap("otel.resource.attributes");
     return serviceName == null
-        && !resourceAttributes.containsKey(ResourceAttributes.SERVICE_NAME.getKey())
-        && "unknown_service:java".equals(existing.getAttribute(ResourceAttributes.SERVICE_NAME));
-  }
-
-  @Nullable
-  private Path getJarPathFromProcessHandle() {
-    String[] javaArgs = getProcessHandleArguments.get();
-    for (int i = 0; i < javaArgs.length; ++i) {
-      if ("-jar".equals(javaArgs[i]) && (i < javaArgs.length - 1)) {
-        return Paths.get(javaArgs[i + 1]);
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private Path getJarPathFromSunCommandLine() {
-    // the jar file is the first argument in the command line string
-    String programArguments = getSystemProperty.apply("sun.java.command");
-    if (programArguments == null) {
-      return null;
-    }
-
-    // Take the path until the first space. If the path doesn't exist extend it up to the next
-    // space. Repeat until a path that exists is found or input runs out.
-    int next = 0;
-    while (true) {
-      int nextSpace = programArguments.indexOf(' ', next);
-      if (nextSpace == -1) {
-        return pathIfExists(programArguments);
-      }
-      Path path = pathIfExists(programArguments.substring(0, nextSpace));
-      next = nextSpace + 1;
-      if (path != null) {
-        return path;
-      }
-    }
-  }
-
-  @Nullable
-  private Path pathIfExists(String programArguments) {
-    Path candidate;
-    try {
-      candidate = Paths.get(programArguments);
-    } catch (InvalidPathException e) {
-      return null;
-    }
-    return fileExists.test(candidate) ? candidate : null;
+        && !resourceAttributes.containsKey(ServiceAttributes.SERVICE_NAME.getKey())
+        && "unknown_service:java".equals(existing.getAttribute(ServiceAttributes.SERVICE_NAME));
   }
 
   private static String getServiceName(Path jarPath) {

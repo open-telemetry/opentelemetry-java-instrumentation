@@ -44,6 +44,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  implementation(project(":sdk-autoconfigure-support"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
@@ -66,7 +67,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation(project(":instrumentation:resources:library"))
-  testImplementation(project(":instrumentation:spring:spring-boot-resources:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
@@ -113,6 +113,27 @@ testing {
         }
       }
     }
+  }
+
+  suites {
+    val testLogbackMissing by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.7.32")
+          }
+        }
+      }
+    }
+  }
+}
+
+configurations.configureEach {
+  if (name.contains("testLogbackMissing")) {
+    exclude("ch.qos.logback", "logback-classic")
   }
 }
 

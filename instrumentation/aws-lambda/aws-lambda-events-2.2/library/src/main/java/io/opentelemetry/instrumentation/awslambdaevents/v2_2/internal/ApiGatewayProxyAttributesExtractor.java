@@ -9,9 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
-import static io.opentelemetry.semconv.SemanticAttributes.FAAS_TRIGGER;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -19,7 +18,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -40,7 +41,8 @@ final class ApiGatewayProxyAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, AwsLambdaRequest request) {
     if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
-      attributes.put(FAAS_TRIGGER, SemanticAttributes.FaasTriggerValues.HTTP);
+      attributes.put(
+          FaasIncubatingAttributes.FAAS_TRIGGER, FaasIncubatingAttributes.FaasTriggerValues.HTTP);
       onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
     }
   }
@@ -48,10 +50,10 @@ final class ApiGatewayProxyAttributesExtractor
   void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
     String method = request.getHttpMethod();
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
@@ -60,7 +62,7 @@ final class ApiGatewayProxyAttributesExtractor
       attributes.put(USER_AGENT_ORIGINAL, userAgent);
     }
 
-    internalSet(attributes, SemanticAttributes.URL_FULL, getHttpUrl(request, headers));
+    internalSet(attributes, UrlAttributes.URL_FULL, getHttpUrl(request, headers));
   }
 
   private static String getHttpUrl(

@@ -25,9 +25,8 @@ final class ApplicationLongGaugeBuilder131 extends ApplicationLongGaugeBuilder
 
   @Override
   public LongGauge build() {
-    io.opentelemetry.extension.incubator.metrics.LongGauge agentLongGauge =
-        ((io.opentelemetry.extension.incubator.metrics.ExtendedLongGaugeBuilder) agentBuilder)
-            .build();
+    io.opentelemetry.api.incubator.metrics.LongGauge agentLongGauge =
+        ((io.opentelemetry.api.incubator.metrics.ExtendedLongGaugeBuilder) agentBuilder).build();
     return new LongGauge() {
       @Override
       public void set(long value) {
@@ -43,7 +42,7 @@ final class ApplicationLongGaugeBuilder131 extends ApplicationLongGaugeBuilder
 
   @Override
   public ExtendedLongGaugeBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
-    ((io.opentelemetry.extension.incubator.metrics.ExtendedLongGaugeBuilder) agentBuilder)
+    ((io.opentelemetry.api.incubator.metrics.ExtendedLongGaugeBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

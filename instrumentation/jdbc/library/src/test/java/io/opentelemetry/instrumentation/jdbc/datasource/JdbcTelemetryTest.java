@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,7 +41,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(SemanticAttributes.DB_STATEMENT, "SELECT ?;"))));
+                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT ?;"))));
   }
 
   @Test
@@ -117,7 +117,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(SemanticAttributes.DB_STATEMENT, "SELECT 1;"))));
+                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT 1;"))));
   }
 
   @Test

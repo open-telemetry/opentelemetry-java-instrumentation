@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 abstract class DbClientCommonAttributesExtractor<
@@ -27,11 +27,9 @@ abstract class DbClientCommonAttributesExtractor<
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.DB_SYSTEM, getter.getSystem(request));
-    internalSet(attributes, SemanticAttributes.DB_USER, getter.getUser(request));
-    internalSet(attributes, SemanticAttributes.DB_NAME, getter.getName(request));
-    internalSet(
-        attributes, SemanticAttributes.DB_CONNECTION_STRING, getter.getConnectionString(request));
+    internalSet(attributes, DbIncubatingAttributes.DB_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, DbIncubatingAttributes.DB_USER, getter.getUser(request));
+    internalSet(attributes, DbIncubatingAttributes.DB_NAME, getter.getName(request));
   }
 
   @Override

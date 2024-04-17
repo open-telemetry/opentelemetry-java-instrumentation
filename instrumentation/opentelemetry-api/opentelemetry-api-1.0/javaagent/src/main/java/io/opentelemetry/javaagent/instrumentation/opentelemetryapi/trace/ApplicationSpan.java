@@ -102,6 +102,20 @@ class ApplicationSpan implements Span {
 
   @Override
   @CanIgnoreReturnValue
+  public Span addLink(SpanContext spanContext) {
+    agentSpan.addLink(Bridging.toAgent(spanContext));
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
+  public Span addLink(SpanContext spanContext, Attributes attributes) {
+    agentSpan.addLink(Bridging.toAgent(spanContext), Bridging.toAgent(attributes));
+    return this;
+  }
+
+  @Override
+  @CanIgnoreReturnValue
   public Span setStatus(StatusCode status) {
     agentSpan.setStatus(Bridging.toAgent(status));
     return this;

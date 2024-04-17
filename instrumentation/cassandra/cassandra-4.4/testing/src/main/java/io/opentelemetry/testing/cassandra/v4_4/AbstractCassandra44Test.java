@@ -7,27 +7,27 @@ package io.opentelemetry.testing.cassandra.v4_4;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_COORDINATOR_DC;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_COORDINATOR_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_IDEMPOTENCE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_PAGE_SIZE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -106,8 +106,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "DROP KEYSPACE IF EXISTS reactive_test",
                     "DROP KEYSPACE IF EXISTS reactive_test",
-                    "DB Query",
-                    null,
+                    "DROP",
+                    "DROP",
                     null))),
         Arguments.of(
             named(
@@ -116,8 +116,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {?:?, ?:?}",
-                    "DB Query",
-                    null,
+                    "CREATE",
+                    "CREATE",
                     null))),
         Arguments.of(
             named(
@@ -126,9 +126,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "reactive_test",
                     "CREATE TABLE reactive_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE reactive_test.users ( id UUID PRIMARY KEY, name text )",
-                    "reactive_test",
-                    null,
-                    null))),
+                    "CREATE TABLE reactive_test.users",
+                    "CREATE TABLE",
+                    "reactive_test.users"))),
         Arguments.of(
             named(
                 "Insert data",

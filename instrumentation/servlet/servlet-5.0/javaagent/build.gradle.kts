@@ -17,7 +17,9 @@ dependencies {
 
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
-  testImplementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
+  testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
+
+  testImplementation(project(":instrumentation:servlet:servlet-5.0:testing"))
 
   testLibrary("org.eclipse.jetty:jetty-server:11.0.0")
   testLibrary("org.eclipse.jetty:jetty-servlet:11.0.0")

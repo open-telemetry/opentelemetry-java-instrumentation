@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version "3.2.3"
+  id("org.springframework.boot") version "3.2.4"
   id("org.graalvm.buildtools.native")
 }
 
@@ -16,6 +16,7 @@ dependencies {
   implementation("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
   implementation(project(":instrumentation:jdbc:library"))
+  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 

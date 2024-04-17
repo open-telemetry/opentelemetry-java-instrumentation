@@ -7,7 +7,7 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.NetworkListener
@@ -79,7 +79,7 @@ class GrizzlyTest extends HttpServerTest<HttpServer> implements AgentTestTrait {
   @Override
   Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
     def attributes = super.httpAttributes(endpoint)
-    attributes.remove(SemanticAttributes.HTTP_ROUTE)
+    attributes.remove(HttpAttributes.HTTP_ROUTE)
     attributes
   }
 

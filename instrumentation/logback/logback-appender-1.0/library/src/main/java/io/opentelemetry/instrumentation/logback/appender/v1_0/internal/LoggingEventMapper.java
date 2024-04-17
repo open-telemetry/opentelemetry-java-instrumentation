@@ -20,7 +20,9 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -124,9 +126,9 @@ public final class LoggingEventMapper {
     captureMdcAttributes(attributes, loggingEvent.getMDCPropertyMap());
 
     if (captureExperimentalAttributes) {
-      attributes.put(SemanticAttributes.THREAD_NAME, loggingEvent.getThreadName());
+      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, loggingEvent.getThreadName());
       if (threadId != -1) {
-        attributes.put(SemanticAttributes.THREAD_ID, threadId);
+        attributes.put(ThreadIncubatingAttributes.THREAD_ID, threadId);
       }
     }
 
@@ -136,13 +138,13 @@ public final class LoggingEventMapper {
         StackTraceElement firstStackElement = callerData[0];
         String fileName = firstStackElement.getFileName();
         if (fileName != null) {
-          attributes.put(SemanticAttributes.CODE_FILEPATH, fileName);
+          attributes.put(CodeIncubatingAttributes.CODE_FILEPATH, fileName);
         }
-        attributes.put(SemanticAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
-        attributes.put(SemanticAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
+        attributes.put(CodeIncubatingAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
+        attributes.put(CodeIncubatingAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
         if (lineNumber > 0) {
-          attributes.put(SemanticAttributes.CODE_LINENO, lineNumber);
+          attributes.put(CodeIncubatingAttributes.CODE_LINENO, lineNumber);
         }
       }
     }
@@ -189,11 +191,11 @@ public final class LoggingEventMapper {
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
     // TODO (trask) extract method for recording exception into
     // io.opentelemetry:opentelemetry-api
-    attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-    attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+    attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+    attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
     StringWriter writer = new StringWriter();
     throwable.printStackTrace(new PrintWriter(writer));
-    attributes.put(SemanticAttributes.EXCEPTION_STACKTRACE, writer.toString());
+    attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
   }
 
   private static Severity levelToSeverity(Level level) {
@@ -221,8 +223,21 @@ public final class LoggingEventMapper {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
+        Object value = keyValuePair.value;
         if (keyValuePair.value != null) {
-          attributes.put(getAttributeKey(keyValuePair.key), keyValuePair.value.toString());
+          // preserve type for boolean and numeric values, everything else is converted to String
+          if (value instanceof Boolean) {
+            attributes.put(keyValuePair.key, (Boolean) keyValuePair.value);
+          } else if (value instanceof Byte
+              || value instanceof Integer
+              || value instanceof Long
+              || value instanceof Short) {
+            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).longValue());
+          } else if (value instanceof Double || value instanceof Float) {
+            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).doubleValue());
+          } else {
+            attributes.put(getAttributeKey(keyValuePair.key), keyValuePair.value.toString());
+          }
         }
       }
     }
@@ -236,7 +251,7 @@ public final class LoggingEventMapper {
   }
 
   public static AttributeKey<String> getAttributeKey(String key) {
-    return attributeKeys.computeIfAbsent(key, k -> AttributeKey.stringKey(k));
+    return attributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static boolean supportsKeyValuePairs() {

@@ -9,3 +9,11 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent"))
 }
+
+configurations.configureEach {
+  if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
+    resolutionStrategy {
+      force("io.opentelemetry:opentelemetry-api:1.27.0")
+    }
+  }
+}

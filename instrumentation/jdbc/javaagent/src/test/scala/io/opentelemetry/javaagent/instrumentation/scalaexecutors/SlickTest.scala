@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.{
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
-import io.opentelemetry.semconv.SemanticAttributes
-import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues
 import java.util.function.Consumer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{Test, TestInstance}
@@ -79,12 +79,14 @@ class SlickTest {
                   .hasKind(SpanKind.CLIENT)
                   .hasParent(trace.getSpan(0))
                   .hasAttributesSatisfyingExactly(
-                    equalTo(SemanticAttributes.DB_SYSTEM, DbSystemValues.H2),
-                    equalTo(SemanticAttributes.DB_NAME, Db),
-                    equalTo(SemanticAttributes.DB_USER, Username),
-                    equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-                    equalTo(SemanticAttributes.DB_STATEMENT, "SELECT ?"),
-                    equalTo(SemanticAttributes.DB_OPERATION, "SELECT")
+                    equalTo(
+                      DbIncubatingAttributes.DB_SYSTEM,
+                      DbSystemValues.H2
+                    ),
+                    equalTo(DbIncubatingAttributes.DB_NAME, Db),
+                    equalTo(DbIncubatingAttributes.DB_USER, Username),
+                    equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT ?"),
+                    equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT")
                   )
             }
           )
