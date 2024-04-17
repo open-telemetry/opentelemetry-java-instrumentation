@@ -15,16 +15,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.server.HttpServer;
 
 /**
- * Configures {@link HttpClient} for tracing.
+ * Configures {@link HttpClient} and {@link reactor.netty.http.server.HttpServer} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to WebClient beans after initialization
  */
 @ConditionalOnBean(OpenTelemetry.class)
-@ConditionalOnClass(WebClient.class)
 @ConditionalOnProperty(name = "otel.instrumentation.reactor-netty.enabled", matchIfMissing = true)
 @Conditional(SdkEnabled.class)
 @Configuration
@@ -34,8 +32,21 @@ public class ReactorNettyInstrumentationAutoConfiguration {
 
   @ConditionalOnClass({HttpClient.class, ObservationRegistry.class})
   @Bean
-  static ReactorNettyHttpClientInitializingBean reactorNettyHttpClientInitializingBean(
+  static ReactorNettyHttpInitializingBean reactorNettyHttpClientInitializingBean(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
-    return new ReactorNettyHttpClientInitializingBean(openTelemetryProvider.getIfAvailable());
+    return new ReactorNettyHttpInitializingBean(openTelemetryProvider.getIfAvailable());
   }
+
+  @Bean
+  @ConditionalOnClass(HttpClient.class)
+  static HttpClientBeanPostProcessor httpClientBeanPostProcessor() {
+    return new HttpClientBeanPostProcessor();
+  }
+
+  @Bean
+  @ConditionalOnClass(HttpServer.class)
+  static HttpServerBeanPostProcessor httpServerBeanPostProcessor() {
+    return new HttpServerBeanPostProcessor();
+  }
+
 }

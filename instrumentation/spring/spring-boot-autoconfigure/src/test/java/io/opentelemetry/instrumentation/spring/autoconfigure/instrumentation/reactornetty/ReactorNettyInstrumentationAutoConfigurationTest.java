@@ -29,7 +29,7 @@ class ReactorNettyInstrumentationAutoConfigurationTest {
                 assertThat(
                         context.getBean(
                             "reactorNettyHttpClientInitializingBean",
-                            ReactorNettyHttpClientInitializingBean.class))
+                            ReactorNettyHttpInitializingBean.class))
                     .isNotNull());
   }
 
@@ -50,7 +50,7 @@ class ReactorNettyInstrumentationAutoConfigurationTest {
             assertThat(
                     context.getBean(
                         "reactorNettyHttpClientInitializingBean",
-                        ReactorNettyHttpClientInitializingBean.class))
+                        ReactorNettyHttpInitializingBean.class))
                 .isNotNull());
   }
 }

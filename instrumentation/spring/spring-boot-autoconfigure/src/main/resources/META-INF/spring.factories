@@ -9,5 +9,4 @@ io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web.Spring
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux.SpringWebfluxInstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webmvc.SpringWebMvc5InstrumentationAutoConfiguration
 
-org.springframework.context.ApplicationListener=\
-io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.logging.LogbackAppenderApplicationListener
+
