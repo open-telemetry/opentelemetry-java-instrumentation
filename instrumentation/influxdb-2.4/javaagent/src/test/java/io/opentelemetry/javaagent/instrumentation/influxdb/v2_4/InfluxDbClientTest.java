@@ -62,10 +62,10 @@ class InfluxDbClientTest {
     influxDbServer.start();
     port = influxDbServer.getMappedPort(8086);
     host = influxDbServer.getHost();
-    String serverURL = "http://" + host + ":" + port + "/";
+    String serverUrl = "http://" + host + ":" + port + "/";
     String username = "root";
     String password = "root";
-    influxDb = InfluxDBFactory.connect(serverURL, username, password);
+    influxDb = InfluxDBFactory.connect(serverUrl, username, password);
     influxDb.createDatabase(databaseName);
   }
 
