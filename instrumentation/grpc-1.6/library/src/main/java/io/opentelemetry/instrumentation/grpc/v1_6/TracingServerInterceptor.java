@@ -67,6 +67,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       extends ForwardingServerCall.SimpleForwardingServerCall<REQUEST, RESPONSE> {
     private final Context context;
     private final GrpcRequest request;
+    private Status status;
 
     // Used by MESSAGE_ID_UPDATER
     @SuppressWarnings("UnusedVariable")
@@ -101,13 +102,13 @@ final class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void close(Status status, Metadata trailers) {
+      this.status = status;
       try {
         delegate().close(status, trailers);
       } catch (Throwable e) {
         instrumenter.end(context, request, status, e);
         throw e;
       }
-      instrumenter.end(context, request, status, status.getCause());
     }
 
     final class TracingServerCallListener
@@ -165,6 +166,10 @@ final class TracingServerInterceptor implements ServerInterceptor {
           instrumenter.end(context, request, Status.UNKNOWN, e);
           throw e;
         }
+        if (status == null) {
+          status = Status.UNKNOWN;
+        }
+        instrumenter.end(context, request, status, status.getCause());
       }
 
       @Override
