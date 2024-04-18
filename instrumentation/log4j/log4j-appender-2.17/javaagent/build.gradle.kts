@@ -14,7 +14,7 @@ muzzle {
 val testLatestDeps = findProperty("testLatestDeps") as Boolean
 
 dependencies {
-  library("org.apache.logging.log4j:log4j-core:2.17.0")
+  library("org.apache.logging.log4j:log4j-core:2.17.2")
 
   compileOnly(project(":javaagent-bootstrap"))
 
@@ -28,7 +28,7 @@ dependencies {
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
   } else {
     // log4j 2.17 doesn't have an slf4j2 bridge
-    testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
+    testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
     testImplementation("org.slf4j:slf4j-api") {
       version {
         strictly("1.7.36")

@@ -26,7 +26,7 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library"))
   implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
-  compileOnly("org.apache.logging.log4j:log4j-core:2.17.0")
+  compileOnly("org.apache.logging.log4j:log4j-core:2.17.2")
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
   implementation(project(":instrumentation:jdbc:library"))

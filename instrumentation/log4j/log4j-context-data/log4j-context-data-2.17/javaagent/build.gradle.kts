@@ -6,13 +6,13 @@ muzzle {
   pass {
     group.set("org.apache.logging.log4j")
     module.set("log4j-core")
-    versions.set("[2.17.0,)")
+    versions.set("[2.17.2,)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("org.apache.logging.log4j:log4j-core:2.17.0")
+  library("org.apache.logging.log4j:log4j-core:2.17.2")
 
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
 
