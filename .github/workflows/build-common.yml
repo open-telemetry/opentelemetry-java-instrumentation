@@ -146,7 +146,7 @@ jobs:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         with:
           # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: check -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          arguments: check spdxSbom -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
@@ -168,7 +168,7 @@ jobs:
       - name: Upload agent jar
         uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
-          name: opentelemetry-javaagent
+          name: opentelemetry-javaagent.jar.zip
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
           if-no-files-found: ignore
 
@@ -178,10 +178,10 @@ jobs:
           mkdir sboms
           find . -path ./sboms -prune -o -name "*.spdx.json" -exec mv {} ./sboms/ \;
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         name: Save SBOM's to build
         with:
-          name: opentelemetry-java-instrumentation-SBOM-${{ matrix.os }}-${{ matrix.test-java-version }}.zip
+          name: opentelemetry-java-instrumentation-SBOM.zip
           path: "sboms/*.json"
 
   test:

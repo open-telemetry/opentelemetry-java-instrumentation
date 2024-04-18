@@ -88,7 +88,7 @@ jobs:
       - name: Build and publish artifacts
         uses: gradle/actions/setup-gradle@e24011a3b5db78bd5ab798036042d9312002f252 # v3.2.0
         with:
-          arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
+          arguments: assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -116,7 +116,7 @@ jobs:
           find . -path ./sboms -prune -o -name "*.spdx.json" -exec mv {} ./sboms/ \;
           zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         name: Save SBOM's to build
         with:
           name: opentelemetry-java-instrumentation-SBOM.zip

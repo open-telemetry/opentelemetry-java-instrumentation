@@ -291,18 +291,12 @@ spdxSbom {
     }
   }
 }
-tasks.named("check") {
-  dependsOn("spdxSbom")
-}
-tasks.named("assemble") {
-  dependsOn("spdxSbom")
-}
 tasks.withType<AbstractPublishToMaven> {
   dependsOn("spdxSbom")
 }
 project.afterEvaluate {
   tasks.withType<PublishToMavenLocal>().configureEach {
-    this.getPublication().artifact("${layout.buildDirectory.get()}/spdx/opentelemetry-java_opentelemetry-javaagent.spdx.json") {
+    this.publication.artifact("${layout.buildDirectory.get()}/spdx/opentelemetry-java_opentelemetry-javaagent.spdx.json") {
       classifier = "spdx"
       extension = "json"
     }
