@@ -13,7 +13,7 @@ otelJava {
 dependencies {
   val springBootVersion = "3.2.4"
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-  library(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  compileOnly(project(":instrumentation:spring:spring-boot-autoconfigure"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
