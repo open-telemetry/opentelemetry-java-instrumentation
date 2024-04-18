@@ -36,6 +36,9 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule 
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new HttpExtServerInstrumentation(), new GraphInterpreterInstrumentation());
+    return asList(
+        new HttpExtServerInstrumentation(),
+        new GraphInterpreterInstrumentation(),
+        new PekkoHttpServerSourceInstrumentation());
   }
 }
