@@ -21,6 +21,8 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,7 +35,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.mock.jndi.SimpleNamingContextBuilder;
 import org.springframework.remoting.rmi.RmiProxyFactoryBean;
 import org.springframework.remoting.rmi.RmiServiceExporter;
 import org.springframework.remoting.support.RemoteExporter;
@@ -68,9 +69,8 @@ class SpringRmiTest {
       exporter.setRegistryPort(registryPort);
 
       // Register in JNDI for remote-slsb testing
-      SimpleNamingContextBuilder builder = new SimpleNamingContextBuilder();
-      builder.bind("springrmi/test/springRmiGreeter", new SpringRmiEjbMock(greeter));
-      builder.activate();
+      Context context = new InitialContext();
+      context.bind("java:comp/env/springrmi/test/springRmiGreeter", new SpringRmiEjbMock(greeter));
 
       return exporter;
     }
