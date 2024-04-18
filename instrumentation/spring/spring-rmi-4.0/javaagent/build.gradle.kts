@@ -28,6 +28,7 @@ dependencies {
   // rmi remoting was removed in spring 6
   latestDepTestLibrary("org.springframework:spring-context:5.+") // documented limitation
   latestDepTestLibrary("org.springframework:spring-aop:5.+") // documented limitation
+  latestDepTestLibrary("org.springframework:spring-test:5.+") // documented limitation
   latestDepTestLibrary("org.springframework.boot:spring-boot:2.+") // documented limitation
 }
 
