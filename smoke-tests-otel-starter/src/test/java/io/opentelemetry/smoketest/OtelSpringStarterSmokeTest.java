@@ -41,6 +41,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
+import io.opentelemetry.spring.smoketest.OtelSpringStarterWebfluxSmokeTestController;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -305,6 +306,33 @@ class OtelSpringStarterSmokeTest {
                         nestedServerSpan
                             .hasKind(SpanKind.SERVER)
                             .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+  }
+
+  @Test
+  @org.junit.jupiter.api.Order(1)
+  void webflux() {
+    resetExporters();
+
+    testRestTemplate.getForObject(
+        OtelSpringStarterWebfluxSmokeTestController.WEBFLUX, String.class);
+
+    // Span
+    TracesAssert.assertThat(expectSpans(2))
+        .hasTracesSatisfyingExactly(
+            traceAssert ->
+                traceAssert.hasSpansSatisfyingExactly(
+                    clientSpan ->
+                        clientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/webflux")),
+                    serverSpan ->
+                        serverSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+                            .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/webflux")));
   }
 
   private static List<SpanData> expectSpans(int spans) {
