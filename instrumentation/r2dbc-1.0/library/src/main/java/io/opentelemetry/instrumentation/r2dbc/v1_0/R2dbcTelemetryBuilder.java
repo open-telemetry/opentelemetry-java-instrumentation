@@ -40,6 +40,16 @@ public final class R2dbcTelemetryBuilder {
   }
 
   /**
+   * Overrides the version of the instrumentation. If not set, the version is automatically
+   * detected.
+   */
+  @CanIgnoreReturnValue
+  public R2dbcTelemetryBuilder setInstrumentationVersion(String instrumentationVersion) {
+    instrumenterBuilder.setInstrumentationVersion(instrumentationVersion);
+    return this;
+  }
+
+  /**
    * Returns a new {@link R2dbcTelemetry} with the settings of this {@link R2dbcTelemetryBuilder}.
    */
   public R2dbcTelemetry build() {

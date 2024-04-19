@@ -11,10 +11,12 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,6 +31,8 @@ public final class R2dbcInstrumenterBuilder {
   private final List<AttributesExtractor<DbExecution, Void>> additionalExtractors =
       new ArrayList<>();
 
+  private Optional<String> instrumentationVersion = Optional.empty();
+
   public R2dbcInstrumenterBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -40,12 +44,21 @@ public final class R2dbcInstrumenterBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public R2dbcInstrumenterBuilder setInstrumentationVersion(String instrumentationVersion) {
+    this.instrumentationVersion = Optional.of(instrumentationVersion);
+    return this;
+  }
+
   public Instrumenter<DbExecution, Void> build(boolean statementSanitizationEnabled) {
 
-    return Instrumenter.<DbExecution, Void>builder(
+    InstrumenterBuilder<DbExecution, Void> builder =
+        Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE))
+            DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE));
+    instrumentationVersion.ifPresent(builder::setInstrumentationVersion);
+    return builder
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)

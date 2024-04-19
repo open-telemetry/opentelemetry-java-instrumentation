@@ -9,6 +9,18 @@ group = "io.opentelemetry.instrumentation"
 val versions: Map<String, String> by project
 val springBootVersion = versions["org.springframework.boot"]
 
+// R2DBC is shadowed to prevent org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
+// from being loaded by Spring Boot - even if the user doesn't want to use R2DBC.
+sourceSets {
+  main {
+    val shadedDep = project(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
+    output.dir(
+      shadedDep.file("build/extracted/shadow"),
+      "builtBy" to ":instrumentation:r2dbc-1.0:library-instrumentation-shaded:extractShadowJar",
+    )
+  }
+}
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
@@ -17,6 +29,7 @@ dependencies {
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
+  compileOnly(project(path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded", configuration = "shadow"))
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library"))
@@ -36,6 +49,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
+  library("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation(project(":sdk-autoconfigure-support"))

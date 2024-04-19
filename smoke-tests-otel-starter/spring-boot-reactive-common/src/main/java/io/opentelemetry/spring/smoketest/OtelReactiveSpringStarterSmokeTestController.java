@@ -13,9 +13,16 @@ import reactor.core.publisher.Mono;
 public class OtelReactiveSpringStarterSmokeTestController {
 
   public static final String WEBFLUX = "/webflux";
+  private final PlayerRepository playerRepository;
+
+  public OtelReactiveSpringStarterSmokeTestController(PlayerRepository playerRepository) {
+    this.playerRepository = playerRepository;
+  }
 
   @GetMapping(WEBFLUX)
   public Mono<String> webflux() {
-    return Mono.just("webflux");
+    return playerRepository
+        .findById(1)
+        .map(player -> "Player: " + player.getName() + " Age: " + player.getAge());
   }
 }
