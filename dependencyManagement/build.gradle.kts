@@ -9,7 +9,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.37.0"
-val otelContribVersion = "1.34.0-alpha"
+val otelContribVersion = "1.35.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -89,7 +89,7 @@ val DEPENDENCIES = listOf(
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
   "com.uber.nullaway:nullaway:0.10.25",
   "commons-beanutils:commons-beanutils:1.9.4",
-  "commons-cli:commons-cli:1.6.0",
+  "commons-cli:commons-cli:1.7.0",
   "commons-codec:commons-codec:1.16.1",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",

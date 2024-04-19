@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2024-04-13 13:18:22 EEST_
+_2024-04-17 09:39:30 EEST_
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -37,7 +37,7 @@ _2024-04-13 13:18:22 EEST_
 > - **Embedded license files**: [jackson-dataformat-yaml-2.17.0.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.17.0.jar/META-INF/LICENSE)
     - [jackson-dataformat-yaml-2.17.0.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.17.0.jar/META-INF/NOTICE)
 
-**6** **Group:** `com.google.cloud.opentelemetry` **Name:** `detector-resources-support` **Version:** `0.27.0`
+**6** **Group:** `com.google.cloud.opentelemetry` **Name:** `detector-resources-support` **Version:** `0.28.0`
 > - **POM Project URL**: [https://github.com/GoogleCloudPlatform/opentelemetry-operations-java](https://github.com/GoogleCloudPlatform/opentelemetry-operations-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -147,15 +147,15 @@ _2024-04-13 13:18:22 EEST_
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**33** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-resources` **Version:** `1.34.0-alpha`
+**33** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-resources` **Version:** `1.35.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**34** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.34.0-alpha`
+**34** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.35.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**35** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-gcp-resources` **Version:** `1.34.0-alpha`
+**35** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-gcp-resources` **Version:** `1.35.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
