@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## Version 1.33.2 (2024-04-20)
+
+### 📈 Enhancements
+
+- Backport: elasticsearch-java 7.17.20 has native instrumentation
+  ([#11098](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11098))
+- Update the OpenTelemetry SDK version to 1.37.0
+  ([#11118](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11118))
+- Backport: graphql-java-22.0 support
+  ([#11171](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11171))
+
 ## Version 2.3.0 (2024-04-12)
 
 ### 📈 Enhancements
