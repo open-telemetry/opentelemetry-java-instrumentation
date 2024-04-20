@@ -26,3 +26,11 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+if (!latestDepTest) {
+  // https://bugs.openjdk.org/browse/JDK-8320431
+  otelJava {
+    maxJavaVersionForTests.set(JavaVersion.VERSION_21)
+  }
+}
