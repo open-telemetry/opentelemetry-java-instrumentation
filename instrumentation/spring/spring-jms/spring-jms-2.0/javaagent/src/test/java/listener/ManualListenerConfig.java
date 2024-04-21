@@ -5,8 +5,12 @@
 
 package listener;
 
+import ch.qos.logback.classic.Level;
+import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
 import javax.jms.Message;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.annotation.JmsListenerConfigurer;
 import org.springframework.jms.config.JmsListenerEndpoint;
@@ -17,6 +21,12 @@ import org.springframework.jms.listener.SessionAwareMessageListener;
 
 @EnableJms
 public class ManualListenerConfig extends AbstractConfig implements JmsListenerConfigurer {
+
+  private static final Logger logger = LoggerFactory.getLogger(ManualListenerConfig.class);
+
+  static {
+    LoggerUtils.setLevel(logger, Level.INFO);
+  }
 
   @Override
   public void configureJmsListeners(JmsListenerEndpointRegistrar registrar) {
@@ -34,7 +44,7 @@ public class ManualListenerConfig extends AbstractConfig implements JmsListenerC
             container.setDestinationName("SpringListenerJms2");
             container.setupMessageListener(
                 (SessionAwareMessageListener<Message>)
-                    (message, session) -> System.out.println("received: " + message));
+                    (message, session) -> logger.info("received: {}", message));
           }
         });
   }
