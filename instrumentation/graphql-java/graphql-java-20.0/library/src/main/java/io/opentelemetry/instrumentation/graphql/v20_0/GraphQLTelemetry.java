@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
+import graphql.ExecutionResult;
 import graphql.execution.instrumentation.Instrumentation;
+import graphql.schema.DataFetchingEnvironment;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 @SuppressWarnings("AbbreviationAsWordInName")
 public final class GraphQLTelemetry {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-20.0";
 
   /** Returns a new {@link GraphQLTelemetry} configured with the given {@link OpenTelemetry}. */
   public static GraphQLTelemetry create(OpenTelemetry openTelemetry) {
@@ -25,18 +26,34 @@ public final class GraphQLTelemetry {
     return new GraphQLTelemetryBuilder(openTelemetry);
   }
 
-  private final OpenTelemetryInstrumentationHelper helper;
+  private final Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult>
+      executionInstrumenter;
 
-  GraphQLTelemetry(OpenTelemetry openTelemetry, boolean sanitizeQuery) {
-    helper =
-        OpenTelemetryInstrumentationHelper.create(
-            openTelemetry, INSTRUMENTATION_NAME, sanitizeQuery);
+  private final Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter;
+
+  private final boolean sanitizeQuery;
+
+  private final boolean createSpansForTrivialDataFetcher;
+
+  GraphQLTelemetry(
+      Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> executionInstrumenter,
+      boolean sanitizeQuery,
+      Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter,
+      boolean createSpansForTrivialDataFetcher) {
+    this.executionInstrumenter = executionInstrumenter;
+    this.sanitizeQuery = sanitizeQuery;
+    this.dataFetcherInstrumenter = dataFetcherInstrumenter;
+    this.createSpansForTrivialDataFetcher = createSpansForTrivialDataFetcher;
   }
 
   /**
    * Returns a new {@link Instrumentation} that generates telemetry for received GraphQL requests.
    */
   public Instrumentation newInstrumentation() {
-    return new OpenTelemetryInstrumentation(helper);
+    return new OpenTelemetryInstrumentation(
+        executionInstrumenter,
+        sanitizeQuery,
+        dataFetcherInstrumenter,
+        createSpansForTrivialDataFetcher);
   }
 }

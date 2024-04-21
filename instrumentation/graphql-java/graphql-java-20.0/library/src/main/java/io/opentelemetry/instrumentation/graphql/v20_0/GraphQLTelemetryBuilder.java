@@ -16,6 +16,10 @@ public final class GraphQLTelemetryBuilder {
 
   private boolean sanitizeQuery = true;
 
+  private boolean createSpansForDataFetchers = false;
+
+  private boolean createSpanForTrivialDataFetchers = false;
+
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -27,11 +31,31 @@ public final class GraphQLTelemetryBuilder {
     return this;
   }
 
+  /** Sets whether spans are created for GraphQL Data Fetchers. Default is {@code false}. */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder createSpansForDataFetchers(boolean createSpansForDataFetchers) {
+    this.createSpansForDataFetchers = createSpansForDataFetchers;
+    return this;
+  }
+
+  /** Sets whether spans are created for Trivial GraphQL Data Fetchers. Default is {@code false}. */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder createSpanForTrivialDataFetchers(
+      boolean createSpanForTrivialDataFetchers) {
+    this.createSpanForTrivialDataFetchers = createSpanForTrivialDataFetchers;
+    return this;
+  }
+
   /**
    * Returns a new {@link GraphQLTelemetry} with the settings of this {@link
    * GraphQLTelemetryBuilder}.
    */
   public GraphQLTelemetry build() {
-    return new GraphQLTelemetry(openTelemetry, sanitizeQuery);
+    return new GraphQLTelemetry(
+        GraphQLInstrumenterFactory.createExecutionInstrumenter(openTelemetry),
+        sanitizeQuery,
+        GraphQLInstrumenterFactory.createDataFetcherInstrumenter(
+            openTelemetry, createSpansForDataFetchers),
+        createSpanForTrivialDataFetchers);
   }
 }
