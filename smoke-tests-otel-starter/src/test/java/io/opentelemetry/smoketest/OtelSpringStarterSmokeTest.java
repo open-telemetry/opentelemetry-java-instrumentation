@@ -195,7 +195,6 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @org.junit.jupiter.api.Order(10)
   void propertyConversion() {
     ConfigProperties configProperties =
         SpringConfigProperties.create(
@@ -276,7 +275,6 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @org.junit.jupiter.api.Order(2)
   void restTemplate() {
     assertClient(OtelSpringStarterSmokeTestController.REST_TEMPLATE);
   }
@@ -316,7 +314,6 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @org.junit.jupiter.api.Order(3)
   void webflux() {
     resetExporters();
 
