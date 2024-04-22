@@ -119,7 +119,7 @@ jobs:
       - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         name: Save SBOM's to build
         with:
-          name: opentelemetry-java-instrumentation-SBOM.zip
+          name: opentelemetry-java-instrumentation-SBOM
           path: "sboms/*.json"
 
       - name: Generate release notes
