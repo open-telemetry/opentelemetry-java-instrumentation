@@ -31,10 +31,12 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.core.AnonymousQueue;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
@@ -45,7 +47,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class ContextPropagationTest {
+public class SpringRabbitMqTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -128,7 +130,7 @@ public class ContextPropagationTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  public void test(boolean testHeaders) throws Exception {
+  public void testContextPropagation(boolean testHeaders) throws Exception {
     try (Connection connection = connectionFactory.newConnection()) {
       try (Channel ignored = connection.createChannel()) {
         testing.runWithSpan(
@@ -218,6 +220,35 @@ public class ContextPropagationTest {
     }
   }
 
+  @Test
+  public void testAnonymousQueueSpanName() throws Exception {
+    try (Connection connection = connectionFactory.newConnection()) {
+      try (Channel ignored = connection.createChannel()) {
+        String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();
+        applicationContext.getBean(AmqpTemplate.class).convertAndSend(anonymousQueueName, "test");
+        applicationContext.getBean(AmqpTemplate.class).receive(anonymousQueueName, 5000);
+
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("<default> publish"),
+                    // Verify that a constant span name is used instead of the randomly generated
+                    // anonymous queue name
+                    span ->
+                        span.hasName("<generated> process")
+                            .hasAttribute(
+                                equalTo(
+                                    MessagingIncubatingAttributes
+                                        .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                    anonymousQueueName))),
+            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
+            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),
+            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.cancel")),
+            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.ack")));
+      }
+    }
+  }
+
   @SpringBootConfiguration
   @EnableAutoConfiguration
   static class ConsumerConfig {
@@ -227,6 +258,11 @@ public class ContextPropagationTest {
     @Bean
     Queue testQueue() {
       return new Queue(TEST_QUEUE);
+    }
+
+    @Bean
+    AnonymousQueue anonymousQueue() {
+      return new AnonymousQueue();
     }
 
     @RabbitListener(queues = TEST_QUEUE)
