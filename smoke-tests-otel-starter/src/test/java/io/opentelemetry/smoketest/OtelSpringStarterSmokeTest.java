@@ -309,7 +309,7 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @org.junit.jupiter.api.Order(1)
+  @org.junit.jupiter.api.Order(3)
   void webflux() {
     resetExporters();
 
