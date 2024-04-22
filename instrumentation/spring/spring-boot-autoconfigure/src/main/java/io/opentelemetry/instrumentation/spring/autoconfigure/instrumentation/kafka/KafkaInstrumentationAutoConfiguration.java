@@ -34,7 +34,7 @@ public class KafkaInstrumentationAutoConfiguration {
   }
 
   @Bean
-  static ConcurrentKafkaListenerContainerFactoryPostProcessor
+  ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
           ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(openTelemetryProvider);

@@ -28,10 +28,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {
 
-  public SpringWebfluxInstrumentationAutoConfiguration() {}
-
   @Bean
-  static WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
+  WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new WebClientBeanPostProcessor(openTelemetryProvider);
   }

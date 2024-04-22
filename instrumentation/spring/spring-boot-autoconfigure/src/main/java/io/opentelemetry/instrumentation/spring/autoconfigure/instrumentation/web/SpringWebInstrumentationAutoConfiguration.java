@@ -29,16 +29,14 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 
-  public SpringWebInstrumentationAutoConfiguration() {}
-
   @Bean
-  static RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
+  RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new RestTemplateBeanPostProcessor(openTelemetryProvider);
   }
 
   @Bean
-  static RestTemplateCustomizer otelRestTemplateCustomizer(
+  RestTemplateCustomizer otelRestTemplateCustomizer(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return restTemplate ->
         RestTemplateInstrumentation.addIfNotPresent(
