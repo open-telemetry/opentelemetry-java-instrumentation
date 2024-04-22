@@ -66,6 +66,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
+/**
+ * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
+ * which asserts the telemetry data from the application startup, is executed first.
+ *
+ * <p>The exporters are not reset using {@link org.junit.jupiter.api.BeforeEach}, because it would
+ * prevent the telemetry data from the application startup to be asserted.
+ */
 @ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(
     classes = {
@@ -280,7 +287,7 @@ class OtelSpringStarterSmokeTest {
   }
 
   private void assertClient(String url) {
-    resetExporters(); // ignore the telemetry from application startup
+    resetExporters();
 
     testRestTemplate.getForObject(url, String.class);
 
@@ -316,7 +323,6 @@ class OtelSpringStarterSmokeTest {
     testRestTemplate.getForObject(
         OtelSpringStarterWebfluxSmokeTestController.WEBFLUX, String.class);
 
-    // Span
     TracesAssert.assertThat(expectSpans(2))
         .hasTracesSatisfyingExactly(
             traceAssert ->
