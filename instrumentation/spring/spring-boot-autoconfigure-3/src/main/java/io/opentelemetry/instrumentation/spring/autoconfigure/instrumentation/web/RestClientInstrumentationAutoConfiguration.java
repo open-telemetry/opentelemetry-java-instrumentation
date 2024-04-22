@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.we
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
-import io.opentelemetry.testing.internal.armeria.client.RestClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -19,6 +18,7 @@ import org.springframework.boot.web.client.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 
 /**
  * Configures {@link RestClient} for tracing.
@@ -32,8 +32,6 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfiguration(after = RestClientAutoConfiguration.class)
 @Configuration
 public class RestClientInstrumentationAutoConfiguration {
-
-  public RestClientInstrumentationAutoConfiguration() {}
 
   @Bean
   static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
