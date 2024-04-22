@@ -264,7 +264,6 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @org.junit.jupiter.api.Order(3)
   void restClient() {
     assertClient(OtelSpringStarterSmokeTestController.REST_CLIENT);
   }
