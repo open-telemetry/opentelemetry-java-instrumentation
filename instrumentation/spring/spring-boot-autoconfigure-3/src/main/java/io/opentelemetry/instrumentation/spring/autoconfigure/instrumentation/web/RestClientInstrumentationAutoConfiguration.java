@@ -34,13 +34,13 @@ import org.springframework.web.client.RestClient;
 public class RestClientInstrumentationAutoConfiguration {
 
   @Bean
-  static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
+  RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new RestClientBeanPostProcessor(openTelemetryProvider);
   }
 
   @Bean
-  static RestClientCustomizer otelRestClientCustomizer(
+  RestClientCustomizer otelRestClientCustomizer(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return builder ->
         builder.requestInterceptor(
