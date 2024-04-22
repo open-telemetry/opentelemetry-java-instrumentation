@@ -29,8 +29,11 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 
+  public SpringWebInstrumentationAutoConfiguration() {}
+
+  // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
-  RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
+  static RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new RestTemplateBeanPostProcessor(openTelemetryProvider);
   }

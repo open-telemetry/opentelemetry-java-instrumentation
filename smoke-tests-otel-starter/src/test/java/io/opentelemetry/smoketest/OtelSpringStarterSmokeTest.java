@@ -48,19 +48,24 @@ import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.awaitility.core.ConditionEvaluationLogger;
 import org.awaitility.core.EvaluatedCondition;
 import org.awaitility.core.TimeoutEvent;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
+@ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(
     classes = {
       OtelSpringStarterSmokeTestApplication.class,
@@ -174,6 +179,11 @@ class OtelSpringStarterSmokeTest {
     SPAN_EXPORTER.reset();
     METRIC_EXPORTER.reset();
     LOG_RECORD_EXPORTER.reset();
+  }
+
+  @AfterEach
+  void tearDown(CapturedOutput output) {
+    assertThat(output).doesNotContain("WARN").doesNotContain("ERROR");
   }
 
   @Test
