@@ -28,8 +28,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {
 
+  public SpringWebfluxInstrumentationAutoConfiguration() {}
+
+  // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
-  WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
+  static WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new WebClientBeanPostProcessor(openTelemetryProvider);
   }
