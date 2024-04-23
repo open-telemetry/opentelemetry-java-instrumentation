@@ -34,7 +34,7 @@ import org.springframework.web.client.RestClient;
 public class RestClientInstrumentationAutoConfiguration {
 
   @Bean
-  RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
+  static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new RestClientBeanPostProcessor(openTelemetryProvider);
   }
