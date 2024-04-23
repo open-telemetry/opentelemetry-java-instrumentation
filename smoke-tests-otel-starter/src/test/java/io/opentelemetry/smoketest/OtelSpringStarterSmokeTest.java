@@ -41,6 +41,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
+import io.opentelemetry.spring.smoketest.OtelSpringStarterWebfluxSmokeTestController;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -65,6 +66,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
+/**
+ * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
+ * which asserts the telemetry data from the application startup, is executed first.
+ *
+ * <p>The exporters are not reset using {@link org.junit.jupiter.api.BeforeEach}, because it would
+ * prevent the telemetry data from the application startup to be asserted.
+ */
 @ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(
     classes = {
@@ -187,7 +195,6 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @org.junit.jupiter.api.Order(10)
   void propertyConversion() {
     ConfigProperties configProperties =
         SpringConfigProperties.create(
@@ -268,7 +275,6 @@ class OtelSpringStarterSmokeTest {
   }
 
   @Test
-  @org.junit.jupiter.api.Order(2)
   void restTemplate() {
     assertClient(OtelSpringStarterSmokeTestController.REST_TEMPLATE);
   }
@@ -279,7 +285,7 @@ class OtelSpringStarterSmokeTest {
   }
 
   private void assertClient(String url) {
-    resetExporters(); // ignore the telemetry from application startup
+    resetExporters();
 
     testRestTemplate.getForObject(url, String.class);
 
@@ -305,6 +311,31 @@ class OtelSpringStarterSmokeTest {
                         nestedServerSpan
                             .hasKind(SpanKind.SERVER)
                             .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+  }
+
+  @Test
+  void webflux() {
+    resetExporters();
+
+    testRestTemplate.getForObject(
+        OtelSpringStarterWebfluxSmokeTestController.WEBFLUX, String.class);
+
+    TracesAssert.assertThat(expectSpans(2))
+        .hasTracesSatisfyingExactly(
+            traceAssert ->
+                traceAssert.hasSpansSatisfyingExactly(
+                    clientSpan ->
+                        clientSpan
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                a ->
+                                    assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/webflux")),
+                    serverSpan ->
+                        serverSpan
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+                            .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
+                            .hasAttribute(HttpAttributes.HTTP_ROUTE, "/webflux")));
   }
 
   private static List<SpanData> expectSpans(int spans) {
