@@ -99,6 +99,11 @@ afterEvaluate {
     sourceCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
     targetCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
   }
+  tasks.withType<Javadoc>().configureEach {
+    with(options) {
+      source = otelJava.minJavaVersionSupported.get().majorVersion
+    }
+  }
 }
 
 evaluationDependsOn(":dependencyManagement")
