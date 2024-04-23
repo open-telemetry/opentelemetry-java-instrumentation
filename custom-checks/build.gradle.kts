@@ -60,6 +60,11 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }
 
+tasks.withType<Javadoc>().configureEach {
+  // using com.sun.tools.javac.api.JavacTrees breaks javadoc generation
+  enabled = false
+}
+
 // Our conventions apply this project as a dependency in the errorprone configuration, which would cause
 // a circular dependency if trying to compile this project with that still there. So we filter this
 // project out.
