@@ -110,12 +110,12 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("CREATE " + dbName)
+                    span.hasName("CREATE DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
                                 String.format(CREATE_DATABASE_STATEMENT_NEW, dbName),
-                                "CREATE",
+                                "CREATE DATABASE",
                                 dbName))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -133,12 +133,12 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("DROP " + dbName)
+                    span.hasName("DROP DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
                                 String.format(DELETE_DATABASE_STATEMENT, dbName),
-                                "DROP",
+                                "DROP DATABASE",
                                 dbName))));
   }
 
