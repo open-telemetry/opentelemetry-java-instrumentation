@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.boot;
+package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
 import io.opentelemetry.test.hello_web_service.HelloRequest;
 import io.opentelemetry.test.hello_web_service.HelloRequestSoapAction;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.boot;
+package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -46,12 +46,10 @@ public class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplic
   private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  private ConfigurableApplicationContext context;
-
   private static final Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
 
   @BeforeAll
-  void setupOptions() {
+  void setup() {
     startServer();
   }
 
@@ -73,16 +71,15 @@ public class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplic
             getContextPath(),
             "server.error.include-message",
             "always"));
-    context = app.run();
     marshaller.setPackagesToScan(ClassUtils.getPackageName(HelloRequest.class));
     marshaller.afterPropertiesSet();
-    return context;
+    return app.run();
   }
 
   @Override
   protected void stopServer(ConfigurableApplicationContext configurableApplicationContext)
       throws Exception {
-    context.close();
+    configurableApplicationContext.close();
   }
 
   @Override
@@ -135,7 +132,8 @@ public class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplic
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE, "test.boot.HelloEndpoint"),
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint"),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName))));
   }
 
@@ -174,7 +172,8 @@ public class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplic
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE, "test.boot.HelloEndpoint"),
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint"),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName))));
   }
 }
