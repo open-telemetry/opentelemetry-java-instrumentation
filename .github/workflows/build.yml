@@ -72,6 +72,12 @@ jobs:
           distribution: temurin
           java-version: 17.0.6
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        with:
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
+
       - name: Build and publish artifact snapshots
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -79,11 +85,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        with:
-          arguments: assemble publishToSonatype
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+        run: ./gradlew assemble publishToSonatype
 
       - name: Build and publish gradle plugin snapshots
         env:
@@ -92,9 +94,5 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        with:
-          build-root-directory: gradle-plugins
-          arguments: build publishToSonatype
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+        run: ./gradlew build publishToSonatype
+        working-directory: gradle-plugins

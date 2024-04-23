@@ -37,15 +37,17 @@ jobs:
           distribution: temurin
           java-version: 17.0.6
 
-      - name: Spotless
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         with:
-          arguments: spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
+
+      - name: Spotless
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        run: ./gradlew spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
   gradle-wrapper-validation:
     runs-on: ubuntu-latest
@@ -68,17 +70,19 @@ jobs:
           distribution: temurin
           java-version: 17.0.6
 
-      - name: Generate license report
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         with:
-          # currently ignoring inputs.no-build-cache and always running with --no-build-cache
-          # see https://github.com/jk1/Gradle-License-Report/issues/231
-          arguments: generateLicenseReport --no-build-cache
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
+
+      - name: Generate license report
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        # currently ignoring inputs.no-build-cache and always running with --no-build-cache
+        # see https://github.com/jk1/Gradle-License-Report/issues/231
+        run: ./gradlew generateLicenseReport --no-build-cache
 
       - name: Check licenses
         run: |
@@ -140,16 +144,18 @@ jobs:
         run: |
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
-      - name: Build
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         with:
-          # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-          arguments: check -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
           gradle-home-cache-excludes: caches/build-cache-1
+
+      - name: Build
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
+        run: ./gradlew check -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check for jApiCmp diffs
         run: |
@@ -232,19 +238,25 @@ jobs:
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        with:
+          # only push cache for one matrix option since github action cache space is limited
+          cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
+
       - name: List tests
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        with:
-          # "check" is needed to activate all tests for listing purposes
-          # listTestsInPartition writes test tasks that apply to the given partition to a file named
-          # "test-tasks.txt" and then disables all tasks (including tests) after it runs
-          arguments: >
-            check -x spotlessCheck
-            listTestsInPartition
-            -PtestPartition=${{ matrix.test-partition }}
-          cache-read-only: true
+        # "check" is needed to activate all tests for listing purposes
+        # listTestsInPartition writes test tasks that apply to the given partition to a file named
+        # "test-tasks.txt" and then disables all tasks (including tests) after it runs
+        run: >
+          ./gradlew
+          check -x spotlessCheck
+          listTestsInPartition
+          -PtestPartition=${{ matrix.test-partition }}
 
       - name: Set test tasks
         run: |
@@ -253,20 +265,15 @@ jobs:
       - name: Test
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        with:
-          # spotless is checked separately since it's a common source of failure
-          arguments: >
-            ${{ env.test-tasks }}
-            -PtestJavaVersion=${{ matrix.test-java-version }}
-            -PtestJavaVM=${{ matrix.vm }}
-            -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
-            -Porg.gradle.java.installations.auto-download=false
-            ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          # only push cache for one matrix option since github action cache space is limited
-          cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+        # spotless is checked separately since it's a common source of failure
+        run: >
+          ./gradlew
+          ${{ env.test-tasks }}
+          -PtestJavaVersion=${{ matrix.test-java-version }}
+          -PtestJavaVM=${{ matrix.vm }}
+          -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
+          -Porg.gradle.java.installations.auto-download=false
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
@@ -383,12 +390,14 @@ jobs:
           distribution: temurin
           java-version: 17.0.6
 
-      - name: Build
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
         with:
-          arguments: build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
-          build-root-directory: gradle-plugins
           cache-read-only: ${{ inputs.cache-read-only }}
+
+      - name: Build
+        run: ./gradlew build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+        working-directory: gradle-plugins
 
   examples:
     runs-on: ubuntu-latest

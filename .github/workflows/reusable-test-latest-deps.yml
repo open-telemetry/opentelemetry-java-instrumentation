@@ -54,34 +54,35 @@ jobs:
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        with:
+          cache-read-only: ${{ inputs.cache-read-only }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
+
       - name: List tests
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
-        with:
-          arguments: >
-            check -x spotlessCheck
-            listTestsInPartition
-            -PtestPartition=${{ matrix.test-partition }}
-            -PtestLatestDeps=true
-          cache-read-only: true
+        run: >
+          ./gradlew
+          check -x spotlessCheck
+          listTestsInPartition
+          -PtestPartition=${{ matrix.test-partition }}
+          -PtestLatestDeps=true
 
       - name: Set test tasks
         run: |
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        with:
-          arguments: >
-            ${{ env.test-tasks }}
-            -PtestLatestDeps=true
-            ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          cache-read-only: ${{ inputs.cache-read-only }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+        run: >
+          ./gradlew
+          ${{ env.test-tasks }}
+          -PtestLatestDeps=true
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
