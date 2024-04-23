@@ -30,6 +30,7 @@ public class SpringWebfluxInstrumentationAutoConfiguration {
 
   public SpringWebfluxInstrumentationAutoConfiguration() {}
 
+  // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
   static WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
