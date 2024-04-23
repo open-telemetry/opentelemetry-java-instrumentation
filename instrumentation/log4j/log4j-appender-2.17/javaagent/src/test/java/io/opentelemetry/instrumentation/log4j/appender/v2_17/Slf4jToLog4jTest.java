@@ -15,7 +15,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -89,18 +90,18 @@ class Slf4jToLog4jTest {
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(ExceptionAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "hello"),
                 satisfies(
-                    SemanticAttributes.EXCEPTION_STACKTRACE,
+                    ExceptionAttributes.EXCEPTION_STACKTRACE,
                     v -> v.contains(Slf4jToLog4jTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()));
       }
 
       if (withParent) {
@@ -134,8 +135,8 @@ class Slf4jToLog4jTest {
         .hasAttributesSatisfyingExactly(
             equalTo(AttributeKey.stringKey("key1"), "val1"),
             equalTo(AttributeKey.stringKey("key2"), "val2"),
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
+            equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()));
   }
 
   @Test
@@ -149,8 +150,8 @@ class Slf4jToLog4jTest {
     LogRecordData log = testing.waitForLogRecords(1).get(0);
     assertThat(log)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
+            equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
             equalTo(AttributeKey.stringKey("log4j.marker"), markerName));
   }
 

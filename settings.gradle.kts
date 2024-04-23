@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.6"
+    id("com.github.jk1.dependency-license-report") version "2.7"
     id("com.google.cloud.tools.jib") version "3.4.2"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
@@ -12,8 +12,8 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.17"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0"
+  id("com.gradle.develocity") version "3.17.2"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -47,6 +47,12 @@ if (useScansGradleCom) {
       capture {
         fileFingerprints = true
       }
+
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
+        }
+      }
     }
   }
 } else {
@@ -64,6 +70,12 @@ if (useScansGradleCom) {
       gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
       gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
         value("Smoke test suite", it)
+      }
+
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
+        }
       }
     }
   }
@@ -95,6 +107,7 @@ include(":javaagent-tooling:javaagent-tooling-java9")
 include(":javaagent-internal-logging-application")
 include(":javaagent-internal-logging-simple")
 include(":javaagent")
+include(":sdk-autoconfigure-support")
 
 include(":bom")
 include(":bom-alpha")
@@ -404,6 +417,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -499,6 +513,7 @@ include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
 include(":instrumentation:spring:spring-boot-autoconfigure")
+include(":instrumentation:spring:spring-boot-autoconfigure-3")
 include(":instrumentation:spring:spring-boot-resources:javaagent")
 include(":instrumentation:spring:spring-boot-resources:javaagent-unit-tests")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent")

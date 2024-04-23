@@ -24,7 +24,7 @@ final class ApplicationDoubleCounterBuilder131 extends ApplicationDoubleCounterB
 
   @Override
   public ExtendedDoubleCounterBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
-    ((io.opentelemetry.extension.incubator.metrics.ExtendedDoubleCounterBuilder) agentBuilder)
+    ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleCounterBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

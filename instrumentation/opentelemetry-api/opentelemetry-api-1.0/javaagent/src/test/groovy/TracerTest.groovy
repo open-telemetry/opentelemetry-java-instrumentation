@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.Scope
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ExceptionAttributes
 
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
@@ -235,8 +235,8 @@ class TracerTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" "java.lang.IllegalStateException"
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" "java.lang.IllegalStateException"
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
@@ -263,8 +263,8 @@ class TracerTest extends AgentInstrumentationSpecification {
           event(0) {
             eventName("exception")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" "java.lang.IllegalStateException"
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" "java.lang.IllegalStateException"
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
               "dog" "bark"
             }
           }

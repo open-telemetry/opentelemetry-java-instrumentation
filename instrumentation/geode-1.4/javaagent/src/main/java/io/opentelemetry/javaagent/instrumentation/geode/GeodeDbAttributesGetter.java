@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest> {
@@ -18,7 +18,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Override
   public String getSystem(GeodeRequest request) {
-    return SemanticAttributes.DbSystemValues.GEODE;
+    return DbIncubatingAttributes.DbSystemValues.GEODE;
   }
 
   @Override
@@ -30,12 +30,6 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   public String getName(GeodeRequest request) {
     return request.getRegion().getName();
-  }
-
-  @Override
-  @Nullable
-  public String getConnectionString(GeodeRequest request) {
-    return null;
   }
 
   @Override

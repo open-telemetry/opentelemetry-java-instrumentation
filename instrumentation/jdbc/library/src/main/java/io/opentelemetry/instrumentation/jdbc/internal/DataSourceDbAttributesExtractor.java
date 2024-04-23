@@ -11,7 +11,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
@@ -31,10 +31,9 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
     if (dbInfo == null) {
       return;
     }
-    internalSet(attributes, SemanticAttributes.DB_SYSTEM, dbInfo.getSystem());
-    internalSet(attributes, SemanticAttributes.DB_USER, dbInfo.getUser());
-    internalSet(attributes, SemanticAttributes.DB_NAME, getName(dbInfo));
-    internalSet(attributes, SemanticAttributes.DB_CONNECTION_STRING, dbInfo.getShortUrl());
+    internalSet(attributes, DbIncubatingAttributes.DB_SYSTEM, dbInfo.getSystem());
+    internalSet(attributes, DbIncubatingAttributes.DB_USER, dbInfo.getUser());
+    internalSet(attributes, DbIncubatingAttributes.DB_NAME, getName(dbInfo));
   }
 
   private static String getName(DbInfo dbInfo) {

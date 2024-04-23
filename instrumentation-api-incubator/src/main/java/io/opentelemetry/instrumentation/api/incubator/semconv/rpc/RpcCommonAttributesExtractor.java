@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import javax.annotation.Nullable;
 
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
@@ -24,9 +24,9 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.RPC_SYSTEM, getter.getSystem(request));
-    internalSet(attributes, SemanticAttributes.RPC_SERVICE, getter.getService(request));
-    internalSet(attributes, SemanticAttributes.RPC_METHOD, getter.getMethod(request));
+    internalSet(attributes, RpcIncubatingAttributes.RPC_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, RpcIncubatingAttributes.RPC_SERVICE, getter.getService(request));
+    internalSet(attributes, RpcIncubatingAttributes.RPC_METHOD, getter.getMethod(request));
   }
 
   @Override

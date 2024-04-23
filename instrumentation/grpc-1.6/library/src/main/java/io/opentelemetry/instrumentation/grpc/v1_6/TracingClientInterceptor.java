@@ -21,7 +21,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingClientInterceptor implements ClientInterceptor {
@@ -111,9 +111,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
       Span span = Span.fromContext(context);
       Attributes attributes =
           Attributes.of(
-              SemanticAttributes.MESSAGE_TYPE,
-              SemanticAttributes.MessageTypeValues.SENT,
-              SemanticAttributes.MESSAGE_ID,
+              MessageIncubatingAttributes.MESSAGE_TYPE,
+              MessageIncubatingAttributes.MessageTypeValues.SENT,
+              MessageIncubatingAttributes.MESSAGE_ID,
               MESSAGE_ID_UPDATER.incrementAndGet(this));
       span.addEvent("message", attributes);
     }
@@ -141,9 +141,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
         Span span = Span.fromContext(context);
         Attributes attributes =
             Attributes.of(
-                SemanticAttributes.MESSAGE_TYPE,
-                SemanticAttributes.MessageTypeValues.RECEIVED,
-                SemanticAttributes.MESSAGE_ID,
+                MessageIncubatingAttributes.MESSAGE_TYPE,
+                MessageIncubatingAttributes.MessageTypeValues.RECEIVED,
+                MessageIncubatingAttributes.MESSAGE_ID,
                 MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this));
         span.addEvent("message", attributes);
         try (Scope ignored = context.makeCurrent()) {

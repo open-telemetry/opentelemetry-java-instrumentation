@@ -6,7 +6,7 @@
 import com.google.common.util.concurrent.MoreExecutors
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
 import net.spy.memcached.ConnectionFactoryBuilder
@@ -622,8 +622,8 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
       }
 
       attributes {
-        "$SemanticAttributes.DB_SYSTEM" "memcached"
-        "$SemanticAttributes.DB_OPERATION" operation
+        "$DbIncubatingAttributes.DB_SYSTEM" "memcached"
+        "$DbIncubatingAttributes.DB_OPERATION" operation
 
         if (error == "canceled") {
           "spymemcached.command.cancelled" true

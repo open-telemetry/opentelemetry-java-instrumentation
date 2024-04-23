@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.util.function.Function;
 
 /**
@@ -32,9 +32,9 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
     String urlPath = getter.getUrlPath(request);
     String urlQuery = getter.getUrlQuery(request);
 
-    internalSet(attributes, SemanticAttributes.URL_SCHEME, urlScheme);
-    internalSet(attributes, SemanticAttributes.URL_PATH, urlPath);
-    internalSet(attributes, SemanticAttributes.URL_QUERY, urlQuery);
+    internalSet(attributes, UrlAttributes.URL_SCHEME, urlScheme);
+    internalSet(attributes, UrlAttributes.URL_PATH, urlPath);
+    internalSet(attributes, UrlAttributes.URL_QUERY, urlQuery);
   }
 
   private String getUrlScheme(REQUEST request) {

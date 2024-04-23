@@ -6,7 +6,8 @@
 package springdata
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
 import org.junit.jupiter.api.Assumptions
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
@@ -89,8 +90,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findAll"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findAll"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findAll"
           }
         }
         span(1) {
@@ -98,8 +99,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "SearchAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -127,8 +128,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.index"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "index"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "index"
           }
         }
         span(1) {
@@ -136,8 +137,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -154,8 +155,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -178,8 +179,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findById"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findById"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findById"
           }
         }
         span(1) {
@@ -187,8 +188,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -215,8 +216,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.index"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "index"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "index"
           }
         }
         span(1) {
@@ -224,8 +225,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -242,8 +243,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -258,8 +259,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findById"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findById"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findById"
           }
         }
         span(1) {
@@ -267,8 +268,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -294,8 +295,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.deleteById"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "deleteById"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "deleteById"
           }
         }
         span(1) {
@@ -303,8 +304,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "DeleteAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "DeleteAction"
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
@@ -320,8 +321,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -337,8 +338,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           name "DocRepository.findAll"
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" DocRepository.name
-            "$SemanticAttributes.CODE_FUNCTION" "findAll"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" DocRepository.name
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "findAll"
           }
         }
         span(1) {
@@ -346,8 +347,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           kind CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "elasticsearch"
-            "$SemanticAttributes.DB_OPERATION" "SearchAction"
+            "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
+            "$DbIncubatingAttributes.DB_OPERATION" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

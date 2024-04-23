@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 
 import javax.servlet.Servlet
 
@@ -86,7 +86,7 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
   @Override
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
-    if (!httpAttributes(endpoint).contains(SemanticAttributes.HTTP_ROUTE)) {
+    if (!httpAttributes(endpoint).contains(HttpAttributes.HTTP_ROUTE)) {
       return null
     }
     if (method == HttpConstants._OTHER) {

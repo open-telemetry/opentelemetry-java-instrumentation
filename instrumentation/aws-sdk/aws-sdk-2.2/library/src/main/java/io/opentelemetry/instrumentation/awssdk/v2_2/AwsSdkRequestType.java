@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +21,8 @@ enum AwsSdkRequestType {
       /*
        * Only one of TopicArn and TargetArn are permitted on an SNS request.
        */
-      request(SemanticAttributes.MESSAGING_DESTINATION_NAME.getKey(), "TargetArn"),
-      request(SemanticAttributes.MESSAGING_DESTINATION_NAME.getKey(), "TopicArn"));
+      request(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME.getKey(), "TargetArn"),
+      request(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME.getKey(), "TopicArn"));
 
   // Wrapping in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")

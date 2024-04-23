@@ -12,7 +12,7 @@ import io.grpc.Status;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -39,7 +39,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       @Nullable Status status,
       @Nullable Throwable error) {
     if (status != null) {
-      attributes.put(SemanticAttributes.RPC_GRPC_STATUS_CODE, status.getCode().value());
+      attributes.put(RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE, status.getCode().value());
     }
     for (String key : capturedRequestMetadata) {
       List<String> value = getter.metadataValue(request, key);

@@ -30,7 +30,7 @@ jobs:
           - 3
       fail-fast: false
     steps:
-      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f # v4.1.3
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -58,30 +58,35 @@ jobs:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        with:
+          cache-read-only: ${{ inputs.cache-read-only }}
+          # gradle enterprise is used for the build cache
+          gradle-home-cache-excludes: caches/build-cache-1
+
       - name: List tests
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        uses: gradle/actions/setup-gradle@e24011a3b5db78bd5ab798036042d9312002f252 # v3.2.0
-        with:
-          arguments: >
-            check -x spotlessCheck
-            listTestsInPartition
-            -PtestPartition=${{ matrix.test-partition }}
-          cache-read-only: true
+        run: >
+          ./gradlew
+          check -x spotlessCheck
+          listTestsInPartition
+          -PtestPartition=${{ matrix.test-partition }}
 
       - name: Set test tasks
         run: |
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
-        uses: gradle/actions/setup-gradle@e24011a3b5db78bd5ab798036042d9312002f252 # v3.2.0
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        with:
-          arguments: >
-            ${{ env.test-tasks }}
-            -PtestIndy=true
-            ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          cache-read-only: ${{ inputs.cache-read-only }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+        run: >
+          ./gradlew
+          ${{ env.test-tasks }}
+          -PtestIndy=true
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
+      - name: Build scan
+        if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
+        run: cat build-scan.txt

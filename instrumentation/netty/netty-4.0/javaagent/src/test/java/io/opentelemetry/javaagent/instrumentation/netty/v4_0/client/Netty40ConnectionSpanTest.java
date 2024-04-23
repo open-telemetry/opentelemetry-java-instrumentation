@@ -27,12 +27,12 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,10 +102,10 @@ class Netty40ConnectionSpanTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
+                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
                       equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
@@ -130,16 +130,15 @@ class Netty40ConnectionSpanTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasException(thrown),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  span.hasAttributesSatisfying(
-                      equalTo(SemanticAttributes.NETWORK_TRANSPORT, "tcp"));
+                  span.hasAttributesSatisfying(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
                   satisfies(
-                      SemanticAttributes.NETWORK_TYPE,
+                      NetworkAttributes.NETWORK_TYPE,
                       val ->
                           val.satisfiesAnyOf(
                               v -> assertThat(val).isNull(), v -> assertThat(v).isEqualTo("ipv4")));
                   span.hasAttributesSatisfying(
-                      equalTo(SemanticAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()));
+                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()));
                   satisfies(
                       NetworkAttributes.NETWORK_PEER_PORT,
                       val ->

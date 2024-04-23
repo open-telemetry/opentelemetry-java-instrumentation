@@ -27,10 +27,6 @@ public abstract class DbInfo {
   @Nullable
   public abstract String getSubtype();
 
-  // "type:[subtype:]//host:port"
-  @Nullable
-  public abstract String getShortUrl();
-
   @Nullable
   public abstract String getUser();
 
@@ -50,7 +46,6 @@ public abstract class DbInfo {
     return builder()
         .system(getSystem())
         .subtype(getSubtype())
-        .shortUrl(getShortUrl())
         .user(getUser())
         .name(getName())
         .db(getDb())
@@ -68,8 +63,6 @@ public abstract class DbInfo {
     public abstract Builder system(String system);
 
     public abstract Builder subtype(String subtype);
-
-    public abstract Builder shortUrl(String shortUrl);
 
     public abstract Builder user(String user);
 

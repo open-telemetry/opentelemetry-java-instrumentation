@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,11 +42,6 @@ class SqlClientAttributesExtractorTest {
     public String getName(Map<String, String> map) {
       return map.get("db.name");
     }
-
-    @Override
-    public String getConnectionString(Map<String, String> map) {
-      return map.get("db.connection_string");
-    }
   }
 
   @Test
@@ -56,7 +51,6 @@ class SqlClientAttributesExtractorTest {
     request.put("db.system", "myDb");
     request.put("db.user", "username");
     request.put("db.name", "potatoes");
-    request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
 
     Context context = Context.root();
@@ -74,13 +68,12 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.DB_SYSTEM, "myDb"),
-            entry(SemanticAttributes.DB_USER, "username"),
-            entry(SemanticAttributes.DB_NAME, "potatoes"),
-            entry(SemanticAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
-            entry(SemanticAttributes.DB_OPERATION, "SELECT"),
-            entry(SemanticAttributes.DB_SQL_TABLE, "potato"));
+            entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+            entry(DbIncubatingAttributes.DB_USER, "username"),
+            entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
+            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+            entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
@@ -103,8 +96,8 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.DB_STATEMENT, "SELECT *"),
-            entry(SemanticAttributes.DB_OPERATION, "SELECT"));
+            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
+            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
   }
 
   @Test
@@ -117,7 +110,7 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
-            .setTableAttribute(SemanticAttributes.DB_CASSANDRA_TABLE)
+            .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
             .build();
 
     // when
@@ -127,9 +120,9 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.DB_STATEMENT, "SELECT * FROM table"),
-            entry(SemanticAttributes.DB_OPERATION, "SELECT"),
-            entry(SemanticAttributes.DB_CASSANDRA_TABLE, "table"));
+            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
+            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+            entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
   }
 
   @Test

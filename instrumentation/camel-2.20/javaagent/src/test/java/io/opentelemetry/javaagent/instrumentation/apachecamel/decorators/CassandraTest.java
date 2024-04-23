@@ -14,7 +14,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -116,10 +116,10 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 stringKey("camel.uri"),
                                 "cql://" + host + ":" + cassandraPort + "/test"),
-                            equalTo(SemanticAttributes.DB_NAME, "test"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(
-                                SemanticAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_STATEMENT,
                                 "select * from test.users where id=? ALLOW FILTERING"),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"))));
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"))));
   }
 }

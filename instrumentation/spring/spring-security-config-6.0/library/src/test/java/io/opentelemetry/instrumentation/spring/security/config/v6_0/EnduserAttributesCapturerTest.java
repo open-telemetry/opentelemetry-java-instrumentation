@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import org.assertj.core.api.Condition;
@@ -43,9 +43,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(SemanticAttributes.ENDUSER_ID))
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
+            span.doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ID))
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -67,9 +67,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
-                .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2"));
+            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
+                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   @Test
@@ -91,9 +91,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
-                .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
+            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
+                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -115,9 +115,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
+            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -139,9 +139,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(SemanticAttributes.ENDUSER_ID))
-                .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_SCOPE)));
+            span.doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ID))
+                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_SCOPE)));
   }
 
   @Test
@@ -163,9 +163,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(SemanticAttributes.ENDUSER_ID))
-                .doesNotHave(attribute(SemanticAttributes.ENDUSER_ROLE))
-                .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2"));
+            span.doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ID))
+                .doesNotHave(attribute(EnduserIncubatingAttributes.ENDUSER_ROLE))
+                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   @Test
@@ -191,9 +191,9 @@ public class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(SemanticAttributes.ENDUSER_ID, "principal")
-                .hasAttribute(SemanticAttributes.ENDUSER_ROLE, "role1,role2")
-                .hasAttribute(SemanticAttributes.ENDUSER_SCOPE, "scope1,scope2"));
+            span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
+                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
+                .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2"));
   }
 
   void test(

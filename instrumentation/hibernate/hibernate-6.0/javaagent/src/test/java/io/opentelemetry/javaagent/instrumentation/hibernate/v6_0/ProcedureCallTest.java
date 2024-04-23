@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import jakarta.persistence.ParameterMode;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -101,12 +101,11 @@ public class ProcedureCallTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(SemanticAttributes.DB_NAME, "test"),
-                            equalTo(SemanticAttributes.DB_USER, "sa"),
-                            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            equalTo(SemanticAttributes.DB_STATEMENT, "{call TEST_PROC()}"),
-                            equalTo(SemanticAttributes.DB_OPERATION, "CALL")),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
+                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "{call TEST_PROC()}"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(SpanKind.INTERNAL)

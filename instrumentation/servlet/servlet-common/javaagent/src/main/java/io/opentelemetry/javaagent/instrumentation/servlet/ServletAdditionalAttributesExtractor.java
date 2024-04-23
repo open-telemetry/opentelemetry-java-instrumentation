@@ -13,7 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import javax.annotation.Nullable;
 
@@ -49,7 +49,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       if (principal != null) {
         String name = principal.getName();
         if (name != null) {
-          attributes.put(SemanticAttributes.ENDUSER_ID, name);
+          attributes.put(EnduserIncubatingAttributes.ENDUSER_ID, name);
         }
       }
     }

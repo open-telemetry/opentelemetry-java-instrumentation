@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import javax.annotation.Nullable;
 
 public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
@@ -20,7 +20,7 @@ public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, R
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     String destination = findMessageDestination(request.getOriginalRequest());
     AttributesExtractorUtil.internalSet(
-        attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME, destination);
+        attributes, MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destination);
   }
 
   /*

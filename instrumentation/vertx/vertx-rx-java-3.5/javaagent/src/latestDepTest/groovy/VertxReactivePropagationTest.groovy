@@ -7,10 +7,15 @@ import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ClientAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.client.WebClient
 import io.opentelemetry.testing.internal.armeria.common.HttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpRequestBuilder
@@ -63,18 +68,18 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
             "$NetworkAttributes.NETWORK_PEER_PORT" Long
-            "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-            "$SemanticAttributes.SERVER_PORT" Long
-            "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
-            "$SemanticAttributes.URL_PATH" "/listProducts"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_SCHEME" "http"
-            "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-            "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+            "$ServerAttributes.SERVER_ADDRESS" "localhost"
+            "$ServerAttributes.SERVER_PORT" Long
+            "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
+            "$UrlAttributes.URL_PATH" "/listProducts"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_SCHEME" "http"
+            "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
+            "$HttpAttributes.HTTP_ROUTE" "/listProducts"
           }
         }
         span(1) {
@@ -92,13 +97,12 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           kind CLIENT
           childOf span(2)
           attributes {
-            "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-            "$SemanticAttributes.DB_NAME" "test"
-            "$SemanticAttributes.DB_USER" "SA"
-            "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$SemanticAttributes.DB_STATEMENT" "SELECT id, name, price, weight FROM products"
-            "$SemanticAttributes.DB_OPERATION" "SELECT"
-            "$SemanticAttributes.DB_SQL_TABLE" "products"
+            "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_USER" "SA"
+            "$DbIncubatingAttributes.DB_STATEMENT" "SELECT id, name, price, weight FROM products"
+            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+            "$DbIncubatingAttributes.DB_SQL_TABLE" "products"
           }
         }
       }
@@ -154,19 +158,19 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind SERVER
             childOf(span(0))
             attributes {
-              "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+              "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
               "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
               "$NetworkAttributes.NETWORK_PEER_PORT" Long
-              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-              "$SemanticAttributes.SERVER_PORT" Long
-              "$SemanticAttributes.CLIENT_ADDRESS" "127.0.0.1"
-              "$SemanticAttributes.URL_PATH" baseUrl
-              "$SemanticAttributes.URL_QUERY" "$TEST_REQUEST_ID_PARAMETER=$requestId"
-              "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-              "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-              "$SemanticAttributes.URL_SCHEME" "http"
-              "$SemanticAttributes.USER_AGENT_ORIGINAL" String
-              "$SemanticAttributes.HTTP_ROUTE" "/listProducts"
+              "$ServerAttributes.SERVER_ADDRESS" "localhost"
+              "$ServerAttributes.SERVER_PORT" Long
+              "$ClientAttributes.CLIENT_ADDRESS" "127.0.0.1"
+              "$UrlAttributes.URL_PATH" baseUrl
+              "$UrlAttributes.URL_QUERY" "$TEST_REQUEST_ID_PARAMETER=$requestId"
+              "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+              "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+              "$UrlAttributes.URL_SCHEME" "http"
+              "$UserAgentAttributes.USER_AGENT_ORIGINAL" String
+              "$HttpAttributes.HTTP_ROUTE" "/listProducts"
               "${TEST_REQUEST_ID_ATTRIBUTE}" requestId
             }
           }
@@ -191,13 +195,12 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             kind CLIENT
             childOf(span(3))
             attributes {
-              "$SemanticAttributes.DB_SYSTEM" "hsqldb"
-              "$SemanticAttributes.DB_NAME" "test"
-              "$SemanticAttributes.DB_USER" "SA"
-              "$SemanticAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$SemanticAttributes.DB_STATEMENT" "SELECT id AS request$requestId, name, price, weight FROM products"
-              "$SemanticAttributes.DB_OPERATION" "SELECT"
-              "$SemanticAttributes.DB_SQL_TABLE" "products"
+              "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
+              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_USER" "SA"
+              "$DbIncubatingAttributes.DB_STATEMENT" "SELECT id AS request$requestId, name, price, weight FROM products"
+              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
+              "$DbIncubatingAttributes.DB_SQL_TABLE" "products"
             }
           }
         }

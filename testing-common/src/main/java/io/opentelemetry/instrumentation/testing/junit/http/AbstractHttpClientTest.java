@@ -18,14 +18,18 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -134,7 +138,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 span ->
                     assertClientSpan(span, uri, HttpConstants._OTHER, responseCode, null)
                         .hasNoParent()
-                        .hasAttribute(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
   }
 
   @ParameterizedTest
@@ -253,7 +257,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -293,7 +297,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -352,7 +356,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
               .collect(Collectors.toList()));
@@ -399,7 +403,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -964,27 +968,27 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             attrs -> {
               // we're opting out of these attributes in the new semconv
               assertThat(attrs)
-                  .doesNotContainKey(SemanticAttributes.NETWORK_TRANSPORT)
-                  .doesNotContainKey(SemanticAttributes.NETWORK_TYPE)
-                  .doesNotContainKey(SemanticAttributes.NETWORK_PROTOCOL_NAME);
-              if (httpClientAttributes.contains(SemanticAttributes.NETWORK_PROTOCOL_VERSION)) {
+                  .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
+                  .doesNotContainKey(NetworkAttributes.NETWORK_TYPE)
+                  .doesNotContainKey(NetworkAttributes.NETWORK_PROTOCOL_NAME);
+              if (httpClientAttributes.contains(NetworkAttributes.NETWORK_PROTOCOL_VERSION)) {
                 // TODO(anuraaga): Support HTTP/2
-                assertThat(attrs).containsEntry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
+                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
               }
 
-              if (httpClientAttributes.contains(SemanticAttributes.SERVER_ADDRESS)) {
-                assertThat(attrs).containsEntry(SemanticAttributes.SERVER_ADDRESS, uri.getHost());
+              if (httpClientAttributes.contains(ServerAttributes.SERVER_ADDRESS)) {
+                assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, uri.getHost());
               }
-              if (httpClientAttributes.contains(SemanticAttributes.SERVER_PORT)) {
+              if (httpClientAttributes.contains(ServerAttributes.SERVER_PORT)) {
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
-                  if (attrs.get(SemanticAttributes.SERVER_PORT) != null) {
+                  if (attrs.get(ServerAttributes.SERVER_PORT) != null) {
                     int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
-                    assertThat(attrs).containsEntry(SemanticAttributes.SERVER_PORT, effectivePort);
+                    assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, effectivePort);
                   }
                   // alternatively, peer port is not emitted -- and that's fine too
                 } else {
-                  assertThat(attrs).containsEntry(SemanticAttributes.SERVER_PORT, uriPort);
+                  assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, uriPort);
                 }
               }
 
@@ -1004,36 +1008,34 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 }
               }
 
-              if (httpClientAttributes.contains(SemanticAttributes.URL_FULL)) {
-                assertThat(attrs).containsEntry(SemanticAttributes.URL_FULL, uri.toString());
+              if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
+                assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
               }
-              if (httpClientAttributes.contains(SemanticAttributes.HTTP_REQUEST_METHOD)) {
-                assertThat(attrs).containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, method);
+              if (httpClientAttributes.contains(HttpAttributes.HTTP_REQUEST_METHOD)) {
+                assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
               }
 
               // opt-in, not collected by default
-              assertThat(attrs).doesNotContainKey(SemanticAttributes.USER_AGENT_ORIGINAL);
+              assertThat(attrs).doesNotContainKey(UserAgentAttributes.USER_AGENT_ORIGINAL);
 
               if (responseCode != null) {
                 assertThat(attrs)
-                    .containsEntry(
-                        SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
+                    .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
                 if (responseCode >= 400) {
                   assertThat(attrs)
-                      .containsEntry(SemanticAttributes.ERROR_TYPE, String.valueOf(responseCode));
+                      .containsEntry(ErrorAttributes.ERROR_TYPE, String.valueOf(responseCode));
                 }
               } else {
-                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE);
+                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
                 // TODO: add more detailed assertions, per url
-                assertThat(attrs).containsKey(SemanticAttributes.ERROR_TYPE);
+                assertThat(attrs).containsKey(ErrorAttributes.ERROR_TYPE);
               }
 
               if (resendCount != null) {
                 assertThat(attrs)
-                    .containsEntry(
-                        SemanticAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
+                    .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
-                assertThat(attrs).doesNotContainKey(SemanticAttributes.HTTP_REQUEST_RESEND_COUNT);
+                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
               }
             });
   }

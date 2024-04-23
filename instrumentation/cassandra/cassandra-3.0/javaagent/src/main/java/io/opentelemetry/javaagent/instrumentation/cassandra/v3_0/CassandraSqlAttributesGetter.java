@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
 
   @Override
   public String getSystem(CassandraRequest request) {
-    return SemanticAttributes.DbSystemValues.CASSANDRA;
+    return DbIncubatingAttributes.DbSystemValues.CASSANDRA;
   }
 
   @Override
@@ -26,12 +26,6 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   @Nullable
   public String getName(CassandraRequest request) {
     return request.getSession().getLoggedKeyspace();
-  }
-
-  @Override
-  @Nullable
-  public String getConnectionString(CassandraRequest request) {
-    return null;
   }
 
   @Override

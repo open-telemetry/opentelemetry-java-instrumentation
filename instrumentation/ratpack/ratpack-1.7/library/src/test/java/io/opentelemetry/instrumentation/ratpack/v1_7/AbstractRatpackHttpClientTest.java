@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashSet;
@@ -156,7 +156,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+    attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
     return attributes;
   }
 }

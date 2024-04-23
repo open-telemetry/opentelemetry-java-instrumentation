@@ -9,7 +9,8 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -411,16 +412,15 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-        "$SemanticAttributes.SERVER_PORT" port
-        "$SemanticAttributes.DB_STATEMENT" {
+        "$ServerAttributes.SERVER_ADDRESS" "localhost"
+        "$ServerAttributes.SERVER_PORT" port
+        "$DbIncubatingAttributes.DB_STATEMENT" {
           statementEval.call(it.replaceAll(" ", ""))
         }
-        "$SemanticAttributes.DB_SYSTEM" "mongodb"
-        "$SemanticAttributes.DB_CONNECTION_STRING" "mongodb://localhost:" + port
-        "$SemanticAttributes.DB_NAME" dbName
-        "$SemanticAttributes.DB_OPERATION" operation
-        "$SemanticAttributes.DB_MONGODB_COLLECTION" collection
+        "$DbIncubatingAttributes.DB_SYSTEM" "mongodb"
+        "$DbIncubatingAttributes.DB_NAME" dbName
+        "$DbIncubatingAttributes.DB_OPERATION" operation
+        "$DbIncubatingAttributes.DB_MONGODB_COLLECTION" collection
       }
     }
   }

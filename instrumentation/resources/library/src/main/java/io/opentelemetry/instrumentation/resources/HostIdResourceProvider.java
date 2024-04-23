@@ -12,7 +12,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -97,7 +97,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
     if (lines.isEmpty()) {
       return Resource.empty();
     }
-    return Resource.create(Attributes.of(ResourceAttributes.HOST_ID, lines.get(0)));
+    return Resource.create(Attributes.of(HostIncubatingAttributes.HOST_ID, lines.get(0)));
   }
 
   private static List<String> readMachineIdFile(Path path) {
@@ -120,7 +120,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
       if (line.contains("MachineGuid")) {
         String[] parts = line.trim().split("\\s+");
         if (parts.length == 3) {
-          return Resource.create(Attributes.of(ResourceAttributes.HOST_ID, parts[2]));
+          return Resource.create(Attributes.of(HostIncubatingAttributes.HOST_ID, parts[2]));
         }
       }
     }
@@ -172,8 +172,8 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
   public boolean shouldApply(ConfigProperties config, Resource existing) {
     return !config
             .getMap("otel.resource.attributes")
-            .containsKey(ResourceAttributes.HOST_ID.getKey())
-        && existing.getAttribute(ResourceAttributes.HOST_ID) == null;
+            .containsKey(HostIncubatingAttributes.HOST_ID.getKey())
+        && existing.getAttribute(HostIncubatingAttributes.HOST_ID) == null;
   }
 
   @Override

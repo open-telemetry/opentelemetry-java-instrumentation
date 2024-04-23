@@ -6,7 +6,8 @@
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ExceptionAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import org.springframework.boot.SpringApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
@@ -94,9 +95,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           kind SpanKind.CLIENT
           childOf span(0)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
-            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
+            "$RpcIncubatingAttributes.RPC_METHOD" "hello"
           }
         }
         span(2) {
@@ -104,9 +105,9 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           kind SpanKind.SERVER
           childOf span(1)
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
-            "$SemanticAttributes.RPC_METHOD" "hello"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
+            "$RpcIncubatingAttributes.RPC_METHOD" "hello"
           }
         }
       }
@@ -128,11 +129,11 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           status ERROR
           hasNoParent()
           event(0) {
-            eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
+            eventName("exception")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$SemanticAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
         }
@@ -142,17 +143,17 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           status ERROR
           childOf span(0)
           event(0) {
-            eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
+            eventName("exception")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$SemanticAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
-            "$SemanticAttributes.RPC_METHOD" "exceptional"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeter"
+            "$RpcIncubatingAttributes.RPC_METHOD" "exceptional"
           }
         }
         span(2) {
@@ -161,17 +162,17 @@ class SpringRmiTest extends AgentInstrumentationSpecification {
           childOf span(1)
           status ERROR
           event(0) {
-            eventName("$SemanticAttributes.EXCEPTION_EVENT_NAME")
+            eventName("exception")
             attributes {
-              "$SemanticAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
-              "$SemanticAttributes.EXCEPTION_MESSAGE" error.getMessage()
-              "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+              "$ExceptionAttributes.EXCEPTION_TYPE" error.getClass().getCanonicalName()
+              "$ExceptionAttributes.EXCEPTION_MESSAGE" error.getMessage()
+              "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
             }
           }
           attributes {
-            "$SemanticAttributes.RPC_SYSTEM" "spring_rmi"
-            "$SemanticAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
-            "$SemanticAttributes.RPC_METHOD" "exceptional"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "spring_rmi"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "springrmi.app.SpringRmiGreeterImpl"
+            "$RpcIncubatingAttributes.RPC_METHOD" "exceptional"
           }
         }
       }
