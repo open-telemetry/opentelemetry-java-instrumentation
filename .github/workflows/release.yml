@@ -113,7 +113,7 @@ jobs:
         name: Collect SBOM's
         run: |
           mkdir sboms
-          find . -path ./sboms -prune -o -name "*.spdx.json" -exec mv {} ./sboms/ \;
+          cp javaagent/build/spdx/*.spdx.json sboms
           zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
 
       - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
