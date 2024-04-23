@@ -40,7 +40,7 @@ import org.springframework.ws.soap.addressing.client.ActionCallback;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 import org.springframework.ws.soap.client.core.SoapActionCallback;
 
-public class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
+class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
   private static final InstrumentationExtension testing =
