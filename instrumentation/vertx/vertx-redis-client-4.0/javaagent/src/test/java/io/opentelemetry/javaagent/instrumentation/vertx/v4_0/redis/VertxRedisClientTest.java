@@ -19,7 +19,6 @@ import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;

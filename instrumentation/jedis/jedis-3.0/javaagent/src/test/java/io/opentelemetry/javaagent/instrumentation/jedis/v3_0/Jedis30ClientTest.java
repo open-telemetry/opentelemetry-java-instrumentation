@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.UnknownHostException;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
-import java.net.UnknownHostException;
 
 class Jedis30ClientTest {
   @RegisterExtension
