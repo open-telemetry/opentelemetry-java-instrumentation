@@ -36,14 +36,10 @@ class Jedis40ClientTest {
   static Jedis jedis;
 
   @BeforeAll
-  static void setup() {
+  static void setup() throws UnknownHostException {
     redisServer.start();
     port = redisServer.getMappedPort(6379);
-    try {
-      ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
-    } catch (UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
     jedis = new Jedis(redisServer.getHost(), port);
   }
 

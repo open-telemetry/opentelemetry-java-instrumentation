@@ -20,7 +20,7 @@ public class RocketMqProxyContainer {
 
   // We still need this container type to do fixed-port-mapping.
   @SuppressWarnings({"resource", "deprecation", "rawtypes"})
-  RocketMqProxyContainer() {
+  RocketMqProxyContainer() throws UnknownHostException {
     int proxyPort = PortUtils.findOpenPorts(4);
     int brokerPort = proxyPort + 1;
     int brokerHaPort = proxyPort + 2;
@@ -28,11 +28,7 @@ public class RocketMqProxyContainer {
     // Although this function says "IpAddress" in the name, it actually returns a hostname.
     String dockerHost = DockerClientFactory.instance().dockerHostIpAddress();
     String ip;
-    try {
-      ip = java.net.InetAddress.getByName(dockerHost).getHostAddress();
-    } catch (UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(dockerHost).getHostAddress();
     container =
         new FixedHostPortGenericContainer(IMAGE_NAME)
             .withFixedExposedPort(proxyPort, proxyPort)

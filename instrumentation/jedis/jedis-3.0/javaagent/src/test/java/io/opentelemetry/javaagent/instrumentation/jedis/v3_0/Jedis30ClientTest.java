@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
+import java.net.UnknownHostException;
 
 class Jedis30ClientTest {
   @RegisterExtension
@@ -40,14 +41,10 @@ class Jedis30ClientTest {
   static Jedis jedis;
 
   @BeforeAll
-  static void setup() {
+  static void setup() throws UnknownHostException {
     redisServer.start();
     host = redisServer.getHost();
-    try {
-      ip = java.net.InetAddress.getByName(host).getHostAddress();
-    } catch (java.net.UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     jedis = new Jedis(host, port);
   }

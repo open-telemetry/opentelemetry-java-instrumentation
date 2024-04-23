@@ -41,14 +41,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   private static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     redisServer.start();
     host = redisServer.getHost();
-    try {
-      ip = java.net.InetAddress.getByName(host).getHostAddress();
-    } catch (UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 

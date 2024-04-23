@@ -60,7 +60,7 @@ public class SpringRabbitMqTest {
   private static String ip;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     rabbitMqContainer =
         new GenericContainer<>("rabbitmq:latest")
             .withExposedPorts(5672)
@@ -81,11 +81,7 @@ public class SpringRabbitMqTest {
     connectionFactory = new ConnectionFactory();
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
-    try {
-      ip = java.net.InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
-    } catch (UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
   }
 
   @AfterAll

@@ -66,7 +66,7 @@ public abstract class AbstractCassandraTest {
   }
 
   @BeforeAll
-  static void beforeAll() {
+  static void beforeAll() throws UnknownHostException {
     cassandra =
         new GenericContainer<>("cassandra:4.0")
             .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
@@ -76,12 +76,7 @@ public abstract class AbstractCassandraTest {
     cassandra.start();
 
     cassandraHost = cassandra.getHost();
-    try {
-      cassandraIp = java.net.InetAddress.getByName(cassandra.getHost()).getHostAddress();
-    } catch (UnknownHostException e) {
-      // Default to 127.0.0.1
-      cassandraIp = "127.0.0.1";
-    }
+    cassandraIp = java.net.InetAddress.getByName(cassandra.getHost()).getHostAddress();
     cassandraPort = cassandra.getMappedPort(9042);
   }
 

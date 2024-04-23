@@ -30,7 +30,7 @@ public abstract class AbstractRabbitMqTest {
   protected static int rabbitMqPort;
 
   @BeforeAll
-  static void startRabbit() {
+  static void startRabbit() throws UnknownHostException {
     rabbitMqContainer =
         new GenericContainer<>("rabbitmq:latest")
             .withExposedPorts(5672)
@@ -45,11 +45,7 @@ public abstract class AbstractRabbitMqTest {
     connectionFactory.setAutomaticRecoveryEnabled(false);
 
     rabbitMqHost = rabbitMqContainer.getHost();
-    try {
-      rabbitMqIp = java.net.InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
-    } catch (UnknownHostException e) {
-      rabbitMqIp = "127.0.0.1";
-    }
+    rabbitMqIp = java.net.InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
     rabbitMqPort = rabbitMqContainer.getMappedPort(5672);
   }
 

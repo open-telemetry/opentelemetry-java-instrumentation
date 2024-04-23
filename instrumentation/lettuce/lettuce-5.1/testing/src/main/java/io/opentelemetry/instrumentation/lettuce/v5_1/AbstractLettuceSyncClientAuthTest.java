@@ -21,16 +21,12 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceClientTest {
 
   @BeforeAll
-  void setUp() {
+  void setUp() throws UnknownHostException {
     redisServer = redisServer.withCommand("redis-server", "--requirepass password");
     redisServer.start();
 
     host = redisServer.getHost();
-    try {
-      ip = java.net.InetAddress.getByName(host).getHostAddress();
-    } catch (UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 

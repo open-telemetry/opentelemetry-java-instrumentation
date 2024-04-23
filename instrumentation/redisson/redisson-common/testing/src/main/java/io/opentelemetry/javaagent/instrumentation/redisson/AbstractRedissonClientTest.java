@@ -68,13 +68,9 @@ public abstract class AbstractRedissonClientTest {
   private RedissonClient redisson;
 
   @BeforeAll
-  static void setupAll() {
+  static void setupAll() throws UnknownHostException {
     redisServer.start();
-    try {
-      ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
-    } catch (UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
     port = redisServer.getMappedPort(6379);
     address = redisServer.getHost() + ":" + port;
   }

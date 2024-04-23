@@ -32,15 +32,11 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   protected static RedisReactiveCommands<String, String> reactiveCommands;
 
   @BeforeAll
-  void setUp() {
+  void setUp() throws UnknownHostException {
     redisServer.start();
 
     host = redisServer.getHost();
-    try {
-      ip = java.net.InetAddress.getByName(host).getHostAddress();
-    } catch (UnknownHostException e) {
-      ip = "127.0.0.1";
-    }
+    ip = java.net.InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
     expectedHostAttributeValue = Objects.equals(host, "127.0.0.1") ? null : host;
