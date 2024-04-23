@@ -22,8 +22,8 @@ public final class RestClientBeanPostProcessor implements BeanPostProcessor {
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
-    if (bean instanceof RestClient restClient) {
-      return addRestClientInterceptorIfNotPresent(restClient, openTelemetryProvider.getObject());
+    if (bean instanceof RestClient) {
+      return addRestClientInterceptorIfNotPresent((RestClient) bean, openTelemetryProvider.getObject());
     }
     return bean;
   }
