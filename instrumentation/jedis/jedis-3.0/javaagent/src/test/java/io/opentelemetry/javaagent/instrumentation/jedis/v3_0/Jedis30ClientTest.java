@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
@@ -44,7 +45,7 @@ class Jedis30ClientTest {
   static void setup() throws UnknownHostException {
     redisServer.start();
     host = redisServer.getHost();
-    ip = java.net.InetAddress.getByName(host).getHostAddress();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     jedis = new Jedis(host, port);
   }

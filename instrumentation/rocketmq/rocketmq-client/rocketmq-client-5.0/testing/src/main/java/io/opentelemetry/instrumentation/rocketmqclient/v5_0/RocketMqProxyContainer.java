@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
@@ -28,7 +29,7 @@ public class RocketMqProxyContainer {
     // Although this function says "IpAddress" in the name, it actually returns a hostname.
     String dockerHost = DockerClientFactory.instance().dockerHostIpAddress();
     String ip;
-    ip = java.net.InetAddress.getByName(dockerHost).getHostAddress();
+    ip = InetAddress.getByName(dockerHost).getHostAddress();
     container =
         new FixedHostPortGenericContainer(IMAGE_NAME)
             .withFixedExposedPort(proxyPort, proxyPort)

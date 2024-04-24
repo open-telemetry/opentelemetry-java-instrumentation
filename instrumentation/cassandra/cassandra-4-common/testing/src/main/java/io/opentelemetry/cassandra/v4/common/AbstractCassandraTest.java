@@ -32,6 +32,7 @@ import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfig
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -76,7 +77,7 @@ public abstract class AbstractCassandraTest {
     cassandra.start();
 
     cassandraHost = cassandra.getHost();
-    cassandraIp = java.net.InetAddress.getByName(cassandra.getHost()).getHostAddress();
+    cassandraIp = InetAddress.getByName(cassandra.getHost()).getHostAddress();
     cassandraPort = cassandra.getMappedPort(9042);
   }
 

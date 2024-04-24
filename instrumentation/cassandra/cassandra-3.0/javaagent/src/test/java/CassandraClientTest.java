@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -62,7 +63,7 @@ public class CassandraClientTest {
     cassandra.start();
 
     cassandraHost = cassandra.getHost();
-    cassandraIp = java.net.InetAddress.getByName(cassandra.getHost()).getHostAddress();
+    cassandraIp = InetAddress.getByName(cassandra.getHost()).getHostAddress();
     cassandraPort = cassandra.getMappedPort(9042);
     cluster =
         Cluster.builder()

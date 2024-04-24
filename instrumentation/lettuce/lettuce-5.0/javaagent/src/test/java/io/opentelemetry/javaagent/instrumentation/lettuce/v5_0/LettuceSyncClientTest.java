@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import org.assertj.core.api.AbstractAssert;
@@ -44,7 +45,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   static void setUp() throws UnknownHostException {
     redisServer.start();
     host = redisServer.getHost();
-    ip = java.net.InetAddress.getByName(host).getHostAddress();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 

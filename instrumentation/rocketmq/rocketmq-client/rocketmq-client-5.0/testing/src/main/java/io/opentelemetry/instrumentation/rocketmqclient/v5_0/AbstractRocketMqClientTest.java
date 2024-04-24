@@ -73,7 +73,7 @@ public abstract class AbstractRocketMqClientTest {
     try {
       container = new RocketMqProxyContainer();
     } catch (UnknownHostException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException("Could not find IP for Docker Host", e);
     }
   }
 

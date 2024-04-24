@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -37,7 +38,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     redisServer.start();
 
     host = redisServer.getHost();
-    ip = java.net.InetAddress.getByName(host).getHostAddress();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 

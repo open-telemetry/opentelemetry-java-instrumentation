@@ -20,6 +20,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public class SpringRabbitMqTest {
     connectionFactory = new ConnectionFactory();
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
-    ip = java.net.InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
+    ip = InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
   }
 
   @AfterAll

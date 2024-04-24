@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,7 +40,7 @@ class Jedis40ClientTest {
   static void setup() throws UnknownHostException {
     redisServer.start();
     port = redisServer.getMappedPort(6379);
-    ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
+    ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
     jedis = new Jedis(redisServer.getHost(), port);
   }
 

@@ -20,6 +20,7 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
@@ -65,7 +66,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   @BeforeAll
   static void setupAll() throws UnknownHostException {
     redisServer.start();
-    ip = java.net.InetAddress.getByName(redisServer.getHost()).getHostAddress();
+    ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
     port = redisServer.getMappedPort(6379);
     address = redisServer.getHost() + ":" + port;
   }

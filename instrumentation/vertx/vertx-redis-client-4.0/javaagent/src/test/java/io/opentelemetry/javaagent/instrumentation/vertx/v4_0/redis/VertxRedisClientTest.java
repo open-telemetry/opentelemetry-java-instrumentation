@@ -19,6 +19,7 @@ import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +47,7 @@ class VertxRedisClientTest {
     redisServer.start();
 
     host = redisServer.getHost();
-    ip = java.net.InetAddress.getByName(host).getHostAddress();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
 
     vertx = Vertx.vertx();
