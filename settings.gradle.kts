@@ -225,6 +225,7 @@ include(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:testing")
 include(":instrumentation:executors:bootstrap")
 include(":instrumentation:executors:javaagent")
+include(":instrumentation:executors:jdk21-testing")
 include(":instrumentation:executors:testing")
 include(":instrumentation:external-annotations:javaagent")
 include(":instrumentation:external-annotations:javaagent-unit-tests")

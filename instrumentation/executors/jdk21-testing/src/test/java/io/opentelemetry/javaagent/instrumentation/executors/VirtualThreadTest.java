@@ -12,21 +12,13 @@ import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
-@EnabledForJreRange(min = JRE.JAVA_21)
 class VirtualThreadTest {
 
   @Test
   void testDisableContextPropagation() throws Exception {
     TestRunnable testRunnable = new TestRunnable();
-    // Thread.ofVirtual().start(testRunnable);
-    Method ofVirtualMethod = Thread.class.getMethod("ofVirtual");
-    Object virtualThreadBuilder = ofVirtualMethod.invoke(null);
-    Method startVirtualThread =
-        Class.forName("java.lang.Thread$Builder").getMethod("start", Runnable.class);
-    Thread thread = (Thread) startVirtualThread.invoke(virtualThreadBuilder, testRunnable);
+    Thread thread = Thread.ofVirtual().start(testRunnable);
     thread.join();
 
     assertThat(testRunnable.error).isNull();

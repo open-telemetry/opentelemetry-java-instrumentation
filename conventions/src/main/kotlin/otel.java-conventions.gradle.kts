@@ -27,12 +27,15 @@ afterEvaluate {
 }
 
 // Version to use to compile code and run tests.
-val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_17
+val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_21
 
 java {
   toolchain {
     languageVersion.set(
-      otelJava.minJavaVersionSupported.map { JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())) }
+      otelJava.minJavaVersionSupported.map {
+        val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
+        JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), defaultJavaVersion))
+      }
     )
   }
 
@@ -69,11 +72,18 @@ tasks.withType<JavaCompile>().configureEach {
           "-Xlint:-processing",
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
+          // jdk21 generates more serial warnings than previous versions
+          "-Xlint:-serial",
 
           // Fail build on any warning
           "-Werror"
         )
       )
+      val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
+      if (Math.max(otelJava.minJavaVersionSupported.get().majorVersion.toInt(), defaultJavaVersion) >= 21) {
+        // new warning in jdk21
+        compilerArgs.add("-Xlint:-this-escape")
+      }
     }
 
     encoding = "UTF-8"
