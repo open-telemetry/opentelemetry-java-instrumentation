@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -147,10 +148,10 @@ class GraphQLTelemetryTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("graphql.operation.name"), "findBookById"),
-                            equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
+                                GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME, "findBookById"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
-                                AttributeKey.stringKey("graphql.document"),
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name } }"))));
   }
 
@@ -183,9 +184,9 @@ class GraphQLTelemetryTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
-                                AttributeKey.stringKey("graphql.document"),
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                 "{ bookById(id: ?) { name } }"))));
   }
 
@@ -296,10 +297,11 @@ class GraphQLTelemetryTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.operation.name"), "addNewBook"),
-                            equalTo(AttributeKey.stringKey("graphql.operation.type"), "mutation"),
+                            equalTo(
+                                GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME, "addNewBook"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "mutation"),
                             normalizedQueryEqualsTo(
-                                AttributeKey.stringKey("graphql.document"),
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                 "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
   }
 
@@ -336,10 +338,10 @@ class GraphQLTelemetryTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("graphql.operation.name"), "findBookById"),
-                            equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
+                                GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME, "findBookById"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
-                                AttributeKey.stringKey("graphql.document"),
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name } }")),
                 span ->
                     span.hasName("bookById")
@@ -384,10 +386,10 @@ class GraphQLTelemetryTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("graphql.operation.name"), "findBookById"),
-                            equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
+                                GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME, "findBookById"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
-                                AttributeKey.stringKey("graphql.document"),
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name } }")),
                 span ->
                     span.hasName("bookById")
@@ -440,10 +442,10 @@ class GraphQLTelemetryTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("graphql.operation.name"), "findBookById"),
-                            equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
+                                GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME, "findBookById"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
-                                AttributeKey.stringKey("graphql.document"),
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                 "query findBookById { bookById(id: ?) { name } }"))));
   }
 

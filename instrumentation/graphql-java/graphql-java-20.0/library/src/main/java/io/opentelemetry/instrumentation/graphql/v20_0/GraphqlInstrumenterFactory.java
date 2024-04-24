@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
@@ -52,14 +53,6 @@ final class GraphqlInstrumenterFactory {
   private static final class GraphqlExecutionAttributesExtractor
       implements AttributesExtractor<OpenTelemetryInstrumentationState, ExecutionResult> {
 
-    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/graphql.md
-    private static final AttributeKey<String> OPERATION_NAME =
-        AttributeKey.stringKey("graphql.operation.name");
-    private static final AttributeKey<String> OPERATION_TYPE =
-        AttributeKey.stringKey("graphql.operation.type");
-    private static final AttributeKey<String> GRAPHQL_DOCUMENT =
-        AttributeKey.stringKey("graphql.document");
-
     @Override
     public void onStart(
         AttributesBuilder attributes,
@@ -73,13 +66,17 @@ final class GraphqlInstrumenterFactory {
         OpenTelemetryInstrumentationState openTelemetryInstrumentationState,
         @Nullable ExecutionResult executionResult,
         @Nullable Throwable error) {
-      attributes.put(OPERATION_NAME, openTelemetryInstrumentationState.getOperationName());
+      attributes.put(
+          GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME,
+          openTelemetryInstrumentationState.getOperationName());
       if (openTelemetryInstrumentationState.getOperation() != null) {
         attributes.put(
-            OPERATION_TYPE,
+            GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE,
             openTelemetryInstrumentationState.getOperation().name().toLowerCase(Locale.ROOT));
       }
-      attributes.put(GRAPHQL_DOCUMENT, openTelemetryInstrumentationState.getQuery());
+      attributes.put(
+          GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
+          openTelemetryInstrumentationState.getQuery());
     }
   }
 
