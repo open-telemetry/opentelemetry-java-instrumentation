@@ -16,9 +16,9 @@ public final class GraphQLTelemetryBuilder {
 
   private boolean sanitizeQuery = true;
 
-  private boolean createSpansForDataFetchers = false;
+  private boolean dataFetcherInstrumentationEnabled = false;
 
-  private boolean createSpanForTrivialDataFetchers = false;
+  private boolean trivialDataFetcherInstrumentationEnabled = false;
 
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -33,16 +33,20 @@ public final class GraphQLTelemetryBuilder {
 
   /** Sets whether spans are created for GraphQL Data Fetchers. Default is {@code false}. */
   @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder createSpansForDataFetchers(boolean createSpansForDataFetchers) {
-    this.createSpansForDataFetchers = createSpansForDataFetchers;
+  public GraphQLTelemetryBuilder setDataFetcherInstrumentationEnabled(
+      boolean dataFetcherInstrumentationEnabled) {
+    this.dataFetcherInstrumentationEnabled = dataFetcherInstrumentationEnabled;
     return this;
   }
 
-  /** Sets whether spans are created for Trivial GraphQL Data Fetchers. Default is {@code false}. */
+  /**
+   * Sets whether spans are created for trivial GraphQL Data Fetchers. A trivial DataFetcher is one
+   * that simply maps data from an object to a field. Default is {@code false}.
+   */
   @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder createSpanForTrivialDataFetchers(
-      boolean createSpanForTrivialDataFetchers) {
-    this.createSpanForTrivialDataFetchers = createSpanForTrivialDataFetchers;
+  public GraphQLTelemetryBuilder setTrivialDataFetcherInstrumentationEnabled(
+      boolean trivialDataFetcherInstrumentationEnabled) {
+    this.trivialDataFetcherInstrumentationEnabled = trivialDataFetcherInstrumentationEnabled;
     return this;
   }
 
@@ -55,7 +59,7 @@ public final class GraphQLTelemetryBuilder {
         GraphqlInstrumenterFactory.createExecutionInstrumenter(openTelemetry),
         sanitizeQuery,
         GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
-            openTelemetry, createSpansForDataFetchers),
-        createSpanForTrivialDataFetchers);
+            openTelemetry, dataFetcherInstrumentationEnabled),
+        trivialDataFetcherInstrumentationEnabled);
   }
 }

@@ -310,7 +310,7 @@ class GraphQLTelemetryTest {
     // Arrange
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
-            .createSpansForDataFetchers(true)
+            .setDataFetcherInstrumentationEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -357,8 +357,8 @@ class GraphQLTelemetryTest {
     // Arrange
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
-            .createSpansForDataFetchers(true)
-            .createSpanForTrivialDataFetchers(true)
+            .setDataFetcherInstrumentationEnabled(true)
+            .setTrivialDataFetcherInstrumentationEnabled(true)
             .build();
 
     GraphQL graphql =
@@ -413,8 +413,8 @@ class GraphQLTelemetryTest {
     // Arrange
     GraphQLTelemetry telemetry =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
-            .createSpansForDataFetchers(false)
-            .createSpanForTrivialDataFetchers(true)
+            .setDataFetcherInstrumentationEnabled(false)
+            .setTrivialDataFetcherInstrumentationEnabled(true)
             .build();
 
     GraphQL graphql =
