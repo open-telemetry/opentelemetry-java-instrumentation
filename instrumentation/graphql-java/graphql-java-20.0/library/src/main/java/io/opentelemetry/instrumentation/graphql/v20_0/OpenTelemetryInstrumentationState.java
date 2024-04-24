@@ -12,10 +12,6 @@ import io.opentelemetry.context.Context;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 final class OpenTelemetryInstrumentationState implements InstrumentationState {
   private static final String ROOT_PATH = ResultPath.rootPath().toString();
 
