@@ -6,34 +6,41 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-// TODO - Tests using this container will currently fail if TESTCONTAINERS_HOST_OVERRIDE is set to
-// anything other than "localhost".
 public class RocketMqProxyContainer {
   // TODO(aaron-ai): replace it by the official image.
-  private static final String IMAGE_NAME = "aaronai/rocketmq-proxy-it:v1.0.1";
+  private static final String IMAGE_NAME = "zackman0010/rocketmq-proxy-it:v1.0.2";
 
   private final GenericContainer<?> container;
   final String endpoints;
 
   // We still need this container type to do fixed-port-mapping.
   @SuppressWarnings({"resource", "deprecation", "rawtypes"})
-  RocketMqProxyContainer() {
+  RocketMqProxyContainer() throws UnknownHostException {
     int proxyPort = PortUtils.findOpenPorts(4);
     int brokerPort = proxyPort + 1;
     int brokerHaPort = proxyPort + 2;
     int namesrvPort = proxyPort + 3;
-    endpoints = "127.0.0.1:" + proxyPort;
+    // Although this function says "IpAddress" in the name, it actually returns a hostname.
+    String dockerHost = DockerClientFactory.instance().dockerHostIpAddress();
+    String ip;
+    ip = InetAddress.getByName(dockerHost).getHostAddress();
     container =
         new FixedHostPortGenericContainer(IMAGE_NAME)
             .withFixedExposedPort(proxyPort, proxyPort)
+            .withFixedExposedPort(brokerPort, brokerPort)
             .withEnv("rocketmq.broker.port", String.valueOf(brokerPort))
             .withEnv("rocketmq.proxy.port", String.valueOf(proxyPort))
             .withEnv("rocketmq.broker.ha.port", String.valueOf(brokerHaPort))
             .withEnv("rocketmq.namesrv.port", String.valueOf(namesrvPort))
-            .withExposedPorts(proxyPort);
+            .withEnv("rocketmq.proxy.ip", ip)
+            .withExposedPorts(proxyPort, brokerPort);
+    endpoints = ip + ":" + proxyPort;
   }
 
   void start() {

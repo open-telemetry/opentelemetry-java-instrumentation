@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
@@ -39,7 +40,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
-  private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
+  private static final RocketMqProxyContainer container;
+
+  static {
+    try {
+      container = new RocketMqProxyContainer();
+    } catch (UnknownHostException e) {
+      throw new IllegalStateException("Could not find IP for Docker Host", e);
+    }
+  }
 
   protected abstract InstrumentationExtension testing();
 
