@@ -19,8 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("AbbreviationAsWordInName")
-final class GraphQLInstrumenterFactory {
+final class GraphqlInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-20.0";
 
@@ -48,7 +47,7 @@ final class GraphQLInstrumenterFactory {
         .buildInstrumenter();
   }
 
-  private GraphQLInstrumenterFactory() {}
+  private GraphqlInstrumenterFactory() {}
 
   private static final class GraphqlExecutionAttributesExtractor
       implements AttributesExtractor<OpenTelemetryInstrumentationState, ExecutionResult> {

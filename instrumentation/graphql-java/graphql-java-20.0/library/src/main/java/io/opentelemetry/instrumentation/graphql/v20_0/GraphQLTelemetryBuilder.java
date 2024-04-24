@@ -52,9 +52,9 @@ public final class GraphQLTelemetryBuilder {
    */
   public GraphQLTelemetry build() {
     return new GraphQLTelemetry(
-        GraphQLInstrumenterFactory.createExecutionInstrumenter(openTelemetry),
+        GraphqlInstrumenterFactory.createExecutionInstrumenter(openTelemetry),
         sanitizeQuery,
-        GraphQLInstrumenterFactory.createDataFetcherInstrumenter(
+        GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
             openTelemetry, createSpansForDataFetchers),
         createSpanForTrivialDataFetchers);
   }
