@@ -9,6 +9,8 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 
+// TODO - Tests using this container will currently fail if TESTCONTAINERS_HOST_OVERRIDE is set to
+// anything other than "localhost".
 public class RocketMqProxyContainer {
   // TODO(aaron-ai): replace it by the official image.
   private static final String IMAGE_NAME = "aaronai/rocketmq-proxy-it:v1.0.1";

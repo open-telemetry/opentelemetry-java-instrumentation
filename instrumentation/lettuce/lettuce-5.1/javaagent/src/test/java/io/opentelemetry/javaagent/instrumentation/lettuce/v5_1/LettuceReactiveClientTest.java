@@ -53,9 +53,9 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                 equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET a ?"))
@@ -68,9 +68,9 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                 equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a"))

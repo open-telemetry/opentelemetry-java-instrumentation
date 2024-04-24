@@ -99,7 +99,7 @@ abstract class AbstractSpringJmsListenerTest {
     Map<String, Object> props = new HashMap<>();
     props.put("spring.jmx.enabled", false);
     props.put("spring.main.web-application-type", "none");
-    props.put("test.broker-url", "tcp://localhost:" + broker.getMappedPort(61616));
+    props.put("test.broker-url", "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
     return props;
   }
 
