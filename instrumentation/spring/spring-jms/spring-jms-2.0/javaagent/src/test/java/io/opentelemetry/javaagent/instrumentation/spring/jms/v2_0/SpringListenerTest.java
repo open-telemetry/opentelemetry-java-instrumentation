@@ -9,10 +9,10 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 
+import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.testing.AbstractJmsTest;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.ConnectionFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;

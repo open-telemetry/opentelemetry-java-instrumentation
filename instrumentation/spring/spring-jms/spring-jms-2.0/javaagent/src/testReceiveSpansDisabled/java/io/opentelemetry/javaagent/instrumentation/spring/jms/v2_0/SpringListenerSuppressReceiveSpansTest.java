@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.testing.AbstractJmsTest;
 import javax.jms.ConnectionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

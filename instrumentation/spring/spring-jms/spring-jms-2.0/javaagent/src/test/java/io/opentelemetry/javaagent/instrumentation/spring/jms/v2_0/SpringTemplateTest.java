@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.testing.AbstractJmsTest;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.testing;
+package io.opentelemetry.instrumentation.spring.jms.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
