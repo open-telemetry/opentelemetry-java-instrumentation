@@ -150,14 +150,8 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
       ResultPath path = environment.getExecutionStepInfo().getPath();
       Context parentContext = state.getParentContextForPath(path);
 
-      if (!dataFetcherInstrumenter.shouldStart(parentContext, environment)) {
-        // Propagate context only, do not create span
-        try (Scope ignored = parentContext.makeCurrent()) {
-          return dataFetcher.get(environment);
-        }
-      }
-
-      if (parameters.isTrivialDataFetcher() && !createSpansForTrivialDataFetcher) {
+      if (!dataFetcherInstrumenter.shouldStart(parentContext, environment)
+          || (parameters.isTrivialDataFetcher() && !createSpansForTrivialDataFetcher)) {
         // Propagate context only, do not create span
         try (Scope ignored = parentContext.makeCurrent()) {
           return dataFetcher.get(environment);
