@@ -23,6 +23,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
+  testImplementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
   testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
 
   testImplementation("org.springframework.boot:spring-boot-starter-activemq:2.5.3")
@@ -43,6 +44,7 @@ testing {
   suites {
     val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
       dependencies {
+        implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
         // this is just to avoid a bit more copy-pasting
         implementation(project.sourceSets["test"].output)
       }

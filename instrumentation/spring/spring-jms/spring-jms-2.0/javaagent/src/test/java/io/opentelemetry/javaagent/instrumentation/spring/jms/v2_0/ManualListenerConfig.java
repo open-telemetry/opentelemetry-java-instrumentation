@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package listener;
+package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
 import ch.qos.logback.classic.Level;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package listener;
+package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 
-public class AbstractConfig {
+class AbstractConfig {
 
   private HornetQServer server;
 
