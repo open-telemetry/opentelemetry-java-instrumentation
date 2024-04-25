@@ -38,7 +38,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
 
-      - uses: gradle/actions/wrapper-validation@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+      - uses: gradle/actions/wrapper-validation@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
 
   license-check:
     runs-on: ubuntu-latest
@@ -71,7 +71,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
@@ -145,7 +145,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
@@ -239,7 +239,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
@@ -338,7 +338,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
@@ -391,7 +391,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -414,7 +414,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@750cdda3edd6d51b7fdfc069d2e2818cf3c44f4c # v3.3.1
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
