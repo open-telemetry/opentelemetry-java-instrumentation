@@ -60,16 +60,18 @@ class KtorServerTracing private constructor(
     fun setStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
-      this.statusExtractor = extractor
+      spanStatusExtractor { prevStatusExtractor ->
+        extractor(prevStatusExtractor).extract(spanStatusBuilder, request, response, error)
+      }
     }
 
-    fun spanStatusExtractor(extract: SpanStatusData.() -> Unit) {
-      setStatusExtractor {
+    fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
+      statusExtractor = { prevExtractor ->
         SpanStatusExtractor<ApplicationRequest, ApplicationResponse> { spanStatusBuilder: SpanStatusBuilder,
                                                                        request: ApplicationRequest,
                                                                        response: ApplicationResponse?,
                                                                        throwable: Throwable? ->
-          extract(SpanStatusData(spanStatusBuilder, request, response, throwable))
+          extract(SpanStatusData(spanStatusBuilder, request, response, throwable), prevExtractor)
         }
       }
     }
@@ -82,24 +84,33 @@ class KtorServerTracing private constructor(
     )
 
     fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
-      this.spanKindExtractor = extractor
+      spanKindExtractor { prevSpanKindExtractor ->
+        extractor(prevSpanKindExtractor).extract(this)
+      }
     }
 
-    fun spanKindExtractor(extract: ApplicationRequest.() -> SpanKind) {
-      setSpanKindExtractor {
+    fun spanKindExtractor(extract: ApplicationRequest.(SpanKindExtractor<ApplicationRequest>) -> SpanKind) {
+      spanKindExtractor = { prevExtractor ->
         SpanKindExtractor<ApplicationRequest> { request: ApplicationRequest ->
-          extract(request)
+          extract(request, prevExtractor)
         }
       }
     }
 
     fun addAttributeExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
-      additionalExtractors.add(extractor)
+      attributeExtractor {
+        onStart {
+          extractor.onStart(attributes, parentContext, request)
+        }
+        onEnd {
+          extractor.onEnd(attributes, parentContext, request, response, error)
+        }
+      }
     }
 
     fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
       val builder = ExtractorBuilder().apply(extractorBuilder).build()
-      addAttributeExtractor(
+      additionalExtractors.add(
         object : AttributesExtractor<ApplicationRequest, ApplicationResponse> {
           override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: ApplicationRequest) {
             builder.onStart(OnStartData(attributes, parentContext, request))
