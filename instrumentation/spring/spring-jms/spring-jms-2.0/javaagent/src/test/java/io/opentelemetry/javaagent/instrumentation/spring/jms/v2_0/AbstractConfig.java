@@ -7,9 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.Collections;
 import javax.annotation.PreDestroy;
 import javax.jms.ConnectionFactory;
 import org.hornetq.api.core.TransportConfiguration;
@@ -19,6 +17,7 @@ import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.api.jms.HornetQJMSClient;
 import org.hornetq.api.jms.JMSFactoryType;
+import org.hornetq.core.config.Configuration;
 import org.hornetq.core.config.CoreQueueConfiguration;
 import org.hornetq.core.config.impl.ConfigurationImpl;
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
@@ -38,19 +37,18 @@ class AbstractConfig {
     File tempDir = Files.createTempDirectory("tmp").toFile();
     tempDir.deleteOnExit();
 
-    org.hornetq.core.config.Configuration config = new ConfigurationImpl();
+    Configuration config = new ConfigurationImpl();
     config.setBindingsDirectory(tempDir.getPath());
     config.setJournalDirectory(tempDir.getPath());
     config.setCreateBindingsDir(false);
     config.setCreateJournalDir(false);
     config.setSecurityEnabled(false);
     config.setPersistenceEnabled(false);
-    List<CoreQueueConfiguration> list = new ArrayList<>();
-    list.add(new CoreQueueConfiguration("someQueue", "someQueue", null, true));
-    config.setQueueConfigurations(list);
-    Set<TransportConfiguration> set = new java.util.HashSet<>();
-    set.add(new TransportConfiguration(InVMAcceptorFactory.class.getName()));
-    config.setAcceptorConfigurations(set);
+    config.setQueueConfigurations(
+        Collections.singletonList(
+            new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
+    config.setAcceptorConfigurations(
+        Collections.singleton(new TransportConfiguration(InVMAcceptorFactory.class.getName())));
 
     server = HornetQServers.newHornetQServer(config);
     server.start();

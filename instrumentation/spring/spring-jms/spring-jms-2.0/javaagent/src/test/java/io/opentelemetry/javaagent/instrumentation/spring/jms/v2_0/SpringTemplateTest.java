@@ -14,10 +14,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
@@ -72,12 +70,11 @@ class SpringTemplateTest extends AbstractJmsTest {
     config.setCreateJournalDir(false);
     config.setSecurityEnabled(false);
     config.setPersistenceEnabled(false);
-    List<CoreQueueConfiguration> list = new ArrayList<>();
-    list.add(new CoreQueueConfiguration("someQueue", "someQueue", null, true));
-    config.setQueueConfigurations(list);
-    Set<TransportConfiguration> set = new java.util.HashSet<>();
-    set.add(new TransportConfiguration(InVMAcceptorFactory.class.getName()));
-    config.setAcceptorConfigurations(set);
+    config.setQueueConfigurations(
+        Collections.singletonList(
+            new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
+    config.setAcceptorConfigurations(
+        Collections.singleton(new TransportConfiguration(InVMAcceptorFactory.class.getName())));
 
     server = HornetQServers.newHornetQServer(config);
     server.start();
@@ -121,6 +118,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo(messageText);
 
+    String receivedMsgId = receivedMessage.getJMSMessageID();
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {
@@ -130,8 +128,7 @@ class SpringTemplateTest extends AbstractJmsTest {
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  try {
+                span ->
                     assertConsumerSpan(
                         span,
                         producerSpan.get(),
@@ -139,11 +136,7 @@ class SpringTemplateTest extends AbstractJmsTest {
                         "SpringTemplateJms2",
                         "receive",
                         false,
-                        receivedMessage.getJMSMessageID());
-                  } catch (JMSException e) {
-                    throw new RuntimeException(e);
-                  }
-                }));
+                        receivedMsgId)));
   }
 
   @Test
@@ -180,6 +173,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo("responded!");
 
+    String receivedMsgId = receivedMessage.getJMSMessageID();
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     AtomicReference<SpanData> tmpProducerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
@@ -210,8 +204,7 @@ class SpringTemplateTest extends AbstractJmsTest {
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  try {
+                span ->
                     assertConsumerSpan(
                         span,
                         tmpProducerSpan.get(),
@@ -219,11 +212,7 @@ class SpringTemplateTest extends AbstractJmsTest {
                         "(temporary)",
                         "receive",
                         false,
-                        receivedMessage.getJMSMessageID());
-                  } catch (JMSException e) {
-                    throw new RuntimeException(e);
-                  }
-                }));
+                        receivedMsgId)));
   }
 
   @Test
@@ -245,6 +234,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo(messageText);
 
+    String receivedMsgId = receivedMessage.getJMSMessageID();
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {
@@ -254,8 +244,7 @@ class SpringTemplateTest extends AbstractJmsTest {
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  try {
+                span ->
                     assertConsumerSpan(
                         span,
                         producerSpan.get(),
@@ -263,10 +252,6 @@ class SpringTemplateTest extends AbstractJmsTest {
                         "SpringTemplateJms2",
                         "receive",
                         true,
-                        receivedMessage.getJMSMessageID());
-                  } catch (JMSException e) {
-                    throw new RuntimeException(e);
-                  }
-                }));
+                        receivedMsgId)));
   }
 }
