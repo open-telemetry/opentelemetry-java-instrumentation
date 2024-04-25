@@ -32,6 +32,9 @@ class SpringConfigPropertiesTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withPropertyValues(
+            "otel.metrics.exporter=none", // to suppress confusing error log
+            "otel.logs.exporter=none",
+            "otel.traces.exporter=none",
             "otel.resource.attributes.environment=dev",
             "otel.resource.attributes.xyz=foo",
             "otel.resource.attributes.service.instance.id=id-example")
