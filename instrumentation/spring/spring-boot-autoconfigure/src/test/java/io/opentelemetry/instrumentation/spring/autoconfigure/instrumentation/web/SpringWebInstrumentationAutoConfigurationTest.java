@@ -46,7 +46,7 @@ class SpringWebInstrumentationAutoConfigurationTest {
         .run(
             context -> {
                 assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse();
-                assertThat(context.containsBean("otelRestClientBeanPostProcessor")).isFalse()
+                assertThat(context.containsBean("otelRestClientBeanPostProcessor")).isFalse();
         });
   }
 
@@ -61,7 +61,7 @@ class SpringWebInstrumentationAutoConfigurationTest {
             assertThat(
                     context.getBean(
                         "otelRestClientBeanPostProcessor", RestClientBeanPostProcessor.class))
-                .isNotNull()
+                .isNotNull();
         });
   }
 }
