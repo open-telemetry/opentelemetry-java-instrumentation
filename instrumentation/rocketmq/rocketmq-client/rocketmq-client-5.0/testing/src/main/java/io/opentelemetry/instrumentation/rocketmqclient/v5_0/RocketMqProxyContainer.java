@@ -6,15 +6,15 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 public class RocketMqProxyContainer {
   // TODO(aaron-ai): replace it by the official image.
-  private static final String IMAGE_NAME = "zackman0010/rocketmq-proxy-it:v1.0.2";
+  private static final String IMAGE_NAME = "aaronai/rocketmq-proxy-it:v1.0.2";
 
   private final GenericContainer<?> container;
   final String endpoints;
