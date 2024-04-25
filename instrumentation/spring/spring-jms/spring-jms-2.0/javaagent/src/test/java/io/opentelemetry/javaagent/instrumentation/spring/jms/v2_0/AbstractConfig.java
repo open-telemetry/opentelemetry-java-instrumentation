@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 
-class AbstractConfig {
+abstract class AbstractConfig {
 
   private HornetQServer server;
 
