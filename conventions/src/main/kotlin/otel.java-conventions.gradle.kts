@@ -91,6 +91,11 @@ tasks.withType<JavaCompile>().configureEach {
     if (name.contains("Test")) {
       // serialVersionUID is basically guaranteed to be useless in tests
       compilerArgs.add("-Xlint:-serial")
+      // when code is compiled with jdk 21 and executed with jdk 8 -parameters flag is needed to avoid
+      // java.lang.reflect.MalformedParametersException: Invalid parameter name ""
+      // when junit calls java.lang.reflect.Executable.getParameters() on the constructor of a
+      // non-static nested test class
+      compilerArgs.add("-parameters")
     }
   }
 }
