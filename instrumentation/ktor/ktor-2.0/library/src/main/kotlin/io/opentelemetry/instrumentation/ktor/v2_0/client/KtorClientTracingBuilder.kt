@@ -34,65 +34,78 @@ class KtorClientTracingBuilder {
     this.openTelemetry = openTelemetry
   }
 
-  fun setCapturedRequestHeaders(vararg headers: String) = setCapturedRequestHeaders(headers.asList())
+  @Deprecated(
+    "Please use method `capturedRequestHeaders`",
+    ReplaceWith("capturedRequestHeaders(headers.asIterable())")
+  )
+  fun setCapturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
-  fun setCapturedRequestHeaders(headers: List<String>) {
-    httpAttributesExtractorBuilder.setCapturedRequestHeaders(headers)
-  }
+  @Deprecated(
+    "Please use method `capturedRequestHeaders`",
+    ReplaceWith("capturedRequestHeaders(headers)")
+  )
+  fun setCapturedRequestHeaders(headers: List<String>) = capturedRequestHeaders(headers)
 
-  fun capturedRequestHeaders(vararg headers: String) {
-    capturedRequestHeaders(headers.asIterable())
-  }
+  fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
-    setCapturedRequestHeaders(headers.toList())
+    httpAttributesExtractorBuilder.setCapturedRequestHeaders(headers.toList())
   }
 
-  fun setCapturedResponseHeaders(vararg headers: String) = setCapturedResponseHeaders(headers.asList())
+  @Deprecated(
+    "Please use method `capturedResponseHeaders`",
+    ReplaceWith("capturedResponseHeaders(headers.asIterable())")
+  )
+  fun setCapturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
-  fun setCapturedResponseHeaders(headers: List<String>) {
-    httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers)
-  }
+  @Deprecated(
+    "Please use method `capturedResponseHeaders`",
+    ReplaceWith("capturedResponseHeaders(headers)")
+  )
+  fun setCapturedResponseHeaders(headers: List<String>) = capturedResponseHeaders(headers)
 
-  fun capturedResponseHeaders(vararg headers: String) {
-    capturedResponseHeaders(headers.asIterable())
-  }
+  fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
-    setCapturedResponseHeaders(headers.toList())
+    httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers.toList())
   }
 
-  fun setKnownMethods(knownMethods: Set<String>) {
-    httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
-    httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
-  }
+  @Deprecated(
+    "Please use method `knownMethods`",
+    ReplaceWith("knownMethods(knownMethods)")
+  )
+  fun setKnownMethods(knownMethods: Set<String>) = knownMethods(knownMethods)
 
-  fun knownMethods(vararg methods: String) {
-    setKnownMethods(methods.toSet())
-  }
+  fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())
 
-  fun knownMethods(methods: Iterable<String>) {
-    setKnownMethods(methods.toSet())
-  }
-
-  fun knownMethods(vararg methods: HttpMethod) {
-    knownMethods(methods.asIterable())
-  }
+  fun knownMethods(vararg methods: HttpMethod) = knownMethods(methods.asIterable())
 
   @JvmName("knownMethodsJvm")
-  fun knownMethods(methods: Iterable<HttpMethod>) {
-    setKnownMethods(methods.map { it.value }.toSet())
+  fun knownMethods(methods: Iterable<HttpMethod>) = knownMethods(methods.map { it.value })
+
+  fun knownMethods(methods: Iterable<String>) {
+    methods.toSet().apply {
+      httpAttributesExtractorBuilder.setKnownMethods(this)
+      httpSpanNameExtractorBuilder.setKnownMethods(this)
+    }
   }
 
+  @Deprecated("Please use method `attributeExtractor`")
   fun addAttributesExtractors(vararg extractors: AttributesExtractor<in HttpRequestData, in HttpResponse>) = addAttributesExtractors(extractors.asList())
 
+  @Deprecated("Please use method `attributeExtractor`")
   fun addAttributesExtractors(extractors: Iterable<AttributesExtractor<in HttpRequestData, in HttpResponse>>) {
-    additionalExtractors += extractors
+    extractors.forEach {
+      attributeExtractor {
+        onStart { it.onStart(attributes, parentContext, request) }
+        onEnd { it.onEnd(attributes, parentContext, request, response, error) }
+      }
+    }
   }
 
   fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    addAttributesExtractors(
+    additionalExtractors.add(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))
@@ -143,12 +156,15 @@ class KtorClientTracingBuilder {
    *
    * @param emitExperimentalHttpClientMetrics `true` if the experimental HTTP client metrics are to be emitted.
    */
+  @Deprecated("Please use method `emitExperimentalHttpClientMetrics`")
   fun setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics: Boolean) {
-    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics
+    if (emitExperimentalHttpClientMetrics) {
+      emitExperimentalHttpClientMetrics()
+    }
   }
 
   fun emitExperimentalHttpClientMetrics() {
-    setEmitExperimentalHttpClientMetrics(true)
+    emitExperimentalHttpClientMetrics = true
   }
 
   internal fun build(): KtorClientTracing {

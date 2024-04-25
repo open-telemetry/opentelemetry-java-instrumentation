@@ -57,6 +57,7 @@ class KtorServerTracing private constructor(
       this.openTelemetry = openTelemetry
     }
 
+    @Deprecated("Please use method `spanStatusExtractor`")
     fun setStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
@@ -83,6 +84,7 @@ class KtorServerTracing private constructor(
       val error: Throwable?
     )
 
+    @Deprecated("Please use method `spanKindExtractor`")
     fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       spanKindExtractor { prevSpanKindExtractor ->
         extractor(prevSpanKindExtractor).extract(this)
@@ -97,6 +99,7 @@ class KtorServerTracing private constructor(
       }
     }
 
+    @Deprecated("Please use method `attributeExtractor`")
     fun addAttributeExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
       attributeExtractor {
         onStart {
@@ -156,51 +159,49 @@ class KtorServerTracing private constructor(
       val error: Throwable?
     )
 
-    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
-      httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders)
-    }
+    @Deprecated(
+      "Please use method `capturedRequestHeaders`",
+      ReplaceWith("capturedRequestHeaders(headers)")
+    )
+    fun setCapturedRequestHeaders(headers: List<String>) = capturedRequestHeaders(headers)
+
+    fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
     fun capturedRequestHeaders(headers: Iterable<String>) {
-      setCapturedRequestHeaders(headers.toList())
+      httpAttributesExtractorBuilder.setCapturedRequestHeaders(headers.toList())
     }
 
-    fun capturedRequestHeaders(vararg headers: String) {
-      capturedRequestHeaders(headers.asIterable())
-    }
+    @Deprecated(
+      "Please use method `capturedResponseHeaders`",
+      ReplaceWith("capturedResponseHeaders(headers)")
+    )
+    fun setCapturedResponseHeaders(headers: List<String>) = capturedResponseHeaders(headers)
 
-    fun setCapturedResponseHeaders(responseHeaders: List<String>) {
-      httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders)
-    }
+    fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
     fun capturedResponseHeaders(headers: Iterable<String>) {
-      setCapturedResponseHeaders(headers.toList())
+      httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers.toList())
     }
 
-    fun capturedResponseHeaders(vararg headers: String) {
-      capturedResponseHeaders(headers.asIterable())
-    }
+    @Deprecated(
+      "Please use method `knownMethods`",
+      ReplaceWith("knownMethods(knownMethods)")
+    )
+    fun setKnownMethods(knownMethods: Set<String>) = knownMethods(knownMethods)
 
-    fun setKnownMethods(knownMethods: Set<String>) {
-      httpAttributesExtractorBuilder.setKnownMethods(knownMethods)
-      httpSpanNameExtractorBuilder.setKnownMethods(knownMethods)
-      httpServerRouteBuilder.setKnownMethods(knownMethods)
-    }
+    fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())
 
-    fun knownMethods(vararg methods: String) {
-      setKnownMethods(methods.toSet())
-    }
-
-    fun knownMethods(methods: Iterable<String>) {
-      setKnownMethods(methods.toSet())
-    }
+    fun knownMethods(vararg methods: HttpMethod) = knownMethods(methods.asIterable())
 
     @JvmName("knownMethodsJvm")
-    fun knownMethods(methods: Iterable<HttpMethod>) {
-      knownMethods(methods.map { it.value })
-    }
+    fun knownMethods(methods: Iterable<HttpMethod>) = knownMethods(methods.map { it.value })
 
-    fun knownMethods(vararg methods: HttpMethod) {
-      knownMethods(methods.map { it.value })
+    fun knownMethods(methods: Iterable<String>) {
+      methods.toSet().apply {
+        httpAttributesExtractorBuilder.setKnownMethods(this)
+        httpSpanNameExtractorBuilder.setKnownMethods(this)
+        httpServerRouteBuilder.setKnownMethods(this)
+      }
     }
 
     internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
