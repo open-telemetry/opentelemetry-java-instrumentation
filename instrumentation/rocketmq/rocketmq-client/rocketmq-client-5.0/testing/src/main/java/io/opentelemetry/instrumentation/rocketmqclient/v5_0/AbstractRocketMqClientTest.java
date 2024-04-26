@@ -67,15 +67,7 @@ public abstract class AbstractRocketMqClientTest {
   private static final String tag = "tagA";
   private static final String consumerGroup = "group-0";
 
-  private static final RocketMqProxyContainer container;
-
-  static {
-    try {
-      container = new RocketMqProxyContainer();
-    } catch (UnknownHostException e) {
-      throw new IllegalStateException("Could not find IP for Docker Host", e);
-    }
-  }
+  private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
 
   private final ClientServiceProvider provider = ClientServiceProvider.loadService();
   private PushConsumer consumer;

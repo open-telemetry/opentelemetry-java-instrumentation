@@ -40,15 +40,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
-  private static final RocketMqProxyContainer container;
-
-  static {
-    try {
-      container = new RocketMqProxyContainer();
-    } catch (UnknownHostException e) {
-      throw new IllegalStateException("Could not find IP for Docker Host", e);
-    }
-  }
+  private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
 
   protected abstract InstrumentationExtension testing();
 
