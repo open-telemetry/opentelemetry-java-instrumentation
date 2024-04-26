@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-class Aws2SqsW3CPropagatorTest extends Aws2SqsTracingTest {
+class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
 
   @Override
   void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
