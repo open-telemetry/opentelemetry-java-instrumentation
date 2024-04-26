@@ -100,7 +100,7 @@ final class GraphqlInstrumenterFactory {
   private static final class GraphqlDataFetcherAttributesExtractor
       implements AttributesExtractor<DataFetchingEnvironment, Void> {
 
-    // NOTE: These are no part of the Semantic Convention and are subject to change
+    // NOTE: These are not part of the Semantic Convention and are subject to change
     private static final AttributeKey<String> GRAPHQL_FIELD_NAME =
         AttributeKey.stringKey("graphql.field.name");
     private static final AttributeKey<String> GRAPHQL_FIELD_PATH =
