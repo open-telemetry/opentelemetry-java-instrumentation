@@ -29,7 +29,7 @@ final class GraphqlInstrumenterFactory {
     return Instrumenter.<OpenTelemetryInstrumentationState, ExecutionResult>builder(
             openTelemetry, INSTRUMENTATION_NAME, ignored -> "GraphQL Operation")
         .addAttributesExtractor(new GraphqlExecutionAttributesExtractor())
-        .setSpanStatusExtractor(new GraphQLExecutionSpanStatusExtractor())
+        .setSpanStatusExtractor(new GraphqlExecutionSpanStatusExtractor())
         .buildInstrumenter();
   }
 
@@ -39,7 +39,7 @@ final class GraphqlInstrumenterFactory {
             openTelemetry,
             INSTRUMENTATION_NAME,
             environment -> environment.getExecutionStepInfo().getField().getName())
-        .addAttributesExtractor(new GraphQLDataFetcherAttributesExtractor())
+        .addAttributesExtractor(new GraphqlDataFetcherAttributesExtractor())
         .setSpanStatusExtractor(
             (spanStatusBuilder, environment, unused, error) ->
                 SpanStatusExtractor.getDefault()
@@ -80,7 +80,7 @@ final class GraphqlInstrumenterFactory {
     }
   }
 
-  private static final class GraphQLExecutionSpanStatusExtractor
+  private static final class GraphqlExecutionSpanStatusExtractor
       implements SpanStatusExtractor<OpenTelemetryInstrumentationState, ExecutionResult> {
     @Override
     public void extract(
@@ -97,7 +97,7 @@ final class GraphqlInstrumenterFactory {
     }
   }
 
-  private static final class GraphQLDataFetcherAttributesExtractor
+  private static final class GraphqlDataFetcherAttributesExtractor
       implements AttributesExtractor<DataFetchingEnvironment, Void> {
 
     // NOTE: These are no part of the Semantic Convention and are subject to change
