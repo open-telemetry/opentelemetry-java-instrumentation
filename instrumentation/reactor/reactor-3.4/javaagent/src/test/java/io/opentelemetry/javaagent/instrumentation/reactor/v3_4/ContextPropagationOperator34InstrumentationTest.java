@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
+package io.opentelemetry.javaagent.instrumentation.reactor.v3_4;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ContextPropagationOperatorInstrumentation34Test {
+class ContextPropagationOperator34InstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -36,6 +36,10 @@ class ContextPropagationOperatorInstrumentation34Test {
                   newReactorContext, null);
           assertThat(otelContext).isNotNull();
           Span.fromContext(otelContext).setAttribute("foo", "bar");
+          Context otelContext2 =
+              ContextPropagationOperator.getOpenTelemetryContext(newReactorContext, null);
+          assertThat(otelContext2).isNotNull();
+          Span.fromContext(otelContext2).setAttribute("foo", "bar");
         });
 
     testing.waitAndAssertTraces(

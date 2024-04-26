@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator;
+package io.opentelemetry.javaagent.instrumentation.reactor.v3_4.operator;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -14,12 +14,11 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/** Instrumentation that is applied only when reactor version is at least 3.4.0. */
 @AutoService(InstrumentationModule.class)
 public class ContextPropagationOperator34InstrumentationModule extends InstrumentationModule {
 
   public ContextPropagationOperator34InstrumentationModule() {
-    super("reactor", "reactor-3.1", "reactor-context-propagation-operator");
+    super("reactor", "reactor-3.4", "reactor-context-propagation-operator");
   }
 
   @Override

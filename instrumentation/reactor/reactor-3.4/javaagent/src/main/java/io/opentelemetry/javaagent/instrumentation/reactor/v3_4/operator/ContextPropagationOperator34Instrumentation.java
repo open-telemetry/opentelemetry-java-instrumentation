@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator;
+package io.opentelemetry.javaagent.instrumentation.reactor.v3_4.operator;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -53,7 +53,6 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
         @Advice.Argument(0) reactor.util.context.ContextView reactorContext,
         @Advice.Argument(1) Context defaultContext,
         @Advice.Return(readOnly = false) Context applicationContext) {
-      new Exception().printStackTrace();
 
       io.opentelemetry.context.Context agentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);
