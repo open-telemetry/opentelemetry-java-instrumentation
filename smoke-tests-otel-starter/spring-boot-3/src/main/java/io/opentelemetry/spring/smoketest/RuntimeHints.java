@@ -17,7 +17,8 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
       org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
     hints.resources().registerResourceBundle("org.apache.commons.dbcp2.LocalStrings");
 
-    // To avoid Spring native issue with MongoDB: java.lang.ClassNotFoundException: org.springframework.data.mongodb.core.aggregation.AggregationOperation
+    // To avoid Spring native issue with MongoDB: java.lang.ClassNotFoundException:
+    // org.springframework.data.mongodb.core.aggregation.AggregationOperation
     hints
         .reflection()
         .registerType(
