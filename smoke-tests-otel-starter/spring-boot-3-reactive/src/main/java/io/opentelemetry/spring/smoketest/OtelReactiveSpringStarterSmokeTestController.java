@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-public class OtelSpringStarterWebfluxSmokeTestController {
+public class OtelReactiveSpringStarterSmokeTestController {
 
   public static final String WEBFLUX = "/webflux";
 
   @GetMapping(WEBFLUX)
-  public Mono<String> getStock() {
-    return Mono.just("pong");
+  public Mono<String> webflux() {
+    return Mono.just("webflux");
   }
 }

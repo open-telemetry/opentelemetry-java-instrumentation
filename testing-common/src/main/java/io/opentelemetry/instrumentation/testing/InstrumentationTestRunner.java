@@ -122,12 +122,19 @@ public abstract class InstrumentationTestRunner {
     try {
       await()
           .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
-    } catch (ConditionTimeoutException e) {
-      // Don't throw this failure since the stack is the awaitility thread, causing confusion.
-      // Instead, just assert one more time on the test thread, which will fail with a better stack
-      // trace.
-      // TODO(anuraaga): There is probably a better way to do this.
-      doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
+    } catch (Throwable t) {
+      // from org.awaitility.core.ConditionAwaiter.await(ConditionAwaiter.java:157)
+      // see https://github.com/oracle/graal/issues/6101 (spring boot graal native image)
+      if (t.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")
+          || t instanceof ConditionTimeoutException) {
+        // Don't throw this failure since the stack is the awaitility thread, causing confusion.
+        // Instead, just assert one more time on the test thread, which will fail with a better
+        // stack trace.
+        // TODO(anuraaga): There is probably a better way to do this.
+        doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
+      } else {
+        throw t;
+      }
     }
   }
 
