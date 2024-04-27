@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import java.util.List;
@@ -39,7 +39,7 @@ class ForwardedHostAddressAndPortExtractorTest {
   @ArgumentsSource(ForwardedArgs.class)
   void shouldParseForwarded(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
-    doReturn(headers).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
+    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(headers);
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, REQUEST);
@@ -84,8 +84,8 @@ class ForwardedHostAddressAndPortExtractorTest {
   @ArgumentsSource(HostArgs.class)
   void shouldParseForwardedHost(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
-    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
-    doReturn(headers).when(getter).getHttpRequestHeader(REQUEST, "x-forwarded-host");
+    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(emptyList());
+    when(getter.getHttpRequestHeader(REQUEST, "x-forwarded-host")).thenReturn(headers);
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, REQUEST);
@@ -98,9 +98,9 @@ class ForwardedHostAddressAndPortExtractorTest {
   @ArgumentsSource(HostArgs.class)
   void shouldParsePseudoAuthority(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
-    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
-    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "x-forwarded-host");
-    doReturn(headers).when(getter).getHttpRequestHeader(REQUEST, ":authority");
+    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(emptyList());
+    when(getter.getHttpRequestHeader(REQUEST, "x-forwarded-host")).thenReturn(emptyList());
+    when(getter.getHttpRequestHeader(REQUEST, ":authority")).thenReturn(headers);
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, REQUEST);
@@ -113,10 +113,10 @@ class ForwardedHostAddressAndPortExtractorTest {
   @ArgumentsSource(HostArgs.class)
   void shouldParseHost(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
-    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
-    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "x-forwarded-host");
-    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, ":authority");
-    doReturn(headers).when(getter).getHttpRequestHeader(REQUEST, "host");
+    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(emptyList());
+    when(getter.getHttpRequestHeader(REQUEST, "x-forwarded-host")).thenReturn(emptyList());
+    when(getter.getHttpRequestHeader(REQUEST, ":authority")).thenReturn(emptyList());
+    when(getter.getHttpRequestHeader(REQUEST, "host")).thenReturn(headers);
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, REQUEST);
