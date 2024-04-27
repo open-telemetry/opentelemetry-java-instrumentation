@@ -12,7 +12,7 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-public class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
+class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
 
   @RegisterExtension
   public static final AgentInstrumentationExtension testing =

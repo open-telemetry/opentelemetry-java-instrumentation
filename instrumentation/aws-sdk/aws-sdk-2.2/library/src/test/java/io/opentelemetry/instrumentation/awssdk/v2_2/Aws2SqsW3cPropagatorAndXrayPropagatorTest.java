@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-public class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
+class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
   @Override
   void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
     telemetryBuilder.setUseConfiguredPropagatorForMessaging(
