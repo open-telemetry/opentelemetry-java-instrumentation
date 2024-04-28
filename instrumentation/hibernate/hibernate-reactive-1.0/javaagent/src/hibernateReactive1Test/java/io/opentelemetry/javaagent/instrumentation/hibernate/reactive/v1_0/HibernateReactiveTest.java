@@ -148,7 +148,7 @@ class HibernateReactiveTest {
                                   .find(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
@@ -173,7 +173,7 @@ class HibernateReactiveTest {
                                   .get(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
@@ -198,7 +198,7 @@ class HibernateReactiveTest {
                                   .withTransaction(transaction -> session.find(Value.class, 1L))
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
@@ -223,7 +223,7 @@ class HibernateReactiveTest {
                                   .withTransaction(transaction -> session.get(Value.class, 1L))
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();

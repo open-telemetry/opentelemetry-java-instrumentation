@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -43,10 +43,9 @@ class HttpExperimentalAttributesExtractorTest {
       HttpCommonAttributesGetter<String, String> getter,
       AttributesExtractor<String, String> extractor) {
 
-    doReturn(singletonList("123")).when(getter).getHttpRequestHeader("request", "content-length");
-    doReturn(singletonList("42"))
-        .when(getter)
-        .getHttpResponseHeader("request", "response", "content-length");
+    when(getter.getHttpRequestHeader("request", "content-length")).thenReturn(singletonList("123"));
+    when(getter.getHttpResponseHeader("request", "response", "content-length"))
+        .thenReturn(singletonList("42"));
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), "request");
