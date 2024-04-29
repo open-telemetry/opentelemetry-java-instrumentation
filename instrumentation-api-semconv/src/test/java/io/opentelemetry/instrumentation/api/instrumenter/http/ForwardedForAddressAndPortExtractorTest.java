@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.network.internal.AddressAndPort;
@@ -91,9 +92,10 @@ class ForwardedForAddressAndPortExtractorTest {
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedForArgs.class)
+  @SuppressWarnings("MockitoDoSetup")
   void shouldParseForwardedFor(List<String> headers, @Nullable String expectedAddress) {
-    when(getter.getHttpRequestHeader("request", "forwarded")).thenReturn(emptyList());
-    when(getter.getHttpRequestHeader("request", "x-forwarded-for")).thenReturn(headers);
+    doReturn(emptyList()).when(getter).getHttpRequestHeader("request", "forwarded");
+    doReturn(headers).when(getter).getHttpRequestHeader("request", "x-forwarded-for");
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, "request");
