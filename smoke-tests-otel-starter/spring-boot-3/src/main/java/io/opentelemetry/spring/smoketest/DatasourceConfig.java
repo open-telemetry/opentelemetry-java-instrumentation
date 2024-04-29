@@ -6,7 +6,6 @@
 package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile("!jdbc-driver-config")
+@Profile("user-has-defined-datasource-bean")
 public class DatasourceConfig {
 
   @Bean
@@ -24,6 +23,6 @@ public class DatasourceConfig {
     dataSource.setUrl("jdbc:h2:mem:db");
     dataSource.setUsername("username");
     dataSource.setPassword("pwd");
-    return JdbcTelemetry.create(openTelemetry).wrap(dataSource);
+    return dataSource;
   }
 }
