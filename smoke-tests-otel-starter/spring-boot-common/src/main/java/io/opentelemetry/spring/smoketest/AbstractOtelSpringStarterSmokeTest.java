@@ -31,7 +31,6 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.condition.EnabledInNativeImage;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,30 +188,4 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                         .hasKind(SpanKind.SERVER)
                         .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
   }
-
-  @Test
-  @EnabledInNativeImage // mongo docker is started only in native image tests
-  void mongodb() {
-    testing.clearData();
-
-    String url = OtelSpringStarterSmokeTestController.MONGODB;
-    testRestTemplate.getForObject(url, String.class);
-
-    testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
-                    span ->
-                        span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, url),
-                    span ->
-                        span.hasKind(SpanKind.CLIENT)
-                            .hasName("find test.customer")
-                            .hasAttribute(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.MONGODB)));
-  }
-
 }

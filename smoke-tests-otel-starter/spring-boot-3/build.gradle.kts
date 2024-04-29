@@ -26,6 +26,7 @@ dependencies {
 
   testImplementation("org.testcontainers:junit-jupiter")
   testImplementation("org.testcontainers:kafka")
+  testImplementation("org.testcontainers:mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
