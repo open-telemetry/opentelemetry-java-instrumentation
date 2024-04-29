@@ -138,7 +138,8 @@ include(":smoke-tests:images:servlet:servlet-3.0")
 include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
 
-include(":smoke-tests-otel-starter")
+include(":smoke-tests-otel-starter:spring-boot-3")
+include(":smoke-tests-otel-starter:spring-boot-3-reactive")
 
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
