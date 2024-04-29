@@ -123,7 +123,9 @@ public abstract class InstrumentationTestRunner {
       await()
           .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
     } catch (Throwable t) {
-      // from org.awaitility.core.ConditionAwaiter.await(ConditionAwaiter.java:157)
+      // awaitility is doing a jmx call that is not implemented in GraalVM:
+      // call:
+      // https://github.com/awaitility/awaitility/blob/fbe16add874b4260dd240108304d5c0be84eabc8/awaitility/src/main/java/org/awaitility/core/ConditionAwaiter.java#L157
       // see https://github.com/oracle/graal/issues/6101 (spring boot graal native image)
       if (t.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")
           || t instanceof ConditionTimeoutException) {
