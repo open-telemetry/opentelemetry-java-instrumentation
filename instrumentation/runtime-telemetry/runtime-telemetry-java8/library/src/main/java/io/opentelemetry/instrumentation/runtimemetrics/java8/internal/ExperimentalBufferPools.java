@@ -22,7 +22,8 @@ import java.util.function.Function;
 /**
  * Registers measurements that generate experimental metrics about buffer pools. These metrics will
  * only be generated the preview of stable JVM semantic conventions (e.g. by setting the {@code
- * otel.semconv-stability.opt-in} system property to {@code jvm}) is enabled.
+ * otel.instrumentation.runtime-telemetry.emit-experimental-telemetry} system property to {@literal
+ * true}).
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
