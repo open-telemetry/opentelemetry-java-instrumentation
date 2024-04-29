@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -73,10 +74,10 @@ class ForwardedUrlSchemeProviderTest {
 
   @ParameterizedTest
   @ArgumentsSource(ForwardedProtoHeaderValues.class)
+  @SuppressWarnings("MockitoDoSetup")
   void parseForwardedProtoHeader(List<String> values, String expectedScheme) {
-    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(emptyList());
-    when(getter.getHttpRequestHeader(REQUEST, "x-forwarded-proto")).thenReturn(values);
-    ;
+    doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
+    doReturn(values).when(getter).getHttpRequestHeader(REQUEST, "x-forwarded-proto");
     assertThat(underTest.apply(REQUEST)).isEqualTo(expectedScheme);
   }
 
