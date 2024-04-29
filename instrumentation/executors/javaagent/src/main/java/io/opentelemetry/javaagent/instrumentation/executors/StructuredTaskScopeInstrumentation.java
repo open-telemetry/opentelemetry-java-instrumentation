@@ -40,9 +40,18 @@ public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterCallableFork(@Advice.Argument(0) Callable<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
-      VirtualField<Callable<?>, PropagatedContext> virtualField =
-          VirtualField.find(Callable.class, PropagatedContext.class);
-      return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        VirtualField<Callable<?>, PropagatedContext> virtualField =
+            VirtualField.find(Callable.class, PropagatedContext.class);
+        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+      }
+      return null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void exitCallableFork(
+        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
     }
   }
 }
