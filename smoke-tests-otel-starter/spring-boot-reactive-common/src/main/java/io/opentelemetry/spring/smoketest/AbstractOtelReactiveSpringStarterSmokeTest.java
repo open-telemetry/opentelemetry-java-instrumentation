@@ -51,6 +51,8 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
 
     testing.waitAndAssertTraces(
         trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE testdb.player")),
+        trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.CLIENT)
