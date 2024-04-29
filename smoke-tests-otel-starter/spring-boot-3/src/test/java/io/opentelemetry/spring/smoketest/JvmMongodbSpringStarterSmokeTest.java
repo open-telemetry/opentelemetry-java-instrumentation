@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.smoketest;
 
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
@@ -10,8 +15,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DisabledInNativeImage
 public class JvmMongodbSpringStarterSmokeTest extends AbstractMongodbSpringStarterSmokeTest {
 
-  @Container
-  @ServiceConnection
+  @Container @ServiceConnection
   static MongoDBContainer container = new MongoDBContainer("mongo:latest");
-
 }

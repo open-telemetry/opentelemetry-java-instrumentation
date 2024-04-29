@@ -27,10 +27,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 
 @ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(
-    classes = {
-      OtelSpringStarterSmokeTestApplication.class,
-      SpringSmokeOtelConfiguration.class
-    },
+    classes = {OtelSpringStarterSmokeTestApplication.class, SpringSmokeOtelConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractMongodbSpringStarterSmokeTest {
 
@@ -51,19 +48,18 @@ abstract class AbstractMongodbSpringStarterSmokeTest {
     testRestTemplate.getForObject(url, String.class);
 
     testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
-                    span ->
-                        span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, url),
-                    span ->
-                        span.hasKind(SpanKind.CLIENT)
-                            .hasName("find test.customer")
-                            .hasAttribute(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.MONGODB)));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfying(
+                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
+                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, url),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasName("find test.customer")
+                        .hasAttribute(
+                            DbIncubatingAttributes.DB_SYSTEM,
+                            DbIncubatingAttributes.DbSystemValues.MONGODB)));
   }
 }
