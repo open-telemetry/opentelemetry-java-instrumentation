@@ -1,21 +1,24 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.spring.smoketest;
 
 import org.springframework.data.annotation.Id;
 
-
 public class Customer {
-	@Id
-	public String id;
+  @Id public String id;
 
-	public String firstName;
-	public String lastName;
+  public String firstName;
+  public String lastName;
 
-	public Customer() {}
+  public Customer() {}
 
-	public Customer(String firstName, String lastName) {
-		this.firstName = firstName;
-		this.lastName = lastName;
-	}
+  public Customer(String firstName, String lastName) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
 
   public String getFirstName() {
     return firstName;
@@ -29,4 +32,3 @@ public class Customer {
     return lastName;
   }
 }
-

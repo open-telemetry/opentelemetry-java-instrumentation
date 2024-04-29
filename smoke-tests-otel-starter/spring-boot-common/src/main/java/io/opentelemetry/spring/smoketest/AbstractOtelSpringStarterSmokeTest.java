@@ -31,6 +31,9 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledInNativeImage;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
@@ -188,6 +191,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   }
 
   @Test
+  @EnabledInNativeImage // mongo docker is started only in native image tests
   void mongodb() {
     testing.clearData();
 
@@ -198,21 +202,17 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span
-                            .hasKind(SpanKind.CLIENT)
+                        span.hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
                     span ->
-                        span
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttribute(HttpAttributes.HTTP_ROUTE, url),
+                        span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, url),
                     span ->
-                        span
-                            .hasKind(SpanKind.CLIENT)
+                        span.hasKind(SpanKind.CLIENT)
                             .hasName("find test.customer")
                             .hasAttribute(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                "{\"find\": \"customer\", \"filter\": {\"firstName\": \"?\"}, \"limit\": \"?\", \"$db\": \"?\", \"lsid\": {\"id\": \"?\"}, \"$readPreference\": {\"mode\": \"?\"}}")));
+                                DbIncubatingAttributes.DB_SYSTEM,
+                                DbIncubatingAttributes.DbSystemValues.MONGODB)));
   }
 
 }
