@@ -21,16 +21,20 @@ public class OtelSpringStarterSmokeTestController {
   public static final String PING = "/ping";
   public static final String REST_CLIENT = "/rest-client";
   public static final String REST_TEMPLATE = "/rest-template";
+  public static final String MONGODB = "/mongodb";
   public static final String TEST_HISTOGRAM = "histogram-test-otel-spring-starter";
   public static final String METER_SCOPE_NAME = "scope";
   private final LongHistogram histogram;
   private final Optional<RestTemplate> restTemplate;
   private final Optional<ServletWebServerApplicationContext> server;
+  private final CustomerRepository customerRepository;
 
   public OtelSpringStarterSmokeTestController(
       OpenTelemetry openTelemetry,
       RestTemplateBuilder restTemplateBuilder,
+      CustomerRepository customerRepository,
       Optional<ServletWebServerApplicationContext> server) {
+    this.customerRepository = customerRepository;
     this.server = server;
     Meter meter = openTelemetry.getMeter(METER_SCOPE_NAME);
     histogram = meter.histogramBuilder(TEST_HISTOGRAM).ofLongs().build();
@@ -52,5 +56,11 @@ public class OtelSpringStarterSmokeTestController {
     return restTemplate
         .map(t -> t.getForObject(PING, String.class))
         .orElseThrow(() -> new IllegalStateException("RestTemplate not available"));
+  }
+
+  @GetMapping(MONGODB)
+  public String mongodb() {
+    Customer alice = customerRepository.findByFirstName("Alice");
+    return alice != null ? alice.getLastName() : "Not found";
   }
 }
