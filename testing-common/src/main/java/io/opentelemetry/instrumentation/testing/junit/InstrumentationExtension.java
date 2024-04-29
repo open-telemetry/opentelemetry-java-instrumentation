@@ -35,9 +35,13 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public abstract class InstrumentationExtension
     implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback {
 
-  private final InstrumentationTestRunner testRunner;
+  private InstrumentationTestRunner testRunner;
 
   protected InstrumentationExtension(InstrumentationTestRunner testRunner) {
+    this.testRunner = testRunner;
+  }
+
+  protected void setTestRunner(InstrumentationTestRunner testRunner) {
     this.testRunner = testRunner;
   }
 
