@@ -58,14 +58,18 @@ public abstract class AbstractAws2SqsTracingTest {
 
   protected abstract InstrumentationExtension getTesting();
 
+  protected abstract SqsClient configureSqsClient(SqsClient sqsClient);
+
+  protected abstract SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient);
+
+  protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
+
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
 
   private static int sqsPort;
   private static SQSRestServer sqs;
-
-  private final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
 
   static Map<String, MessageAttributeValue> dummyMessageAttributes(int count) {
     Map<String, MessageAttributeValue> map = new HashMap<>();
@@ -75,6 +79,8 @@ public abstract class AbstractAws2SqsTracingTest {
     }
     return map;
   }
+
+  private final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
 
   ReceiveMessageRequest receiveMessageRequest =
       ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
@@ -114,12 +120,6 @@ public abstract class AbstractAws2SqsTracingTest {
   boolean isXrayInjectionEnabled() {
     return true;
   }
-
-  protected abstract SqsClient configureSqsClient(SqsClient sqsClient);
-
-  protected abstract SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient);
-
-  protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
   void configureSdkClient(SqsClientBuilder builder) throws URISyntaxException {
     builder

@@ -17,15 +17,15 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
 
   @RegisterExtension
-  public static final LibraryInstrumentationExtension testing =
+  private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
+
+  static AwsSdkTelemetry telemetry;
 
   @Override
   protected final LibraryInstrumentationExtension getTesting() {
     return testing;
   }
-
-  static AwsSdkTelemetry telemetry;
 
   @BeforeEach
   void setup() {

@@ -15,7 +15,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
 
   @RegisterExtension
-  public static final AgentInstrumentationExtension testing =
+  private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
   @Override
