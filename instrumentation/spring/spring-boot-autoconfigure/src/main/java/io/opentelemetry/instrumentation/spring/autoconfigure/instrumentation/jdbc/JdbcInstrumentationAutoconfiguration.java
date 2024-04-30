@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class JdbcInstrumentationAutoconfiguration {
 
+  // For error prone
   public JdbcInstrumentationAutoconfiguration() {}
 
   @Bean
