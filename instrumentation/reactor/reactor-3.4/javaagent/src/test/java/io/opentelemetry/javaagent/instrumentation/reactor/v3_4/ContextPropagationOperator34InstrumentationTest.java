@@ -39,7 +39,7 @@ class ContextPropagationOperator34InstrumentationTest {
           Context otelContext2 =
               ContextPropagationOperator.getOpenTelemetryContext(newReactorContext, null);
           assertThat(otelContext2).isNotNull();
-          Span.fromContext(otelContext2).setAttribute("foo", "bar");
+          Span.fromContext(otelContext2).setAttribute("foo2", "bar2");
         });
 
     testing.waitAndAssertTraces(
@@ -49,6 +49,7 @@ class ContextPropagationOperator34InstrumentationTest {
                     span.hasName("parent")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(attributeEntry("foo", "bar"))));
+                        .hasAttributes(
+                            attributeEntry("foo", "bar"), attributeEntry("foo2", "bar2"))));
   }
 }
