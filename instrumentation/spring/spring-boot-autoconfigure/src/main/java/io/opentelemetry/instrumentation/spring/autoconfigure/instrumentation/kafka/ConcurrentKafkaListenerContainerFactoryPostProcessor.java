@@ -14,10 +14,12 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
+  private final boolean experimentalSpanAttributes;
 
   ConcurrentKafkaListenerContainerFactoryPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+      ObjectProvider<OpenTelemetry> openTelemetryProvider, boolean experimentalSpanAttributes) {
     this.openTelemetryProvider = openTelemetryProvider;
+    this.experimentalSpanAttributes = experimentalSpanAttributes;
   }
 
   @Override
@@ -29,7 +31,9 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
     ConcurrentKafkaListenerContainerFactory<?, ?> listenerContainerFactory =
         (ConcurrentKafkaListenerContainerFactory<?, ?>) bean;
     SpringKafkaTelemetry springKafkaTelemetry =
-        SpringKafkaTelemetry.create(openTelemetryProvider.getObject());
+        SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
+            .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
+            .build();
     listenerContainerFactory.setBatchInterceptor(springKafkaTelemetry.createBatchInterceptor());
     listenerContainerFactory.setRecordInterceptor(springKafkaTelemetry.createRecordInterceptor());
 
