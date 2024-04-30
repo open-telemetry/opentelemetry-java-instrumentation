@@ -11,36 +11,26 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.spring.smoketest.AbstractSpringStarterSmokeTest;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import io.opentelemetry.spring.smoketest.SpringSmokeInstrumentationExtension;
 import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 
-@ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(
     classes = {OtelSpringStarterSmokeTestApplication.class, SpringSmokeOtelConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-abstract class AbstractMongodbSpringStarterSmokeTest {
+abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  @RegisterExtension
-  static final SpringSmokeInstrumentationExtension testing =
-      SpringSmokeInstrumentationExtension.create();
+  protected AbstractMongodbSpringStarterSmokeTest() {
+    super(SpringSmokeInstrumentationExtension.create());
+  }
 
   @Autowired private TestRestTemplate testRestTemplate;
-
-  @AfterEach
-  void tearDown(CapturedOutput output) {
-    assertThat(output).doesNotContain("WARN").doesNotContain("ERROR");
-  }
 
   @Test
   void mongodb() {
