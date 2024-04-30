@@ -7,18 +7,18 @@ package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.spring.smoketest.OtelReactiveSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelReactiveSpringStarterSmokeTestController;
-import io.opentelemetry.spring.smoketest.SpringSmokeInstrumentationExtension;
 import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
+import io.opentelemetry.spring.smoketest.SpringSmokeTestRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -35,14 +35,19 @@ import org.springframework.web.reactive.function.client.WebClient;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class OtelReactiveSpringStarterSmokeTest {
 
-  @RegisterExtension
-  static final SpringSmokeInstrumentationExtension testing =
-      SpringSmokeInstrumentationExtension.create();
+  private SpringSmokeTestRunner testing;
 
   @LocalServerPort int serverPort;
 
+  @Autowired OpenTelemetry openTelemetry;
+
   @Autowired WebClient.Builder webClientBuilder;
   private WebClient webClient;
+
+  @BeforeEach
+  void initOpenTelemetry() {
+    testing = new SpringSmokeTestRunner(openTelemetry);
+  }
 
   @BeforeEach
   void setUp() {

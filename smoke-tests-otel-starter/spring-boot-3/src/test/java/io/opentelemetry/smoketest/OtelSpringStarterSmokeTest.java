@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -27,17 +28,17 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
-import io.opentelemetry.spring.smoketest.SpringSmokeInstrumentationExtension;
 import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
+import io.opentelemetry.spring.smoketest.SpringSmokeTestRunner;
 import java.util.Collections;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -70,9 +71,7 @@ import org.springframework.core.env.Environment;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class OtelSpringStarterSmokeTest {
 
-  @RegisterExtension
-  static final SpringSmokeInstrumentationExtension testing =
-      SpringSmokeInstrumentationExtension.createWithoutAutomaticReset();
+  private SpringSmokeTestRunner testing;
 
   @Autowired private TestRestTemplate testRestTemplate;
 
@@ -80,6 +79,13 @@ class OtelSpringStarterSmokeTest {
   @Autowired private PropagationProperties propagationProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
+
+  @Autowired OpenTelemetry openTelemetry;
+
+  @BeforeEach
+  void initOpenTelemetry() {
+    testing = new SpringSmokeTestRunner(openTelemetry);
+  }
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
@@ -177,7 +183,7 @@ class OtelSpringStarterSmokeTest {
         AbstractIterableAssert::isNotEmpty);
 
     // Log
-    LogRecordData firstLog = testing.logRecords().get(0);
+    LogRecordData firstLog = testing.getExportedLogRecords().get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
         .startsWith("Starting ")
@@ -199,7 +205,7 @@ class OtelSpringStarterSmokeTest {
   }
 
   private void assertClient(String url) {
-    testing.clearData();
+    testing.clearAllExportedData();
 
     testRestTemplate.getForObject(url, String.class);
 

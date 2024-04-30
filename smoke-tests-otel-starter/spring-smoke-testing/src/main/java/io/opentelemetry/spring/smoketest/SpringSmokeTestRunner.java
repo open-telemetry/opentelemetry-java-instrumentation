@@ -57,7 +57,6 @@ public final class SpringSmokeTestRunner extends InstrumentationTestRunner {
 
   @Override
   public List<MetricData> getExportedMetrics() {
-    //    metricReader.forceFlush().join(10, TimeUnit.SECONDS);
     return testMetricExporter.getFinishedMetricItems();
   }
 

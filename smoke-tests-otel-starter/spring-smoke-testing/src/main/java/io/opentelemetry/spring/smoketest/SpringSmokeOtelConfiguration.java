@@ -5,7 +5,6 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryInjector;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.logs.ConfigurableLogRecordExporterProvider;
@@ -22,11 +21,6 @@ import org.springframework.context.annotation.Configuration;
 public class SpringSmokeOtelConfiguration {
 
   private static final String MEMORY_EXPORTER = "memory";
-
-  @Bean
-  OpenTelemetryInjector openTelemetryInjector() {
-    return SpringSmokeInstrumentationExtension::init;
-  }
 
   @Bean
   AutoConfigurationCustomizerProvider autoConfigurationCustomizerProvider() {
