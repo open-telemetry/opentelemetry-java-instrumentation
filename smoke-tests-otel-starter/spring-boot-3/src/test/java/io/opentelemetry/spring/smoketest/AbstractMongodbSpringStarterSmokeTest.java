@@ -14,7 +14,6 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.spring.smoketest.AbstractSpringStarterSmokeTest;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
-import io.opentelemetry.spring.smoketest.SpringSmokeInstrumentationExtension;
 import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +25,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  protected AbstractMongodbSpringStarterSmokeTest() {
-    super(SpringSmokeInstrumentationExtension.create());
-  }
-
   @Autowired private TestRestTemplate testRestTemplate;
 
   @Test
   void mongodb() {
+    testing.clearAllExportedData(); // ignore data from application startup
+
     String url = OtelSpringStarterSmokeTestController.MONGODB;
     testRestTemplate.getForObject(url, String.class);
 
