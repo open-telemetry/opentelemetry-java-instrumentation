@@ -29,7 +29,7 @@ public class R2dbcAutoConfiguration {
   @Bean
   static R2dbcInstrumentingPostProcessor r2dbcInstrumentingPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      @Value("${otel.instrumentation.mongo.statement-sanitizer.enabled:true}")
+      @Value("${otel.instrumentation.common.db-statement-sanitizer.enabled:true}")
           boolean statementSanitizationEnabled) {
     return new R2dbcInstrumentingPostProcessor(openTelemetryProvider, statementSanitizationEnabled);
   }
