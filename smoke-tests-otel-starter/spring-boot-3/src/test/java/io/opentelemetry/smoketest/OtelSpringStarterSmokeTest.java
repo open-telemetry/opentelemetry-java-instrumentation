@@ -26,6 +26,7 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import io.opentelemetry.spring.smoketest.AbstractSpringStarterSmokeTest;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestController;
 import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
@@ -33,16 +34,12 @@ import io.opentelemetry.spring.smoketest.SpringSmokeTestRunner;
 import java.util.Collections;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,7 +53,6 @@ import org.springframework.core.env.Environment;
  * <p>The exporters are not reset using {@link org.junit.jupiter.api.BeforeEach}, because it would
  * prevent the telemetry data from the application startup to be asserted.
  */
-@ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(
     classes = {
       OtelSpringStarterSmokeTestApplication.class,
@@ -69,9 +65,7 @@ import org.springframework.core.env.Environment;
       "otel.exporter.otlp.headers.c=3"
     })
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class OtelSpringStarterSmokeTest {
-
-  private SpringSmokeTestRunner testing;
+class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private TestRestTemplate testRestTemplate;
 
@@ -113,11 +107,6 @@ class OtelSpringStarterSmokeTest {
                           Attributes.of(
                               AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
     }
-  }
-
-  @AfterEach
-  void tearDown(CapturedOutput output) {
-    assertThat(output).doesNotContain("WARN").doesNotContain("ERROR");
   }
 
   @Test
