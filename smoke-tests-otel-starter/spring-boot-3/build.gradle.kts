@@ -22,7 +22,7 @@ dependencies {
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
   testImplementation("org.springframework.boot:spring-boot-starter-test")
-  testImplementation(project(":testing-common"))
+  testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 }
 
 tasks {

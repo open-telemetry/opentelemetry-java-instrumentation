@@ -23,6 +23,8 @@ public class OtelSpringStarterSmokeTestController {
   public static final String REST_CLIENT = "/rest-client";
   public static final String REST_TEMPLATE = "/rest-template";
   public static final String TEST_HISTOGRAM = "histogram-test-otel-spring-starter";
+  public static final String METER_SCOPE_NAME =
+      OtelSpringStarterSmokeTestApplication.class.getName();
   private final LongHistogram histogram;
   private final Optional<RestTemplate> restTemplate;
   private final Optional<RestClient> restClient;
@@ -32,7 +34,7 @@ public class OtelSpringStarterSmokeTestController {
       RestClient.Builder restClientBuilder,
       RestTemplateBuilder restTemplateBuilder,
       Optional<ServletWebServerApplicationContext> server) {
-    Meter meter = openTelemetry.getMeter(OtelSpringStarterSmokeTestApplication.class.getName());
+    Meter meter = openTelemetry.getMeter(METER_SCOPE_NAME);
     histogram = meter.histogramBuilder(TEST_HISTOGRAM).ofLongs().build();
     Optional<String> rootUri = server.map(s -> "http://localhost:" + s.getWebServer().getPort());
     restClient = rootUri.map(uri -> restClientBuilder.baseUrl(uri).build());
