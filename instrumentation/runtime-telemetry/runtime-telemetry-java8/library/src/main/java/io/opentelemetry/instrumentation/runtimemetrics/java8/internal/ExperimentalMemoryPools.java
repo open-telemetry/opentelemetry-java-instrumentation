@@ -21,10 +21,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Registers measurements that generate experimental metrics about memory pools. These metrics will
- * only be generated the preview of stable JVM semantic conventions (e.g. by setting the {@code
- * otel.instrumentation.runtime-telemetry.emit-experimental-telemetry} system property to {@literal
- * true}).
+ * Registers measurements that generate experimental metrics about memory pools.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
