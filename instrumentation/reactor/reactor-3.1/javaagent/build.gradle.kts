@@ -21,7 +21,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
   // we compile against 3.4.0, so we could use reactor.util.context.ContextView
-  // instrumentation is expected it to work with 3.1.0.RELEASE
+  // instrumentation is tested against 3.1.0.RELEASE
   compileOnly("io.projectreactor:reactor-core:3.4.0")
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
