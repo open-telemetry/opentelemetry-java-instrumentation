@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17.0.6
+          java-version: 21
 
       - name: Login to GitHub package registry
         uses: docker/login-action@v3
@@ -55,7 +55,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17.0.6
+          java-version: 21
 
       - name: Login to GitHub package registry
         uses: azure/docker-login@v1
