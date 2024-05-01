@@ -88,6 +88,7 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
+                            // earliest tested and latest version behave differently
                             .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
                             .hasAttributes(Attributes.empty())));
   }

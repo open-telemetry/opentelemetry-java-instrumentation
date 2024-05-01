@@ -167,6 +167,8 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
             () ->
                 Mono.defer(
                         () -> {
+                          // earliest tested and latest version behave differently
+                          // in latest dep test current span is "parent" not "middle"
                           if (!testLatestDeps) {
                             Span.current().setAttribute("middle", "foo");
                           }
