@@ -16,7 +16,7 @@ jobs:
       - uses: graalvm/setup-graalvm@2f25c0caae5b220866f732832d5e3e29ff493338 # v1.2.1.1
         with:
           version: "latest"
-          java-version: "17"
+          java-version: "21"
           components: "native-image"
       - name: Running test
         run: |
