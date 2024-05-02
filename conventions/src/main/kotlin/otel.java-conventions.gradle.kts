@@ -61,6 +61,8 @@ tasks.withType<JavaCompile>().configureEach {
     release.set(otelJava.minJavaVersionSupported.map { it.majorVersion.toInt() })
 
     if (name != "jmhCompileGeneratedClasses") {
+      val graalVm = "graalvm" in System.getProperty("java.vendor").lowercase()
+          || "graalvm" in System.getProperty("java.vendor.version").lowercase()
       compilerArgs.addAll(
         listOf(
           "-Xlint:all",
@@ -75,12 +77,17 @@ tasks.withType<JavaCompile>().configureEach {
           // jdk21 generates more serial warnings than previous versions
           "-Xlint:-serial",
 
-          // Fail build on any warning
-          "-Werror"
         )
       )
+      if (!graalVm) {
+        // Fail build on any warning
+        // GraalVM doesn't support ignoring "this-escape", so we don't enable this for GraalVM
+        compilerArgs.add("-Werror")
+      }
+
       val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
-      if (Math.max(otelJava.minJavaVersionSupported.get().majorVersion.toInt(), defaultJavaVersion) >= 21) {
+      if (Math.max(otelJava.minJavaVersionSupported.get().majorVersion.toInt(), defaultJavaVersion) >= 21 && !graalVm
+      ) {
         // new warning in jdk21
         compilerArgs.add("-Xlint:-this-escape")
       }
