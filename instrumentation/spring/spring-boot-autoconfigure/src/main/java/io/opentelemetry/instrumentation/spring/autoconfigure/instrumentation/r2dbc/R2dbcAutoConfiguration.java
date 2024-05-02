@@ -27,6 +27,7 @@ public class R2dbcAutoConfiguration {
   public R2dbcAutoConfiguration() {}
 
   @Bean
+  // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   static R2dbcInstrumentingPostProcessor r2dbcInstrumentingPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
       @Value("${otel.instrumentation.common.db-statement-sanitizer.enabled:true}")
