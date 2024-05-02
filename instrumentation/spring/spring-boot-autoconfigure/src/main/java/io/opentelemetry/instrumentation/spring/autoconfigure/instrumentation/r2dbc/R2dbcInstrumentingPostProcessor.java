@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 import io.opentelemetry.instrumentation.r2dbc.v1_0.R2dbcTelemetry;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.r2dbc.OptionsCapableConnectionFactory;
@@ -27,18 +28,18 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
-    if (!(bean instanceof ConnectionFactory)) {
-      return bean;
+    if (bean instanceof ConnectionFactory && !ScopedProxyUtils.isScopedTarget(beanName)) {
+      ConnectionFactory connectionFactory = (ConnectionFactory) bean;
+      return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
+          .setStatementSanitizationEnabled(statementSanitizationEnabled)
+          // the instrumentation is embedded, so we have to use the version of this library
+          .setInstrumentationVersion(
+              EmbeddedInstrumentationProperties.findVersion(
+                  "io.opentelemetry.spring-boot-autoconfigure"))
+          .build()
+          .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }
-    ConnectionFactory connectionFactory = (ConnectionFactory) bean;
-    return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
-        .setStatementSanitizationEnabled(statementSanitizationEnabled)
-        // the instrumentation is embedded, so we have to use the version of this library
-        .setInstrumentationVersion(
-            EmbeddedInstrumentationProperties.findVersion(
-                "io.opentelemetry.spring-boot-autoconfigure"))
-        .build()
-        .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
+    return bean;
   }
 
   private static ConnectionFactoryOptions getConnectionFactoryOptions(
