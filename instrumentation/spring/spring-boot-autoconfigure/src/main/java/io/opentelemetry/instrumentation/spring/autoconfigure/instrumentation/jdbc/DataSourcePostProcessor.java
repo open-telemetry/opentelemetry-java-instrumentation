@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jdbc;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import javax.sql.DataSource;
@@ -21,7 +22,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
     this.openTelemetryProvider = openTelemetryProvider;
   }
 
-  @com.google.errorprone.annotations.CanIgnoreReturnValue
+  @CanIgnoreReturnValue
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     // Exclude scoped proxy beans to avoid double wrapping
