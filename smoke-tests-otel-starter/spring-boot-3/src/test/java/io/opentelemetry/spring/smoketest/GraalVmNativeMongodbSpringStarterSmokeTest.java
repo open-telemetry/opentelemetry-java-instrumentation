@@ -5,6 +5,7 @@
 
 package io.opentelemetry.smoketest;
 
+import io.opentelemetry.spring.smoketest.EnabledInGithubActions;
 import org.junit.jupiter.api.condition.EnabledInNativeImage;
 
 /**
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.condition.EnabledInNativeImage;
  * <p>In CI, this is done in reusable-native-tests.yml. If you want to run the tests locally, you
  * need to start the container manually: docker run -d -p 27017:27017 --name mongo --rm mongo:latest
  */
-@EnabledInNativeImage
+@EnabledInNativeImage // see JvmMongodbSpringStarterSmokeTest for the JVM test
+@EnabledInGithubActions
 public class GraalVmNativeMongodbSpringStarterSmokeTest
     extends AbstractMongodbSpringStarterSmokeTest {}
