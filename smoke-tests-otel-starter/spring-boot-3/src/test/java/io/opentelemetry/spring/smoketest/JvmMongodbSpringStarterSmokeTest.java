@@ -12,7 +12,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-@DisabledInNativeImage
+@DisabledInNativeImage // See GraalVmNativeMongodbSpringStarterSmokeTest for the GraalVM native test
 public class JvmMongodbSpringStarterSmokeTest extends AbstractMongodbSpringStarterSmokeTest {
 
   @Container @ServiceConnection
