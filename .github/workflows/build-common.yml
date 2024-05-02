@@ -275,6 +275,19 @@ jobs:
           -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
+      - name: Test Spring Boot 2 Smoke Tests
+        env:
+          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+        run: |
+          sed -i '/$requiresSpringBoot3/d' smoke-tests-otel-starter/spring-boot-3-reactive/build.gradle.kts
+          SPRING_BOOT_VERSION=2.7.18 ./gradlew \
+          :smoke-tests-otel-starter:spring-boot-3-reactive:test \
+          -PtestJavaVersion=${{ matrix.test-java-version }} \
+          -PtestJavaVM=${{ matrix.vm }} \
+          -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }} \
+          -Porg.gradle.java.installations.auto-download=false \
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
         run: cat build-scan.txt
