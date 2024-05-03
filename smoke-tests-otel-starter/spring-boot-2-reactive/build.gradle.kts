@@ -9,11 +9,15 @@ dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
+  implementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("io.projectreactor:reactor-test")
-  testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
+}
+
+springBoot {
+  mainClass = "io.opentelemetry.spring.smoketest.OtelReactiveSpringStarterSmokeTestApplication"
 }
 
 configurations.configureEach {
