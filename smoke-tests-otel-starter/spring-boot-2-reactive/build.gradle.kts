@@ -9,7 +9,7 @@ dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
-  implementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
+  implementation(project(":smoke-tests-otel-starter:spring-boot-reactive"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test")
