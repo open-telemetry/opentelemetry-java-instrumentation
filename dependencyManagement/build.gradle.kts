@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.10.25",
+  "com.uber.nullaway:nullaway:0.10.26",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.7.0",
   "commons-codec:commons-codec:1.17.0",
