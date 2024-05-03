@@ -30,6 +30,13 @@ tasks {
   val extractShadowJar by registering(Copy::class) {
     dependsOn(shadowJar)
     from(zipTree(shadowJar.get().archiveFile))
+    exclude("META-INF/**")
     into("build/extracted/shadow")
+  }
+
+  val extractShadowJarSpring by registering(Copy::class) {
+    dependsOn(shadowJar)
+    from(zipTree(shadowJar.get().archiveFile))
+    into("build/extracted/shadow-spring")
   }
 }

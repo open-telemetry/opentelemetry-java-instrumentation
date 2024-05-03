@@ -15,8 +15,8 @@ sourceSets {
   main {
     val shadedDep = project(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
     output.dir(
-      shadedDep.file("build/extracted/shadow"),
-      "builtBy" to ":instrumentation:r2dbc-1.0:library-instrumentation-shaded:extractShadowJar",
+      shadedDep.file("build/extracted/shadow-spring"),
+      "builtBy" to ":instrumentation:r2dbc-1.0:library-instrumentation-shaded:extractShadowJarSpring",
     )
   }
 }
