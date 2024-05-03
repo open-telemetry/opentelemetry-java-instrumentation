@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.ka
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
@@ -35,9 +35,8 @@ public class KafkaInstrumentationAutoConfiguration {
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
           ObjectProvider<OpenTelemetry> openTelemetryProvider,
-          @Value("${otel.instrumentation.kafka.experimental-span-attributes:false}")
-              boolean experimentalSpanAttributes) {
+          ObjectProvider<ConfigProperties> configPropertiesProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
-        openTelemetryProvider, experimentalSpanAttributes);
+        openTelemetryProvider, configPropertiesProvider);
   }
 }

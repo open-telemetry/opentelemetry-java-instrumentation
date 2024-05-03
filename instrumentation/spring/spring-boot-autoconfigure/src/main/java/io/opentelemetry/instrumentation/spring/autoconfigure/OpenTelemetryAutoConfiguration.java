@@ -19,10 +19,14 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.internal.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -80,31 +84,37 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    // If you change the bean name, also change it in the OpenTelemetryJdbcDriverAutoConfiguration
-    // class
-    public OpenTelemetry openTelemetry(
+    public AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk(
         Environment env,
         OtlpExporterProperties otlpExporterProperties,
         OtelResourceProperties resourceProperties,
         PropagationProperties propagationProperties,
         OpenTelemetrySdkComponentLoader componentLoader) {
 
-      OpenTelemetry openTelemetry =
-          AutoConfigureUtil.setComponentLoader(
-                  AutoConfigureUtil.setConfigPropertiesCustomizer(
-                      AutoConfiguredOpenTelemetrySdk.builder(),
-                      c ->
-                          SpringConfigProperties.create(
-                              env,
-                              otlpExporterProperties,
-                              resourceProperties,
-                              propagationProperties,
-                              c)),
-                  componentLoader)
-              .build()
-              .getOpenTelemetrySdk();
+      return AutoConfigureUtil.setComponentLoader(
+              AutoConfigureUtil.setConfigPropertiesCustomizer(
+                  AutoConfiguredOpenTelemetrySdk.builder(),
+                  c ->
+                      SpringConfigProperties.create(
+                          env,
+                          otlpExporterProperties,
+                          resourceProperties,
+                          propagationProperties,
+                          c)),
+              componentLoader)
+          .build();
+    }
 
-      return openTelemetry;
+    @Bean
+    public OpenTelemetry openTelemetry(
+        AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+      return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
+    }
+
+    @Bean("configProperties")
+    public ConfigProperties configProperties(
+        AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+      return AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
     }
   }
 
@@ -116,6 +126,22 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public OpenTelemetry openTelemetry() {
       return OpenTelemetry.noop();
+    }
+
+    @Bean("configProperties")
+    public ConfigProperties configProperties() {
+      return DefaultConfigProperties.createFromMap(Collections.emptyMap());
+    }
+  }
+
+  @Configuration
+  @ConditionalOnBean(OpenTelemetry.class)
+  @ConditionalOnMissingBean({ConfigProperties.class})
+  public static class FallbackConfigProperties {
+
+    @Bean("configProperties")
+    public ConfigProperties configProperties() {
+      return DefaultConfigProperties.create(Collections.emptyMap());
     }
   }
 
