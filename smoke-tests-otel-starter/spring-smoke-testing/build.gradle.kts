@@ -13,6 +13,8 @@ dependencies {
   // spring depdenencies are compile only to enable testing against different versions of spring
   compileOnly("org.springframework.boot:spring-boot-starter:$springBootVersion")
   compileOnly("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
   api(project(":testing-common"))
   api(project(":instrumentation:spring:spring-boot-autoconfigure"))
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")

@@ -1,8 +1,6 @@
-val springBootVersion = System.getenv("SPRING_BOOT_VERSION") ?: "3.2.5"
-val springBoot2 = springBootVersion.startsWith("2.")
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version (System.getenv("SPRING_BOOT_VERSION") ?: "3.2.5")
+  id("org.springframework.boot") version "3.2.5"
   id("org.graalvm.buildtools.native")
 }
 
@@ -23,41 +21,31 @@ dependencies {
   testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 }
 
-if (springBoot2) {
-  configurations.configureEach {
-    resolutionStrategy {
-      // requires old logback (and therefore also old slf4j)
-      force("ch.qos.logback:logback-classic:1.2.13")
-      force("org.slf4j:slf4j-api:1.7.36")
-    }
-  }
-}
-
 tasks {
   test {
     // suppress warning about byte-buddy-agent being loaded dynamically
     jvmArgs("-XX:+EnableDynamicAgentLoading")
   }
-  compileAotJava { // $requiresSpringBoot3
-    with(options) { // $requiresSpringBoot3
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none") // $requiresSpringBoot3
+  compileAotJava {
+    with(options) {
+      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
       // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
       // -deprecation,-unchecked and none are required (none is not enough)
-    } // $requiresSpringBoot3
-  } // $requiresSpringBoot3
-  compileAotTestJava { // $requiresSpringBoot3
-    with(options) { // $requiresSpringBoot3
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none") // $requiresSpringBoot3
+    }
+  }
+  compileAotTestJava {
+    with(options) {
+      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
       // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
       // -deprecation,-unchecked and none are required (none is not enough)
-    } // $requiresSpringBoot3
-  } // $requiresSpringBoot3
-  checkstyleAot { // $requiresSpringBoot3
-    isEnabled = false // $requiresSpringBoot3
-  } // $requiresSpringBoot3
-  checkstyleAotTest { // $requiresSpringBoot3
-    isEnabled = false // $requiresSpringBoot3
-  } // $requiresSpringBoot3
+    }
+  }
+  checkstyleAot {
+    isEnabled = false
+  }
+  checkstyleAotTest {
+    isEnabled = false
+  }
 }
 
 // To be able to execute the tests as GraalVM native executables
