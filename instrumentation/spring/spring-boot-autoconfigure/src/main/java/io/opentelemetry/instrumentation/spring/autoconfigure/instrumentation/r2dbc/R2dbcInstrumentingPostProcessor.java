@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.r2dbc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.R2dbcTelemetry;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
@@ -32,10 +31,6 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
       ConnectionFactory connectionFactory = (ConnectionFactory) bean;
       return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
           .setStatementSanitizationEnabled(statementSanitizationEnabled)
-          // the instrumentation is embedded, so we have to use the version of this library
-          .setInstrumentationVersion(
-              EmbeddedInstrumentationProperties.findVersion(
-                  "io.opentelemetry.spring-boot-autoconfigure"))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }
