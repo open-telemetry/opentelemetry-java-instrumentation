@@ -8,7 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 import static java.util.logging.Level.FINE;
 
 import application.io.opentelemetry.instrumentation.annotations.WithSpan;
+import application.io.opentelemetry.instrumentation.annotations.Counted;
+import application.io.opentelemetry.instrumentation.annotations.MetricAttribute;
+import application.io.opentelemetry.instrumentation.annotations.Timed;
+import com.google.common.base.Stopwatch;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.internal.StringUtils;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.SpanAttributesExtractor;
@@ -16,6 +26,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
 public final class AnnotationSingletons {
@@ -29,6 +42,13 @@ public final class AnnotationSingletons {
       createInstrumenterWithAttributes();
   private static final SpanAttributesExtractor ATTRIBUTES = createAttributesExtractor();
 
+  private static final ConcurrentMap<String, DoubleHistogram> HISTOGRAMS =
+      new ConcurrentHashMap<>();
+
+  private static final ConcurrentMap<String, LongCounter> COUNTERS = new ConcurrentHashMap<>();
+
+  private static final Meter METER = GlobalOpenTelemetry.get().getMeter(INSTRUMENTATION_NAME);
+
   public static Instrumenter<Method, Object> instrumenter() {
     return INSTRUMENTER;
   }
@@ -39,6 +59,71 @@ public final class AnnotationSingletons {
 
   public static SpanAttributesExtractor attributes() {
     return ATTRIBUTES;
+  }
+
+  public static void recordHistogramWithAttributes(
+      MethodRequest methodRequest, Stopwatch stopwatch) {
+    Timed timedAnnotation = methodRequest.method().getAnnotation(Timed.class);
+    AttributesBuilder attributesBuilder = Attributes.builder();
+    extractMetricAttributes(methodRequest, attributesBuilder);
+    extractAdditionAttributes(timedAnnotation, attributesBuilder);
+    getHistogram(timedAnnotation)
+        .record(stopwatch.stop().elapsed().toMillis(), attributesBuilder.build());
+  }
+
+  private static void extractMetricAttributes(
+      MethodRequest methodRequest, AttributesBuilder attributesBuilder) {
+    Parameter[] parameters = methodRequest.method().getParameters();
+    for (int i = 0; i < parameters.length; i++) {
+      if (parameters[i].isAnnotationPresent(MetricAttribute.class)) {
+        MetricAttribute annotation = parameters[i].getAnnotation(MetricAttribute.class);
+        String attributeKey = "";
+        if (!StringUtils.isNullOrEmpty(annotation.value())) {
+          attributeKey = annotation.value();
+        } else if (!StringUtils.isNullOrEmpty(parameters[i].getName())) {
+          attributeKey = parameters[i].getName();
+        } else {
+          continue;
+        }
+        attributesBuilder.put(attributeKey, methodRequest.args()[i].toString());
+      }
+    }
+  }
+
+  private static void extractAdditionAttributes(
+      Timed timedAnnotation, AttributesBuilder attributesBuilder) {
+    int length = timedAnnotation.attributes().length;
+    for (int i = 0; i < length / 2; i++) {
+      attributesBuilder.put(
+          timedAnnotation.attributes()[i],
+          i + 1 > length ? "" : timedAnnotation.attributes()[i + 1]);
+    }
+  }
+
+  public static void recordHistogram(Method method, Stopwatch stopwatch) {
+    Timed timedAnnotation = method.getAnnotation(Timed.class);
+    AttributesBuilder attributesBuilder = Attributes.builder();
+    extractAdditionAttributes(timedAnnotation, attributesBuilder);
+    getHistogram(timedAnnotation)
+        .record(stopwatch.stop().elapsed().toMillis(), attributesBuilder.build());
+  }
+
+  private static LongCounter getCounter(MethodRequest methodRequest) {
+    Counted countedAnnotation = methodRequest.method().getAnnotation(Counted.class);
+    if (!COUNTERS.containsKey(countedAnnotation.value())) {
+      synchronized (countedAnnotation.value()) {
+        if (!COUNTERS.containsKey(countedAnnotation.value())) {
+          COUNTERS.put(
+              countedAnnotation.value(),
+              METER
+                  .counterBuilder(countedAnnotation.value())
+                  .setDescription(countedAnnotation.description())
+                  .setUnit(countedAnnotation.unit())
+                  .build());
+        }
+      }
+    }
+    return COUNTERS.get(countedAnnotation.value());
   }
 
   private static Instrumenter<Method, Object> createInstrumenter() {
@@ -102,6 +187,23 @@ public final class AnnotationSingletons {
       spanName = SpanNames.fromMethod(method);
     }
     return spanName;
+  }
+
+  private static DoubleHistogram getHistogram(Timed timedAnnotation) {
+    if (!HISTOGRAMS.containsKey(timedAnnotation.value())) {
+      synchronized (timedAnnotation.value()) {
+        if (!HISTOGRAMS.containsKey(timedAnnotation.value())) {
+          HISTOGRAMS.put(
+              timedAnnotation.value(),
+              METER
+                  .histogramBuilder(timedAnnotation.value())
+                  .setDescription(timedAnnotation.description())
+                  .setUnit(timedAnnotation.unit())
+                  .build());
+        }
+      }
+    }
+    return HISTOGRAMS.get(timedAnnotation.value());
   }
 
   private AnnotationSingletons() {}
