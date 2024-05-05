@@ -92,7 +92,6 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
         (result, throwable) -> {
           Span span = Span.fromContext(context);
 
-          // TODO: Needs revisions. Exceptions should be recording by using 'span.recordException'
           for (GraphQLError error : result.getErrors()) {
             AttributesBuilder attributes = Attributes.builder();
             attributes.put(
