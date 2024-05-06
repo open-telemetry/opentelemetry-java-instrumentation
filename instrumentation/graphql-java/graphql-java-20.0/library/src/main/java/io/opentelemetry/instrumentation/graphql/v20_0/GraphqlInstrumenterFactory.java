@@ -43,7 +43,7 @@ final class GraphqlInstrumenterFactory {
         .setSpanStatusExtractor(
             (spanStatusBuilder, environment, unused, error) ->
                 SpanStatusExtractor.getDefault()
-                    .extract(spanStatusBuilder, environment, unused, error))
+                    .extract(spanStatusBuilder, environment, null, error))
         .setEnabled(enabled)
         .buildInstrumenter();
   }
