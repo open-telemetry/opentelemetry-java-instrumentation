@@ -211,12 +211,8 @@ class InfluxDbClientTest {
           influxDb.query(
               query,
               10,
-              (cancellable, queryResult) -> {
-                countDownLatch.countDown();
-              },
-              () -> {
-                testing.runWithSpan("child", () -> {});
-              },
+              (cancellable, queryResult) -> countDownLatch.countDown(),
+              () -> testing.runWithSpan("child", () -> {}),
               throwable -> {});
         });
     assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
@@ -235,7 +231,7 @@ class InfluxDbClientTest {
                                 "SELECT",
                                 databaseName)),
                 span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(1))));
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -269,7 +265,7 @@ class InfluxDbClientTest {
                             attributeAssertions(
                                 "SELECT MEAN(water_level) FROM;", "SELECT", databaseName)),
                 span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(1))));
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test

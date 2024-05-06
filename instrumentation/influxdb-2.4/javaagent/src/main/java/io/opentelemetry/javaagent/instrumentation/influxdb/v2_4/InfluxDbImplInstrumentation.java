@@ -24,6 +24,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.BatchPoints;
@@ -74,6 +75,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Query query,
+        @Advice.AllArguments(readOnly = false, typing = Assigner.Typing.DYNAMIC) Object[] arguments,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
@@ -96,6 +98,17 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;
+      }
+
+      // wrap callbacks so they'd run in the context of the parent span
+      Object[] newArguments = new Object[arguments.length];
+      boolean hasChangedArgument = false;
+      for (int i = 0; i < arguments.length; i++) {
+        newArguments[i] = InfluxDbObjetWrapper.wrap(arguments[i], parentContext);
+        hasChangedArgument |= newArguments[i] != arguments[i];
+      }
+      if (hasChangedArgument) {
+        arguments = newArguments;
       }
 
       context = instrumenter().start(parentContext, influxDbRequest);
