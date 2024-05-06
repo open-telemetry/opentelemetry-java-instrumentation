@@ -5,7 +5,6 @@
 
 package io.opentelemetry.smoketest;
 
-import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(
     classes = {
       OtelSpringStarterSmokeTestApplication.class,
-      OtelSpringStarterSmokeTest.TestConfiguration.class
+      AbstractOtelSpringStarterSmokeTest.TestConfiguration.class
     },
     properties = {"otel.sdk.disabled=true"})
 @DisabledInNativeImage // Without this the native tests in the OtelSpringStarterSmokeTest class will

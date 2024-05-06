@@ -16,12 +16,14 @@ dependencies {
   runtimeOnly("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
   implementation("org.springframework.kafka:spring-kafka") // not tested here, just make sure there are no warnings when it's included
-  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
+  implementation(project(":smoke-tests-otel-starter:spring-boot-non-reactive-common"))
   testImplementation("org.springframework.boot:spring-boot-starter-test")
-  testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
+}
+
+springBoot {
+  mainClass = "io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication"
 }
 
 tasks {
