@@ -18,7 +18,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 @ExtendWith(OutputCaptureExtension.class)
 public abstract class AbstractSpringStarterSmokeTest {
 
-  @Autowired OpenTelemetry openTelemetry;
+  @Autowired protected OpenTelemetry openTelemetry;
 
   protected SpringSmokeTestRunner testing;
 

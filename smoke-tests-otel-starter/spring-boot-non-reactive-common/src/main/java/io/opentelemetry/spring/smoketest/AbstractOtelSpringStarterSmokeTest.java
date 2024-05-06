@@ -7,7 +7,6 @@ package io.opentelemetry.spring.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -29,7 +28,6 @@ import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.Collections;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -49,13 +47,6 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Autowired private PropagationProperties propagationProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
-
-  @Autowired OpenTelemetry openTelemetry;
-
-  @BeforeEach
-  void initOpenTelemetry() {
-    testing = new SpringSmokeTestRunner(openTelemetry);
-  }
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
