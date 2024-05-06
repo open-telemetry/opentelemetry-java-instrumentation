@@ -33,7 +33,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   List<Closeable> cleanup = []
 
   def setupSpec() throws Exception {
-    client = MongoClients.create("mongodb://localhost:$port")
+    client = MongoClients.create("mongodb://$host:$port")
   }
 
   def cleanupSpec() throws Exception {
@@ -54,7 +54,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
 
   @Override
   void createCollectionNoDescription(String dbName, String collectionName) {
-    def tmpClient = MongoClients.create("mongodb://localhost:${port}")
+    def tmpClient = MongoClients.create("mongodb://$host:${port}")
     cleanup.add(tmpClient)
     MongoDatabase db = tmpClient.getDatabase(dbName)
     def latch = new CountDownLatch(1)
@@ -72,7 +72,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
     def settings = MongoClientSettings.builder()
       .applyToClusterSettings({ builder ->
         builder.hosts(Arrays.asList(
-          new ServerAddress("localhost", port)))
+          new ServerAddress(host, port)))
       })
     settings.build()
     def tmpClient = MongoClients.create(settings.build())

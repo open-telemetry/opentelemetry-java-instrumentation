@@ -22,7 +22,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -86,8 +85,7 @@ public class OpenTelemetryAutoConfiguration {
         OtlpExporterProperties otlpExporterProperties,
         OtelResourceProperties resourceProperties,
         PropagationProperties propagationProperties,
-        OpenTelemetrySdkComponentLoader componentLoader,
-        ObjectProvider<OpenTelemetryInjector> openTelemetryConsumerProvider) {
+        OpenTelemetrySdkComponentLoader componentLoader) {
 
       OpenTelemetry openTelemetry =
           AutoConfigureUtil.setComponentLoader(
@@ -103,8 +101,6 @@ public class OpenTelemetryAutoConfiguration {
                   componentLoader)
               .build()
               .getOpenTelemetrySdk();
-
-      openTelemetryConsumerProvider.forEach(consumer -> consumer.accept(openTelemetry));
 
       return openTelemetry;
     }

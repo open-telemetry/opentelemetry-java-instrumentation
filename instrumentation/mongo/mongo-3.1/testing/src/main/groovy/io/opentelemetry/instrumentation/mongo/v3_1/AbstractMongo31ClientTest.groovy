@@ -29,7 +29,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
   def setupSpec() throws Exception {
     def options = MongoClientOptions.builder().description("some-description")
     configureMongoClientOptions(options)
-    client = new MongoClient(new ServerAddress("localhost", port), options.build())
+    client = new MongoClient(new ServerAddress(host, port), options.build())
   }
 
   def cleanupSpec() throws Exception {
@@ -47,7 +47,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
   void createCollectionNoDescription(String dbName, String collectionName) {
     def options = MongoClientOptions.builder()
     configureMongoClientOptions(options)
-    MongoDatabase db = new MongoClient(new ServerAddress("localhost", port), options.build()).getDatabase(dbName)
+    MongoDatabase db = new MongoClient(new ServerAddress(host, port), options.build()).getDatabase(dbName)
     db.createCollection(collectionName)
   }
 
@@ -55,7 +55,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
   void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
     def clientOptions = client.mongoClientOptions
     def newClientOptions = MongoClientOptions.builder(clientOptions).build()
-    MongoDatabase db = new MongoClient(new ServerAddress("localhost", port), newClientOptions).getDatabase(dbName)
+    MongoDatabase db = new MongoClient(new ServerAddress(host, port), newClientOptions).getDatabase(dbName)
     db.createCollection(collectionName)
   }
 
@@ -64,7 +64,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
     def options = MongoClientOptions.builder().description("some-description")
     configureMongoClientOptions(options)
     options.build()
-    MongoDatabase db = new MongoClient(new ServerAddress("localhost", port), options.build()).getDatabase(dbName)
+    MongoDatabase db = new MongoClient(new ServerAddress(host, port), options.build()).getDatabase(dbName)
     db.createCollection(collectionName)
   }
 
@@ -165,7 +165,7 @@ abstract class AbstractMongo31ClientTest extends AbstractMongoClientTest<MongoCo
   def "test client failure"() {
     setup:
     def options = MongoClientOptions.builder().serverSelectionTimeout(10).build()
-    def client = new MongoClient(new ServerAddress("localhost", PortUtils.UNUSABLE_PORT), [], options)
+    def client = new MongoClient(new ServerAddress(host, PortUtils.UNUSABLE_PORT), [], options)
 
     when:
     MongoDatabase db = client.getDatabase(dbName)

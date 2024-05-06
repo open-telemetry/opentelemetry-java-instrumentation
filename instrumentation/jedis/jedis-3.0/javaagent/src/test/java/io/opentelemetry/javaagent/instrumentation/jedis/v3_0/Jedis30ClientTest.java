@@ -15,6 +15,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,15 +33,21 @@ class Jedis30ClientTest {
   static GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
+  static String host;
+
+  static String ip;
+
   static int port;
 
   static Jedis jedis;
 
   @BeforeAll
-  static void setup() {
+  static void setup() throws UnknownHostException {
     redisServer.start();
+    host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
-    jedis = new Jedis("localhost", port);
+    jedis = new Jedis(host, port);
   }
 
   @AfterAll
@@ -68,10 +76,10 @@ class Jedis30ClientTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative))));
@@ -94,10 +102,10 @@ class Jedis30ClientTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative))),
@@ -110,10 +118,10 @@ class Jedis30ClientTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative))));
@@ -136,10 +144,10 @@ class Jedis30ClientTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative))),
@@ -152,10 +160,10 @@ class Jedis30ClientTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 AbstractLongAssert::isNotNegative))));

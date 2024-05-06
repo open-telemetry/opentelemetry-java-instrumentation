@@ -31,7 +31,7 @@ class SanitizationTest {
     when(exchange.getIn()).thenReturn(message);
 
     String actualSanitized = decorator.getStatement(exchange, null);
-    assertEquals(actualSanitized, expected);
+    assertEquals(expected, actualSanitized);
   }
 
   @ParameterizedTest
@@ -45,7 +45,7 @@ class SanitizationTest {
     when(exchange.getIn()).thenReturn(message);
 
     String actualSanitized = decorator.getStatement(exchange, null);
-    assertEquals(actualSanitized, expected);
+    assertEquals(expected, actualSanitized);
   }
 
   @ParameterizedTest
@@ -60,7 +60,7 @@ class SanitizationTest {
     when(exchange.getIn()).thenReturn(message);
 
     String actualSanitized = decorator.getStatement(exchange, null);
-    assertEquals(actualSanitized, expected);
+    assertEquals(expected, actualSanitized);
   }
 
   static class SqlArgs implements ArgumentsProvider {

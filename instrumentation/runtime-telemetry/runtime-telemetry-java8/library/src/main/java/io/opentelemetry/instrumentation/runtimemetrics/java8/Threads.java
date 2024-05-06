@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
-import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
+import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -54,10 +52,6 @@ public final class Threads {
 
   // Visible for testing
   static final Threads INSTANCE = new Threads();
-
-  // TODO: use the opentelemetry-semconv classes once we have metrics attributes there
-  static final AttributeKey<Boolean> JVM_THREAD_DAEMON = booleanKey("jvm.thread.daemon");
-  static final AttributeKey<String> JVM_THREAD_STATE = stringKey("jvm.thread.state");
 
   /** Register observers for java runtime class metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
@@ -102,10 +96,11 @@ public final class Threads {
     return measurement -> {
       int daemonThreadCount = threadBean.getDaemonThreadCount();
       measurement.record(
-          daemonThreadCount, Attributes.builder().put(JVM_THREAD_DAEMON, true).build());
+          daemonThreadCount,
+          Attributes.builder().put(JvmAttributes.JVM_THREAD_DAEMON, true).build());
       measurement.record(
           threadBean.getThreadCount() - daemonThreadCount,
-          Attributes.builder().put(JVM_THREAD_DAEMON, false).build());
+          Attributes.builder().put(JvmAttributes.JVM_THREAD_DAEMON, false).build());
     };
   }
 
@@ -133,7 +128,8 @@ public final class Threads {
       throw new IllegalStateException("Unexpected error happened during ThreadInfo#isDaemon()", e);
     }
     String threadState = threadInfo.getThreadState().name().toLowerCase(Locale.ROOT);
-    return Attributes.of(JVM_THREAD_DAEMON, isDaemon, JVM_THREAD_STATE, threadState);
+    return Attributes.of(
+        JvmAttributes.JVM_THREAD_DAEMON, isDaemon, JvmAttributes.JVM_THREAD_STATE, threadState);
   }
 
   private Threads() {}

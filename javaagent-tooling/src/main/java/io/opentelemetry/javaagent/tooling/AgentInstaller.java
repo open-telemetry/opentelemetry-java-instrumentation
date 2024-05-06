@@ -200,10 +200,7 @@ public class AgentInstaller {
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
-    for (String property :
-        asList(
-            "otel.instrumentation.experimental.span-suppression-strategy",
-            "otel.semconv-stability.opt-in")) {
+    for (String property : asList("otel.instrumentation.experimental.span-suppression-strategy")) {
       String value = config.getString(property);
       if (value != null) {
         System.setProperty(property, value);
