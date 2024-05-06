@@ -31,7 +31,6 @@ import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -73,11 +72,7 @@ class InfluxDbClientTest {
   void cleanup() {
     influxDb.deleteDatabase(databaseName);
     influxDb.close();
-  }
-
-  @BeforeEach
-  void reset() {
-    testing.clearData();
+    influxDbServer.stop();
   }
 
   @Test
