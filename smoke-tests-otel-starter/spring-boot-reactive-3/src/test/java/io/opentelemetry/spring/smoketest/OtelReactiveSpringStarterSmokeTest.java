@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.smoketest;
-
-import io.opentelemetry.spring.smoketest.AbstractOtelReactiveSpringStarterSmokeTest;
+package io.opentelemetry.spring.smoketest;
 
 class OtelReactiveSpringStarterSmokeTest extends AbstractOtelReactiveSpringStarterSmokeTest {}

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.smoketest;
+package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import javax.sql.DataSource;

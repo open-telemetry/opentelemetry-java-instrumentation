@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.smoketest;
+package io.opentelemetry.spring.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,8 +26,6 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
-import io.opentelemetry.spring.smoketest.AbstractSpringStarterSmokeTest;
-import io.opentelemetry.spring.smoketest.SpringSmokeTestRunner;
 import java.util.Collections;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
