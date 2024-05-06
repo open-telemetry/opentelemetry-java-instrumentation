@@ -23,7 +23,7 @@ public abstract class AbstractSpringStarterSmokeTest {
   protected SpringSmokeTestRunner testing;
 
   @BeforeEach
-  void initOpenTelemetry() {
+  void setUpTesting() {
     testing = new SpringSmokeTestRunner(openTelemetry);
   }
 
