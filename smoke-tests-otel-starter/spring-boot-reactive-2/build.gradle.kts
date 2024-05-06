@@ -3,7 +3,7 @@ plugins {
   id("org.springframework.boot") version "2.7.18"
 }
 
-description = "smoke-tests-otel-starter-spring-boot-2-reactive"
+description = "smoke-tests-otel-starter-spring-boot-reactive-2"
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)

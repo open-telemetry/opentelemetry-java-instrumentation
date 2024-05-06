@@ -140,9 +140,9 @@ include(":smoke-tests:images:spring-boot")
 
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-reactive-common")
-include(":smoke-tests-otel-starter:spring-boot-2-reactive")
-include(":smoke-tests-otel-starter:spring-boot-3")
-include(":smoke-tests-otel-starter:spring-boot-3-reactive")
+include(":smoke-tests-otel-starter:spring-boot-reactive-2")
+include(":smoke-tests-otel-starter:spring-boot-reactive-3")
+include(":smoke-tests-otel-starter:spring-boot-non-reactive-3")
 
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")

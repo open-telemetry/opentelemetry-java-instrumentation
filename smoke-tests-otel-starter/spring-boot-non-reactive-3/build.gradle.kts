@@ -4,25 +4,24 @@ plugins {
   id("org.graalvm.buildtools.native")
 }
 
-description = "smoke-tests-otel-starter-spring-boot-3-reactive"
+description = "smoke-tests-otel-starter-spring-boot-non-reactive-3"
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
 dependencies {
+  implementation("org.springframework.boot:spring-boot-starter-web")
+  implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+  runtimeOnly("com.h2database:h2")
+  implementation("org.apache.commons:commons-dbcp2")
+  implementation("org.springframework.kafka:spring-kafka") // not tested here, just make sure there are no warnings when it's included
+  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
-  implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
-  implementation("org.springframework.boot:spring-boot-starter-webflux")
-
   testImplementation("org.springframework.boot:spring-boot-starter-test")
-  testImplementation("io.projectreactor:reactor-test")
-}
-
-springBoot {
-  mainClass = "io.opentelemetry.spring.smoketest.OtelReactiveSpringStarterSmokeTestApplication"
+  testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 }
 
 tasks {
