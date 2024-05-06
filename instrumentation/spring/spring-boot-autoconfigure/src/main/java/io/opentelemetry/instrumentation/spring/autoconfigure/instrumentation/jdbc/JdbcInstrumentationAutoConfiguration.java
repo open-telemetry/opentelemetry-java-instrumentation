@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootInstrumentation("jdbc")
+@SpringBootInstrumentation(module = "jdbc")
 @AutoConfiguration(after = DataSourceAutoConfiguration.class)
 @ConditionalOnBean({DataSource.class})
 @Configuration(proxyBeanMethods = false)

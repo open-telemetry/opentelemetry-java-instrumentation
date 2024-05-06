@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.DispatcherServlet;
 
-@SpringBootInstrumentation("spring-webmvc")
+@SpringBootInstrumentation(module = "spring-webmvc")
 @ConditionalOnClass({Filter.class, OncePerRequestFilter.class, DispatcherServlet.class})
 @Configuration
 @SuppressWarnings("OtelPrivateConstructorForUtilityClass")

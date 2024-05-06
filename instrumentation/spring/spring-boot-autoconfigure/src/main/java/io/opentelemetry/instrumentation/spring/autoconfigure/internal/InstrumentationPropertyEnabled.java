@@ -21,7 +21,8 @@ public class InstrumentationPropertyEnabled implements Condition {
     Map<String, Object> attributes =
         metadata.getAnnotationAttributes(SpringBootInstrumentation.class.getName());
 
-    String value = String.format("otel.instrumentation.%s.enabled", attributes.get("value"));
-    return context.getEnvironment().getProperty(value, Boolean.class, true);
+    String name = String.format("otel.instrumentation.%s.enabled", attributes.get("module"));
+    boolean defaultValue = (boolean) attributes.get("enabledByDefault");
+    return context.getEnvironment().getProperty(name, Boolean.class, defaultValue);
   }
 }

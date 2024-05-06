@@ -22,7 +22,7 @@ import org.springframework.web.client.RestClient;
  *
  * <p>Adds Open Telemetry instrumentation to {@link RestClient} beans after initialization
  */
-@SpringBootInstrumentation("spring-web")
+@SpringBootInstrumentation(module = "spring-web")
 @ConditionalOnClass(RestClient.class)
 @AutoConfiguration(after = RestClientAutoConfiguration.class)
 @Configuration

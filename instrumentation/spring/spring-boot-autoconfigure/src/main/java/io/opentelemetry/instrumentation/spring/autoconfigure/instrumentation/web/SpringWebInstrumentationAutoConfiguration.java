@@ -19,7 +19,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization
  */
-@SpringBootInstrumentation("spring-web")
+@SpringBootInstrumentation(module = "spring-web")
 @ConditionalOnClass(RestTemplate.class)
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {

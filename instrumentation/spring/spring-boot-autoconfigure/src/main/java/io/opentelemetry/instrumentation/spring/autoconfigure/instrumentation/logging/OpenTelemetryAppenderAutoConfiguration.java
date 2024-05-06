@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
 public class OpenTelemetryAppenderAutoConfiguration {
 
-  @SpringBootInstrumentation("log4j-appender")
+  @SpringBootInstrumentation(module = "log4j-appender")
   @ConditionalOnClass(org.apache.logging.log4j.core.LoggerContext.class)
   @Configuration
   static class Log4jAppenderConfig {
@@ -32,7 +32,7 @@ public class OpenTelemetryAppenderAutoConfiguration {
     }
   }
 
-  @SpringBootInstrumentation("logback-appender")
+  @SpringBootInstrumentation(module = "logback-appender")
   @ConditionalOnClass(ch.qos.logback.classic.LoggerContext.class)
   @Configuration
   static class LogbackAppenderConfig {

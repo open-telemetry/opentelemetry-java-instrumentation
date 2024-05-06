@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
-@SpringBootInstrumentation("kafka")
+@SpringBootInstrumentation(module = "kafka")
 @ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {

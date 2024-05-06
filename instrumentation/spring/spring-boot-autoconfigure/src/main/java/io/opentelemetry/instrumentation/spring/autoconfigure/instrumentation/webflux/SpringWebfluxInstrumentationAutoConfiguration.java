@@ -20,7 +20,7 @@ import org.springframework.web.server.WebFilter;
  *
  * <p>Adds Open Telemetry instrumentation to WebClient beans after initialization
  */
-@SpringBootInstrumentation("spring-webflux")
+@SpringBootInstrumentation(module = "spring-webflux")
 @ConditionalOnClass(WebClient.class)
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {

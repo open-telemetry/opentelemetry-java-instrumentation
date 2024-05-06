@@ -16,7 +16,7 @@ import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /** Configures {@link WithSpanAspect} to trace bean methods annotated with {@link WithSpan}. */
-@SpringBootInstrumentation("annotations")
+@SpringBootInstrumentation(module = "annotations")
 @ConditionalOnClass(Aspect.class)
 @Configuration
 public class InstrumentationAnnotationsAutoConfiguration {

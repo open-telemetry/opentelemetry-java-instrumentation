@@ -19,10 +19,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootInstrumentation("micrometer")
+@SpringBootInstrumentation(module = "micrometer", enabledByDefault = false)
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
-@ConditionalOnBean({Clock.class})
+@ConditionalOnBean(Clock.class)
 @ConditionalOnClass(MeterRegistry.class)
 @Configuration
 public class MicrometerBridgeAutoConfiguration {
