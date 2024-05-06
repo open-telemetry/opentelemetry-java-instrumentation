@@ -79,7 +79,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(Retrofit.class);
+      callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
@@ -137,7 +137,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(Retrofit.class);
+      callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
