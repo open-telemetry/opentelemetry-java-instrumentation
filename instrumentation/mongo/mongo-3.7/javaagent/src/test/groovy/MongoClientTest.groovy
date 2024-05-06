@@ -28,7 +28,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     client = MongoClients.create(MongoClientSettings.builder()
       .applyToClusterSettings({ builder ->
         builder.hosts(Arrays.asList(
-          new ServerAddress("localhost", port)))
+          new ServerAddress(host, port)))
           .description("some-description")
       })
       .build())
@@ -47,7 +47,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
 
   @Override
   void createCollectionNoDescription(String dbName, String collectionName) {
-    MongoDatabase db = MongoClients.create("mongodb://localhost:${port}").getDatabase(dbName)
+    MongoDatabase db = MongoClients.create("mongodb://$host:${port}").getDatabase(dbName)
     db.createCollection(collectionName)
   }
 
@@ -56,7 +56,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     def clientSettings = MongoClientSettings.builder()
       .applyToClusterSettings({ builder ->
         builder.hosts(Arrays.asList(
-          new ServerAddress("localhost", port)))
+          new ServerAddress(host, port)))
           .description("some-description")
       })
       .build()
@@ -70,7 +70,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     def clientSettings = MongoClientSettings.builder()
       .applyToClusterSettings({ builder ->
         builder.hosts(Arrays.asList(
-          new ServerAddress("localhost", port)))
+          new ServerAddress(host, port)))
           .description("some-description")
       })
     clientSettings.build()
@@ -174,7 +174,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
 
   def "test client failure"() {
     setup:
-    def client = MongoClients.create("mongodb://localhost:" + UNUSABLE_PORT + "/?connectTimeoutMS=10")
+    def client = MongoClients.create("mongodb://" + host + ":" + UNUSABLE_PORT + "/?connectTimeoutMS=10")
 
     when:
     MongoDatabase db = client.getDatabase(dbName)

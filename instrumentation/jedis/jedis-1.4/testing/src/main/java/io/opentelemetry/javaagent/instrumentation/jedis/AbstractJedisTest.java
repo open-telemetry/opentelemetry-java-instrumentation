@@ -28,6 +28,8 @@ public abstract class AbstractJedisTest {
   private static final GenericContainer<?> REDIS_SERVER =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
+  private static String host;
+
   private static int port;
 
   private static Jedis jedis;
@@ -35,8 +37,9 @@ public abstract class AbstractJedisTest {
   @BeforeAll
   static void setup() {
     REDIS_SERVER.start();
+    host = REDIS_SERVER.getHost();
     port = REDIS_SERVER.getMappedPort(6379);
-    jedis = new Jedis("localhost", port);
+    jedis = new Jedis(host, port);
   }
 
   @AfterAll
@@ -64,7 +67,7 @@ public abstract class AbstractJedisTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port))));
   }
 
@@ -85,7 +88,7 @@ public abstract class AbstractJedisTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -96,7 +99,7 @@ public abstract class AbstractJedisTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port))));
   }
 
@@ -117,7 +120,7 @@ public abstract class AbstractJedisTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -128,7 +131,7 @@ public abstract class AbstractJedisTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port))));
   }
 }

@@ -22,3 +22,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:graphql-java:graphql-java-common:testing"))
 }
+
+if (findProperty("testLatestDeps") as Boolean) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  }
+}

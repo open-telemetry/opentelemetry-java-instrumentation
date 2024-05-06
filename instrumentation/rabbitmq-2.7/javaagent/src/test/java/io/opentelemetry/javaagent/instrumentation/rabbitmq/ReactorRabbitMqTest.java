@@ -52,8 +52,7 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
                                       attrs -> {
                                         String peerAddr =
                                             attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS);
-                                        assertThat(peerAddr)
-                                            .isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null);
+                                        assertThat(peerAddr).isIn(rabbitMqIp, null);
 
                                         String networkType =
                                             attrs.get(NetworkAttributes.NETWORK_TYPE);

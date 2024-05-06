@@ -32,6 +32,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
 
   def setupSpec() {
     redisServer.start()
+    String host = redisServer.getHost()
     port = redisServer.getMappedPort(6379)
     // latest has separate artifacts for akka an pekko, currently latestDepTestLibrary picks the
     // pekko one
@@ -44,7 +45,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
     }
     // latest RedisClient constructor takes username as argument
     if (RedisClient.metaClass.getMetaMethod("username") != null) {
-      redisClient = new RedisClient("localhost",
+      redisClient = new RedisClient(host,
         port,
         Option.apply(null),
         Option.apply(null),
@@ -54,7 +55,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
         system,
         new RedisDispatcher("rediscala.rediscala-client-worker-dispatcher"))
     } else {
-      redisClient = new RedisClient("localhost",
+      redisClient = new RedisClient(host,
         port,
         Option.apply(null),
         Option.apply(null),

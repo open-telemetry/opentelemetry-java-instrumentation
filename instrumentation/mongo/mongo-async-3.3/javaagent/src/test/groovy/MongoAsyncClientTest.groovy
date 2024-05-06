@@ -35,7 +35,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
         .clusterSettings(
           ClusterSettings.builder()
             .description("some-description")
-            .applyConnectionString(new ConnectionString("mongodb://localhost:$port"))
+            .applyConnectionString(new ConnectionString("mongodb://$host:$port"))
             .build())
         .build())
   }
@@ -53,7 +53,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
 
   @Override
   void createCollectionNoDescription(String dbName, String collectionName) {
-    MongoDatabase db = MongoClients.create("mongodb://localhost:$port").getDatabase(dbName)
+    MongoDatabase db = MongoClients.create("mongodb://$host:$port").getDatabase(dbName)
     db.createCollection(collectionName, toCallback {})
   }
 
@@ -71,7 +71,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
       .clusterSettings(
         ClusterSettings.builder()
           .description("some-description")
-          .applyConnectionString(new ConnectionString("mongodb://localhost:$port"))
+          .applyConnectionString(new ConnectionString("mongodb://$host:$port"))
           .build())
     settings.build()
     MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName)

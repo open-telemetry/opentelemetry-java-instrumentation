@@ -67,6 +67,7 @@ public abstract class AbstractRocketMqClientTest {
   private static final String consumerGroup = "group-0";
 
   private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
+
   private final ClientServiceProvider provider = ClientServiceProvider.loadService();
   private PushConsumer consumer;
   private Producer producer;

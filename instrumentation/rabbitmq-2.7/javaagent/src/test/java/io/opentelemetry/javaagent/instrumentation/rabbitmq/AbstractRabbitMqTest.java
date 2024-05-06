@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.ConnectionFactory;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,8 +24,14 @@ public abstract class AbstractRabbitMqTest {
   private static GenericContainer<?> rabbitMqContainer;
   protected static ConnectionFactory connectionFactory;
 
+  protected static String rabbitMqHost;
+
+  protected static String rabbitMqIp;
+
+  protected static int rabbitMqPort;
+
   @BeforeAll
-  static void startRabbit() {
+  static void startRabbit() throws UnknownHostException {
     rabbitMqContainer =
         new GenericContainer<>("rabbitmq:latest")
             .withExposedPorts(5672)
@@ -36,6 +44,10 @@ public abstract class AbstractRabbitMqTest {
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
     connectionFactory.setAutomaticRecoveryEnabled(false);
+
+    rabbitMqHost = rabbitMqContainer.getHost();
+    rabbitMqIp = InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
+    rabbitMqPort = rabbitMqContainer.getMappedPort(5672);
   }
 
   @AfterAll

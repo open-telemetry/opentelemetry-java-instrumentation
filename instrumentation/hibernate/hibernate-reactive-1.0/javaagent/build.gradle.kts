@@ -83,3 +83,10 @@ tasks {
     dependsOn(testing.suites)
   }
 }
+
+if (!latestDepTest) {
+  // https://bugs.openjdk.org/browse/JDK-8320431
+  otelJava {
+    maxJavaVersionForTests.set(JavaVersion.VERSION_21)
+  }
+}

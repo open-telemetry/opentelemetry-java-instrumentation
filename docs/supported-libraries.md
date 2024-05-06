@@ -206,10 +206,10 @@ These are the application servers that the smoke tests are run against:
 
 These are the JVMs and operating systems that the integration tests are run against:
 
-| JVM                                                                                       | Versions      | OS                                    |
-| ----------------------------------------------------------------------------------------- |---------------| ------------------------------------- |
-| [OpenJDK (Eclipse Temurin)](https://adoptium.net/)                                        | 8, 11, 17, 21 | [`ubuntu-latest`], [`windows-latest`] |
-| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/java/semeru-runtimes/) | 8, 11, 17     | [`ubuntu-latest`]                     |
+| JVM                                                                                       | Versions          | OS                                    |
+| ----------------------------------------------------------------------------------------- |-------------------| ------------------------------------- |
+| [OpenJDK (Eclipse Temurin)](https://adoptium.net/)                                        | 8, 11, 17, 21, 22 | [`ubuntu-latest`], [`windows-latest`] |
+| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/java/semeru-runtimes/) | 8, 11, 17, 21     | [`ubuntu-latest`]                     |
 
 ## Disabled instrumentations
 

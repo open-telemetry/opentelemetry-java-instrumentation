@@ -41,14 +41,13 @@ class MethodSpanAttributesExtractorTest {
   @BeforeEach
   void setup() {
     lenient()
-        .doAnswer(
+        .when(cache.computeIfAbsent(any(), any()))
+        .thenAnswer(
             invocation -> {
               Method m = invocation.getArgument(0);
               Function<Method, AttributeBindings> fn = invocation.getArgument(1);
               return fn.apply(m);
-            })
-        .when(cache)
-        .computeIfAbsent(any(), any());
+            });
   }
 
   @Test
@@ -123,6 +122,7 @@ class MethodSpanAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("MockitoDoSetup")
   void appliesCachedBindings() {
     AttributeBindings bindings = mock(AttributeBindings.class);
     when(bindings.isEmpty()).thenReturn(false);
@@ -143,6 +143,7 @@ class MethodSpanAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("MockitoDoSetup")
   void doesNotApplyCachedEmptyBindings() {
     AttributeBindings bindings = mock(AttributeBindings.class);
     when(bindings.isEmpty()).thenReturn(true);
