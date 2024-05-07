@@ -16,7 +16,7 @@ dependencies {
   compileOnly(project(":instrumentation:spring:spring-boot-autoconfigure"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
 
-  testCompileOnly(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
