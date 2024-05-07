@@ -31,6 +31,7 @@ public class SpringWebInstrumentationAutoConfiguration {
 
   public SpringWebInstrumentationAutoConfiguration() {}
 
+  // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
   static RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
@@ -38,7 +39,7 @@ public class SpringWebInstrumentationAutoConfiguration {
   }
 
   @Bean
-  static RestTemplateCustomizer otelRestTemplateCustomizer(
+  RestTemplateCustomizer otelRestTemplateCustomizer(
       ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return restTemplate ->
         RestTemplateInstrumentation.addIfNotPresent(

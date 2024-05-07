@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17.0.6
+          java-version: 21
 
       - name: Login to GitHub package registry
         uses: docker/login-action@v3
@@ -34,10 +34,11 @@ jobs:
       - name: Set tag
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
+
       - name: Build Docker image
-        uses: gradle/actions/setup-gradle@d0f2f0387e6ef0dce1fca38d0482617633e9d63a # v3.3.0
-        with:
-          arguments: ":smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}"
+        run: ./gradlew :smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}
 
   publishWindows:
     runs-on: windows-latest
@@ -54,7 +55,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17.0.6
+          java-version: 21
 
       - name: Login to GitHub package registry
         uses: azure/docker-login@v1
@@ -66,10 +67,11 @@ jobs:
       - name: Set tag
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
+
       - name: Build Docker image
-        uses: gradle/actions/setup-gradle@d0f2f0387e6ef0dce1fca38d0482617633e9d63a # v3.3.0
-        with:
-          arguments: ":smoke-tests:images:fake-backend:dockerPush -PextraTag=${{ env.TAG }}"
+        run: ./gradlew :smoke-tests:images:fake-backend:dockerPush -PextraTag=${{ env.TAG }}
 
   workflow-notification:
     needs:

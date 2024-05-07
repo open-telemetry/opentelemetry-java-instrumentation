@@ -33,6 +33,7 @@ public class KafkaInstrumentationAutoConfiguration {
     return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
   }
 
+  // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(

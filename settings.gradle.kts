@@ -1,10 +1,10 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.6"
+    id("com.github.jk1.dependency-license-report") version "2.7"
     id("com.google.cloud.tools.jib") version "3.4.2"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.23"
+    id("org.jetbrains.kotlin.jvm") version "1.9.24"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.10.1"
@@ -12,8 +12,8 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.17.1"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0"
+  id("com.gradle.develocity") version "3.17.2"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -138,7 +138,9 @@ include(":smoke-tests:images:servlet:servlet-3.0")
 include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
 
-include(":smoke-tests-otel-starter")
+include(":smoke-tests-otel-starter:spring-smoke-testing")
+include(":smoke-tests-otel-starter:spring-boot-3")
+include(":smoke-tests-otel-starter:spring-boot-3-reactive")
 
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
@@ -225,6 +227,7 @@ include(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:testing")
 include(":instrumentation:executors:bootstrap")
 include(":instrumentation:executors:javaagent")
+include(":instrumentation:executors:jdk21-testing")
 include(":instrumentation:executors:testing")
 include(":instrumentation:external-annotations:javaagent")
 include(":instrumentation:external-annotations:javaagent-unit-tests")
@@ -353,7 +356,9 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common:library")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
-include(":instrumentation:kotlinx-coroutines:javaagent")
+include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
+include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent")
+include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent-kotlin")
 include(":instrumentation:ktor:ktor-1.0:library")
 include(":instrumentation:ktor:ktor-2.0:javaagent")
 include(":instrumentation:ktor:ktor-2.0:library")
@@ -513,6 +518,7 @@ include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
 include(":instrumentation:spring:spring-boot-autoconfigure")
+include(":instrumentation:spring:spring-boot-autoconfigure-3")
 include(":instrumentation:spring:spring-boot-resources:javaagent")
 include(":instrumentation:spring:spring-boot-resources:javaagent-unit-tests")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent")
@@ -526,6 +532,7 @@ include(":instrumentation:spring:spring-integration-4.1:javaagent")
 include(":instrumentation:spring:spring-integration-4.1:library")
 include(":instrumentation:spring:spring-integration-4.1:testing")
 include(":instrumentation:spring:spring-jms:spring-jms-2.0:javaagent")
+include(":instrumentation:spring:spring-jms:spring-jms-2.0:testing")
 include(":instrumentation:spring:spring-jms:spring-jms-6.0:javaagent")
 include(":instrumentation:spring:spring-kafka-2.7:javaagent")
 include(":instrumentation:spring:spring-kafka-2.7:library")

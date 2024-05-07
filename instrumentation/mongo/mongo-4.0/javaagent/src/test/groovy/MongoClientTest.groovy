@@ -23,7 +23,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   MongoClient client
 
   def setupSpec() throws Exception {
-    client = MongoClients.create("mongodb://localhost:$port")
+    client = MongoClients.create("mongodb://$host:$port")
   }
 
   def cleanupSpec() throws Exception {
@@ -39,7 +39,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
 
   @Override
   void createCollectionNoDescription(String dbName, String collectionName) {
-    MongoDatabase db = MongoClients.create("mongodb://localhost:${port}").getDatabase(dbName)
+    MongoDatabase db = MongoClients.create("mongodb://$host:${port}").getDatabase(dbName)
     db.createCollection(collectionName)
   }
 
@@ -53,7 +53,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     def settings = MongoClientSettings.builder()
       .applyToClusterSettings({ builder ->
         builder.hosts(Arrays.asList(
-          new ServerAddress("localhost", port)))
+          new ServerAddress(host, port)))
       })
     settings.build()
     MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName)

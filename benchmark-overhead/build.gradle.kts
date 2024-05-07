@@ -23,9 +23,9 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
-  testImplementation("org.jooq:joox:2.0.0")
+  testImplementation("org.jooq:joox:2.0.1")
   testImplementation("com.jayway.jsonpath:json-path:2.9.0")
-  testImplementation("org.slf4j:slf4j-simple:2.0.12")
+  testImplementation("org.slf4j:slf4j-simple:2.0.13")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }

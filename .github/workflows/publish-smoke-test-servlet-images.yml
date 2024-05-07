@@ -47,7 +47,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
 
       - name: Free disk space
         if: matrix.os != 'windows-latest'
@@ -57,7 +57,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 17.0.6
+          java-version: 21
 
       - name: Login to GitHub package registry
         uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
@@ -67,7 +67,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@d0f2f0387e6ef0dce1fca38d0482617633e9d63a # v3.3.0
+        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ matrix.smoke-test-suite != 'tomcat' }}

@@ -47,6 +47,7 @@ class HibernateReactiveTest {
 
   private static final Vertx vertx = Vertx.vertx();
   private static GenericContainer<?> container;
+  private static String host;
   private static int port;
   private static EntityManagerFactory entityManagerFactory;
   private static Mutiny.SessionFactory mutinySessionFactory;
@@ -64,7 +65,9 @@ class HibernateReactiveTest {
             .withStartupTimeout(Duration.ofMinutes(2));
     container.start();
 
+    host = container.getHost();
     port = container.getMappedPort(5432);
+    System.setProperty("db.host", host);
     System.setProperty("db.port", String.valueOf(port));
 
     entityManagerFactory =
@@ -300,7 +303,7 @@ class HibernateReactiveTest {
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$?"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "Value"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")

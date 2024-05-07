@@ -26,6 +26,9 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
   GenericContainer mongodb
 
   @Shared
+  String host
+
+  @Shared
   int port
 
   def setupSpec() {
@@ -33,7 +36,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
       .withExposedPorts(27017)
       .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("mongodb")))
     mongodb.start()
-
+    host = mongodb.getHost()
     port = mongodb.getMappedPort(27017)
   }
 
@@ -77,7 +80,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
 
   def "test port open"() {
     when:
-    new Socket("localhost", port)
+    new Socket(host, port)
 
     then:
     noExceptionThrown()
@@ -412,7 +415,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         childOf((SpanData) parentSpan)
       }
       attributes {
-        "$ServerAttributes.SERVER_ADDRESS" "localhost"
+        "$ServerAttributes.SERVER_ADDRESS" host
         "$ServerAttributes.SERVER_PORT" port
         "$DbIncubatingAttributes.DB_STATEMENT" {
           statementEval.call(it.replaceAll(" ", ""))
