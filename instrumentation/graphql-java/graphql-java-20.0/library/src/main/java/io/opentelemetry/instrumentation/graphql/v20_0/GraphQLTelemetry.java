@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
-import graphql.ExecutionResult;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.schema.DataFetchingEnvironment;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
 
 @SuppressWarnings("AbbreviationAsWordInName")
 public final class GraphQLTelemetry {
@@ -26,22 +26,16 @@ public final class GraphQLTelemetry {
     return new GraphQLTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult>
-      executionInstrumenter;
-
+  private final OpenTelemetryInstrumentationHelper helper;
   private final Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter;
-
-  private final boolean sanitizeQuery;
-
   private final boolean createSpansForTrivialDataFetcher;
 
   GraphQLTelemetry(
-      Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> executionInstrumenter,
+      OpenTelemetry openTelemetry,
       boolean sanitizeQuery,
       Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter,
       boolean createSpansForTrivialDataFetcher) {
-    this.executionInstrumenter = executionInstrumenter;
-    this.sanitizeQuery = sanitizeQuery;
+    helper = GraphqlInstrumenterFactory.createInstrumentationHelper(openTelemetry, sanitizeQuery);
     this.dataFetcherInstrumenter = dataFetcherInstrumenter;
     this.createSpansForTrivialDataFetcher = createSpansForTrivialDataFetcher;
   }
@@ -51,9 +45,6 @@ public final class GraphQLTelemetry {
    */
   public Instrumentation newInstrumentation() {
     return new OpenTelemetryInstrumentation(
-        executionInstrumenter,
-        sanitizeQuery,
-        dataFetcherInstrumenter,
-        createSpansForTrivialDataFetcher);
+        helper, dataFetcherInstrumenter, createSpansForTrivialDataFetcher);
   }
 }

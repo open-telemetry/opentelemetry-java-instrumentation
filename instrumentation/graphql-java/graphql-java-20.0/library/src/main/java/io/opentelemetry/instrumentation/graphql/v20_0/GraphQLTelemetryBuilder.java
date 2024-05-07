@@ -56,7 +56,7 @@ public final class GraphQLTelemetryBuilder {
    */
   public GraphQLTelemetry build() {
     return new GraphQLTelemetry(
-        GraphqlInstrumenterFactory.createExecutionInstrumenter(openTelemetry),
+        openTelemetry,
         sanitizeQuery,
         GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
             openTelemetry, dataFetcherInstrumentationEnabled),

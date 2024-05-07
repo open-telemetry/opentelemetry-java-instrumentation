@@ -23,6 +23,10 @@ dependencies {
   testImplementation(project(":instrumentation:graphql-java:graphql-java-common:testing"))
 }
 
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
+}
+
 if (findProperty("testLatestDeps") as Boolean) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)

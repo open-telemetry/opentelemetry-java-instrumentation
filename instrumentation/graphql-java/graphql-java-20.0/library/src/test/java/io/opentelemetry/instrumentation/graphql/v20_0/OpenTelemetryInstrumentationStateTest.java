@@ -18,7 +18,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void setContextSetsContextForRootPath() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context context = Context.root().with(ContextKey.named("New"), "Context");
 
     // Act
@@ -31,7 +32,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void getContextGetsContextForRootPath() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context context = Context.root().with(ContextKey.named("New"), "Context");
 
     // Act
@@ -44,7 +46,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void getContextReturnsCurrentContext() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context context = Context.root().with(ContextKey.named("New"), "Context");
 
     Context result;
@@ -61,7 +64,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void getParentContextForPathReturnsCurrentContextForRootPath() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context context = Context.root().with(ContextKey.named("New"), "Context");
 
     Context result;
@@ -78,7 +82,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void getParentContextForPathReturnsRootPathContextForRootPath() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context context = Context.root().with(ContextKey.named("New"), "Context");
 
     state.setContextForPath(ResultPath.rootPath(), context);
@@ -93,7 +98,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void getParentContextForPathReturnsCurrentContextForDeepPath() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context context = Context.root().with(ContextKey.named("New"), "Context");
 
     ResultPath resultPath = ResultPath.parse("/segment1/segment2/segment3");
@@ -112,7 +118,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void getParentContextForPathReturnsRootPathContextForDeepPath() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context context = Context.root().with(ContextKey.named("New"), "Context");
 
     state.setContextForPath(ResultPath.rootPath(), context);
@@ -129,7 +136,8 @@ class OpenTelemetryInstrumentationStateTest {
   @Test
   void getParentContextForPathReturnsParentContextForDeepPath() {
     // Arrange
-    OpenTelemetryInstrumentationState state = new OpenTelemetryInstrumentationState();
+    Graphql20OpenTelemetryInstrumentationState state =
+        new Graphql20OpenTelemetryInstrumentationState();
     Context rootPathContext = Context.root().with(ContextKey.named("Name"), "RootPath");
     Context childContext = Context.root().with(ContextKey.named("Name"), "Child");
 
