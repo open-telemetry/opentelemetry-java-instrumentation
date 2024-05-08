@@ -7,22 +7,17 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.an
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /** Configures {@link WithSpanAspect} to trace bean methods annotated with {@link WithSpan}. */
-@ConditionalOnBean(OpenTelemetry.class)
+@ConditionalOnEnabledInstrumentation(module = "annotations")
 @ConditionalOnClass(Aspect.class)
-@ConditionalOnProperty(name = "otel.instrumentation.annotations.enabled", matchIfMissing = true)
-@Conditional(SdkEnabled.class)
 @Configuration
 public class InstrumentationAnnotationsAutoConfiguration {
   private final ParameterNameDiscoverer parameterNameDiscoverer =
