@@ -29,12 +29,13 @@ configurations.configureEach {
   }
 }
 
-// On CI, we run in Java 8, so this option is not available and not needed.
-if (System.getenv()["CI"] != "true") {
-  tasks {
-    test {
-      // suppress warning about byte-buddy-agent (included in mockito) being loaded dynamically
-      jvmArgs("-XX:+EnableDynamicAgentLoading")
+tasks.withType<JavaCompile>().configureEach {
+  if (javaCompiler.isPresent && javaCompiler.get().metadata.languageVersion.canCompileOrRun(21)) {
+    tasks {
+      test {
+        // suppress warning about byte-buddy-agent (included in mockito) being loaded dynamically
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
+      }
     }
   }
 }
