@@ -30,6 +30,11 @@ public abstract class AbstractSpringStarterSmokeTest {
   @AfterEach
   void checkSpringLogs(CapturedOutput output) {
     // warnings are emitted if the auto-configuration have non-fatal problems
-    assertThat(output).doesNotContain("WARN").doesNotContain("ERROR");
+    assertThat(output)
+        // only look for WARN and ERROR log level, e.g. [Test worker] WARN
+        .doesNotContain("] WARN")
+        .doesNotContain("] ERROR")
+        // not a warning in Spring Boot 2
+        .doesNotContain("is not eligible for getting processed by all BeanPostProcessors");
   }
 }

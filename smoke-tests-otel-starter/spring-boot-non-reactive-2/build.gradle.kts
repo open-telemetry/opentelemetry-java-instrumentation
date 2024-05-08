@@ -28,14 +28,3 @@ configurations.configureEach {
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
-
-tasks.withType<JavaCompile>().configureEach {
-  if (javaCompiler.isPresent && javaCompiler.get().metadata.languageVersion.canCompileOrRun(21)) {
-    tasks {
-      test {
-        // suppress warning about byte-buddy-agent (included in mockito) being loaded dynamically
-        jvmArgs("-XX:+EnableDynamicAgentLoading")
-      }
-    }
-  }
-}
