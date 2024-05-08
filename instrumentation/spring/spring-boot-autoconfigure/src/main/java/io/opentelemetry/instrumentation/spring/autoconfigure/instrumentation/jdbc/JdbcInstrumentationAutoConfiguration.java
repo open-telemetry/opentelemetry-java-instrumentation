@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jdbc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SpringBootInstrumentation;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@SpringBootInstrumentation(module = "jdbc")
+@ConditionalOnEnabledInstrumentation(module = "jdbc")
 @AutoConfiguration(after = DataSourceAutoConfiguration.class)
 @ConditionalOnBean({DataSource.class})
 @Configuration(proxyBeanMethods = false)

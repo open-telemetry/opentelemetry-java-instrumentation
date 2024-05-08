@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Conditional;
 @Retention(RetentionPolicy.RUNTIME)
 @ConditionalOnBean(OpenTelemetry.class)
 @Conditional({SdkEnabled.class, InstrumentationPropertyEnabled.class})
-public @interface SpringBootInstrumentation {
+public @interface ConditionalOnEnabledInstrumentation {
   String module();
 
   boolean enabledByDefault() default true;

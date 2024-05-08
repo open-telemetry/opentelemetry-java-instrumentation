@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SpringBootInstrumentation;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -19,7 +19,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization
  */
-@SpringBootInstrumentation(module = "spring-web")
+@ConditionalOnEnabledInstrumentation(module = "spring-web")
 @ConditionalOnClass(RestTemplate.class)
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.ka
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SpringBootInstrumentation;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
-@SpringBootInstrumentation(module = "kafka")
+@ConditionalOnEnabledInstrumentation(module = "kafka")
 @ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {

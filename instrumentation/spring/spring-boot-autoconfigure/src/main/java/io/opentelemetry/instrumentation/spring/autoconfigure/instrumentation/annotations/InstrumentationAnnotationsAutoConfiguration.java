@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.an
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SpringBootInstrumentation;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +16,7 @@ import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 
 /** Configures {@link WithSpanAspect} to trace bean methods annotated with {@link WithSpan}. */
-@SpringBootInstrumentation(module = "annotations")
+@ConditionalOnEnabledInstrumentation(module = "annotations")
 @ConditionalOnClass(Aspect.class)
 @Configuration
 public class InstrumentationAnnotationsAutoConfiguration {

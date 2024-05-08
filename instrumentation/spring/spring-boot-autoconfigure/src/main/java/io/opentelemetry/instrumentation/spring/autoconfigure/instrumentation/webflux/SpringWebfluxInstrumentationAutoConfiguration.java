@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SpringBootInstrumentation;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,7 +20,7 @@ import org.springframework.web.server.WebFilter;
  *
  * <p>Adds Open Telemetry instrumentation to WebClient beans after initialization
  */
-@SpringBootInstrumentation(module = "spring-webflux")
+@ConditionalOnEnabledInstrumentation(module = "spring-webflux")
 @ConditionalOnClass(WebClient.class)
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {

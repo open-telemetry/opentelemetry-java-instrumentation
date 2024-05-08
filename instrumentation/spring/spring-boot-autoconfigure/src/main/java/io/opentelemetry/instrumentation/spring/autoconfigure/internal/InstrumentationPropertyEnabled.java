@@ -19,7 +19,7 @@ public class InstrumentationPropertyEnabled implements Condition {
   @Override
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
     Map<String, Object> attributes =
-        metadata.getAnnotationAttributes(SpringBootInstrumentation.class.getName());
+        metadata.getAnnotationAttributes(ConditionalOnEnabledInstrumentation.class.getName());
 
     String name = String.format("otel.instrumentation.%s.enabled", attributes.get("module"));
     boolean defaultValue = (boolean) attributes.get("enabledByDefault");
