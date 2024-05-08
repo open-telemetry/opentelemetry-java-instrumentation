@@ -9,4 +9,4 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration;
 
 @SpringBootApplication(exclude = GsonAutoConfiguration.class)
-public class ShenyuBootstrapApplication {}
+public class ShenYuBootstrapApplication {}
