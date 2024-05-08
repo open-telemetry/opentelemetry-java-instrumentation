@@ -11,17 +11,15 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import org.apache.shenyu.common.dto.MetaData;
-import org.apache.shenyu.plugin.global.cache.MetaDataCache;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.netty.http.client.HttpClient;
 
@@ -29,7 +27,7 @@ import reactor.netty.http.client.HttpClient;
 @SpringBootTest(
     properties = {"shenyu.local.enabled=true", "spring.main.allow-bean-definition-overriding=true"},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = {ShenYuBootstrapApplication.class, ShenYuRouteTest.ForceNettyAutoConfiguration.class})
+    classes = {ShenYuBootstrapApplication.class})
 class ShenYuRouteTest {
 
   private static final AttributeKey<String> META_ID_ATTRIBUTE =
@@ -65,21 +63,25 @@ class ShenYuRouteTest {
   @Value("${local.server.port}")
   private int port;
 
-  @TestConfiguration
-  static class ForceNettyAutoConfiguration {
-    @Bean
-    NettyReactiveWebServerFactory nettyFactory() {
-      return new NettyReactiveWebServerFactory();
-    }
-  }
-
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @BeforeAll
-  static void beforeAll() {
-    MetaDataCache.getInstance()
-        .cache(
+  static void beforeAll()
+      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+    Class<?> metaDataCache = null;
+    try {
+      metaDataCache = Class.forName("org.apache.shenyu.plugin.global.cache.MetaDataCache");
+    } catch (ClassNotFoundException e) {
+      // in 2.5.0, the MetaDataCache turned to be org.apache.shenyu.plugin.base.cache
+      metaDataCache = Class.forName("org.apache.shenyu.plugin.base.cache.MetaDataCache");
+    }
+
+    Object cacheInst = metaDataCache.getMethod("getInstance").invoke(null);
+    Method cacheMethod = metaDataCache.getMethod("cache", MetaData.class);
+
+    cacheMethod.invoke(cacheInst,
             new MetaData(
                 "123",
                 "test-shenyu",
@@ -116,5 +118,18 @@ class ShenYuRouteTest {
                             equalTo(SERVICE_NAME_ATTRIBUTE, "shenyu-service"),
                             equalTo(APP_NAME_ATTRIBUTE, "test-shenyu"),
                             equalTo(CONTEXT_PATH_ATTRIBUTE, "/"))));
+  }
+
+  @Test
+  void testUnmatchedRouter() {
+    HttpClient httpClient = HttpClient.create();
+    httpClient.get().uri("http://localhost:" + port + "/a/b/c/d").response().block();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.SERVER)));
   }
 }

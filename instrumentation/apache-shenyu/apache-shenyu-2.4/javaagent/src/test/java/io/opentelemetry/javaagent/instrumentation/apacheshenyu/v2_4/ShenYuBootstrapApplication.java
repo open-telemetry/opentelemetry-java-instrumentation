@@ -8,5 +8,5 @@ package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration;
 
-@SpringBootApplication(exclude = GsonAutoConfiguration.class)
+@SpringBootApplication(exclude = {GsonAutoConfiguration.class})
 public class ShenYuBootstrapApplication {}
