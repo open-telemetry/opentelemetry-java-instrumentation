@@ -77,8 +77,6 @@ public class ShenYuRouteTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  final ConfigurableApplicationContext[] context = {null};
-
   @BeforeAll
   static void beforeAll() {
     MetaDataCache.getInstance()
