@@ -650,15 +650,15 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                         span, endpoint == EXCEPTION ? options.expectedException : null);
                     span.hasParent(trace.getSpan(finalParentIndex));
                   });
+              if (options.hasRenderSpan.test(endpoint)) {
+                spanAssertions.add(span -> assertRenderSpan(span, method, endpoint));
+              }
             }
 
             if (options.hasResponseSpan.test(endpoint)) {
               int parentIndex = spanAssertions.size() - 1;
               spanAssertions.add(
-                  span -> {
-                    assertResponseSpan(span, method, endpoint);
-                    span.hasParent(trace.getSpan(parentIndex));
-                  });
+                  span -> assertResponseSpan(span, trace.getSpan(parentIndex), method, endpoint));
             }
 
             if (options.hasErrorPageSpans.test(endpoint)) {
@@ -699,10 +699,23 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         "assertHandlerSpan not implemented in " + getClass().getName());
   }
 
+  @CanIgnoreReturnValue
+  protected SpanDataAssert assertResponseSpan(
+      SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
+    span.hasParent(parentSpan);
+    return assertResponseSpan(span, method, endpoint);
+  }
+
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     throw new UnsupportedOperationException(
         "assertResponseSpan not implemented in " + getClass().getName());
+  }
+
+  protected SpanDataAssert assertRenderSpan(
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
+    throw new UnsupportedOperationException(
+        "assertRenderSpan not implemented in " + getClass().getName());
   }
 
   protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
