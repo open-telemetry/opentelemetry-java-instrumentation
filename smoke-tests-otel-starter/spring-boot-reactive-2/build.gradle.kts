@@ -29,8 +29,11 @@ configurations.configureEach {
 }
 
 tasks {
-  test {
-    // suppress warning about byte-buddy-agent being loaded dynamically
-    jvmArgs("-XX:+EnableDynamicAgentLoading")
+  // On CI, we run in Java 8, so this option is not available and not needed.
+  if (JavaVersion.current() >= JavaVersion.VERSION_21) {
+    test {
+      // suppress warning about byte-buddy-agent (included in mockito) being loaded dynamically
+      jvmArgs("-XX:+EnableDynamicAgentLoading")
+    }
   }
 }

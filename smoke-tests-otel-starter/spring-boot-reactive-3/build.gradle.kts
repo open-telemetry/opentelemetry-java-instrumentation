@@ -27,7 +27,7 @@ springBoot {
 
 tasks {
   test {
-    // suppress warning about byte-buddy-agent being loaded dynamically
+    // suppress warning about byte-buddy-agent (included in mockito) being loaded dynamically
     jvmArgs("-XX:+EnableDynamicAgentLoading")
   }
   compileAotJava {
