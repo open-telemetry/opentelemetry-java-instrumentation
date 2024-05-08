@@ -74,7 +74,7 @@ class ShenYuRouteTest {
   }
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @BeforeAll
   static void beforeAll() {
