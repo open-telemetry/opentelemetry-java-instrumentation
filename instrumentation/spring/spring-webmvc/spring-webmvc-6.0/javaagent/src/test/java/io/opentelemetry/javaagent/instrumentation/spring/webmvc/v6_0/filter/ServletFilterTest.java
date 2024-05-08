@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.filter;
+
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -11,14 +12,15 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import boot.AbstractSpringBootBasedTest;
-import boot.AppConfig;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.spring.webmvc.filter.AbstractServletFilterTest;
+import io.opentelemetry.instrumentation.spring.webmvc.filter.FilteredAppConfig;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot.SecurityConfig;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -26,20 +28,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-class SpringBootBasedTest extends AbstractSpringBootBasedTest {
+class ServletFilterTest extends AbstractServletFilterTest {
+
+  private static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
 
   @RegisterExtension
   private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
-
-  private static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
-
-  private ConfigurableApplicationContext context;
-
-  @Override
-  protected ConfigurableApplicationContext context() {
-    return context;
-  }
 
   @Override
   protected Class<?> securityConfigClass() {
@@ -47,20 +42,17 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   }
 
   @Override
+  protected Class<?> filterConfigClass() {
+    return ServletFilterConfig.class;
+  }
+
+  @Override
   protected ConfigurableApplicationContext setupServer() {
-    SpringApplication app = new SpringApplication(AppConfig.class, securityConfigClass());
+    SpringApplication app =
+        new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
     app.setDefaultProperties(
-        ImmutableMap.of(
-            "server.port",
-            port,
-            "server.context-path",
-            getContextPath(),
-            "server.servlet.contextPath",
-            getContextPath(),
-            "server.error.include-message",
-            "always"));
-    context = app.run();
-    return context;
+        ImmutableMap.of("server.port", port, "server.error.include-message", "always"));
+    return app.run();
   }
 
   @Override
@@ -105,6 +97,5 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setResponseCodeOnNonStandardHttpMethod(400);
-    options.setExpectedException(new RuntimeException(EXCEPTION.getBody()));
   }
 }

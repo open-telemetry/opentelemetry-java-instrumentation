@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.filter;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.filter;
 
 import com.google.common.collect.ImmutableMap;
-import filter.AbstractServletFilterTest;
-import filter.FilteredAppConfig;
+import io.opentelemetry.instrumentation.spring.webmvc.filter.AbstractServletFilterTest;
+import io.opentelemetry.instrumentation.spring.webmvc.filter.FilteredAppConfig;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.boot.SecurityConfig;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import test.boot.SecurityConfig;
 
 class ServletFilterTest extends AbstractServletFilterTest {
 

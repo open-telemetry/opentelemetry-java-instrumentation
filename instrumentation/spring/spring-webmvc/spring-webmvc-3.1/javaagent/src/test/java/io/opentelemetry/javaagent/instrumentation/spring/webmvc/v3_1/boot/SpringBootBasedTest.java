@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.boot;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.boot;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 
-import boot.AbstractSpringBootBasedTest;
-import boot.AppConfig;
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest;
+import io.opentelemetry.instrumentation.spring.webmvc.boot.AppConfig;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;

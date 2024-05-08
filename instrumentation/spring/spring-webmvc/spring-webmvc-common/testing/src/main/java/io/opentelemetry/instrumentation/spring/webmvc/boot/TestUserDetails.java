@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package boot;
+package io.opentelemetry.instrumentation.spring.webmvc.boot;
 
 import java.util.Collection;
 import java.util.Collections;

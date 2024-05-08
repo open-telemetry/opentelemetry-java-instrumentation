@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import boot.SavingAuthenticationProvider;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot;
+
+import io.opentelemetry.instrumentation.spring.webmvc.boot.SavingAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -15,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-class SecurityConfig {
+public class SecurityConfig {
 
   @Bean
   SavingAuthenticationProvider savingAuthenticationProvider() {

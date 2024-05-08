@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package test.boot;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.boot;
 
-import boot.SavingAuthenticationProvider;
+import io.opentelemetry.instrumentation.spring.webmvc.boot.SavingAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;

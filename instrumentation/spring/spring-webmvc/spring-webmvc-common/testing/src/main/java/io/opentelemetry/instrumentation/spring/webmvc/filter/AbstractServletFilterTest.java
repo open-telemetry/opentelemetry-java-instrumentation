@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package filter;
+package io.opentelemetry.instrumentation.spring.webmvc.filter;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
