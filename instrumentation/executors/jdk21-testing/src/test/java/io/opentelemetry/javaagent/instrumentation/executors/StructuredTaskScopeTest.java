@@ -10,14 +10,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
+import java.util.concurrent.StructuredTaskScope;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@EnabledForJreRange(min = JRE.JAVA_21)
+@SuppressWarnings("preview")
 class StructuredTaskScopeTest {
 
   @RegisterExtension
@@ -25,16 +23,7 @@ class StructuredTaskScopeTest {
 
   @Test
   void multipleForkJoin() throws Exception {
-    Class<?> sofTaskScopeClass =
-        Class.forName("java.util.concurrent.StructuredTaskScope$ShutdownOnFailure");
-    Object taskScope = sofTaskScopeClass.getDeclaredConstructor().newInstance();
-    Class<?> taskScopeClass = Class.forName("java.util.concurrent.StructuredTaskScope");
-    Method forkMethod = taskScopeClass.getDeclaredMethod("fork", Callable.class);
-    Method joinMethod = taskScopeClass.getDeclaredMethod("join");
-    Method closeMethod = taskScopeClass.getDeclaredMethod("close");
-
-    Class<?> subtaskClass = Class.forName("java.util.concurrent.StructuredTaskScope$Subtask");
-    Method getMethod = subtaskClass.getDeclaredMethod("get");
+    StructuredTaskScope<Object> taskScope = new StructuredTaskScope.ShutdownOnFailure();
 
     Callable<String> callable1 =
         () -> {
@@ -51,15 +40,11 @@ class StructuredTaskScopeTest {
         testing.runWithSpan(
             "parent",
             () -> {
-              try {
-                Object fork1 = forkMethod.invoke(taskScope, callable1);
-                Object fork2 = forkMethod.invoke(taskScope, callable2);
-                joinMethod.invoke(taskScope);
+              StructuredTaskScope.Subtask<String> fork1 = taskScope.fork(callable1);
+              StructuredTaskScope.Subtask<String> fork2 = taskScope.fork(callable2);
+              taskScope.join();
 
-                return "" + getMethod.invoke(fork1) + getMethod.invoke(fork2);
-              } catch (Exception e) {
-                throw new AssertionError(e);
-              }
+              return "" + fork1.get() + fork2.get();
             });
 
     assertThat(result).isEqualTo("ab");
@@ -73,6 +58,6 @@ class StructuredTaskScopeTest {
                 span ->
                     span.hasName("task2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
 
-    closeMethod.invoke(taskScope);
+    taskScope.close();
   }
 }
