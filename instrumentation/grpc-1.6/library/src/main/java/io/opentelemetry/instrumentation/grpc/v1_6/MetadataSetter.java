@@ -13,6 +13,7 @@ enum MetadataSetter implements TextMapSetter<Metadata> {
 
   @Override
   public void set(Metadata carrier, String key, String value) {
+    carrier.removeAll(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
     carrier.put(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER), value);
   }
 }
