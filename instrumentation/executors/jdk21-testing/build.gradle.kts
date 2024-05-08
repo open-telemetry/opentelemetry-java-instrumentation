@@ -18,8 +18,10 @@ otelJava {
   val testJavaVersion =
     gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
       ?: JavaVersion.current()
-  minJavaVersionSupported.set(JavaVersion.toVersion(max(testJavaVersion.majorVersion.toInt(),
-    JavaVersion.VERSION_21.majorVersion.toInt())))
+  minJavaVersionSupported.set(JavaVersion.toVersion(max(
+    testJavaVersion.majorVersion.toInt(),
+    JavaVersion.VERSION_21.majorVersion.toInt()
+  )))
 }
 
 tasks.withType<JavaCompile>().configureEach {
