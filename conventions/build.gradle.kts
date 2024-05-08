@@ -63,7 +63,7 @@ dependencies {
   implementation("org.owasp:dependency-check-gradle:9.1.0")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.14")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.15")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.1.0")
