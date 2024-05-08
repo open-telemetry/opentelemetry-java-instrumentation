@@ -5,10 +5,6 @@ plugins {
 
 description = "smoke-tests-otel-starter-spring-boot-non-reactive-2"
 
-otelJava {
-  minJavaVersionSupported.set(JavaVersion.VERSION_17)
-}
-
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")

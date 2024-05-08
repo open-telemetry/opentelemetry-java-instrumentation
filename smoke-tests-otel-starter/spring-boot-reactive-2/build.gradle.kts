@@ -5,10 +5,6 @@ plugins {
 
 description = "smoke-tests-otel-starter-spring-boot-reactive-2"
 
-otelJava {
-  minJavaVersionSupported.set(JavaVersion.VERSION_17)
-}
-
 dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
