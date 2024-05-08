@@ -5,10 +5,6 @@ plugins {
 
 description = "smoke-tests-otel-starter-spring-smoke-testing"
 
-otelJava {
-  minJavaVersionSupported.set(JavaVersion.VERSION_17)
-}
-
 dependencies {
   // spring dependencies are compile only to enable testing against different versions of spring
   compileOnly(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
