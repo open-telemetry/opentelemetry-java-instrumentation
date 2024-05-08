@@ -48,7 +48,7 @@ public class ContextBuilderInstrumentation implements TypeInstrumentation {
       HttpServerRoute.update(
           context,
           HttpServerRouteSource.NESTED_CONTROLLER,
-          ApacheShenyuSingletons.httpRouteGetter(),
+          ApacheShenYuSingletons.httpRouteGetter(),
           metaData);
       MetaDataHelper.extractAttributes(metaData, context);
     }

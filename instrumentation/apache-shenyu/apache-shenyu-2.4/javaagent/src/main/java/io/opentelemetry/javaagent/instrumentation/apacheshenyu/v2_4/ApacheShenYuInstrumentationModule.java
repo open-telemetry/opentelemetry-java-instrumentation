@@ -13,8 +13,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ApacheShenyuInstrumentationModule extends InstrumentationModule {
-  public ApacheShenyuInstrumentationModule() {
+public class ApacheShenYuInstrumentationModule extends InstrumentationModule {
+  public ApacheShenYuInstrumentationModule() {
     super("apache-shenyu", "apache-shenyu-2.4");
   }
 

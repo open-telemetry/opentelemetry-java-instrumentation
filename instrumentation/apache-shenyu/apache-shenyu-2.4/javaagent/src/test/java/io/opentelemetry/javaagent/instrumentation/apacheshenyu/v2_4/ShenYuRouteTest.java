@@ -30,8 +30,8 @@ import reactor.netty.http.client.HttpClient;
 @SpringBootTest(
     properties = {"shenyu.local.enabled=true", "spring.main.allow-bean-definition-overriding=true"},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = {ShenyuBootstrapApplication.class, ShenyuRouteTest.ForceNettyAutoConfiguration.class})
-public class ShenyuRouteTest {
+    classes = {ShenyuBootstrapApplication.class, ShenYuRouteTest.ForceNettyAutoConfiguration.class})
+class ShenYuRouteTest {
 
   private static final AttributeKey<String> META_ID_ATTRIBUTE =
       AttributeKey.stringKey("apache-shenyu.meta.id");
@@ -75,7 +75,7 @@ public class ShenyuRouteTest {
   }
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   final ConfigurableApplicationContext[] context = {null};
 

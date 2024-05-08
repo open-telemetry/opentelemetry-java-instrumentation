@@ -7,6 +7,7 @@ muzzle {
     group.set("org.apache.shenyu")
     module.set("shenyu-web")
     versions.set("[2.4.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -15,7 +16,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testInstrumentation(project(":instrumentation:apache-shenyu:apache-shenyu-2.4:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
@@ -25,7 +25,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-webflux:2.2.2.RELEASE") {
     exclude("org.codehaus.groovy", "groovy")
   }
-//  based on apache shenyu 2.4.0 official example
+  // based on apache shenyu 2.4.0 official example
   testImplementation("org.apache.shenyu:shenyu-spring-boot-starter-gateway:2.4.0") {
     exclude("org.codehaus.groovy", "groovy")
   }

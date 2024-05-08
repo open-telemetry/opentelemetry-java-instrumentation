@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import org.apache.shenyu.common.dto.MetaData;
 
-public class ApacheShenyuSingletons {
+public final class ApacheShenYuSingletons {
 
-  private ApacheShenyuSingletons() {}
+  private ApacheShenYuSingletons() {}
 
   public static HttpServerRouteGetter<MetaData> httpRouteGetter() {
     return (context, metaData) -> metaData.getPath();
