@@ -29,14 +29,12 @@ configurations.configureEach {
   }
 }
 
-tasks.withType<JavaCompile>().forEach {
-  if (it.options.release.get() >= 21) {
-    tasks {
-      // On CI, we run in Java 8, so this option is not available and not needed.
-      test {
-        // suppress warning about byte-buddy-agent (included in mockito) being loaded dynamically
-        jvmArgs("-XX:+EnableDynamicAgentLoading")
-      }
+// On CI, we run in Java 8, so this option is not available and not needed.
+if (System.getenv()["CI"] != "true") {
+  tasks {
+    test {
+      // suppress warning about byte-buddy-agent (included in mockito) being loaded dynamically
+      jvmArgs("-XX:+EnableDynamicAgentLoading")
     }
   }
 }
