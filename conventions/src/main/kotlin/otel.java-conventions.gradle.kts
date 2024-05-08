@@ -1,4 +1,3 @@
-import com.gradle.enterprise.gradleplugin.testretry.retry
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
@@ -79,11 +78,6 @@ tasks.withType<JavaCompile>().configureEach {
           "-Werror"
         )
       )
-      val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
-      if (Math.max(otelJava.minJavaVersionSupported.get().majorVersion.toInt(), defaultJavaVersion) >= 21) {
-        // new warning in jdk21
-        compilerArgs.add("-Xlint:-this-escape")
-      }
     }
 
     encoding = "UTF-8"
@@ -117,6 +111,12 @@ afterEvaluate {
   tasks.withType<Javadoc>().configureEach {
     with(options) {
       source = otelJava.minJavaVersionSupported.get().majorVersion
+    }
+  }
+  tasks.withType<JavaCompile>().configureEach {
+    if (javaCompiler.isPresent && javaCompiler.get().metadata.languageVersion.canCompileOrRun(21)) {
+      // new warning in jdk21
+      options.compilerArgs.add("-Xlint:-this-escape")
     }
   }
 }
