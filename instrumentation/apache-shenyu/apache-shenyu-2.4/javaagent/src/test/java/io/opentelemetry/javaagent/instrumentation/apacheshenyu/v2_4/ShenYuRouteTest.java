@@ -68,7 +68,10 @@ class ShenYuRouteTest {
 
   @BeforeAll
   static void beforeAll()
-      throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+      throws ClassNotFoundException,
+          NoSuchMethodException,
+          InvocationTargetException,
+          IllegalAccessException {
 
     Class<?> metaDataCache = null;
     try {
@@ -81,18 +84,19 @@ class ShenYuRouteTest {
     Object cacheInst = metaDataCache.getMethod("getInstance").invoke(null);
     Method cacheMethod = metaDataCache.getMethod("cache", MetaData.class);
 
-    cacheMethod.invoke(cacheInst,
-            new MetaData(
-                "123",
-                "test-shenyu",
-                "/",
-                "/a/b/c",
-                "http",
-                "shenyu-service",
-                "hello",
-                "string",
-                "test-ext",
-                true));
+    cacheMethod.invoke(
+        cacheInst,
+        new MetaData(
+            "123",
+            "test-shenyu",
+            "/",
+            "/a/b/c",
+            "http",
+            "shenyu-service",
+            "hello",
+            "string",
+            "test-ext",
+            true));
   }
 
   @Test
@@ -128,8 +132,6 @@ class ShenYuRouteTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.SERVER)));
+                span -> span.hasName("GET").hasKind(SpanKind.SERVER)));
   }
 }
