@@ -4,7 +4,7 @@ plugins {
   id("org.graalvm.buildtools.native")
 }
 
-description = "smoke-tests-otel-starter-spring-boot-non-reactive-3"
+description = "smoke-tests-otel-starter-spring-boot-3"
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)

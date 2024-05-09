@@ -3,7 +3,7 @@ plugins {
   id("org.springframework.boot") version "2.7.18"
 }
 
-description = "smoke-tests-otel-starter-spring-boot-non-reactive-2"
+description = "smoke-tests-otel-starter-spring-boot-2"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")

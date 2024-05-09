@@ -3,7 +3,7 @@ plugins {
   id("org.springframework.boot") version "2.7.18"
 }
 
-description = "smoke-tests-otel-starter-spring-boot-non-reactive-common"
+description = "smoke-tests-otel-starter-spring-boot-common"
 
 dependencies {
   // spring dependencies are compile only to enable testing against different versions of spring

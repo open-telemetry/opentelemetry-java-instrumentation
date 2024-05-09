@@ -3,7 +3,7 @@ plugins {
 }
 
 // Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
-base.archivesName.set("opentelemetry-spring-boot-non-reactive-3")
+base.archivesName.set("opentelemetry-spring-boot-3")
 group = "io.opentelemetry.instrumentation"
 
 otelJava {
