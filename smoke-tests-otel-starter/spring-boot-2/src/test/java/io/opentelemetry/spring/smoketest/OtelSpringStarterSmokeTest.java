@@ -8,13 +8,6 @@ package io.opentelemetry.spring.smoketest;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 
-/**
- * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
- * which asserts the telemetry data from the application startup, is executed first.
- *
- * <p>The exporters are not reset using {@link BeforeEach}, because it would prevent the telemetry
- * data from the application startup to be asserted.
- */
 @SpringBootTest(
     classes = {
       OtelSpringStarterSmokeTestApplication.class,
