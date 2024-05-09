@@ -118,8 +118,6 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   }
 
   @Test
-  // Suppressing deprecation because we use some deprecated attributes in the test
-  @SuppressWarnings("deprecation")
   public void testSendDynamoDbRequestWithRetries() {
     cleanResponses();
     // Setup and configuration
