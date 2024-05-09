@@ -83,13 +83,16 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
 
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    activeRequests.add(1, startAttributes, context);
+    // Have to clone the startAttributes because the same object is reused for startAndEndAttributes
+    // in onEnd
+    activeRequests.add(1, startAttributes.toBuilder().build(), context);
 
     return context.with(HTTP_SERVER_EXPERIMENTAL_METRICS_START_ATTRIBUTES, startAttributes);
   }
 
   @Override
-  public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+  public void onEnd(
+      Context context, Attributes startAndEndAttributes, long startNanos, long endNanos) {
     Attributes startAttributes = context.get(HTTP_SERVER_EXPERIMENTAL_METRICS_START_ATTRIBUTES);
     if (startAttributes == null) {
       logger.log(
@@ -102,16 +105,14 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
     // request count (otherwise it will split the timeseries)
     activeRequests.add(-1, startAttributes, context);
 
-    Attributes sizeAttributes = startAttributes.toBuilder().putAll(endAttributes).build();
-
-    Long requestBodySize = getHttpRequestBodySize(endAttributes, startAttributes);
+    Long requestBodySize = getHttpRequestBodySize(startAndEndAttributes);
     if (requestBodySize != null) {
-      requestSize.record(requestBodySize, sizeAttributes, context);
+      requestSize.record(requestBodySize, startAndEndAttributes, context);
     }
 
-    Long responseBodySize = getHttpResponseBodySize(endAttributes, startAttributes);
+    Long responseBodySize = getHttpResponseBodySize(startAndEndAttributes);
     if (responseBodySize != null) {
-      responseSize.record(responseBodySize, sizeAttributes, context);
+      responseSize.record(responseBodySize, startAndEndAttributes, context);
     }
   }
 }

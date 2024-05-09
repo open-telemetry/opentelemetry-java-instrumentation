@@ -42,6 +42,7 @@ class RpcServerMetricsTest {
 
     Attributes responseAttributes1 =
         Attributes.builder()
+            .putAll(requestAttributes)
             .put(ServerAttributes.SERVER_ADDRESS, "example.com")
             .put(ServerAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
@@ -51,6 +52,7 @@ class RpcServerMetricsTest {
 
     Attributes responseAttributes2 =
         Attributes.builder()
+            .putAll(requestAttributes)
             .put(ServerAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
@@ -74,7 +76,7 @@ class RpcServerMetricsTest {
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    listener.onEnd(context1, responseAttributes1, nanos(250));
+    listener.onEnd(context1, responseAttributes1, nanos(100), nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -105,7 +107,7 @@ class RpcServerMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00")))));
 
-    listener.onEnd(context2, responseAttributes2, nanos(300));
+    listener.onEnd(context2, responseAttributes2, nanos(150), nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(

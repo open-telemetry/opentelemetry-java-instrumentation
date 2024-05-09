@@ -49,6 +49,7 @@ class HttpClientExperimentalMetricsTest {
 
     Attributes responseAttributes =
         Attributes.builder()
+            .putAll(requestAttributes)
             .put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
             .put(ErrorAttributes.ERROR_TYPE, "400")
             .put(HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE, 100)
@@ -77,7 +78,7 @@ class HttpClientExperimentalMetricsTest {
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    listener.onEnd(context1, responseAttributes, nanos(250));
+    listener.onEnd(context1, responseAttributes, nanos(100), nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
@@ -134,7 +135,7 @@ class HttpClientExperimentalMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00")))));
 
-    listener.onEnd(context2, responseAttributes, nanos(300));
+    listener.onEnd(context2, responseAttributes, nanos(150), nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(

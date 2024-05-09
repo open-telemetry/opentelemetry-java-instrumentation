@@ -1,2 +1,15 @@
 Comparing source compatibility of  against 
-No changes.
+***! MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.instrumentation.api.instrumenter.OperationListener  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) ABSTRACT(-) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long)
+	+++* NEW METHOD: PUBLIC(+) ABSTRACT(+) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long, long)
+***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	===! UNCHANGED INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.OperationListener
+	---  REMOVED METHOD: PUBLIC(-) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long)
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long, long)
+***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	===! UNCHANGED INTERFACE: io.opentelemetry.instrumentation.api.instrumenter.OperationListener
+	---  REMOVED METHOD: PUBLIC(-) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long)
+	+++  NEW METHOD: PUBLIC(+) void onEnd(io.opentelemetry.context.Context, io.opentelemetry.api.common.Attributes, long, long)
