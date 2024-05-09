@@ -5,7 +5,6 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(
