@@ -104,7 +104,14 @@
     },
     {
       // intentionally using Spring Boot 2 in this smoke tests
-      "matchFileNames": ["smoke-tests/images/spring-boot/build.gradle.kts"],
+      "matchFileNames": [
+        "smoke-tests/images/spring-boot/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-common/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-common/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-smoke-testing/build.gradle.kts"
+      ],
       "matchPackageNames": ["org.springframework.boot", "org.springframework.boot:spring-boot-dependencies"],
       "matchUpdateTypes": ["major"],
       "enabled": false,
