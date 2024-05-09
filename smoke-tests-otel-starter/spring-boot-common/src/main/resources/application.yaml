@@ -8,3 +8,12 @@ otel:
   resource:
     attributes:
       attributeFromYaml: true # boolean will be automatically converted to string by spring
+
+spring:
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+    listener:
+      idle-between-polls: 1000
+    producer:
+      transaction-id-prefix: test-

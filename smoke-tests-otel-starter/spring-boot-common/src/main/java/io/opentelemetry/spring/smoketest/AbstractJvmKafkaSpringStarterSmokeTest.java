@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.smoketest;
+package io.opentelemetry.spring.smoketest;
 
 import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
@@ -16,7 +16,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
 @DisabledInNativeImage // See GraalVmNativeKafkaSpringStarterSmokeTest for the GraalVM native test
-public class JvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringStarterSmokeTest {
+public class AbstractJvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringStarterSmokeTest {
 
   @Container @ServiceConnection
   static KafkaContainer kafka =

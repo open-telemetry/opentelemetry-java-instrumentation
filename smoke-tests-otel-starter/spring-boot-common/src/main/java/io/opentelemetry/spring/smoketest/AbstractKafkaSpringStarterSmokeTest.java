@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.smoketest;
+package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -11,35 +11,18 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import io.opentelemetry.spring.smoketest.AbstractSpringStarterSmokeTest;
-import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
-import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
 
-@SpringBootTest(
-    classes = {
-      OtelSpringStarterSmokeTestApplication.class,
-      SpringSmokeOtelConfiguration.class,
-      AbstractKafkaSpringStarterSmokeTest.KafkaConfig.class
-    },
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = {
-      "spring.kafka.consumer.auto-offset-reset=earliest",
-      "spring.kafka.consumer.linger-ms=10",
-      "spring.kafka.listener.idle-between-polls=1000",
-      "spring.kafka.producer.transaction-id-prefix=test-"
-    })
 abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private KafkaTemplate<String, String> kafkaTemplate;
