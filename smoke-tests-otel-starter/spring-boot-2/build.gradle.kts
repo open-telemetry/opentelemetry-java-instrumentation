@@ -24,7 +24,7 @@ springBoot {
 configurations.configureEach {
   resolutionStrategy {
     // our dependency management pins to a version that is not compatible with spring boot 2.7
-    force("ch.qos.logback:logback-classic:1.2.13")
+    force("ch.qos.logback:logback-classic:1.5.6")
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
