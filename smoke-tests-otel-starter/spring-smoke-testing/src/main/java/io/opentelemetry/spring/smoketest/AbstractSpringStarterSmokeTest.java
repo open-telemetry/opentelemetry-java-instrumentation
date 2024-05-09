@@ -18,18 +18,23 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 @ExtendWith(OutputCaptureExtension.class)
 public abstract class AbstractSpringStarterSmokeTest {
 
-  @Autowired OpenTelemetry openTelemetry;
+  @Autowired protected OpenTelemetry openTelemetry;
 
   protected SpringSmokeTestRunner testing;
 
   @BeforeEach
-  void initOpenTelemetry() {
+  void setUpTesting() {
     testing = new SpringSmokeTestRunner(openTelemetry);
   }
 
   @AfterEach
   void checkSpringLogs(CapturedOutput output) {
     // warnings are emitted if the auto-configuration have non-fatal problems
-    assertThat(output).doesNotContain("WARN").doesNotContain("ERROR");
+    assertThat(output)
+        // only look for WARN and ERROR log level, e.g. [Test worker] WARN
+        .doesNotContain("] WARN")
+        .doesNotContain("] ERROR")
+        // not a warning in Spring Boot 2
+        .doesNotContain("is not eligible for getting processed by all BeanPostProcessors");
   }
 }
