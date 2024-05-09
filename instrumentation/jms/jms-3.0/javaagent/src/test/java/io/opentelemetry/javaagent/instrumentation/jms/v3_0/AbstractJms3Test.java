@@ -75,7 +75,8 @@ abstract class AbstractJms3Test {
     broker.start();
 
     connectionFactory =
-        new ActiveMQConnectionFactory("tcp://localhost:" + broker.getMappedPort(61616));
+        new ActiveMQConnectionFactory(
+            "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
     connectionFactory.setUser("test");
     connectionFactory.setPassword("test");
 

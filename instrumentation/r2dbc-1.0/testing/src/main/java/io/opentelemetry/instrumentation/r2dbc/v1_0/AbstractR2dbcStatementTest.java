@@ -132,7 +132,7 @@ public abstract class AbstractR2dbcStatementTest {
         createProxyConnectionFactory(
             ConnectionFactoryOptions.builder()
                 .option(DRIVER, props.system)
-                .option(HOST, "localhost")
+                .option(HOST, container.getHost())
                 .option(PORT, port)
                 .option(USER, USER_DB)
                 .option(PASSWORD, PW_DB)
@@ -170,7 +170,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_STATEMENT, parameter.expectedStatement),
                                 equalTo(DB_OPERATION, parameter.operation),
                                 equalTo(DB_SQL_TABLE, parameter.table),
-                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
                         span.hasName("child")

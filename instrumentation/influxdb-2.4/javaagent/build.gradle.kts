@@ -1,0 +1,46 @@
+plugins {
+  id("otel.javaagent-instrumentation")
+}
+
+muzzle {
+  pass {
+    group.set("org.influxdb")
+    module.set("influxdb-java")
+    versions.set("[2.4,)")
+    assertInverse.set(true)
+  }
+}
+
+dependencies {
+  compileOnly("org.influxdb:influxdb-java:2.4")
+
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
+  // we use methods that weren't present before 2.14 in tests
+  testLibrary("org.influxdb:influxdb-java:2.14")
+}
+
+testing {
+  suites {
+    val test24 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("org.influxdb:influxdb-java:2.4")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
+}
+
+tasks {
+  test {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  if (!(findProperty("testLatestDeps") as Boolean)) {
+    check {
+      dependsOn(testing.suites)
+    }
+  }
+}

@@ -28,6 +28,13 @@ muzzle {
   }
 }
 
+if (findProperty("testLatestDeps") as Boolean) {
+  // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
+  otelJava {
+    maxJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+}
+
 dependencies {
   compileOnly("org.elasticsearch.client:transport:5.3.0") {
     isTransitive = false

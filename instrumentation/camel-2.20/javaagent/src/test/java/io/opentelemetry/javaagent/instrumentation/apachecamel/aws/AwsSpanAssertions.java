@@ -19,6 +19,7 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,9 +83,11 @@ class AwsSpanAssertions {
                         v -> assertThat(v).isNull(),
                         v -> assertThat(v).isInstanceOf(Number.class))),
             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-            equalTo(stringKey("rpc.system"), "aws-api"),
-            satisfies(stringKey("rpc.method"), stringAssert -> stringAssert.isEqualTo(rpcMethod)),
-            equalTo(stringKey("rpc.service"), "AmazonSQS")));
+            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+            satisfies(
+                RpcIncubatingAttributes.RPC_METHOD,
+                stringAssert -> stringAssert.isEqualTo(rpcMethod)),
+            equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS")));
 
     if (spanName.endsWith("receive")
         || spanName.endsWith("process")
@@ -123,10 +126,10 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
-            equalTo(stringKey("rpc.system"), "aws-api"),
-            equalTo(stringKey("rpc.method"), spanName.substring(3)),
-            equalTo(stringKey("rpc.service"), "Amazon S3"),
             equalTo(stringKey("aws.bucket.name"), bucketName),
+            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+            equalTo(RpcIncubatingAttributes.RPC_METHOD, spanName.substring(3)),
+            equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Amazon S3"),
             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, method),
             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
@@ -145,9 +148,9 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
-            equalTo(stringKey("rpc.system"), "aws-api"),
-            equalTo(stringKey("rpc.method"), spanName.substring(4)),
-            equalTo(stringKey("rpc.service"), "AmazonSNS"),
+            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
+            equalTo(RpcIncubatingAttributes.RPC_METHOD, spanName.substring(4)),
+            equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSNS"),
             equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topicArn),
             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),

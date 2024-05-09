@@ -46,7 +46,11 @@ abstract class AbstractLettuceClientTest {
   protected abstract RedisClient createClient(String uri);
 
   protected static String host;
+
+  protected static String ip;
+
   protected static int port;
+
   protected static String embeddedDbUri;
 
   protected ContainerConnection newContainerConnection() {

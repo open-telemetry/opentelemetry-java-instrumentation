@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
-import static io.opentelemetry.instrumentation.runtimemetrics.java8.Threads.JVM_THREAD_DAEMON;
-import static io.opentelemetry.instrumentation.runtimemetrics.java8.Threads.JVM_THREAD_STATE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.mockito.Mockito.mock;
@@ -16,6 +14,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import org.junit.jupiter.api.Test;
@@ -67,12 +66,14 @@ class ThreadsStableSemconvTest {
                                             point
                                                 .hasValue(2)
                                                 .hasAttributesSatisfying(
-                                                    equalTo(JVM_THREAD_DAEMON, true)),
+                                                    equalTo(JvmAttributes.JVM_THREAD_DAEMON, true)),
                                         point ->
                                             point
                                                 .hasValue(5)
                                                 .hasAttributesSatisfying(
-                                                    equalTo(JVM_THREAD_DAEMON, false))))));
+                                                    equalTo(
+                                                        JvmAttributes.JVM_THREAD_DAEMON,
+                                                        false))))));
   }
 
   @Test
@@ -110,14 +111,18 @@ class ThreadsStableSemconvTest {
                                             point
                                                 .hasValue(1)
                                                 .hasAttributesSatisfying(
-                                                    equalTo(JVM_THREAD_DAEMON, false),
-                                                    equalTo(JVM_THREAD_STATE, "runnable")),
+                                                    equalTo(JvmAttributes.JVM_THREAD_DAEMON, false),
+                                                    equalTo(
+                                                        JvmAttributes.JVM_THREAD_STATE,
+                                                        "runnable")),
                                         point ->
                                             point
                                                 .hasValue(1)
                                                 .hasAttributesSatisfying(
-                                                    equalTo(JVM_THREAD_DAEMON, true),
-                                                    equalTo(JVM_THREAD_STATE, "waiting"))))));
+                                                    equalTo(JvmAttributes.JVM_THREAD_DAEMON, true),
+                                                    equalTo(
+                                                        JvmAttributes.JVM_THREAD_STATE,
+                                                        "waiting"))))));
   }
 
   static final class ThreadInfoAnswer implements Answer<Object> {

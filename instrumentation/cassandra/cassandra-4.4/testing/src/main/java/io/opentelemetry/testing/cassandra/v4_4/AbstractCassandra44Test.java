@@ -65,14 +65,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
                                             v -> assertThat(v).isEqualTo("ipv6"))),
-                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("127.0.0.1"),
-                                            v -> assertThat(v).isEqualTo("0:0:0:0:0:0:0:1"))),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),

@@ -67,6 +67,7 @@ fun createLanguageTask(
     classFileVersion = ClassFileVersion.JAVA_V8
     var transformationClassPath = inputClasspath
     val compileTask = compileTaskProvider.get()
+    // this does not work for kotlin as compile task does not extend AbstractCompile
     if (compileTask is AbstractCompile) {
       val classesDirectory = compileTask.destinationDirectory.asFile.get()
       val rawClassesDirectory: File = File(classesDirectory.parent, "${classesDirectory.name}raw")

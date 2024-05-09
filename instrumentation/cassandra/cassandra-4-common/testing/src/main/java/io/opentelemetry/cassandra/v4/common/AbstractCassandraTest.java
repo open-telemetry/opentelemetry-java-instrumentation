@@ -32,7 +32,9 @@ import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfig
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -52,6 +54,10 @@ public abstract class AbstractCassandraTest {
   @SuppressWarnings("rawtypes")
   private static GenericContainer cassandra;
 
+  protected static String cassandraHost;
+
+  protected static String cassandraIp;
+
   protected static int cassandraPort;
 
   protected abstract InstrumentationExtension testing();
@@ -61,7 +67,7 @@ public abstract class AbstractCassandraTest {
   }
 
   @BeforeAll
-  static void beforeAll() {
+  static void beforeAll() throws UnknownHostException {
     cassandra =
         new GenericContainer<>("cassandra:4.0")
             .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
@@ -70,6 +76,8 @@ public abstract class AbstractCassandraTest {
             .withStartupTimeout(Duration.ofMinutes(2));
     cassandra.start();
 
+    cassandraHost = cassandra.getHost();
+    cassandraIp = InetAddress.getByName(cassandra.getHost()).getHostAddress();
     cassandraPort = cassandra.getMappedPort(9042);
   }
 
@@ -100,14 +108,9 @@ public abstract class AbstractCassandraTest {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
                                             v -> assertThat(v).isEqualTo("ipv6"))),
-                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("127.0.0.1"),
-                                            v -> assertThat(v).isEqualTo("0:0:0:0:0:0:0:1"))),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),
@@ -159,14 +162,9 @@ public abstract class AbstractCassandraTest {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
                                             v -> assertThat(v).isEqualTo("ipv6"))),
-                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("127.0.0.1"),
-                                            v -> assertThat(v).isEqualTo("0:0:0:0:0:0:0:1"))),
+                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(DB_NAME, parameter.keyspace),
@@ -338,7 +336,7 @@ public abstract class AbstractCassandraTest {
   }
 
   protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
-    sessionBuilder.addContactPoint(new InetSocketAddress("localhost", cassandraPort));
+    sessionBuilder.addContactPoint(new InetSocketAddress(cassandra.getHost(), cassandraPort));
     return sessionBuilder;
   }
 }

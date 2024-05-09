@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
@@ -22,7 +23,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -30,6 +30,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
@@ -51,8 +52,8 @@ public class OpenTelemetryAutoConfiguration {
   public OpenTelemetryAutoConfiguration() {}
 
   @Configuration
+  @Conditional(SdkEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
-  @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "false", matchIfMissing = true)
   public static class OpenTelemetrySdkConfig {
 
     @Bean
@@ -86,8 +87,7 @@ public class OpenTelemetryAutoConfiguration {
         OtlpExporterProperties otlpExporterProperties,
         OtelResourceProperties resourceProperties,
         PropagationProperties propagationProperties,
-        OpenTelemetrySdkComponentLoader componentLoader,
-        ObjectProvider<OpenTelemetryInjector> openTelemetryConsumerProvider) {
+        OpenTelemetrySdkComponentLoader componentLoader) {
 
       OpenTelemetry openTelemetry =
           AutoConfigureUtil.setComponentLoader(
@@ -103,8 +103,6 @@ public class OpenTelemetryAutoConfiguration {
                   componentLoader)
               .build()
               .getOpenTelemetrySdk();
-
-      openTelemetryConsumerProvider.forEach(consumer -> consumer.accept(openTelemetry));
 
       return openTelemetry;
     }

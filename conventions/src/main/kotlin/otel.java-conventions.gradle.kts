@@ -27,12 +27,15 @@ afterEvaluate {
 }
 
 // Version to use to compile code and run tests.
-val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_17
+val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_21
 
 java {
   toolchain {
     languageVersion.set(
-      otelJava.minJavaVersionSupported.map { JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())) }
+      otelJava.minJavaVersionSupported.map {
+        val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
+        JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), defaultJavaVersion))
+      }
     )
   }
 
@@ -69,11 +72,18 @@ tasks.withType<JavaCompile>().configureEach {
           "-Xlint:-processing",
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
+          // jdk21 generates more serial warnings than previous versions
+          "-Xlint:-serial",
 
           // Fail build on any warning
           "-Werror"
         )
       )
+      val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
+      if (Math.max(otelJava.minJavaVersionSupported.get().majorVersion.toInt(), defaultJavaVersion) >= 21) {
+        // new warning in jdk21
+        compilerArgs.add("-Xlint:-this-escape")
+      }
     }
 
     encoding = "UTF-8"
@@ -81,6 +91,11 @@ tasks.withType<JavaCompile>().configureEach {
     if (name.contains("Test")) {
       // serialVersionUID is basically guaranteed to be useless in tests
       compilerArgs.add("-Xlint:-serial")
+      // when code is compiled with jdk 21 and executed with jdk 8, the -parameters flag is needed to avoid
+      // java.lang.reflect.MalformedParametersException: Invalid parameter name ""
+      // when junit calls java.lang.reflect.Executable.getParameters() on the constructor of a
+      // non-static nested test class
+      compilerArgs.add("-parameters")
     }
   }
 }
@@ -98,6 +113,11 @@ afterEvaluate {
   tasks.withType<ScalaCompile>().configureEach {
     sourceCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
     targetCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
+  }
+  tasks.withType<Javadoc>().configureEach {
+    with(options) {
+      source = otelJava.minJavaVersionSupported.get().majorVersion
+    }
   }
 }
 
@@ -407,7 +427,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.15.0"
+  toolVersion = "10.16.0"
   maxWarnings = 0
 }
 
