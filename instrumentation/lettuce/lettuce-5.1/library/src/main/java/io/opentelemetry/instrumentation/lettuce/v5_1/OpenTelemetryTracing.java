@@ -17,6 +17,7 @@ import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -28,7 +29,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -37,6 +37,12 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 final class OpenTelemetryTracing implements Tracing {
+
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  // copied from DbIncubatingAttributes.DbSystemValues
+  private static final String REDIS = "redis";
 
   private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =
       ServerAttributesExtractor.create(new LettuceServerAttributesGetter());
@@ -154,8 +160,7 @@ final class OpenTelemetryTracing implements Tracing {
               .spanBuilder("redis")
               .setSpanKind(SpanKind.CLIENT)
               .setParent(context)
-              .setAttribute(
-                  DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.REDIS);
+              .setAttribute(DB_SYSTEM, REDIS);
       return new OpenTelemetrySpan(context, spanBuilder, sanitizer);
     }
   }
@@ -333,7 +338,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (name != null) {
         String statement =
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
-        span.setAttribute(DbIncubatingAttributes.DB_STATEMENT, statement);
+        span.setAttribute(DB_STATEMENT, statement);
       }
       span.end();
     }

@@ -15,9 +15,12 @@ enum SqsProcessRequestAttributesGetter
     implements MessagingAttributesGetter<SqsProcessRequest, Response<?>> {
   INSTANCE;
 
+  // copied from MessagingIncubatingAttributes.MessagingSystemValues
+  private static final String AWS_SQS = "aws_sqs";
+
   @Override
   public String getSystem(SqsProcessRequest request) {
-    return "AmazonSQS";
+    return AWS_SQS;
   }
 
   @Override

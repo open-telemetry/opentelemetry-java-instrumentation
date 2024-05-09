@@ -11,6 +11,7 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
@@ -30,7 +31,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +41,8 @@ import javax.annotation.Nullable;
 public final class ArmeriaTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.armeria-1.3";
+  // copied from PeerIncubatingAttributes
+  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
@@ -243,7 +245,7 @@ public final class ArmeriaTelemetryBuilder {
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(PeerIncubatingAttributes.PEER_SERVICE, peerService));
+          AttributesExtractor.constant(PEER_SERVICE, peerService));
     }
     if (emitExperimentalHttpClientMetrics) {
       clientInstrumenterBuilder

@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 /**
  * Extractor of <a
@@ -23,6 +23,10 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
         REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
+
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -38,7 +42,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, DbIncubatingAttributes.DB_STATEMENT, getter.getStatement(request));
-    internalSet(attributes, DbIncubatingAttributes.DB_OPERATION, getter.getOperation(request));
+    internalSet(attributes, DB_STATEMENT, getter.getStatement(request));
+    internalSet(attributes, DB_OPERATION, getter.getOperation(request));
   }
 }

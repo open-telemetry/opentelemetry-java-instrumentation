@@ -86,7 +86,9 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
                         .hasLinks(
                             LinkData.create(
@@ -106,7 +108,9 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message1"),
                             equalTo(
@@ -123,7 +127,9 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message2"),
                             equalTo(

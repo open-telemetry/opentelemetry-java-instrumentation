@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -43,6 +42,12 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 
 /** AWS request execution interceptor. */
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
+
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  // copied from DbIncubatingAttributes.DbSystemValues
+  private static final String DB_SYSTEM_DYNAMODB = "dynamodb";
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
@@ -312,10 +317,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     fieldMapper.mapToAttributes(sdkRequest, awsSdkRequest, span);
 
     if (awsSdkRequest.type() == DYNAMODB) {
-      span.setAttribute(DbIncubatingAttributes.DB_SYSTEM, "dynamodb");
+      span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
       String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
       if (operation != null) {
-        span.setAttribute(DbIncubatingAttributes.DB_OPERATION, operation);
+        span.setAttribute(DB_OPERATION, operation);
       }
     }
   }

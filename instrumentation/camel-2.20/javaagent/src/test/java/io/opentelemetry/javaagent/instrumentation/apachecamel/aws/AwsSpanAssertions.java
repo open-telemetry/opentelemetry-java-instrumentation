@@ -95,7 +95,9 @@ class AwsSpanAssertions {
       attributeAssertions.addAll(
           Arrays.asList(
               equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, queueName),
-              equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS")));
+              equalTo(
+                  MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                  MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS)));
       if (spanName.endsWith("receive")) {
         attributeAssertions.add(
             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"));
