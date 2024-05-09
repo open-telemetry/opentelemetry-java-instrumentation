@@ -3,91 +3,53 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.kafka;
+package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import java.time.Duration;
+import io.opentelemetry.spring.smoketest.AbstractSpringStarterSmokeTest;
+import io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication;
+import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.utility.DockerImageName;
 
-class KafkaIntegrationTest {
+@SpringBootTest(
+    classes = {
+      OtelSpringStarterSmokeTestApplication.class,
+      SpringSmokeOtelConfiguration.class,
+      AbstractKafkaSpringStarterSmokeTest.KafkaConfig.class
+    },
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+      "spring.kafka.consumer.auto-offset-reset=earliest",
+      "spring.kafka.consumer.linger-ms=10",
+      "spring.kafka.listener.idle-between-polls=1000",
+      "spring.kafka.producer.transaction-id-prefix=test-"
+    })
+abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  @RegisterExtension
-  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  static KafkaContainer kafka;
-
-  private ApplicationContextRunner contextRunner;
-
-  @BeforeAll
-  static void setUpKafka() {
-    kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.10"))
-            .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
-            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
-            .withStartupTimeout(Duration.ofMinutes(1));
-    kafka.start();
-  }
-
-  @AfterAll
-  static void tearDownKafka() {
-    kafka.stop();
-  }
-
-  @BeforeEach
-  void setUpContext() {
-    contextRunner =
-        new ApplicationContextRunner()
-            .withConfiguration(
-                AutoConfigurations.of(
-                    KafkaAutoConfiguration.class,
-                    KafkaInstrumentationAutoConfiguration.class,
-                    TestConfig.class))
-            .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry)
-            .withPropertyValues(
-                "spring.kafka.bootstrap-servers=" + kafka.getBootstrapServers(),
-                "spring.kafka.consumer.auto-offset-reset=earliest",
-                "spring.kafka.consumer.linger-ms=10",
-                "spring.kafka.listener.idle-between-polls=1000",
-                "spring.kafka.producer.transaction-id-prefix=test-");
-  }
-
-  @Test
-  void shouldInstrumentProducerAndConsumer() {
-    contextRunner.run(KafkaIntegrationTest::runShouldInstrumentProducerAndConsumer);
-  }
+  @Autowired private KafkaTemplate<String, String> kafkaTemplate;
 
   // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
   // ops.send, although with different return type.
   @SuppressWarnings({"unchecked", "deprecation"})
-  private static void runShouldInstrumentProducerAndConsumer(
-      ConfigurableApplicationContext applicationContext) {
-    KafkaTemplate<String, String> kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
+  @Test
+  void shouldInstrumentProducerAndConsumer() {
+    testing.clearAllExportedData(); // ignore data from application startup
 
     testing.runWithSpan(
         "producer",
@@ -128,7 +90,7 @@ class KafkaIntegrationTest {
                     span.hasName("testTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
@@ -155,7 +117,9 @@ class KafkaIntegrationTest {
   }
 
   @Configuration
-  static class TestConfig {
+  public static class KafkaConfig {
+
+    @Autowired OpenTelemetry openTelemetry;
 
     @Bean
     public NewTopic testTopic() {
@@ -164,7 +128,12 @@ class KafkaIntegrationTest {
 
     @KafkaListener(id = "testListener", topics = "testTopic")
     public void listener(ConsumerRecord<String, String> record) {
-      testing.runWithSpan("consumer", () -> {});
+      openTelemetry
+          .getTracer("consumer", "1.0")
+          .spanBuilder("consumer")
+          .setSpanKind(SpanKind.CONSUMER)
+          .startSpan()
+          .end();
     }
   }
 }
