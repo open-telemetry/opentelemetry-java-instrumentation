@@ -118,8 +118,8 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
       }
 
       if (!value.containsKey(CommonConfig.get().getLoggingKeysTraceFlags())) {
-        value.put(CommonConfig.get().getLoggingKeysTraceFlags(),
-            spanContext.getTraceFlags().asHex());
+        value.put(
+            CommonConfig.get().getLoggingKeysTraceFlags(), spanContext.getTraceFlags().asHex());
       }
     }
   }

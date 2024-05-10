@@ -67,13 +67,14 @@ public final class CommonConfig {
         config.getBoolean("otel.instrumentation.http.server.emit-experimental-telemetry", false);
     enduserConfig = new EnduserConfig(config);
     loggingKeysTraceId =
-        config.getString("otel.instrumentation.common.logging.keys.trace_id",
-            LoggingContextConstants.TRACE_ID);
+        config.getString(
+            "otel.instrumentation.common.logging.keys.trace_id", LoggingContextConstants.TRACE_ID);
     loggingKeysSpanId =
-        config.getString("otel.instrumentation.common.logging.keys.span_id",
-            LoggingContextConstants.SPAN_ID);
+        config.getString(
+            "otel.instrumentation.common.logging.keys.span_id", LoggingContextConstants.SPAN_ID);
     loggingKeysTraceFlags =
-        config.getString("otel.instrumentation.common.logging.keys.trace_flags",
+        config.getString(
+            "otel.instrumentation.common.logging.keys.trace_flags",
             LoggingContextConstants.TRACE_FLAGS);
   }
 

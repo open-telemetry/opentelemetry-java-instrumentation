@@ -49,9 +49,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) Object value) {
-      if (CommonConfig.get().getLoggingKeysTraceId().equals(key) || CommonConfig.get()
-          .getLoggingKeysSpanId().equals(key) || CommonConfig.get().getLoggingKeysTraceFlags()
-          .equals(key)) {
+      if (CommonConfig.get().getLoggingKeysTraceId().equals(key)
+          || CommonConfig.get().getLoggingKeysSpanId().equals(key)
+          || CommonConfig.get().getLoggingKeysTraceFlags().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
