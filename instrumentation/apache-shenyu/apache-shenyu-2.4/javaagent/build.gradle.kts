@@ -19,19 +19,16 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
 
-  testImplementation("org.springframework.boot:spring-boot-starter-webflux:2.2.2.RELEASE") {
-    exclude("org.codehaus.groovy", "groovy")
-    exclude("org.springframework.boot", "spring-boot-actuator")
-  }
   // based on apache shenyu 2.4.0 official example
-  testImplementation("org.apache.shenyu:shenyu-spring-boot-starter-gateway:2.4.0") {
+  testLibrary("org.apache.shenyu:shenyu-spring-boot-starter-gateway:2.4.0") {
+    exclude("org.codehaus.groovy", "groovy")
+  }
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux:2.2.2.RELEASE") {
     exclude("org.codehaus.groovy", "groovy")
   }
 
+  // the latest version of apache shenyu uses spring-boot 2.7
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.7.+")
-  latestDepTestLibrary("org.apache.shenyu:shenyu-spring-boot-starter-gateway:2.+") {
-    exclude("org.codehaus.groovy", "groovy")
-  }
 }
 
 tasks.withType<Test>().configureEach {
@@ -46,8 +43,8 @@ tasks.withType<Test>().configureEach {
 
 configurations.testRuntimeClasspath {
   resolutionStrategy {
+    // requires old logback (and therefore also old slf4j)
     force("ch.qos.logback:logback-classic:1.2.11")
     force("org.slf4j:slf4j-api:1.7.36")
-    force("org.springframework.boot:spring-boot-starter-actuator:2.2.2.RELEASE")
   }
 }

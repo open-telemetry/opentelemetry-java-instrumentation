@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
-import static java.util.Arrays.asList;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -20,6 +19,6 @@ public class ApacheShenYuInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new ContextBuilderInstrumentation());
+    return Collections.singletonList(new ContextBuilderInstrumentation());
   }
 }
