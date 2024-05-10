@@ -27,8 +27,6 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
 
   @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
 
-  // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
-  // ops.send, although with different return type.
   @SuppressWarnings({"unchecked", "deprecation"})
   @Test
   void shouldInstrumentProducerAndConsumer() {
@@ -39,7 +37,14 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
         () -> {
           kafkaTemplate.executeInTransaction(
               ops -> {
-                ops.send("testTopic", "10", "testSpan");
+                // return type is incompatible between Spring Boot 2 and 3
+                try {
+                  ops.getClass()
+                      .getDeclaredMethod("send", String.class, Object.class, Object.class)
+                      .invoke(ops, "testTopic", "10", "testSpan");
+                } catch (Exception e) {
+                  throw new IllegalStateException(e);
+                }
                 return 0;
               });
         });

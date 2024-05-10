@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,11 @@ public abstract class AbstractSpringStarterSmokeTest {
   @Autowired protected OpenTelemetry openTelemetry;
 
   protected SpringSmokeTestRunner testing;
+
+  @BeforeAll
+  static void beforeAll() {
+    SpringSmokeTestRunner.resetExporters();
+  }
 
   @BeforeEach
   void setUpTesting() {
