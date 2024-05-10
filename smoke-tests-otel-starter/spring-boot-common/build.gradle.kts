@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
   id("otel.java-conventions")
   id("org.springframework.boot") version "2.7.18"
@@ -17,4 +19,8 @@ dependencies {
 
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
+}
+
+tasks.withType<BootJar> {
+  enabled = false
 }

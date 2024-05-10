@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
   id("otel.java-conventions")
   id("org.springframework.boot") version "2.7.18"
@@ -12,4 +14,8 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter-webflux")
   compileOnly("org.springframework.boot:spring-boot-starter-test")
   api(project(":smoke-tests-otel-starter:spring-smoke-testing"))
+}
+
+tasks.withType<BootJar> {
+  enabled = false
 }
