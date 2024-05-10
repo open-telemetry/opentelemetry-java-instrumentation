@@ -16,9 +16,12 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
   public void registerHints(
       org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
     hints.resources().registerResourceBundle("org.apache.commons.dbcp2.LocalStrings");
-    hints.reflection().registerType(
-        TypeReference.of("org.testcontainers.shaded.com.github.dockerjava.core.DockerConfigFile"),
-        MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-        MemberCategory.INVOKE_DECLARED_METHODS);
+    hints
+        .reflection()
+        .registerType(
+            TypeReference.of(
+                "org.testcontainers.shaded.com.github.dockerjava.core.DockerConfigFile"),
+            MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+            MemberCategory.INVOKE_DECLARED_METHODS);
   }
 }
