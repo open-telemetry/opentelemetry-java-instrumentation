@@ -20,6 +20,9 @@ dependencies {
   library("org.springframework:spring-context:4.0.0.RELEASE")
   library("org.springframework:spring-aop:4.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
+  testImplementation("org.apache.tomee:openejb-core:8.0.16")
+  testImplementation("org.apache.tomee:openejb-ejbd:8.0.16")
+  testImplementation("org.apache.tomee:openejb-client:8.0.16")
 
   // rmi remoting was removed in spring 6
   latestDepTestLibrary("org.springframework:spring-context:5.+") // documented limitation
