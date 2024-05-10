@@ -73,7 +73,8 @@ public enum ArmeriaHttpClientAttributesGetter
 
   @Override
   public String getNetworkProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
-    SessionProtocol protocol = ctx.sessionProtocol();
+    SessionProtocol protocol =
+        requestLog != null ? requestLog.sessionProtocol() : ctx.sessionProtocol();
     return protocol.isMultiplex() ? "2" : "1.1";
   }
 
