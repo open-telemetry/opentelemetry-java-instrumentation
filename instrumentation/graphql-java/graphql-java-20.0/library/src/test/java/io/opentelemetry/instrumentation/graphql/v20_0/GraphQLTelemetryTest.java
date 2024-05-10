@@ -49,6 +49,12 @@ class GraphQLTelemetryTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  private static final AttributeKey<String> GRAPHQL_FIELD_NAME =
+      AttributeKey.stringKey("graphql.field.name");
+
+  private static final AttributeKey<String> GRAPHQL_FIELD_PATH =
+      AttributeKey.stringKey("graphql.field.path");
+
   private final List<Map<String, String>> books = new ArrayList<>();
 
   private final List<Map<String, String>> authors = new ArrayList<>();
@@ -357,17 +363,15 @@ class GraphQLTelemetryTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("query findBookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById"),
-                            equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById")),
+                            equalTo(GRAPHQL_FIELD_NAME, "bookById"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById")),
                 span ->
                     span.hasName("author")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("bookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "author"),
-                            equalTo(
-                                AttributeKey.stringKey("graphql.field.path"),
-                                "/bookById/author"))));
+                            equalTo(GRAPHQL_FIELD_NAME, "author"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/author"))));
   }
 
   @Test
@@ -417,33 +421,29 @@ class GraphQLTelemetryTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("query findBookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById"),
-                            equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById")),
+                            equalTo(GRAPHQL_FIELD_NAME, "bookById"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById")),
                 span ->
                     span.hasName("name")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("bookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "name"),
-                            equalTo(
-                                AttributeKey.stringKey("graphql.field.path"), "/bookById/name")),
+                            equalTo(GRAPHQL_FIELD_NAME, "name"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/name")),
                 span ->
                     span.hasName("author")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("bookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "author"),
-                            equalTo(
-                                AttributeKey.stringKey("graphql.field.path"), "/bookById/author")),
+                            equalTo(GRAPHQL_FIELD_NAME, "author"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/author")),
                 span ->
                     span.hasName("name")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("author"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "name"),
-                            equalTo(
-                                AttributeKey.stringKey("graphql.field.path"),
-                                "/bookById/author/name"))));
+                            equalTo(GRAPHQL_FIELD_NAME, "name"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/author/name"))));
   }
 
   @Test
