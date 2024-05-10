@@ -23,6 +23,6 @@ public class OtelReactiveSpringStarterSmokeTestController {
   public Mono<String> webflux() {
     return playerRepository
         .findById(1)
-        .map(player -> "Player: " + player.name() + " Age: " + player.age());
+        .map(player -> "Player: " + player.getName() + " Age: " + player.getAge());
   }
 }

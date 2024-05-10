@@ -13,6 +13,7 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter-web")
   compileOnly("org.springframework.boot:spring-boot-starter-webflux")
   compileOnly("org.springframework.boot:spring-boot-starter-test")
+  compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc")
   api(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 }
 

@@ -11,10 +11,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import io.opentelemetry.spring.smoketest.AbstractSpringStarterSmokeTest;
-import io.opentelemetry.spring.smoketest.OtelReactiveSpringStarterSmokeTestApplication;
-import io.opentelemetry.spring.smoketest.OtelReactiveSpringStarterSmokeTestController;
-import io.opentelemetry.spring.smoketest.SpringSmokeOtelConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,13 +63,21 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                         .hasAttribute(HttpAttributes.HTTP_ROUTE, "/webflux"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasName("SELECT testdb.PLAYER")
+                        .satisfies(
+                            s ->
+                                assertThat(s.getName())
+                                    .isEqualToIgnoringCase("SELECT testdb.PLAYER"))
                         .hasAttribute(DbIncubatingAttributes.DB_NAME, "testdb")
-                        .hasAttribute(DbIncubatingAttributes.DB_SQL_TABLE, "PLAYER")
+                        .hasAttributesSatisfying(
+                            a ->
+                                assertThat(a.get(DbIncubatingAttributes.DB_SQL_TABLE))
+                                    .isEqualToIgnoringCase("PLAYER"))
                         .hasAttribute(DbIncubatingAttributes.DB_OPERATION, "SELECT")
-                        .hasAttribute(
-                            DbIncubatingAttributes.DB_STATEMENT,
-                            "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $? LIMIT ?")
+                        .hasAttributesSatisfying(
+                            a ->
+                                assertThat(a.get(DbIncubatingAttributes.DB_STATEMENT))
+                                    .isEqualToIgnoringCase(
+                                        "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $? LIMIT ?"))
                         .hasAttribute(DbIncubatingAttributes.DB_SYSTEM, "h2")));
   }
 }
