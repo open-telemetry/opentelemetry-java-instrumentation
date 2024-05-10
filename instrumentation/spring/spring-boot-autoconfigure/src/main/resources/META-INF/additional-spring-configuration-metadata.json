@@ -274,6 +274,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.common.db-statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization for R2DBC.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Kafka instrumentation.",
@@ -331,6 +337,12 @@
       "type": "java.lang.Boolean",
       "description": "Enable the Micrometer instrumentation.",
       "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.r2dbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the R2DBC (reactive JDBC) instrumentation. Also see <code>otel.instrumentation.common.db-statement-sanitizer.enabled</code>.",
+      "defaultValue": true
     },
     {
       "name": "otel.instrumentation.spring-web.enabled",

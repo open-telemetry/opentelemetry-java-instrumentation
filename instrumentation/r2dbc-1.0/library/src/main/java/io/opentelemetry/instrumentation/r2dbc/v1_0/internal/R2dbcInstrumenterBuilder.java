@@ -41,7 +41,6 @@ public final class R2dbcInstrumenterBuilder {
   }
 
   public Instrumenter<DbExecution, Void> build(boolean statementSanitizationEnabled) {
-
     return Instrumenter.<DbExecution, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,

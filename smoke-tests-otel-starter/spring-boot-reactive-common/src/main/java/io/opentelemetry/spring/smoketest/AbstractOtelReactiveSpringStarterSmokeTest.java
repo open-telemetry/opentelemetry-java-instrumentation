@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,8 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
 
     testing.waitAndAssertTraces(
         trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE testdb.player")),
+        trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.CLIENT)
@@ -57,6 +60,24 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                         .hasName("GET /webflux")
                         .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
                         .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/webflux")));
+                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/webflux"),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .satisfies(
+                            s ->
+                                assertThat(s.getName())
+                                    .isEqualToIgnoringCase("SELECT testdb.PLAYER"))
+                        .hasAttribute(DbIncubatingAttributes.DB_NAME, "testdb")
+                        .hasAttributesSatisfying(
+                            a ->
+                                assertThat(a.get(DbIncubatingAttributes.DB_SQL_TABLE))
+                                    .isEqualToIgnoringCase("PLAYER"))
+                        .hasAttribute(DbIncubatingAttributes.DB_OPERATION, "SELECT")
+                        .hasAttributesSatisfying(
+                            a ->
+                                assertThat(a.get(DbIncubatingAttributes.DB_STATEMENT))
+                                    .isEqualToIgnoringCase(
+                                        "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $? LIMIT ?"))
+                        .hasAttribute(DbIncubatingAttributes.DB_SYSTEM, "h2")));
   }
 }

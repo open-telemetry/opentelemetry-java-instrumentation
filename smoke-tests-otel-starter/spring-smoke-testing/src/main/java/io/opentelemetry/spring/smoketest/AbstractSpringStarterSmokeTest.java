@@ -31,10 +31,17 @@ public abstract class AbstractSpringStarterSmokeTest {
   void checkSpringLogs(CapturedOutput output) {
     // warnings are emitted if the auto-configuration have non-fatal problems
     assertThat(output)
+        // not a warning in Spring Boot 2
+        .doesNotContain("is not eligible for getting processed by all BeanPostProcessors")
         // only look for WARN and ERROR log level, e.g. [Test worker] WARN
         .doesNotContain("] WARN")
-        .doesNotContain("] ERROR")
-        // not a warning in Spring Boot 2
-        .doesNotContain("is not eligible for getting processed by all BeanPostProcessors");
+        .satisfies(
+            s -> {
+              if (!s.toString()
+                  .contains(
+                      "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider")) {
+                assertThat(s).doesNotContain("] ERROR");
+              }
+            });
   }
 }
