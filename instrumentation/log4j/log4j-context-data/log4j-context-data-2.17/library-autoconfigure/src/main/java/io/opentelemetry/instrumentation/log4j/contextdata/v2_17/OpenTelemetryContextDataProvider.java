@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17;
 
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
-
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
@@ -29,6 +25,15 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
   private static final boolean BAGGAGE_ENABLED =
       ConfigPropertiesUtil.getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+
+  private static final String LOGGING_KEYS_TRACE_ID =
+      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.keys.trace_id");
+
+  private static final String LOGGING_KEYS_SPAN_ID =
+      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.keys.span_id");
+
+  private static final String LOGGING_KEYS_TRACE_FLAGS =
+      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.keys.trace_flags");
 
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
@@ -77,9 +82,9 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     contextData.putAll(staticContextData);
 
     SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(TRACE_ID, spanContext.getTraceId());
-    contextData.put(SPAN_ID, spanContext.getSpanId());
-    contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+    contextData.put(LOGGING_KEYS_TRACE_ID, spanContext.getTraceId());
+    contextData.put(LOGGING_KEYS_SPAN_ID, spanContext.getSpanId());
+    contextData.put(LOGGING_KEYS_TRACE_FLAGS, spanContext.getTraceFlags().asHex());
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

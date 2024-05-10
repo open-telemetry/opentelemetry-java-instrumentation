@@ -136,12 +136,12 @@ public class AgentInstaller {
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default(
-                // default method graph compiler inspects the class hierarchy, we don't need it, so
-                // we use a simpler and faster strategy instead
-                new ByteBuddy()
-                    .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
-                    .with(VisibilityBridgeStrategy.Default.NEVER)
-                    .with(InstrumentedType.Factory.Default.FROZEN))
+            // default method graph compiler inspects the class hierarchy, we don't need it, so
+            // we use a simpler and faster strategy instead
+            new ByteBuddy()
+                .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
+                .with(VisibilityBridgeStrategy.Default.NEVER)
+                .with(InstrumentedType.Factory.Default.FROZEN))
             .with(AgentBuilder.TypeStrategy.Default.DECORATE)
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -206,6 +206,16 @@ public class AgentInstaller {
         System.setProperty(property, value);
       }
     }
+
+    System.setProperty(
+        "otel.instrumentation.common.logging.keys.trace_id",
+        config.getString("otel.instrumentation.common.logging.keys.trace_id"));
+    System.setProperty(
+        "otel.instrumentation.common.logging.keys.span_id",
+        config.getString("otel.instrumentation.common.logging.keys.span_id"));
+    System.setProperty(
+        "otel.instrumentation.common.logging.keys.trace_flags",
+        config.getString("otel.instrumentation.common.logging.keys.trace_flags"));
   }
 
   private static void setupUnsafe(Instrumentation inst) {

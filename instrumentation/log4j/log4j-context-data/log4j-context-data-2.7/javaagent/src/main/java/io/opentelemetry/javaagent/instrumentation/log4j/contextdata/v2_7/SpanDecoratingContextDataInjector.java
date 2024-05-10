@@ -5,15 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.contextdata.v2_7;
 
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
-
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
@@ -41,7 +38,7 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
   public StringMap injectContextData(List<Property> list, StringMap stringMap) {
     StringMap contextData = delegate.injectContextData(list, stringMap);
 
-    if (contextData.containsKey(TRACE_ID)) {
+    if (contextData.containsKey(CommonConfig.get().getLoggingKeysTraceId())) {
       // Assume already instrumented event if traceId is present.
       return staticContextData.isEmpty() ? contextData : newContextData(contextData);
     }
@@ -54,9 +51,11 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
     }
 
     StringMap newContextData = newContextData(contextData);
-    newContextData.putValue(TRACE_ID, currentContext.getTraceId());
-    newContextData.putValue(SPAN_ID, currentContext.getSpanId());
-    newContextData.putValue(TRACE_FLAGS, currentContext.getTraceFlags().asHex());
+    newContextData.putValue(
+        CommonConfig.get().getLoggingKeysTraceId(), currentContext.getTraceId());
+    newContextData.putValue(CommonConfig.get().getLoggingKeysSpanId(), currentContext.getSpanId());
+    newContextData.putValue(
+        CommonConfig.get().getLoggingKeysTraceFlags(), currentContext.getTraceFlags().asHex());
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

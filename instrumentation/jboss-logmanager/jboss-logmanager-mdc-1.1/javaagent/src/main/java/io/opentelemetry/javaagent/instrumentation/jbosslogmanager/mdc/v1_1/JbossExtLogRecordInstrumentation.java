@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,6 +15,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
@@ -57,7 +55,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) String value) {
-      if (TRACE_ID.equals(key) || SPAN_ID.equals(key) || TRACE_FLAGS.equals(key)) {
+      if (CommonConfig.get().getLoggingKeysTraceId().equals(key)
+          || CommonConfig.get().getLoggingKeysSpanId().equals(key)
+          || CommonConfig.get().getLoggingKeysTraceFlags().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -72,18 +72,14 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        switch (key) {
-          case TRACE_ID:
-            value = spanContext.getTraceId();
-            break;
-          case SPAN_ID:
-            value = spanContext.getSpanId();
-            break;
-          case TRACE_FLAGS:
-            value = spanContext.getTraceFlags().asHex();
-            break;
-          default:
-            // do nothing
+        if (CommonConfig.get().getLoggingKeysTraceId().equals(key)) {
+          value = spanContext.getTraceId();
+        }
+        if (CommonConfig.get().getLoggingKeysSpanId().equals(key)) {
+          value = spanContext.getSpanId();
+        }
+        if (CommonConfig.get().getLoggingKeysTraceFlags().equals(key)) {
+          value = spanContext.getTraceFlags().asHex();
         }
       }
     }
@@ -97,9 +93,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Return(readOnly = false) Map<String, String> value) {
 
-      if (value.containsKey(TRACE_ID)
-          && value.containsKey(SPAN_ID)
-          && value.containsKey(TRACE_FLAGS)) {
+      if (value.containsKey(CommonConfig.get().getLoggingKeysTraceId())
+          && value.containsKey(CommonConfig.get().getLoggingKeysSpanId())
+          && value.containsKey(CommonConfig.get().getLoggingKeysTraceFlags())) {
         return;
       }
 
@@ -113,16 +109,17 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!value.containsKey(TRACE_ID)) {
-        value.put(TRACE_ID, spanContext.getTraceId());
+      if (!value.containsKey(CommonConfig.get().getLoggingKeysTraceId())) {
+        value.put(CommonConfig.get().getLoggingKeysTraceId(), spanContext.getTraceId());
       }
 
-      if (!value.containsKey(SPAN_ID)) {
-        value.put(SPAN_ID, spanContext.getSpanId());
+      if (!value.containsKey(CommonConfig.get().getLoggingKeysSpanId())) {
+        value.put(CommonConfig.get().getLoggingKeysSpanId(), spanContext.getSpanId());
       }
 
-      if (!value.containsKey(TRACE_FLAGS)) {
-        value.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+      if (!value.containsKey(CommonConfig.get().getLoggingKeysTraceFlags())) {
+        value.put(CommonConfig.get().getLoggingKeysTraceFlags(),
+            spanContext.getTraceFlags().asHex());
       }
     }
   }
