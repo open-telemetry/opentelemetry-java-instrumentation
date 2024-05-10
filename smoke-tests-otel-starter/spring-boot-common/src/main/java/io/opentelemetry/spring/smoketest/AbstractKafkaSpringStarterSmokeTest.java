@@ -27,7 +27,6 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
 
   @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
 
-  @SuppressWarnings({"unchecked", "deprecation"})
   @Test
   void shouldInstrumentProducerAndConsumer() {
     testing.clearAllExportedData(); // ignore data from application startup
