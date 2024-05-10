@@ -20,7 +20,6 @@ dependencies {
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
 
-  testImplementation("org.springframework.boot:spring-boot-testcontainers")
   testImplementation("org.testcontainers:junit-jupiter")
   testImplementation("org.testcontainers:kafka")
   testImplementation("org.springframework.boot:spring-boot-starter-test")

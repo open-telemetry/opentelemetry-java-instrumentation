@@ -25,7 +25,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  @Autowired private KafkaTemplate<String, String> kafkaTemplate;
+  @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
 
   // In kafka 2 ops.send is deprecated. We are using it to avoid reflection because kafka 3 also has
   // ops.send, although with different return type.
