@@ -465,6 +465,9 @@ class GraphQLTelemetryTest {
                 + "  query findBookById {\n"
                 + "    bookById(id: \"book-1\") {\n"
                 + "      name\n"
+                + "      author {\n"
+                + "        name\n"
+                + "      }\n"
                 + "    }\n"
                 + "  }");
 
@@ -484,7 +487,7 @@ class GraphQLTelemetryTest {
                             equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
                                 GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
-                                "query findBookById { bookById(id: ?) { name } }"))));
+                                "query findBookById { bookById(id: ?) { name author { name } } }"))));
   }
 
   private static AttributeAssertion normalizedQueryEqualsTo(
