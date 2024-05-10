@@ -16,7 +16,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
 
   // based on apache shenyu 2.4.0 official example
@@ -29,6 +28,8 @@ dependencies {
 
   // the latest version of apache shenyu uses spring-boot 2.7
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.7.+")
+
+  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 }
 
 tasks.withType<Test>().configureEach {
