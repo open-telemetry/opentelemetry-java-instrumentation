@@ -108,10 +108,16 @@ class GraphQLTelemetryTest {
   }
 
   private DataFetcher<Map<String, String>> getBookByIdDataFetcher() {
-    return dataFetchingEnvironment -> {
-      String bookId = dataFetchingEnvironment.getArgument("id");
-      return books.stream().filter(book -> book.get("id").equals(bookId)).findFirst().orElse(null);
-    };
+    return dataFetchingEnvironment ->
+        testing.runWithSpan(
+            "fetchBookById",
+            () -> {
+              String bookId = dataFetchingEnvironment.getArgument("id");
+              return books.stream()
+                  .filter(book -> book.get("id").equals(bookId))
+                  .findFirst()
+                  .orElse(null);
+            });
   }
 
   private DataFetcher<Map<String, String>> getAuthorDataFetcher() {
@@ -159,7 +165,11 @@ class GraphQLTelemetryTest {
                             equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
                                 GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
-                                "query findBookById { bookById(id: ?) { name } }"))));
+                                "query findBookById { bookById(id: ?) { name } }")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("query findBookById"))));
   }
 
   @Test
@@ -194,7 +204,11 @@ class GraphQLTelemetryTest {
                             equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
                                 GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
-                                "{ bookById(id: ?) { name } }"))));
+                                "{ bookById(id: ?) { name } }")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("query"))));
   }
 
   @Test
@@ -366,6 +380,10 @@ class GraphQLTelemetryTest {
                             equalTo(GRAPHQL_FIELD_NAME, "bookById"),
                             equalTo(GRAPHQL_FIELD_PATH, "/bookById")),
                 span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById")),
+                span ->
                     span.hasName("author")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("bookById"))
@@ -423,6 +441,10 @@ class GraphQLTelemetryTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_FIELD_NAME, "bookById"),
                             equalTo(GRAPHQL_FIELD_PATH, "/bookById")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById")),
                 span ->
                     span.hasName("name")
                         .hasKind(SpanKind.INTERNAL)
@@ -487,7 +509,11 @@ class GraphQLTelemetryTest {
                             equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
                                 GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
-                                "query findBookById { bookById(id: ?) { name author { name } } }"))));
+                                "query findBookById { bookById(id: ?) { name author { name } } }")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("query findBookById"))));
   }
 
   private static AttributeAssertion normalizedQueryEqualsTo(

@@ -84,7 +84,7 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
 
       boolean isCompletionStage = false;
 
-      try (Scope scope = childContext.makeCurrent()) {
+      try (Scope ignored = childContext.makeCurrent()) {
         Object fieldValue = dataFetcher.get(environment);
 
         isCompletionStage = fieldValue instanceof CompletionStage;
