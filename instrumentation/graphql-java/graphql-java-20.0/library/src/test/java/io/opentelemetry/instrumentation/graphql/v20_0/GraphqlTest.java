@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.graphql.AbstractGraphqlTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -23,6 +24,12 @@ public class GraphqlTest extends AbstractGraphqlTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  private static final AttributeKey<String> GRAPHQL_FIELD_NAME =
+      AttributeKey.stringKey("graphql.field.name");
+
+  private static final AttributeKey<String> GRAPHQL_FIELD_PATH =
+      AttributeKey.stringKey("graphql.field.path");
 
   @Override
   protected InstrumentationExtension getTesting() {
@@ -61,6 +68,9 @@ public class GraphqlTest extends AbstractGraphqlTest {
                 + "  query findBookById {\n"
                 + "    bookById(id: \"book-1\") {\n"
                 + "      name\n"
+                + "      author {\n"
+                + "        name\n"
+                + "      }\n"
                 + "    }\n"
                 + "  }");
 
@@ -80,15 +90,25 @@ public class GraphqlTest extends AbstractGraphqlTest {
                             equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
                                 GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
-                                "query findBookById { bookById(id: ?) { name } }")),
+                                "query findBookById { bookById(id: ?) { name author { name } } }")),
                 span ->
                     span.hasName("bookById")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
+                        .hasParent(spanWithName("query findBookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById"),
-                            equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById")),
-                span -> span.hasName("fetchBookById").hasParent(trace.getSpan(1))));
+                            equalTo(GRAPHQL_FIELD_NAME, "bookById"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById")),
+                span ->
+                    span.hasName("author")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById"))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GRAPHQL_FIELD_NAME, "author"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/author"))));
   }
 
   @Test
@@ -110,6 +130,9 @@ public class GraphqlTest extends AbstractGraphqlTest {
                 + "  query findBookById {\n"
                 + "    bookById(id: \"book-1\") {\n"
                 + "      name\n"
+                + "      author {\n"
+                + "        name\n"
+                + "      }\n"
                 + "    }\n"
                 + "  }");
 
@@ -129,23 +152,39 @@ public class GraphqlTest extends AbstractGraphqlTest {
                             equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
                                 GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
-                                "query findBookById { bookById(id: ?) { name } }")),
+                                "query findBookById { bookById(id: ?) { name author { name } } }")),
                 span ->
                     span.hasName("bookById")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
+                        .hasParent(spanWithName("query findBookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById"),
-                            equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById")),
-                span -> span.hasName("fetchBookById").hasParent(trace.getSpan(1)),
+                            equalTo(GRAPHQL_FIELD_NAME, "bookById"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById")),
                 span ->
                     span.hasName("name")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))
+                        .hasParent(spanWithName("bookById"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.stringKey("graphql.field.name"), "name"),
-                            equalTo(
-                                AttributeKey.stringKey("graphql.field.path"), "/bookById/name"))));
+                            equalTo(GRAPHQL_FIELD_NAME, "name"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/name")),
+                span ->
+                    span.hasName("author")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById"))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GRAPHQL_FIELD_NAME, "author"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/author")),
+                span ->
+                    span.hasName("name")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("author"))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GRAPHQL_FIELD_NAME, "name"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById/author/name"))));
   }
 
   @Test
@@ -167,6 +206,9 @@ public class GraphqlTest extends AbstractGraphqlTest {
                 + "  query findBookById {\n"
                 + "    bookById(id: \"book-1\") {\n"
                 + "      name\n"
+                + "      author {\n"
+                + "        name\n"
+                + "      }\n"
                 + "    }\n"
                 + "  }");
 
@@ -186,7 +228,17 @@ public class GraphqlTest extends AbstractGraphqlTest {
                             equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
                             normalizedQueryEqualsTo(
                                 GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
-                                "query findBookById { bookById(id: ?) { name } }")),
-                span -> span.hasName("fetchBookById").hasParent(trace.getSpan(0))));
+                                "query findBookById { bookById(id: ?) { name author { name } } }")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("query findBookById"))));
+  }
+
+  private static SpanData spanWithName(String name) {
+    return testing.spans().stream()
+        .filter(span -> span.getName().equals(name))
+        .findFirst()
+        .orElse(null);
   }
 }
