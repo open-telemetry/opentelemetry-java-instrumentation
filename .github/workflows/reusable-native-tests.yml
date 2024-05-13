@@ -24,7 +24,7 @@ jobs:
           echo "JAVA_HOME: $JAVA_HOME"
           java --version
           native-image --version
-          # Testcontainers does not work with native-image, 
+          # Testcontainers does not work in some cases with GraalVM native images, 
           # therefore we're starting a Kafka container manually for the tests
           docker compose -f .github/graal-native-docker-compose.yaml up -d
           # don't wait for startup - gradle compile takes long enough
