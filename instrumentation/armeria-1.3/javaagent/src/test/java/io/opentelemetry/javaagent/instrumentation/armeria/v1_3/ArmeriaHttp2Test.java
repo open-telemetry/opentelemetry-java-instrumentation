@@ -43,7 +43,7 @@ class ArmeriaHttp2Test {
       new ServerExtension() {
         @Override
         protected void configure(ServerBuilder sb) {
-          sb.service("/", (ctx, req) -> createWebClient(server1).execute(req));
+          sb.service("/", (ctx, req) -> createWebClient(server1).get("/"));
         }
       };
 
