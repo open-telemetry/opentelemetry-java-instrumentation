@@ -25,8 +25,7 @@ final class ApplicationLongGaugeBuilder131 extends ApplicationLongGaugeBuilder
 
   @Override
   public LongGauge build() {
-    io.opentelemetry.api.incubator.metrics.LongGauge agentLongGauge =
-        ((io.opentelemetry.api.incubator.metrics.ExtendedLongGaugeBuilder) agentBuilder).build();
+    io.opentelemetry.api.metrics.LongGauge agentLongGauge = agentBuilder.build();
     return new LongGauge() {
       @Override
       public void set(long value) {
