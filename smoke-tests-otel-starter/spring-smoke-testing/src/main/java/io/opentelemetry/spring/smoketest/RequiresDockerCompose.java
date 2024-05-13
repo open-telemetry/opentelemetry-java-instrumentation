@@ -18,5 +18,5 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 @EnabledIfEnvironmentVariable(
     named = "DOCKER_COMPOSE_TEST",
     matches = "true",
-    disabledReason = "Docker compose not started (see reusable-native-tests.yml on how to start).")
+    disabledReason = "Testcontainers does not work in some cases with GraalVM native images. A container has to be started manually. So, an environment variable is used to disable the test by default.")
 public @interface RequiresDockerCompose {}
