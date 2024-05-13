@@ -27,7 +27,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     // handled by OpenTelemetryApiIncubatorInstrumentationModule
     return not(
         hasClassesNamed(
-            "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder"));
+            "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder"));
   }
 
   @Override
