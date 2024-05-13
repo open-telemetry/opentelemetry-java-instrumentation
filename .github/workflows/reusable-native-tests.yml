@@ -19,6 +19,8 @@ jobs:
           java-version: "21"
           components: "native-image"
       - name: Running test
+        env:
+          DOCKER_COMPOSE_TEST: "true"
         run: |
           echo "GRAALVM_HOME: $GRAALVM_HOME"
           echo "JAVA_HOME: $JAVA_HOME"

@@ -16,9 +16,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @EnabledIfEnvironmentVariable(
-    named = "CI", // automatically set by GitHub actions
+    named = "DOCKER_COMPOSE_TEST",
     matches = "true",
-    disabledReason =
-        "Not currently executing within GitHub actions where the required external "
-            + "services (e.g. mongodb) are started using docker.")
-public @interface EnabledInGithubActions {}
+    disabledReason = "Docker compose not started (see reusable-native-tests.yml on how to start).")
+public @interface RequiresDockerCompose {}

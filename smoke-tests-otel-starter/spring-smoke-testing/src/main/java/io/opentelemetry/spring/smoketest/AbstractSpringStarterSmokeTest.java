@@ -32,6 +32,7 @@ public abstract class AbstractSpringStarterSmokeTest {
   void setUpTesting() {
     if (openTelemetry != null) {
       // @Autowired doesn't work in all tests
+      // those tests have to manage the testing instance themselves
       testing = new SpringSmokeTestRunner(openTelemetry);
     }
   }

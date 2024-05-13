@@ -28,5 +28,5 @@ import org.springframework.boot.test.context.SpringBootTest;
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnabledInNativeImage // see JvmMongodbSpringStarterSmokeTest for the JVM test
-@EnabledInGithubActions
+@RequiresDockerCompose
 public class GraalVmNativeKafkaSpringStarterSmokeTest extends AbstractKafkaSpringStarterSmokeTest {}
