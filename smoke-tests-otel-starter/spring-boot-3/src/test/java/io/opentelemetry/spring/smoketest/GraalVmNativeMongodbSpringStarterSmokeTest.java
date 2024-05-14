@@ -21,10 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * command.
  */
 @SpringBootTest(
-    classes = {
-      OtelSpringStarterSmokeTestApplication.class,
-      SpringSmokeOtelConfiguration.class
-    },
+    classes = {OtelSpringStarterSmokeTestApplication.class, SpringSmokeOtelConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnabledInNativeImage // see JvmMongodbSpringStarterSmokeTest for the JVM test
 @EnabledInGithubActions

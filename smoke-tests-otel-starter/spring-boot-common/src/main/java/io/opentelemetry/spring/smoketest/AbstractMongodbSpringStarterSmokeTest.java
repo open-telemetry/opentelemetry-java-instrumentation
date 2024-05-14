@@ -5,38 +5,34 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 
 abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  @Autowired protected TestRestTemplate testRestTemplate;
+  @Autowired protected MongoClient mongoClient;
 
   @Test
   void mongodb() {
     testing.clearAllExportedData(); // ignore data from application startup
 
-    String url = OtelSpringStarterSmokeTestController.MONGODB;
-    testRestTemplate.getForObject(url, String.class);
+    testing.runWithSpan(
+        "server",
+        () -> {
+          mongoClient.listDatabaseNames().into(new ArrayList<>());
+        });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("server"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
-                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, url),
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasName("find test.customer")
+                        .hasName("listDatabases admin")
                         .hasAttribute(
                             DbIncubatingAttributes.DB_SYSTEM,
                             DbIncubatingAttributes.DbSystemValues.MONGODB)));

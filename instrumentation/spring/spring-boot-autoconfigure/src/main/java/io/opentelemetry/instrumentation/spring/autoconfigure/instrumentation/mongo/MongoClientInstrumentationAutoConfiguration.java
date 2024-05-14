@@ -10,7 +10,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,12 +27,13 @@ public class MongoClientInstrumentationAutoConfiguration {
 
   @Bean
   public MongoClientSettingsBuilderCustomizer customizer(
-      OpenTelemetry openTelemetry,
-      ConfigProperties config) {
+      OpenTelemetry openTelemetry, ConfigProperties config) {
     return builder ->
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
-                .setStatementSanitizationEnabled(config.getBoolean("otel.instrumentation.mongo.statement-sanitizer.enabled", true))
+                .setStatementSanitizationEnabled(
+                    config.getBoolean(
+                        "otel.instrumentation.mongo.statement-sanitizer.enabled", true))
                 .build()
                 .newCommandListener());
   }
