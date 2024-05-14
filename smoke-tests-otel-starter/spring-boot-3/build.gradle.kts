@@ -15,11 +15,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
   runtimeOnly("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
-  implementation(project(":instrumentation:jdbc:library"))
-  implementation("org.springframework.kafka:spring-kafka") // not tested here, just make sure there are no warnings when it's included
+  implementation("org.springframework.kafka:spring-kafka")
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
