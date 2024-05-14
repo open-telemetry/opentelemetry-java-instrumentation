@@ -276,7 +276,13 @@
     {
       "name": "otel.instrumentation.common.db-statement-sanitizer.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables the DB statement sanitization for R2DBC.",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.jdbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the JDBC instrumentation. Also see <code>otel.instrumentation.common.db-statement-sanitizer.enabled</code>.",
       "defaultValue": true
     },
     {

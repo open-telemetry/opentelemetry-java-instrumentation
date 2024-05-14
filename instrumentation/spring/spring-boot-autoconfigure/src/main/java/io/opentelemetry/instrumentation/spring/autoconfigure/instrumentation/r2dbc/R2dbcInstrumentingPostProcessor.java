@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.r2
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.R2dbcTelemetry;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import org.springframework.aop.scope.ScopedProxyUtils;
@@ -17,12 +18,13 @@ import org.springframework.boot.r2dbc.OptionsCapableConnectionFactory;
 class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
-  private final boolean statementSanitizationEnabled;
+  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
 
   R2dbcInstrumentingPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider, boolean statementSanitizationEnabled) {
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+    this.configPropertiesProvider = configPropertiesProvider;
   }
 
   @Override
@@ -30,7 +32,10 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
     if (bean instanceof ConnectionFactory && !ScopedProxyUtils.isScopedTarget(beanName)) {
       ConnectionFactory connectionFactory = (ConnectionFactory) bean;
       return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
-          .setStatementSanitizationEnabled(statementSanitizationEnabled)
+          .setStatementSanitizationEnabled(
+              configPropertiesProvider
+                  .getObject()
+                  .getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }
