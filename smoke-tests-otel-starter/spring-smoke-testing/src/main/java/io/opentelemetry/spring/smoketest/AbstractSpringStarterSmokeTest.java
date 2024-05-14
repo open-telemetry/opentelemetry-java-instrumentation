@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +23,19 @@ public abstract class AbstractSpringStarterSmokeTest {
 
   protected SpringSmokeTestRunner testing;
 
+  @BeforeAll
+  static void beforeAll() {
+    SpringSmokeTestRunner.resetExporters();
+  }
+
   @BeforeEach
   void setUpTesting() {
-    testing = new SpringSmokeTestRunner(openTelemetry);
+    if (openTelemetry != null) {
+      // @Autowired doesn't work in all tests, e.g. AbstractJvmKafkaSpringStarterSmokeTest
+      // those tests have to manage the testing instance,
+      // themselves because they don't use @SpringBootTest
+      testing = new SpringSmokeTestRunner(openTelemetry);
+    }
   }
 
   @AfterEach

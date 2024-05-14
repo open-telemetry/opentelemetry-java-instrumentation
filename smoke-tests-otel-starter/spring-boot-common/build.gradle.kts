@@ -14,6 +14,9 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter-test")
   compileOnly("org.springframework.boot:spring-boot-starter-data-jdbc")
   compileOnly("org.apache.commons:commons-dbcp2")
+  compileOnly("org.springframework.kafka:spring-kafka")
+  compileOnly("org.testcontainers:junit-jupiter")
+  compileOnly("org.testcontainers:kafka")
 
   api(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 

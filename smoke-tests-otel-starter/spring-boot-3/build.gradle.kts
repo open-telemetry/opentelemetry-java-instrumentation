@@ -15,10 +15,13 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
   runtimeOnly("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
-  implementation("org.springframework.kafka:spring-kafka") // not tested here, just make sure there are no warnings when it's included
+  implementation("org.springframework.kafka:spring-kafka")
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
+
+  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("org.testcontainers:kafka")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
