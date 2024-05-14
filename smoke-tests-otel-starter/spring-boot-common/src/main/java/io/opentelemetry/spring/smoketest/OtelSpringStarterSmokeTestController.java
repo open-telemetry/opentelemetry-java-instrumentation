@@ -61,6 +61,6 @@ public class OtelSpringStarterSmokeTestController {
   @GetMapping(MONGODB)
   public String mongodb() {
     Customer alice = customerRepository.findByFirstName("Alice");
-    return alice != null ? alice.lastName() : "Not found";
+    return alice != null ? alice.getLastName() : "Not found";
   }
 }

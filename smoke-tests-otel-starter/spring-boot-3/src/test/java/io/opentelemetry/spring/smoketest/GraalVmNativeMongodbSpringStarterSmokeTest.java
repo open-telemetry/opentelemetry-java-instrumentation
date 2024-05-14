@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.smoketest;
+package io.opentelemetry.spring.smoketest;
 
-import io.opentelemetry.spring.smoketest.EnabledInGithubActions;
 import org.junit.jupiter.api.condition.EnabledInNativeImage;
+import org.springframework.boot.test.context.SpringBootTest;
 
 /**
  * GraalVM native image doesn't support Testcontainers in our case, so the docker container is
@@ -17,8 +17,15 @@ import org.junit.jupiter.api.condition.EnabledInNativeImage;
  * it's not yet clear why it doesn't work in our case.
  *
  * <p>In CI, this is done in reusable-native-tests.yml. If you want to run the tests locally, you
- * need to start the container manually: docker run -d -p 27017:27017 --name mongo --rm mongo:latest
+ * need to start the container manually: see .github/workflows/reusable-native-tests.yml for the
+ * command.
  */
+@SpringBootTest(
+    classes = {
+      OtelSpringStarterSmokeTestApplication.class,
+      SpringSmokeOtelConfiguration.class
+    },
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnabledInNativeImage // see JvmMongodbSpringStarterSmokeTest for the JVM test
 @EnabledInGithubActions
 public class GraalVmNativeMongodbSpringStarterSmokeTest
