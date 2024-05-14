@@ -138,7 +138,6 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnBean(OpenTelemetry.class)
   @ConditionalOnMissingBean({ConfigProperties.class})
   public static class FallbackConfigProperties {
-
     @Bean("configProperties")
     public ConfigProperties configProperties() {
       return DefaultConfigProperties.create(Collections.emptyMap());
