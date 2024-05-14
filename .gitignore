@@ -11,6 +11,7 @@ target
 **/build/
 **/generated/
 examples/**/build/
+build-cache/
 
 # Eclipse #
 ###########
