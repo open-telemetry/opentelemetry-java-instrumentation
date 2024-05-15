@@ -36,6 +36,7 @@ public class CriteriaTest extends AbstractHibernateTest {
         Arguments.of(named("getSingleResultOrNull", interactions.get(2))));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testCriteriaQuery(Consumer<Query<Value>> interaction) {
@@ -78,6 +79,7 @@ public class CriteriaTest extends AbstractHibernateTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 stringAssert -> stringAssert.startsWith("select")),

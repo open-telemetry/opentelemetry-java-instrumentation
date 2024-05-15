@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
@@ -123,6 +124,7 @@ public abstract class AbstractR2dbcStatementTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testQueries(Parameter parameter) {
@@ -164,6 +166,9 @@ public abstract class AbstractR2dbcStatementTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_CONNECTION_STRING,
+                                    parameter.system + "://localhost:" + port),
                                 equalTo(DB_SYSTEM, parameter.system),
                                 equalTo(DB_NAME, DB),
                                 equalTo(DB_USER, USER_DB),

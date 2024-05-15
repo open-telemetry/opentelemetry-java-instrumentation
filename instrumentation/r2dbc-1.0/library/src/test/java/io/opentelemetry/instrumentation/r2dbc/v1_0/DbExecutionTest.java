@@ -44,6 +44,7 @@ class DbExecutionTest {
     assertEquals("db", dbExecution.getName());
     assertEquals("localhost", dbExecution.getHost());
     assertEquals(3306, dbExecution.getPort());
+    assertEquals("mariadb://localhost:3306", dbExecution.getConnectionString());
     assertEquals("SELECT * from person where last_name = 'tom'", dbExecution.getRawStatement());
   }
 }

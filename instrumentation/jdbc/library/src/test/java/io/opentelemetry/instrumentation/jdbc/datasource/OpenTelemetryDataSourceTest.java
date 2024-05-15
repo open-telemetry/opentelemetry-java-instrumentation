@@ -33,6 +33,7 @@ class OpenTelemetryDataSourceTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
@@ -55,7 +56,10 @@ class OpenTelemetryDataSourceTest {
                                 TestDataSource.class.getName()),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "postgresql"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "dbname"))));
+                            equalTo(DbIncubatingAttributes.DB_NAME, "dbname"),
+                            equalTo(
+                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                "postgresql://127.0.0.1:5432"))));
 
     assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();
@@ -97,6 +101,7 @@ class OpenTelemetryDataSourceTest {
   private static void assertDbInfo(DbInfo dbInfo) {
     assertThat(dbInfo.getSystem()).isEqualTo("postgresql");
     assertNull(dbInfo.getSubtype());
+    assertThat(dbInfo.getShortUrl()).isEqualTo("postgresql://127.0.0.1:5432");
     assertNull(dbInfo.getUser());
     assertNull(dbInfo.getName());
     assertThat(dbInfo.getDb()).isEqualTo("dbname");

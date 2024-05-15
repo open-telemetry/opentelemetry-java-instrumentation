@@ -41,6 +41,10 @@ public final class VertxRedisClientRequest {
     return select != null ? select.longValue() : null;
   }
 
+  public String getConnectionString() {
+    return null;
+  }
+
   public String getHost() {
     return redisUri.socketAddress().host();
   }
