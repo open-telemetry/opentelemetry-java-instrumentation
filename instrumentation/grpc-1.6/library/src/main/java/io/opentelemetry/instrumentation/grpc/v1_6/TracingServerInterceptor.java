@@ -9,6 +9,7 @@ import io.grpc.Contexts;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
+import io.grpc.InternalMetadata;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
@@ -35,6 +36,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
   private static final AtomicLongFieldUpdater<TracingServerCall> MESSAGE_ID_UPDATER =
       AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "messageId");
 
+  private static final Metadata.Key<String> AUTHORITY_KEY =
+      InternalMetadata.keyOf(":authority", Metadata.ASCII_STRING_MARSHALLER);
+
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
@@ -49,12 +53,17 @@ final class TracingServerInterceptor implements ServerInterceptor {
       ServerCall<REQUEST, RESPONSE> call,
       Metadata headers,
       ServerCallHandler<REQUEST, RESPONSE> next) {
+    String authority = call.getAuthority();
+    if (authority == null && headers != null) {
+      // armeria grpc client exposes authority in a header
+      authority = headers.get(AUTHORITY_KEY);
+    }
     GrpcRequest request =
         new GrpcRequest(
             call.getMethodDescriptor(),
             headers,
             call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR),
-            call.getAuthority());
+            authority);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return next.startCall(call, headers);
