@@ -753,7 +753,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             assertThat(attrs)
                 .hasEntrySatisfying(
                     NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                    entry -> assertThat(entry).isIn("1.1", "2.0"));
+                    entry -> assertThat(entry).isIn("1.1", "2"));
           }
 
           assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost");
