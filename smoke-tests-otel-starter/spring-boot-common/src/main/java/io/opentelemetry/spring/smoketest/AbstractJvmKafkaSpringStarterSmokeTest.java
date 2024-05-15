@@ -55,6 +55,7 @@ public class AbstractJvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringS
                     KafkaInstrumentationAutoConfiguration.class,
                     KafkaConfig.class))
             .withPropertyValues(
+                "otel.instrumentation.kafka.experimental-span-attributes=true",
                 "spring.kafka.bootstrap-servers=" + kafka.getBootstrapServers(),
                 "spring.kafka.consumer.auto-offset-reset=earliest",
                 "spring.kafka.consumer.linger-ms=10",

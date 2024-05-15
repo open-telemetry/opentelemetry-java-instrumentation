@@ -1,5 +1,7 @@
 otel:
   instrumentation:
+    kafka:
+      experimental-span-attributes: true
     logback-appender:
       experimental:
         capture-code-attributes: true

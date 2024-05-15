@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.ka
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -14,10 +15,13 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
+  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
 
   ConcurrentKafkaListenerContainerFactoryPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
+    this.configPropertiesProvider = configPropertiesProvider;
   }
 
   @Override
@@ -29,7 +33,12 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
     ConcurrentKafkaListenerContainerFactory<?, ?> listenerContainerFactory =
         (ConcurrentKafkaListenerContainerFactory<?, ?>) bean;
     SpringKafkaTelemetry springKafkaTelemetry =
-        SpringKafkaTelemetry.create(openTelemetryProvider.getObject());
+        SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
+            .setCaptureExperimentalSpanAttributes(
+                configPropertiesProvider
+                    .getObject()
+                    .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+            .build();
     listenerContainerFactory.setBatchInterceptor(springKafkaTelemetry.createBatchInterceptor());
     listenerContainerFactory.setRecordInterceptor(springKafkaTelemetry.createRecordInterceptor());
 
