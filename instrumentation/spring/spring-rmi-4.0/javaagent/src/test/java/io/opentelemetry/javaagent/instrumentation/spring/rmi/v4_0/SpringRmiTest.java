@@ -26,9 +26,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import javax.ejb.EJBException;
 import javax.ejb.embeddable.EJBContainer;
-import javax.naming.spi.NamingManager;
-import org.apache.openejb.OpenEjbContainer;
-import org.apache.openejb.client.RemoteInitialContextFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -92,10 +89,7 @@ class SpringRmiTest {
     Map<String, Object> map = new HashMap<>();
     map.put(EJBContainer.APP_NAME, "test");
     map.put(EJBContainer.MODULES, new java.io.File("build/classes/java/test"));
-    map.put(OpenEjbContainer.OPENEJB_EMBEDDED_REMOTABLE, "true");
     ejbContainer = EJBContainer.createEJBContainer(map);
-    // needed to ensure that remote ejb call isn't optimized to a local call
-    NamingManager.setInitialContextFactoryBuilder(environment -> new RemoteInitialContextFactory());
 
     Map<String, Object> props = new HashMap<>();
     props.put("spring.jmx.enabled", false);
