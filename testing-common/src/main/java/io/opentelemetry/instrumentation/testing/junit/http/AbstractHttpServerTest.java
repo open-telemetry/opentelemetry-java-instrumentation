@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -123,7 +124,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
-    return AggregatedHttpRequest.of(HttpMethod.valueOf(method), resolveAddress(uri));
+    return AggregatedHttpRequest.of(
+        HttpMethod.valueOf(method), resolveAddress(uri, getProtocolPrefix()));
+  }
+
+  private String getProtocolPrefix() {
+    return options.useHttp2 ? "h2c://" : "h1c://";
   }
 
   @ParameterizedTest
@@ -316,7 +322,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     QueryParams formBody = QueryParams.builder().add("test-parameter", "test value õäöü").build();
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(
-            RequestHeaders.builder(HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS))
+            RequestHeaders.builder(
+                    HttpMethod.POST, resolveAddress(CAPTURE_PARAMETERS, getProtocolPrefix()))
                 .contentType(MediaType.FORM_DATA)
                 .build(),
             HttpData.ofUtf8(formBody.toQueryString()));
@@ -393,7 +400,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       HttpRequestBuilder request =
           HttpRequest.builder()
               // Force HTTP/1 via h1c so upgrade requests don't show up as traces
-              .get(endpoint.resolvePath(address).toString().replace("http://", "h1c://"))
+              .get(endpoint.resolvePath(address).toString().replace("http://", getProtocolPrefix()))
               .queryParam(ServerEndpoint.ID_PARAMETER_NAME, index);
 
       testing.runWithSpan(
@@ -415,6 +422,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @Test
   void httpPipelining() throws InterruptedException {
     assumeTrue(options.testHttpPipelining);
+    // test uses http 1.1
+    assumeFalse(options.useHttp2);
 
     int count = 10;
     CountDownLatch countDownLatch = new CountDownLatch(count);
@@ -480,6 +489,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @Test
   void requestWithNonStandardHttpMethod() throws InterruptedException {
     assumeTrue(options.testNonStandardHttpMethod);
+    // test uses http 1.1
+    assumeFalse(options.useHttp2);
 
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
     try {
@@ -751,9 +762,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           if (attrs.get(NetworkAttributes.NETWORK_PROTOCOL_VERSION) != null) {
             assertThat(attrs)
-                .hasEntrySatisfying(
-                    NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                    entry -> assertThat(entry).isIn("1.1", "2"));
+                .containsEntry(
+                    NetworkAttributes.NETWORK_PROTOCOL_VERSION, options.useHttp2 ? "2" : "1.1");
           }
 
           assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost");

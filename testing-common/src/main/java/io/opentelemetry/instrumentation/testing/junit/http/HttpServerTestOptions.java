@@ -65,6 +65,7 @@ public final class HttpServerTestOptions {
   boolean testHttpPipelining = true;
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
+  boolean useHttp2 = false;
 
   HttpServerTestOptions() {}
 
@@ -225,6 +226,17 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setVerifyServerSpanEndTime(boolean verifyServerSpanEndTime) {
     this.verifyServerSpanEndTime = verifyServerSpanEndTime;
     return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setUseHttp2(boolean useHttp2) {
+    this.useHttp2 = useHttp2;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions useHttp2() {
+    return setUseHttp2(true);
   }
 
   @FunctionalInterface
