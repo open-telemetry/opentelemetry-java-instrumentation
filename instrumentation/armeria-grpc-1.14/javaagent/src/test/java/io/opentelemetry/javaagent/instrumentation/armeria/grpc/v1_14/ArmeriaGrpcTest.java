@@ -54,7 +54,7 @@ class ArmeriaGrpcTest {
       };
 
   @Test
-  public void grpcInstrumentation() {
+  void grpcInstrumentation() {
     GreeterGrpc.GreeterBlockingStub client =
         GrpcClients.builder(server.httpUri()).build(GreeterGrpc.GreeterBlockingStub.class);
 
