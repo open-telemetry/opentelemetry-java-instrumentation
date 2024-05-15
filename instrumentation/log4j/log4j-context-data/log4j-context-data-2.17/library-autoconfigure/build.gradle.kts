@@ -16,9 +16,6 @@ tasks {
     filter {
       excludeTestsMatching("LibraryLog4j2BaggageTest")
     }
-    systemProperty("otel.instrumentation.common.logging.keys.trace_id", "trace_id")
-    systemProperty("otel.instrumentation.common.logging.keys.span_id", "span_id")
-    systemProperty("otel.instrumentation.common.logging.keys.trace_flags", "trace_flags")
   }
 
   val testAddBaggage by registering(Test::class) {
@@ -26,9 +23,6 @@ tasks {
       includeTestsMatching("LibraryLog4j2BaggageTest")
     }
     jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
-    systemProperty("otel.instrumentation.common.logging.keys.trace_id", "trace_id")
-    systemProperty("otel.instrumentation.common.logging.keys.span_id", "span_id")
-    systemProperty("otel.instrumentation.common.logging.keys.trace_flags", "trace_flags")
   }
 
   named("check") {

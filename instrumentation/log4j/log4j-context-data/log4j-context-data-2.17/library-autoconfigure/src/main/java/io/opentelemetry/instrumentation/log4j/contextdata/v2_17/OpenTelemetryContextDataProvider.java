@@ -10,6 +10,7 @@ import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.Collections;
@@ -82,9 +83,17 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     contextData.putAll(staticContextData);
 
     SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(LOGGING_KEYS_TRACE_ID, spanContext.getTraceId());
-    contextData.put(LOGGING_KEYS_SPAN_ID, spanContext.getSpanId());
-    contextData.put(LOGGING_KEYS_TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+    contextData.put(
+        LOGGING_KEYS_TRACE_ID == null ? LoggingContextConstants.TRACE_ID : LOGGING_KEYS_TRACE_ID,
+        spanContext.getTraceId());
+    contextData.put(
+        LOGGING_KEYS_SPAN_ID == null ? LoggingContextConstants.SPAN_ID : LOGGING_KEYS_SPAN_ID,
+        spanContext.getSpanId());
+    contextData.put(
+        LOGGING_KEYS_TRACE_FLAGS == null
+            ? LoggingContextConstants.TRACE_FLAGS
+            : LOGGING_KEYS_TRACE_FLAGS,
+        spanContext.getTraceFlags().asHex());
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

@@ -206,16 +206,6 @@ public class AgentInstaller {
         System.setProperty(property, value);
       }
     }
-
-    System.setProperty(
-        "otel.instrumentation.common.logging.keys.trace_id",
-        config.getString("otel.instrumentation.common.logging.keys.trace_id", "trace_id"));
-    System.setProperty(
-        "otel.instrumentation.common.logging.keys.span_id",
-        config.getString("otel.instrumentation.common.logging.keys.span_id", "span_id"));
-    System.setProperty(
-        "otel.instrumentation.common.logging.keys.trace_flags",
-        config.getString("otel.instrumentation.common.logging.keys.trace_flags", "trace_flags"));
   }
 
   private static void setupUnsafe(Instrumentation inst) {

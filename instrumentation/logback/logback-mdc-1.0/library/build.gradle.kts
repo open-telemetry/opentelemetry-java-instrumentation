@@ -34,15 +34,6 @@ testing {
         implementation(project(":instrumentation:logback:logback-mdc-1.0:testing"))
         implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
       }
-      targets {
-        all {
-          testTask.configure {
-            systemProperty("otel.instrumentation.common.logging.keys.trace_id", "trace_id")
-            systemProperty("otel.instrumentation.common.logging.keys.span_id", "span_id")
-            systemProperty("otel.instrumentation.common.logging.keys.trace_flags", "trace_flags")
-          }
-        }
-      }
     }
   }
 }
