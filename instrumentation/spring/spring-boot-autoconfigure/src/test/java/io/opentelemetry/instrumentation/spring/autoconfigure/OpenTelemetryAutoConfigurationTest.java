@@ -49,7 +49,7 @@ class OpenTelemetryAutoConfigurationTest {
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
-                    .hasBean("configProperties"));
+                    .hasBean("otelProperties"));
   }
 
   @Test
@@ -58,7 +58,7 @@ class OpenTelemetryAutoConfigurationTest {
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(context -> assertThat(context).hasBean("openTelemetry").hasBean("configProperties"));
+        .run(context -> assertThat(context).hasBean("openTelemetry").hasBean("otelProperties"));
   }
 
   @Test

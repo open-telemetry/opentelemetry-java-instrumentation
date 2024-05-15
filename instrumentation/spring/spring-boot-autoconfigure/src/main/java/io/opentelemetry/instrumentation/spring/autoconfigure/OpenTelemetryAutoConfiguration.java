@@ -111,8 +111,8 @@ public class OpenTelemetryAutoConfiguration {
       return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
     }
 
-    @Bean("configProperties")
-    public ConfigProperties configProperties(
+    @Bean
+    public ConfigProperties otelProperties(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
       return AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
     }
@@ -128,8 +128,8 @@ public class OpenTelemetryAutoConfiguration {
       return OpenTelemetry.noop();
     }
 
-    @Bean("configProperties")
-    public ConfigProperties configProperties() {
+    @Bean
+    public ConfigProperties otelProperties() {
       return DefaultConfigProperties.createFromMap(Collections.emptyMap());
     }
   }
@@ -138,8 +138,8 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnBean(OpenTelemetry.class)
   @ConditionalOnMissingBean({ConfigProperties.class})
   public static class FallbackConfigProperties {
-    @Bean("configProperties")
-    public ConfigProperties configProperties() {
+    @Bean
+    public ConfigProperties otelProperties() {
       return DefaultConfigProperties.create(Collections.emptyMap());
     }
   }
