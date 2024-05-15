@@ -197,7 +197,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
             "$ServerAttributes.SERVER_ADDRESS" String
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "s3ToSqsTestQueue"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
@@ -533,7 +533,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
             "$ServerAttributes.SERVER_ADDRESS" String
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "s3ToSnsToSqsTestQueue"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String

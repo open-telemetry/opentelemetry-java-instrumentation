@@ -14,13 +14,13 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +30,11 @@ import javax.annotation.Nullable;
 
 final class ApiGatewayProxyAttributesExtractor
     implements AttributesExtractor<AwsLambdaRequest, Object> {
+
+  // copied from FaasIncubatingAttributes
+  private static final AttributeKey<String> FAAS_TRIGGER = AttributeKey.stringKey("faas.trigger");
+  // copied from FaasIncubatingAttributes.FaasTriggerValues
+  private static final String HTTP = "http";
 
   private final Set<String> knownMethods;
 
@@ -41,8 +46,7 @@ final class ApiGatewayProxyAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, AwsLambdaRequest request) {
     if (request.getInput() instanceof APIGatewayProxyRequestEvent) {
-      attributes.put(
-          FaasIncubatingAttributes.FAAS_TRIGGER, FaasIncubatingAttributes.FaasTriggerValues.HTTP);
+      attributes.put(FAAS_TRIGGER, HTTP);
       onRequest(attributes, (APIGatewayProxyRequestEvent) request.getInput());
     }
   }

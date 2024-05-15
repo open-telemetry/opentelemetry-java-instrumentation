@@ -7,19 +7,19 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class HttpMessageBodySizeUtil {
 
   @Nullable
   static Long getHttpRequestBodySize(Attributes... attributesList) {
-    return getAttribute(HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE, attributesList);
+    return getAttribute(HttpExperimentalAttributesExtractor.HTTP_REQUEST_BODY_SIZE, attributesList);
   }
 
   @Nullable
   static Long getHttpResponseBodySize(Attributes... attributesList) {
-    return getAttribute(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, attributesList);
+    return getAttribute(
+        HttpExperimentalAttributesExtractor.HTTP_RESPONSE_BODY_SIZE, attributesList);
   }
 
   @Nullable

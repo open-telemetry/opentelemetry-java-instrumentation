@@ -84,7 +84,9 @@ public class AwsLambdaSqsEventWrapperTest {
                     span.hasName("otel process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))));
   }

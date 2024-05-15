@@ -14,15 +14,22 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingServerInterceptor implements ServerInterceptor {
+
+  // copied from MessageIncubatingAttributes
+  private static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
+  private static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
+  // copied from MessageIncubatingAttributes.MessageTypeValues
+  private static final String SENT = "SENT";
+  private static final String RECEIVED = "RECEIVED";
 
   @SuppressWarnings("rawtypes")
   private static final AtomicLongFieldUpdater<TracingServerCall> MESSAGE_ID_UPDATER =
@@ -92,11 +99,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       }
       Span span = Span.fromContext(context);
       Attributes attributes =
-          Attributes.of(
-              MessageIncubatingAttributes.MESSAGE_TYPE,
-              MessageIncubatingAttributes.MessageTypeValues.SENT,
-              MessageIncubatingAttributes.MESSAGE_ID,
-              MESSAGE_ID_UPDATER.incrementAndGet(this));
+          Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, MESSAGE_ID_UPDATER.incrementAndGet(this));
       span.addEvent("message", attributes);
     }
 
@@ -126,9 +129,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
       public void onMessage(REQUEST message) {
         Attributes attributes =
             Attributes.of(
-                MessageIncubatingAttributes.MESSAGE_TYPE,
-                MessageIncubatingAttributes.MessageTypeValues.RECEIVED,
-                MessageIncubatingAttributes.MESSAGE_ID,
+                MESSAGE_TYPE,
+                RECEIVED,
+                MESSAGE_ID,
                 MESSAGE_ID_UPDATER.incrementAndGet(TracingServerCall.this));
         Span.fromContext(context).addEvent("message", attributes);
         delegate().onMessage(message);
