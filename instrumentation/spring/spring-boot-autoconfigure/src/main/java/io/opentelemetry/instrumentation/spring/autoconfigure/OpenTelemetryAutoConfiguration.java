@@ -25,6 +25,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -111,6 +113,16 @@ public class OpenTelemetryAutoConfiguration {
       return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
     }
 
+    /**
+     * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
+     *
+     * <p>Why not use spring boot properties directly? <br>
+     * 1. issues with older spring boot versions <br>
+     * 2. support for {@link
+     * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesCustomizer(Function)}
+     * and {@link
+     * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}
+     */
     @Bean
     public ConfigProperties otelProperties(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
