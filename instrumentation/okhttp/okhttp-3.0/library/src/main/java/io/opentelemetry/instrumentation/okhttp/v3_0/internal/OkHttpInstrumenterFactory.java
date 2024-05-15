@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimen
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
@@ -21,6 +22,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBu
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -36,6 +38,8 @@ public final class OkHttpInstrumenterFactory {
       OpenTelemetry openTelemetry,
       Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer,
       Consumer<HttpSpanNameExtractorBuilder<Request>> spanNameExtractorConfigurer,
+      Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+          spanNameExtractorTransformer,
       List<AttributesExtractor<Request, Response>> additionalAttributesExtractors,
       boolean emitExperimentalHttpClientMetrics) {
 
@@ -48,10 +52,12 @@ public final class OkHttpInstrumenterFactory {
     HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
         HttpSpanNameExtractor.builder(httpAttributesGetter);
     spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
+    SpanNameExtractor<? super Request> spanNameExtractor =
+        spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
-                openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractors(additionalAttributesExtractors)

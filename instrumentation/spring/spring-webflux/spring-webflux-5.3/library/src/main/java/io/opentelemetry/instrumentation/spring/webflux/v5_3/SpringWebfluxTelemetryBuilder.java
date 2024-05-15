@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExp
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
@@ -48,6 +50,14 @@ public final class SpringWebfluxTelemetryBuilder {
       HttpSpanNameExtractor.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
   private final HttpServerRouteBuilder<ServerWebExchange> httpServerRouteBuilder =
       HttpServerRoute.builder(WebfluxServerHttpAttributesGetter.INSTANCE);
+
+  private Function<
+          SpanNameExtractor<ClientRequest>, ? extends SpanNameExtractor<? super ClientRequest>>
+      clientSpanNameExtractorTransformer = Function.identity();
+  private Function<
+          SpanNameExtractor<ServerWebExchange>,
+          ? extends SpanNameExtractor<? super ServerWebExchange>>
+      serverSpanNameExtractorTransformer = Function.identity();
 
   private Consumer<HttpClientAttributesExtractorBuilder<ClientRequest, ClientResponse>>
       clientExtractorConfigurer = builder -> {};
@@ -188,17 +198,37 @@ public final class SpringWebfluxTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public SpringWebfluxTelemetryBuilder setClientSpanNameExtractor(
+      Function<SpanNameExtractor<ClientRequest>, ? extends SpanNameExtractor<? super ClientRequest>>
+          clientSpanNameExtractor) {
+    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+    return this;
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public SpringWebfluxTelemetryBuilder setServerSpanNameExtractor(
+      Function<
+              SpanNameExtractor<ServerWebExchange>,
+              ? extends SpanNameExtractor<? super ServerWebExchange>>
+          serverSpanNameExtractor) {
+    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+    return this;
+  }
+
   /**
    * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
    * SpringWebfluxTelemetryBuilder}.
    */
   public SpringWebfluxTelemetry build() {
-
     Instrumenter<ClientRequest, ClientResponse> clientInstrumenter =
         ClientInstrumenterFactory.create(
             openTelemetry,
             clientExtractorConfigurer,
             clientSpanNameExtractorConfigurer,
+            clientSpanNameExtractorTransformer,
             clientAdditionalExtractors,
             emitExperimentalHttpClientTelemetry);
 
@@ -211,10 +241,12 @@ public final class SpringWebfluxTelemetryBuilder {
 
   private Instrumenter<ServerWebExchange, ServerWebExchange> buildServerInstrumenter() {
     WebfluxServerHttpAttributesGetter getter = WebfluxServerHttpAttributesGetter.INSTANCE;
+    SpanNameExtractor<? super ServerWebExchange> spanNameExtractor =
+        serverSpanNameExtractorTransformer.apply(httpServerSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<ServerWebExchange, ServerWebExchange> builder =
         Instrumenter.<ServerWebExchange, ServerWebExchange>builder(
-                openTelemetry, INSTRUMENTATION_NAME, httpServerSpanNameExtractorBuilder.build())
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(getter))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(serverAdditionalExtractors)

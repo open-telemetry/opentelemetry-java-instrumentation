@@ -35,14 +35,10 @@ public final class GrpcTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
 
-  @Nullable
   private Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
-      clientSpanNameExtractorTransformer;
-
-  @Nullable
+      clientSpanNameExtractorTransformer = Function.identity();
   private Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
-      serverSpanNameExtractorTransformer;
-
+      serverSpanNameExtractorTransformer = Function.identity();
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalExtractors = new ArrayList<>();
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
@@ -147,19 +143,12 @@ public final class GrpcTelemetryBuilder {
   }
 
   /** Returns a new {@link GrpcTelemetry} with the settings of this {@link GrpcTelemetryBuilder}. */
-  @SuppressWarnings("deprecation") // using createForServerSide() for the old->stable semconv story
   public GrpcTelemetry build() {
     SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
-
-    SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor = originalSpanNameExtractor;
-    if (clientSpanNameExtractorTransformer != null) {
-      clientSpanNameExtractor = clientSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
-    }
-
-    SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor = originalSpanNameExtractor;
-    if (serverSpanNameExtractorTransformer != null) {
-      serverSpanNameExtractor = serverSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
-    }
+    SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor =
+        clientSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
+    SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor =
+        serverSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
 
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);

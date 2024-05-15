@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpInstrumenterFactory;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -28,6 +30,8 @@ public final class OkHttpTelemetryBuilder {
       builder -> {};
   private Consumer<HttpSpanNameExtractorBuilder<Request>> spanNameExtractorConfigurer =
       builder -> {};
+  private Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+      spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -104,6 +108,15 @@ public final class OkHttpTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+          spanNameExtractorTransformer) {
+    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return this;
+  }
+
   /**
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
@@ -113,6 +126,7 @@ public final class OkHttpTelemetryBuilder {
             openTelemetry,
             extractorConfigurer,
             spanNameExtractorConfigurer,
+            spanNameExtractorTransformer,
             additionalExtractors,
             emitExperimentalHttpClientMetrics),
         openTelemetry.getPropagators());

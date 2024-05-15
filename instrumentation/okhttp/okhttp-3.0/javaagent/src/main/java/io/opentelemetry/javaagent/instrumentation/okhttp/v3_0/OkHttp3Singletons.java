@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpAttributesGet
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpInstrumenterFactory;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.TracingInterceptor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import java.util.function.Function;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -34,6 +35,7 @@ public final class OkHttp3Singletons {
                   .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          Function.identity(),
           singletonList(
               HttpClientPeerServiceAttributesExtractor.create(
                   OkHttpAttributesGetter.INSTANCE, CommonConfig.get().getPeerServiceResolver())),

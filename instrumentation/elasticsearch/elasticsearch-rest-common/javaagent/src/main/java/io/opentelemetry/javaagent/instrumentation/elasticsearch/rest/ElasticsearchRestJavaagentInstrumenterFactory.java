@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.elasticsearch.rest.internal.Elasticsearc
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Collections;
+import java.util.function.Function;
 import org.elasticsearch.client.Response;
 
 public final class ElasticsearchRestJavaagentInstrumenterFactory {
@@ -28,6 +29,7 @@ public final class ElasticsearchRestJavaagentInstrumenterFactory {
         GlobalOpenTelemetry.get(),
         instrumentationName,
         Collections.emptyList(),
+        Function.identity(),
         CommonConfig.get().getKnownHttpRequestMethods(),
         CAPTURE_SEARCH_QUERY);
   }

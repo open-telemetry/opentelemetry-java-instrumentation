@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExp
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
@@ -23,6 +24,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
@@ -39,6 +41,8 @@ public final class RestletTelemetryBuilder {
           HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<Request> httpSpanNameExtractorBuilder =
       HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE);
+  private Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+      spanNameExtractorTransformer = Function.identity();
   private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
       HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE);
   private boolean emitExperimentalHttpServerMetrics = false;
@@ -114,16 +118,27 @@ public final class RestletTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public RestletTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+          spanNameExtractorTransformer) {
+    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return this;
+  }
+
   /**
    * Returns a new {@link RestletTelemetry} with the settings of this {@link
    * RestletTelemetryBuilder}.
    */
   public RestletTelemetry build() {
     RestletHttpAttributesGetter httpAttributesGetter = RestletHttpAttributesGetter.INSTANCE;
+    SpanNameExtractor<? super Request> spanNameExtractor =
+        spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
-                openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

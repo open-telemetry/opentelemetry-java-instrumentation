@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExp
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
@@ -27,6 +28,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import ratpack.http.Request;
 import ratpack.http.Response;
 import ratpack.http.client.HttpResponse;
@@ -52,6 +54,11 @@ public final class RatpackTelemetryBuilder {
       HttpSpanNameExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<Request> httpServerSpanNameExtractorBuilder =
       HttpSpanNameExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
+
+  private Function<SpanNameExtractor<RequestSpec>, ? extends SpanNameExtractor<? super RequestSpec>>
+      clientSpanNameExtractorTransformer = Function.identity();
+  private Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+      serverSpanNameExtractorTransformer = Function.identity();
 
   private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
       HttpServerRoute.builder(RatpackHttpAttributesGetter.INSTANCE);
@@ -178,6 +185,24 @@ public final class RatpackTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public RatpackTelemetryBuilder setClientSpanNameExtractor(
+      Function<SpanNameExtractor<RequestSpec>, ? extends SpanNameExtractor<? super RequestSpec>>
+          clientSpanNameExtractor) {
+    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+    return this;
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public RatpackTelemetryBuilder setServerSpanNameExtractor(
+      Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+          serverSpanNameExtractor) {
+    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+    return this;
+  }
+
   /** Returns a new {@link RatpackTelemetry} with the configuration of this builder. */
   public RatpackTelemetry build() {
     return new RatpackTelemetry(buildServerInstrumenter(), httpClientInstrumenter());
@@ -185,10 +210,12 @@ public final class RatpackTelemetryBuilder {
 
   private Instrumenter<Request, Response> buildServerInstrumenter() {
     RatpackHttpAttributesGetter httpAttributes = RatpackHttpAttributesGetter.INSTANCE;
+    SpanNameExtractor<? super Request> spanNameExtractor =
+        serverSpanNameExtractorTransformer.apply(httpServerSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<Request, Response> builder =
         Instrumenter.<Request, Response>builder(
-                openTelemetry, INSTRUMENTATION_NAME, httpServerSpanNameExtractorBuilder.build())
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
@@ -204,10 +231,12 @@ public final class RatpackTelemetryBuilder {
 
   private Instrumenter<RequestSpec, HttpResponse> httpClientInstrumenter() {
     RatpackHttpClientAttributesGetter httpAttributes = RatpackHttpClientAttributesGetter.INSTANCE;
+    SpanNameExtractor<? super RequestSpec> spanNameExtractor =
+        clientSpanNameExtractorTransformer.apply(httpClientSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<RequestSpec, HttpResponse> builder =
         Instrumenter.<RequestSpec, HttpResponse>builder(
-                openTelemetry, INSTRUMENTATION_NAME, httpClientSpanNameExtractorBuilder.build())
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
             .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalHttpClientExtractors)
