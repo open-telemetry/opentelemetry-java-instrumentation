@@ -292,6 +292,18 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.mongo.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Mongo client instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.mongo.statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.log4j-appender.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Log4J2 appender instrumentation.",

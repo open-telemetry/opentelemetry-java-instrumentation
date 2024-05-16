@@ -31,12 +31,16 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
@@ -54,6 +58,14 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
+    @Autowired private ObjectProvider<JdbcTemplate> jdbcTemplate;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void loadData() {
+      jdbcTemplate
+          .getObject()
+          .execute("create table test_table (id bigint not null, primary key (id))");
+    }
 
     @Bean
     @Order(1)

@@ -30,8 +30,6 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
 
   @Test
   void shouldInstrumentProducerAndConsumer() {
-    testing.clearAllExportedData(); // ignore data from application startup
-
     testing.runWithSpan(
         "producer",
         () -> {

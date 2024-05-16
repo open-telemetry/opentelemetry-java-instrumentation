@@ -29,6 +29,7 @@ dependencies {
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
+  implementation(project(":instrumentation:mongo:mongo-3.1:library"))
   compileOnly(project(path = ":instrumentation:r2dbc-1.0:library-instrumentation-shaded", configuration = "shadow"))
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
@@ -49,6 +50,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
+  library("org.springframework.boot:spring-boot-starter-data-mongodb:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
