@@ -615,9 +615,14 @@ class JdbcConnectionUrlParserTest {
               .build(),
 
           // https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.03/en-US/ff15928cf5594d78b841fbbe649f04b4.html
-          arg("jdbc:sap://sap.host").setSystem("hanadb").setHost("sap.host").build(),
+          arg("jdbc:sap://sap.host")
+              .setShortUrl("sap://sap.host")
+              .setSystem("hanadb")
+              .setHost("sap.host")
+              .build(),
           arg("jdbc:sap://sap.host")
               .setProperties(stdProps())
+              .setShortUrl("sap://sap.host:9999")
               .setSystem("hanadb")
               .setUser("stdUserName")
               .setHost("sap.host")
@@ -625,6 +630,7 @@ class JdbcConnectionUrlParserTest {
               .setDb("stdDatabaseName")
               .build(),
           arg("jdbc:sap://sap.host:88/?databaseName=sapdb&user=sapuser&password=PW")
+              .setShortUrl("sap://sap.host:88")
               .setSystem("hanadb")
               .setUser("sapuser")
               .setHost("sap.host")
