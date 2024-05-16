@@ -18,8 +18,6 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
 
   @Test
   void mongodb() {
-    testing.clearAllExportedData(); // ignore data from application startup
-
     testing.runWithSpan(
         "server",
         () -> {
