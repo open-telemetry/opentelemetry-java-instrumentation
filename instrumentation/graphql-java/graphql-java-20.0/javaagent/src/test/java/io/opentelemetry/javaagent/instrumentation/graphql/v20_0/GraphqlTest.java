@@ -23,4 +23,9 @@ public class GraphqlTest extends AbstractGraphqlTest {
 
   @Override
   protected void configure(GraphQL.Builder builder) {}
+
+  @Override
+  protected boolean hasDataFetcherSpans() {
+    return true;
+  }
 }
