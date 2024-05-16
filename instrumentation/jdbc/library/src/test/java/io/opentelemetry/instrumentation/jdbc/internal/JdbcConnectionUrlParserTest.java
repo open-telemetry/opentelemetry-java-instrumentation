@@ -614,6 +614,24 @@ class JdbcConnectionUrlParserTest {
               .setName("asdb")
               .build(),
 
+          // https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.03/en-US/ff15928cf5594d78b841fbbe649f04b4.html
+          arg("jdbc:sap://sap.host").setSystem("hanadb").setHost("sap.host").build(),
+          arg("jdbc:sap://sap.host")
+              .setProperties(stdProps())
+              .setSystem("hanadb")
+              .setUser("stdUserName")
+              .setHost("sap.host")
+              .setPort(9999)
+              .setDb("stdDatabaseName")
+              .build(),
+          arg("jdbc:sap://sap.host:88/?databaseName=sapdb&user=sapuser&password=PW")
+              .setSystem("hanadb")
+              .setUser("sapuser")
+              .setHost("sap.host")
+              .setPort(88)
+              .setDb("sapdb")
+              .build(),
+
           // http://www.h2database.com/html/features.html#database_url
           arg("jdbc:h2:mem:").setShortUrl("h2:mem:").setSystem("h2").setSubtype("mem").build(),
           arg("jdbc:h2:mem:")
