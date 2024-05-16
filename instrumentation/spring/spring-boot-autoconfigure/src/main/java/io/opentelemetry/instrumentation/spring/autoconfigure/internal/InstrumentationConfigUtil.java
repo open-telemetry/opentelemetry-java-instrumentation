@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
 public class InstrumentationConfigUtil {
   private InstrumentationConfigUtil() {}
