@@ -29,6 +29,12 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
 
   @Override
   @Nullable
+  public String getConnectionString(SpymemcachedRequest spymemcachedRequest) {
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getStatement(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }

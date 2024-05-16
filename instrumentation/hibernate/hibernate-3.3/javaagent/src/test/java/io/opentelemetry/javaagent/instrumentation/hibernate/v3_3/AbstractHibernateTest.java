@@ -57,6 +57,7 @@ abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent) {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
@@ -64,11 +65,13 @@ abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
             equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
             satisfies(DbIncubatingAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
             satisfies(DbIncubatingAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"));
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent, String verb) {
     return span.hasName(verb.concat(" db1.Value"))
         .hasKind(SpanKind.CLIENT)
@@ -77,6 +80,7 @@ abstract class AbstractHibernateTest extends AgentInstrumentationSpecification {
             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
             equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
             satisfies(
                 DbIncubatingAttributes.DB_STATEMENT,
                 stringAssert -> stringAssert.startsWith(verb.toLowerCase(Locale.ROOT))),

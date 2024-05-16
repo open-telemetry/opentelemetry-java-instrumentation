@@ -23,6 +23,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
   @Shared
   def repo = context.getBean(CustomerRepository)
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "test CRUD"() {
     setup:
     def isHibernate4 = Version.getVersionString().startsWith("4.")
@@ -63,6 +64,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
             "$DbIncubatingAttributes.DB_NAME" "test"
             "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
             "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName(.*)from Customer(.*)/
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -119,6 +121,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_NAME" "test"
               "$DbIncubatingAttributes.DB_USER" "sa"
               "$DbIncubatingAttributes.DB_STATEMENT" "call next value for Customer_SEQ"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_OPERATION" "CALL"
             }
           }
@@ -138,6 +141,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "$DbIncubatingAttributes.DB_NAME" "test"
               "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
               "$DbIncubatingAttributes.DB_OPERATION" "INSERT"
               "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -152,6 +156,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "$DbIncubatingAttributes.DB_NAME" "test"
               "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
               "$DbIncubatingAttributes.DB_OPERATION" "INSERT"
               "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -206,6 +211,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
             "$DbIncubatingAttributes.DB_NAME" "test"
             "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
             "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -226,6 +232,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
             "$DbIncubatingAttributes.DB_NAME" "test"
             "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
             "$DbIncubatingAttributes.DB_STATEMENT" ~/update Customer set firstName=\?,(.*)lastName=\? where id=\?/
             "$DbIncubatingAttributes.DB_OPERATION" "UPDATE"
             "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -268,6 +275,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
             "$DbIncubatingAttributes.DB_NAME" "test"
             "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
             "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)(where ([^.]+)\.lastName( ?)=( ?)\?|)/
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -311,6 +319,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "$DbIncubatingAttributes.DB_NAME" "test"
               "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
               "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
               "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -335,6 +344,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "$DbIncubatingAttributes.DB_NAME" "test"
               "$DbIncubatingAttributes.DB_USER" "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
               "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
               "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
@@ -364,6 +374,7 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
             "$DbIncubatingAttributes.DB_NAME" "test"
             "$DbIncubatingAttributes.DB_USER" "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
             "$DbIncubatingAttributes.DB_STATEMENT" "delete from Customer where id=?"
             "$DbIncubatingAttributes.DB_OPERATION" "DELETE"
             "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"

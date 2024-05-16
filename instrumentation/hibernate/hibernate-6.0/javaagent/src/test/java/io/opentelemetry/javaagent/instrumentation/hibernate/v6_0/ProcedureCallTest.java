@@ -69,6 +69,7 @@ public class ProcedureCallTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void testProcedureCall() {
     testing.runWithSpan(
@@ -104,6 +105,7 @@ public class ProcedureCallTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
+                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "{call TEST_PROC()}"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CALL")),
                 span ->

@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
+import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
+import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 
 import io.opentelemetry.context.Context;
@@ -31,6 +33,7 @@ public final class DbExecution {
   private final String name;
   private final String host;
   private final Integer port;
+  private final String connectionString;
   private final String rawStatement;
 
   private Context context;
@@ -50,8 +53,19 @@ public final class DbExecution {
         factoryOptions.hasOption(DATABASE)
             ? ((String) factoryOptions.getValue(DATABASE)).toLowerCase(Locale.ROOT)
             : null;
+    String driver =
+        factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
+    String protocol =
+        factoryOptions.hasOption(PROTOCOL) ? (String) factoryOptions.getValue(PROTOCOL) : null;
     this.host = factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
     this.port = factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
+    this.connectionString =
+        String.format(
+            "%s%s:%s%s",
+            driver != null ? driver : "",
+            protocol != null ? ":" + protocol : "",
+            host != null ? "//" + host : "",
+            port != null ? ":" + port : "");
     this.rawStatement =
         queryInfo.getQueries().stream().map(QueryInfo::getQuery).collect(Collectors.joining(";\n"));
   }
@@ -74,6 +88,10 @@ public final class DbExecution {
 
   public String getName() {
     return name;
+  }
+
+  public String getConnectionString() {
+    return connectionString;
   }
 
   public String getRawStatement() {
@@ -105,6 +123,8 @@ public final class DbExecution {
         + '\''
         + ", port="
         + port
+        + ", connectionString='"
+        + connectionString
         + '\''
         + ", rawStatement='"
         + rawStatement

@@ -36,6 +36,12 @@ public enum VertxRedisClientAttributesGetter
   }
 
   @Override
+  @Nullable
+  public String getConnectionString(VertxRedisClientRequest request) {
+    return request.getConnectionString();
+  }
+
+  @Override
   public String getStatement(VertxRedisClientRequest request) {
     return sanitizer.sanitize(request.getCommand(), request.getArgs());
   }

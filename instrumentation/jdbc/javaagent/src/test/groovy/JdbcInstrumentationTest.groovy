@@ -167,6 +167,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   def "basic statement with #connection.getClass().getCanonicalName() on #system generates spans"() {
     setup:
     Statement statement = connection.createStatement()
@@ -194,6 +195,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
@@ -253,6 +255,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
@@ -304,6 +307,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
@@ -355,6 +359,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
@@ -407,6 +412,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_USER" username
             }
             "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
@@ -461,6 +467,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_USER" username
             }
             "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
           }
@@ -526,6 +533,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
@@ -582,6 +590,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
             "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
           }
         }
         if (recursive) {
@@ -595,6 +604,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_SYSTEM" system
               "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
               "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
             }
           }
         }
@@ -643,6 +653,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
             "$DbIncubatingAttributes.DB_STATEMENT" "testing ?"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
@@ -683,6 +694,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
             "$DbIncubatingAttributes.DB_NAME" databaseName
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
             "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION" operation
             "$DbIncubatingAttributes.DB_SQL_TABLE" table
@@ -740,6 +752,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "$DbIncubatingAttributes.DB_NAME" dbNameLower
               "$DbIncubatingAttributes.DB_USER" "SA"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_STATEMENT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
               "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
               "$DbIncubatingAttributes.DB_SQL_TABLE" "INFORMATION_SCHEMA.SYSTEM_USERS"
@@ -786,6 +799,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
             "$DbIncubatingAttributes.DB_STATEMENT" "SELECT * FROM table"
             "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
             "$DbIncubatingAttributes.DB_SQL_TABLE" "table"
