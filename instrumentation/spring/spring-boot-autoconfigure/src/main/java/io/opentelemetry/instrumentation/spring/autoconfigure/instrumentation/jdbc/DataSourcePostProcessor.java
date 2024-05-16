@@ -37,8 +37,8 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
       return JdbcTelemetry.builder(openTelemetryProvider.getObject())
           .setStatementSanitizationEnabled(
               InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                  configPropertiesProvider.getObject(), "otel.instrumentation.jdbc.statement-sanitizer.enabled")
-            )
+                  configPropertiesProvider.getObject(),
+                  "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
           .build()
           .wrap(dataSource);
     }

@@ -33,10 +33,9 @@ public class MongoClientInstrumentationAutoConfiguration {
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
                 .setStatementSanitizationEnabled(
-                    InstrumentationConfigUtil.isStatementSanitizationEnabled(config,
-                        "otel.instrumentation.mongo.statement-sanitizer.enabled"))
+                    InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                        config, "otel.instrumentation.mongo.statement-sanitizer.enabled"))
                 .build()
                 .newCommandListener());
   }
-
 }

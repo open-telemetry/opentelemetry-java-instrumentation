@@ -34,8 +34,10 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
       ConnectionFactory connectionFactory = (ConnectionFactory) bean;
       return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
           // there is no instrumentation-specific property, so we use the common one
-          .setStatementSanitizationEnabled(InstrumentationConfigUtil.isStatementSanitizationEnabled(configPropertiesProvider
-                            .getObject(),"otel.instrumentation.common.db-statement-sanitizer.enabled"))
+          .setStatementSanitizationEnabled(
+              InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                  configPropertiesProvider.getObject(),
+                  "otel.instrumentation.common.db-statement-sanitizer.enabled"))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }

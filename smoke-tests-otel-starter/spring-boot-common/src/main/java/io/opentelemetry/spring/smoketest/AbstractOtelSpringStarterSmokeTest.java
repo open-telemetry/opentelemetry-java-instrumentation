@@ -70,7 +70,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     public void loadData() {
       jdbcTemplate
           .getObject()
-          .execute("create table customer (id bigint not null, name varchar not null, primary key (id))");
+          .execute(
+              "create table customer (id bigint not null, name varchar not null, primary key (id))");
     }
 
     @Bean
