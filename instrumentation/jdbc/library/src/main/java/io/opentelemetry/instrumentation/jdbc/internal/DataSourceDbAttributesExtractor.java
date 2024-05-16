@@ -22,10 +22,13 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
+  private static final AttributeKey<String> DB_CONNECTION_STRING =
+      AttributeKey.stringKey("db.connection_string");
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, DataSource dataSource) {}
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -39,6 +42,7 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
     internalSet(attributes, DB_SYSTEM, dbInfo.getSystem());
     internalSet(attributes, DB_USER, dbInfo.getUser());
     internalSet(attributes, DB_NAME, getName(dbInfo));
+    internalSet(attributes, DB_CONNECTION_STRING, dbInfo.getShortUrl());
   }
 
   private static String getName(DbInfo dbInfo) {

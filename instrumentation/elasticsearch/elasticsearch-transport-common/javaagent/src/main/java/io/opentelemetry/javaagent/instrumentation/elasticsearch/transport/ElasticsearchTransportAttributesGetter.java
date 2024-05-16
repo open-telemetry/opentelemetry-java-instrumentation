@@ -31,6 +31,12 @@ final class ElasticsearchTransportAttributesGetter
 
   @Override
   @Nullable
+  public String getConnectionString(ElasticTransportRequest s) {
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getStatement(ElasticTransportRequest s) {
     return null;
   }
