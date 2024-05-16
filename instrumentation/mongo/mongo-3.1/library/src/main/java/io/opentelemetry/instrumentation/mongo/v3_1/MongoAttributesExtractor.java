@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_MONGODB_COLLECTION;
 import static java.util.Arrays.asList;
 
 import com.mongodb.event.CommandStartedEvent;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -18,6 +18,10 @@ import javax.annotation.Nullable;
 import org.bson.BsonValue;
 
 class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEvent, Void> {
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_MONGODB_COLLECTION =
+      AttributeKey.stringKey("db.mongodb.collection");
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, CommandStartedEvent event) {

@@ -19,6 +19,17 @@ configurations.configureEach {
   if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.37.0")
+      force("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
+    }
+    if (name.startsWith("incubatorTest")) {
+      resolutionStrategy {
+        force("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
+      }
+    } else if (name.startsWith("oldAndNewIncubatorTest")) {
+      resolutionStrategy {
+        force("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
+        force("io.opentelemetry:opentelemetry-extension-incubator:1.32.0-alpha")
+      }
     }
   }
 }

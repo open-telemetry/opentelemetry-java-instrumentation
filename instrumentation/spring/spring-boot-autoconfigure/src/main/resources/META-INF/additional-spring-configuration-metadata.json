@@ -286,6 +286,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.kafka.experimental-span-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental Kafka span attributes.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.log4j-appender.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Log4J2 appender instrumentation.",

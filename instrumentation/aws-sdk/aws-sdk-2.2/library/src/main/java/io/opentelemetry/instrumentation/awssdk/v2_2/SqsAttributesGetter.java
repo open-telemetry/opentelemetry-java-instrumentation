@@ -16,9 +16,12 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 enum SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttributes, Response> {
   INSTANCE;
 
+  // copied from MessagingIncubatingAttributes.MessagingSystemValues
+  private static final String AWS_SQS = "aws_sqs";
+
   @Override
   public String getSystem(ExecutionAttributes request) {
-    return "AmazonSQS";
+    return AWS_SQS;
   }
 
   @Override

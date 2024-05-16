@@ -22,14 +22,20 @@ import java.util.List;
  */
 public final class SpringSmokeTestRunner extends InstrumentationTestRunner {
 
-  static final InMemorySpanExporter testSpanExporter = InMemorySpanExporter.create();
-  static final InMemoryMetricExporter testMetricExporter =
-      InMemoryMetricExporter.create(AggregationTemporality.DELTA);
-  static final InMemoryLogRecordExporter testLogRecordExporter = InMemoryLogRecordExporter.create();
+  static InMemorySpanExporter testSpanExporter;
+  static InMemoryMetricExporter testMetricExporter;
+  static InMemoryLogRecordExporter testLogRecordExporter;
+
   static OpenTelemetry openTelemetry;
 
   public SpringSmokeTestRunner(OpenTelemetry openTelemetry) {
     super(openTelemetry);
+  }
+
+  static void resetExporters() {
+    testSpanExporter = InMemorySpanExporter.create();
+    testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
+    testLogRecordExporter = InMemoryLogRecordExporter.create();
   }
 
   @Override

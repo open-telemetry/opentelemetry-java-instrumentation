@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.resources;
 
 import com.google.errorprone.annotations.MustBeClosed;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +22,9 @@ import java.util.stream.Stream;
  * v2 runtimes.
  */
 public final class ContainerResource {
+
+  // copied from ContainerIncubatingAttributes
+  private static final AttributeKey<String> CONTAINER_ID = AttributeKey.stringKey("container.id");
 
   static final Filesystem FILESYSTEM_INSTANCE = new Filesystem();
   private static final Resource INSTANCE = buildSingleton();
@@ -48,7 +51,7 @@ public final class ContainerResource {
   // Visible for testing
   Resource buildResource() {
     return getContainerId()
-        .map(id -> Resource.create(Attributes.of(ContainerIncubatingAttributes.CONTAINER_ID, id)))
+        .map(id -> Resource.create(Attributes.of(CONTAINER_ID, id)))
         .orElseGet(Resource::empty);
   }
 

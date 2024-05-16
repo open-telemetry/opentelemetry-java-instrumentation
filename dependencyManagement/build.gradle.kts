@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.37.0"
+val otelSdkVersion = "1.38.0"
 val otelContribVersion = "1.35.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -96,7 +96,7 @@ val DEPENDENCIES = listOf(
   "commons-fileupload:commons-fileupload:1.5",
   "commons-io:commons-io:2.16.1",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.1",
+  "commons-logging:commons-logging:1.3.2",
   "commons-validator:commons-validator:1.8.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",

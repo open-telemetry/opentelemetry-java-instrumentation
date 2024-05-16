@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -16,28 +16,38 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 final class KafkaConsumerAttributesExtractor
     implements AttributesExtractor<KafkaProcessRequest, Void> {
 
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
+      AttributeKey.stringKey("messaging.destination.partition.id");
+  private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
+      AttributeKey.stringKey("messaging.kafka.consumer.group");
+  private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
+      AttributeKey.stringKey("messaging.kafka.message.key");
+  private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
+      AttributeKey.longKey("messaging.kafka.message.offset");
+  private static final AttributeKey<Boolean> MESSAGING_KAFKA_MESSAGE_TOMBSTONE =
+      AttributeKey.booleanKey("messaging.kafka.message.tombstone");
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaProcessRequest request) {
 
     ConsumerRecord<?, ?> record = request.getRecord();
 
-    attributes.put(
-        MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
-        String.valueOf(record.partition()));
-    attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
+    attributes.put(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(record.partition()));
+    attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
 
     Object key = record.key();
     if (key != null && canSerialize(key.getClass())) {
-      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
+      attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
     }
     if (record.value() == null) {
-      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
+      attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
 
     String consumerGroup = request.getConsumerGroup();
     if (consumerGroup != null) {
-      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
+      attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
     }
   }
 

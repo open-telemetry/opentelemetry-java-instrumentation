@@ -36,72 +36,74 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
 
   @Override
   Undertow startServer(int port) {
-    Undertow server = Undertow.builder()
-      .addHttpListener(port, "localhost")
-      .setHandler(Handlers.path()
-        .addExactPath(SUCCESS.rawPath()) { exchange ->
-          controller(SUCCESS) {
-            exchange.getResponseSender().send(SUCCESS.body)
-          }
-        }
-        .addExactPath(QUERY_PARAM.rawPath()) { exchange ->
-          controller(QUERY_PARAM) {
-            exchange.getResponseSender().send(exchange.getQueryString())
-          }
-        }
-        .addExactPath(REDIRECT.rawPath()) { exchange ->
-          controller(REDIRECT) {
-            exchange.setStatusCode(StatusCodes.FOUND)
-            exchange.getResponseHeaders().put(Headers.LOCATION, REDIRECT.body)
-            exchange.endExchange()
-          }
-        }
-        .addExactPath(CAPTURE_HEADERS.rawPath()) { exchange ->
-          controller(CAPTURE_HEADERS) {
-            exchange.setStatusCode(StatusCodes.OK)
-            exchange.getResponseHeaders().put(new HttpString("X-Test-Response"), exchange.getRequestHeaders().getFirst("X-Test-Request"))
-            exchange.getResponseSender().send(CAPTURE_HEADERS.body)
-          }
-        }
-        .addExactPath(ERROR.rawPath()) { exchange ->
-          controller(ERROR) {
-            exchange.setStatusCode(ERROR.status)
-            exchange.getResponseSender().send(ERROR.body)
-          }
-        }
-        .addExactPath(EXCEPTION.rawPath()) { exchange ->
-          controller(EXCEPTION) {
-            throw new Exception(EXCEPTION.body)
-          }
-        }
-        .addExactPath(INDEXED_CHILD.rawPath()) { exchange ->
-          controller(INDEXED_CHILD) {
-            INDEXED_CHILD.collectSpanAttributes { name -> exchange.getQueryParameters().get(name).peekFirst() }
-            exchange.getResponseSender().send(INDEXED_CHILD.body)
-          }
-        }
-        .addExactPath("sendResponse") { exchange ->
-          Span.current().addEvent("before-event")
-          runWithSpan("sendResponse") {
-            exchange.setStatusCode(StatusCodes.OK)
-            exchange.getResponseSender().send("sendResponse")
-          }
-          // event is added only when server span has not been ended
-          // we need to make sure that sending response does not end server span
-          Span.current().addEvent("after-event")
-        }
-        .addExactPath("sendResponseWithException") { exchange ->
-          Span.current().addEvent("before-event")
-          runWithSpan("sendResponseWithException") {
-            exchange.setStatusCode(StatusCodes.OK)
-            exchange.getResponseSender().send("sendResponseWithException")
-          }
-          // event is added only when server span has not been ended
-          // we need to make sure that sending response does not end server span
-          Span.current().addEvent("after-event")
-          throw new Exception("exception after sending response")
-        }
-      ).build()
+    Undertow.Builder builder = Undertow.builder()
+        .addHttpListener(port, "localhost")
+        .setHandler(Handlers.path()
+            .addExactPath(SUCCESS.rawPath()) { exchange ->
+              controller(SUCCESS) {
+                exchange.getResponseSender().send(SUCCESS.body)
+              }
+            }
+            .addExactPath(QUERY_PARAM.rawPath()) { exchange ->
+              controller(QUERY_PARAM) {
+                exchange.getResponseSender().send(exchange.getQueryString())
+              }
+            }
+            .addExactPath(REDIRECT.rawPath()) { exchange ->
+              controller(REDIRECT) {
+                exchange.setStatusCode(StatusCodes.FOUND)
+                exchange.getResponseHeaders().put(Headers.LOCATION, REDIRECT.body)
+                exchange.endExchange()
+              }
+            }
+            .addExactPath(CAPTURE_HEADERS.rawPath()) { exchange ->
+              controller(CAPTURE_HEADERS) {
+                exchange.setStatusCode(StatusCodes.OK)
+                exchange.getResponseHeaders().put(new HttpString("X-Test-Response"), exchange.getRequestHeaders().getFirst("X-Test-Request"))
+                exchange.getResponseSender().send(CAPTURE_HEADERS.body)
+              }
+            }
+            .addExactPath(ERROR.rawPath()) { exchange ->
+              controller(ERROR) {
+                exchange.setStatusCode(ERROR.status)
+                exchange.getResponseSender().send(ERROR.body)
+              }
+            }
+            .addExactPath(EXCEPTION.rawPath()) { exchange ->
+              controller(EXCEPTION) {
+                throw new Exception(EXCEPTION.body)
+              }
+            }
+            .addExactPath(INDEXED_CHILD.rawPath()) { exchange ->
+              controller(INDEXED_CHILD) {
+                INDEXED_CHILD.collectSpanAttributes { name -> exchange.getQueryParameters().get(name).peekFirst() }
+                exchange.getResponseSender().send(INDEXED_CHILD.body)
+              }
+            }
+            .addExactPath("sendResponse") { exchange ->
+              Span.current().addEvent("before-event")
+              runWithSpan("sendResponse") {
+                exchange.setStatusCode(StatusCodes.OK)
+                exchange.getResponseSender().send("sendResponse")
+              }
+              // event is added only when server span has not been ended
+              // we need to make sure that sending response does not end server span
+              Span.current().addEvent("after-event")
+            }
+            .addExactPath("sendResponseWithException") { exchange ->
+              Span.current().addEvent("before-event")
+              runWithSpan("sendResponseWithException") {
+                exchange.setStatusCode(StatusCodes.OK)
+                exchange.getResponseSender().send("sendResponseWithException")
+              }
+              // event is added only when server span has not been ended
+              // we need to make sure that sending response does not end server span
+              Span.current().addEvent("after-event")
+              throw new Exception("exception after sending response")
+            }
+        )
+    configureUndertow(builder)
+    Undertow server = builder.build()
     server.start()
     return server
   }
@@ -109,6 +111,9 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
   @Override
   void stopServer(Undertow undertow) {
     undertow.stop()
+  }
+
+  void configureUndertow(Undertow.Builder builder) {
   }
 
   @Override
@@ -147,6 +152,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             eventName "after-event"
           }
 
+          def protocolVersion = useHttp2() ? "2" : "1.1"
           attributes {
             "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
             "$UrlAttributes.URL_SCHEME" uri.getScheme()
@@ -154,7 +160,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" protocolVersion
             "$ServerAttributes.SERVER_ADDRESS" uri.host
             "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
@@ -196,6 +202,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
           }
           errorEvent(Exception, "exception after sending response", 2)
 
+          def protocolVersion = useHttp2() ? "2" : "1.1"
           attributes {
             "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
             "$UrlAttributes.URL_SCHEME" uri.getScheme()
@@ -203,7 +210,7 @@ class UndertowServerTest extends HttpServerTest<Undertow> implements AgentTestTr
             "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
             "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
             "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" protocolVersion
             "$ServerAttributes.SERVER_ADDRESS" uri.host
             "$ServerAttributes.SERVER_PORT" uri.port
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"

@@ -67,7 +67,6 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
-  testImplementation("org.testcontainers:kafka")
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
@@ -149,10 +148,6 @@ tasks {
 
   compileTestJava {
     options.compilerArgs.add("-parameters")
-  }
-
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   withType<Test>().configureEach {

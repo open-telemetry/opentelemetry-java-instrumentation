@@ -972,8 +972,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   .doesNotContainKey(NetworkAttributes.NETWORK_TYPE)
                   .doesNotContainKey(NetworkAttributes.NETWORK_PROTOCOL_NAME);
               if (httpClientAttributes.contains(NetworkAttributes.NETWORK_PROTOCOL_VERSION)) {
-                // TODO(anuraaga): Support HTTP/2
-                assertThat(attrs).containsEntry(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
+                assertThat(attrs)
+                    .containsEntry(
+                        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+                        options.getHttpProtocolVersion().apply(uri));
               }
 
               if (httpClientAttributes.contains(ServerAttributes.SERVER_ADDRESS)) {

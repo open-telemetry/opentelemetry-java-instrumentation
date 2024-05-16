@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
+class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

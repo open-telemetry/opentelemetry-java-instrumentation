@@ -81,7 +81,8 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(
@@ -129,7 +130,8 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(

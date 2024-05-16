@@ -11,7 +11,6 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
@@ -24,6 +23,9 @@ import java.util.stream.Collectors;
  * any time.
  */
 public final class DbExecution {
+  // copied from DbIncubatingAttributes.DbSystemValues
+  private static final String OTHER_SQL = "other_sql";
+
   private final String system;
   private final String user;
   private final String name;
@@ -42,7 +44,7 @@ public final class DbExecution {
                 .getDatabaseProductName()
                 .toLowerCase(Locale.ROOT)
                 .split(" ")[0]
-            : DbIncubatingAttributes.DbSystemValues.OTHER_SQL;
+            : OTHER_SQL;
     this.user = factoryOptions.hasOption(USER) ? (String) factoryOptions.getValue(USER) : null;
     this.name =
         factoryOptions.hasOption(DATABASE)
