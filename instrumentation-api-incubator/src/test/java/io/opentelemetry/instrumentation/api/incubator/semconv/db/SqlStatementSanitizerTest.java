@@ -216,8 +216,7 @@ public class SqlStatementSanitizerTest {
 
           // PostgreSQL native parameter marker, we want to keep $1 instead of replacing it with ?
           Arguments.of(
-              "SELECT * FROM TABLE WHERE FIELD = $1",
-              "SELECT * FROM TABLE WHERE FIELD = $1"),
+              "SELECT * FROM TABLE WHERE FIELD = $1", "SELECT * FROM TABLE WHERE FIELD = $1"),
 
           // Unicode, including a unicode identifier with a trailing number
           Arguments.of(
