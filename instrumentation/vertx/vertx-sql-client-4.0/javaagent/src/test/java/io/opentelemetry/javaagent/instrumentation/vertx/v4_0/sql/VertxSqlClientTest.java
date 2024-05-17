@@ -229,7 +229,7 @@ class VertxSqlClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_NAME, DB),
                             equalTo(DB_USER, USER_DB),
-                            equalTo(DB_STATEMENT, "select * from test where id = $?"),
+                            equalTo(DB_STATEMENT, "select * from test where id = $1"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "test"),
                             equalTo(SERVER_ADDRESS, host),
@@ -259,7 +259,7 @@ class VertxSqlClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_NAME, DB),
                             equalTo(DB_USER, USER_DB),
-                            equalTo(DB_STATEMENT, "insert into test values ($?, $?) returning *"),
+                            equalTo(DB_STATEMENT, "insert into test values ($1, $2) returning *"),
                             equalTo(DB_OPERATION, "INSERT"),
                             equalTo(DB_SQL_TABLE, "test"),
                             equalTo(SERVER_ADDRESS, host),
@@ -410,7 +410,7 @@ class VertxSqlClientTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(DB_NAME, DB),
                                 equalTo(DB_USER, USER_DB),
-                                equalTo(DB_STATEMENT, "select * from test where id = $?"),
+                                equalTo(DB_STATEMENT, "select * from test where id = $1"),
                                 equalTo(DB_OPERATION, "SELECT"),
                                 equalTo(DB_SQL_TABLE, "test"),
                                 equalTo(SERVER_ADDRESS, host),
