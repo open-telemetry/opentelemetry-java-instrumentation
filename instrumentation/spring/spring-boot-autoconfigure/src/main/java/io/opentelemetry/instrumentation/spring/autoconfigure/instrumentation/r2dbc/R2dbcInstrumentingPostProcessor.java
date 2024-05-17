@@ -37,7 +37,7 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
           .setStatementSanitizationEnabled(
               InstrumentationConfigUtil.isStatementSanitizationEnabled(
                   configPropertiesProvider.getObject(),
-                  "otel.instrumentation.common.db-statement-sanitizer.enabled"))
+                  "otel.instrumentation.r2dbc.statement-sanitizer.enabled"))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }
