@@ -84,6 +84,13 @@ class CgroupV2ContainerIdExtractorTest {
         "f23ec1d4b715c6531a17e9c549222fbbe1f7ffff697a29a2212b3b4cdc37f52e");
   }
 
+  @Test
+  void extractSuccess_crio2() throws Exception {
+    verifyContainerId(
+        "crio_proc_self_mountinfo2",
+        "b4873629b312dc1d77472aba6fb177c6ce9a8f7c205ad7a03302726805007fe6");
+  }
+
   private static List<String> fileToListOfLines(String filename) {
     InputStream in =
         CgroupV2ContainerIdExtractorTest.class.getClassLoader().getResourceAsStream(filename);
