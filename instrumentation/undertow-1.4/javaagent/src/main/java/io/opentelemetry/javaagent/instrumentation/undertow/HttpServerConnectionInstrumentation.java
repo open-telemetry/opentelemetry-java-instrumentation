@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -18,16 +19,18 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpTransferEncodingInstrumentation implements TypeInstrumentation {
+public class HttpServerConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.undertow.server.protocol.http.HttpTransferEncoding");
+    return namedOneOf(
+        "io.undertow.server.protocol.http.HttpServerConnection",
+        "io.undertow.server.protocol.http2.Http2ServerConnection");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createSinkConduit")
+        named("getSinkConduit")
             .and(takesArgument(0, named("io.undertow.server.HttpServerExchange"))),
         this.getClass().getName() + "$ResponseAdvice");
   }
