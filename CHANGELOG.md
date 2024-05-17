@@ -2,6 +2,63 @@
 
 ## Unreleased
 
+### 🌟 New javaagent instrumentation
+
+- Add support for InfluxDB
+  ([#10850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10850))
+- Add instrumentation for armeria gRPC
+  ([#11351](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11351))
+
+### 📈 Enhancements
+
+- Instrument ConnectionSource in Akka/Pekko HTTP Servers
+  ([#11103](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11103))
+- Use constant span name when using Spring AMQP AnonymousQueues
+  ([#11141](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11141))
+- Add support for `RestClient` in Spring starter
+  ([#11038](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11038))
+- Add support for WebFlux server in Spring starter
+  ([#11185](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11185))
+- Add async operation end strategy for Kotlin coroutines flow
+  ([#11168](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11168))
+- Add automatic JDBC instrumentation to the Spring starter
+  ([#11258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11258))
+- Add `StructuredTaskScope` instrumentation
+  ([#11202](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11202))
+- Allow reading OTel context from reactor ContextView
+  ([#11235](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11235))
+- Add spring starter r2dbc support
+  ([#11221](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11221))
+- Enable instrumentation of Spring EJB clients
+  ([#11104](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11104))
+- Support `otel.instrumentation.kafka.experimental-span-attributes` in Spring starter
+  ([#11263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11263))
+- Remove incubating semconv dependency from library instrumentation
+  ([#11324](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11324))
+- Add extension functions for Ktor plugins
+  ([#10963](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10963))
+- Add dedicated flag for R2DBC statement sanitizer
+  ([#11384](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11384))
+- Allow library instrumentations to override span name
+  ([#11355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11355))
+- Don't sanitize PostgreSQL parameter markers
+  ([#11388](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11388))
+
+### 🛠️ Bug fixes
+
+- Fix GraphQL instrumentation to work with latest version
+  ([#11142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11142))
+- Fix jmx-metrics on WildFly
+  ([#11151](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11151))
+- End gRPC server span in onComplete instead of close
+  ([#11170](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11170))
+- Fix a bug in undertow instrumentation related to HTTP/2
+  ([#11361](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11361))
+- Armeria http client reports wrong protocol version
+  ([#11334](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11334))
+- Use daemon thread for scheduling in jmx-metrics BeanFinder
+  ([#11337](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11337))
+
 ## Version 1.33.2 (2024-04-20)
 
 ### 📈 Enhancements
