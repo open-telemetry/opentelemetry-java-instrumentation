@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.4.0 (2024-05-17)
 
 ### 🌟 New javaagent instrumentation
 
