@@ -116,12 +116,10 @@ public class OpenTelemetryAutoConfiguration {
     /**
      * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
      *
-     * <p>Why not use spring boot properties directly? <br>
-     * 1. issues with older spring boot versions <br>
-     * 2. support for {@link
+     * <p>Not using spring boot properties directly in order to support {@link
      * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesCustomizer(Function)}
      * and {@link
-     * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}
+     * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}.
      */
     @Bean
     public ConfigProperties otelProperties(
