@@ -43,6 +43,8 @@
   ([#11355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11355))
 - Don't sanitize PostgreSQL parameter markers
   ([#11388](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11388))
+- Make statement sanitizer configurable for Spring Boot
+  ([#11350](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11350))
 
 ### 🛠️ Bug fixes
 
