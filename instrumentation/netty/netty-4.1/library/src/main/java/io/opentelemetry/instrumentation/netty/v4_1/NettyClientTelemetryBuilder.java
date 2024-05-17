@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /** A builder of {@link NettyClientTelemetry}. */
 public final class NettyClientTelemetryBuilder {
@@ -32,6 +34,11 @@ public final class NettyClientTelemetryBuilder {
       extractorConfigurer = builder -> {};
   private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
       spanNameExtractorConfigurer = builder -> {};
+  private Function<
+          SpanNameExtractor<HttpRequestAndChannel>,
+          ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
+      spanNameExtractorTransformer = Function.identity();
+
   private boolean emitExperimentalHttpClientMetrics = false;
   private boolean emitExperimentalHttpClientEvents = false;
 
@@ -120,6 +127,17 @@ public final class NettyClientTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setSpanNameExtractor(
+      Function<
+              SpanNameExtractor<HttpRequestAndChannel>,
+              ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
+          spanNameExtractorTransformer) {
+    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return this;
+  }
+
   /** Returns a new {@link NettyClientTelemetry} with the given configuration. */
   public NettyClientTelemetry build() {
     return new NettyClientTelemetry(
@@ -131,7 +149,10 @@ public final class NettyClientTelemetryBuilder {
                 PeerServiceResolver.create(Collections.emptyMap()),
                 emitExperimentalHttpClientMetrics)
             .createHttpInstrumenter(
-                extractorConfigurer, spanNameExtractorConfigurer, additionalAttributesExtractors),
+                extractorConfigurer,
+                spanNameExtractorConfigurer,
+                spanNameExtractorTransformer,
+                additionalAttributesExtractors),
         emitExperimentalHttpClientEvents);
   }
 }

@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import java.util.function.Function;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
@@ -27,6 +28,7 @@ public class JettyHttpClientSingletons {
                   .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          Function.identity(),
           singletonList(
               HttpClientPeerServiceAttributesExtractor.create(
                   JettyClientHttpAttributesGetter.INSTANCE,

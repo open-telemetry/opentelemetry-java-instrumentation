@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class JavaHttpClientTelemetryBuilder {
 
@@ -30,6 +32,8 @@ public final class JavaHttpClientTelemetryBuilder {
       extractorConfigurer = builder -> {};
   private Consumer<HttpSpanNameExtractorBuilder<HttpRequest>> spanNameExtractorConfigurer =
       builder -> {};
+  private Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
+      spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -106,12 +110,22 @@ public final class JavaHttpClientTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
+          spanNameExtractorTransformer) {
+    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return this;
+  }
+
   public JavaHttpClientTelemetry build() {
     Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
         JavaHttpClientInstrumenterFactory.createInstrumenter(
             openTelemetry,
             extractorConfigurer,
             spanNameExtractorConfigurer,
+            spanNameExtractorTransformer,
             additionalExtractors,
             emitExperimentalHttpClientMetrics);
 
