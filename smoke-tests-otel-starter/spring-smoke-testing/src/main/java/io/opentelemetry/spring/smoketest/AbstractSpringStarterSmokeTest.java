@@ -48,8 +48,8 @@ public abstract class AbstractSpringStarterSmokeTest {
         .satisfies(
             s -> {
               if (!s.toString()
-                  .contains(
-                      "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider")
+                      .contains(
+                          "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider")
                   && !s.toString().contains("The architecture 'amd64' for image")) {
                 assertThat(s).doesNotContain("] WARN").doesNotContain("] ERROR");
               }
