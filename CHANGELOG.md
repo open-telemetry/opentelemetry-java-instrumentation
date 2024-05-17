@@ -4,10 +4,12 @@
 
 ### 🌟 New javaagent instrumentation
 
-- Add support for InfluxDB
+- InfluxDB
   ([#10850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10850))
-- Add instrumentation for armeria gRPC
+- Armeria gRPC
   ([#11351](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11351))
+- Apache ShenYu
+  ([#11260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11260))
 
 ### 📈 Enhancements
 
