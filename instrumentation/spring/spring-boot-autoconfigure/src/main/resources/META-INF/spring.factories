@@ -6,7 +6,7 @@ io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.mongo.Mong
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.logging.OpenTelemetryAppenderAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jdbc.JdbcInstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.micrometer.MicrometerBridgeAutoConfiguration,\
-io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.r2dbc.R2dbcAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.r2dbc.R2dbcInstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web.SpringWebInstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux.SpringWebfluxInstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webmvc.SpringWebMvc5InstrumentationAutoConfiguration

@@ -71,6 +71,8 @@ dependencies {
   }
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
+  testRuntimeOnly("com.h2database:h2:1.4.197")
+  testRuntimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
 
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")

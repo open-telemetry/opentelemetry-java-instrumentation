@@ -68,16 +68,13 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                                 assertThat(s.getName())
                                     .isEqualToIgnoringCase("SELECT testdb.PLAYER"))
                         .hasAttribute(DbIncubatingAttributes.DB_NAME, "testdb")
-                        .hasAttributesSatisfying(
-                            a ->
-                                assertThat(a.get(DbIncubatingAttributes.DB_SQL_TABLE))
-                                    .isEqualToIgnoringCase("PLAYER"))
-                        .hasAttribute(DbIncubatingAttributes.DB_OPERATION, "SELECT")
+                        // 2 is not replaced by ?,
+                        // otel.instrumentation.common.db-statement-sanitizer.enabled=false
                         .hasAttributesSatisfying(
                             a ->
                                 assertThat(a.get(DbIncubatingAttributes.DB_STATEMENT))
                                     .isEqualToIgnoringCase(
-                                        "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT ?"))
+                                        "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT 2"))
                         .hasAttribute(DbIncubatingAttributes.DB_SYSTEM, "h2")));
   }
 }

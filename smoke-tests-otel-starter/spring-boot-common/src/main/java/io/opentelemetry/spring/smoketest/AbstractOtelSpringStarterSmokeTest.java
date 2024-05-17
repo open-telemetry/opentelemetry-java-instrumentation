@@ -60,6 +60,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private RestTemplateBuilder restTemplateBuilder;
   @LocalServerPort private int port;
+  @Autowired private JdbcTemplate jdbcTemplate;
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
@@ -69,7 +70,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     public void loadData() {
       jdbcTemplate
           .getObject()
-          .execute("create table test_table (id bigint not null, primary key (id))");
+          .execute(
+              "create table customer (id bigint not null, name varchar not null, primary key (id))");
     }
 
     @Bean
@@ -128,7 +130,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                         .hasKind(SpanKind.CLIENT)
                         .hasAttribute(
                             DbIncubatingAttributes.DB_STATEMENT,
-                            "create table test_table (id bigint not null, primary key (id))")),
+                            "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 clientSpan ->
@@ -169,6 +171,30 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         .as("Should capture code attributes")
         .containsEntry(
             CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+  }
+
+  @Test
+  void databaseQuery() {
+    testing.clearAllExportedData();
+
+    testing.runWithSpan(
+        "server",
+        () -> {
+          jdbcTemplate.query(
+              "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name"));
+        });
+
+    // 1 is not replaced by ?, otel.instrumentation.common.db-statement-sanitizer.enabled=false
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                span -> span.hasName("server"),
+                span -> span.satisfies(s -> assertThat(s.getName()).endsWith(".getConnection")),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttribute(
+                            DbIncubatingAttributes.DB_STATEMENT,
+                            "select name from customer where id = 1")));
   }
 
   @Test

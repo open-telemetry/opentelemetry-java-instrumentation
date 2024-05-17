@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jd
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -27,7 +28,8 @@ public class JdbcInstrumentationAutoConfiguration {
   @Bean
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   static DataSourcePostProcessor dataSourcePostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
-    return new DataSourcePostProcessor(openTelemetryProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+    return new DataSourcePostProcessor(openTelemetryProvider, configPropertiesProvider);
   }
 }

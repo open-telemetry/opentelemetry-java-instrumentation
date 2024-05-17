@@ -16,9 +16,10 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @EnabledIfEnvironmentVariable(
-    named = "GITHUB_ACTIONS",
+    named = "DOCKER_COMPOSE_TEST",
     matches = "true",
     disabledReason =
-        "Not currently executing within GitHub actions where the required external "
-            + "services (e.g. mongodb) are started using docker.")
-public @interface EnabledInGithubActions {}
+        "Testcontainers does not work in some cases with GraalVM native images. "
+            + "A container has to be started manually. "
+            + "So, an environment variable is used to disable the test by default.")
+public @interface RequiresDockerCompose {}
