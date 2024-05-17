@@ -35,12 +35,15 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
@@ -55,6 +58,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Autowired private PropagationProperties propagationProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
+  @Autowired private RestTemplateBuilder restTemplateBuilder;
+  @LocalServerPort private int port;
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
@@ -168,26 +173,17 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
   @Test
   void restTemplate() {
-    assertClient(OtelSpringStarterSmokeTestController.REST_TEMPLATE);
-  }
-
-  protected void assertClient(String url) {
     testing.clearAllExportedData();
 
-    testRestTemplate.getForObject(url, String.class);
+    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
+    assertClient();
+  }
 
+  protected void assertClient() {
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                clientSpan ->
-                    clientSpan
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
-                serverSpan ->
-                    serverSpan
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, url),
                 nestedClientSpan ->
                     nestedClientSpan
                         .hasKind(SpanKind.CLIENT)
