@@ -22,4 +22,4 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
         "Testcontainers does not work in some cases with GraalVM native images. "
             + "A container has to be started manually. "
             + "So, an environment variable is used to disable the test by default.")
-public @interface RequiresDockerComposeEnvVariable {}
+public @interface RequiresDockerCompose {}
