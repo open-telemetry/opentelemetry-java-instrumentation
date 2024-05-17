@@ -22,9 +22,9 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(name = "otel.instrumentation.r2dbc.enabled", matchIfMissing = true)
 @Conditional(SdkEnabled.class)
 @Configuration(proxyBeanMethods = false)
-public class R2dbcAutoConfiguration {
+public class R2dbcInstrumentationAutoConfiguration {
 
-  public R2dbcAutoConfiguration() {}
+  public R2dbcInstrumentationAutoConfiguration() {}
 
   @Bean
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
