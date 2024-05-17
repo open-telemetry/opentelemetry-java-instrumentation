@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstru
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.function.Function;
 
 public class JavaHttpClientSingletons {
 
@@ -34,6 +35,7 @@ public class JavaHttpClientSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
             builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+            Function.identity(),
             singletonList(
                 HttpClientPeerServiceAttributesExtractor.create(
                     JavaHttpClientAttributesGetter.INSTANCE,

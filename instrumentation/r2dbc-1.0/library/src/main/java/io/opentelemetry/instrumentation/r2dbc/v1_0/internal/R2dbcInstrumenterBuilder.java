@@ -12,9 +12,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -40,16 +42,22 @@ public final class R2dbcInstrumenterBuilder {
     return this;
   }
 
-  public Instrumenter<DbExecution, Void> build(boolean statementSanitizationEnabled) {
+  public Instrumenter<DbExecution, Void> build(
+      Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
+          spanNameExtractorTransformer,
+      boolean statementSanitizationEnabled) {
+    SpanNameExtractor<? super DbExecution> spanNameExtractor =
+        spanNameExtractorTransformer.apply(
+            DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE));
+
     return Instrumenter.<DbExecution, Void>builder(
-            openTelemetry,
-            INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE))
+            openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(ServerAttributesExtractor.create(R2dbcNetAttributesGetter.INSTANCE))
+        .addAttributesExtractors(additionalExtractors)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

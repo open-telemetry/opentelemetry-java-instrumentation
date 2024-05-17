@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHt
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.List;
+import java.util.function.Function;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -30,6 +31,7 @@ public final class WebClientHelper {
                   .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                   .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
           builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+          Function.identity(),
           singletonList(
               HttpClientPeerServiceAttributesExtractor.create(
                   WebClientHttpAttributesGetter.INSTANCE,

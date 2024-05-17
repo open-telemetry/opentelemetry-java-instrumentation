@@ -12,13 +12,13 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:armeria-1.3:library"))
+  implementation(project(":instrumentation:armeria:armeria-1.3:library"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   library("com.linecorp.armeria:armeria:1.3.0")
   testLibrary("com.linecorp.armeria:armeria-junit5:1.3.0")
 
-  testImplementation(project(":instrumentation:armeria-1.3:testing"))
+  testImplementation(project(":instrumentation:armeria:armeria-1.3:testing"))
 }
 
 tasks {

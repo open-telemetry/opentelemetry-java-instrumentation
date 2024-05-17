@@ -77,7 +77,7 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                             a ->
                                 assertThat(a.get(DbIncubatingAttributes.DB_STATEMENT))
                                     .isEqualToIgnoringCase(
-                                        "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $? LIMIT ?"))
+                                        "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT ?"))
                         .hasAttribute(DbIncubatingAttributes.DB_SYSTEM, "h2")));
   }
 }

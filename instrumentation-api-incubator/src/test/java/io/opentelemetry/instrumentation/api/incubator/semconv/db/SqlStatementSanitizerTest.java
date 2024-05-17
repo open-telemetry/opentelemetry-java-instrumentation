@@ -140,7 +140,7 @@ public class SqlStatementSanitizerTest {
   static class SqlArgs implements ArgumentsProvider {
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           Arguments.of("SELECT * FROM TABLE WHERE FIELD=1234", "SELECT * FROM TABLE WHERE FIELD=?"),
           Arguments.of(
@@ -214,6 +214,10 @@ public class SqlStatementSanitizerTest {
           Arguments.of(
               "SELECT * FROM TABLE WHERE FIELD = $$\\\\$$", "SELECT * FROM TABLE WHERE FIELD = ?"),
 
+          // PostgreSQL native parameter marker, we want to keep $1 instead of replacing it with ?
+          Arguments.of(
+              "SELECT * FROM TABLE WHERE FIELD = $1", "SELECT * FROM TABLE WHERE FIELD = $1"),
+
           // Unicode, including a unicode identifier with a trailing number
           Arguments.of(
               "SELECT * FROM TABLEओ7 WHERE FIELD = 'ɣ'", "SELECT * FROM TABLEओ7 WHERE FIELD = ?"),
@@ -231,7 +235,7 @@ public class SqlStatementSanitizerTest {
   static class CouchbaseArgs implements ArgumentsProvider {
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           // Some databases support/encourage " instead of ' with same escape rules
           Arguments.of(
@@ -268,7 +272,7 @@ public class SqlStatementSanitizerTest {
     }
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           // Select
           Arguments.of("SELECT x, y, z FROM schema.table", expect("SELECT", "schema.table")),
@@ -381,7 +385,7 @@ public class SqlStatementSanitizerTest {
     }
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           Arguments.of("CREATE TABLE `table`", expect("CREATE TABLE", "table")),
           Arguments.of("CREATE TABLE IF NOT EXISTS table", expect("CREATE TABLE", "table")),
