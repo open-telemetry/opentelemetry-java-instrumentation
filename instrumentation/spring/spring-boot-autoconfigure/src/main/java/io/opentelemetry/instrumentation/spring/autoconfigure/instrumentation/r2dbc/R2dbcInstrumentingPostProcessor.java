@@ -33,7 +33,6 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
     if (bean instanceof ConnectionFactory && !ScopedProxyUtils.isScopedTarget(beanName)) {
       ConnectionFactory connectionFactory = (ConnectionFactory) bean;
       return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
-          // there is no instrumentation-specific property, so we use the common one
           .setStatementSanitizationEnabled(
               InstrumentationConfigUtil.isStatementSanitizationEnabled(
                   configPropertiesProvider.getObject(),
