@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExp
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
@@ -65,6 +66,12 @@ public final class ArmeriaTelemetryBuilder {
       HttpSpanNameExtractor.builder(ArmeriaHttpClientAttributesGetter.INSTANCE);
   private final HttpSpanNameExtractorBuilder<RequestContext> httpServerSpanNameExtractorBuilder =
       HttpSpanNameExtractor.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
+  private Function<
+          SpanNameExtractor<RequestContext>, ? extends SpanNameExtractor<? super RequestContext>>
+      clientSpanNameExtractorTransformer = Function.identity();
+  private Function<
+          SpanNameExtractor<RequestContext>, ? extends SpanNameExtractor<? super RequestContext>>
+      serverSpanNameExtractorTransformer = Function.identity();
 
   private final HttpServerRouteBuilder<RequestContext> httpServerRouteBuilder =
       HttpServerRoute.builder(ArmeriaHttpServerAttributesGetter.INSTANCE);
@@ -212,18 +219,43 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder setClientSpanNameExtractor(
+      Function<
+              SpanNameExtractor<RequestContext>,
+              ? extends SpanNameExtractor<? super RequestContext>>
+          clientSpanNameExtractor) {
+    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+    return this;
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder setServerSpanNameExtractor(
+      Function<
+              SpanNameExtractor<RequestContext>,
+              ? extends SpanNameExtractor<? super RequestContext>>
+          serverSpanNameExtractor) {
+    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+    return this;
+  }
+
   public ArmeriaTelemetry build() {
     ArmeriaHttpClientAttributesGetter clientAttributesGetter =
         ArmeriaHttpClientAttributesGetter.INSTANCE;
     ArmeriaHttpServerAttributesGetter serverAttributesGetter =
         ArmeriaHttpServerAttributesGetter.INSTANCE;
 
+    SpanNameExtractor<? super RequestContext> clientSpanNameExtractor =
+        clientSpanNameExtractorTransformer.apply(httpClientSpanNameExtractorBuilder.build());
+    SpanNameExtractor<? super RequestContext> serverSpanNameExtractor =
+        serverSpanNameExtractorTransformer.apply(httpServerSpanNameExtractorBuilder.build());
+
     InstrumenterBuilder<ClientRequestContext, RequestLog> clientInstrumenterBuilder =
-        Instrumenter.builder(
-            openTelemetry, INSTRUMENTATION_NAME, httpClientSpanNameExtractorBuilder.build());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);
     InstrumenterBuilder<ServiceRequestContext, RequestLog> serverInstrumenterBuilder =
-        Instrumenter.builder(
-            openTelemetry, INSTRUMENTATION_NAME, httpServerSpanNameExtractorBuilder.build());
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor);
 
     Stream.of(clientInstrumenterBuilder, serverInstrumenterBuilder)
         .forEach(instrumenter -> instrumenter.addAttributesExtractors(additionalExtractors));
