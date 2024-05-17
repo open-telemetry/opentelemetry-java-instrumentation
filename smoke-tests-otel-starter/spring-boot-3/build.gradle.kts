@@ -15,20 +15,22 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
   runtimeOnly("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
-  implementation("org.springframework.kafka:spring-kafka") // not tested here, just make sure there are no warnings when it's included
-  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
+  implementation("org.springframework.kafka:spring-kafka")
+  implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
+  implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
+  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("org.testcontainers:kafka")
+  testImplementation("org.testcontainers:mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
-  testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
+}
+
+springBoot {
+  mainClass = "io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication"
 }
 
 tasks {
-  test {
-    // suppress warning about byte-buddy-agent being loaded dynamically
-    jvmArgs("-XX:+EnableDynamicAgentLoading")
-  }
   compileAotJava {
     with(options) {
       compilerArgs.add("-Xlint:-deprecation,-unchecked,none")

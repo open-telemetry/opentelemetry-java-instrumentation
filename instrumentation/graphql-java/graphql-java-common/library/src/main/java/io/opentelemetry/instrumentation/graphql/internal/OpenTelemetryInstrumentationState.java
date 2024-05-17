@@ -13,41 +13,41 @@ import io.opentelemetry.context.Context;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class OpenTelemetryInstrumentationState implements InstrumentationState {
+public class OpenTelemetryInstrumentationState implements InstrumentationState {
   private Context context;
   private Operation operation;
   private String operationName;
   private String query;
 
-  Context getContext() {
+  public Context getContext() {
     return context;
   }
 
-  void setContext(Context context) {
+  public void setContext(Context context) {
     this.context = context;
   }
 
-  Operation getOperation() {
+  public Operation getOperation() {
     return operation;
   }
 
-  void setOperation(Operation operation) {
+  public void setOperation(Operation operation) {
     this.operation = operation;
   }
 
-  String getOperationName() {
+  public String getOperationName() {
     return operationName;
   }
 
-  void setOperationName(String operationName) {
+  public void setOperationName(String operationName) {
     this.operationName = operationName;
   }
 
-  String getQuery() {
+  public String getQuery() {
     return query;
   }
 
-  void setQuery(String query) {
+  public void setQuery(String query) {
     this.query = query;
   }
 }

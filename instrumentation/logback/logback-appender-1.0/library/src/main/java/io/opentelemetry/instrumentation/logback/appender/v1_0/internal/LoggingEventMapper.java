@@ -21,8 +21,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.ExceptionAttributes;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -37,6 +35,15 @@ import org.slf4j.event.KeyValuePair;
  * any time.
  */
 public final class LoggingEventMapper {
+  // copied from CodeIncubatingAttributes
+  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
+  private static final AttributeKey<String> CODE_NAMESPACE =
+      AttributeKey.stringKey("code.namespace");
+  // copied from
+  private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
+  private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
 
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
@@ -126,9 +133,9 @@ public final class LoggingEventMapper {
     captureMdcAttributes(attributes, loggingEvent.getMDCPropertyMap());
 
     if (captureExperimentalAttributes) {
-      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, loggingEvent.getThreadName());
+      attributes.put(THREAD_NAME, loggingEvent.getThreadName());
       if (threadId != -1) {
-        attributes.put(ThreadIncubatingAttributes.THREAD_ID, threadId);
+        attributes.put(THREAD_ID, threadId);
       }
     }
 
@@ -138,13 +145,13 @@ public final class LoggingEventMapper {
         StackTraceElement firstStackElement = callerData[0];
         String fileName = firstStackElement.getFileName();
         if (fileName != null) {
-          attributes.put(CodeIncubatingAttributes.CODE_FILEPATH, fileName);
+          attributes.put(CODE_FILEPATH, fileName);
         }
-        attributes.put(CodeIncubatingAttributes.CODE_NAMESPACE, firstStackElement.getClassName());
-        attributes.put(CodeIncubatingAttributes.CODE_FUNCTION, firstStackElement.getMethodName());
+        attributes.put(CODE_NAMESPACE, firstStackElement.getClassName());
+        attributes.put(CODE_FUNCTION, firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
         if (lineNumber > 0) {
-          attributes.put(CodeIncubatingAttributes.CODE_LINENO, lineNumber);
+          attributes.put(CODE_LINENO, lineNumber);
         }
       }
     }

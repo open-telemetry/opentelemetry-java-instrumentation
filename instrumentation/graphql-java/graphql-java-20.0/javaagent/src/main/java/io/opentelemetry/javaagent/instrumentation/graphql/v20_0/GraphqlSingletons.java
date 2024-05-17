@@ -16,10 +16,18 @@ public final class GraphqlSingletons {
   private static final boolean QUERY_SANITIZATION_ENABLED =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
+  private static final boolean DATA_FETCHER_ENABLED =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.graphql.data-fetcher.enabled", false);
+  private static final boolean TRIVIAL_DATA_FETCHER_ENABLED =
+      InstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.graphql.trivial-data-fetcher.enabled", false);
 
   private static final GraphQLTelemetry TELEMETRY =
       GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
           .setSanitizeQuery(QUERY_SANITIZATION_ENABLED)
+          .setDataFetcherInstrumentationEnabled(DATA_FETCHER_ENABLED)
+          .setTrivialDataFetcherInstrumentationEnabled(TRIVIAL_DATA_FETCHER_ENABLED)
           .build();
 
   private GraphqlSingletons() {}

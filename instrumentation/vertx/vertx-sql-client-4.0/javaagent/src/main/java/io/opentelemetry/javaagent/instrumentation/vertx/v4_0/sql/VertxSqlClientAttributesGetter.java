@@ -31,6 +31,12 @@ public enum VertxSqlClientAttributesGetter
 
   @Override
   @Nullable
+  public String getConnectionString(VertxSqlClientRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getRawStatement(VertxSqlClientRequest request) {
     return request.getStatement();
   }

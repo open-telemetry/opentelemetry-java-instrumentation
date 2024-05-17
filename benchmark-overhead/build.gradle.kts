@@ -18,8 +18,8 @@ repositories {
 dependencies {
   implementation(enforcedPlatform("org.junit:junit-bom:5.10.2"))
 
-  testImplementation("org.testcontainers:testcontainers:1.19.7")
-  testImplementation("org.testcontainers:postgresql:1.19.7")
+  testImplementation("org.testcontainers:testcontainers:1.19.8")
+  testImplementation("org.testcontainers:postgresql:1.19.8")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")

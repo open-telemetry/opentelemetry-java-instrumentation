@@ -26,7 +26,7 @@ jobs:
   spotless:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
@@ -52,14 +52,14 @@ jobs:
   gradle-wrapper-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - uses: gradle/actions/wrapper-validation@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
 
   license-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -68,7 +68,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
@@ -106,7 +106,7 @@ jobs:
   extra-dependency-management-enforcement:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Dependency check
         run: |
@@ -129,7 +129,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -138,7 +138,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Increase gradle daemon heap size
         run: |
@@ -203,7 +203,7 @@ jobs:
             vm: openj9
       fail-fast: false
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -220,7 +220,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       # vaadin 14 tests fail with node 18
       - name: Set up Node
@@ -326,7 +326,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -335,7 +335,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
@@ -379,7 +379,7 @@ jobs:
   gradle-plugins:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -388,7 +388,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
@@ -402,7 +402,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -411,7 +411,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2

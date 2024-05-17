@@ -34,6 +34,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
+import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
@@ -78,6 +79,10 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   String getContextPath() {
     return ""
+  }
+
+  boolean useHttp2() {
+    false
   }
 
   boolean hasHandlerSpan(ServerEndpoint endpoint) {
@@ -249,6 +254,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
       if (!testNonStandardHttpMethod()) {
         options.disableTestNonStandardHttpMethod()
       }
+      options.useHttp2 = useHttp2()
     }
 
     // Override trace assertion method. We can call java assertions from groovy but not the other
@@ -352,12 +358,16 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
 
   def "http pipelining test"() {
     assumeTrue(testHttpPipelining())
+    // test uses http 1.1
+    assumeFalse(useHttp2())
     expect:
     junitTest.httpPipelining()
   }
 
   def "non standard http method"() {
     assumeTrue(testNonStandardHttpMethod())
+    // test uses http 1.1
+    assumeFalse(useHttp2())
     expect:
     junitTest.requestWithNonStandardHttpMethod()
   }

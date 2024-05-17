@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +19,40 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 @ExtendWith(OutputCaptureExtension.class)
 public abstract class AbstractSpringStarterSmokeTest {
 
-  @Autowired OpenTelemetry openTelemetry;
+  @Autowired protected OpenTelemetry openTelemetry;
 
   protected SpringSmokeTestRunner testing;
 
+  @BeforeAll
+  static void beforeAll() {
+    SpringSmokeTestRunner.resetExporters();
+  }
+
   @BeforeEach
-  void initOpenTelemetry() {
-    testing = new SpringSmokeTestRunner(openTelemetry);
+  void setUpTesting() {
+    if (openTelemetry != null) {
+      // @Autowired doesn't work in all tests, e.g. AbstractJvmKafkaSpringStarterSmokeTest
+      // those tests have to manage the testing instance,
+      // themselves because they don't use @SpringBootTest
+      testing = new SpringSmokeTestRunner(openTelemetry);
+    }
   }
 
   @AfterEach
   void checkSpringLogs(CapturedOutput output) {
     // warnings are emitted if the auto-configuration have non-fatal problems
-    assertThat(output).doesNotContain("WARN").doesNotContain("ERROR");
+    assertThat(output)
+        // not a warning in Spring Boot 2
+        .doesNotContain("is not eligible for getting processed by all BeanPostProcessors")
+        // only look for WARN and ERROR log level, e.g. [Test worker] WARN
+        .doesNotContain("] WARN")
+        .satisfies(
+            s -> {
+              if (!s.toString()
+                  .contains(
+                      "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider")) {
+                assertThat(s).doesNotContain("] ERROR");
+              }
+            });
   }
 }

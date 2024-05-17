@@ -5,14 +5,18 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.Arrays;
 
 final class RpcMetricsAdvice {
+
+  // copied from RpcIncubatingAttributes
+  private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
+      AttributeKey.longKey("rpc.grpc.status_code");
 
   static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
@@ -23,10 +27,10 @@ final class RpcMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             Arrays.asList(
-                RpcIncubatingAttributes.RPC_SYSTEM,
-                RpcIncubatingAttributes.RPC_SERVICE,
-                RpcIncubatingAttributes.RPC_METHOD,
-                RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
+                RpcCommonAttributesExtractor.RPC_SYSTEM,
+                RpcCommonAttributesExtractor.RPC_SERVICE,
+                RpcCommonAttributesExtractor.RPC_METHOD,
+                RPC_GRPC_STATUS_CODE,
                 NetworkAttributes.NETWORK_TYPE,
                 NetworkAttributes.NETWORK_TRANSPORT,
                 ServerAttributes.SERVER_ADDRESS,
@@ -42,10 +46,10 @@ final class RpcMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             Arrays.asList(
-                RpcIncubatingAttributes.RPC_SYSTEM,
-                RpcIncubatingAttributes.RPC_SERVICE,
-                RpcIncubatingAttributes.RPC_METHOD,
-                RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
+                RpcCommonAttributesExtractor.RPC_SYSTEM,
+                RpcCommonAttributesExtractor.RPC_SERVICE,
+                RpcCommonAttributesExtractor.RPC_METHOD,
+                RPC_GRPC_STATUS_CODE,
                 NetworkAttributes.NETWORK_TYPE,
                 NetworkAttributes.NETWORK_TRANSPORT,
                 ServerAttributes.SERVER_ADDRESS,

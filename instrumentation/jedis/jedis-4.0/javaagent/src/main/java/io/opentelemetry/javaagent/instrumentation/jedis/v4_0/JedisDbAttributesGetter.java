@@ -28,6 +28,11 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  public String getConnectionString(JedisRequest request) {
+    return null;
+  }
+
+  @Override
   public String getStatement(JedisRequest request) {
     return request.getStatement();
   }

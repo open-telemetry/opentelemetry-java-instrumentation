@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.37.0"
+val otelSdkVersion = "1.38.0"
 val otelContribVersion = "1.35.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -34,14 +34,14 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.2",
-  "org.testcontainers:testcontainers-bom:1.19.7",
+  "org.testcontainers:testcontainers-bom:1.19.8",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.10.4"
 val errorProneVersion = "2.27.1"
-val byteBuddyVersion = "1.14.14"
+val byteBuddyVersion = "1.14.15"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -96,13 +96,13 @@ val DEPENDENCIES = listOf(
   "commons-fileupload:commons-fileupload:1.5",
   "commons-io:commons-io:2.16.1",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.1",
+  "commons-logging:commons-logging:1.3.2",
   "commons-validator:commons-validator:1.8.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.2.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.3.1-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.25.3",
   "org.awaitility:awaitility:4.2.1",

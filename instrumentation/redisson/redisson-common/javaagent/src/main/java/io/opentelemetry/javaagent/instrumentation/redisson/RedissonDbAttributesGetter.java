@@ -29,6 +29,11 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   }
 
   @Override
+  public String getConnectionString(RedissonRequest request) {
+    return null;
+  }
+
+  @Override
   public String getStatement(RedissonRequest request) {
     return request.getStatement();
   }

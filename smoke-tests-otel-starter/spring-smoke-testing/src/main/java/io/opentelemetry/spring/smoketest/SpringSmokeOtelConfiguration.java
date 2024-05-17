@@ -5,6 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.logs.ConfigurableLogRecordExporterProvider;
@@ -28,7 +29,7 @@ public class SpringSmokeOtelConfiguration {
   }
 
   private static Map<String, String> getProperties() {
-    return Map.of(
+    return ImmutableMap.of(
         // We set the export interval of the metrics to 100 ms. The default value is 1 minute.
         "otel.metric.export.interval",
         "100",

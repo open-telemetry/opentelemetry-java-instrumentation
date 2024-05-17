@@ -16,6 +16,10 @@ public final class GraphQLTelemetryBuilder {
 
   private boolean sanitizeQuery = true;
 
+  private boolean dataFetcherInstrumentationEnabled = false;
+
+  private boolean trivialDataFetcherInstrumentationEnabled = false;
+
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -27,11 +31,35 @@ public final class GraphQLTelemetryBuilder {
     return this;
   }
 
+  /** Sets whether spans are created for GraphQL Data Fetchers. Default is {@code false}. */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setDataFetcherInstrumentationEnabled(
+      boolean dataFetcherInstrumentationEnabled) {
+    this.dataFetcherInstrumentationEnabled = dataFetcherInstrumentationEnabled;
+    return this;
+  }
+
+  /**
+   * Sets whether spans are created for trivial GraphQL Data Fetchers. A trivial DataFetcher is one
+   * that simply maps data from an object to a field. Default is {@code false}.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setTrivialDataFetcherInstrumentationEnabled(
+      boolean trivialDataFetcherInstrumentationEnabled) {
+    this.trivialDataFetcherInstrumentationEnabled = trivialDataFetcherInstrumentationEnabled;
+    return this;
+  }
+
   /**
    * Returns a new {@link GraphQLTelemetry} with the settings of this {@link
    * GraphQLTelemetryBuilder}.
    */
   public GraphQLTelemetry build() {
-    return new GraphQLTelemetry(openTelemetry, sanitizeQuery);
+    return new GraphQLTelemetry(
+        openTelemetry,
+        sanitizeQuery,
+        GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
+            openTelemetry, dataFetcherInstrumentationEnabled),
+        trivialDataFetcherInstrumentationEnabled);
   }
 }

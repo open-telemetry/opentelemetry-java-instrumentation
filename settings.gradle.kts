@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.17.2"
+  id("com.gradle.develocity") version "3.17.3"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
@@ -139,8 +139,12 @@ include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
 
 include(":smoke-tests-otel-starter:spring-smoke-testing")
+include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
-include(":smoke-tests-otel-starter:spring-boot-3-reactive")
+include(":smoke-tests-otel-starter:spring-boot-common")
+include(":smoke-tests-otel-starter:spring-boot-reactive-2")
+include(":smoke-tests-otel-starter:spring-boot-reactive-3")
+include(":smoke-tests-otel-starter:spring-boot-reactive-common")
 
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
@@ -165,6 +169,7 @@ include(":instrumentation:apache-shenyu:apache-shenyu-2.4:javaagent")
 include(":instrumentation:armeria-1.3:javaagent")
 include(":instrumentation:armeria-1.3:library")
 include(":instrumentation:armeria-1.3:testing")
+include(":instrumentation:armeria-grpc-1.14:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
@@ -425,6 +430,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")

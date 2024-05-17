@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
@@ -17,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -27,6 +27,9 @@ import org.apache.dubbo.rpc.Result;
 public final class DubboTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dubbo-2.7";
+
+  // copied from PeerIncubatingAttributes
+  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
@@ -82,7 +85,7 @@ public final class DubboTelemetryBuilder {
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(PeerIncubatingAttributes.PEER_SERVICE, peerService));
+          AttributesExtractor.constant(PEER_SERVICE, peerService));
     }
 
     return new DubboTelemetry(
