@@ -30,6 +30,8 @@ val scalified = fun(pack: String): String {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:executors:bootstrap"))
+
   library("${scalified("com.twitter:finagle-http")}:$finagleVersion")
 
   // should wire netty contexts
