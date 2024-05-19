@@ -42,8 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static final List<ServerEndpoint> serverEndpointsList =
       Arrays.asList(
@@ -97,14 +96,12 @@ public class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setContextPath("/app");
-
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
+    options.setTestErrorBody(false);
 
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
-
-    options.setTestErrorBody(false);
 
     options.setExpectedHttpRoute(
         (ServerEndpoint endpoint, String method) -> {
@@ -118,9 +115,9 @@ public class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (endpoint == REDIRECT) {
+    if (endpoint.equals(REDIRECT)) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
-    } else if (endpoint == NOT_FOUND) {
+    } else if (endpoint.equals(NOT_FOUND)) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
     }
     span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);

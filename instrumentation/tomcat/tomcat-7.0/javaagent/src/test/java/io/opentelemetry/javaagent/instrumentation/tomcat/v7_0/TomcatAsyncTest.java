@@ -27,9 +27,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Objects;
 import java.util.UUID;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
@@ -39,8 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   public Tomcat setupServer() throws Exception {
@@ -67,9 +64,8 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     return tomcatServer;
   }
 
-  @SuppressWarnings("unchecked")
   protected void setupServlets(Context context) throws Exception {
-    Class<Servlet> servlet = (Class<Servlet>) servlet();
+    Class<AsyncServlet> servlet = AsyncServlet.class;
 
     addServlet(context, SUCCESS.getPath(), servlet);
     addServlet(context, QUERY_PARAM.getPath(), servlet);
@@ -81,11 +77,8 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     addServlet(context, INDEXED_CHILD.getPath(), servlet);
   }
 
-  public Class<? extends Servlet> servlet() {
-    return AsyncServlet.class;
-  }
-
-  void addServlet(Context servletContext, String path, Class<Servlet> servlet) throws Exception {
+  void addServlet(Context servletContext, String path, Class<AsyncServlet> servlet)
+      throws Exception {
     String name = UUID.randomUUID().toString();
     Tomcat.addServlet(servletContext, name, servlet.getDeclaredConstructor().newInstance());
     servletContext.addServletMappingDecoded(path, name);
@@ -103,7 +96,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
 
     options.setExpectedHttpRoute(
         (ServerEndpoint endpoint, String method) -> {
-          if (Objects.equals(method, HttpConstants._OTHER)) {
+          if (method.equals(HttpConstants._OTHER)) {
             return getContextPath() + endpoint.getPath();
           }
           if (endpoint.equals(NOT_FOUND)) {
@@ -124,9 +117,9 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (endpoint == REDIRECT) {
+    if (endpoint.equals(REDIRECT)) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
-    } else if (endpoint == NOT_FOUND) {
+    } else if (endpoint.equals(NOT_FOUND)) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
     }
     span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
