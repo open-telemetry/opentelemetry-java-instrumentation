@@ -11,6 +11,7 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
 
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
