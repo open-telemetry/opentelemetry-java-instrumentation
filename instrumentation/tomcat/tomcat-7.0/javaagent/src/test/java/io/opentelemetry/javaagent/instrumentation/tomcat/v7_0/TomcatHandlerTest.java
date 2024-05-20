@@ -39,7 +39,7 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
+class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
