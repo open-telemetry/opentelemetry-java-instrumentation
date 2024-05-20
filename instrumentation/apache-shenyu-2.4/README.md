@@ -1,4 +1,4 @@
-# Settings for the Apache Shenyu instrumentation
+# Settings for the Apache ShenYu instrumentation
 
 | System property                                                     | Type    | Default | Description                                                                                 |
 |---------------------------------------------------------------------| ------- | ------- |---------------------------------------------------------------------------------------------|
