@@ -18,6 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -31,7 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.List;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
@@ -45,7 +45,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static final List<ServerEndpoint> serverEndpointsList =
-      Arrays.asList(
+      asList(
           SUCCESS,
           REDIRECT,
           ERROR,
