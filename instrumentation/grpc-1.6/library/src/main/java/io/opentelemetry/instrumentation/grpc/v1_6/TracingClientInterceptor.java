@@ -109,16 +109,17 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(REQUEST message) {
+      Span span = Span.fromContext(context);
+      Attributes attributes =
+          Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, MESSAGE_ID_UPDATER.incrementAndGet(this));
+      span.addEvent("message", attributes);
+
       try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
         instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
-      Span span = Span.fromContext(context);
-      Attributes attributes =
-          Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, MESSAGE_ID_UPDATER.incrementAndGet(this));
-      span.addEvent("message", attributes);
     }
 
     final class TracingClientCallListener
