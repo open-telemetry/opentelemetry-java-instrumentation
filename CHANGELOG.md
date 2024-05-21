@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### 📈 Enhancements
+
+- Backport: Fix the logic to get container.id resource attribute
+  ([#11333](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11333))
+- Backport: Update the OpenTelemetry SDK version to 1.38.0
+  ([#11386](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11386))
+- Backport: Fix a bug in undertow instrumentation related to HTTP/2
+  ([#11387](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11387))
+- Backport: Fix container.id issue in some crio scenarios
+  ([#11405](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11405))
+
 ## Version 1.33.2 (2024-04-20)
 
 ### 📈 Enhancements
