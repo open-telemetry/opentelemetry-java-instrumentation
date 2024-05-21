@@ -285,7 +285,7 @@ spdxSbom {
         revision.set(System.getenv("GITHUB_SHA"))
       }
       document {
-        name.set("opentelemetry-java_opentelemetry-javaagent")
+        name.set("opentelemetry-javaagent")
         namespace.set("https://opentelemetry.io/spdx/" + UUID.randomUUID())
       }
     }
@@ -296,7 +296,7 @@ tasks.withType<AbstractPublishToMaven> {
 }
 project.afterEvaluate {
   tasks.withType<PublishToMavenLocal>().configureEach {
-    this.publication.artifact("${layout.buildDirectory.get()}/spdx/opentelemetry-java_opentelemetry-javaagent.spdx.json") {
+    this.publication.artifact("${layout.buildDirectory.get()}/spdx/opentelemetry-javaagent.spdx.json") {
       classifier = "spdx"
       extension = "json"
     }
