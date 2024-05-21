@@ -278,7 +278,7 @@ spdxSbom {
     // Create a target to match the published jar name.
     // This is used for the task name (spdxSbomFor<SbomName>)
     // and output file (<sbomName>.spdx.json).
-    create("opentelemetry-java_opentelemetry-javaagent") {
+    create("opentelemetry-javaagent") {
       configurations.set(listOf("baseJavaagentLibs"))
       scm {
         uri.set("https://github.com/" + System.getenv("GITHUB_REPOSITORY"))
