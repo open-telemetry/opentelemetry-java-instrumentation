@@ -94,7 +94,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
+        run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
 
       - name: Build and publish gradle plugins
         env:
@@ -107,6 +107,18 @@ jobs:
         # Don't use publishToSonatype since we don't want to publish the marker artifact
         run: ./gradlew build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
         working-directory: gradle-plugins
+
+      - name: Collect SBOMs
+        run: |
+          mkdir sboms
+          cp javaagent/build/spdx/*.spdx.json sboms
+          zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
+
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        name: Upload SBOMs
+        with:
+          name: opentelemetry-java-instrumentation-SBOM
+          path: "sboms/*.json"
 
       - name: Generate release notes
         env:
@@ -161,7 +173,8 @@ jobs:
                             --title "Version $VERSION" \
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
-                            opentelemetry-javaagent.jar
+                            opentelemetry-javaagent.jar \
+                            opentelemetry-java-instrumentation-SBOM.zip
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
