@@ -57,7 +57,7 @@ jobs:
           java-version: 17.0.6
 
       - name: Login to GitHub package registry
-        uses: azure/docker-login@v1
+        uses: azure/docker-login@v2
         with:
           login-server: ghcr.io
           username: ${{ github.repository_owner }}
