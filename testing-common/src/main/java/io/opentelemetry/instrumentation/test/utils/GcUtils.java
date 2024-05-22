@@ -12,6 +12,8 @@ import java.util.concurrent.TimeoutException;
 
 public final class GcUtils {
 
+  private static final StringBuilder garbage = new StringBuilder();
+
   public static void awaitGc(Duration timeout) throws InterruptedException, TimeoutException {
     Object obj = new Object();
     WeakReference<Object> ref = new WeakReference<>(obj);
@@ -27,6 +29,15 @@ public final class GcUtils {
       if (Thread.interrupted()) {
         throw new InterruptedException();
       }
+      // generate garbage to give gc some work
+      for (int i = 0; i < 26; i++) {
+        if (garbage.length() == 0) {
+          garbage.append("ab");
+        } else {
+          garbage.append(garbage);
+        }
+      }
+      garbage.setLength(0);
       System.gc();
     }
     if (ref.get() != null) {
