@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.render.InventoryMarkdownReportRenderer
+import org.spdx.sbom.gradle.SpdxSbomTask
 import java.util.UUID
 
 plugins {
@@ -295,6 +296,9 @@ tasks.withType<AbstractPublishToMaven> {
   dependsOn("spdxSbom")
 }
 project.afterEvaluate {
+  tasks.withType<Sign>().configureEach {
+    mustRunAfter(tasks.withType<SpdxSbomTask>())
+  }
   tasks.withType<PublishToMavenLocal>().configureEach {
     this.publication.artifact("${layout.buildDirectory.get()}/spdx/opentelemetry-javaagent.spdx.json") {
       classifier = "spdx"
