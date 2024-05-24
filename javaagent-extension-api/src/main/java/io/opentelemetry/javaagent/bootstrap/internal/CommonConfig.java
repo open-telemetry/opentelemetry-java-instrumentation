@@ -74,8 +74,7 @@ public final class CommonConfig {
             "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID);
     loggingKeysTraceFlags =
         config.getString(
-            "otel.instrumentation.common.logging.trace-flags",
-            LoggingContextConstants.TRACE_FLAGS);
+            "otel.instrumentation.common.logging.trace-flags", LoggingContextConstants.TRACE_FLAGS);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {
