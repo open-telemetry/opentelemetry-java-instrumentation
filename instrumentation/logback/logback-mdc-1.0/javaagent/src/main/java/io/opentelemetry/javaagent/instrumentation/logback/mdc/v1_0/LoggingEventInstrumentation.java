@@ -7,6 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.spanIdKey;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceFlagsKey;
+import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.traceIdKey;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -76,10 +79,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
       SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
 
       if (spanContext.isValid()) {
-        spanContextData.put(CommonConfig.get().getLoggingKeysTraceId(), spanContext.getTraceId());
-        spanContextData.put(CommonConfig.get().getLoggingKeysSpanId(), spanContext.getSpanId());
-        spanContextData.put(
-            CommonConfig.get().getLoggingKeysTraceFlags(), spanContext.getTraceFlags().asHex());
+        spanContextData.put(traceIdKey(), spanContext.getTraceId());
+        spanContextData.put(spanIdKey(), spanContext.getSpanId());
+        spanContextData.put(traceFlagsKey(), spanContext.getTraceFlags().asHex());
       }
       spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
 

@@ -27,12 +27,9 @@ import java.util.Map;
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
   private boolean addBaggage;
-
-  private String loggingKeysTraceId;
-
-  private String loggingKeysSpanId;
-
-  private String loggingKeysTraceFlags;
+  private String traceIdKey;
+  private String spanIdKey;
+  private String traceFlagsKey;
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
@@ -48,37 +45,37 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
-   * {@code <loggingKeysTraceId>trace_id</loggingKeysTraceId}
+   * {@code <traceIdKey>trace_id</traceIdKey>}
    *
-   * @param loggingKeysTraceId Customize the key name of the trace_id in MDC
+   * @param traceIdKey Customize the key name of the trace_id in MDC
    */
-  public void setLoggingKeysTraceId(String loggingKeysTraceId) {
-    this.loggingKeysTraceId = loggingKeysTraceId;
+  public void setTraceIdKey(String traceIdKey) {
+    this.traceIdKey = traceIdKey;
   }
 
   /**
-   * {@code <loggingKeysSpanId>span_id</loggingKeysSpanId>}
+   * {@code <spanIdKey>span_id</spanIdKey>}
    *
-   * @param loggingKeysSpanId Customize the key name of the span_id in MDC
+   * @param spanIdKey Customize the key name of the span_id in MDC
    */
-  public void setLoggingKeysSpanId(String loggingKeysSpanId) {
-    this.loggingKeysSpanId = loggingKeysSpanId;
+  public void setSpanIdKey(String spanIdKey) {
+    this.spanIdKey = spanIdKey;
   }
 
   /**
-   * {@code <loggingKeysTraceFlags>trace_flags</loggingKeysTraceFlags>}
+   * {@code <traceFlagsKey>trace_flags</traceFlagsKey>}
    *
-   * @param loggingKeysTraceFlags Customize the key name of the trace_flags in MDC
+   * @param traceFlagsKey Customize the key name of the trace_flags in MDC
    */
-  public void setLoggingKeysTraceFlags(String loggingKeysTraceFlags) {
-    this.loggingKeysTraceFlags = loggingKeysTraceFlags;
+  public void setTraceFlagsKey(String traceFlagsKey) {
+    this.traceFlagsKey = traceFlagsKey;
   }
 
   public ILoggingEvent wrapEvent(ILoggingEvent event) {
     Map<String, String> eventContext = event.getMDCPropertyMap();
     if (eventContext != null
         && eventContext.containsKey(
-            loggingKeysTraceId == null ? LoggingContextConstants.TRACE_ID : loggingKeysTraceId)) {
+            traceIdKey == null ? LoggingContextConstants.TRACE_ID : traceIdKey)) {
       // Assume already instrumented event if traceId is present.
       return event;
     }
@@ -90,15 +87,12 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     if (currentSpan.getSpanContext().isValid()) {
       SpanContext spanContext = currentSpan.getSpanContext();
       contextData.put(
-          loggingKeysTraceId == null ? LoggingContextConstants.TRACE_ID : loggingKeysTraceId,
+          traceIdKey == null ? LoggingContextConstants.TRACE_ID : traceIdKey,
           spanContext.getTraceId());
       contextData.put(
-          loggingKeysSpanId == null ? LoggingContextConstants.SPAN_ID : loggingKeysSpanId,
-          spanContext.getSpanId());
+          spanIdKey == null ? LoggingContextConstants.SPAN_ID : spanIdKey, spanContext.getSpanId());
       contextData.put(
-          loggingKeysTraceFlags == null
-              ? LoggingContextConstants.TRACE_FLAGS
-              : loggingKeysTraceFlags,
+          traceFlagsKey == null ? LoggingContextConstants.TRACE_FLAGS : traceFlagsKey,
           spanContext.getTraceFlags().asHex());
     }
 

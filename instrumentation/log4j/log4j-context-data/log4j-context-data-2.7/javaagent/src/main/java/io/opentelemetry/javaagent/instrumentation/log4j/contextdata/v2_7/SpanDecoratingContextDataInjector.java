@@ -25,6 +25,9 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
   private static final boolean BAGGAGE_ENABLED =
       InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+  private static final String TRACE_ID_KEY = CommonConfig.get().getLoggingKeysTraceId();
+  private static final String SPAN_ID_KEY = CommonConfig.get().getLoggingKeysSpanId();
+  private static final String TRACE_FLAGS_KEY = CommonConfig.get().getLoggingKeysTraceFlags();
 
   private static final StringMap staticContextData = getStaticContextData();
 
@@ -38,7 +41,7 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
   public StringMap injectContextData(List<Property> list, StringMap stringMap) {
     StringMap contextData = delegate.injectContextData(list, stringMap);
 
-    if (contextData.containsKey(CommonConfig.get().getLoggingKeysTraceId())) {
+    if (contextData.containsKey(TRACE_ID_KEY)) {
       // Assume already instrumented event if traceId is present.
       return staticContextData.isEmpty() ? contextData : newContextData(contextData);
     }
@@ -51,11 +54,9 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
     }
 
     StringMap newContextData = newContextData(contextData);
-    newContextData.putValue(
-        CommonConfig.get().getLoggingKeysTraceId(), currentContext.getTraceId());
-    newContextData.putValue(CommonConfig.get().getLoggingKeysSpanId(), currentContext.getSpanId());
-    newContextData.putValue(
-        CommonConfig.get().getLoggingKeysTraceFlags(), currentContext.getTraceFlags().asHex());
+    newContextData.putValue(TRACE_ID_KEY, currentContext.getTraceId());
+    newContextData.putValue(SPAN_ID_KEY, currentContext.getSpanId());
+    newContextData.putValue(TRACE_FLAGS_KEY, currentContext.getTraceFlags().asHex());
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

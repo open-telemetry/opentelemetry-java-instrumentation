@@ -68,13 +68,13 @@ public final class CommonConfig {
     enduserConfig = new EnduserConfig(config);
     loggingKeysTraceId =
         config.getString(
-            "otel.instrumentation.common.logging.keys.trace_id", LoggingContextConstants.TRACE_ID);
+            "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID);
     loggingKeysSpanId =
         config.getString(
-            "otel.instrumentation.common.logging.keys.span_id", LoggingContextConstants.SPAN_ID);
+            "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID);
     loggingKeysTraceFlags =
         config.getString(
-            "otel.instrumentation.common.logging.keys.trace_flags",
+            "otel.instrumentation.common.logging.trace-flags",
             LoggingContextConstants.TRACE_FLAGS);
   }
 

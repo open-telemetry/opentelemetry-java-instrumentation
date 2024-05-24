@@ -23,22 +23,16 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  * #supplyContextData()} is called when a log entry is created.
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
-
   private static final boolean BAGGAGE_ENABLED =
       ConfigPropertiesUtil.getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
-
-  private static final String LOGGING_KEYS_TRACE_ID =
-      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.keys.trace_id");
-
-  private static final String LOGGING_KEYS_SPAN_ID =
-      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.keys.span_id");
-
-  private static final String LOGGING_KEYS_TRACE_FLAGS =
-      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.keys.trace_flags");
-
+  private static final String TRACE_ID_KEY =
+      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.trace-id");
+  private static final String SPAN_ID_KEY =
+      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.span-id");
+  private static final String TRACE_FLAGS_KEY =
+      ConfigPropertiesUtil.getString("otel.instrumentation.common.logging.trace-flags");
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
-
   private static final Map<String, String> staticContextData = getStaticContextData();
 
   private static Map<String, String> getStaticContextData() {
@@ -84,15 +78,13 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
     SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(
-        LOGGING_KEYS_TRACE_ID == null ? LoggingContextConstants.TRACE_ID : LOGGING_KEYS_TRACE_ID,
+        TRACE_ID_KEY == null ? LoggingContextConstants.TRACE_ID : TRACE_ID_KEY,
         spanContext.getTraceId());
     contextData.put(
-        LOGGING_KEYS_SPAN_ID == null ? LoggingContextConstants.SPAN_ID : LOGGING_KEYS_SPAN_ID,
+        SPAN_ID_KEY == null ? LoggingContextConstants.SPAN_ID : SPAN_ID_KEY,
         spanContext.getSpanId());
     contextData.put(
-        LOGGING_KEYS_TRACE_FLAGS == null
-            ? LoggingContextConstants.TRACE_FLAGS
-            : LOGGING_KEYS_TRACE_FLAGS,
+        TRACE_FLAGS_KEY == null ? LoggingContextConstants.TRACE_FLAGS : TRACE_FLAGS_KEY,
         spanContext.getTraceFlags().asHex());
 
     if (BAGGAGE_ENABLED) {
