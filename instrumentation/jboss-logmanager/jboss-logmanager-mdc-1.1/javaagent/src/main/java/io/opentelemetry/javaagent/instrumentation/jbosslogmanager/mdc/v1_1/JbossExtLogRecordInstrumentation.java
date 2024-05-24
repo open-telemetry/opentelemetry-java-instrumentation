@@ -55,9 +55,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) String value) {
-      if (CommonConfig.get().getLoggingKeysTraceId().equals(key)
-          || CommonConfig.get().getLoggingKeysSpanId().equals(key)
-          || CommonConfig.get().getLoggingKeysTraceFlags().equals(key)) {
+      if (CommonConfig.get().getTraceIdKey().equals(key)
+          || CommonConfig.get().getSpanIdKey().equals(key)
+          || CommonConfig.get().getTraceFlagsKey().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -72,13 +72,13 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        if (CommonConfig.get().getLoggingKeysTraceId().equals(key)) {
+        if (CommonConfig.get().getTraceIdKey().equals(key)) {
           value = spanContext.getTraceId();
         }
-        if (CommonConfig.get().getLoggingKeysSpanId().equals(key)) {
+        if (CommonConfig.get().getSpanIdKey().equals(key)) {
           value = spanContext.getSpanId();
         }
-        if (CommonConfig.get().getLoggingKeysTraceFlags().equals(key)) {
+        if (CommonConfig.get().getTraceFlagsKey().equals(key)) {
           value = spanContext.getTraceFlags().asHex();
         }
       }
@@ -93,9 +93,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Return(readOnly = false) Map<String, String> value) {
 
-      if (value.containsKey(CommonConfig.get().getLoggingKeysTraceId())
-          && value.containsKey(CommonConfig.get().getLoggingKeysSpanId())
-          && value.containsKey(CommonConfig.get().getLoggingKeysTraceFlags())) {
+      if (value.containsKey(CommonConfig.get().getTraceIdKey())
+          && value.containsKey(CommonConfig.get().getSpanIdKey())
+          && value.containsKey(CommonConfig.get().getTraceFlagsKey())) {
         return;
       }
 
@@ -109,17 +109,16 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!value.containsKey(CommonConfig.get().getLoggingKeysTraceId())) {
-        value.put(CommonConfig.get().getLoggingKeysTraceId(), spanContext.getTraceId());
+      if (!value.containsKey(CommonConfig.get().getTraceIdKey())) {
+        value.put(CommonConfig.get().getTraceIdKey(), spanContext.getTraceId());
       }
 
-      if (!value.containsKey(CommonConfig.get().getLoggingKeysSpanId())) {
-        value.put(CommonConfig.get().getLoggingKeysSpanId(), spanContext.getSpanId());
+      if (!value.containsKey(CommonConfig.get().getSpanIdKey())) {
+        value.put(CommonConfig.get().getSpanIdKey(), spanContext.getSpanId());
       }
 
-      if (!value.containsKey(CommonConfig.get().getLoggingKeysTraceFlags())) {
-        value.put(
-            CommonConfig.get().getLoggingKeysTraceFlags(), spanContext.getTraceFlags().asHex());
+      if (!value.containsKey(CommonConfig.get().getTraceFlagsKey())) {
+        value.put(CommonConfig.get().getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
       }
     }
   }

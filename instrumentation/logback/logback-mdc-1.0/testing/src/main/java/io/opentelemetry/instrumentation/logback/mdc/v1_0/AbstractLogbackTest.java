@@ -65,28 +65,16 @@ public abstract class AbstractLogbackTest {
 
     assertThat(events.size()).isEqualTo(2);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
-    assertThat(
-            events
-                .get(0)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_id_test" : "trace_id"))
-        .isNull();
-    assertThat(
-            events.get(0).getMDCPropertyMap().get(expectLoggingKeys() ? "span_id_test" : "span_id"))
-        .isNull();
-    assertThat(
-            events
-                .get(0)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_flags_test" : "trace_flags"))
-        .isNull();
+    assertThat(events.get(0).getMDCPropertyMap().get(getLoggingKey("trace_id"))).isNull();
+    assertThat(events.get(0).getMDCPropertyMap().get(getLoggingKey("span_id"))).isNull();
+    assertThat(events.get(0).getMDCPropertyMap().get(getLoggingKey("trace_flags"))).isNull();
     assertThat(events.get(0).getMDCPropertyMap().get("baggage.baggage_key"))
         .isEqualTo(expectBaggage() ? "baggage_value" : null);
 
     assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
-    assertThat(events.get(1).getMDCPropertyMap().get("trace_id")).isNull();
-    assertThat(events.get(1).getMDCPropertyMap().get("span_id")).isNull();
-    assertThat(events.get(1).getMDCPropertyMap().get("trace_flags")).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get(getLoggingKey("trace_id"))).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get(getLoggingKey("span_id"))).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get(getLoggingKey("trace_flags"))).isNull();
     assertThat(events.get(1).getMDCPropertyMap().get("baggage.baggage_key"))
         .isEqualTo(expectBaggage() ? "baggage_value" : null);
   }
@@ -103,58 +91,26 @@ public abstract class AbstractLogbackTest {
 
     assertThat(events.size()).isEqualTo(3);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
-    assertThat(
-            events
-                .get(0)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_id_test" : "trace_id"))
+    assertThat(events.get(0).getMDCPropertyMap().get(getLoggingKey("trace_id")))
         .isEqualTo(span1.getSpanContext().getTraceId());
-    assertThat(
-            events.get(0).getMDCPropertyMap().get(expectLoggingKeys() ? "span_id_test" : "span_id"))
+    assertThat(events.get(0).getMDCPropertyMap().get(getLoggingKey("span_id")))
         .isEqualTo(span1.getSpanContext().getSpanId());
-    assertThat(
-            events
-                .get(0)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_flags_test" : "trace_flags"))
-        .isEqualTo("01");
+    assertThat(events.get(0).getMDCPropertyMap().get(getLoggingKey("trace_flags"))).isEqualTo("01");
     assertThat(events.get(0).getMDCPropertyMap().get("baggage.baggage_key"))
         .isEqualTo(expectBaggage() ? "baggage_value" : null);
 
     assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
-    assertThat(
-            events
-                .get(1)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_id_test" : "trace_id"))
-        .isNull();
-    assertThat(
-            events.get(1).getMDCPropertyMap().get(expectLoggingKeys() ? "span_id_test" : "span_id"))
-        .isNull();
-    assertThat(
-            events
-                .get(1)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_flags_test" : "trace_flags"))
-        .isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get(getLoggingKey("trace_id"))).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get(getLoggingKey("span_id"))).isNull();
+    assertThat(events.get(1).getMDCPropertyMap().get(getLoggingKey("trace_flags"))).isNull();
     assertThat(events.get(1).getMDCPropertyMap().get("baggage.baggage_key")).isNull();
 
     assertThat(events.get(2).getMessage()).isEqualTo("log message 3");
-    assertThat(
-            events
-                .get(2)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_id_test" : "trace_id"))
+    assertThat(events.get(2).getMDCPropertyMap().get(getLoggingKey("trace_id")))
         .isEqualTo(span2.getSpanContext().getTraceId());
-    assertThat(
-            events.get(2).getMDCPropertyMap().get(expectLoggingKeys() ? "span_id_test" : "span_id"))
+    assertThat(events.get(2).getMDCPropertyMap().get(getLoggingKey("span_id")))
         .isEqualTo(span2.getSpanContext().getSpanId());
-    assertThat(
-            events
-                .get(2)
-                .getMDCPropertyMap()
-                .get(expectLoggingKeys() ? "trace_flags_test" : "trace_flags"))
-        .isEqualTo("01");
+    assertThat(events.get(2).getMDCPropertyMap().get(getLoggingKey("trace_flags"))).isEqualTo("01");
     assertThat(events.get(2).getMDCPropertyMap().get("baggage.baggage_key"))
         .isEqualTo(expectBaggage() ? "baggage_value" : null);
   }
@@ -181,5 +137,9 @@ public abstract class AbstractLogbackTest {
 
   protected boolean expectLoggingKeys() {
     return false;
+  }
+
+  private String getLoggingKey(String key) {
+    return expectLoggingKeys() ? key + "_test" : key;
   }
 }

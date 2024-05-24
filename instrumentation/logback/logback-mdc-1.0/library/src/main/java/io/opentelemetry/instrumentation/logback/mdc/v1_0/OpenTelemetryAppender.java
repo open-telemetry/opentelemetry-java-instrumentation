@@ -27,9 +27,9 @@ import java.util.Map;
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
   private boolean addBaggage;
-  private String traceIdKey;
-  private String spanIdKey;
-  private String traceFlagsKey;
+  private String traceIdKey = LoggingContextConstants.TRACE_ID;
+  private String spanIdKey = LoggingContextConstants.SPAN_ID;
+  private String traceFlagsKey = LoggingContextConstants.TRACE_FLAGS;
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
@@ -73,9 +73,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   public ILoggingEvent wrapEvent(ILoggingEvent event) {
     Map<String, String> eventContext = event.getMDCPropertyMap();
-    if (eventContext != null
-        && eventContext.containsKey(
-            traceIdKey == null ? LoggingContextConstants.TRACE_ID : traceIdKey)) {
+    if (eventContext != null && eventContext.containsKey(traceIdKey)) {
       // Assume already instrumented event if traceId is present.
       return event;
     }
@@ -86,14 +84,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
     if (currentSpan.getSpanContext().isValid()) {
       SpanContext spanContext = currentSpan.getSpanContext();
-      contextData.put(
-          traceIdKey == null ? LoggingContextConstants.TRACE_ID : traceIdKey,
-          spanContext.getTraceId());
-      contextData.put(
-          spanIdKey == null ? LoggingContextConstants.SPAN_ID : spanIdKey, spanContext.getSpanId());
-      contextData.put(
-          traceFlagsKey == null ? LoggingContextConstants.TRACE_FLAGS : traceFlagsKey,
-          spanContext.getTraceFlags().asHex());
+      contextData.put(traceIdKey, spanContext.getTraceId());
+      contextData.put(spanIdKey, spanContext.getSpanId());
+      contextData.put(traceFlagsKey, spanContext.getTraceFlags().asHex());
     }
 
     if (addBaggage) {

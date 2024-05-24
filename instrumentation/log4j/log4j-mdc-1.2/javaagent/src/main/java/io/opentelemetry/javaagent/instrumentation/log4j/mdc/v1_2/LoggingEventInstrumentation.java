@@ -49,9 +49,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) Object value) {
-      if (CommonConfig.get().getLoggingKeysTraceId().equals(key)
-          || CommonConfig.get().getLoggingKeysSpanId().equals(key)
-          || CommonConfig.get().getLoggingKeysTraceFlags().equals(key)) {
+      if (CommonConfig.get().getTraceIdKey().equals(key)
+          || CommonConfig.get().getSpanIdKey().equals(key)
+          || CommonConfig.get().getTraceFlagsKey().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -67,13 +67,13 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        if (CommonConfig.get().getLoggingKeysTraceId().equals(key)) {
+        if (CommonConfig.get().getTraceIdKey().equals(key)) {
           value = spanContext.getTraceId();
         }
-        if (CommonConfig.get().getLoggingKeysSpanId().equals(key)) {
+        if (CommonConfig.get().getSpanIdKey().equals(key)) {
           value = spanContext.getSpanId();
         }
-        if (CommonConfig.get().getLoggingKeysTraceFlags().equals(key)) {
+        if (CommonConfig.get().getTraceFlagsKey().equals(key)) {
           value = spanContext.getTraceFlags().asHex();
         }
       } else if (value == null) {

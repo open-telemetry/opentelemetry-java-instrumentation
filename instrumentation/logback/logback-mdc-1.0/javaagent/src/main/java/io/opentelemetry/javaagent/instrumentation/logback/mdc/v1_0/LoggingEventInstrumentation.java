@@ -63,8 +63,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) Map<String, String> contextData) {
 
-      if (contextData != null
-          && contextData.containsKey(CommonConfig.get().getLoggingKeysTraceId())) {
+      if (contextData != null && contextData.containsKey(CommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.
         return;
       }
