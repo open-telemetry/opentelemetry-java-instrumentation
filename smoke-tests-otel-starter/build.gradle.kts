@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version "3.2.6"
+  id("org.springframework.boot") version "3.3.0"
   id("org.graalvm.buildtools.native")
 }
 
