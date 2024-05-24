@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -19,8 +20,9 @@ public class ConsumerBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.pulsar.client.impl.ConsumerBase")
-        .or(named("org.apache.pulsar.client.impl.MultiTopicsConsumerImpl"));
+    return namedOneOf(
+        "org.apache.pulsar.client.impl.ConsumerBase",
+        "org.apache.pulsar.client.impl.MultiTopicsConsumerImpl");
   }
 
   @Override
