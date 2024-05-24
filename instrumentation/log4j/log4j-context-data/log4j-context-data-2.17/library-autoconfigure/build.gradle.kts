@@ -15,6 +15,7 @@ tasks {
   test {
     filter {
       excludeTestsMatching("LibraryLog4j2BaggageTest")
+      excludeTestsMatching("LibraryLog4j2LoggingKeysTest")
     }
   }
 
