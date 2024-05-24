@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -30,6 +32,8 @@ public final class JettyClientTelemetryBuilder {
       builder -> {};
   private Consumer<HttpSpanNameExtractorBuilder<Request>> spanNameExtractorConfigurer =
       builder -> {};
+  private Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+      spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
@@ -121,6 +125,15 @@ public final class JettyClientTelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public JettyClientTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+          spanNameExtractorTransformer) {
+    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return this;
+  }
+
   /**
    * Returns a new {@link JettyClientTelemetry} with the settings of this {@link
    * JettyClientTelemetryBuilder}.
@@ -132,6 +145,7 @@ public final class JettyClientTelemetryBuilder {
                 openTelemetry,
                 extractorConfigurer,
                 spanNameExtractorConfigurer,
+                spanNameExtractorTransformer,
                 additionalExtractors,
                 emitExperimentalHttpClientMetrics),
             sslContextFactory,

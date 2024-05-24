@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /** A builder of {@link SpringWebMvcTelemetry}. */
 public final class SpringWebMvcTelemetryBuilder {
@@ -44,13 +43,10 @@ public final class SpringWebMvcTelemetryBuilder {
       HttpSpanNameExtractor.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
   private final HttpServerRouteBuilder<HttpServletRequest> httpServerRouteBuilder =
       HttpServerRoute.builder(SpringWebMvcHttpAttributesGetter.INSTANCE);
-
-  @Nullable
   private Function<
           SpanNameExtractor<HttpServletRequest>,
           ? extends SpanNameExtractor<? super HttpServletRequest>>
-      spanNameExtractorTransformer;
-
+      spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpServerMetrics = false;
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -142,13 +138,8 @@ public final class SpringWebMvcTelemetryBuilder {
   public SpringWebMvcTelemetry build() {
     SpringWebMvcHttpAttributesGetter httpAttributesGetter =
         SpringWebMvcHttpAttributesGetter.INSTANCE;
-
-    SpanNameExtractor<HttpServletRequest> originalSpanNameExtractor =
-        httpSpanNameExtractorBuilder.build();
-    SpanNameExtractor<? super HttpServletRequest> spanNameExtractor = originalSpanNameExtractor;
-    if (spanNameExtractorTransformer != null) {
-      spanNameExtractor = spanNameExtractorTransformer.apply(originalSpanNameExtractor);
-    }
+    SpanNameExtractor<? super HttpServletRequest> spanNameExtractor =
+        spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<HttpServletRequest, HttpServletResponse> builder =
         Instrumenter.<HttpServletRequest, HttpServletResponse>builder(

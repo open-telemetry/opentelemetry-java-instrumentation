@@ -30,7 +30,7 @@ public final class RestletInstrumenterFactory {
   public static Instrumenter<Request, Response> newServerInstrumenter(
       OpenTelemetry openTelemetry,
       AttributesExtractor<Request, Response> httpServerAttributesExtractor,
-      SpanNameExtractor<Request> httpServerSpanNameExtractor,
+      SpanNameExtractor<? super Request> httpServerSpanNameExtractor,
       ContextCustomizer<Request> httpServerRoute,
       List<AttributesExtractor<Request, Response>> additionalExtractors,
       boolean emitExperimentalHttpServerMetrics) {

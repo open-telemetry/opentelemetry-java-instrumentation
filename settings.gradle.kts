@@ -4,15 +4,15 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.2"
     id("com.gradle.plugin-publish") version "1.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "1.9.24"
+    id("org.jetbrains.kotlin.jvm") version "2.0.0"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.10.1"
+    id("org.graalvm.buildtools.native") version "0.10.2"
   }
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.17.2"
+  id("com.gradle.develocity") version "3.17.4"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
@@ -165,9 +165,11 @@ include(":instrumentation:apache-httpclient:apache-httpclient-4.3:library")
 include(":instrumentation:apache-httpclient:apache-httpclient-4.3:testing")
 include(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent")
 include(":instrumentation:apache-httpclient:apache-httpclient-5.2:library")
-include(":instrumentation:armeria-1.3:javaagent")
-include(":instrumentation:armeria-1.3:library")
-include(":instrumentation:armeria-1.3:testing")
+include(":instrumentation:apache-shenyu-2.4:javaagent")
+include(":instrumentation:armeria:armeria-1.3:javaagent")
+include(":instrumentation:armeria:armeria-1.3:library")
+include(":instrumentation:armeria:armeria-1.3:testing")
+include(":instrumentation:armeria:armeria-grpc-1.14:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
@@ -428,6 +430,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")

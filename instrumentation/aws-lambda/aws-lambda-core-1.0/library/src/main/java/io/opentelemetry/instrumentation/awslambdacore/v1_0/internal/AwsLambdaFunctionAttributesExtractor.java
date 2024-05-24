@@ -6,11 +6,10 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
-import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -22,6 +21,15 @@ import javax.annotation.Nullable;
  */
 public final class AwsLambdaFunctionAttributesExtractor
     implements AttributesExtractor<AwsLambdaRequest, Object> {
+
+  // copied from FaasIncubatingAttributes
+  private static final AttributeKey<String> FAAS_INVOCATION_ID =
+      AttributeKey.stringKey("faas.invocation_id");
+  // copied from CloudIncubatingAttributes
+  private static final AttributeKey<String> CLOUD_ACCOUNT_ID =
+      AttributeKey.stringKey("cloud.account.id");
+  private static final AttributeKey<String> CLOUD_RESOURCE_ID =
+      AttributeKey.stringKey("cloud.resource_id");
 
   @Nullable private static final MethodHandle GET_FUNCTION_ARN;
 
@@ -47,11 +55,11 @@ public final class AwsLambdaFunctionAttributesExtractor
       io.opentelemetry.context.Context parentContext,
       AwsLambdaRequest request) {
     Context awsContext = request.getAwsContext();
-    attributes.put(FaasIncubatingAttributes.FAAS_INVOCATION_ID, awsContext.getAwsRequestId());
+    attributes.put(FAAS_INVOCATION_ID, awsContext.getAwsRequestId());
     String arn = getFunctionArn(awsContext);
     if (arn != null) {
-      attributes.put(CloudIncubatingAttributes.CLOUD_RESOURCE_ID, arn);
-      attributes.put(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, getAccountId(arn));
+      attributes.put(CLOUD_RESOURCE_ID, arn);
+      attributes.put(CLOUD_ACCOUNT_ID, getAccountId(arn));
     }
   }
 

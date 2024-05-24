@@ -1,6 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.render.InventoryMarkdownReportRenderer
+import org.spdx.sbom.gradle.SpdxSbomTask
+import java.util.UUID
 
 plugins {
   id("com.github.jk1.dependency-license-report")
@@ -8,6 +10,7 @@ plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
+  id("org.spdx.sbom")
 }
 
 description = "OpenTelemetry Javaagent"
@@ -267,6 +270,39 @@ with(components["java"] as AdhocComponentWithVariants) {
     }
     withVariantsFromConfiguration(configurations["runtimeElements"]) {
       skip()
+    }
+  }
+}
+
+spdxSbom {
+  targets {
+    // Create a target to match the published jar name.
+    // This is used for the task name (spdxSbomFor<SbomName>)
+    // and output file (<sbomName>.spdx.json).
+    create("opentelemetry-javaagent") {
+      configurations.set(listOf("baseJavaagentLibs"))
+      scm {
+        uri.set("https://github.com/" + System.getenv("GITHUB_REPOSITORY"))
+        revision.set(System.getenv("GITHUB_SHA"))
+      }
+      document {
+        name.set("opentelemetry-javaagent")
+        namespace.set("https://opentelemetry.io/spdx/" + UUID.randomUUID())
+      }
+    }
+  }
+}
+tasks.withType<AbstractPublishToMaven> {
+  dependsOn("spdxSbom")
+}
+project.afterEvaluate {
+  tasks.withType<Sign>().configureEach {
+    mustRunAfter(tasks.withType<SpdxSbomTask>())
+  }
+  tasks.withType<PublishToMavenLocal>().configureEach {
+    this.publication.artifact("${layout.buildDirectory.get()}/spdx/opentelemetry-javaagent.spdx.json") {
+      classifier = "spdx"
+      extension = "json"
     }
   }
 }

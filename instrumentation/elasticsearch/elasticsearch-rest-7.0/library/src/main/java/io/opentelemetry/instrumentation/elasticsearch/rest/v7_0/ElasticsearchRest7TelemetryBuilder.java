@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchRestInstrumenterFactory;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import org.elasticsearch.client.Response;
 
 public final class ElasticsearchRest7TelemetryBuilder {
@@ -27,6 +29,10 @@ public final class ElasticsearchRest7TelemetryBuilder {
   private final List<AttributesExtractor<ElasticsearchRestRequest, Response>> attributesExtractors =
       new ArrayList<>();
   private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
+  private Function<
+          SpanNameExtractor<ElasticsearchRestRequest>,
+          ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
+      spanNameExtractorTransformer = Function.identity();
 
   ElasticsearchRest7TelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -62,6 +68,17 @@ public final class ElasticsearchRest7TelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ElasticsearchRest7TelemetryBuilder setSpanNameExtractor(
+      Function<
+              SpanNameExtractor<ElasticsearchRestRequest>,
+              ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
+          spanNameExtractorTransformer) {
+    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return this;
+  }
+
   /**
    * Returns a new {@link ElasticsearchRest7Telemetry} with the settings of this {@link
    * ElasticsearchRest7TelemetryBuilder}.
@@ -69,7 +86,12 @@ public final class ElasticsearchRest7TelemetryBuilder {
   public ElasticsearchRest7Telemetry build() {
     Instrumenter<ElasticsearchRestRequest, Response> instrumenter =
         ElasticsearchRestInstrumenterFactory.create(
-            openTelemetry, INSTRUMENTATION_NAME, attributesExtractors, knownMethods, false);
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            attributesExtractors,
+            spanNameExtractorTransformer,
+            knownMethods,
+            false);
 
     return new ElasticsearchRest7Telemetry(instrumenter);
   }

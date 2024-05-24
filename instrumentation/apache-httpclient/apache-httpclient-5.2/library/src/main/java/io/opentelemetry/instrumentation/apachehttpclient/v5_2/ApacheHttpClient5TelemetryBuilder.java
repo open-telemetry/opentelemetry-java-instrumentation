@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
@@ -22,6 +23,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import org.apache.hc.core5.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClient5Telemetry}. */
@@ -40,7 +42,10 @@ public final class ApacheHttpClient5TelemetryBuilder {
   private final HttpSpanNameExtractorBuilder<ApacheHttpClient5Request>
       httpSpanNameExtractorBuilder =
           HttpSpanNameExtractor.builder(ApacheHttpClient5HttpAttributesGetter.INSTANCE);
-
+  private Function<
+          SpanNameExtractor<ApacheHttpClient5Request>,
+          ? extends SpanNameExtractor<? super ApacheHttpClient5Request>>
+      spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
 
   ApacheHttpClient5TelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -115,6 +120,17 @@ public final class ApacheHttpClient5TelemetryBuilder {
     return this;
   }
 
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ApacheHttpClient5TelemetryBuilder setSpanNameExtractor(
+      Function<
+              SpanNameExtractor<ApacheHttpClient5Request>,
+              ? extends SpanNameExtractor<? super ApacheHttpClient5Request>>
+          spanNameExtractorTransformer) {
+    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return this;
+  }
+
   /**
    * Returns a new {@link ApacheHttpClient5Telemetry} configured with this {@link
    * ApacheHttpClient5TelemetryBuilder}.
@@ -122,10 +138,12 @@ public final class ApacheHttpClient5TelemetryBuilder {
   public ApacheHttpClient5Telemetry build() {
     ApacheHttpClient5HttpAttributesGetter httpAttributesGetter =
         ApacheHttpClient5HttpAttributesGetter.INSTANCE;
+    SpanNameExtractor<? super ApacheHttpClient5Request> spanNameExtractor =
+        spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<ApacheHttpClient5Request, HttpResponse> builder =
         Instrumenter.<ApacheHttpClient5Request, HttpResponse>builder(
-                openTelemetry, INSTRUMENTATION_NAME, httpSpanNameExtractorBuilder.build())
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)

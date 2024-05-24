@@ -19,13 +19,13 @@ import javax.annotation.Nullable;
  */
 final class GraphqlAttributesExtractor
     implements AttributesExtractor<OpenTelemetryInstrumentationState, ExecutionResult> {
-  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/graphql.md
-  private static final AttributeKey<String> OPERATION_NAME =
-      AttributeKey.stringKey("graphql.operation.name");
-  private static final AttributeKey<String> OPERATION_TYPE =
-      AttributeKey.stringKey("graphql.operation.type");
+  // copied from GraphqlIncubatingAttributes
   private static final AttributeKey<String> GRAPHQL_DOCUMENT =
       AttributeKey.stringKey("graphql.document");
+  private static final AttributeKey<String> GRAPHQL_OPERATION_NAME =
+      AttributeKey.stringKey("graphql.operation.name");
+  private static final AttributeKey<String> GRAPHQL_OPERATION_TYPE =
+      AttributeKey.stringKey("graphql.operation.type");
 
   @Override
   public void onStart(
@@ -40,9 +40,10 @@ final class GraphqlAttributesExtractor
       OpenTelemetryInstrumentationState request,
       @Nullable ExecutionResult response,
       @Nullable Throwable error) {
-    attributes.put(OPERATION_NAME, request.getOperationName());
+    attributes.put(GRAPHQL_OPERATION_NAME, request.getOperationName());
     if (request.getOperation() != null) {
-      attributes.put(OPERATION_TYPE, request.getOperation().name().toLowerCase(Locale.ROOT));
+      attributes.put(
+          GRAPHQL_OPERATION_TYPE, request.getOperation().name().toLowerCase(Locale.ROOT));
     }
     attributes.put(GRAPHQL_DOCUMENT, request.getQuery());
   }

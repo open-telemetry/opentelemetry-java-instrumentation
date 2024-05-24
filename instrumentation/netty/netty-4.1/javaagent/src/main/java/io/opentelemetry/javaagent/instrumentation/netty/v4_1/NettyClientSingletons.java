@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHa
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.Collections;
+import java.util.function.Function;
 
 public final class NettyClientSingletons {
 
@@ -50,6 +51,7 @@ public final class NettyClientSingletons {
                     .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
                     .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
             builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+            Function.identity(),
             Collections.emptyList());
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();

@@ -61,7 +61,7 @@ jobs:
     # skipping release branches because the versions in those branches are not snapshots
     if: github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     steps:
-      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -70,7 +70,7 @@ jobs:
         uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
@@ -85,7 +85,7 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew assemble publishToSonatype
+        run: ./gradlew assemble spdxSbom publishToSonatype
 
       - name: Build and publish gradle plugin snapshots
         env:

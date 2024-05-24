@@ -7,14 +7,15 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
+  // copied from DbIncubatingAttributes.DbSystemValues
+  private static final String CASSANDRA = "cassandra";
 
   @Override
   public String getSystem(CassandraRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.CASSANDRA;
+    return CASSANDRA;
   }
 
   @Override
@@ -27,6 +28,12 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   @Nullable
   public String getName(CassandraRequest request) {
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
+  }
+
+  @Override
+  @Nullable
+  public String getConnectionString(CassandraRequest request) {
+    return null;
   }
 
   @Override

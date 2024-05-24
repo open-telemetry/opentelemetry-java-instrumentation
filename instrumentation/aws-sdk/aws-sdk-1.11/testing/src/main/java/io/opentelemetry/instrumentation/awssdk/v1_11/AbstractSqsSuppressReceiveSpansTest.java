@@ -127,7 +127,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -156,7 +157,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -234,7 +236,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -263,7 +266,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
+                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),

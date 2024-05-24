@@ -23,8 +23,10 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -33,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -43,11 +46,16 @@ public abstract class AbstractGraphqlTest {
   private final List<Map<String, String>> books = new ArrayList<>();
   private final List<Map<String, String>> authors = new ArrayList<>();
 
-  private GraphQL graphql;
+  protected GraphQL graphql;
+  protected GraphQLSchema graphqlSchema;
 
   protected abstract InstrumentationExtension getTesting();
 
   protected abstract void configure(GraphQL.Builder builder);
+
+  protected boolean hasDataFetcherSpans() {
+    return false;
+  }
 
   @BeforeAll
   void setup() throws IOException {
@@ -62,7 +70,7 @@ public abstract class AbstractGraphqlTest {
         new InputStreamReader(
             this.getClass().getClassLoader().getResourceAsStream("schema.graphqls"),
             StandardCharsets.UTF_8)) {
-      GraphQLSchema graphqlSchema = buildSchema(reader);
+      graphqlSchema = buildSchema(reader);
       GraphQL.Builder graphqlBuilder = GraphQL.newGraphQL(graphqlSchema);
       configure(graphqlBuilder);
       this.graphql = graphqlBuilder.build();
@@ -138,21 +146,37 @@ public abstract class AbstractGraphqlTest {
 
     getTesting()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
+            trace -> {
+              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+              assertions.add(
+                  span ->
+                      span.hasName("query findBookById")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME,
+                                  "findBookById"),
+                              equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
+                              normalizedQueryEqualsTo(
+                                  GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
+                                  "query findBookById { bookById(id: ?) { name } }")));
+              if (hasDataFetcherSpans()) {
+                assertions.add(
                     span ->
-                        span.hasName("query findBookById")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
+                        span.hasName("bookById")
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    AttributeKey.stringKey("graphql.operation.name"),
-                                    "findBookById"),
-                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
-                                normalizedQueryEqualsTo(
-                                    AttributeKey.stringKey("graphql.document"),
-                                    "query findBookById { bookById(id: ?) { name } }")),
-                    span -> span.hasName("fetchBookById").hasParent(trace.getSpan(0))));
+                                equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById"),
+                                equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById")));
+              }
+              assertions.add(
+                  span ->
+                      span.hasName("fetchBookById")
+                          .hasParent(trace.getSpan(hasDataFetcherSpans() ? 1 : 0)));
+
+              trace.hasSpansSatisfyingExactly(assertions);
+            });
   }
 
   @Test
@@ -170,18 +194,33 @@ public abstract class AbstractGraphqlTest {
 
     getTesting()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
+            trace -> {
+              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+              assertions.add(
+                  span ->
+                      span.hasName("query")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
+                              normalizedQueryEqualsTo(
+                                  AttributeKey.stringKey("graphql.document"),
+                                  "{ bookById(id: ?) { name } }")));
+              if (hasDataFetcherSpans()) {
+                assertions.add(
                     span ->
-                        span.hasName("query")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
+                        span.hasName("bookById")
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
-                                normalizedQueryEqualsTo(
-                                    AttributeKey.stringKey("graphql.document"),
-                                    "{ bookById(id: ?) { name } }")),
-                    span -> span.hasName("fetchBookById").hasParent(trace.getSpan(0))));
+                                equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById"),
+                                equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById")));
+              }
+              assertions.add(
+                  span ->
+                      span.hasName("fetchBookById")
+                          .hasParent(trace.getSpan(hasDataFetcherSpans() ? 1 : 0)));
+              trace.hasSpansSatisfyingExactly(assertions);
+            });
   }
 
   @Test
@@ -280,15 +319,16 @@ public abstract class AbstractGraphqlTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    AttributeKey.stringKey("graphql.operation.name"), "addNewBook"),
+                                    GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME,
+                                    "addNewBook"),
                                 equalTo(
-                                    AttributeKey.stringKey("graphql.operation.type"), "mutation"),
+                                    GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "mutation"),
                                 normalizedQueryEqualsTo(
-                                    AttributeKey.stringKey("graphql.document"),
+                                    GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                     "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
   }
 
-  private static AttributeAssertion normalizedQueryEqualsTo(
+  protected static AttributeAssertion normalizedQueryEqualsTo(
       AttributeKey<String> key, String value) {
     return satisfies(
         key,

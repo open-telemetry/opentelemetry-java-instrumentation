@@ -22,3 +22,7 @@ configurations {
     extendsFrom(bootstrap)
   }
 }
+
+dependencies {
+  api("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
+}

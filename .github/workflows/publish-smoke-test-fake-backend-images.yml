@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Login to GitHub package registry
         uses: docker/login-action@v3
@@ -55,10 +55,10 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version-file: .java-version
 
       - name: Login to GitHub package registry
-        uses: azure/docker-login@v1
+        uses: azure/docker-login@v2
         with:
           login-server: ghcr.io
           username: ${{ github.repository_owner }}

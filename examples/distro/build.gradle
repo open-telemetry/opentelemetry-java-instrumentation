@@ -14,7 +14,7 @@ buildscript {
   dependencies {
     classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
     classpath "com.github.johnrengelman:shadow:8.1.1"
-    classpath "io.opentelemetry.instrumentation:gradle-plugins:2.4.0-alpha-SNAPSHOT"
+    classpath "io.opentelemetry.instrumentation:gradle-plugins:2.5.0-alpha-SNAPSHOT"
   }
 }
 
@@ -27,11 +27,11 @@ subprojects {
   ext {
     versions = [
       // this line is managed by .github/scripts/update-sdk-version.sh
-      opentelemetrySdk           : "1.37.0",
+      opentelemetrySdk           : "1.38.0",
 
       // these lines are managed by .github/scripts/update-version.sh
-      opentelemetryJavaagent     : "2.4.0-SNAPSHOT",
-      opentelemetryJavaagentAlpha: "2.4.0-alpha-SNAPSHOT",
+      opentelemetryJavaagent     : "2.5.0-SNAPSHOT",
+      opentelemetryJavaagentAlpha: "2.5.0-alpha-SNAPSHOT",
 
       autoservice                : "1.1.1",
       junit                      : "5.10.2"
@@ -68,7 +68,7 @@ subprojects {
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.opentelemetryJavaagentAlpha}"))
 
-    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-core:5.12.0")
     testImplementation(enforcedPlatform("org.junit:junit-bom:${versions.junit}"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")

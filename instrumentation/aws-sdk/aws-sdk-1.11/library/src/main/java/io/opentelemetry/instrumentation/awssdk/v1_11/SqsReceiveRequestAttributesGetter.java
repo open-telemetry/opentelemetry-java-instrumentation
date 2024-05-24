@@ -16,9 +16,12 @@ enum SqsReceiveRequestAttributesGetter
     implements MessagingAttributesGetter<SqsReceiveRequest, Response<?>> {
   INSTANCE;
 
+  // copied from MessagingIncubatingAttributes.MessagingSystemValues
+  private static final String AWS_SQS = "aws_sqs";
+
   @Override
   public String getSystem(SqsReceiveRequest request) {
-    return "AmazonSQS";
+    return AWS_SQS;
   }
 
   @Override

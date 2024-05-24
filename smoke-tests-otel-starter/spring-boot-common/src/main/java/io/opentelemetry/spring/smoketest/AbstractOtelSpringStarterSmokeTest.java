@@ -31,12 +31,19 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
@@ -51,9 +58,21 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Autowired private PropagationProperties propagationProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
+  @Autowired private RestTemplateBuilder restTemplateBuilder;
+  @LocalServerPort private int port;
+  @Autowired private JdbcTemplate jdbcTemplate;
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
+    @Autowired private ObjectProvider<JdbcTemplate> jdbcTemplate;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void loadData() {
+      jdbcTemplate
+          .getObject()
+          .execute(
+              "create table customer (id bigint not null, name varchar not null, primary key (id))");
+    }
 
     @Bean
     @Order(1)
@@ -111,7 +130,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                         .hasKind(SpanKind.CLIENT)
                         .hasAttribute(
                             DbIncubatingAttributes.DB_STATEMENT,
-                            "create table test_table (id bigint not null, primary key (id))")),
+                            "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 clientSpan ->
@@ -155,27 +174,42 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   }
 
   @Test
-  void restTemplate() {
-    assertClient(OtelSpringStarterSmokeTestController.REST_TEMPLATE);
-  }
-
-  protected void assertClient(String url) {
+  void databaseQuery() {
     testing.clearAllExportedData();
 
-    testRestTemplate.getForObject(url, String.class);
+    testing.runWithSpan(
+        "server",
+        () -> {
+          jdbcTemplate.query(
+              "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name"));
+        });
 
+    // 1 is not replaced by ?, otel.instrumentation.common.db-statement-sanitizer.enabled=false
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                clientSpan ->
-                    clientSpan
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith(url)),
-                serverSpan ->
-                    serverSpan
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, url),
+                span -> span.hasName("server"),
+                span -> span.satisfies(s -> assertThat(s.getName()).endsWith(".getConnection")),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttribute(
+                            DbIncubatingAttributes.DB_STATEMENT,
+                            "select name from customer where id = 1")));
+  }
+
+  @Test
+  void restTemplate() {
+    testing.clearAllExportedData();
+
+    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
+    assertClient();
+  }
+
+  protected void assertClient() {
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
                 nestedClientSpan ->
                     nestedClientSpan
                         .hasKind(SpanKind.CLIENT)

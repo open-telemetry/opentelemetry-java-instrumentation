@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
@@ -28,6 +29,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionReq
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -61,6 +63,10 @@ public final class NettyClientInstrumenterFactory {
       Consumer<HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
           extractorConfigurer,
       Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>> spanNameExtractorConfigurer,
+      Function<
+              SpanNameExtractor<HttpRequestAndChannel>,
+              ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
+          spanNameExtractorTransformer,
       List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
           additionalHttpAttributeExtractors) {
     NettyHttpClientAttributesGetter httpAttributesGetter = new NettyHttpClientAttributesGetter();
@@ -72,10 +78,12 @@ public final class NettyClientInstrumenterFactory {
     HttpSpanNameExtractorBuilder<HttpRequestAndChannel> httpSpanNameExtractorBuilder =
         HttpSpanNameExtractor.builder(httpAttributesGetter);
     spanNameExtractorConfigurer.accept(httpSpanNameExtractorBuilder);
+    SpanNameExtractor<? super HttpRequestAndChannel> spanNameExtractor =
+        spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
         Instrumenter.<HttpRequestAndChannel, HttpResponse>builder(
-                openTelemetry, instrumentationName, httpSpanNameExtractorBuilder.build())
+                openTelemetry, instrumentationName, spanNameExtractor)
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(extractorBuilder.build())
             .addAttributesExtractor(

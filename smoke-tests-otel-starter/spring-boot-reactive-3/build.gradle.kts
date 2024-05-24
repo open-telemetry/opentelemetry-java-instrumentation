@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version "3.2.5"
+  id("org.springframework.boot") version "3.3.0"
   id("org.graalvm.buildtools.native")
 }
 
@@ -16,6 +16,10 @@ dependencies {
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+
+  runtimeOnly("com.h2database:h2")
+  runtimeOnly("io.r2dbc:r2dbc-h2")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("io.projectreactor:reactor-test")
