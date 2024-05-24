@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,7 @@ public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule 
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new LocalSchedulerActivationInstrumentation());
+    return asList(
+        new LocalSchedulerActivationInstrumentation(), new PromiseMonitoredInstrumentation());
   }
 }
