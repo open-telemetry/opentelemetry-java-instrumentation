@@ -44,23 +44,17 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.addBaggage = addBaggage;
   }
 
-  /**
-   * @param traceIdKey Customize MDC key name for the trace id.
-   */
+  /** Customize MDC key name for the trace id. */
   public void setTraceIdKey(String traceIdKey) {
     this.traceIdKey = traceIdKey;
   }
 
-  /**
-   * @param spanIdKey Customize MDC key name for the span id.
-   */
+  /** Customize MDC key name for the span id. */
   public void setSpanIdKey(String spanIdKey) {
     this.spanIdKey = spanIdKey;
   }
 
-  /**
-   * @param traceFlagsKey Customize MDC key name for the trace flags.
-   */
+  /** Customize MDC key name for the trace flags. */
   public void setTraceFlagsKey(String traceFlagsKey) {
     this.traceFlagsKey = traceFlagsKey;
   }
