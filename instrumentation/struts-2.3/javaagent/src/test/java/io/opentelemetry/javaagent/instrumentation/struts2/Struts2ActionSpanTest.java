@@ -11,10 +11,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -143,20 +139,11 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
         .hasKind(SpanKind.INTERNAL);
 
     if (endpoint.equals(EXCEPTION)) {
-      span.hasStatus(StatusData.error())
-          .hasEventsSatisfyingExactly(
-              event ->
-                  event
-                      .hasName("exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(EXCEPTION_TYPE, Exception.class.getName()),
-                          equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      span.hasStatus(StatusData.error()).hasException(new Exception(EXCEPTION.getBody()));
     }
 
     span.hasAttributesSatisfyingExactly(
-        equalTo(
-            CODE_NAMESPACE, "io.opentelemetry.javaagent.instrumentation.struts2.GreetingAction"),
+        equalTo(CODE_NAMESPACE, GreetingAction.class.getName()),
         equalTo(CODE_FUNCTION, endpoint.name().toLowerCase(Locale.ROOT)));
     return span;
   }
