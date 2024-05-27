@@ -340,8 +340,8 @@ public abstract class AbstractSpringJpaTest<
     // when
     IncorrectResultSizeDataAccessException expectedException =
         catchThrowableOfType(
-            () -> findOneByLastName(repo, commonLastName),
-            IncorrectResultSizeDataAccessException.class);
+            IncorrectResultSizeDataAccessException.class,
+            () -> findOneByLastName(repo, commonLastName));
 
     // then
     assertNotNull(expectedException);
