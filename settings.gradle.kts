@@ -28,6 +28,19 @@ dependencyResolutionManagement {
     mavenCentral()
     mavenLocal()
   }
+
+  versionCatalogs {
+    create("springBoot2") {
+      val springBoot2Version =
+        gradle.startParameter.projectProperties["springBoot2Version"] ?: "2.4.0"
+      plugin("versions", "org.springframework.boot").version(springBoot2Version)
+    }
+    create("springBoot3") {
+      val springBoot3Version =
+        gradle.startParameter.projectProperties["springBoot3Version"] ?: "3.0.0"
+      plugin("versions", "org.springframework.boot").version(springBoot3Version)
+    }
+  }
 }
 
 val gradleEnterpriseServer = "https://ge.opentelemetry.io"

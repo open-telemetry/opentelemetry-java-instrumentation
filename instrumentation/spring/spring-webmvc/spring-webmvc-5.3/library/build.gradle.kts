@@ -3,7 +3,7 @@ plugins {
 }
 
 val versions: Map<String, String> by project
-val springBootVersion = versions["org.springframework.boot"]
+val springBootVersion = versions["2.7.18"]
 
 dependencies {
   compileOnly("org.springframework:spring-webmvc:5.3.0")

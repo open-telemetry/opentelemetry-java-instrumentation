@@ -6,7 +6,7 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 val versions: Map<String, String> by project
-val springBootVersion = versions["org.springframework.boot"]
+val springBootVersion = versions["2.7.18"]
 
 dependencies {
   api("org.springframework.boot:spring-boot-starter:$springBootVersion")

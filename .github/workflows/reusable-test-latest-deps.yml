@@ -82,6 +82,8 @@ jobs:
           ./gradlew
           ${{ env.test-tasks }}
           -PtestLatestDeps=true
+          -PspringBoot2Version=2.7.18
+          -PspringBoot3Version=3.3.0
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan

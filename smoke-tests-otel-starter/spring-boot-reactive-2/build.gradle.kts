@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version "2.7.18"
+  alias(springBoot2.plugins.versions)
 }
 
 description = "smoke-tests-otel-starter-spring-boot-reactive-2"
