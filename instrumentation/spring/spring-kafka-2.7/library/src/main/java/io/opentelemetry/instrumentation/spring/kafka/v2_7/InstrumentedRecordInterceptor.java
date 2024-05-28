@@ -69,18 +69,24 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
 
   @Override
   public void success(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
-    if (decorated != null) {
-      decorated.success(record, consumer);
+    try {
+      if (decorated != null) {
+        decorated.success(record, consumer);
+      }
+    } finally {
+      end(record, null);
     }
-    end(record, null);
   }
 
   @Override
   public void failure(ConsumerRecord<K, V> record, Exception exception, Consumer<K, V> consumer) {
-    if (decorated != null) {
-      decorated.failure(record, exception, consumer);
+    try {
+      if (decorated != null) {
+        decorated.failure(record, exception, consumer);
+      }
+    } finally {
+      end(record, exception);
     }
-    end(record, exception);
   }
 
   private void end(ConsumerRecord<K, V> record, @Nullable Throwable error) {
