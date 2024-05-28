@@ -38,6 +38,23 @@ To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradle
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <GROOVY TEST FILE NAME>` will run only the selected test.
 
+### Ignoring warnings in tests
+
+During local development, you may want to ignore warnings in tests.
+
+To ignore warnings, formatting issues, or other non-fatal issues in tests, use
+
+```
+./gradlew test -Ddev=true -x spotlessCheck -x checkstyleMain
+```
+
+The `dev` flag
+
+- will ignore warnings in tests
+- will use a local build cache, which can speed up the build
+
+The local build cache is also useful for other commands, such as `./gradlew spotlessApply -Ddev=true`.
+
 ## Smoke tests
 
 The smoke tests are not run as part of a global `test` task run since they take a long time and are
