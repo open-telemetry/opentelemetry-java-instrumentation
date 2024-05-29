@@ -34,7 +34,7 @@ dependencyResolutionManagement {
     create("springBoot2") {
       val springBoot2Version =
         gradle.startParameter.projectProperties["springBoot2Version"] ?:
-        (if (latestDepTest) "2.7.18" else "2.4.0")
+        (if (latestDepTest) "2.7.18" else "2.4.2")
       plugin("versions", "org.springframework.boot").version(springBoot2Version)
     }
     create("springBoot3") {
