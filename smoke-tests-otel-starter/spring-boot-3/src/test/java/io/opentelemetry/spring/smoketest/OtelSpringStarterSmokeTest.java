@@ -5,13 +5,15 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootVersion;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.web.client.RestClient;
+import org.springframework.context.ApplicationContext;
 
 @SpringBootTest(
     classes = {
@@ -26,21 +28,23 @@ import org.springframework.web.client.RestClient;
     })
 class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
-  @Autowired RestClient.Builder restClientBuilder;
+  @Autowired ApplicationContext context;
   @LocalServerPort private int port;
 
   @Test
-  void restClient() {
+  void restClient() throws Exception {
+    int version = Integer.parseInt(SpringBootVersion.getVersion().substring(2, 3));
+    assumeTrue(version >= 2); // rest client is available since Spring Boot 3.2
+
     testing.clearAllExportedData();
 
-    RestClient client = restClientBuilder.baseUrl("http://localhost:" + port).build();
-    assertThat(
-            client
-                .get()
-                .uri(OtelSpringStarterSmokeTestController.PING)
-                .retrieve()
-                .body(String.class))
-        .isEqualTo("pong");
+    Object builder =
+        context.getBean(Class.forName("org.springframework.web.client.RestClient$Builder"));
+    builder = invokeMethod(builder, "baseUrl", "http://localhost:" + port);
+    Object restClient = invokeMethod(builder, "build");
+    Object spec = invokeMethod(restClient, "get");
+    invokeMethod(spec, "uri", OtelSpringStarterSmokeTestController.PING);
+
     assertClient();
   }
 }

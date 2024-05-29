@@ -24,6 +24,7 @@ dependencies {
   testImplementation("org.testcontainers:kafka")
   testImplementation("org.testcontainers:mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation("org.apache.commons:commons-lang3:3.12.0")
 }
 
 springBoot {
