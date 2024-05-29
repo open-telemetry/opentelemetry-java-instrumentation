@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ktor.v2_0;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -13,10 +13,10 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KtorInstrumentationModule extends InstrumentationModule {
+public class KtorServerInstrumentationModule extends InstrumentationModule {
 
-  public KtorInstrumentationModule() {
-    super("ktor", "ktor-2.0");
+  public KtorServerInstrumentationModule() {
+    super("ktor", "ktor-server", "ktor-2.0", "ktor-server-2.0");
   }
 
   @Override
@@ -26,6 +26,6 @@ public class KtorInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new ServerInstrumentation(), new HttpClientInstrumentation());
+    return singletonList(new ServerInstrumentation());
   }
 }
