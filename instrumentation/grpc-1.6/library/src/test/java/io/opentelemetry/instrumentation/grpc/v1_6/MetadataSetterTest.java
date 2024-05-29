@@ -14,19 +14,19 @@ import org.junit.jupiter.api.Test;
 
 class MetadataSetterTest {
 
-  @Test
-  void checkThatIterableSizeEqualsOne() {
-    GrpcPropagator tested = new GrpcPropagator();
-    Metadata metadata = new Metadata();
-    tested.inject(Context.current(), metadata, MetadataSetter.INSTANCE);
+    @Test
+    void checkThatIterableSizeEqualsOne() {
+        GrpcPropagator testGrpcPropagator = new GrpcPropagator();
+        Metadata metadata = new Metadata();
+        testGrpcPropagator.inject(Context.current(), metadata, MetadataSetter.INSTANCE);
 
-    int size = 0;
-    for (String s :
-        metadata.getAll(Metadata.Key.of(GrpcPropagator.FIELD, Metadata.ASCII_STRING_MARSHALLER))) {
-      if (s != null) {
-        size++;
-      }
+        int size = 0;
+        for (String s :
+                metadata.getAll(Metadata.Key.of(testGrpcPropagator.fields().get(0), Metadata.ASCII_STRING_MARSHALLER))) {
+            if (s != null) {
+                size++;
+            }
+        }
+        assertTrue(size == 1);
     }
-    assertTrue(size == 1);
-  }
 }
