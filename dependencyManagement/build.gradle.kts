@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-io:commons-io:2.16.1",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.2",
-  "commons-validator:commons-validator:1.8.0",
+  "commons-validator:commons-validator:1.9.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.35.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:1.3.1-alpha",
