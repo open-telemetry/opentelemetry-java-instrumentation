@@ -86,8 +86,11 @@ public class SessionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(
-                returns(implementsInterface(named("org.hibernate.query.CommonQueryContract")))
-                    .or(named("org.hibernate.query.spi.QueryImplementor"))),
+                returns(
+                    implementsInterface(
+                        namedOneOf(
+                            "org.hibernate.query.CommonQueryContract",
+                            "org.hibernate.query.spi.QueryImplementor")))),
         SessionInstrumentation.class.getName() + "$GetQueryAdvice");
   }
 
