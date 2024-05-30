@@ -30,25 +30,19 @@ dependencyResolutionManagement {
   }
 
   versionCatalogs {
-    val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-    create("springBoot2") {
-      val springBoot2Version =
-        gradle.startParameter.projectProperties["springBoot2Version"]
-          ?: (if (latestDepTest) "2.7.18" else "2.6.15") // r2dbc is not compatible with earlier versions
-      plugin("versions", "org.springframework.boot").version(springBoot2Version)
+    fun addSpringBootCatalog(name: String, minVersion: String) {
+      val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+      create(name) {
+        val version =
+          gradle.startParameter.projectProperties["${name}Version"]
+            ?: (if (latestDepTest) "+" else minVersion)
+        plugin("versions", "org.springframework.boot").version(version)
+      }
     }
-    create("springBoot3") {
-      val springBoot3Version =
-        gradle.startParameter.projectProperties["springBoot3Version"]
-          ?: (if (latestDepTest) "3.3.0" else "3.0.0")
-      plugin("versions", "org.springframework.boot").version(springBoot3Version)
-    }
-    create("springBoot32") {
-      val springBoot3Version =
-        gradle.startParameter.projectProperties["springBoot3Version"]
-          ?: (if (latestDepTest) "3.3.0" else "3.2.0")
-      plugin("versions", "org.springframework.boot").version(springBoot3Version)
-    }
+    // r2dbc is not compatible with earlier versions
+    addSpringBootCatalog("springBoot2", "2.6.15")
+    addSpringBootCatalog("springBoot3", "3.0.0")
+    addSpringBootCatalog("springBoot32", "3.2.0")
   }
 }
 

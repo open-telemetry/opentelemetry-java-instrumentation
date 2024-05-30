@@ -150,7 +150,7 @@ tasks {
     dependsOn(testing.suites)
   }
 
-  compileTestJava {
+  compileJava {
     options.compilerArgs.add("-parameters")
   }
 
