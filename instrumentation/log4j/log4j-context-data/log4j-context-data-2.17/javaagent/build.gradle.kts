@@ -47,6 +47,11 @@ testing {
     }
 
     val testAddBaggage by registering(JvmTestSuite::class) {
+      sources {
+        java {
+          setSrcDirs(listOf("src/testAddBaggage/java"))
+        }
+      }
       dependencies {
         implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
       }
