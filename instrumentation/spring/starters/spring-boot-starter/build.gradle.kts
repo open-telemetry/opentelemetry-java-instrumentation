@@ -9,8 +9,8 @@ val versions: Map<String, String> by project
 val springBootVersion = "2.7.18"
 
 dependencies {
-  api("org.springframework.boot:spring-boot-starter:$springBootVersion")
-  api("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   api(project(":instrumentation:spring:spring-boot-autoconfigure"))
   api(project(":instrumentation:spring:spring-boot-autoconfigure-3"))
   api(project(":instrumentation-annotations"))
