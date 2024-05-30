@@ -43,6 +43,12 @@ dependencyResolutionManagement {
           ?: (if (latestDepTest) "3.3.0" else "3.0.0")
       plugin("versions", "org.springframework.boot").version(springBoot3Version)
     }
+    create("springBoot32") {
+      val springBoot3Version =
+        gradle.startParameter.projectProperties["springBoot3Version"]
+          ?: (if (latestDepTest) "3.3.0" else "3.2.0")
+      plugin("versions", "org.springframework.boot").version(springBoot3Version)
+    }
   }
 }
 
@@ -157,6 +163,7 @@ include(":smoke-tests:images:spring-boot")
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
+include(":smoke-tests-otel-starter:spring-boot-3.2")
 include(":smoke-tests-otel-starter:spring-boot-common")
 include(":smoke-tests-otel-starter:spring-boot-reactive-2")
 include(":smoke-tests-otel-starter:spring-boot-reactive-3")

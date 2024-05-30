@@ -203,10 +203,6 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
-    assertClient();
-  }
-
-  protected void assertClient() {
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(

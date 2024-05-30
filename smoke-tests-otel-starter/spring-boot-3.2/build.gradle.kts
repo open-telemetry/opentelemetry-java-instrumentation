@@ -1,10 +1,10 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot3.plugins.versions)
+  alias(springBoot32.plugins.versions)
   id("org.graalvm.buildtools.native")
 }
 
-description = "smoke-tests-otel-starter-spring-boot-3"
+description = "smoke-tests-otel-starter-spring-boot-3.2"
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
@@ -12,17 +12,9 @@ otelJava {
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
-  implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
-  runtimeOnly("com.h2database:h2")
-  implementation("org.apache.commons:commons-dbcp2")
-  implementation("org.springframework.kafka:spring-kafka")
-  implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-  testImplementation("org.testcontainers:junit-jupiter")
-  testImplementation("org.testcontainers:kafka")
-  testImplementation("org.testcontainers:mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
