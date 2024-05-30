@@ -34,7 +34,7 @@ dependencyResolutionManagement {
     create("springBoot2") {
       val springBoot2Version =
         gradle.startParameter.projectProperties["springBoot2Version"]
-          ?: (if (latestDepTest) "2.7.18" else "2.6.0") // r2dbc is not compatible with earlier versions
+          ?: (if (latestDepTest) "2.7.18" else "2.6.15") // r2dbc is not compatible with earlier versions
       plugin("versions", "org.springframework.boot").version(springBoot2Version)
     }
     create("springBoot3") {
