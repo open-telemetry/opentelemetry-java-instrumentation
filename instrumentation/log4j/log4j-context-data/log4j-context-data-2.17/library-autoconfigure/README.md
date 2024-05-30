@@ -47,8 +47,8 @@ If you want to customize the names of these keys, you can set system property or
 | System property                                       | Environment variable                              |
 |-------------------------------------------------------|---------------------------------------------------|
 | `otel.instrumentation.common.logging.trace-id`        | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_ID`    |
-| `otel.instrumentation.common.logging.span-id`         | `OTEL_INSTRUMENTATION_COMMON_LOGGING_SPAN_ID`     | 
-| `otel.instrumentation.common.logging.trace-flags`     | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_FLAGS` | 
+| `otel.instrumentation.common.logging.span-id`         | `OTEL_INSTRUMENTATION_COMMON_LOGGING_SPAN_ID`     |
+| `otel.instrumentation.common.logging.trace-flags`     | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_FLAGS` |
 
 If the `otel.instrumentation.log4j-context-data.add-baggage` system property (or the
 `OTEL_INSTRUMENTATION_LOG4J_CONTEXT_DATA_ADD_BAGGAGE` environment variable) is set to `true`,
