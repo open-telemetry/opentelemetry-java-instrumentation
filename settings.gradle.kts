@@ -33,14 +33,14 @@ dependencyResolutionManagement {
     val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
     create("springBoot2") {
       val springBoot2Version =
-        gradle.startParameter.projectProperties["springBoot2Version"] ?:
-        (if (latestDepTest) "2.7.18" else "2.4.2")
+        gradle.startParameter.projectProperties["springBoot2Version"]
+          ?: (if (latestDepTest) "2.7.18" else "2.6.0") // r2dbc is not compatible with earlier versions
       plugin("versions", "org.springframework.boot").version(springBoot2Version)
     }
     create("springBoot3") {
       val springBoot3Version =
-        gradle.startParameter.projectProperties["springBoot3Version"] ?:
-        (if (latestDepTest) "3.3.0" else "3.0.0")
+        gradle.startParameter.projectProperties["springBoot3Version"]
+          ?: (if (latestDepTest) "3.3.0" else "3.0.0")
       plugin("versions", "org.springframework.boot").version(springBoot3Version)
     }
   }
