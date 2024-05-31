@@ -42,7 +42,7 @@ will be added to the context when a log statement is made when a span is active:
 - `span_id`
 - `trace_flags`
 
-If you want to customize the names of these keys, you can set system property or environment variable:
+These keys can be customized using the following system properties or environment variables:
 
 | System property                                       | Environment variable                              |
 |-------------------------------------------------------|---------------------------------------------------|

@@ -32,8 +32,7 @@ dependencies {
 
 ### Usage
 
-If the `otel.instrumentation.logback-mdc.add-baggage` system property (or the
-`OTEL_INSTRUMENTATION_LOGBACK_MDC_ADD_BAGGAGE` environment variable) is set to `true`,
+If you set `<addBaggage>true</addBaggage>` in your `logback.xml` configuration,
 key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will be added to the context too.
 
 - `baggage.<entry_name>`
@@ -72,10 +71,8 @@ following attributes are available for use:
 - `span_id`
 - `trace_flags`
 
-If you want to customize the names of these keys, you can set system property or environment variable:
+These keys can be customized using the configuration of the following `logback.xml` example:
 
-| System property                                       | Environment variable                              |
-|-------------------------------------------------------|---------------------------------------------------|
-| `otel.instrumentation.common.logging.trace-id`        | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_ID`    |
-| `otel.instrumentation.common.logging.span-id`         | `OTEL_INSTRUMENTATION_COMMON_LOGGING_SPAN_ID`     |
-| `otel.instrumentation.common.logging.trace-flags`     | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_FLAGS` |
+- `<traceIdKey>example_trace_id</traceIdKey>`
+- `<spanIdKey>example_span_id</spanIdKey>`
+- `<traceFlagsKey>example_trace_flags</traceFlagsKey>`
