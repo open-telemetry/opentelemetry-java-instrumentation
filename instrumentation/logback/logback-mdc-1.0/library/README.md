@@ -71,8 +71,12 @@ following attributes are available for use:
 - `span_id`
 - `trace_flags`
 
-These keys can be customized using the configuration of the following `logback.xml` example:
+These keys can be customized in your `logback.xml` configuration, for example:
 
-- `<traceIdKey>example_trace_id</traceIdKey>`
-- `<spanIdKey>example_span_id</spanIdKey>`
-- `<traceFlagsKey>example_trace_flags</traceFlagsKey>`
+```xml
+<appender name="OTEL" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+  <traceIdKey>example_trace_id</traceIdKey>
+  <spanIdKey>example_span_id</spanIdKey>
+  <traceFlagsKey>example_trace_flags</traceFlagsKey>
+</appender>
+```
