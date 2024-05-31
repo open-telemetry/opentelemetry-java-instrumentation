@@ -9,7 +9,7 @@ public class JavaLambdaMaker {
 
   @SuppressWarnings("FunctionalExpressionCanBeFolded")
   public static Runnable lambda(Runnable runnable) {
-    return runnable::run;
+    return runnable;
   }
 
   private JavaLambdaMaker() {}
