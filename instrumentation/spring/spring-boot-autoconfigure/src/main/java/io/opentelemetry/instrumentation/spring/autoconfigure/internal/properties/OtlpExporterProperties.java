@@ -38,6 +38,10 @@ public final class OtlpExporterProperties {
     return logs;
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static class SignalProperties {
     private final Map<String, String> headers = new HashMap<>();
 
