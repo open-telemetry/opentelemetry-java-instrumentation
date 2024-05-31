@@ -6,10 +6,11 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.AttributesAssert;

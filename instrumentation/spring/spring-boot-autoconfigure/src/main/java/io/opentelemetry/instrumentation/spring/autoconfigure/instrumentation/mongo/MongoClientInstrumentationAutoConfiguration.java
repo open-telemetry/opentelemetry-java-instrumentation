@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
 public class MongoClientInstrumentationAutoConfiguration {
 
   @Bean
-  public MongoClientSettingsBuilderCustomizer customizer(
+  MongoClientSettingsBuilderCustomizer customizer(
       OpenTelemetry openTelemetry, ConfigProperties config) {
     return builder ->
         builder.addCommandListener(
