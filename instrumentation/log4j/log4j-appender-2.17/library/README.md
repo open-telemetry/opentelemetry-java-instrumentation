@@ -37,7 +37,7 @@ The following demonstrates how you might configure the appender in your `log4j.x
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" packages="io.opentelemetry.instrumentation.log4j.appender.v2_17">
+<Configuration status="WARN">
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout

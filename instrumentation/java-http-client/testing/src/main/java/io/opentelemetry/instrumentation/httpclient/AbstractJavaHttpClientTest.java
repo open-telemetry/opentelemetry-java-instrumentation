@@ -26,14 +26,16 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
 
   @BeforeAll
   void setUp() {
-    HttpClient httpClient =
+    HttpClient.Builder httpClientBuilder =
         HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(CONNECTION_TIMEOUT)
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .build();
+            .followRedirects(HttpClient.Redirect.NORMAL);
+    configureHttpClientBuilder(httpClientBuilder);
+    HttpClient httpClient = httpClientBuilder.build();
     client = configureHttpClient(httpClient);
   }
+
+  protected abstract void configureHttpClientBuilder(HttpClient.Builder httpClientBuilder);
 
   protected abstract HttpClient configureHttpClient(HttpClient httpClient);
 
