@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
 public class JavaLambdaMaker {
 
-  @SuppressWarnings("FunctionalExpressionCanBeFolded")
+  @SuppressWarnings({"FunctionalExpressionCanBeFolded", "UnnecessaryMethodReference"})
   public static Runnable lambda(Runnable runnable) {
-    return runnable;
+    return runnable::run;
   }
 
   private JavaLambdaMaker() {}
