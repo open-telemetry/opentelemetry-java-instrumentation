@@ -163,6 +163,48 @@ class OpenTelemetryConnectionTest {
     connection.close();
   }
 
+  @Test
+  void testVerifyCommit() throws Exception {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+    String query = "COMMIT";
+    Statement statement = connection.createStatement();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(statement.execute(query)).isTrue();
+        });
+    transactionTraceAssertion(dbInfo, query);
+
+    statement.close();
+    connection.close();
+  }
+
+  @Test
+  void testVerifyRollback() throws Exception {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+    String query = "ROLLBACK";
+    Statement statement = connection.createStatement();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(statement.execute(query)).isTrue();
+        });
+    transactionTraceAssertion(dbInfo, query);
+
+    statement.close();
+    connection.close();
+  }
+
   private static DbInfo getDbInfo() {
     return DbInfo.builder()
         .system("my_system")
@@ -195,6 +237,28 @@ class OpenTelemetryConnectionTest {
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "users"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, dbInfo.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, dbInfo.getPort()))));
+  }
+
+  @SuppressWarnings("deprecation") // old semconv
+  private static void transactionTraceAssertion(DbInfo dbInfo, String query) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(query + " " + dbInfo.getName())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, dbInfo.getSystem()),
+                            equalTo(DbIncubatingAttributes.DB_NAME, dbInfo.getName()),
+                            equalTo(DbIncubatingAttributes.DB_USER, dbInfo.getUser()),
+                            equalTo(
+                                DbIncubatingAttributes.DB_CONNECTION_STRING, dbInfo.getShortUrl()),
+                            equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION, query),
                             equalTo(ServerAttributes.SERVER_ADDRESS, dbInfo.getHost()),
                             equalTo(ServerAttributes.SERVER_PORT, dbInfo.getPort()))));
   }
