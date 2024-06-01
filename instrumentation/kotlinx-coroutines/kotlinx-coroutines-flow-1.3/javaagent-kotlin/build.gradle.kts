@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // We are using a separate module for kotlin source instead of placing them in
 // instrumentation/kotlinx-coroutines/kotlinx-coroutines-flow-1.3/javaagent because muzzle
@@ -14,10 +14,8 @@ dependencies {
   compileOnly(project(":instrumentation-api"))
 }
 
-tasks {
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "1.8"
-    }
+kotlin {
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_1_8)
   }
 }
