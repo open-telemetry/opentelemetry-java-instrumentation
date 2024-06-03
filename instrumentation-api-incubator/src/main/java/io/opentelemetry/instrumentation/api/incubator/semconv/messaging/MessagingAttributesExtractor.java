@@ -142,12 +142,14 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     }
 
     switch (operation) {
-      case PUBLISH:
+      case CREATE, PUBLISH:
         return SpanKey.PRODUCER;
       case RECEIVE:
         return SpanKey.CONSUMER_RECEIVE;
       case PROCESS:
         return SpanKey.CONSUMER_PROCESS;
+      case SETTLE:
+        throw new IllegalStateException("Can't possibly happen");
     }
     throw new IllegalStateException("Can't possibly happen");
   }
