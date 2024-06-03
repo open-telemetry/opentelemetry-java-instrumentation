@@ -31,7 +31,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
       AttributeKey.longKey("messaging.batch.message_count");
   private static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
+      AttributeKey.stringKey("messaging.client.id");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_ANONYMOUS =
       AttributeKey.booleanKey("messaging.destination.anonymous");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
@@ -48,8 +48,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.longKey("messaging.message.envelope.size");
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       AttributeKey.stringKey("messaging.message.id");
-  private static final AttributeKey<String> MESSAGING_OPERATION =
-      AttributeKey.stringKey("messaging.operation");
+  private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
+      AttributeKey.stringKey("messaging.operation.type");
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
 
@@ -108,7 +108,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         attributes, MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
     internalSet(attributes, MESSAGING_CLIENT_ID, getter.getClientId(request));
     if (operation != null) {
-      internalSet(attributes, MESSAGING_OPERATION, operation.operationName());
+      internalSet(attributes, MESSAGING_OPERATION_TYPE, operation.operationName());
     }
   }
 
