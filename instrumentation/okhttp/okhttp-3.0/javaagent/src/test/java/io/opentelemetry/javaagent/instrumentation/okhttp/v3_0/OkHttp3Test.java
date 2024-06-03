@@ -18,7 +18,7 @@ import okhttp3.Protocol;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class OkHttp3Test extends AbstractOkHttp3Test {
+class OkHttp3Test extends AbstractOkHttp3Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
