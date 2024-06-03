@@ -142,7 +142,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     }
 
     switch (operation) {
-      case CREATE, PUBLISH:
+      case CREATE:
+        return SpanKey.PRODUCER;
+      case PUBLISH:
         return SpanKey.PRODUCER;
       case RECEIVE:
         return SpanKey.CONSUMER_RECEIVE;
