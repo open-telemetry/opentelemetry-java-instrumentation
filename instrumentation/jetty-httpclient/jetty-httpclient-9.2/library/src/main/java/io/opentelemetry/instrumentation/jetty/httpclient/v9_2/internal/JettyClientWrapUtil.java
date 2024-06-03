@@ -21,14 +21,14 @@ import org.eclipse.jetty.client.api.Response;
  */
 public final class JettyClientWrapUtil {
   private static final Class<?>[] listenerInterfaces = {
-      Response.CompleteListener.class,
-      Response.FailureListener.class,
-      Response.SuccessListener.class,
-      Response.AsyncContentListener.class,
-      Response.ContentListener.class,
-      Response.HeadersListener.class,
-      Response.HeaderListener.class,
-      Response.BeginListener.class
+    Response.CompleteListener.class,
+    Response.FailureListener.class,
+    Response.SuccessListener.class,
+    Response.AsyncContentListener.class,
+    Response.ContentListener.class,
+    Response.HeadersListener.class,
+    Response.HeaderListener.class,
+    Response.BeginListener.class
   };
 
   private JettyClientWrapUtil() {}
