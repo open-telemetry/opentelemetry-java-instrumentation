@@ -52,7 +52,7 @@ These keys can be customized using the following system properties or environmen
 
 If the `otel.instrumentation.log4j-context-data.add-baggage` system property (or the
 `OTEL_INSTRUMENTATION_LOG4J_CONTEXT_DATA_ADD_BAGGAGE` environment variable) is set to `true`,
-key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will be added to the context too.
+key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will also be added to the context data.
 
 - `baggage.<entry_name>`
 

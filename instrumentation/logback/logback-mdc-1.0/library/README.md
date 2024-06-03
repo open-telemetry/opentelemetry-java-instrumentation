@@ -32,11 +32,6 @@ dependencies {
 
 ### Usage
 
-If you set `<addBaggage>true</addBaggage>` in your `logback.xml` configuration,
-key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will be added to the context too.
-
-- `baggage.<entry_name>`
-
 The following demonstrates how you might configure the appender in your `logback.xml` configuration:
 
 ```xml
@@ -80,3 +75,8 @@ These keys can be customized in your `logback.xml` configuration, for example:
   <traceFlagsKey>example_trace_flags</traceFlagsKey>
 </appender>
 ```
+
+If you set `<addBaggage>true</addBaggage>` in your `logback.xml` configuration,
+key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will also be added to the MDC.
+
+- `baggage.<entry_name>`
