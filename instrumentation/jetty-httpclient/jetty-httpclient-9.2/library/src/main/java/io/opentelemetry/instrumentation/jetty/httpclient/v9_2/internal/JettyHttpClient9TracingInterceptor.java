@@ -28,24 +28,24 @@ import org.eclipse.jetty.client.api.Result;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class JettyHttpClient9TracingInterceptor
+public final class JettyHttpClient9TracingInterceptor
     implements Request.BeginListener,
-        Request.FailureListener,
-        Response.SuccessListener,
-        Response.FailureListener,
-        Response.CompleteListener {
+    Request.FailureListener,
+    Response.SuccessListener,
+    Response.FailureListener,
+    Response.CompleteListener {
 
   private static final Logger logger =
       Logger.getLogger(JettyHttpClient9TracingInterceptor.class.getName());
 
   private static final Class<?>[] requestlistenerInterfaces = {
-    Request.BeginListener.class,
-    Request.FailureListener.class,
-    Request.SuccessListener.class,
-    Request.HeadersListener.class,
-    Request.ContentListener.class,
-    Request.CommitListener.class,
-    Request.QueuedListener.class
+      Request.BeginListener.class,
+      Request.FailureListener.class,
+      Request.SuccessListener.class,
+      Request.HeadersListener.class,
+      Request.ContentListener.class,
+      Request.CommitListener.class,
+      Request.QueuedListener.class
   };
 
   @Nullable private Context context;
