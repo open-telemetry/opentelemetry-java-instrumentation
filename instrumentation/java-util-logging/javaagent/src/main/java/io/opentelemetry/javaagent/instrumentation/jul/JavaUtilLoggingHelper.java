@@ -38,6 +38,20 @@ public final class JavaUtilLoggingHelper {
     }
 
     String instrumentationName = logger.getName();
+    capture(instrumentationName,logRecord);
+  }
+
+  public static void capture(java.util.logging.Logger logger, LogRecord logRecord){
+    if (!logger.isLoggable(logRecord.getLevel())) {
+      // this is already checked in most cases, except if Logger.log(LogRecord) was called directly
+      return;
+    }
+
+    String instrumentationName = logger.getName();
+    capture(instrumentationName,logRecord);
+  }
+
+  private static void capture(String instrumentationName, LogRecord logRecord){
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
