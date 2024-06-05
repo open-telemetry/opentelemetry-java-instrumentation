@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.properties;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -18,6 +18,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class SpringConfigProperties implements ConfigProperties {
   private final Environment environment;
 

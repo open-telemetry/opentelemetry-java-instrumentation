@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.resources;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -14,6 +14,10 @@ import io.opentelemetry.semconv.ServiceAttributes;
 import java.util.Optional;
 import org.springframework.boot.info.BuildProperties;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class SpringResourceProvider implements ResourceProvider {
 
   private final Optional<BuildProperties> buildProperties;

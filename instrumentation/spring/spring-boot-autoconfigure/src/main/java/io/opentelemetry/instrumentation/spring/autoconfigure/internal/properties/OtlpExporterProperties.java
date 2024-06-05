@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.properties;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/** Configuration for OLTP exporters. */
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @ConfigurationProperties(prefix = "otel.exporter.otlp")
 public final class OtlpExporterProperties {
 
@@ -35,6 +38,10 @@ public final class OtlpExporterProperties {
     return logs;
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static class SignalProperties {
     private final Map<String, String> headers = new HashMap<>();
 
