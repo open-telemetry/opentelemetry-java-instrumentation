@@ -1,6 +1,5 @@
 plugins {
   id("otel.library-instrumentation")
-  id("otel.japicmp-conventions")
 }
 
 // Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
