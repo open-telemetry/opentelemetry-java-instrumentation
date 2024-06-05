@@ -19,6 +19,8 @@ import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRo
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.vertx.core.Vertx
+import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +43,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtensionContext
@@ -63,16 +66,19 @@ class KotlinCoroutinesInstrumentationTest {
   companion object {
     val threadPool = Executors.newFixedThreadPool(2)
     val singleThread = Executors.newSingleThreadExecutor()
+    val vertx = Vertx.vertx()
+
+    @JvmStatic
+    @RegisterExtension
+    val testing = AgentInstrumentationExtension.create()
   }
 
   @AfterAll
   fun shutdown() {
     threadPool.shutdown()
     singleThread.shutdown()
+    vertx.close()
   }
-
-  @RegisterExtension
-  val testing = AgentInstrumentationExtension.create()
 
   val tracer = testing.openTelemetry.getTracer("test")
 
@@ -517,6 +523,7 @@ class KotlinCoroutinesInstrumentationTest {
       arguments(DispatcherWrapper(Dispatchers.Unconfined)),
       arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
       arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+      arguments(DispatcherWrapper(vertx.dispatcher()))
     )
   }
 
@@ -558,5 +565,34 @@ class KotlinCoroutinesInstrumentationTest {
     override fun updateThreadContext(context: CoroutineContext): Scope {
       return otelContext.makeCurrent()
     }
+  }
+
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11411
+  @ParameterizedTest
+  @ArgumentsSource(DispatchersSource::class)
+  fun `dispatch does not propagate context`(dispatcher: DispatcherWrapper) {
+    Assumptions.assumeTrue(dispatcher.dispatcher != Dispatchers.Unconfined)
+
+    runTest(dispatcher) {
+      dispatcher.dispatcher.dispatch(coroutineContext) {
+        tracer.spanBuilder("dispatched").startSpan().end()
+      }
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly({
+          it.hasName("parent")
+            .hasNoParent()
+        })
+      },
+      { trace ->
+        trace.hasSpansSatisfyingExactly({
+          it.hasName("dispatched")
+            .hasNoParent()
+        })
+      }
+    )
   }
 }
