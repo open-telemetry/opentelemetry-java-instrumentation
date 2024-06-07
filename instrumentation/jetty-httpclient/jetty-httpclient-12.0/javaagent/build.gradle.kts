@@ -10,6 +10,10 @@ muzzle {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
   implementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:library"))
 
