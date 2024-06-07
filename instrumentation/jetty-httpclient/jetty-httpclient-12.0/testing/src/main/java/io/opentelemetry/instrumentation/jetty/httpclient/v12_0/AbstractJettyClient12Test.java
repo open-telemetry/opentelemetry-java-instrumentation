@@ -7,9 +7,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
@@ -25,14 +23,10 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
   private static final Logger logger = Logger.getLogger(AbstractJettyClient12Test.class.getName());
-
-  @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   protected abstract HttpClient createStandardClient();
 

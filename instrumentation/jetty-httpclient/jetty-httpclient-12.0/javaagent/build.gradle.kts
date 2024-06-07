@@ -10,15 +10,10 @@ muzzle {
   }
 }
 
-// We do not want to support alpha or beta version
-val jettyVers_base12 = "12.0.0"
-
 dependencies {
   implementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:library"))
 
-  library("org.eclipse.jetty:jetty-client:$jettyVers_base12")
+  library("org.eclipse.jetty:jetty-client:12.0.0")
 
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing"))
-
-  latestDepTestLibrary("org.eclipse.jetty:jetty-client:12.+") // documented limitation
 }
