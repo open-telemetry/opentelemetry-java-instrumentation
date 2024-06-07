@@ -5,7 +5,6 @@ plugins {
 
 group = "io.opentelemetry.instrumentation"
 
-val versions: Map<String, String> by project
 val springBootVersion = "2.6.15"
 
 dependencies {
