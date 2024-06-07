@@ -2,6 +2,10 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 // We do not want to support alpha or beta version
 val jettyVers_base12 = "12.0.0"
 
