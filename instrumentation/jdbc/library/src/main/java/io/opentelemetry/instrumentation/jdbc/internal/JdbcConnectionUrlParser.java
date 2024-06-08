@@ -831,6 +831,54 @@ public enum JdbcConnectionUrlParser {
 
       return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
     }
+  },
+  INFORMIX_SQLI("informix-sqli") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+
+      int dbNameStartIdx = jdbcUrl.indexOf('/', jdbcUrl.indexOf("//") + 2) + 1;
+      int dbNameEndIdx = jdbcUrl.indexOf(':', dbNameStartIdx);
+
+      String name = jdbcUrl.substring(dbNameStartIdx, dbNameEndIdx);
+      if (name != null) {
+        builder.name(name);
+      }
+
+      return INFORMIX.doParse(jdbcUrl, builder);
+    }
+  },
+
+  INFORMIX_DIRECT("informix-direct") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+
+      String[] split = jdbcUrl.split("//");
+      int dbNameEndIdx = split[1].indexOf(":");
+
+      String name = split[1].substring(0, dbNameEndIdx);
+      if (name != null) {
+        builder.name(name);
+      }
+
+      builder.host("infxhost");
+      return INFORMIX.doParse(jdbcUrl, builder);
+    }
+  },
+
+  INFORMIX {
+    private static final int DEFAULT_PORT = 9088;
+
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      DbInfo dbInfo = builder.build();
+      if (dbInfo.getPort() == null) {
+        builder.port(DEFAULT_PORT);
+      }
+
+      return builder;
+    }
   };
 
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
@@ -1000,6 +1048,10 @@ public enum JdbcConnectionUrlParser {
         return DbSystemValues.H2;
       case "hsqldb": // Hyper SQL Database
         return "hsqldb";
+      case "informix-sqli": // IBM Informix
+        return DbSystemValues.INFORMIX_SQLI;
+      case "informix-direct":
+        return DbSystemValues.INFORMIX_DIRECT;
       case "mariadb": // MariaDB
         return DbSystemValues.MARIADB;
       case "mysql": // MySQL
@@ -1026,6 +1078,8 @@ public enum JdbcConnectionUrlParser {
     static final String MYSQL = "mysql";
     static final String ORACLE = "oracle";
     static final String DB2 = "db2";
+    static final String INFORMIX_SQLI = "informix-sqli";
+    static final String INFORMIX_DIRECT = "informix-direct";
     static final String POSTGRESQL = "postgresql";
     static final String HANADB = "hanadb";
     static final String DERBY = "derby";
