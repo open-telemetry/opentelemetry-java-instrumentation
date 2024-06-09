@@ -22,8 +22,8 @@ public class TimedExample {
   @Timed(description = METRIC_DESCRIPTION)
   public void exampleWithDescriptionAndDefaultValue() {}
 
-  @Timed(unit = TimeUnit.MICROSECONDS)
-  public void exampleWithUnitUSAndDefaultValue() {}
+  @Timed(unit = TimeUnit.NANOSECONDS)
+  public void exampleWithUnitNanoSecondAndDefaultValue() {}
 
   @Timed(value = "example.with.description.duration", description = METRIC_DESCRIPTION)
   public void exampleWithDescription() {}

@@ -11,8 +11,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import application.io.opentelemetry.instrumentation.annotations.MetricAttribute;
 import application.io.opentelemetry.instrumentation.annotations.Timed;
-// import io.opentelemetry.javaagent.instrumentation.timed.annotations.Timed;
-// import io.opentelemetry.javaagent.instrumentation.timed.annotations.MetricAttribute;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -122,7 +120,7 @@ public final class TimedHelper {
         if (!HISTOGRAMS.containsKey(metricName)) {
           DoubleHistogram doubleHistogram = null;
           if (TIMED_DEFAULT_NAME.equals(metricName)) {
-            doubleHistogram = METER.histogramBuilder(metricName).build();
+            doubleHistogram = METER.histogramBuilder(metricName).setUnit("ms").build();
           } else {
             String unitStr = extractUnitStr(timedAnnotation);
             doubleHistogram =

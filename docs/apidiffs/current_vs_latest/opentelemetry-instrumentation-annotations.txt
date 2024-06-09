@@ -1,4 +1,4 @@
-Comparing source compatibility of  against 
+Comparing source compatibility of opentelemetry-instrumentation-annotations-2.5.0-SNAPSHOT.jar against opentelemetry-instrumentation-annotations-2.4.0.jar
 +++  NEW ANNOTATION: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.annotations.Counted  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW INTERFACE: java.lang.annotation.Annotation

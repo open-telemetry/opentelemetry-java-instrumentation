@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.timed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
+import application.io.opentelemetry.instrumentation.annotations.MetricAttribute;
+import application.io.opentelemetry.instrumentation.annotations.Timed;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;

@@ -48,10 +48,10 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithUnitUSAndDefaultValue() {
-    new TimedExample().exampleWithUnitUSAndDefaultValue();
+  void testExampleWithUnitNanoSecondAndDefaultValue() {
+    new TimedExample().exampleWithUnitNanoSecondAndDefaultValue();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(TIMED_DEFAULT_NAME).hasUnit(""));
+        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(TIMED_DEFAULT_NAME).hasUnit("ms"));
   }
 
   @Test
