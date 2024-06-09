@@ -860,14 +860,15 @@ public enum JdbcConnectionUrlParser {
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
 
-      int informUrlStartIdx = jdbcUrl.indexOf("informix-direct://") + "informix-direct://".length();
-      int colonLoc = jdbcUrl.indexOf(":", informUrlStartIdx);
+      int informixUrlStartIdx =
+          jdbcUrl.indexOf("informix-direct://") + "informix-direct://".length();
+      int colonLoc = jdbcUrl.indexOf(":", informixUrlStartIdx);
 
       String name;
-      if (jdbcUrl.indexOf(":", informUrlStartIdx) > -1) {
-        name = jdbcUrl.substring(informUrlStartIdx, colonLoc);
+      if (colonLoc > -1) {
+        name = jdbcUrl.substring(informixUrlStartIdx, colonLoc);
       } else {
-        name = jdbcUrl.substring(informUrlStartIdx);
+        name = jdbcUrl.substring(informixUrlStartIdx);
       }
       if (!name.isEmpty()) {
         builder.name(name);
