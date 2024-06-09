@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.eclipse.jetty")
     module.set("jetty-client")
-    versions.set("[9.2,12)")
+    versions.set("[9.2,10)")
   }
 }
 
