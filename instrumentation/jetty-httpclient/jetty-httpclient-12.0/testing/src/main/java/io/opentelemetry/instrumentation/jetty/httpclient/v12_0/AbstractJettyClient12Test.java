@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
-import static java.util.logging.Level.FINE;
-
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -16,17 +14,16 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Logger;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
-
-  private static final Logger logger = Logger.getLogger(AbstractJettyClient12Test.class.getName());
 
   protected abstract HttpClient createStandardClient();
 
@@ -38,25 +35,30 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
   Request jettyRequest = null;
 
+  @BeforeEach
+  public void before() throws Exception {
+    client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
+    client.start();
+
+    SslContextFactory.Client tlsCtx = new SslContextFactory.Client();
+    httpsClient = createHttpsClient(tlsCtx);
+    httpsClient.setFollowRedirects(false);
+    httpsClient.start();
+  }
+
+  @AfterEach
+  public void after() throws Exception {
+    client.stop();
+    httpsClient.stop();
+  }
+
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    try {
-      // disable redirect tests
-      optionsBuilder.disableTestRedirects();
-      // jetty 12 does not support to reuse request
-      // use request.send() twice will block the program infinitely
-      optionsBuilder.disableTestReusedRequest();
-      // start the main Jetty HttpClient and a https client
-      client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
-      client.start();
-
-      SslContextFactory.Client tlsCtx = new SslContextFactory.Client();
-      httpsClient = createHttpsClient(tlsCtx);
-      httpsClient.setFollowRedirects(false);
-      httpsClient.start();
-    } catch (Throwable t) {
-      logger.log(FINE, t.getMessage(), t);
-    }
+    // disable redirect tests
+    optionsBuilder.disableTestRedirects();
+    // jetty 12 does not support to reuse request
+    // use request.send() twice will block the program infinitely
+    optionsBuilder.disableTestReusedRequest();
   }
 
   @Override

@@ -17,7 +17,7 @@ import java.util.function.Function;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 
-public class JettyHttpClientSingletons {
+public final class JettyHttpClientSingletons {
 
   static final String JETTY_CLIENT_CONTEXT_KEY = "otel-jetty-client-context";
 

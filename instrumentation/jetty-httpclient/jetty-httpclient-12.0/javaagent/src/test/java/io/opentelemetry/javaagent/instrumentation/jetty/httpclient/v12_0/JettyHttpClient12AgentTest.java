@@ -12,7 +12,7 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyHttpClient12AgentTest extends AbstractJettyClient12Test {
+class JettyHttpClient12AgentTest extends AbstractJettyClient12Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

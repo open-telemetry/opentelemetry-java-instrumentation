@@ -17,7 +17,7 @@ import org.eclipse.jetty.client.Result;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class JettyHttpClient12TracingInterceptor
+public final class JettyHttpClient12TracingInterceptor
     implements Request.BeginListener,
         Request.FailureListener,
         Response.SuccessListener,
