@@ -839,7 +839,7 @@ public enum JdbcConnectionUrlParser {
 
       int informixUrlStartIdx = jdbcUrl.indexOf("informix-sqli://") + "informix-sqli://".length();
 
-      if (jdbcUrl.indexOf('/', informixUrlStartIdx) != -1) {
+      if (jdbcUrl.indexOf('/', informixUrlStartIdx) > -1) {
         int dbNameStartIdx = jdbcUrl.indexOf('/', informixUrlStartIdx) + 1;
         int dbNameEndIdx = jdbcUrl.indexOf(':', dbNameStartIdx);
 
