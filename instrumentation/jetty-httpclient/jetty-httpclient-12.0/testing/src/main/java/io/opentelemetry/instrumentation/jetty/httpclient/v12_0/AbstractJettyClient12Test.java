@@ -33,8 +33,6 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
   protected HttpClient httpsClient;
 
-  Request jettyRequest = null;
-
   @BeforeEach
   public void before() throws Exception {
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
@@ -71,8 +69,6 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
     request.method(method);
     request.timeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-
-    jettyRequest = request;
 
     return request;
   }
