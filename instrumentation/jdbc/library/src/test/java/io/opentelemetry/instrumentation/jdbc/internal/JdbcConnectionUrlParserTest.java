@@ -654,6 +654,12 @@ class JdbcConnectionUrlParserTest {
               .setPort(9088)
               .setName("stores_demo")
               .build(),
+          arg("jdbc:informix-sqli://infxhost:99")
+              .setSystem("informix-sqli")
+              .setShortUrl("informix-sqli://infxhost:99")
+              .setHost("infxhost")
+              .setPort(99)
+              .build(),
           arg("jdbc:informix-direct://infxdb:999;user=infxuser;password=PW")
               .setSystem("informix-direct")
               .setUser("infxuser")
@@ -661,6 +667,13 @@ class JdbcConnectionUrlParserTest {
               .setHost("infxhost")
               .setPort(999)
               .setName("infxdb")
+              .build(),
+          arg("jdbc:informix-direct://infxdb")
+              .setSystem("informix-direct")
+              .setShortUrl("informix-direct://infxhost:9088")
+              .setHost("infxhost")
+              .setName("infxdb")
+              .setPort(9088)
               .build(),
 
           // http://www.h2database.com/html/features.html#database_url

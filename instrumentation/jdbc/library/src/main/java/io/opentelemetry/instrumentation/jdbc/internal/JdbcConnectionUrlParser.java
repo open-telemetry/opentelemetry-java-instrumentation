@@ -837,12 +837,16 @@ public enum JdbcConnectionUrlParser {
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
 
-      int dbNameStartIdx = jdbcUrl.indexOf('/', jdbcUrl.indexOf("//") + 2) + 1;
-      int dbNameEndIdx = jdbcUrl.indexOf(':', dbNameStartIdx);
+      int informixUrlStartIdx = jdbcUrl.indexOf("informix-sqli://") + "informix-sqli://".length();
 
-      String name = jdbcUrl.substring(dbNameStartIdx, dbNameEndIdx);
-      if (name != null) {
-        builder.name(name);
+      if (jdbcUrl.indexOf('/', informixUrlStartIdx) != -1) {
+        int dbNameStartIdx = jdbcUrl.indexOf('/', informixUrlStartIdx) + 1;
+        int dbNameEndIdx = jdbcUrl.indexOf(':', dbNameStartIdx);
+
+        String name = jdbcUrl.substring(dbNameStartIdx, dbNameEndIdx);
+        if (!name.isEmpty()) {
+          builder.name(name);
+        }
       }
 
       return INFORMIX.doParse(jdbcUrl, builder);
@@ -850,19 +854,26 @@ public enum JdbcConnectionUrlParser {
   },
 
   INFORMIX_DIRECT("informix-direct") {
+    private static final String DEFAULT_HOST = "infxhost";
+
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
 
-      String[] split = jdbcUrl.split("//");
-      int dbNameEndIdx = split[1].indexOf(":");
+      int informUrlStartIdx = jdbcUrl.indexOf("informix-direct://") + "informix-direct://".length();
+      int colonLoc = jdbcUrl.indexOf(":", informUrlStartIdx);
 
-      String name = split[1].substring(0, dbNameEndIdx);
-      if (name != null) {
+      String name;
+      if (jdbcUrl.indexOf(":", informUrlStartIdx) > -1) {
+        name = jdbcUrl.substring(informUrlStartIdx, colonLoc);
+      } else {
+        name = jdbcUrl.substring(informUrlStartIdx);
+      }
+      if (!name.isEmpty()) {
         builder.name(name);
       }
 
-      builder.host("infxhost");
+      builder.host(DEFAULT_HOST);
       return INFORMIX.doParse(jdbcUrl, builder);
     }
   },
