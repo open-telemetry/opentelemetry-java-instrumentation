@@ -666,8 +666,6 @@ public enum JdbcConnectionUrlParser {
     private static final String DEFAULT_USER = "SA";
     private static final int DEFAULT_PORT = 9001;
 
-    // TODO(anuraaga): Replace dbsystem with semantic convention
-    // https://github.com/open-telemetry/opentelemetry-specification/pull/1321
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       String instance = null;
