@@ -13,11 +13,13 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // TODO: Copy & paste with only trivial adaptions from v2
-abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule {
+abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule implements
+    ExperimentalInstrumentationModule {
 
   protected AbstractAwsSdkInstrumentationModule(String additionalInstrumentationName) {
     super("aws-sdk", "aws-sdk-1.11", additionalInstrumentationName);
@@ -29,8 +31,8 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
+  public String getModuleGroup() {
+    return "aws-sdk";
   }
 
   @Override
