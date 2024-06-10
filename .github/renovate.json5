@@ -116,7 +116,7 @@
         "org.slf4j:slf4j-api",
         "org.springframework.boot",
         "org.springframework.boot:spring-boot-dependencies"],
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": ["major", "minor"],
       "enabled": false,
     },
     {
