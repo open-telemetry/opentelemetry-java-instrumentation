@@ -360,3 +360,14 @@ For example:
 ```
 
 [suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation
+
+## Use non-inlined advice code with `invokedynamic`
+
+### shared classes and common classloader
+
+By default, all the advices of an instrumentation module will be loaded into isolated classloaders,
+one per instrumentation module. Some instrumentations require to use a common classloader in order
+to preserve the semantics of `static` fields and share interfaces and classes.
+
+In order to load multiple `InstrumentationModule` implementations in the same classloader, you need to 
+override the `ExperimentalInstrumentationModule#getModuleGroup` to return an identical value.
