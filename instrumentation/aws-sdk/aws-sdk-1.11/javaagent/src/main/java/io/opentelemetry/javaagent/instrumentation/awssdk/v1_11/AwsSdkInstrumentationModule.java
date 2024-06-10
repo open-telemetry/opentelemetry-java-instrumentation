@@ -14,8 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class AwsSdkInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class AwsSdkInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public AwsSdkInstrumentationModule() {
     super("aws-sdk", "aws-sdk-1.11", "aws-sdk-1.11-core");
   }

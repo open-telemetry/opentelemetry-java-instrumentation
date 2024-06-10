@@ -12,14 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.List;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 // TODO: Copy & paste with only trivial adaptions from v2
-abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   protected AbstractAwsSdkInstrumentationModule(String additionalInstrumentationName) {
     super("aws-sdk", "aws-sdk-1.11", additionalInstrumentationName);
