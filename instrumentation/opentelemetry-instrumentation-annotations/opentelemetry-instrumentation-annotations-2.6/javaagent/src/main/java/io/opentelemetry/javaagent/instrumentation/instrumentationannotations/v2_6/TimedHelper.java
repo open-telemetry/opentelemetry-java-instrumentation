@@ -3,62 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.timed;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
-import application.io.opentelemetry.instrumentation.annotations.MetricAttribute;
 import application.io.opentelemetry.instrumentation.annotations.Timed;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-public final class TimedHelper {
+public final class TimedHelper extends MetricsAnnotationHelper {
 
-  private static final String INSTRUMENTATION_NAME =
-      "io.opentelemetry.opentelemetry-instrumentation-annotation-timed";
   private static final String TIMED_DEFAULT_NAME = "method.invocation.duration";
 
   private static final ConcurrentMap<String, DoubleHistogram> HISTOGRAMS =
       new ConcurrentHashMap<>();
-
-  private static final Meter METER = GlobalOpenTelemetry.get().getMeter(INSTRUMENTATION_NAME);
-
-  private static void extractMetricAttributes(
-      MethodRequest methodRequest, AttributesBuilder attributesBuilder) {
-    Parameter[] parameters = methodRequest.method().getParameters();
-    for (int i = 0; i < parameters.length; i++) {
-      if (parameters[i].isAnnotationPresent(MetricAttribute.class)) {
-        MetricAttribute annotation = parameters[i].getAnnotation(MetricAttribute.class);
-        String attributeKey = "";
-        if (!StringUtils.isNullOrEmpty(annotation.value())) {
-          attributeKey = annotation.value();
-        } else if (!StringUtils.isNullOrEmpty(parameters[i].getName())) {
-          attributeKey = parameters[i].getName();
-        } else {
-          continue;
-        }
-        attributesBuilder.put(attributeKey, methodRequest.args()[i].toString());
-      }
-    }
-  }
-
-  private static void extractAdditionAttributes(
-      String[] attributes, AttributesBuilder attributesBuilder) {
-    int length = attributes.length;
-    for (int i = 0; i + 1 < length; i += 2) {
-      attributesBuilder.put(attributes[i], attributes[i + 1]);
-    }
-  }
 
   public static void recordHistogramWithAttributes(
       MethodRequest methodRequest, Throwable throwable, Object returnValue, long startNanoTime) {

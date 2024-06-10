@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.counted;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6;
 
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.KotlinCoroutineUtil.isKotlinSuspendMethod;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -25,16 +25,16 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CountedInstrumentation implements TypeInstrumentation {
+public class TimedInstrumentation implements TypeInstrumentation {
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
-  CountedInstrumentation() {
+  TimedInstrumentation() {
     annotatedMethodMatcher =
-        isAnnotatedWith(named("application.io.opentelemetry.instrumentation.annotations.Counted"));
+        isAnnotatedWith(named("application.io.opentelemetry.instrumentation.annotations.Timed"));
     annotatedParametersMatcher =
         hasParameters(
             whereAny(
@@ -53,67 +53,75 @@ public class CountedInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    ElementMatcher.Junction<MethodDescription> countedMethods =
+    ElementMatcher.Junction<MethodDescription> timedMethods =
         annotatedMethodMatcher.and(not(excludedMethodsMatcher));
 
     ElementMatcher.Junction<MethodDescription> timedMethodsWithParameters =
-        countedMethods.and(annotatedParametersMatcher);
+        timedMethods.and(annotatedParametersMatcher);
 
     ElementMatcher.Junction<MethodDescription> timedMethodsWithoutParameters =
-        countedMethods.and(not(annotatedParametersMatcher));
+        timedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        timedMethodsWithoutParameters, CountedInstrumentation.class.getName() + "$CountedAdvice");
+        timedMethodsWithoutParameters, TimedInstrumentation.class.getName() + "$TimedAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
     // with @MetricsAttribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
         timedMethodsWithParameters,
-        CountedInstrumentation.class.getName() + "$CountedAttributesAdvice");
+        TimedInstrumentation.class.getName() + "$TimedAttributesAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class CountedAttributesAdvice {
+  public static class TimedAttributesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Origin Method originMethod,
         @Advice.Local("otelMethod") Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
-        @Advice.Local("otelRequest") MethodRequest request) {
+        @Advice.Local("otelRequest") MethodRequest request,
+        @Advice.Local("startNanoTime") long startNanoTime) {
 
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to local variable so that there would be only one call to Class.getMethod.
       method = originMethod;
       request = new MethodRequest(method, args);
+      startNanoTime = System.nanoTime();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Local("otelMethod") Method method,
         @Advice.Local("otelRequest") MethodRequest request,
+        @Advice.Local("startNanoTime") long startNanoTime,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      CountedHelper.recordCountWithAttributes(request, returnValue, throwable);
+      TimedHelper.recordHistogramWithAttributes(request, throwable, returnValue, startNanoTime);
     }
   }
 
   @SuppressWarnings("unused")
-  public static class CountedAdvice {
+  public static class TimedAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Origin Method originMethod, @Advice.Local("otelMethod") Method method) {
+        @Advice.Origin Method originMethod,
+        @Advice.Local("otelMethod") Method method,
+        @Advice.Local("startNanoTime") long startNanoTime) {
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to local variable so that there would be only one call to Class.getMethod.
       method = originMethod;
+      startNanoTime = System.nanoTime();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Local("otelMethod") Method method,
+        @Advice.Local("startNanoTime") long startNanoTime,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      CountedHelper.recordCount(method, returnValue, throwable);
+      TimedHelper.recordHistogram(method, throwable, returnValue, startNanoTime);
     }
   }
 }

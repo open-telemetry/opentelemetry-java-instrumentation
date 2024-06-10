@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.test.annotations.counted;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted;
 
 import io.opentelemetry.instrumentation.annotations.Counted;
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.test.annotations.timed;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed;
 
 import io.opentelemetry.instrumentation.annotations.Timed;
 import java.util.concurrent.TimeUnit;

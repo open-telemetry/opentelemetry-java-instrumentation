@@ -35,7 +35,7 @@ tasks {
   }
   test {
     jvmArgs(
-      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotations.counted.CountedExample[exampleIgnore];io.opentelemetry.test.annotations.timed.TimedExample[exampleIgnore]"
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample[exampleIgnore];io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed.TimedExample[exampleIgnore]"
     )
   }
 }

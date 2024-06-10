@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.test.annotations.timed;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted;
 
-import static io.opentelemetry.test.annotations.timed.TimedExample.ANOTHER_NAME_HISTOGRAM;
-import static io.opentelemetry.test.annotations.timed.TimedExample.METRIC_DESCRIPTION;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample.ANOTHER_NAME_COUNT;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample.METRIC_DESCRIPTION;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample.METRIC_UNIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -14,79 +15,69 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class TimedInstrumentationTest {
+class CountedInstrumentationTest {
 
   @RegisterExtension
   public static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
-  public static final String TIMED_DEFAULT_NAME = "method.invocation.duration";
-
-  public static final String TIMED_INSTRUMENTATION_NAME =
-      "io.opentelemetry.opentelemetry-instrumentation-annotation-timed";
+  private static final String INSTRUMENTATION_NAME =
+      "io.opentelemetry.opentelemetry-instrumentation-annotations-2.6";
+  private static final String COUNTED_DEFAULT_NAME = "method.invocation.count";
 
   @Test
   void testDefaultExample() {
-    new TimedExample().defaultExample();
+    new CountedExample().defaultExample();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(TIMED_DEFAULT_NAME));
+        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME));
   }
 
   @Test
   void testExampleWithAnotherName() {
-    new TimedExample().exampleWithAnotherName();
+    new CountedExample().exampleWithAnotherName();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(ANOTHER_NAME_HISTOGRAM));
+        INSTRUMENTATION_NAME, metric -> metric.hasName(ANOTHER_NAME_COUNT));
   }
 
   @Test
   void testExampleWithDescriptionAndDefaultValue() {
-    new TimedExample().exampleWithDescriptionAndDefaultValue();
+    new CountedExample().exampleWithDescriptionAndDefaultValue();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
-        metric -> metric.hasName(TIMED_DEFAULT_NAME).hasDescription(""));
+        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasDescription(""));
   }
 
   @Test
-  void testExampleWithUnitNanoSecondAndDefaultValue() {
-    new TimedExample().exampleWithUnitNanoSecondAndDefaultValue();
+  void testExampleWithUnitAndDefaultValue() {
+    new CountedExample().exampleWithUnitAndDefaultValue();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(TIMED_DEFAULT_NAME).hasUnit("ms"));
+        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasUnit(""));
   }
 
   @Test
   void testExampleWithDescription() {
-    new TimedExample().exampleWithDescription();
+    new CountedExample().exampleWithDescription();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
+        INSTRUMENTATION_NAME,
         metric ->
-            metric.hasName("example.with.description.duration").hasDescription(METRIC_DESCRIPTION));
+            metric.hasName("example.with.description.count").hasDescription(METRIC_DESCRIPTION));
   }
 
   @Test
-  void testExampleWithUnitSecondAnd2SecondLatency() throws InterruptedException {
-    new TimedExample().exampleWithUnitSecondAnd2SecondLatency();
+  void testExampleWithUnit() {
+    new CountedExample().exampleWithUnit();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("example.with.unit.duration")
-                .hasUnit("s")
-                .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getHistogramData().getPoints())
-                          .allMatch(p -> p.getMax() < 5 && p.getMin() > 0);
-                    }));
+        INSTRUMENTATION_NAME,
+        metric -> metric.hasName("example.with.unit.count").hasUnit(METRIC_UNIT));
   }
 
   @Test
   void testExampleWithAdditionalAttributes1() {
-    new TimedExample().exampleWithAdditionalAttributes1();
+    new CountedExample().exampleWithAdditionalAttributes1();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
+        INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(TIMED_DEFAULT_NAME)
+                .hasName(COUNTED_DEFAULT_NAME)
                 .satisfies(
                     metricData -> {
                       assertThat(metricData.getData().getPoints())
@@ -104,12 +95,12 @@ class TimedInstrumentationTest {
 
   @Test
   void testExampleWithAdditionalAttributes2() {
-    new TimedExample().exampleWithAdditionalAttributes2();
+    new CountedExample().exampleWithAdditionalAttributes2();
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
+        INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(TIMED_DEFAULT_NAME)
+                .hasName(COUNTED_DEFAULT_NAME)
                 .satisfies(
                     metricData -> {
                       assertThat(metricData.getData().getPoints())
@@ -127,24 +118,36 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleIgnore() throws Exception {
-    new TimedExample().exampleIgnore();
-    Thread.sleep(500);
-    assertThat(testing.metrics()).isEmpty();
+  void testExampleWithReturnAttribute() {
+    new CountedExample().exampleWithReturnValueAttribute();
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName(COUNTED_DEFAULT_NAME)
+                .satisfies(
+                    metricData -> {
+                      assertThat(metricData.getData().getPoints())
+                          .allMatch(
+                              p ->
+                                  CountedExample.RETURN_STRING.equals(
+                                      p.getAttributes()
+                                          .get(AttributeKey.stringKey("returnValue"))));
+                    }));
   }
 
   @Test
   void testExampleWithException() {
     try {
-      new TimedExample().exampleWithException();
+      new CountedExample().exampleWithException();
     } catch (IllegalStateException e) {
       // noop
     }
     testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
+        INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(TIMED_DEFAULT_NAME)
+                .hasName(COUNTED_DEFAULT_NAME)
                 .satisfies(
                     metricData -> {
                       assertThat(metricData.getData().getPoints())
@@ -159,21 +162,9 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithReturnValueAttribute() {
-    new TimedExample().exampleWithReturnValueAttribute();
-    testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName(TIMED_DEFAULT_NAME)
-                .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  TimedExample.RETURN_STRING.equals(
-                                      p.getAttributes()
-                                          .get(AttributeKey.stringKey("returnValue"))));
-                    }));
+  void testExampleIgnore() throws Exception {
+    new CountedExample().exampleIgnore();
+    Thread.sleep(500); // sleep a bit just to make sure no metric is captured
+    assertThat(testing.metrics()).isEmpty();
   }
 }

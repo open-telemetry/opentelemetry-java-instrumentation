@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.counted;
+package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import application.io.opentelemetry.instrumentation.annotations.Counted;
 import application.io.opentelemetry.instrumentation.annotations.MetricAttribute;
+import application.io.opentelemetry.instrumentation.annotations.Timed;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -17,14 +18,14 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Instrumentation for methods annotated with {@link Counted} or {@link MetricAttribute}
- * annotations.
+ * Instrumentation for methods annotated with {@link Counted}, {@link Timed} and {@link
+ * MetricAttribute} annotations.
  */
 @AutoService(InstrumentationModule.class)
-public class CountedInstrumentationModule extends InstrumentationModule {
+public class MetricsAnnotationInstrumentationModule extends InstrumentationModule {
 
-  public CountedInstrumentationModule() {
-    super("opentelemetry-instrumentation-annotation-counted", "counted");
+  public MetricsAnnotationInstrumentationModule() {
+    super("opentelemetry-instrumentation-annotations", "metrics-annotations");
   }
 
   @Override
@@ -41,6 +42,6 @@ public class CountedInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CountedInstrumentation());
+    return asList(new CountedInstrumentation(), new TimedInstrumentation());
   }
 }
