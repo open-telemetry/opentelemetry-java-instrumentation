@@ -9,8 +9,8 @@ on:
 jobs:
   graalvm-native-tests:
     uses: ./.github/workflows/reusable-native-tests.yml
-    env:
-      LATEST_DEPS: "true"
+    with:
+      test-latest-deps: true
 
   workflow-notification:
     needs:
