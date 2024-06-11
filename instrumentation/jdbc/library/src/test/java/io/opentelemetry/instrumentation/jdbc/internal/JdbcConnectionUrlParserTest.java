@@ -671,26 +671,29 @@ class JdbcConnectionUrlParserTest {
               .setShortUrl("informix-sqli:")
               .setPort(9088)
               .build(),
+
+          // https://www.ibm.com/docs/en/informix-servers/12.10?topic=method-format-database-urls
           arg("jdbc:informix-direct://infxdb:999;user=infxuser;password=PW")
               .setSystem("informix-direct")
+              .setShortUrl("informix-direct:")
               .setUser("infxuser")
-              .setShortUrl("informix-direct://infxhost:999")
-              .setHost("infxhost")
               .setPort(999)
+              .setName("infxdb")
+              .build(),
+          arg("jdbc:informix-direct://infxdb;user=infxuser;password=PW")
+              .setSystem("informix-direct")
+              .setShortUrl("informix-direct:")
+              .setUser("infxuser")
               .setName("infxdb")
               .build(),
           arg("jdbc:informix-direct://infxdb")
               .setSystem("informix-direct")
-              .setShortUrl("informix-direct://infxhost:9088")
-              .setHost("infxhost")
+              .setShortUrl("informix-direct:")
               .setName("infxdb")
-              .setPort(9088)
               .build(),
           arg("jdbc:informix-direct:")
               .setSystem("informix-direct")
-              .setShortUrl("informix-direct://infxhost:9088")
-              .setHost("infxhost")
-              .setPort(9088)
+              .setShortUrl("informix-direct:")
               .build(),
 
           // http://www.h2database.com/html/features.html#database_url

@@ -833,10 +833,16 @@ public enum JdbcConnectionUrlParser {
     }
   },
   INFORMIX_SQLI("informix-sqli") {
+    private static final int DEFAULT_PORT = 9088;
+
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
-      builder = INFORMIX.doParse(jdbcUrl, builder);
+
+      DbInfo dbInfo = builder.build();
+      if (dbInfo.getPort() == null) {
+        builder.port(DEFAULT_PORT);
+      }
 
       int hostIndex = jdbcUrl.indexOf("://");
       if (hostIndex == -1) {
@@ -863,46 +869,20 @@ public enum JdbcConnectionUrlParser {
   },
 
   INFORMIX_DIRECT("informix-direct") {
-    private static final String DEFAULT_HOST = "infxhost";
+    private final Pattern pattern = Pattern.compile("://(.*?)(:|;|$)");
 
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
-      builder = INFORMIX.doParse(jdbcUrl, builder);
-      builder.host(DEFAULT_HOST);
 
-      int hostIndex = jdbcUrl.indexOf("://");
-      if (hostIndex == -1) {
-        return builder;
+      Matcher matcher = pattern.matcher(jdbcUrl);
+      if (matcher.find()) {
+        String name = matcher.group(1);
+        if (!name.isEmpty()) {
+          builder.name(name);
+        }
       }
-
-      int informixUrlStartIdx =
-          jdbcUrl.indexOf("informix-direct://") + "informix-direct://".length();
-      int colonLoc = jdbcUrl.indexOf(":", informixUrlStartIdx);
-
-      String name;
-      if (colonLoc > -1) {
-        name = jdbcUrl.substring(informixUrlStartIdx, colonLoc);
-      } else {
-        name = jdbcUrl.substring(informixUrlStartIdx);
-      }
-      if (!name.isEmpty()) {
-        builder.name(name);
-      }
-
-      return builder;
-    }
-  },
-
-  INFORMIX {
-    private static final int DEFAULT_PORT = 9088;
-
-    @Override
-    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
-      DbInfo dbInfo = builder.build();
-      if (dbInfo.getPort() == null) {
-        builder.port(DEFAULT_PORT);
-      }
+      builder.host(null);
 
       return builder;
     }
