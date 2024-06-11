@@ -371,3 +371,25 @@ to preserve the semantics of `static` fields and share interfaces and classes.
 
 In order to load multiple `InstrumentationModule` implementations in the same classloader, you need to
 override the `ExperimentalInstrumentationModule#getModuleGroup` to return an identical value.
+
+### advice local variables
+
+With inlined advices, declaring an advice method argument with `@Advice.Local` allows to define
+a variable that is local to the advice execution for communication between the enter and exit advices.
+
+When advices are not inlined, usage of `@Advice.Local` is not possible. It is however possible to
+return a value from the enter advice and get the value in the exit advice with a parameter annotated
+with `@Advice.Enter`, for example:
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+public static Object onEnter(@Advice.Argument(1) Object request) {
+  return "enterValue";
+}
+
+@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+public static void onExit(@Advice.Argument(1) Object request,
+                          @Advice.Enter Object enterValue) {
+  // do something with enterValue
+}
+```
