@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot32.plugins.versions)
+  alias(springBoot3.plugins.versions)
   id("org.graalvm.buildtools.native")
 }
 

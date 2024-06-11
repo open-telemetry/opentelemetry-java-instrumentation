@@ -41,7 +41,8 @@ dependencyResolutionManagement {
     }
     // r2dbc is not compatible with earlier versions
     addSpringBootCatalog("springBoot2", "2.6.15", "2.+")
-    addSpringBootCatalog("springBoot3", "3.0.0", "3.+")
+    // spring boot 3.0 is not compatible with graalvm native image
+    addSpringBootCatalog("springBoot3", "3.1.0", "3.+")
     addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
   }
 }
