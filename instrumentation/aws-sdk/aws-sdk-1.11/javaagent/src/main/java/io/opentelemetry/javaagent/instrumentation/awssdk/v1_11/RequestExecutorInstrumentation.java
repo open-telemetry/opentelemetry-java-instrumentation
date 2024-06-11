@@ -44,7 +44,7 @@ public class RequestExecutorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestExecutorAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.FieldValue("request") Request<?> request,
         @Advice.Return Response<?> response,
