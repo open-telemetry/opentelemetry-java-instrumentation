@@ -367,24 +367,37 @@ Using non-inlined advice code is possible thanks to the `invokedynamic` instruct
 is referred as "indy" in reference to this, by extension "indy modules" are the instrumentation
 modules using this instrumentation strategy.
 
-### indy modules and transition
+The most common way to instrument code with bytebuddy relies on inlining, this strategy will be
+referred as "inlined" strategy in opposition to "indy".
 
-Instrumentation modules that use "indy" must have their `InstrumentationModule#isIndyModule`
+### Indy modules and transition
+
+Having all instrumentation rely on native "indy" instrumentation is a tedious task and can't be
+achieved in a "big bang" step, we thus have to use intermediate steps.
+
+Instrumentation modules that are "indy native" must have their `InstrumentationModule#isIndyModule`
 implementation return `true`. Also, all the instrumentation advice methods annotated with
 `@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must have the `inlined = false` explicitly set.
 
-The end goal is to use indy modules whenever possible, but during the transition process we have
-three sets of instrumentation modules:
-- `isIndyModule` always returns `true`: module converted to indy module and non-inlined advices
-- `isIndyModule` might return `true` when `otel.javaagent.experimental.indy` is set through automatic conversion, but false otherwise.
-- `isIndyModule` always returns `false`: opt-out for instrumentation modules that are known to not
-  support automatic conversion.
+The `otel.javaagent.experimental.indy` (default `false`) configuration option allows to opt-in for
+using "indy". When set to `true`, the `io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer`
+will transform advices automatically to make them "indy native".
 
-Setting the `otel.javaagent.experimental.indy=true` configuration option will enable
-`io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer` that will attempt to
-convert advices automatically. This configuration is automatically enabled in CI when `test indy`
-label is added to a pull-request or when the `-PtestIndy=true` parameter is added to gradle.
-This configuration has no effect on instrumentation modules that explicitly return `true` or `false`.
+This configuration is automatically enabled in CI when `test indy` label is added to a pull-request
+or when the `-PtestIndy=true` parameter is added to gradle.
+
+In order to preserve compatibility with both instrumentation strategies, we have to omit the `inlined = false`
+from the advice method annotations.
+
+We have two sets of instrumentation modules:
+- "indy compatible": compatible with both "indy" and "inlined", do not override `isIndyModule`
+- "inlined only": only compatible with "inlined", `isIndyModule` returns `false`.
+
+The first step of the migration is to move all the "inlined only" to the "indy compatible" category
+by refactoring them with the limitations described below.
+
+Once everything is "indy compatible", we can evaluate changing the default value of `otel.javaagent.experimental.indy`
+to `true` and make it non-experimental.
 
 ### shared classes and common classloader
 
@@ -405,12 +418,12 @@ return a value from the enter advice and get the value in the exit advice with a
 with `@Advice.Enter`, for example:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+@Advice.OnMethodEnter(suppress = Throwable.class)
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "enterValue";
 }
 
-@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
 public static void onExit(@Advice.Argument(1) Object request,
                           @Advice.Enter Object enterValue) {
   // do something with enterValue
