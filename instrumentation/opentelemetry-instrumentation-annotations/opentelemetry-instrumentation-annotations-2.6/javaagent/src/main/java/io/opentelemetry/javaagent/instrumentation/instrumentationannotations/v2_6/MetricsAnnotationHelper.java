@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2
 import application.io.opentelemetry.instrumentation.annotations.MetricAttribute;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Parameter;
@@ -24,10 +23,10 @@ public abstract class MetricsAnnotationHelper {
     for (int i = 0; i < parameters.length; i++) {
       if (parameters[i].isAnnotationPresent(MetricAttribute.class)) {
         MetricAttribute annotation = parameters[i].getAnnotation(MetricAttribute.class);
-        String attributeKey = "";
-        if (!StringUtils.isNullOrEmpty(annotation.value())) {
+        String attributeKey;
+        if (!annotation.value().isEmpty()) {
           attributeKey = annotation.value();
-        } else if (!StringUtils.isNullOrEmpty(parameters[i].getName())) {
+        } else if (parameters[i].isNamePresent()) {
           attributeKey = parameters[i].getName();
         } else {
           continue;
