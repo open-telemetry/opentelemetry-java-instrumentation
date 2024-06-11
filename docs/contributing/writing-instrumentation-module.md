@@ -429,3 +429,60 @@ public static void onExit(@Advice.Argument(1) Object request,
   // do something with enterValue
 }
 ```
+
+### modifying method arguments
+
+With inlined advices, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
+allows to modify instrumented method arguments.
+
+When using non-inlined advices, reading the argument values is still done with `@Advice.Argument`
+annotated parameters, however modifying the values is done through the advice method return value 
+and `@Advice.AssignReturned.ToArguments` annotation:
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class)
+@Advice.AssignReturned.ToArguments(@ToArgument(1))
+public static Object onEnter(@Advice.Argument(1) Object request) {
+  return "hello";
+}
+```
+
+It is possible to modify multiple arguments at once by using an array, see usages of
+`@Advice.AssignReturned.ToArguments` for detailed examples.
+
+### modifying method return value
+
+With inlined advices, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
+allows to modify instrumented method return value on exit advice.
+
+When using non-inlined advices, reading the original return value is still done with `@Advice.Return`
+annotated parameter, however modifying the value is done through the advice method return value
+and `@Advice.AssignReturned.ToReturned`
+
+```java
+@Advice.OnMethodExit(suppress = Throwable.class)
+@Advice.AssignReturned.ToReturned
+public static Object onEnter(@Advice.Return Object returnValue) {
+  return "hello";
+}
+```
+
+### writing to internal class fields
+
+With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
+on advice method parameter allows to modify the `fieldName` field of the instrumented class.
+
+When using non-inlined advices, reading the original field value is still done with `@Advice.FieldValue`
+annotated parameter, however modifying the value is done through the advice method return value
+and `@Advice.AssignReturned.ToFields` annotation:
+
+```java
+@Advice.OnMethodExit(suppress = Throwable.class)
+@Advice.AssignReturned.ToFields(@ToField(value = "fieldName"))
+public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
+  return "newFieldValue";
+}
+```
+
+It is possible to modify multiple fields at once by using an array, see usages of
+`@Advice.AssignReturned.ToFields` for detailed examples.
