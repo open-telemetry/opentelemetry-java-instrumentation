@@ -63,7 +63,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueryMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object startMethod(@Advice.This CommonQueryContract query) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
@@ -98,7 +98,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
           callDepth, hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter Object enterScope) {
 

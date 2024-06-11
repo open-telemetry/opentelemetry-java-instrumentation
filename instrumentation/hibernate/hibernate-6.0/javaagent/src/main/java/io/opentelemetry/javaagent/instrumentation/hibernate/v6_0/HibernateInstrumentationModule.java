@@ -36,11 +36,6 @@ public class HibernateInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyModule() {
-    return true;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new QueryInstrumentation(),

@@ -95,7 +95,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
@@ -125,7 +125,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
           callDepth, hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.Thrown Throwable throwable, @Advice.Enter Object enterState) {
 
@@ -136,7 +136,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetQueryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
         @Advice.This SharedSessionContract session, @Advice.Return Query query) {
 
@@ -152,7 +152,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetTransactionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
@@ -168,7 +168,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetCriteriaAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(
         @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 

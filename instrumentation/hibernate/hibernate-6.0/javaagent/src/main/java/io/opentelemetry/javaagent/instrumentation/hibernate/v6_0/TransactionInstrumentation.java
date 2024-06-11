@@ -48,7 +48,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TransactionCommitAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object startCommit(@Advice.This Transaction transaction) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);

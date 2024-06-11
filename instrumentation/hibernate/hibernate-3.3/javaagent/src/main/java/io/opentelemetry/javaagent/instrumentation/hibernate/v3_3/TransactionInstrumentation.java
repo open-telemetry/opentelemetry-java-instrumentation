@@ -49,7 +49,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TransactionCommitAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object startCommit(@Advice.This Transaction transaction) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
@@ -72,7 +72,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
           callDepth, hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
         @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable Object enterScope) {
 
