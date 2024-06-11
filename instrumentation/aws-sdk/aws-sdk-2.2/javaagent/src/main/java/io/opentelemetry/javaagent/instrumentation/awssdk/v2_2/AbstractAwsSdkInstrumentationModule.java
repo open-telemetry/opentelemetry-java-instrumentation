@@ -30,11 +30,6 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isIndyModule() {
-    return true;
-  }
-
-  @Override
   public boolean isHelperClass(String className) {
     return className.startsWith("io.opentelemetry.contrib.awsxray.");
   }

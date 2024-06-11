@@ -26,11 +26,6 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
         none(), SqsInstrumentationModule.class.getName() + "$RegisterAdvice");
   }
 
-  @Override
-  public boolean isIndyModule() {
-    return true;
-  }
-
   @SuppressWarnings("unused")
   public static class RegisterAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)

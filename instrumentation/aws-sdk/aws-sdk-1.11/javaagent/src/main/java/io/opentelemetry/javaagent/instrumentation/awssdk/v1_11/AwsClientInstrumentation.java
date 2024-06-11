@@ -39,7 +39,7 @@ public class AwsClientInstrumentation implements TypeInstrumentation {
   public static class AwsClientAdvice {
 
     // Since we're instrumenting the constructor, we can't add onThrowable.
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addHandler(
         @Advice.FieldValue("requestHandler2s") List<RequestHandler2> handlers) {
       boolean hasAgentHandler = false;
