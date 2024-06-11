@@ -686,6 +686,12 @@ class JdbcConnectionUrlParserTest {
               .setName("infxdb")
               .setPort(9088)
               .build(),
+          arg("jdbc:informix-direct:")
+              .setSystem("informix-direct")
+              .setShortUrl("informix-direct://infxhost:9088")
+              .setHost("infxhost")
+              .setPort(9088)
+              .build(),
 
           // http://www.h2database.com/html/features.html#database_url
           arg("jdbc:h2:mem:").setShortUrl("h2:mem:").setSystem("h2").setSubtype("mem").build(),

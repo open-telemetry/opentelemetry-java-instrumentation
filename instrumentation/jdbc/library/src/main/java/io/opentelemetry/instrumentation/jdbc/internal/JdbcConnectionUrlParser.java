@@ -868,6 +868,13 @@ public enum JdbcConnectionUrlParser {
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+      builder = INFORMIX.doParse(jdbcUrl, builder);
+      builder.host(DEFAULT_HOST);
+
+      int hostIndex = jdbcUrl.indexOf("://");
+      if (hostIndex == -1) {
+        return builder;
+      }
 
       int informixUrlStartIdx =
           jdbcUrl.indexOf("informix-direct://") + "informix-direct://".length();
@@ -883,8 +890,7 @@ public enum JdbcConnectionUrlParser {
         builder.name(name);
       }
 
-      builder.host(DEFAULT_HOST);
-      return INFORMIX.doParse(jdbcUrl, builder);
+      return builder;
     }
   },
 
