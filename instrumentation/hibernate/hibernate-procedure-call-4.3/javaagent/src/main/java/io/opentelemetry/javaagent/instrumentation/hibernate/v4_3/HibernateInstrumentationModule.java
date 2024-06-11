@@ -11,13 +11,11 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class HibernateInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class HibernateInstrumentationModule extends InstrumentationModule {
   public HibernateInstrumentationModule() {
     super("hibernate-procedure-call", "hibernate-procedure-call-4.3", "hibernate");
   }
@@ -28,8 +26,10 @@ public class HibernateInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "hibernate";
+  public boolean isIndyModule() {
+    // uses SessionInfo class from hibernate common which is now in separate class loader for all
+    // instrumentations
+    return false;
   }
 
   @Override

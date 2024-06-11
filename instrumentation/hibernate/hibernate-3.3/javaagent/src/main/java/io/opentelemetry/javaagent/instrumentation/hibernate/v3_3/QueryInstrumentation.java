@@ -14,13 +14,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -50,11 +50,16 @@ public class QueryInstrumentation implements TypeInstrumentation {
   public static class QueryMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object startMethod(@Advice.This Query query) {
+    public static void startMethod(
+        @Advice.This Query query,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
 
-      CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
+      callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return;
       }
 
       VirtualField<Query, SessionInfo> queryVirtualField =
@@ -62,21 +67,32 @@ public class QueryInstrumentation implements TypeInstrumentation {
       SessionInfo sessionInfo = queryVirtualField.get(query);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      HibernateOperation hibernateOperation =
+      hibernateOperation =
           new HibernateOperation(getOperationNameForQuery(query.getQueryString()), sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return callDepth;
+        return;
       }
 
-      return HibernateOperationScope.startNew(
-          callDepth, hibernateOperation, parentContext, instrumenter());
+      context = instrumenter().start(parentContext, hibernateOperation);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterScope) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
 
-      HibernateOperationScope.end(enterScope, instrumenter(), throwable);
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
+      if (scope != null) {
+        scope.close();
+        instrumenter().end(context, hibernateOperation, null, throwable);
+      }
     }
   }
 }

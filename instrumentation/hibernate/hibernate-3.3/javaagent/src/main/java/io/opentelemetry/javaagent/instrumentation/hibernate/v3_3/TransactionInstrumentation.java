@@ -13,15 +13,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,11 +49,16 @@ public class TransactionInstrumentation implements TypeInstrumentation {
   public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object startCommit(@Advice.This Transaction transaction) {
+    public static void startCommit(
+        @Advice.This Transaction transaction,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
 
-      CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
+      callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return;
       }
 
       VirtualField<Transaction, SessionInfo> transactionVirtualField =
@@ -62,21 +66,31 @@ public class TransactionInstrumentation implements TypeInstrumentation {
       SessionInfo sessionInfo = transactionVirtualField.get(transaction);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      HibernateOperation hibernateOperation =
-          new HibernateOperation("Transaction.commit", sessionInfo);
+      hibernateOperation = new HibernateOperation("Transaction.commit", sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return callDepth;
+        return;
       }
 
-      return HibernateOperationScope.startNew(
-          callDepth, hibernateOperation, parentContext, instrumenter());
+      context = instrumenter().start(parentContext, hibernateOperation);
+      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable Object enterScope) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
 
-      HibernateOperationScope.end(enterScope, instrumenter(), throwable);
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
+      if (scope != null) {
+        scope.close();
+        instrumenter().end(context, hibernateOperation, null, throwable);
+      }
     }
   }
 }
