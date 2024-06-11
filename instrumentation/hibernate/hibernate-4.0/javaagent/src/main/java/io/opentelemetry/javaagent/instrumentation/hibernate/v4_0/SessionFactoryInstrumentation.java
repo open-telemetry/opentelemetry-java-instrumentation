@@ -47,7 +47,7 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionFactoryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void openSession(@Advice.Return SharedSessionContract session) {
 
       VirtualField<SharedSessionContract, SessionInfo> virtualField =

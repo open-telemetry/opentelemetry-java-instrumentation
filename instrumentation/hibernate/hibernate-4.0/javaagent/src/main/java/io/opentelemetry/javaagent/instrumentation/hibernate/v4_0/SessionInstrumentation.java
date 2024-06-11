@@ -18,13 +18,13 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -95,21 +95,17 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void startMethod(
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
         @Advice.Origin("#d") String descriptor,
         @Advice.Argument(0) Object arg0,
-        @Advice.Argument(value = 1, optional = true) Object arg1,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Argument(value = 1, optional = true) Object arg1) {
 
-      callDepth = CallDepth.forClass(HibernateOperation.class);
+      CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return callDepth;
       }
 
       VirtualField<SharedSessionContract, SessionInfo> virtualField =
@@ -119,39 +115,28 @@ public class SessionInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       String entityName =
           getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
-      hibernateOperation =
+      HibernateOperation hibernateOperation =
           new HibernateOperation(getSessionMethodOperationName(name), entityName, sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return;
+        return callDepth;
       }
 
-      context = instrumenter().start(parentContext, hibernateOperation);
-      scope = context.makeCurrent();
+      return HibernateOperationScope.startNew(
+          callDepth, hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterState) {
 
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (scope != null) {
-        scope.close();
-        instrumenter().end(context, hibernateOperation, null, throwable);
-      }
+      HibernateOperationScope.end(enterState, instrumenter(), throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetQueryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getQuery(
         @Advice.This SharedSessionContract session, @Advice.Return Query query) {
 
@@ -167,7 +152,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetTransactionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
@@ -183,7 +168,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetCriteriaAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getCriteria(
         @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 
