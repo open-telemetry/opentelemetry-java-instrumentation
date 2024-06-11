@@ -836,20 +836,29 @@ public enum JdbcConnectionUrlParser {
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+      builder = INFORMIX.doParse(jdbcUrl, builder);
 
-      int informixUrlStartIdx = jdbcUrl.indexOf("informix-sqli://") + "informix-sqli://".length();
-
-      if (jdbcUrl.indexOf('/', informixUrlStartIdx) > -1) {
-        int dbNameStartIdx = jdbcUrl.indexOf('/', informixUrlStartIdx) + 1;
-        int dbNameEndIdx = jdbcUrl.indexOf(':', dbNameStartIdx);
-
-        String name = jdbcUrl.substring(dbNameStartIdx, dbNameEndIdx);
-        if (!name.isEmpty()) {
-          builder.name(name);
-        }
+      int hostIndex = jdbcUrl.indexOf("://");
+      if (hostIndex == -1) {
+        return builder;
       }
 
-      return INFORMIX.doParse(jdbcUrl, builder);
+      int dbNameStartIndex = jdbcUrl.indexOf('/', hostIndex + 3);
+      if (dbNameStartIndex == -1) {
+        return builder;
+      }
+      int dbNameEndIndex = jdbcUrl.indexOf(':', dbNameStartIndex);
+      if (dbNameEndIndex == -1) {
+        dbNameEndIndex = jdbcUrl.length();
+      }
+      String name = jdbcUrl.substring(dbNameStartIndex + 1, dbNameEndIndex);
+      if (name.isEmpty()) {
+        builder.name(null);
+      } else {
+        builder.name(name);
+      }
+
+      return builder;
     }
   },
 

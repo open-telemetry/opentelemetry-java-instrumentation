@@ -660,6 +660,17 @@ class JdbcConnectionUrlParserTest {
               .setHost("infxhost")
               .setPort(99)
               .build(),
+          arg("jdbc:informix-sqli://infxhost/")
+              .setSystem("informix-sqli")
+              .setShortUrl("informix-sqli://infxhost:9088")
+              .setHost("infxhost")
+              .setPort(9088)
+              .build(),
+          arg("jdbc:informix-sqli:")
+              .setSystem("informix-sqli")
+              .setShortUrl("informix-sqli:")
+              .setPort(9088)
+              .build(),
           arg("jdbc:informix-direct://infxdb:999;user=infxuser;password=PW")
               .setSystem("informix-direct")
               .setUser("infxuser")
