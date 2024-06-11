@@ -363,11 +363,34 @@ For example:
 
 ## Use non-inlined advice code with `invokedynamic`
 
+Using non-inlined advice code is possible thanks to the `invokedynamic` instruction, this strategy
+is referred as "indy" in reference to this, by extension "indy modules" are the instrumentation
+modules using this instrumentation strategy.
+
+### indy modules and transition
+
+Instrumentation modules that use "indy" must have their `InstrumentationModule#isIndyModule`
+implementation return `true`. Also, all the instrumentation advice methods annotated with
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must have the `inlined = false` explicitly set.
+
+The end goal is to use indy modules whenever possible, but during the transition process we have
+three sets of instrumentation modules:
+- `isIndyModule` always returns `true`: module converted to indy module and non-inlined advices
+- `isIndyModule` might return `true` when `otel.javaagent.experimental.indy` is set through automatic conversion, but false otherwise.
+- `isIndyModule` always returns `false`: opt-out for instrumentation modules that are known to not
+  support automatic conversion.
+
+Setting the `otel.javaagent.experimental.indy=true` configuration option will enable
+`io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer` that will attempt to
+convert advices automatically. This configuration is automatically enabled in CI when `test indy`
+label is added to a pull-request or when the `-PtestIndy=true` parameter is added to gradle.
+This configuration has no effect on instrumentation modules that explicitly return `true` or `false`.
+
 ### shared classes and common classloader
 
 By default, all the advices of an instrumentation module will be loaded into isolated classloaders,
 one per instrumentation module. Some instrumentations require to use a common classloader in order
-to preserve the semantics of `static` fields and share interfaces and classes.
+to preserve the semantics of `static` fields and to share classes.
 
 In order to load multiple `InstrumentationModule` implementations in the same classloader, you need to
 override the `ExperimentalInstrumentationModule#getModuleGroup` to return an identical value.
