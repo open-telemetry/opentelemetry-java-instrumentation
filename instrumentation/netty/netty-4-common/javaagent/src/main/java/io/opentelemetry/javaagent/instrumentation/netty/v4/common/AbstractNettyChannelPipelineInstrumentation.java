@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -185,10 +186,11 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class AddAfterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void addAfterHandler(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(value = 1, readOnly = false) String name) {
-      ChannelHandler handler = pipeline.get(name);
+    @Advice.AssignReturned.ToArguments(@ToArgument(1))
+    public static String addAfterHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String originalName) {
+      ChannelHandler handler = pipeline.get(originalName);
+      String name = originalName;
       if (handler != null) {
         VirtualField<ChannelHandler, ChannelHandler> virtualField =
             VirtualField.find(ChannelHandler.class, ChannelHandler.class);
@@ -197,6 +199,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           name = ourHandler.getClass().getName();
         }
       }
+      return name;
     }
   }
 

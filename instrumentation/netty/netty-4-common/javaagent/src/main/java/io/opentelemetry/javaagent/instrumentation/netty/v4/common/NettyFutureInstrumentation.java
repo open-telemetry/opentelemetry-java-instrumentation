@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -58,12 +59,13 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class AddListenerAdvice {
 
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>> listener) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Object wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
       if (FutureListenerWrappers.shouldWrap(listener)) {
-        listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
+        return FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
       }
+      return listener;
     }
   }
 
@@ -71,9 +73,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class AddListenersAdvice {
 
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>>[] listeners) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Object wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
       Context context = Java8BytecodeBridge.currentContext();
       @SuppressWarnings({"unchecked", "rawtypes"})
@@ -86,7 +88,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
           wrappedListeners[i] = listeners[i];
         }
       }
-      listeners = wrappedListeners;
+      return wrappedListeners;
     }
   }
 
@@ -94,10 +96,10 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class RemoveListenerAdvice {
 
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>> listener) {
-      listener = FutureListenerWrappers.getWrapper(listener);
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Object wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
+      return FutureListenerWrappers.getWrapper(listener);
     }
   }
 
@@ -105,9 +107,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class RemoveListenersAdvice {
 
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>>[] listeners) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Object wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
       @SuppressWarnings({"unchecked", "rawtypes"})
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =
@@ -115,7 +117,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
       for (int i = 0; i < listeners.length; ++i) {
         wrappedListeners[i] = FutureListenerWrappers.getWrapper(listeners[i]);
       }
-      listeners = wrappedListeners;
+      return wrappedListeners;
     }
   }
 }
