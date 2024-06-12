@@ -15,9 +15,9 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyCon
 /** Container used to carry state between enter and exit advices */
 public class NettyScope {
 
-  Context context;
-  NettyConnectionRequest request;
-  Scope scope;
+  private final Context context;
+  private final NettyConnectionRequest request;
+  private final Scope scope;
 
   private NettyScope(Context context, NettyConnectionRequest request, Scope scope) {
     this.context = context;
