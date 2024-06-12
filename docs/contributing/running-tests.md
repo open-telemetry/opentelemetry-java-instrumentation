@@ -48,12 +48,7 @@ To ignore warnings, formatting issues, or other non-fatal issues in tests, use
 ./gradlew test -Ddev=true -x spotlessCheck -x checkstyleMain
 ```
 
-The `dev` flag
-
-- will ignore warnings in tests
-- will use a local build cache, which can speed up the build
-
-The local build cache is also useful for other commands, such as `./gradlew spotlessApply -Ddev=true`.
+The `dev` flag will ignore warnings in tests.
 
 ## Smoke tests
 

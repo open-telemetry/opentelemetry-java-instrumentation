@@ -98,15 +98,8 @@ if (useScansGradleCom) {
   }
 
   buildCache {
-    if (System.getProperty("dev") == "true") {
-      local {
-        directory = File(rootDir, "build-cache")
-        removeUnusedEntriesAfterDays = 30
-      }
-    } else {
-      remote(develocity.buildCache) {
-        isPush = isCI && geAccessKey.isNotEmpty()
-      }
+    remote(develocity.buildCache) {
+      isPush = isCI && geAccessKey.isNotEmpty()
     }
   }
 }
