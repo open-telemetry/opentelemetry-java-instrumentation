@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.Connecti
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.netty.v4.common.NettyScope;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,41 +41,41 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
     @Advice.OnMethodEnter
-    public static void startConnect(
-        @Advice.Argument(2) SocketAddress remoteAddress,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Object startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request = NettyConnectionRequest.connect(remoteAddress);
+      NettyConnectionRequest request = NettyConnectionRequest.connect(remoteAddress);
 
       if (!connectionInstrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
 
-      context = connectionInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      Context context = connectionInstrumenter().start(parentContext, request);
+      Scope scope = context.makeCurrent();
+
+      return NettyScope.create(context, request, scope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(4) ChannelPromise channelPromise,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Enter Object enterScope) {
 
-      if (scope == null) {
+      if (!(enterScope instanceof NettyScope)) {
         return;
       }
-      scope.close();
+      NettyScope nettyScope = (NettyScope) enterScope;
+
+      nettyScope.getScope().close();
 
       if (throwable != null) {
-        connectionInstrumenter().end(context, request, null, throwable);
+        connectionInstrumenter()
+            .end(nettyScope.getContext(), nettyScope.getRequest(), null, throwable);
       } else {
         channelPromise.addListener(
-            new ConnectionCompleteListener(connectionInstrumenter(), context, request));
+            new ConnectionCompleteListener(
+                connectionInstrumenter(), nettyScope.getContext(), nettyScope.getRequest()));
       }
     }
   }
