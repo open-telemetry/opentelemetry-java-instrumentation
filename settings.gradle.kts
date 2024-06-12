@@ -28,6 +28,23 @@ dependencyResolutionManagement {
     mavenCentral()
     mavenLocal()
   }
+
+  versionCatalogs {
+    fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
+      val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+      create(name) {
+        val version =
+          gradle.startParameter.projectProperties["${name}Version"]
+            ?: (if (latestDepTest) maxVersion else minVersion)
+        plugin("versions", "org.springframework.boot").version(version)
+      }
+    }
+    // r2dbc is not compatible with earlier versions
+    addSpringBootCatalog("springBoot2", "2.6.15", "2.+")
+    // spring boot 3.0 is not compatible with graalvm native image
+    addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
+    addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
+  }
 }
 
 val gradleEnterpriseServer = "https://ge.opentelemetry.io"
@@ -141,6 +158,7 @@ include(":smoke-tests:images:spring-boot")
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
+include(":smoke-tests-otel-starter:spring-boot-3.2")
 include(":smoke-tests-otel-starter:spring-boot-common")
 include(":smoke-tests-otel-starter:spring-boot-reactive-2")
 include(":smoke-tests-otel-starter:spring-boot-reactive-3")
