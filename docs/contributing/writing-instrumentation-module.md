@@ -370,6 +370,15 @@ modules using this instrumentation strategy.
 The most common way to instrument code with bytebuddy relies on inlining, this strategy will be
 referred as "inlined" strategy in opposition to "indy".
 
+For inlined advices, the advice code is directly copied into the instrumented method.
+In addition, all helper classes are injected into the classloader of the instrumented classes.
+
+For indy, advice classes are not inlined. Instead, they loaded alongside with all helper classes
+into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
+application classloader and the agent classloader.
+The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
+invokedynamic bytecode instructions.
+
 ### Indy modules and transition
 
 Having all instrumentation rely on native "indy" instrumentation is a tedious task and can't be
@@ -436,7 +445,7 @@ With inlined advices, using the `@Advice.Argument` annotation on method paramete
 allows to modify instrumented method arguments.
 
 When using non-inlined advices, reading the argument values is still done with `@Advice.Argument`
-annotated parameters, however modifying the values is done through the advice method return value 
+annotated parameters, however modifying the values is done through the advice method return value
 and `@Advice.AssignReturned.ToArguments` annotation:
 
 ```java
