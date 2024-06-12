@@ -187,8 +187,8 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    public static String addAfterHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String originalName) {
+    public static Object addAfterHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) String originalName) {
       ChannelHandler handler = pipeline.get(originalName);
       String name = originalName;
       if (handler != null) {
