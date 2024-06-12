@@ -154,9 +154,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class RemoveLastAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void removeHandler(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Return(readOnly = false) ChannelHandler handler) {
+    @Advice.AssignReturned.ToReturned
+    public static Object removeHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
@@ -176,6 +176,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           handler = pipeline.removeLast();
         }
       }
+      return handler;
     }
   }
 
