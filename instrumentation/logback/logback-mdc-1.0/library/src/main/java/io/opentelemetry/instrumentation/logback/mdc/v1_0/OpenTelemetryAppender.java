@@ -5,10 +5,6 @@
 
 package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
-
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggerContextVO;
 import ch.qos.logback.classic.spi.LoggingEventVO;
@@ -20,6 +16,7 @@ import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
@@ -30,6 +27,9 @@ import java.util.Map;
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
   private boolean addBaggage;
+  private String traceIdKey = LoggingContextConstants.TRACE_ID;
+  private String spanIdKey = LoggingContextConstants.SPAN_ID;
+  private String traceFlagsKey = LoggingContextConstants.TRACE_FLAGS;
 
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
 
@@ -44,9 +44,24 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.addBaggage = addBaggage;
   }
 
+  /** Customize MDC key name for the trace id. */
+  public void setTraceIdKey(String traceIdKey) {
+    this.traceIdKey = traceIdKey;
+  }
+
+  /** Customize MDC key name for the span id. */
+  public void setSpanIdKey(String spanIdKey) {
+    this.spanIdKey = spanIdKey;
+  }
+
+  /** Customize MDC key name for the trace flags. */
+  public void setTraceFlagsKey(String traceFlagsKey) {
+    this.traceFlagsKey = traceFlagsKey;
+  }
+
   public ILoggingEvent wrapEvent(ILoggingEvent event) {
     Map<String, String> eventContext = event.getMDCPropertyMap();
-    if (eventContext != null && eventContext.containsKey(TRACE_ID)) {
+    if (eventContext != null && eventContext.containsKey(traceIdKey)) {
       // Assume already instrumented event if traceId is present.
       return event;
     }
@@ -57,9 +72,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
     if (currentSpan.getSpanContext().isValid()) {
       SpanContext spanContext = currentSpan.getSpanContext();
-      contextData.put(TRACE_ID, spanContext.getTraceId());
-      contextData.put(SPAN_ID, spanContext.getSpanId());
-      contextData.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+      contextData.put(traceIdKey, spanContext.getTraceId());
+      contextData.put(spanIdKey, spanContext.getSpanId());
+      contextData.put(traceFlagsKey, spanContext.getTraceFlags().asHex());
     }
 
     if (addBaggage) {
