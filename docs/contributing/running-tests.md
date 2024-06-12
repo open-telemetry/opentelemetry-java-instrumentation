@@ -38,7 +38,7 @@ To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradle
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <GROOVY TEST FILE NAME>` will run only the selected test.
 
-### Ignoring warnings in tests
+### How to prevent linting and formatting warnings from failing tests
 
 During local development, you may want to ignore lint warnings when running tests.
 
