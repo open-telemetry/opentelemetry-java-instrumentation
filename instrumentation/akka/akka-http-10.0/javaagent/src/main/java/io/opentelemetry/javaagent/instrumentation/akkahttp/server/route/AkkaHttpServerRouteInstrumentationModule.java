@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 /**
@@ -18,15 +17,16 @@ import java.util.List;
  * AkkaHttpServerInstrumentationModule applies to classes in akka-http-core.jar
  */
 @AutoService(InstrumentationModule.class)
-public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerRouteInstrumentationModule() {
     super("akka-http", "akka-http-10.0", "akka-http-server", "akka-http-server-route");
   }
 
   @Override
-  public String getModuleGroup() {
-    return "akka-http";
+  public boolean isIndyModule() {
+    // AkkaHttpServerInstrumentationModule and AkkaHttpServerRouteInstrumentationModule share
+    // AkkaRouteHolder class
+    return false;
   }
 
   @Override
