@@ -40,7 +40,7 @@ Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <GROOV
 
 ### Ignoring warnings in tests
 
-During local development, you may want to ignore warnings in tests.
+During local development, you may want to ignore lint warnings when running tests.
 
 To ignore warnings, formatting issues, or other non-fatal issues in tests, use
 
