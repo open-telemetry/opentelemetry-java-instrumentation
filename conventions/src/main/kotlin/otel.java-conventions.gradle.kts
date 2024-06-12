@@ -72,12 +72,13 @@ tasks.withType<JavaCompile>().configureEach {
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
           // jdk21 generates more serial warnings than previous versions
-          "-Xlint:-serial",
-
-          // Fail build on any warning
-          "-Werror"
+          "-Xlint:-serial"
         )
       )
+      if (System.getProperty("dev") != "true") {
+        // Fail build on any warning
+        compilerArgs.add("-Werror")
+      }
     }
 
     encoding = "UTF-8"
