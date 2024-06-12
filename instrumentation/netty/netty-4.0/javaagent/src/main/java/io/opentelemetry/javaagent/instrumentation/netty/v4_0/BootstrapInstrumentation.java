@@ -11,9 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.ChannelPromise;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.ConnectionCompleteListener;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -49,11 +47,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
       if (!connectionInstrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-
-      Context context = connectionInstrumenter().start(parentContext, request);
-      Scope scope = context.makeCurrent();
-
-      return NettyScope.create(context, request, scope);
+      return NettyScope.startNew(connectionInstrumenter(), parentContext, request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -62,21 +56,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
         @Advice.Argument(4) ChannelPromise channelPromise,
         @Advice.Enter Object enterScope) {
 
-      if (!(enterScope instanceof NettyScope)) {
-        return;
-      }
-      NettyScope nettyScope = (NettyScope) enterScope;
-
-      nettyScope.getScope().close();
-
-      if (throwable != null) {
-        connectionInstrumenter()
-            .end(nettyScope.getContext(), nettyScope.getRequest(), null, throwable);
-      } else {
-        channelPromise.addListener(
-            new ConnectionCompleteListener(
-                connectionInstrumenter(), nettyScope.getContext(), nettyScope.getRequest()));
-      }
+      NettyScope.end(enterScope, connectionInstrumenter(), channelPromise, throwable);
     }
   }
 }
