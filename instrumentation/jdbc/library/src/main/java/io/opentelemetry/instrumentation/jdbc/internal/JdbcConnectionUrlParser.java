@@ -872,6 +872,8 @@ public enum JdbcConnectionUrlParser {
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
       builder = MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+      builder.host(null);
+      builder.port(null);
 
       Matcher matcher = pattern.matcher(jdbcUrl);
       if (matcher.find()) {
@@ -880,7 +882,6 @@ public enum JdbcConnectionUrlParser {
           builder.name(name);
         }
       }
-      builder.host(null);
 
       return builder;
     }

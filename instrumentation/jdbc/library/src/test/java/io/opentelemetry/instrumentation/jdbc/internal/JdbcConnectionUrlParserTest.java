@@ -677,7 +677,6 @@ class JdbcConnectionUrlParserTest {
               .setSystem("informix-direct")
               .setShortUrl("informix-direct:")
               .setUser("infxuser")
-              .setPort(999)
               .setName("infxdb")
               .build(),
           arg("jdbc:informix-direct://infxdb;user=infxuser;password=PW")
