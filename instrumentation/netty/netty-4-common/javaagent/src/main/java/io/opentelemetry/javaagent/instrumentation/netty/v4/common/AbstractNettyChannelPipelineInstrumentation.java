@@ -160,6 +160,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
+      ChannelHandler returnHandler = handler;
       if (ourHandler != null) {
         // Context is null when our handler has already been removed. This happens when calling
         // removeLast first removed our handler and we called removeLast again to remove the http
@@ -173,10 +174,10 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         if (handlerClassName.endsWith("TracingHandler")
             && (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
                 || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty."))) {
-          handler = pipeline.removeLast();
+          returnHandler = pipeline.removeLast();
         }
       }
-      return handler;
+      return returnHandler;
     }
   }
 
