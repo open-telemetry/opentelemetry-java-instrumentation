@@ -11,14 +11,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.NettyFutureInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class NettyInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class NettyInstrumentationModule extends InstrumentationModule {
   public NettyInstrumentationModule() {
     super("netty", "netty-4.1");
   }
@@ -31,8 +29,10 @@ public class NettyInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "netty";
+  public boolean isIndyModule() {
+    // netty instrumentation classes are used in other instrumentations which causes class cast
+    // exceptions
+    return false;
   }
 
   @Override
