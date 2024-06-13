@@ -9,14 +9,18 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 final class TypeTransformerImpl implements TypeTransformer {
   private AgentBuilder.Identified.Extendable agentBuilder;
+  private final Advice.WithCustomMapping adviceMapping;
 
   TypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
     this.agentBuilder = agentBuilder;
+    adviceMapping = Advice.withCustomMapping()
+        .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class));
   }
 
   @Override
@@ -24,7 +28,7 @@ final class TypeTransformerImpl implements TypeTransformer {
       ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
     agentBuilder =
         agentBuilder.transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            new AgentBuilder.Transformer.ForAdvice(adviceMapping)
                 .include(
                     Utils.getBootstrapProxy(),
                     Utils.getAgentClassLoader(),
