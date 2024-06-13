@@ -35,7 +35,7 @@
   ([#11441](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11441))
 - Fix request header capture corrupting tomcat request
   ([#11469](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11469))
-- Fix ktor server instrumentation when ktor client library is not present 
+- Fix ktor server instrumentation when ktor client library is not present
   ([#11454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11454))
 - Fix gRPC instrumentation adding duplicates to metadata instead of overwriting
   ([#11308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11308))
