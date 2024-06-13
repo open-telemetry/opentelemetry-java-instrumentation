@@ -623,6 +623,7 @@ include(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
+include(":instrumentation:javalin:javalin-5.0:javaagent")
 
 // benchmark
 include(":benchmark-overhead-jmh")
