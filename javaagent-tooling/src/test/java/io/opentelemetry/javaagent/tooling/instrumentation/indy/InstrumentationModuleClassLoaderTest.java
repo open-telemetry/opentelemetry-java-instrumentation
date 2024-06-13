@@ -196,8 +196,8 @@ class InstrumentationModuleClassLoaderTest {
     }
   }
 
-
-  public static class HidingModule extends InstrumentationModule implements ExperimentalInstrumentationModule {
+  public static class HidingModule extends InstrumentationModule
+      implements ExperimentalInstrumentationModule {
 
     List<String> hiddenPackages = new ArrayList<>();
 
@@ -226,8 +226,7 @@ class InstrumentationModuleClassLoaderTest {
         new InstrumentationModuleClassLoader(null, agentCl, ElementMatchers.any());
     nothingHidden.installModule(module);
 
-    assertThat(nothingHidden.loadClass(HideMe.class.getName()))
-        .isSameAs(HideMe.class);
+    assertThat(nothingHidden.loadClass(HideMe.class.getName())).isSameAs(HideMe.class);
 
     module.hiddenPackages.add(HideMe.class.getPackage().getName());
     InstrumentationModuleClassLoader classHidden =
@@ -238,7 +237,7 @@ class InstrumentationModuleClassLoaderTest {
         .isInstanceOf(ClassNotFoundException.class);
   }
 
-  public static class HideMe{}
+  public static class HideMe {}
 
   private static String getClassFile(Class<?> cl) {
     return cl.getName().replace('.', '/') + ".class";

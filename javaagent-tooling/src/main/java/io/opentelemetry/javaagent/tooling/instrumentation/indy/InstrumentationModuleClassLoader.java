@@ -78,9 +78,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private final ElementMatcher<String> agentClassNamesMatcher;
 
   /**
-   * Mutable list of packages from the agent classloader to hide.
-   * So even if a class matches {@link #agentClassNamesMatcher}, it will not be attempted
-   * to be loaded from the agent classloader if it is from any of these packages.
+   * Mutable list of packages from the agent classloader to hide. So even if a class matches {@link
+   * #agentClassNamesMatcher}, it will not be attempted to be loaded from the agent classloader if
+   * it is from any of these packages.
    */
   private final Set<String> hiddenAgentPackages;
 
@@ -143,7 +143,8 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);
     if (module instanceof ExperimentalInstrumentationModule) {
-      hiddenAgentPackages.addAll(((ExperimentalInstrumentationModule) module).agentPackagesToHide());
+      hiddenAgentPackages.addAll(
+          ((ExperimentalInstrumentationModule) module).agentPackagesToHide());
     }
   }
 
@@ -230,11 +231,11 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   private boolean shouldLoadFromAgent(String dotClassName) {
-    if(!agentClassNamesMatcher.matches(dotClassName)) {
+    if (!agentClassNamesMatcher.matches(dotClassName)) {
       return false;
     }
     for (String packageName : hiddenAgentPackages) {
-      if(dotClassName.startsWith(packageName)) {
+      if (dotClassName.startsWith(packageName)) {
         return false;
       }
     }

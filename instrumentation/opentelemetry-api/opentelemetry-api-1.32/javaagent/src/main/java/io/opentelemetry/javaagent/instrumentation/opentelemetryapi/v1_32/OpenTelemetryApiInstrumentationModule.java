@@ -12,13 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.List;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api", "opentelemetry-api-1.32");
   }

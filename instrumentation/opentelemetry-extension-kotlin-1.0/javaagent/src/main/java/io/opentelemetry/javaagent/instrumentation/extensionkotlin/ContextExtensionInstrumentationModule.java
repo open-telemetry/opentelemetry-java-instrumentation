@@ -14,8 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ContextExtensionInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class ContextExtensionInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public ContextExtensionInstrumentationModule() {
     super("opentelemetry-extension-kotlin");

@@ -15,8 +15,8 @@ import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api", "opentelemetry-api-1.0");
   }

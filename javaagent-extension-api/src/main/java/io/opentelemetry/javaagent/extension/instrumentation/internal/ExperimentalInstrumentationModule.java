@@ -51,10 +51,10 @@ public interface ExperimentalInstrumentationModule {
   }
 
   /**
-   * Some instrumentations need to invoke classes which are present both in the agent classloader and
-   * the instrumented application classloader. By default, the classloader of the instrumentation would
-   * link those against the class provided by the agent. This setting allows to hide packages,
-   * so that matching classes are instead used from the application classloader.
+   * Some instrumentations need to invoke classes which are present both in the agent classloader
+   * and the instrumented application classloader. By default, the classloader of the
+   * instrumentation would link those against the class provided by the agent. This setting allows
+   * to hide packages, so that matching classes are instead used from the application classloader.
    *
    * @return the list of packages (without trailing dots)
    */

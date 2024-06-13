@@ -14,8 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ReactorInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class ReactorInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public ReactorInstrumentationModule() {
     super("reactor", "reactor-3.1");
@@ -23,7 +23,7 @@ public class ReactorInstrumentationModule extends InstrumentationModule implemen
 
   @Override
   public String getModuleGroup() {
-    //needs to be in the same module as ContextPropagationOperatorInstrumentation
+    // needs to be in the same module as ContextPropagationOperatorInstrumentation
     return "opentelemetry-api-bridge";
   }
 
