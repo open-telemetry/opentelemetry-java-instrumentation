@@ -22,7 +22,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -155,13 +154,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class RemoveLastAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    @Advice.AssignReturned.ToReturned
-    public static Object removeHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
+    public static void removeHandler(
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Return(readOnly = false) ChannelHandler handler) { // TODO
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler ourHandler = virtualField.get(handler);
-      ChannelHandler returnHandler = handler;
       if (ourHandler != null) {
         // Context is null when our handler has already been removed. This happens when calling
         // removeLast first removed our handler and we called removeLast again to remove the http
@@ -175,10 +173,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         if (handlerClassName.endsWith("TracingHandler")
             && (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
                 || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty."))) {
-          returnHandler = pipeline.removeLast();
+          handler = pipeline.removeLast();
         }
       }
-      return returnHandler;
     }
   }
 
@@ -186,11 +183,10 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class AddAfterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    public static Object addAfterHandler(
-        @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) String originalName) {
-      ChannelHandler handler = pipeline.get(originalName);
-      String name = originalName;
+    public static void addAfterHandler(
+        @Advice.This ChannelPipeline pipeline,
+        @Advice.Argument(value = 1, readOnly = false) String name) { // TODO
+      ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
         VirtualField<ChannelHandler, ChannelHandler> virtualField =
             VirtualField.find(ChannelHandler.class, ChannelHandler.class);
@@ -199,7 +195,6 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           name = ourHandler.getClass().getName();
         }
       }
-      return name;
     }
   }
 

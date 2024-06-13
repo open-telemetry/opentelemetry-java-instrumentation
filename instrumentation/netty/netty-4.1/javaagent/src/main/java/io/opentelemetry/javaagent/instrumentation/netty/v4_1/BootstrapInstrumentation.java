@@ -23,7 +23,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.NettyScope;
 import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -66,9 +65,9 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   public static class SetResolverAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    public static Object onEnter(@Advice.Argument(value = 0) AddressResolverGroup<?> resolver) {
-      return InstrumentedAddressResolverGroup.wrap(connectionInstrumenter(), resolver);
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false) AddressResolverGroup<?> resolver) { // TODO
+      resolver = InstrumentedAddressResolverGroup.wrap(connectionInstrumenter(), resolver);
     }
   }
 
