@@ -10,17 +10,17 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Collections;
-import java.util.List;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
+import java.util.Collections;
+import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @SuppressWarnings("unused")
 @AutoService(InstrumentationModule.class)
-public class GraphqlInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class GraphqlInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public GraphqlInstrumentationModule() {
     super("graphql-java", "graphql-java-20.0");
@@ -42,7 +42,8 @@ public class GraphqlInstrumentationModule extends InstrumentationModule implemen
     // we do not use ByteBuddy Advice dispatching in this instrumentation
     // Instead, we manually call GraphqlSingletons via ASM
     // Easiest solution to work with indy is to inject an indy-proxy to be invoked
-    injector.proxyBuilder("io.opentelemetry.javaagent.instrumentation.graphql.v20_0.GraphqlSingletons")
+    injector
+        .proxyBuilder("io.opentelemetry.javaagent.instrumentation.graphql.v20_0.GraphqlSingletons")
         .inject(InjectionMode.CLASS_ONLY);
   }
 }
