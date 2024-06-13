@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
@@ -28,24 +29,39 @@ class CouchbaseSpanUtil {
       } else {
         childOf((SpanData) parentSpan)
       }
-      attributes {
-        "$DbIncubatingAttributes.DB_SYSTEM" "couchbase"
-        "$DbIncubatingAttributes.DB_NAME" bucketName
-        "$DbIncubatingAttributes.DB_STATEMENT" statement
-        "$DbIncubatingAttributes.DB_OPERATION"(operation ?: spanName)
 
-        // Because of caching, not all requests hit the server so these attributes may be absent
-        "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
-        "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
-        "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Number || it == null }
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes {
+          "$DbIncubatingAttributes.DB_SYSTEM" "couchbase"
+          "db.namespace" bucketName
+          "db.query.text" statement
+          "db.operation.name"(operation ?: spanName)
 
-        // Because of caching, not all requests hit the server so this tag may be absent
-        "couchbase.local.address" { it == null || it instanceof String }
+          // Because of caching, not all requests hit the server so these attributes may be absent
+          "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
+          "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Number || it == null }
+        }
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes {
+          "$DbIncubatingAttributes.DB_SYSTEM" "couchbase"
+          "$DbIncubatingAttributes.DB_NAME" bucketName
+          "$DbIncubatingAttributes.DB_STATEMENT" statement
+          "$DbIncubatingAttributes.DB_OPERATION"(operation ?: spanName)
 
-        // Not all couchbase operations have operation id.  Notably, 'ViewQuery's do not
-        // We assign a spanName of 'Bucket.query' and this is shared with n1ql queries
-        // that do have operation ids
-        "couchbase.operation_id" { it == null || it instanceof String }
+          // Because of caching, not all requests hit the server so these attributes may be absent
+          "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
+          "$NetworkAttributes.NETWORK_PEER_ADDRESS" { it == "127.0.0.1" || it == null }
+          "$NetworkAttributes.NETWORK_PEER_PORT" { it instanceof Number || it == null }
+
+          // Because of caching, not all requests hit the server so this tag may be absent
+          "couchbase.local.address" { it == null || it instanceof String }
+
+          // Not all couchbase operations have operation id.  Notably, 'ViewQuery's do not
+          // We assign a spanName of 'Bucket.query' and this is shared with n1ql queries
+          // that do have operation ids
+          "couchbase.operation_id" { it == null || it instanceof String }
+        }
       }
     }
   }
