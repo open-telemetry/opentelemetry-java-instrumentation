@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.api.Result;
 
 /**
  * JettyHttpClient9TracingInterceptor does three jobs stimulated from the Jetty Request object from
@@ -32,8 +31,7 @@ public final class JettyHttpClient9TracingInterceptor
     implements Request.BeginListener,
         Request.FailureListener,
         Response.SuccessListener,
-        Response.FailureListener,
-        Response.CompleteListener {
+        Response.FailureListener {
 
   private static final Logger logger =
       Logger.getLogger(JettyHttpClient9TracingInterceptor.class.getName());
@@ -88,7 +86,6 @@ public final class JettyHttpClient9TracingInterceptor
   }
 
   private void wrapRequestListeners(List<Request.RequestListener> requestListeners) {
-
     ListIterator<Request.RequestListener> iterator = requestListeners.listIterator();
 
     while (iterator.hasNext()) {
@@ -125,7 +122,6 @@ public final class JettyHttpClient9TracingInterceptor
   }
 
   private void startSpan(Request request) {
-
     if (!instrumenter.shouldStart(this.parentContext, request)) {
       return;
     }
@@ -136,13 +132,10 @@ public final class JettyHttpClient9TracingInterceptor
   public void onBegin(Request request) {}
 
   @Override
-  public void onComplete(Result result) {
-    closeIfPossible(result.getResponse());
-  }
-
-  @Override
   public void onSuccess(Response response) {
-    closeIfPossible(response);
+    if (this.context != null) {
+      instrumenter.end(this.context, response.getRequest(), response, null);
+    }
   }
 
   @Override
@@ -156,15 +149,6 @@ public final class JettyHttpClient9TracingInterceptor
   public void onFailure(Response response, Throwable t) {
     if (this.context != null) {
       instrumenter.end(this.context, response.getRequest(), response, t);
-    }
-  }
-
-  private void closeIfPossible(Response response) {
-
-    if (this.context != null) {
-      instrumenter.end(this.context, response.getRequest(), response, null);
-    } else {
-      logger.fine("onComplete - could not find an otel context");
     }
   }
 }
