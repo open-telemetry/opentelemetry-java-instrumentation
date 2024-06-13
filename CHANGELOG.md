@@ -2,6 +2,48 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Add support for informix connection string parsing in jdbc instrumentation
+  ([#11542](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11542))
+- Generate an SBOM for the javaagent artifact
+  ([#11075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11075))
+- Extract sql operation even when the sanitizer is disabled
+  ([#11472](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11472))
+- Improve security manager support
+  ([#11466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11466))
+- Generate Log4j2Plugin.dat for OpenTelemetryAppender
+  ([#11503](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11503))
+- Stop kotlin coroutine dispatcher from propagating context
+  ([#11500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11500))
+- Handle vert.x sub routes
+  ([#11535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11535))
+- Undertow: run response customizer on all ServerConnection implementations
+  ([#11539](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11539))
+- Allow configuring MDC key names for trace_id, span_id, trace_flags
+  ([#11329](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11329))
+- Apply async end strategy to all kotlin coroutine flows
+  ([#11583](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11583))
+
+### 🛠️ Bug fixes
+
+- Fix container.id issue in some crio scenarios
+  ([#11382](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11382))
+- Fix finagle http client context propagation
+  ([#11400](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11400))
+- Fix sporadically failing finagle test
+  ([#11441](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11441))
+- Fix request header capture corrupting tomcat request
+  ([#11469](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11469))
+- Fix ktor server instrumentation when ktor client library is not present 
+  ([#11454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11454))
+- Fix gRPC instrumentation adding duplicates to metadata instead of overwriting
+  ([#11308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11308))
+- Avoid NullPointerException when jms destination is not available
+  ([#11570](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11570))
+- Fix Spring Kafka instrumentation closing the trace too early
+  ([#11471](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11471))
+
 ## Version 1.33.3 (2024-05-21)
 
 ### 📈 Enhancements
