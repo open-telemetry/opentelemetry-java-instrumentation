@@ -106,7 +106,7 @@ public class NettyChannelPipelineInstrumentation
       if (ourHandler != null) {
         try {
           pipeline.addLast(ourHandler.getClass().getName(), ourHandler);
-          // associate our handler with original handler so they could be removed together
+          // associate our handle with original handler so they could be removed together
           instrumentationHandlerField.set(handler, ourHandler);
         } catch (IllegalArgumentException e) {
           // Prevented adding duplicate handlers.
