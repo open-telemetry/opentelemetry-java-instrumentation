@@ -23,4 +23,10 @@ public class InfluxDbInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new InfluxDbImplInstrumentation());
   }
+
+  @Override
+  public boolean isIndyModule() {
+    // Uses multiple Advice.Locals and argument assignment
+    return false;
+  }
 }
