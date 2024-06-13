@@ -16,6 +16,8 @@ import javax.annotation.Nullable;
 
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {
 
+  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
+
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
     attributes.put(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.REDIS);
@@ -23,9 +25,7 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
     int database = redisUri.getDatabase();
     if (database != 0) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(
-            AttributeKey.stringKey("db.namespace"),
-            redisUri.getHost()); // TODO (heya) required further discussion
+        attributes.put(DB_NAMESPACE, String.valueOf(database));
       }
 
       if (SemconvStability.emitOldDatabaseSemconv()) {

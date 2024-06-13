@@ -19,13 +19,13 @@ enum VertxRedisClientAttributesExtractor
     implements AttributesExtractor<VertxRedisClientRequest, Void> {
   INSTANCE;
 
+  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, VertxRedisClientRequest request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(
-          AttributeKey.stringKey("db.namespace"),
-          request.getHost()); // TODO (heya) required further discussion
+      attributes.put(DB_NAMESPACE, String.valueOf(request.getDatabaseIndex()));
     }
 
     if (SemconvStability.emitOldDatabaseSemconv()) {
