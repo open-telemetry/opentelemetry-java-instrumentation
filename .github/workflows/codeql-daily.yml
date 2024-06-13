@@ -30,7 +30,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@530d4feaa9c62aaab2d250371e2061eb7a172363 # v3.25.9
+        uses: github/codeql-action/init@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
         with:
           languages: java
           # using "latest" helps to keep up with the latest Kotlin support
@@ -45,7 +45,7 @@ jobs:
         run: ./gradlew assemble -x javadoc --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@530d4feaa9c62aaab2d250371e2061eb7a172363 # v3.25.9
+        uses: github/codeql-action/analyze@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
 
   workflow-notification:
     needs:
