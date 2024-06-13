@@ -20,5 +20,8 @@ public interface DbClientCommonAttributesGetter<REQUEST> {
   String getName(REQUEST request);
 
   @Nullable
+  String getNamespace(REQUEST request);
+
+  @Nullable
   String getConnectionString(REQUEST request);
 }
