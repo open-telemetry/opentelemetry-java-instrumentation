@@ -4,7 +4,7 @@
 
 ### 📈 Enhancements
 
-- Add support for informix connection string parsing in jdbc instrumentation
+- Add support for Informix connection string parsing in JDBC instrumentation
   ([#11542](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11542))
 - Generate an SBOM for the javaagent artifact
   ([#11075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11075))
