@@ -14,14 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 
@@ -62,16 +60,10 @@ public class JettyHttpClient12RespListenersInstrumentation implements TypeInstru
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Map<String, Object> attr = response.getRequest().getAttributes();
-      if (attr == null || !attr.containsKey(JETTY_CLIENT_CONTEXT_KEY)) {
-        return;
+      context = (Context) response.getRequest().getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
+      if (context != null) {
+        scope = context.makeCurrent();
       }
-      // Must be a Context
-      Object contextObj = attr.get(JETTY_CLIENT_CONTEXT_KEY);
-      if (!(contextObj instanceof Context)) {
-        return;
-      }
-      context = (Context) contextObj;
-      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -95,12 +87,10 @@ public class JettyHttpClient12RespListenersInstrumentation implements TypeInstru
         @Advice.Argument(0) Result result,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      VirtualField<Request, Context> virtualField = VirtualField.find(Request.class, Context.class);
-      context = virtualField.get(result.getRequest());
-      if (context == null) {
-        return;
+      context = (Context) result.getRequest().getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
+      if (context != null) {
+        scope = context.makeCurrent();
       }
-      scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
