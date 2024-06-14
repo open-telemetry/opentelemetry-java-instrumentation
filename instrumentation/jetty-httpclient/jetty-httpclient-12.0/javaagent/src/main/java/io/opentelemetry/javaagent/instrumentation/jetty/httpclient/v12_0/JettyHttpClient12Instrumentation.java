@@ -99,15 +99,12 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExitNotify(
-        @Advice.This HttpRequest request,
-        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
 
-      // not ending span here unless error, span ended in the interceptor
       scope.close();
     }
   }

@@ -24,7 +24,7 @@ public class JettyHttpClient12InstrumentationModule extends InstrumentationModul
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new JettyHttpClient12Instrumentation(),
-        new JettyHttpClient12RespListenersInstrumentation());
+        new JettyClient12ResponseListenersInstrumentation());
   }
 
   @Override

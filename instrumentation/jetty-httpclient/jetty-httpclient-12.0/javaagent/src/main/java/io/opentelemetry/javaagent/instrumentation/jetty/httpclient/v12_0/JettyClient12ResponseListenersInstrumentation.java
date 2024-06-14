@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 
-public class JettyHttpClient12RespListenersInstrumentation implements TypeInstrumentation {
+public class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.eclipse.jetty.client.transport.ResponseListeners");
@@ -38,7 +38,7 @@ public class JettyHttpClient12RespListenersInstrumentation implements TypeInstru
                 nameContains("notify")
                     .and(isPublic())
                     .and(takesArgument(0, named("org.eclipse.jetty.client.Response")))),
-        JettyHttpClient12RespListenersInstrumentation.class.getName()
+        JettyClient12ResponseListenersInstrumentation.class.getName()
             + "$JettyHttpClient12RespListenersNotifyAdvice");
 
     // for complete listeners
@@ -48,7 +48,7 @@ public class JettyHttpClient12RespListenersInstrumentation implements TypeInstru
                 nameContains("notifyComplete")
                     .and(isPublic())
                     .and(takesArgument(0, named("org.eclipse.jetty.client.Result")))),
-        JettyHttpClient12RespListenersInstrumentation.class.getName()
+        JettyClient12ResponseListenersInstrumentation.class.getName()
             + "$JettyHttpClient12CompleteListenersNotifyAdvice");
   }
 
