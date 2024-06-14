@@ -39,7 +39,7 @@
   ([#11454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11454))
 - Fix gRPC instrumentation adding duplicates to metadata instead of overwriting
   ([#11308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11308))
-- Avoid NullPointerException when jms destination is not available
+- Avoid NullPointerException when JMS destination is not available
   ([#11570](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11570))
 - Fix Spring Kafka instrumentation closing the trace too early
   ([#11471](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11471))
