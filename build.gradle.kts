@@ -13,7 +13,7 @@ plugins {
 
   See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512
    */
-  id("org.graalvm.buildtools.native").apply(false)
+  id("org.graalvm.buildtools.native") apply false
 }
 
 apply(from = "version.gradle.kts")
