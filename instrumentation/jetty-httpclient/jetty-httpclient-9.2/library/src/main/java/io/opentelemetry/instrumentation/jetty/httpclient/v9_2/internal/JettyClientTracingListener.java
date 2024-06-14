@@ -15,26 +15,26 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
 /**
- * JettyHttpClient9TracingInterceptor does three jobs stimulated from the Jetty Request object from
- * attachToRequest() 1. Start the CLIENT span and create the tracer 2. Set the listener callbacks
- * for each important lifecycle actions that would cause the start and close of the span 3. Set
- * callback wrappers on two important request-based callbacks
+ * JettyClientTracingListener performs three actions when {@link #handleRequest(Context,
+ * HttpRequest, Instrumenter)} is called 1. Start the CLIENT span 2. Set the listener callbacks for
+ * each lifecycle action that signal end of the request 3. Wrap request listeners to propagate
+ * context into the listeners
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class JettyHttpClient9TracingInterceptor
+public final class JettyClientTracingListener
     implements Request.BeginListener,
         Request.FailureListener,
         Response.SuccessListener,
         Response.FailureListener {
 
-  private static final Logger logger =
-      Logger.getLogger(JettyHttpClient9TracingInterceptor.class.getName());
+  private static final Logger logger = Logger.getLogger(JettyClientTracingListener.class.getName());
 
   private static final Class<?>[] requestlistenerInterfaces = {
     Request.BeginListener.class,
@@ -46,46 +46,48 @@ public final class JettyHttpClient9TracingInterceptor
     Request.QueuedListener.class
   };
 
-  @Nullable private Context context;
-
-  @Nullable
-  public Context getContext() {
-    return this.context;
-  }
-
-  private final Context parentContext;
-
+  private final Context context;
   private final Instrumenter<Request, Response> instrumenter;
 
-  public JettyHttpClient9TracingInterceptor(
-      Context parentCtx, Instrumenter<Request, Response> instrumenter) {
-    this.parentContext = parentCtx;
+  private JettyClientTracingListener(
+      Context context, Instrumenter<Request, Response> instrumenter) {
+    this.context = context;
     this.instrumenter = instrumenter;
   }
 
-  public void attachToRequest(Request jettyRequest) {
-    List<JettyHttpClient9TracingInterceptor> current =
-        jettyRequest.getRequestListeners(JettyHttpClient9TracingInterceptor.class);
-
+  @Nullable
+  public static Context handleRequest(
+      Context parentContext, HttpRequest request, Instrumenter<Request, Response> instrumenter) {
+    List<JettyClientTracingListener> current =
+        request.getRequestListeners(JettyClientTracingListener.class);
     if (!current.isEmpty()) {
-      logger.warning("A tracing interceptor is already in place for this request!");
-      return;
+      logger.warning("A tracing request listener is already in place for this request!");
+      return null;
     }
-    startSpan(jettyRequest);
+
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return null;
+    }
+
+    Context context = instrumenter.start(parentContext, request);
 
     // wrap all important request-based listeners that may already be attached, null should ensure
-    // are returned here
-    List<Request.RequestListener> existingListeners = jettyRequest.getRequestListeners(null);
-    wrapRequestListeners(existingListeners);
+    // that all listeners are returned here
+    List<Request.RequestListener> existingListeners = request.getRequestListeners(null);
+    wrapRequestListeners(existingListeners, context);
 
-    jettyRequest
-        .onRequestBegin(this)
-        .onRequestFailure(this)
-        .onResponseFailure(this)
-        .onResponseSuccess(this);
+    JettyClientTracingListener listener = new JettyClientTracingListener(context, instrumenter);
+    request
+        .onRequestBegin(listener)
+        .onRequestFailure(listener)
+        .onResponseFailure(listener)
+        .onResponseSuccess(listener);
+
+    return context;
   }
 
-  private void wrapRequestListeners(List<Request.RequestListener> requestListeners) {
+  private static void wrapRequestListeners(
+      List<Request.RequestListener> requestListeners, Context context) {
     ListIterator<Request.RequestListener> iterator = requestListeners.listIterator();
 
     while (iterator.hasNext()) {
@@ -121,34 +123,21 @@ public final class JettyHttpClient9TracingInterceptor
     }
   }
 
-  private void startSpan(Request request) {
-    if (!instrumenter.shouldStart(this.parentContext, request)) {
-      return;
-    }
-    this.context = instrumenter.start(this.parentContext, request);
-  }
-
   @Override
   public void onBegin(Request request) {}
 
   @Override
   public void onSuccess(Response response) {
-    if (this.context != null) {
-      instrumenter.end(this.context, response.getRequest(), response, null);
-    }
+    instrumenter.end(this.context, response.getRequest(), response, null);
   }
 
   @Override
   public void onFailure(Request request, Throwable t) {
-    if (this.context != null) {
-      instrumenter.end(this.context, request, null, t);
-    }
+    instrumenter.end(this.context, request, null, t);
   }
 
   @Override
   public void onFailure(Response response, Throwable t) {
-    if (this.context != null) {
-      instrumenter.end(this.context, response.getRequest(), response, t);
-    }
+    instrumenter.end(this.context, response.getRequest(), response, t);
   }
 }
