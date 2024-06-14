@@ -16,7 +16,7 @@
   ([#11503](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11503))
 - Stop kotlin coroutine dispatcher from propagating context
   ([#11500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11500))
-- Handle vert.x sub routes
+- Handle Vert.x sub routes
   ([#11535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11535))
 - Undertow: run response customizer on all ServerConnection implementations
   ([#11539](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11539))
