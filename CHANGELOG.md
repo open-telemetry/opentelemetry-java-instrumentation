@@ -29,7 +29,7 @@
 
 - Fix container.id issue in some crio scenarios
   ([#11382](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11382))
-- Fix finagle http client context propagation
+- Fix Finagle http client context propagation
   ([#11400](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11400))
 - Fix sporadically failing finagle test
   ([#11441](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11441))
