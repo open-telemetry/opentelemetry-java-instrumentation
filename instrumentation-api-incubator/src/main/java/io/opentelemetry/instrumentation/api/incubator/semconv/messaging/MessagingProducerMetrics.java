@@ -28,8 +28,8 @@ public class MessagingProducerMetrics implements OperationListener {
       ContextKey.named("pulsar-producer-metrics-state");
   private static final Logger logger = Logger.getLogger(MessagingProducerMetrics.class.getName());
 
-
   private final DoubleHistogram publishDurationHistogram;
+
   private MessagingProducerMetrics(Meter meter) {
     DoubleHistogramBuilder durationBuilder =
         meter
@@ -66,7 +66,8 @@ public class MessagingProducerMetrics implements OperationListener {
 
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
 
-    publishDurationHistogram.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
+    publishDurationHistogram.record(
+        (endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
   }
 
   @AutoValue

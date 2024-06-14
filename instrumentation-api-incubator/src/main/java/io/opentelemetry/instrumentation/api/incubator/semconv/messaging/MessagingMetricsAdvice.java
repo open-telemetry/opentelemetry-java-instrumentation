@@ -35,5 +35,6 @@ public class MessagingMetricsAdvice {
                 ServerAttributes.SERVER_PORT,
                 ServerAttributes.SERVER_ADDRESS));
   }
+
   private MessagingMetricsAdvice() {}
 }

@@ -39,7 +39,8 @@ public class MessagingProducerMetricsTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "pulsar")
-            .put(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+            .put(
+                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                 "persistent://public/default/topic")
             .put(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish")
             .put(ServerAttributes.SERVER_PORT, 6650)
@@ -86,10 +87,12 @@ public class MessagingProducerMetricsTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                            equalTo(
+                                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                                 "pulsar"),
                                             equalTo(
-                                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
+                                                MessagingIncubatingAttributes
+                                                    .MESSAGING_DESTINATION_NAME,
                                                 "persistent://public/default/topic"),
                                             equalTo(ServerAttributes.SERVER_PORT, 6650),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"))
