@@ -11,9 +11,19 @@ val extraTag = findProperty("extraTag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 tasks {
+  val dockerWorkingDir = layout.buildDirectory.dir("docker")
+
+  val imagePrepare by registering(Copy::class) {
+    into(dockerWorkingDir)
+    from("Dockerfile")
+  }
+
   val imageBuild by registering(DockerBuildImage::class) {
+    dependsOn(imagePrepare)
+    inputDir.set(dockerWorkingDir)
+
     images.add("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-zulu-openjdk-8u31:$extraTag")
-    dockerFile.set(File("Dockerfile"))
+    dockerFile.set(dockerWorkingDir.get().file("Dockerfile"))
   }
 
   val dockerPush by registering(DockerPushImage::class) {
