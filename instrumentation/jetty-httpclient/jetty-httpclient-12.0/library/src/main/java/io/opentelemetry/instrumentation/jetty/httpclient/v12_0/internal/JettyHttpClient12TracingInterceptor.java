@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
-import org.eclipse.jetty.client.Result;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
