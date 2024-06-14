@@ -21,8 +21,7 @@ public final class JettyHttpClient12TracingInterceptor
     implements Request.BeginListener,
         Request.FailureListener,
         Response.SuccessListener,
-        Response.FailureListener,
-        Response.CompleteListener {
+        Response.FailureListener {
 
   private static final Logger logger =
       Logger.getLogger(JettyHttpClient12TracingInterceptor.class.getName());
@@ -73,11 +72,6 @@ public final class JettyHttpClient12TracingInterceptor
 
   @Override
   public void onBegin(Request request) {}
-
-  @Override
-  public void onComplete(Result result) {
-    closeIfPossible(result.getResponse());
-  }
 
   @Override
   public void onFailure(Response response, Throwable t) {

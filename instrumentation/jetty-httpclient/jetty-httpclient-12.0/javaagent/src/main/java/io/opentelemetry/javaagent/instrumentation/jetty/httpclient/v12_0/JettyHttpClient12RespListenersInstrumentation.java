@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
+import java.util.Map;
+
+import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -60,11 +63,16 @@ public class JettyHttpClient12RespListenersInstrumentation implements TypeInstru
         @Advice.Argument(0) Response response,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      VirtualField<Request, Context> virtualField = VirtualField.find(Request.class, Context.class);
-      context = virtualField.get(response.getRequest());
-      if (context == null) {
+      Map<String, Object> attr = response.getRequest().getAttributes();
+      if (attr == null || !attr.containsKey(JETTY_CLIENT_CONTEXT_KEY)) {
         return;
       }
+      // Must be a Context
+      Object contextObj = attr.get(JETTY_CLIENT_CONTEXT_KEY);
+      if (!(contextObj instanceof Context)) {
+        return;
+      }
+      context = (Context) contextObj;
       scope = context.makeCurrent();
     }
 
@@ -78,11 +86,7 @@ public class JettyHttpClient12RespListenersInstrumentation implements TypeInstru
         return;
       }
 
-      // not ending span here unless error, span ended in the interceptor
       scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, response.getRequest(), response, throwable);
-      }
     }
   }
 
@@ -111,11 +115,7 @@ public class JettyHttpClient12RespListenersInstrumentation implements TypeInstru
         return;
       }
 
-      // not ending span here unless error, span ended in the interceptor
       scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, result.getRequest(), result.getResponse(), throwable);
-      }
     }
   }
 }

@@ -14,14 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClient12TracingInterceptor;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.transport.HttpRequest;
 
 public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
@@ -62,8 +60,6 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
         return;
       }
       // set context for responseListeners
-      VirtualField<Request, Context> virtualField = VirtualField.find(Request.class, Context.class);
-      virtualField.set(request, parentContext);
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
 
       scope = context.makeCurrent();
@@ -94,9 +90,6 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
         @Advice.This HttpRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (!request.getAttributes().containsKey(JETTY_CLIENT_CONTEXT_KEY)) {
-        return;
-      }
       context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       if (context == null) {
         return;
@@ -116,9 +109,6 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
 
       // not ending span here unless error, span ended in the interceptor
       scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
-      }
     }
   }
 }

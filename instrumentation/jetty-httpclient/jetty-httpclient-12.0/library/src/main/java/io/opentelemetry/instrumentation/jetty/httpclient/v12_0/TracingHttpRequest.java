@@ -17,7 +17,7 @@ import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.transport.HttpConversation;
 import org.eclipse.jetty.client.transport.HttpRequest;
 
-public class TracingHttpRequest extends HttpRequest {
+class TracingHttpRequest extends HttpRequest {
 
   private Context parentContext;
 
@@ -41,99 +41,90 @@ public class TracingHttpRequest extends HttpRequest {
     interceptor.attachToRequest(this);
     super.send(
         result -> {
-          Scope scope = null;
           if (parentContext != null) {
-            scope = parentContext.makeCurrent();
-          }
-          // async call
-          listener.onComplete(result);
-          if (scope != null) {
-            scope.close();
+            try (Scope scope = parentContext.makeCurrent()) {
+              listener.onComplete(result);
+            }
+          } else {
+            listener.onComplete(result);
           }
         });
   }
 
   @Override
   public void notifyQueued() {
-    Scope scope = null;
     if (parentContext != null) {
-      scope = parentContext.makeCurrent();
-    }
-    super.notifyQueued();
-    if (scope != null) {
-      scope.close();
+      try (Scope scope = parentContext.makeCurrent()) {
+        super.notifyQueued();
+      }
+    } else {
+      super.notifyQueued();
     }
   }
 
   @Override
   public void notifyBegin() {
-    Scope scope = null;
     if (parentContext != null) {
-      scope = parentContext.makeCurrent();
-    }
-    super.notifyBegin();
-    if (scope != null) {
-      scope.close();
+      try (Scope scope = parentContext.makeCurrent()) {
+        super.notifyBegin();
+      }
+    } else {
+      super.notifyBegin();
     }
   }
 
   @Override
   public void notifyHeaders() {
-    Scope scope = null;
     if (parentContext != null) {
-      scope = parentContext.makeCurrent();
-    }
-    super.notifyHeaders();
-    if (scope != null) {
-      scope.close();
+      try (Scope scope = parentContext.makeCurrent()) {
+        super.notifyHeaders();
+      }
+    } else {
+      super.notifyHeaders();
     }
   }
 
   @Override
   public void notifyCommit() {
-    Scope scope = null;
     if (parentContext != null) {
-      scope = parentContext.makeCurrent();
-    }
-    super.notifyCommit();
-    if (scope != null) {
-      scope.close();
+      try (Scope scope = parentContext.makeCurrent()) {
+        super.notifyCommit();
+      }
+    } else {
+      super.notifyCommit();
     }
   }
 
   @Override
   public void notifyContent(ByteBuffer byteBuffer) {
-    Scope scope = null;
     if (parentContext != null) {
-      scope = parentContext.makeCurrent();
-    }
-    super.notifyContent(byteBuffer);
-    if (scope != null) {
-      scope.close();
+      try (Scope scope = parentContext.makeCurrent()) {
+        super.notifyContent(byteBuffer);
+      }
+    } else {
+      super.notifyContent(byteBuffer);
     }
   }
 
   @Override
   public void notifySuccess() {
-    Scope scope = null;
     if (parentContext != null) {
-      scope = parentContext.makeCurrent();
-    }
-    super.notifySuccess();
-    if (scope != null) {
-      scope.close();
+      try (Scope scope = parentContext.makeCurrent()) {
+        super.notifySuccess();
+      }
+    } else {
+      super.notifySuccess();
     }
   }
 
   @Override
   public void notifyFailure(Throwable failure) {
-    Scope scope = null;
     if (parentContext != null) {
-      scope = parentContext.makeCurrent();
-    }
-    super.notifyFailure(failure);
-    if (scope != null) {
-      scope.close();
+      try (Scope scope = parentContext.makeCurrent()) {
+        super.notifyFailure(failure);
+      }
+    } else {
+      super.notifyFailure(failure);
     }
   }
 }
