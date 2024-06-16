@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -32,6 +33,12 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod().and(named("query")).and(takesArgument(0, named("java.lang.String"))),
         this.getClass().getName() + "$ClickHouseQueryAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("query"))
+            .and(takesArgument(0, named("com.clickhouse.client.ClickHouseParameterizedQuery"))),
+        this.getClass().getName() + "$ClickHouseParameterizedQueryAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -44,12 +51,9 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-
       if (query == null) {
         return;
       }
-
-      System.out.println("Query: " + query);
 
       Context parentContext = currentContext();
 
@@ -75,7 +79,53 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") ClickHouseDbRequest clickHouseRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
 
+      scope.close();
+      instrumenter().end(context, clickHouseRequest, null, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ClickHouseParameterizedQueryAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.This ClickHouseRequest<ClickHouseRequest.Mutation> clickHouseRequest,
+        @Advice.Argument(0) ClickHouseParameterizedQuery query,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
+      if (query == null) {
+        return;
+      }
+
+      Context parentContext = currentContext();
+
+      ClickHouseDbRequest request =
+          ClickHouseDbRequest.create(
+              clickHouseRequest.getServer().getHost(),
+              clickHouseRequest.getServer().getPort(),
+              clickHouseRequest.getServer().getDatabase().get(),
+              query.getOriginalQuery());
+
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+
+      context = instrumenter().start(parentContext, request);
+      scope = context.makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth,
+        @Advice.Local("otelRequest") ClickHouseDbRequest clickHouseRequest,
+        @Advice.Local("otelContext") Context context,
+        @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
