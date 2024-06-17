@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 public class MessagingProducerMetricsTest {
 
-  static final double[] DURATION_BUCKETS =
+  private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @Test
