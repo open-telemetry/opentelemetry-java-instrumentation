@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.5.0 (2024-06-14)
+
 ### 📈 Enhancements
 
 - Add support for Informix connection string parsing in JDBC instrumentation
