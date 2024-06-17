@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-public class MessagingProducerMetrics implements OperationListener {
+public final class MessagingProducerMetrics implements OperationListener {
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
   private static final ContextKey<MessagingProducerMetrics.State> PULSAR_PUBLISH_METRICS_STATE =
