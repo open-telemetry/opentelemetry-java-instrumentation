@@ -6,13 +6,16 @@ on:
       skip-native-tests:
         type: boolean
         required: false
+      test-latest-deps:
+        type: boolean
+        required: false
 
 jobs:
   graalvm-native-tests:
     if: "!inputs.skip-native-tests"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - id: read-java
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
       - uses: graalvm/setup-graalvm@2f25c0caae5b220866f732832d5e3e29ff493338 # v1.2.1.1
@@ -32,5 +35,5 @@ jobs:
           # therefore we're starting a Kafka container manually for the tests
           docker compose -f .github/graal-native-docker-compose.yaml up -d
           # don't wait for startup - gradle compile takes long enough
-          ./gradlew nativeTest
+          ./gradlew ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} nativeTest
           docker compose -f .github/graal-native-docker-compose.yaml down # is this needed?

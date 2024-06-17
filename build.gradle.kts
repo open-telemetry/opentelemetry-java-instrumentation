@@ -5,6 +5,15 @@ plugins {
 
   id("io.github.gradle-nexus.publish-plugin")
   id("otel.spotless-conventions")
+  /* workaround for
+  What went wrong:
+  Could not determine the dependencies of task ':smoke-tests-otel-starter:spring-boot-3.2:bootJar'.
+  > Could not create task ':smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata'.
+  > Cannot set the value of task ':smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata' property 'metadataService' of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService using a provider of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService.
+
+  See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512
+   */
+  id("org.graalvm.buildtools.native") apply false
 }
 
 apply(from = "version.gradle.kts")

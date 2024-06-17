@@ -31,11 +31,13 @@ public abstract class MessageWithDestination {
       jmsDestination = fallbackDestination;
     }
 
-    if (jmsDestination.isQueue()) {
-      return createMessageWithQueue(message, jmsDestination);
-    }
-    if (jmsDestination.isTopic()) {
-      return createMessageWithTopic(message, jmsDestination);
+    if (jmsDestination != null) {
+      if (jmsDestination.isQueue()) {
+        return createMessageWithQueue(message, jmsDestination);
+      }
+      if (jmsDestination.isTopic()) {
+        return createMessageWithTopic(message, jmsDestination);
+      }
     }
     return new AutoValue_MessageWithDestination(
         message, "unknown", /* isTemporaryDestination= */ false);
