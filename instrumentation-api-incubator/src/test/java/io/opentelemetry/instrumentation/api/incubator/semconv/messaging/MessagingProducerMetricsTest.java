@@ -23,7 +23,7 @@ import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
-public class MessagingProducerMetricsTest {
+class MessagingProducerMetricsTest {
 
   private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
