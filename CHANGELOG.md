@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## Version 2.5.0 (2024-06-14)
+## Version 2.5.0 (2024-06-17)
 
 ### 📈 Enhancements
 
