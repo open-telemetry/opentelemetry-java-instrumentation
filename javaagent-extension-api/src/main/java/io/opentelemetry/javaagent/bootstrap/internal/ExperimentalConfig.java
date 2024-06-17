@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public final class ExperimentalConfig {
   private static final ExperimentalConfig instance =
       new ExperimentalConfig(InstrumentationConfig.get());
 
-  private final InstrumentationConfig config;
+  private final CoreInstrumentationConfig config;
   private final List<String> messagingHeaders;
 
   /** Returns the global agent configuration. */
@@ -26,7 +27,7 @@ public final class ExperimentalConfig {
     return instance;
   }
 
-  public ExperimentalConfig(InstrumentationConfig config) {
+  public ExperimentalConfig(CoreInstrumentationConfig config) {
     this.config = config;
     messagingHeaders =
         config.getList("otel.instrumentation.messaging.experimental.capture-headers", emptyList());

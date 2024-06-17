@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap.internal;
+package io.opentelemetry.instrumentation.api.incubator.internal.config;
 
 import java.util.Objects;
 
@@ -39,7 +39,7 @@ public class EnduserConfig {
   private final boolean roleEnabled;
   private final boolean scopeEnabled;
 
-  EnduserConfig(InstrumentationConfig instrumentationConfig) {
+  EnduserConfig(CoreInstrumentationConfig instrumentationConfig) {
     Objects.requireNonNull(instrumentationConfig, "instrumentationConfig must not be null");
 
     /*

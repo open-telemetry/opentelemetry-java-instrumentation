@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -13,6 +13,10 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class ConfigPropertiesBridge implements CoreInstrumentationConfig {
 
   private final ConfigProperties configProperties;
