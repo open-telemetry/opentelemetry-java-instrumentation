@@ -21,11 +21,16 @@ import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+/**
+ * {@link OperationListener} which keeps track of <a
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#http-server">Producer
+ * metrics</a>.
+ */
 public final class MessagingProducerMetrics implements OperationListener {
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
-  private static final ContextKey<MessagingProducerMetrics.State> PULSAR_PUBLISH_METRICS_STATE =
-      ContextKey.named("pulsar-producer-metrics-state");
+  private static final ContextKey<MessagingProducerMetrics.State> MESSAGING_PRODUCER_METRICS_STATE =
+      ContextKey.named("messaging-producer-metrics-state");
   private static final Logger logger = Logger.getLogger(MessagingProducerMetrics.class.getName());
 
   private final DoubleHistogram publishDurationHistogram;
@@ -49,13 +54,13 @@ public final class MessagingProducerMetrics implements OperationListener {
   @CanIgnoreReturnValue
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
-        PULSAR_PUBLISH_METRICS_STATE,
+        MESSAGING_PRODUCER_METRICS_STATE,
         new AutoValue_MessagingProducerMetrics_State(startAttributes, startNanos));
   }
 
   @Override
   public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    MessagingProducerMetrics.State state = context.get(PULSAR_PUBLISH_METRICS_STATE);
+    MessagingProducerMetrics.State state = context.get(MESSAGING_PRODUCER_METRICS_STATE);
     if (state == null) {
       logger.log(
           FINE,
