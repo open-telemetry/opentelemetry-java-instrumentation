@@ -1,6 +1,7 @@
 plugins {
   id("otel.javaagent-instrumentation")
 }
+
 muzzle {
   pass {
     group.set("io.javalin")
@@ -9,6 +10,11 @@ muzzle {
     assertInverse.set(true)
   }
 }
+
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   library("io.javalin:javalin:5.0.0")
 
