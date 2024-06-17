@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.extannotations.External
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class IncludeTest {
 
-  @Mock InstrumentationConfig config;
+  @Mock CoreInstrumentationConfig config;
 
   @ParameterizedTest
   @MethodSource("provideArguments")

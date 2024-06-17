@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
@@ -16,7 +17,7 @@ public final class LogbackSingletons {
   private static final LoggingEventMapper mapper;
 
   static {
-    InstrumentationConfig config = InstrumentationConfig.get();
+    CoreInstrumentationConfig config = InstrumentationConfig.get();
 
     boolean captureExperimentalAttributes =
         config.getBoolean(

@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
@@ -113,7 +114,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   }
 
   // visible for testing
-  static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
+  static Set<String> configureAdditionalTraceAnnotations(CoreInstrumentationConfig config) {
     String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
     if (configString == null) {
       return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
