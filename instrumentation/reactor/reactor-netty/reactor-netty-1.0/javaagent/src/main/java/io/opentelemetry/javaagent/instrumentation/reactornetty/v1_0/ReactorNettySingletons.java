@@ -29,7 +29,8 @@ public final class ReactorNettySingletons {
 
   static {
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(INSTRUMENTATION_NAME, new ReactorNettyHttpClientAttributesGetter())
+        HttpClientInstrumenterFactory.builder(
+                INSTRUMENTATION_NAME, new ReactorNettyHttpClientAttributesGetter())
             .buildClientInstrumenter(HttpClientRequestHeadersSetter.INSTANCE);
 
     NettyClientInstrumenterFactory instrumenterFactory =

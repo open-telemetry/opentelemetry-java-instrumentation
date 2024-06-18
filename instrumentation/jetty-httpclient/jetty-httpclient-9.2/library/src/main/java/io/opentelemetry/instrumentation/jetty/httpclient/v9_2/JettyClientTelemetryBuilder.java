@@ -16,7 +16,8 @@ import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 /** A builder of {@link JettyClientTelemetry}. */
-public final class JettyClientTelemetryBuilder extends HttpClientConfigBuilder<JettyClientTelemetryBuilder, Request, Response> {
+public final class JettyClientTelemetryBuilder
+    extends HttpClientConfigBuilder<JettyClientTelemetryBuilder, Request, Response> {
 
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
@@ -44,7 +45,8 @@ public final class JettyClientTelemetryBuilder extends HttpClientConfigBuilder<J
    */
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew( instrumenterBuilder().buildClientInstrumenter(HttpHeaderSetter.INSTANCE) ,
+        TracingHttpClient.buildNew(
+            instrumenterBuilder().buildClientInstrumenter(HttpHeaderSetter.INSTANCE),
             sslContextFactory,
             httpClientTransport);
 

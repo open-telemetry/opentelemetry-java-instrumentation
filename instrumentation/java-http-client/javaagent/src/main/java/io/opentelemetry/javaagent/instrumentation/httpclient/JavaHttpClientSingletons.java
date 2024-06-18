@@ -24,7 +24,9 @@ public class JavaHttpClientSingletons {
     SETTER = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
 
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(JavaHttpClientTelemetryBuilder.INSTRUMENTATION_NAME, JavaHttpClientAttributesGetter.INSTANCE)
+        HttpClientInstrumenterFactory.builder(
+                JavaHttpClientTelemetryBuilder.INSTRUMENTATION_NAME,
+                JavaHttpClientAttributesGetter.INSTANCE)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

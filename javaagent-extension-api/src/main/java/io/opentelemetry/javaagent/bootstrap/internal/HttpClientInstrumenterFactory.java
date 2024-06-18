@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -21,28 +22,27 @@ public final class HttpClientInstrumenterFactory {
 
   private HttpClientInstrumenterFactory() {}
 
-  public static <REQUEST, RESPONSE>
-  InstrumenterBuilder<REQUEST, RESPONSE> builder(
-          String instrumentationName,
-          HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return configureBuilder(
-        CommonConfig.get(), new Builder<>(instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter)).instrumenterBuilder();
+  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> builder(
+      String instrumentationName,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
+    Builder<REQUEST, RESPONSE> builder =
+        new Builder<>(instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter);
+    CommonConfig config = CommonConfig.get();
+    set(config::getKnownHttpRequestMethods, builder::setKnownMethods);
+    set(config::getClientRequestHeaders, builder::setCapturedRequestHeaders);
+    set(config::getClientResponseHeaders, builder::setCapturedResponseHeaders);
+    set(config::getPeerServiceResolver, builder::setPeerServiceResolver);
+    set(
+        config::shouldEmitExperimentalHttpClientTelemetry,
+        builder::setEmitExperimentalHttpClientMetrics);
+    return builder.instrumenterBuilder();
   }
 
-  @SuppressWarnings("unchecked")
-  @CanIgnoreReturnValue
-  public static <T extends HttpClientConfigBuilder> T configureBuilder(
-      CommonConfig commonConfig, T builder) {
-    CommonConfigSetter.set(commonConfig::getKnownHttpRequestMethods, builder::setKnownMethods);
-    CommonConfigSetter.set(
-        commonConfig::getClientRequestHeaders, builder::setCapturedRequestHeaders);
-    CommonConfigSetter.set(
-        commonConfig::getClientResponseHeaders, builder::setCapturedResponseHeaders);
-    CommonConfigSetter.set(commonConfig::getPeerServiceResolver, builder::setPeerServiceResolver);
-    CommonConfigSetter.set(
-        commonConfig::shouldEmitExperimentalHttpClientTelemetry,
-        builder::setEmitExperimentalHttpClientMetrics);
-    return builder;
+  private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
+    T t = supplier.get();
+    if (t != null) {
+      consumer.accept(t);
+    }
   }
 
   /**

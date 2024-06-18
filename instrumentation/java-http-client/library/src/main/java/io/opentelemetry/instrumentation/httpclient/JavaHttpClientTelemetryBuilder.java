@@ -25,8 +25,7 @@ public final class JavaHttpClientTelemetryBuilder
 
   public JavaHttpClientTelemetry build() {
     Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
-        instrumenterBuilder()
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+        instrumenterBuilder().buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     return new JavaHttpClientTelemetry(
         instrumenter, new HttpHeadersSetter(openTelemetry.getPropagators()));

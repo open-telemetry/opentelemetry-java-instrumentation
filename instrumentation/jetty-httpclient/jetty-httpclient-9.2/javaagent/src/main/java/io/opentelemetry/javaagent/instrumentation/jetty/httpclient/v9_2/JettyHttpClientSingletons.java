@@ -16,8 +16,9 @@ import org.eclipse.jetty.client.api.Response;
 public class JettyHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-              HttpClientInstrumenterFactory.builder(JettyClientTelemetry.INSTRUMENTATION_NAME, JettyClientHttpAttributesGetter.INSTANCE)
-                 .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
+      HttpClientInstrumenterFactory.builder(
+              JettyClientTelemetry.INSTRUMENTATION_NAME, JettyClientHttpAttributesGetter.INSTANCE)
+          .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;

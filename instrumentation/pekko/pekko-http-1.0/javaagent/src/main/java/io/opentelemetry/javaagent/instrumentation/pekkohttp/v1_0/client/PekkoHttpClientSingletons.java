@@ -22,7 +22,8 @@ public class PekkoHttpClientSingletons {
     SETTER = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
 
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(PekkoHttpUtil.instrumentationName(), new PekkoHttpClientAttributesGetter())
+        HttpClientInstrumenterFactory.builder(
+                PekkoHttpUtil.instrumentationName(), new PekkoHttpClientAttributesGetter())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

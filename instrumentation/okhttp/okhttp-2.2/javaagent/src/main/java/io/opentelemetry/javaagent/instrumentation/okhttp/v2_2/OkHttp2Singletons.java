@@ -22,7 +22,8 @@ public final class OkHttp2Singletons {
 
   static {
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(INSTRUMENTATION_NAME, new OkHttp2HttpAttributesGetter())
+        HttpClientInstrumenterFactory.builder(
+                INSTRUMENTATION_NAME, new OkHttp2HttpAttributesGetter())
             .buildInstrumenter(alwaysClient());
 
     TRACING_INTERCEPTOR =

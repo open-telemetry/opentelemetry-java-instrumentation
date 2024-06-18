@@ -43,7 +43,9 @@ public abstract class HttpClientConfigBuilder<SELF, REQUEST, RESPONSE> {
   private boolean emitExperimentalHttpClientMetrics = false;
 
   protected HttpClientConfigBuilder(
-      String instrumentationName, OpenTelemetry openTelemetry, HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);

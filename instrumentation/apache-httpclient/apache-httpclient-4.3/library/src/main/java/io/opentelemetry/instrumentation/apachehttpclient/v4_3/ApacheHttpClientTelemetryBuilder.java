@@ -28,8 +28,7 @@ public final class ApacheHttpClientTelemetryBuilder
   public ApacheHttpClientTelemetry build() {
     // We manually inject because we need to inject internal requests for redirects.
     return new ApacheHttpClientTelemetry(
-        instrumenterBuilder()
-            .buildInstrumenter(SpanKindExtractor.alwaysClient()),
+        instrumenterBuilder().buildInstrumenter(SpanKindExtractor.alwaysClient()),
         openTelemetry.getPropagators());
   }
 }

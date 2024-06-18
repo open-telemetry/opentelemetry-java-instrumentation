@@ -21,7 +21,8 @@ public class AkkaHttpClientSingletons {
   static {
     SETTER = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(AkkaHttpUtil.instrumentationName(), new AkkaHttpClientAttributesGetter())
+        HttpClientInstrumenterFactory.builder(
+                AkkaHttpUtil.instrumentationName(), new AkkaHttpClientAttributesGetter())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
