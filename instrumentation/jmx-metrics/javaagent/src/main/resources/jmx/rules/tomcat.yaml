@@ -83,7 +83,7 @@ rules:
 
   - bean: Catalina:type=Manager,host=localhost,context=*
     unit: "1"
-    prefix: tomcat.sessions.
+    prefix: tomcat.session.
     type: updowncounter
     metricAttribute:
       context: param(context)
@@ -93,7 +93,7 @@ rules:
         desc: The number of active sessions
   - bean: Tomcat:type=Manager,host=localhost,context=*
     unit: "1"
-    prefix: tomcat.sessions.
+    prefix: tomcat.session.
     type: updowncounter
     metricAttribute:
       context: param(context)
