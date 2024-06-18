@@ -58,7 +58,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
   private static double getTransformedDuration(long startNanoTime, Timed timedAnnotation) {
     TimeUnit unit = timedAnnotation.unit();
     long nanoDelta = System.nanoTime() - startNanoTime;
-    return unit.convert(nanoDelta, NANOSECONDS);
+    return (double) nanoDelta / NANOSECONDS.convert(1, unit);
   }
 
   private static void extractException(Throwable throwable, AttributesBuilder attributesBuilder) {
