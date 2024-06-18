@@ -43,19 +43,19 @@ rules:
         metricAttribute:
           network.io.direction: const(receive)
   - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
-    unit: "1"
+    unit: "{connection}"
     metricAttribute:
       data_source: param(data-source)
     mapping:
       ActiveCount:
-        metric: wildfly.db.client.connections.usage
+        metric: wildfly.db.client.connection.count
         metricAttribute:
-          state: const(used)
+          db.client.connection.state: const(used)
         desc: The number of open jdbc connections
       IdleCount:
         metric: wildfly.db.client.connections.usage
         metricAttribute:
-          state: const(idle)
+          db.client.connection.state: const(idle)
         desc: The number of idle jdbc connections
       WaitCount:
         metric: wildfly.db.client.connections.WaitCount
