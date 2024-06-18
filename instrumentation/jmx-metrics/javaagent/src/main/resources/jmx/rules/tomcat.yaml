@@ -29,19 +29,19 @@ rules:
         unit: ms
         desc: Total time for processing all requests
       bytesReceived:
-        metric: traffic
+        metric: network.io
         type: counter
         unit: By
         desc: The number of bytes transmitted
         metricAttribute:
-          direction: const(received)
+          network.io.direction: const(receive)
       bytesSent:
-        metric: traffic
+        metric: network.io
         type: counter
         unit: By
         desc: The number of bytes transmitted
         metricAttribute:
-          direction: const(sent)
+          network.io.direction: const(transmit)
   - bean: Tomcat:type=GlobalRequestProcessor,name=*
     unit: "1"
     prefix: tomcat.
@@ -67,19 +67,19 @@ rules:
         unit: ms
         desc: Total time for processing all requests
       bytesReceived:
-        metric: traffic
+        metric: network.io
         type: counter
         unit: By
         desc: The number of bytes transmitted
         metricAttribute:
-          direction: const(received)
+          network.io.direction: const(receive)
       bytesSent:
-        metric: traffic
+        metric: network.io
         type: counter
         unit: By
         desc: The number of bytes transmitted
         metricAttribute:
-          direction: const(sent)
+          network.io.direction: const(transmit)
 
   - bean: Catalina:type=Manager,host=localhost,context=*
     unit: "1"
