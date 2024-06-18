@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import org.apache.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClientTelemetry}. */
@@ -27,6 +28,8 @@ public final class ApacheHttpClientTelemetryBuilder
   public ApacheHttpClientTelemetry build() {
     // We manually inject because we need to inject internal requests for redirects.
     return new ApacheHttpClientTelemetry(
-        buildWithManualInjection(INSTRUMENTATION_NAME), openTelemetry.getPropagators());
+        instrumenterBuilder(INSTRUMENTATION_NAME)
+            .buildInstrumenter(SpanKindExtractor.alwaysClient()),
+        openTelemetry.getPropagators());
   }
 }

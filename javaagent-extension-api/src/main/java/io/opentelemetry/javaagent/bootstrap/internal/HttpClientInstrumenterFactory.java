@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 
@@ -61,17 +59,6 @@ public final class HttpClientInstrumenterFactory {
     @Override
     public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(String instrumentationName) {
       return super.instrumenterBuilder(instrumentationName);
-    }
-
-    @Override
-    public Instrumenter<REQUEST, RESPONSE> build(
-        String instrumentationName, TextMapSetter<REQUEST> setter) {
-      return super.build(instrumentationName, setter);
-    }
-
-    @Override
-    public Instrumenter<REQUEST, RESPONSE> buildWithManualInjection(String instrumentationName) {
-      return super.buildWithManualInjection(instrumentationName);
     }
   }
 }

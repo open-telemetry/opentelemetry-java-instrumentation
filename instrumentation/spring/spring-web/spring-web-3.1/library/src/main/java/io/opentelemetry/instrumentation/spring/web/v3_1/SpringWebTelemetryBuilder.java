@@ -24,6 +24,8 @@ public final class SpringWebTelemetryBuilder
    * SpringWebTelemetryBuilder}.
    */
   public SpringWebTelemetry build() {
-    return new SpringWebTelemetry(build(INSTRUMENTATION_NAME, HttpRequestSetter.INSTANCE));
+    return new SpringWebTelemetry(
+        instrumenterBuilder(INSTRUMENTATION_NAME)
+            .buildClientInstrumenter(HttpRequestSetter.INSTANCE));
   }
 }

@@ -18,7 +18,8 @@ public class GoogleHttpClientSingletons {
   static {
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(new GoogleHttpClientHttpAttributesGetter())
-            .build(INSTRUMENTATION_NAME, HttpHeaderSetter.INSTANCE);
+            .instrumenterBuilder(INSTRUMENTATION_NAME)
+            .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {
