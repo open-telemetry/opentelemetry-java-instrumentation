@@ -13,6 +13,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -101,6 +102,7 @@ public final class PulsarSingletons {
         .addAttributesExtractor(
             ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR))
+        .addOperationMetrics(MessagingConsumerMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
