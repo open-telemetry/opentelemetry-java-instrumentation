@@ -11,7 +11,7 @@ rules:
       name: param(name)
     mapping:
       errorCount:
-        metric: errorCount
+        metric: request.errorCount
         type: gauge
         desc: The number of errors per second on all request processors
       requestCount:
@@ -19,12 +19,12 @@ rules:
         type: gauge
         desc: The number of requests per second across all request processors
       maxTime:
-        metric: maxTime
+        metric: request.maxTime
         type: gauge
         unit: ms
         desc: The longest request processing time
       processingTime:
-        metric: processingTime
+        metric: request.processingTime
         type: counter
         unit: ms
         desc: Total time for processing all requests
@@ -49,20 +49,20 @@ rules:
       name: param(name)
     mapping:
       errorCount:
-        metric: errorCount
+        metric: request.errorCount
         type: gauge
         desc: The number of errors per second on all request processors
       requestCount:
-        metric: requestCount
+        metric: request.requestCount
         type: gauge
         desc: The number of requests per second across all request processors
       maxTime:
-        metric: maxTime
+        metric: request.maxTime
         type: gauge
         unit: ms
         desc: The longest request processing time
       processingTime:
-        metric: processingTime
+        metric: request.processingTime
         type: counter
         unit: ms
         desc: Total time for processing all requests
