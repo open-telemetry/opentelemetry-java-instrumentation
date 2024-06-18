@@ -36,7 +36,8 @@ No targets are enabled by default. The supported target environments are listed 
 
 The pre-defined metrics do not provide an exhaustive mapping of every available JMX attribute as doing
 so would be verbose, tedious to maintain and brittle as it relies on implementation details of each
-of the targets supported.
+of the targets supported. The goal here is to provide a monitoring of the essential metrics, advanced
+use-cases will require dedicated configuration.
 
 The following guidelines are recommended when modifying/extending pre-defined metrics:
 - stay consistent with [semconv general guidelines](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/metrics.md#general-guidelines) for metrics.
