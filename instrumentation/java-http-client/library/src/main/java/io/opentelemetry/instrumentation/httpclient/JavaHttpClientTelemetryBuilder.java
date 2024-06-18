@@ -20,12 +20,12 @@ public final class JavaHttpClientTelemetryBuilder
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
+    super(instrumentationName, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
   }
 
   public JavaHttpClientTelemetry build() {
     Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
-        instrumenterBuilder(INSTRUMENTATION_NAME)
+        instrumenterBuilder()
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     return new JavaHttpClientTelemetry(

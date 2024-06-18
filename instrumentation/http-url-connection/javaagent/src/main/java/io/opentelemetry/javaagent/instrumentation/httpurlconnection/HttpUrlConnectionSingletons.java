@@ -16,8 +16,8 @@ public final class HttpUrlConnectionSingletons {
 
   static {
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(new HttpUrlHttpAttributesGetter())
-            .instrumenterBuilder("io.opentelemetry.http-url-connection")
+        HttpClientInstrumenterFactory.builder("io.opentelemetry.http-url-connection", new HttpUrlHttpAttributesGetter())
+            .instrumenterBuilder()
             .addAttributesExtractor(
                 HttpMethodAttributeExtractor.create(
                     CommonConfig.get().getKnownHttpRequestMethods()))

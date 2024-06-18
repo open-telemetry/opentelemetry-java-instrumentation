@@ -16,7 +16,7 @@ public final class SpringWebTelemetryBuilder
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-web-3.1";
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(openTelemetry, SpringWebHttpAttributesGetter.INSTANCE);
+    super(instrumentationName, openTelemetry, SpringWebHttpAttributesGetter.INSTANCE);
   }
 
   /**
@@ -25,7 +25,7 @@ public final class SpringWebTelemetryBuilder
    */
   public SpringWebTelemetry build() {
     return new SpringWebTelemetry(
-        instrumenterBuilder(INSTRUMENTATION_NAME)
+        instrumenterBuilder()
             .buildClientInstrumenter(HttpRequestSetter.INSTANCE));
   }
 }

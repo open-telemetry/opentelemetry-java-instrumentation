@@ -29,6 +29,7 @@ import java.util.function.Function;
 
 public abstract class HttpClientConfigBuilder<SELF, REQUEST, RESPONSE> {
 
+  private final String instrumentationName;
   protected final OpenTelemetry openTelemetry;
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
@@ -42,7 +43,8 @@ public abstract class HttpClientConfigBuilder<SELF, REQUEST, RESPONSE> {
   private boolean emitExperimentalHttpClientMetrics = false;
 
   protected HttpClientConfigBuilder(
-      OpenTelemetry openTelemetry, HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+      String instrumentationName, OpenTelemetry openTelemetry, HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
@@ -130,7 +132,7 @@ public abstract class HttpClientConfigBuilder<SELF, REQUEST, RESPONSE> {
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
-  protected InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(String instrumentationName) {
+  protected InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder() {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 

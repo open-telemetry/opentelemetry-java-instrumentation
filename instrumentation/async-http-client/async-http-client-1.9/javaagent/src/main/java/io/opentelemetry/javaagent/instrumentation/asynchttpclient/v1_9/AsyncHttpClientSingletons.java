@@ -17,8 +17,8 @@ public final class AsyncHttpClientSingletons {
 
   static {
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(new AsyncHttpClientHttpAttributesGetter())
-            .instrumenterBuilder(INSTRUMENTATION_NAME)
+        HttpClientInstrumenterFactory.builder(INSTRUMENTATION_NAME, new AsyncHttpClientHttpAttributesGetter())
+            .instrumenterBuilder()
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 

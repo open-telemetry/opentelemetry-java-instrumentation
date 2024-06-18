@@ -13,8 +13,8 @@ import play.shaded.ahc.org.asynchttpclient.Response;
 public final class PlayWsClientInstrumenterFactory {
 
   public static Instrumenter<Request, Response> createInstrumenter(String instrumentationName) {
-    return HttpClientInstrumenterFactory.builder(new PlayWsClientHttpAttributesGetter())
-        .instrumenterBuilder(instrumentationName)
+    return HttpClientInstrumenterFactory.builder(instrumentationName, new PlayWsClientHttpAttributesGetter())
+        .instrumenterBuilder()
         .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 

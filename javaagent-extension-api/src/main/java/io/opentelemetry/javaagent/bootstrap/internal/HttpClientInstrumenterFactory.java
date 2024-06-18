@@ -23,9 +23,10 @@ public final class HttpClientInstrumenterFactory {
 
   public static <REQUEST, RESPONSE>
       HttpClientInstrumenterFactory.Builder<REQUEST, RESPONSE> builder(
+          String instrumentationName,
           HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
     return configureBuilder(
-        CommonConfig.get(), new Builder<>(GlobalOpenTelemetry.get(), httpAttributesGetter));
+        CommonConfig.get(), new Builder<>(instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter));
   }
 
   @SuppressWarnings("unchecked")
@@ -51,14 +52,15 @@ public final class HttpClientInstrumenterFactory {
   public static class Builder<REQUEST, RESPONSE>
       extends HttpClientConfigBuilder<HttpClientConfigBuilder, REQUEST, RESPONSE> {
     Builder(
+        String instrumentationName,
         OpenTelemetry openTelemetry,
         HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-      super(openTelemetry, httpAttributesGetter);
+      super(instrumentationName, openTelemetry, httpAttributesGetter);
     }
 
     @Override
-    public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(String instrumentationName) {
-      return super.instrumenterBuilder(instrumentationName);
+    public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder() {
+      return super.instrumenterBuilder();
     }
   }
 }

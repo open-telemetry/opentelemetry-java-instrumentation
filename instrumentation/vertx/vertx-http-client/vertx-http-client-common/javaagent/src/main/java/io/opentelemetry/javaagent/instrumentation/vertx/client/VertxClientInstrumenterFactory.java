@@ -15,8 +15,8 @@ public final class VertxClientInstrumenterFactory {
   public static Instrumenter<HttpClientRequest, HttpClientResponse> create(
       String instrumentationName, AbstractVertxHttpAttributesGetter httpAttributesGetter) {
 
-    return HttpClientInstrumenterFactory.builder(httpAttributesGetter)
-        .instrumenterBuilder(instrumentationName)
+    return HttpClientInstrumenterFactory.builder(instrumentationName, httpAttributesGetter)
+        .instrumenterBuilder()
         .buildClientInstrumenter(new HttpRequestHeaderSetter());
   }
 

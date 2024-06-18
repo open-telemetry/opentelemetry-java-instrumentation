@@ -22,7 +22,7 @@ public final class JettyClientTelemetryBuilder extends HttpClientConfigBuilder<J
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(openTelemetry, JettyClientHttpAttributesGetter.INSTANCE);
+    super(instrumentationName, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE);
   }
 
   @CanIgnoreReturnValue
@@ -44,7 +44,7 @@ public final class JettyClientTelemetryBuilder extends HttpClientConfigBuilder<J
    */
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew( instrumenterBuilder(JettyClientTelemetry.INSTRUMENTATION_NAME).buildClientInstrumenter(HttpHeaderSetter.INSTANCE) ,
+        TracingHttpClient.buildNew( instrumenterBuilder().buildClientInstrumenter(HttpHeaderSetter.INSTANCE) ,
             sslContextFactory,
             httpClientTransport);
 
