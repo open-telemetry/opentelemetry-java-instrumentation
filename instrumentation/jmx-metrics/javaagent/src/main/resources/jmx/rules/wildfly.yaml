@@ -3,7 +3,7 @@ rules:
   - bean: jboss.as:deployment=*,subsystem=undertow
     metricAttribute:
       deployment: param(deployment)
-    prefix: wildfly.sessions.
+    prefix: wildfly.session.
     type: counter
     unit: "1"
     mapping:
@@ -64,7 +64,7 @@ rules:
   - bean: jboss.as:subsystem=transactions
     type: counter
     prefix: wildfly.db.client.
-    unit: "{transactions}"
+    unit: "{transaction}"
     mapping:
       numberOfTransactions:
         metric: transaction.NumberOfTransactions

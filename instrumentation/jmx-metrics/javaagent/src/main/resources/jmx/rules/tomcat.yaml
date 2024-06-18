@@ -13,10 +13,12 @@ rules:
       errorCount:
         metric: request.errorCount
         type: gauge
+        unit: "{request}"
         desc: The number of errors per second on all request processors
       requestCount:
-        metric: requestCount
+        metric: request.requestCount
         type: gauge
+        unit: "{request}"
         desc: The number of requests per second across all request processors
       maxTime:
         metric: request.maxTime
@@ -51,10 +53,12 @@ rules:
       errorCount:
         metric: request.errorCount
         type: gauge
+        unit: "{request}"
         desc: The number of errors per second on all request processors
       requestCount:
         metric: request.requestCount
         type: gauge
+        unit: "{request}"
         desc: The number of requests per second across all request processors
       maxTime:
         metric: request.maxTime
@@ -82,7 +86,7 @@ rules:
           network.io.direction: const(transmit)
 
   - bean: Catalina:type=Manager,host=localhost,context=*
-    unit: "1"
+    unit: "{session}"
     prefix: tomcat.session.
     type: updowncounter
     metricAttribute:
@@ -92,7 +96,7 @@ rules:
         metric: activeSessions
         desc: The number of active sessions
   - bean: Tomcat:type=Manager,host=localhost,context=*
-    unit: "1"
+    unit: "{session}"
     prefix: tomcat.session.
     type: updowncounter
     metricAttribute:
@@ -103,8 +107,8 @@ rules:
         desc: The number of active sessions
 
   - bean: Catalina:type=ThreadPool,name=*
-    unit: "{threads}"
-    prefix: tomcat.threads.
+    unit: "{thread}"
+    prefix: tomcat.thread.
     type: updowncounter
     metricAttribute:
       name: param(name)
@@ -116,8 +120,8 @@ rules:
         metric: currentThreadsBusy
         desc: Busy thread count of the thread pool
   - bean: Tomcat:type=ThreadPool,name=*
-    unit: "{threads}"
-    prefix: tomcat.threads.
+    unit: "{thread}"
+    prefix: tomcat.thread.
     type: updowncounter
     metricAttribute:
       name: param(name)

@@ -8,7 +8,7 @@ rules:
       resource: param(context)
     mapping:
       sessionsCreated:
-        unit: "{sessions}"
+        unit: "{session}"
         type: counter
         desc: The number of sessions established in total
       sessionTimeTotal:
@@ -23,7 +23,7 @@ rules:
 
   - bean: org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
     prefix: jetty.thread.
-    unit: "{threads}"
+    unit: "{thread}"
     type: updowncounter
     mapping:
       busyThreads:
