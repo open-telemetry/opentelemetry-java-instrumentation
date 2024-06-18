@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 public final class TimedHelper extends MetricsAnnotationHelper {
 
-  private static final String TIMED_DEFAULT_NAME = "method.invocation.duration";
   private static final ClassValue<Map<Method, DoubleHistogram>> histograms =
       new ClassValue<Map<Method, DoubleHistogram>>() {
         @Override
@@ -83,13 +82,9 @@ public final class TimedHelper extends MetricsAnnotationHelper {
             method,
             m -> {
               Timed timedAnnotation = m.getAnnotation(Timed.class);
-              String metricName =
-                  (null == timedAnnotation.value() || timedAnnotation.value().isEmpty())
-                      ? TIMED_DEFAULT_NAME
-                      : timedAnnotation.value();
               String unitStr = extractUnitStr(timedAnnotation);
               return METER
-                  .histogramBuilder(metricName)
+                  .histogramBuilder(timedAnnotation.value())
                   .setDescription(timedAnnotation.description())
                   .setUnit(unitStr)
                   .build();

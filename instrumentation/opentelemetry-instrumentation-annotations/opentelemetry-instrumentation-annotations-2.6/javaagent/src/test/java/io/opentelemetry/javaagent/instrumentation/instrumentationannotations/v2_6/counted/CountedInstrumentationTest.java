@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted;
 
-import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample.ANOTHER_NAME_COUNT;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample.METRIC_DESCRIPTION;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample.METRIC_NAME;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample.METRIC_UNIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,40 +18,16 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CountedInstrumentationTest {
 
   @RegisterExtension
-  public static final AgentInstrumentationExtension testing =
+  private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
   private static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-instrumentation-annotations-2.6";
-  private static final String COUNTED_DEFAULT_NAME = "method.invocation.count";
-
-  @Test
-  void testDefaultExample() {
-    new CountedExample().defaultExample();
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME));
-  }
 
   @Test
   void testExampleWithAnotherName() {
-    new CountedExample().exampleWithAnotherName();
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, metric -> metric.hasName(ANOTHER_NAME_COUNT));
-  }
-
-  @Test
-  void testExampleWithDescriptionAndDefaultValue() {
-    new CountedExample().exampleWithDescriptionAndDefaultValue();
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasDescription(METRIC_DESCRIPTION));
-  }
-
-  @Test
-  void testExampleWithUnitAndDefaultValue() {
-    new CountedExample().exampleWithUnitAndDefaultValue();
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasUnit(METRIC_UNIT));
+    new CountedExample().exampleWithName();
+    testing.waitAndAssertMetrics(INSTRUMENTATION_NAME, metric -> metric.hasName(METRIC_NAME));
   }
 
   @Test
@@ -78,20 +54,20 @@ class CountedInstrumentationTest {
         INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(COUNTED_DEFAULT_NAME)
+                .hasName("example.with.attributes.count")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  "value1"
-                                          .equals(
-                                              p.getAttributes().get(AttributeKey.stringKey("key1")))
-                                      && "value2"
-                                          .equals(
-                                              p.getAttributes()
-                                                  .get(AttributeKey.stringKey("key2"))));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    "value1"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key1")))
+                                        && "value2"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key2"))))));
   }
 
   @Test
@@ -101,21 +77,23 @@ class CountedInstrumentationTest {
         INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(COUNTED_DEFAULT_NAME)
+                .hasName("example.with.attributes2.count")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  "value1"
-                                          .equals(
-                                              p.getAttributes().get(AttributeKey.stringKey("key1")))
-                                      && "value2"
-                                          .equals(
-                                              p.getAttributes().get(AttributeKey.stringKey("key2")))
-                                      && null
-                                          == p.getAttributes().get(AttributeKey.stringKey("key3")));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    "value1"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key1")))
+                                        && "value2"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key2")))
+                                        && null
+                                            == p.getAttributes()
+                                                .get(AttributeKey.stringKey("key3")))));
   }
 
   @Test
@@ -125,16 +103,15 @@ class CountedInstrumentationTest {
         INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(COUNTED_DEFAULT_NAME)
+                .hasName("example.with.return.count")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  CountedExample.RETURN_STRING.equals(
-                                      p.getAttributes()
-                                          .get(AttributeKey.stringKey("returnValue"))));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    CountedExample.RETURN_STRING.equals(
+                                        p.getAttributes()
+                                            .get(AttributeKey.stringKey("returnValue"))))));
   }
 
   @Test
@@ -148,18 +125,17 @@ class CountedInstrumentationTest {
         INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(COUNTED_DEFAULT_NAME)
+                .hasName("example.with.exception.count")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  IllegalStateException.class
-                                      .getName()
-                                      .equals(
-                                          p.getAttributes()
-                                              .get(AttributeKey.stringKey("exception"))));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    IllegalStateException.class
+                                        .getName()
+                                        .equals(
+                                            p.getAttributes()
+                                                .get(AttributeKey.stringKey("exception"))))));
   }
 
   @Test

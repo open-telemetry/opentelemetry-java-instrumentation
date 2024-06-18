@@ -9,21 +9,12 @@ import io.opentelemetry.instrumentation.annotations.Timed;
 import java.util.concurrent.TimeUnit;
 
 public class TimedExample {
-  public static final String ANOTHER_NAME_HISTOGRAM = "another.name.duration";
+  public static final String METRIC_NAME = "name.duration";
   public static final String METRIC_DESCRIPTION = "I am the description.";
   public static final String RETURN_STRING = "I am a return string.";
 
-  @Timed
-  public void defaultExample() {}
-
-  @Timed(ANOTHER_NAME_HISTOGRAM)
+  @Timed(METRIC_NAME)
   public void exampleWithAnotherName() {}
-
-  @Timed(description = METRIC_DESCRIPTION)
-  public void exampleWithDescriptionAndDefaultValue() {}
-
-  @Timed(unit = TimeUnit.NANOSECONDS)
-  public void exampleWithUnitNanoSecondAndDefaultValue() {}
 
   @Timed(value = "example.with.description.duration", description = METRIC_DESCRIPTION)
   public void exampleWithDescription() {}
@@ -33,21 +24,25 @@ public class TimedExample {
     Thread.sleep(2000);
   }
 
-  @Timed(additionalAttributes = {"key1", "value1", "key2", "value2"})
+  @Timed(
+      value = "example.with.attributes.duration",
+      additionalAttributes = {"key1", "value1", "key2", "value2"})
   public void exampleWithAdditionalAttributes1() {}
 
-  @Timed(additionalAttributes = {"key1", "value1", "key2", "value2", "key3"})
+  @Timed(
+      value = "example.with.attributes2.duration",
+      additionalAttributes = {"key1", "value1", "key2", "value2", "key3"})
   public void exampleWithAdditionalAttributes2() {}
 
-  @Timed
+  @Timed("example.ignore.duration")
   public void exampleIgnore() {}
 
-  @Timed
+  @Timed("example.with.exception.duration")
   public void exampleWithException() {
     throw new IllegalStateException("test");
   }
 
-  @Timed(returnValueAttribute = "returnValue")
+  @Timed(value = "example.with.return.duration", returnValueAttribute = "returnValue")
   public ReturnObject exampleWithReturnValueAttribute() {
     return new ReturnObject();
   }

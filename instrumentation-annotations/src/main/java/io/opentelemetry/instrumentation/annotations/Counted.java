@@ -40,10 +40,8 @@ public @interface Counted {
    *
    * <p>The name should follow the instrument naming rule: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule</a>
-   *
-   * <p>The default name is {@code method.invocation.count}.
    */
-  String value() default "";
+  String value();
 
   /**
    * Description of the instrument.

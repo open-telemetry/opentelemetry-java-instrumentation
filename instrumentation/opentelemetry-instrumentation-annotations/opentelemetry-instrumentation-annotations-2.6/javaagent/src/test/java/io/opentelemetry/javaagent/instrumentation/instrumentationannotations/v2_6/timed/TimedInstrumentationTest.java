@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed;
 
-import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed.TimedExample.ANOTHER_NAME_HISTOGRAM;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed.TimedExample.METRIC_DESCRIPTION;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed.TimedExample.METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -17,43 +17,17 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class TimedInstrumentationTest {
 
   @RegisterExtension
-  public static final AgentInstrumentationExtension testing =
+  private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
   private static final String TIMED_INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-instrumentation-annotations-2.6";
-  private static final String TIMED_DEFAULT_NAME = "method.invocation.duration";
-
-  @Test
-  void testDefaultExample() {
-    new TimedExample().defaultExample();
-    testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(TIMED_DEFAULT_NAME));
-  }
 
   @Test
   void testExampleWithAnotherName() {
     new TimedExample().exampleWithAnotherName();
-    testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(ANOTHER_NAME_HISTOGRAM));
+    testing.waitAndAssertMetrics(TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(METRIC_NAME));
   }
-
-  /*
-  @Test
-  void testExampleWithDescriptionAndDefaultValue() {
-    new TimedExample().exampleWithDescriptionAndDefaultValue();
-    testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
-        metric -> metric.hasName(TIMED_DEFAULT_NAME).hasDescription(""));
-  }
-
-  @Test
-  void testExampleWithUnitNanoSecondAndDefaultValue() {
-    new TimedExample().exampleWithUnitNanoSecondAndDefaultValue();
-    testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(TIMED_DEFAULT_NAME).hasUnit("ms"));
-  }
-   */
 
   @Test
   void testExampleWithDescription() {
@@ -74,10 +48,9 @@ class TimedInstrumentationTest {
                 .hasName("example.with.unit.duration")
                 .hasUnit("s")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getHistogramData().getPoints())
-                          .allMatch(p -> p.getMax() < 5 && p.getMin() > 0);
-                    }));
+                    metricData ->
+                        assertThat(metricData.getHistogramData().getPoints())
+                            .allMatch(p -> p.getMax() < 5 && p.getMin() > 0)));
   }
 
   @Test
@@ -87,20 +60,20 @@ class TimedInstrumentationTest {
         TIMED_INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(TIMED_DEFAULT_NAME)
+                .hasName("example.with.attributes.duration")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  "value1"
-                                          .equals(
-                                              p.getAttributes().get(AttributeKey.stringKey("key1")))
-                                      && "value2"
-                                          .equals(
-                                              p.getAttributes()
-                                                  .get(AttributeKey.stringKey("key2"))));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    "value1"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key1")))
+                                        && "value2"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key2"))))));
   }
 
   @Test
@@ -110,21 +83,23 @@ class TimedInstrumentationTest {
         TIMED_INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(TIMED_DEFAULT_NAME)
+                .hasName("example.with.attributes2.duration")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  "value1"
-                                          .equals(
-                                              p.getAttributes().get(AttributeKey.stringKey("key1")))
-                                      && "value2"
-                                          .equals(
-                                              p.getAttributes().get(AttributeKey.stringKey("key2")))
-                                      && null
-                                          == p.getAttributes().get(AttributeKey.stringKey("key3")));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    "value1"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key1")))
+                                        && "value2"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("key2")))
+                                        && null
+                                            == p.getAttributes()
+                                                .get(AttributeKey.stringKey("key3")))));
   }
 
   @Test
@@ -145,18 +120,17 @@ class TimedInstrumentationTest {
         TIMED_INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(TIMED_DEFAULT_NAME)
+                .hasName("example.with.exception.duration")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  IllegalStateException.class
-                                      .getName()
-                                      .equals(
-                                          p.getAttributes()
-                                              .get(AttributeKey.stringKey("exception"))));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    IllegalStateException.class
+                                        .getName()
+                                        .equals(
+                                            p.getAttributes()
+                                                .get(AttributeKey.stringKey("exception"))))));
   }
 
   @Test
@@ -166,15 +140,14 @@ class TimedInstrumentationTest {
         TIMED_INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName(TIMED_DEFAULT_NAME)
+                .hasName("example.with.return.duration")
                 .satisfies(
-                    metricData -> {
-                      assertThat(metricData.getData().getPoints())
-                          .allMatch(
-                              p ->
-                                  TimedExample.RETURN_STRING.equals(
-                                      p.getAttributes()
-                                          .get(AttributeKey.stringKey("returnValue"))));
-                    }));
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    TimedExample.RETURN_STRING.equals(
+                                        p.getAttributes()
+                                            .get(AttributeKey.stringKey("returnValue"))))));
   }
 }

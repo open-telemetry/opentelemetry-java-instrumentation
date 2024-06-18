@@ -41,10 +41,8 @@ public @interface Timed {
    *
    * <p>The name should follow the instrument naming rule: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule</a>
-   *
-   * <p>The default name is {@code method.invocation.duration}.
    */
-  String value() default "";
+  String value();
 
   /**
    * Description for the instrument.

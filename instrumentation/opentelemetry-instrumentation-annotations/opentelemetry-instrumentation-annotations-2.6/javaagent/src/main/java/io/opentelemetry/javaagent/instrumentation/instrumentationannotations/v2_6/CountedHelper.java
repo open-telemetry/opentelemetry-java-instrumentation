@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class CountedHelper extends MetricsAnnotationHelper {
 
-  private static final String COUNTED_DEFAULT_NAME = "method.invocation.count";
   private static final ClassValue<Map<Method, LongCounter>> counters =
       new ClassValue<Map<Method, LongCounter>>() {
         @Override
@@ -71,12 +70,8 @@ public final class CountedHelper extends MetricsAnnotationHelper {
             method,
             m -> {
               Counted countedAnnotation = m.getAnnotation(Counted.class);
-              String metricName =
-                  (null == countedAnnotation.value() || countedAnnotation.value().isEmpty())
-                      ? COUNTED_DEFAULT_NAME
-                      : countedAnnotation.value();
               return METER
-                  .counterBuilder(metricName)
+                  .counterBuilder(countedAnnotation.value())
                   .setDescription(countedAnnotation.description())
                   .setUnit(countedAnnotation.unit())
                   .build();
