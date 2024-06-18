@@ -28,7 +28,6 @@ public final class NettyClientSingletons {
   static {
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(INSTRUMENTATION_NAME, new NettyHttpClientAttributesGetter())
-            .instrumenterBuilder()
             .addContextCustomizer(
                 (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
             .buildClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);

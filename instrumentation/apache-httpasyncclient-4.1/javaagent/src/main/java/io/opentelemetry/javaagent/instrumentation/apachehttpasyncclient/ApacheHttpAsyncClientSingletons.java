@@ -17,7 +17,6 @@ public final class ApacheHttpAsyncClientSingletons {
   static {
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(INSTRUMENTATION_NAME, new ApacheHttpAsyncClientHttpAttributesGetter())
-            .instrumenterBuilder()
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 

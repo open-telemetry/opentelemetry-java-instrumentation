@@ -22,11 +22,11 @@ public final class HttpClientInstrumenterFactory {
   private HttpClientInstrumenterFactory() {}
 
   public static <REQUEST, RESPONSE>
-      HttpClientInstrumenterFactory.Builder<REQUEST, RESPONSE> builder(
+  InstrumenterBuilder<REQUEST, RESPONSE> builder(
           String instrumentationName,
           HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
     return configureBuilder(
-        CommonConfig.get(), new Builder<>(instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter));
+        CommonConfig.get(), new Builder<>(instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter)).instrumenterBuilder();
   }
 
   @SuppressWarnings("unchecked")

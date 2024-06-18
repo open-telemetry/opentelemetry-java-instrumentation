@@ -18,7 +18,6 @@ public final class JoddHttpSingletons {
   static {
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(INSTRUMENTATION_NAME, new JoddHttpHttpAttributesGetter())
-            .instrumenterBuilder()
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 

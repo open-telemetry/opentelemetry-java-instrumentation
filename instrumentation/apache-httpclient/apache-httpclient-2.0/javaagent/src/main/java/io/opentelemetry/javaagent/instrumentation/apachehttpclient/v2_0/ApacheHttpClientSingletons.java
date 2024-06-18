@@ -17,7 +17,6 @@ public final class ApacheHttpClientSingletons {
   static {
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(INSTRUMENTATION_NAME, new ApacheHttpClientHttpAttributesGetter())
-            .instrumenterBuilder()
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
 

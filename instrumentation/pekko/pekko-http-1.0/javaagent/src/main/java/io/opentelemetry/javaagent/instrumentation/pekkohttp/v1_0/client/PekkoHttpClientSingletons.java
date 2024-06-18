@@ -23,7 +23,6 @@ public class PekkoHttpClientSingletons {
 
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(PekkoHttpUtil.instrumentationName(), new PekkoHttpClientAttributesGetter())
-            .instrumenterBuilder()
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

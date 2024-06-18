@@ -25,7 +25,6 @@ public class JavaHttpClientSingletons {
 
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(JavaHttpClientTelemetryBuilder.INSTRUMENTATION_NAME, JavaHttpClientAttributesGetter.INSTANCE)
-            .instrumenterBuilder()
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
