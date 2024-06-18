@@ -16,7 +16,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @SuppressWarnings("unused")
 @AutoService(InstrumentationModule.class)
-public final class JavalinInstrumentationModule extends InstrumentationModule {
+public class JavalinInstrumentationModule extends InstrumentationModule {
 
   public JavalinInstrumentationModule() {
     super("javalin", "javalin-5");

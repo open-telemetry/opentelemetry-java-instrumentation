@@ -30,14 +30,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JavalinInstrumentationTest {
+class JavalinTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static Javalin app;
-  static int port;
-  static WebClient client;
+  private static Javalin app;
+  private static int port;
+  private static WebClient client;
 
   @BeforeAll
   static void setup() {

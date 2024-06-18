@@ -19,6 +19,4 @@ dependencies {
   library("io.javalin:javalin:5.0.0")
 
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
-
-  testLibrary("io.javalin:javalin:5.0.0")
 }

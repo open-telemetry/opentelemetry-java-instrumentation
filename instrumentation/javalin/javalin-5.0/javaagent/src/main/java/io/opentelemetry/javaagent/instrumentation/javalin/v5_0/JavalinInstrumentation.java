@@ -29,8 +29,8 @@ public class JavalinInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public void transform(TypeTransformer typeTransformer) {
-    typeTransformer.applyAdviceToMethod(
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
         namedOneOf("handle").and(takesArgument(0, named("io.javalin.http.Context"))),
         this.getClass().getName() + "$HandlerAdapterAdvice");
   }
