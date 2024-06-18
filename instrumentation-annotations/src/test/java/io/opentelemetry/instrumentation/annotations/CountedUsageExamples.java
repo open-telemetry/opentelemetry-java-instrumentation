@@ -7,13 +7,10 @@ package io.opentelemetry.instrumentation.annotations;
 
 public class CountedUsageExamples {
 
-  @Counted()
-  public void method1() {}
-
   @Counted("customizedName")
-  public void method2() {}
+  public void method() {}
 
-  @Counted
+  @Counted("methodWithAttributes")
   public void attributes(
       @MetricAttribute String attribute1, @MetricAttribute("attribute2") long attribute2) {}
 }
