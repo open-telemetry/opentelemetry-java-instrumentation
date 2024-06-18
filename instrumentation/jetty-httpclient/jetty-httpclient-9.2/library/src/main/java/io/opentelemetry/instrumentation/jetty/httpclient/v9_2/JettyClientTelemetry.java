@@ -11,7 +11,9 @@ import org.eclipse.jetty.client.HttpClient;
 /** Entrypoint for instrumenting Jetty client. */
 public final class JettyClientTelemetry {
 
-  /** Returns a new {@link JettyClientTelemetry} configured with the given {@link OpenTelemetry}. */
+    public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
+
+    /** Returns a new {@link JettyClientTelemetry} configured with the given {@link OpenTelemetry}. */
   public static JettyClientTelemetry create(OpenTelemetry openTelemetry) {
     JettyClientTelemetryBuilder builder = builder(openTelemetry);
     return builder.build();

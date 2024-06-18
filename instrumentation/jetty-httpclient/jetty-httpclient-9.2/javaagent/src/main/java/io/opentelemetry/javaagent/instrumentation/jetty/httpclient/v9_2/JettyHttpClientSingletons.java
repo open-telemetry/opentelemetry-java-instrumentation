@@ -5,35 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
-import static java.util.Collections.singletonList;
-
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetry;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.HttpHeaderSetter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import java.util.function.Function;
+import io.opentelemetry.javaagent.bootstrap.internal.HttpClientInstrumenterFactory;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
 public class JettyHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-      JettyClientInstrumenterFactory.create(
-          GlobalOpenTelemetry.get(),
-          builder ->
-              builder
-                  .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                  .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          Function.identity(),
-          singletonList(
-              HttpClientPeerServiceAttributesExtractor.create(
-                  JettyClientHttpAttributesGetter.INSTANCE,
-                  CommonConfig.get().getPeerServiceResolver())),
-          CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
+              HttpClientInstrumenterFactory.builder(JettyClientHttpAttributesGetter.INSTANCE)
+                  .instrumenterBuilder(JettyClientTelemetry.INSTRUMENTATION_NAME)
+                 .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
