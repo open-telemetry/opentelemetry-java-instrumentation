@@ -22,7 +22,7 @@ rules:
         desc: The mean time sessions remain active
 
   - bean: org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
-    prefix: jetty.threads.
+    prefix: jetty.thread.
     unit: "{threads}"
     type: updowncounter
     mapping:
