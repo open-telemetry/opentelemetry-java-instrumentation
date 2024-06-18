@@ -44,7 +44,7 @@ The following guidelines are recommended when modifying/extending pre-defined me
 - start with `{target}.` prefix, where `{target}` is the target system, for example `tomcat` or `hadoop`.
 - align with semconv when semantics are identical, for example:
   - `wildfly.network.io` is consistent with [`system.network.io`](https://opentelemetry.io/docs/specs/semconv/system/system-metrics/#metric-systemnetworkio)
-- when not fitting semconv, reuse the existing mbean attribute names as metric suffix to preserve semantics, for example `tomcat.errorCount` where tomcat reports as error any status >=400 and another app server might do differently.
+- when not fitting semconv, reuse the existing mbean attribute names as metric suffix to preserve semantics of the exposed MBeans, for example `tomcat.request.errorCount` where tomcat reports as error any status >=400 and another app server might do it differently.
 
 ## Configuration Files
 
