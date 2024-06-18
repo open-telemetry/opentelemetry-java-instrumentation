@@ -132,7 +132,7 @@ public abstract class HttpClientConfigBuilder<SELF, REQUEST, RESPONSE> {
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
-  private InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(String instrumentationName) {
+  protected InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(String instrumentationName) {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 

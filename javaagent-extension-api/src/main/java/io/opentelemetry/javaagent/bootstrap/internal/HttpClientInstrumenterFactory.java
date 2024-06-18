@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 
 /**
@@ -55,6 +56,11 @@ public final class HttpClientInstrumenterFactory {
         OpenTelemetry openTelemetry,
         HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
       super(openTelemetry, httpAttributesGetter);
+    }
+
+    @Override
+    public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(String instrumentationName) {
+      return super.instrumenterBuilder(instrumentationName);
     }
 
     @Override

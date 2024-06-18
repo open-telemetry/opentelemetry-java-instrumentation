@@ -16,7 +16,11 @@ public final class HttpUrlConnectionSingletons {
   static {
     INSTRUMENTER =
         HttpClientInstrumenterFactory.builder(new HttpUrlHttpAttributesGetter())
-            .build("io.opentelemetry.http-url-connection", RequestPropertySetter.INSTANCE);
+            .instrumenterBuilder("io.opentelemetry.http-url-connection")
+            .addContextCustomizer(
+                (context, httpRequestPacket, startAttributes) ->
+                    GetOutputStreamContext.init(context))
+            .buildClientInstrumenter(RequestPropertySetter.INSTANCE);
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {
