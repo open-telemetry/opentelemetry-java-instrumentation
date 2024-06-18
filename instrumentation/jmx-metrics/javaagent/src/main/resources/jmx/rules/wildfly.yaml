@@ -25,6 +25,7 @@ rules:
         unit: ns
       errorCount:
   - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
+    metricPrefix: wildfly.
     metricAttribute:
       server: param(server)
       listener: param(http-listener)
@@ -32,15 +33,15 @@ rules:
     unit: By
     mapping:
       bytesSent:
-        metric: wildfly.network.io
+        metric: network.io
         desc: Total number of bytes transferred
         metricAttribute:
-          direction: const(out)
+          network.io.direction: const(transmit)
       bytesReceived:
-        metric: wildfly.network.io
+        metric: network.io
         desc: Total number of bytes transferred
         metricAttribute:
-          direction: const(in)
+          network.io.direction: const(receive)
   - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
     unit: "1"
     metricAttribute:
