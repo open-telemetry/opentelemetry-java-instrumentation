@@ -55,9 +55,9 @@ public @interface Timed {
   /**
    * The unit for the instrument.
    *
-   * <p>Default is milliseconds.
+   * <p>Default is seconds.
    */
-  TimeUnit unit() default TimeUnit.MILLISECONDS;
+  TimeUnit unit() default TimeUnit.SECONDS;
 
   /**
    * List of key-value pairs to supply additional attributes.

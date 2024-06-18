@@ -24,9 +24,10 @@ class TimedInstrumentationTest {
       "io.opentelemetry.opentelemetry-instrumentation-annotations-2.6";
 
   @Test
-  void testExampleWithAnotherName() {
-    new TimedExample().exampleWithAnotherName();
-    testing.waitAndAssertMetrics(TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(METRIC_NAME));
+  void testExampleWithName() {
+    new TimedExample().exampleWithName();
+    testing.waitAndAssertMetrics(
+        TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(METRIC_NAME).hasUnit("s"));
   }
 
   @Test
@@ -39,18 +40,18 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithUnitSecondAnd2SecondLatency() throws InterruptedException {
-    new TimedExample().exampleWithUnitSecondAnd2SecondLatency();
+  void testExampleWithUnit() throws InterruptedException {
+    new TimedExample().exampleWithUnit();
     testing.waitAndAssertMetrics(
         TIMED_INSTRUMENTATION_NAME,
         metric ->
             metric
                 .hasName("example.with.unit.duration")
-                .hasUnit("s")
+                .hasUnit("ms")
                 .satisfies(
                     metricData ->
                         assertThat(metricData.getHistogramData().getPoints())
-                            .allMatch(p -> p.getMax() < 5 && p.getMin() > 0)));
+                            .allMatch(p -> p.getMax() < 5000 && p.getMin() > 0)));
   }
 
   @Test

@@ -14,13 +14,13 @@ public class TimedExample {
   public static final String RETURN_STRING = "I am a return string.";
 
   @Timed(METRIC_NAME)
-  public void exampleWithAnotherName() {}
+  public void exampleWithName() {}
 
   @Timed(value = "example.with.description.duration", description = METRIC_DESCRIPTION)
   public void exampleWithDescription() {}
 
-  @Timed(value = "example.with.unit.duration", unit = TimeUnit.SECONDS)
-  public void exampleWithUnitSecondAnd2SecondLatency() throws InterruptedException {
+  @Timed(value = "example.with.unit.duration", unit = TimeUnit.MILLISECONDS)
+  public void exampleWithUnit() throws InterruptedException {
     Thread.sleep(2000);
   }
 

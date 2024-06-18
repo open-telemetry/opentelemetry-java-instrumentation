@@ -56,7 +56,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
   }
 
   private static double getTransformedDuration(long startNanoTime, Timed timedAnnotation) {
-    TimeUnit unit = extractTimeUnit(timedAnnotation);
+    TimeUnit unit = timedAnnotation.unit();
     long nanoDelta = System.nanoTime() - startNanoTime;
     return unit.convert(nanoDelta, NANOSECONDS);
   }
@@ -82,33 +82,32 @@ public final class TimedHelper extends MetricsAnnotationHelper {
             method,
             m -> {
               Timed timedAnnotation = m.getAnnotation(Timed.class);
-              String unitStr = extractUnitStr(timedAnnotation);
               return METER
                   .histogramBuilder(timedAnnotation.value())
                   .setDescription(timedAnnotation.description())
-                  .setUnit(unitStr)
+                  .setUnit(toString(timedAnnotation.unit()))
                   .build();
             });
   }
 
-  private static TimeUnit extractTimeUnit(Timed timedAnnotation) {
-    if (null == timedAnnotation.unit()) {
-      return TimeUnit.MILLISECONDS;
-    }
-    return timedAnnotation.unit();
-  }
-
-  private static String extractUnitStr(Timed timedAnnotation) {
-    switch (timedAnnotation.unit()) {
+  private static String toString(TimeUnit timeUnit) {
+    switch (timeUnit) {
       case NANOSECONDS:
         return "ns";
       case MICROSECONDS:
-        return "µs";
+        return "us";
+      case MILLISECONDS:
+        return "ms";
       case SECONDS:
         return "s";
-      default:
-        return "ms";
+      case MINUTES:
+        return "min";
+      case HOURS:
+        return "h";
+      case DAYS:
+        return "d";
     }
+    throw new IllegalArgumentException("Unsupported time unit " + timeUnit);
   }
 
   private TimedHelper() {}
