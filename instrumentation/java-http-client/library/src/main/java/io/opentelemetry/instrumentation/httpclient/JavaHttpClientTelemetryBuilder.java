@@ -20,7 +20,7 @@ public final class JavaHttpClientTelemetryBuilder
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(instrumentationName, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
+    super(INSTRUMENTATION_NAME, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
   }
 
   public JavaHttpClientTelemetry build() {

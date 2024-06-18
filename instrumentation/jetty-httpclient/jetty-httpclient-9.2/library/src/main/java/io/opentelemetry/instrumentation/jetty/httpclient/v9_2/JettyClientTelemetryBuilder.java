@@ -23,7 +23,10 @@ public final class JettyClientTelemetryBuilder
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(instrumentationName, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE);
+    super(
+        JettyClientTelemetry.INSTRUMENTATION_NAME,
+        openTelemetry,
+        JettyClientHttpAttributesGetter.INSTANCE);
   }
 
   @CanIgnoreReturnValue
