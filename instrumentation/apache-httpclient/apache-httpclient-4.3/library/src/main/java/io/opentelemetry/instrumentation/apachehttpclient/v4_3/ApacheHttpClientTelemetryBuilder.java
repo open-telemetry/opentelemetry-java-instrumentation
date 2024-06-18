@@ -18,7 +18,7 @@ public final class ApacheHttpClientTelemetryBuilder
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(instrumentationName, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
+    super(INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
   }
 
   /**
