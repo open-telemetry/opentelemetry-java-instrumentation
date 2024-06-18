@@ -11,13 +11,19 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public final class CountedHelper extends MetricsAnnotationHelper {
 
   private static final String COUNTED_DEFAULT_NAME = "method.invocation.count";
-  private static final ConcurrentMap<String, LongCounter> COUNTERS = new ConcurrentHashMap<>();
+  private static final ClassValue<Map<Method, LongCounter>> counters =
+      new ClassValue<Map<Method, LongCounter>>() {
+        @Override
+        protected Map<Method, LongCounter> computeValue(Class<?> type) {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
   public static void recordCountWithAttributes(
       MethodRequest methodRequest, Object returnValue, Throwable throwable) {
@@ -59,30 +65,22 @@ public final class CountedHelper extends MetricsAnnotationHelper {
   }
 
   private static LongCounter getCounter(Method method) {
-    Counted countedAnnotation = method.getAnnotation(Counted.class);
-    String metricName =
-        (null == countedAnnotation.value() || countedAnnotation.value().isEmpty())
-            ? COUNTED_DEFAULT_NAME
-            : countedAnnotation.value();
-    if (!COUNTERS.containsKey(metricName)) {
-      synchronized (metricName) {
-        if (!COUNTERS.containsKey(metricName)) {
-          LongCounter longCounter = null;
-          if (COUNTED_DEFAULT_NAME.equals(metricName)) {
-            longCounter = METER.counterBuilder(metricName).build();
-          } else {
-            longCounter =
-                METER
-                    .counterBuilder(metricName)
-                    .setDescription(countedAnnotation.description())
-                    .setUnit(countedAnnotation.unit())
-                    .build();
-          }
-          COUNTERS.put(metricName, longCounter);
-        }
-      }
-    }
-    return COUNTERS.get(metricName);
+    return counters
+        .get(method.getDeclaringClass())
+        .computeIfAbsent(
+            method,
+            m -> {
+              Counted countedAnnotation = m.getAnnotation(Counted.class);
+              String metricName =
+                  (null == countedAnnotation.value() || countedAnnotation.value().isEmpty())
+                      ? COUNTED_DEFAULT_NAME
+                      : countedAnnotation.value();
+              return METER
+                  .counterBuilder(metricName)
+                  .setDescription(countedAnnotation.description())
+                  .setUnit(countedAnnotation.unit())
+                  .build();
+            });
   }
 
   private CountedHelper() {}

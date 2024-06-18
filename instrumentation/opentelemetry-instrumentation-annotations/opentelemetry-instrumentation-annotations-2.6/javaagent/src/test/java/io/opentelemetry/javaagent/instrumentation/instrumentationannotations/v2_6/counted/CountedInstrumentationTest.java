@@ -43,14 +43,15 @@ class CountedInstrumentationTest {
   void testExampleWithDescriptionAndDefaultValue() {
     new CountedExample().exampleWithDescriptionAndDefaultValue();
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasDescription(""));
+        INSTRUMENTATION_NAME,
+        metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasDescription(METRIC_DESCRIPTION));
   }
 
   @Test
   void testExampleWithUnitAndDefaultValue() {
     new CountedExample().exampleWithUnitAndDefaultValue();
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasUnit(""));
+        INSTRUMENTATION_NAME, metric -> metric.hasName(COUNTED_DEFAULT_NAME).hasUnit(METRIC_UNIT));
   }
 
   @Test

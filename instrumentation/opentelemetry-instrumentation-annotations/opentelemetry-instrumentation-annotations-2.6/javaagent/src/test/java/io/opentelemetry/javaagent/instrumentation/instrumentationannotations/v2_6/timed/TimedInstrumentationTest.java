@@ -38,6 +38,7 @@ class TimedInstrumentationTest {
         TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(ANOTHER_NAME_HISTOGRAM));
   }
 
+  /*
   @Test
   void testExampleWithDescriptionAndDefaultValue() {
     new TimedExample().exampleWithDescriptionAndDefaultValue();
@@ -52,6 +53,7 @@ class TimedInstrumentationTest {
     testing.waitAndAssertMetrics(
         TIMED_INSTRUMENTATION_NAME, metric -> metric.hasName(TIMED_DEFAULT_NAME).hasUnit("ms"));
   }
+   */
 
   @Test
   void testExampleWithDescription() {

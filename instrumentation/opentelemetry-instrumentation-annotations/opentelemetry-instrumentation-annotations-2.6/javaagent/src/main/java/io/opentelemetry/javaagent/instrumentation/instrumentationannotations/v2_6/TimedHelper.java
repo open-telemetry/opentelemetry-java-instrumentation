@@ -13,16 +13,20 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 public final class TimedHelper extends MetricsAnnotationHelper {
 
   private static final String TIMED_DEFAULT_NAME = "method.invocation.duration";
-
-  private static final ConcurrentMap<String, DoubleHistogram> HISTOGRAMS =
-      new ConcurrentHashMap<>();
+  private static final ClassValue<Map<Method, DoubleHistogram>> histograms =
+      new ClassValue<Map<Method, DoubleHistogram>>() {
+        @Override
+        protected Map<Method, DoubleHistogram> computeValue(Class<?> type) {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
   public static void recordHistogramWithAttributes(
       MethodRequest methodRequest, Throwable throwable, Object returnValue, long startNanoTime) {
@@ -31,7 +35,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
         getCommonAttributeBuilder(throwable, returnValue, timedAnnotation);
     double duration = getTransformedDuration(startNanoTime, timedAnnotation);
     extractMetricAttributes(methodRequest, attributesBuilder);
-    getHistogram(timedAnnotation).record(duration, attributesBuilder.build());
+    getHistogram(methodRequest.method()).record(duration, attributesBuilder.build());
   }
 
   public static void recordHistogram(
@@ -40,7 +44,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
     AttributesBuilder attributesBuilder =
         getCommonAttributeBuilder(throwable, returnValue, timedAnnotation);
     double duration = getTransformedDuration(startNanoTime, timedAnnotation);
-    getHistogram(timedAnnotation).record(duration, attributesBuilder.build());
+    getHistogram(method).record(duration, attributesBuilder.build());
   }
 
   private static AttributesBuilder getCommonAttributeBuilder(
@@ -55,8 +59,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
   private static double getTransformedDuration(long startNanoTime, Timed timedAnnotation) {
     TimeUnit unit = extractTimeUnit(timedAnnotation);
     long nanoDelta = System.nanoTime() - startNanoTime;
-    double duration = unit.convert(nanoDelta, NANOSECONDS);
-    return duration;
+    return unit.convert(nanoDelta, NANOSECONDS);
   }
 
   private static void extractException(Throwable throwable, AttributesBuilder attributesBuilder) {
@@ -73,31 +76,24 @@ public final class TimedHelper extends MetricsAnnotationHelper {
     }
   }
 
-  private static DoubleHistogram getHistogram(Timed timedAnnotation) {
-    String metricName =
-        (null == timedAnnotation.value() || timedAnnotation.value().isEmpty())
-            ? TIMED_DEFAULT_NAME
-            : timedAnnotation.value();
-    if (!HISTOGRAMS.containsKey(metricName)) {
-      synchronized (metricName) {
-        if (!HISTOGRAMS.containsKey(metricName)) {
-          DoubleHistogram doubleHistogram = null;
-          if (TIMED_DEFAULT_NAME.equals(metricName)) {
-            doubleHistogram = METER.histogramBuilder(metricName).setUnit("ms").build();
-          } else {
-            String unitStr = extractUnitStr(timedAnnotation);
-            doubleHistogram =
-                METER
-                    .histogramBuilder(metricName)
-                    .setDescription(timedAnnotation.description())
-                    .setUnit(unitStr)
-                    .build();
-          }
-          HISTOGRAMS.put(metricName, doubleHistogram);
-        }
-      }
-    }
-    return HISTOGRAMS.get(metricName);
+  private static DoubleHistogram getHistogram(Method method) {
+    return histograms
+        .get(method.getDeclaringClass())
+        .computeIfAbsent(
+            method,
+            m -> {
+              Timed timedAnnotation = m.getAnnotation(Timed.class);
+              String metricName =
+                  (null == timedAnnotation.value() || timedAnnotation.value().isEmpty())
+                      ? TIMED_DEFAULT_NAME
+                      : timedAnnotation.value();
+              String unitStr = extractUnitStr(timedAnnotation);
+              return METER
+                  .histogramBuilder(metricName)
+                  .setDescription(timedAnnotation.description())
+                  .setUnit(unitStr)
+                  .build();
+            });
   }
 
   private static TimeUnit extractTimeUnit(Timed timedAnnotation) {
