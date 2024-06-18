@@ -15,6 +15,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -22,6 +24,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
@@ -76,6 +79,12 @@ abstract class AbstractPulsarClientTest {
 
   private static final AttributeKey<String> MESSAGE_TYPE =
       AttributeKey.stringKey("messaging.pulsar.message.type");
+
+  private static final List<Double> DURATION_SECONDS_BUCKETS =
+      unmodifiableList(
+          asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
+  private static final double[] DURATION_BUCKETS =
+      DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @BeforeAll
   static void beforeAll() throws PulsarClientException {
@@ -163,6 +172,26 @@ abstract class AbstractPulsarClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             batchReceiveAttributes(topic, null, false))));
+
+    assertThat(testing.metrics())
+        .satisfiesExactlyInAnyOrder(
+            metric ->
+                OpenTelemetryAssertions.assertThat(metric)
+                    .hasName("messaging.publish.duration")
+                    .hasUnit("s")
+                    .hasDescription("Measures the duration of publish operation.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost))
+                                        .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
   @Test

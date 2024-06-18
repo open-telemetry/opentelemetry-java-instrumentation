@@ -64,7 +64,7 @@ public final class MessagingProducerMetrics implements OperationListener {
     if (state == null) {
       logger.log(
           FINE,
-          "No state present when ending context {0}. Cannot record pulsar publish metrics.",
+          "No state present when ending context {0}. Cannot record produce publish metrics.",
           context);
       return;
     }
