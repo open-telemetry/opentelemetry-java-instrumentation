@@ -12,7 +12,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.HttpClientInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 
 public final class OkHttp2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-2.2";
@@ -22,7 +22,7 @@ public final class OkHttp2Singletons {
 
   static {
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(
+        JavaagentHttpClientInstrumenterBuilder.create(
                 INSTRUMENTATION_NAME, new OkHttp2HttpAttributesGetter())
             .buildInstrumenter(alwaysClient());
 

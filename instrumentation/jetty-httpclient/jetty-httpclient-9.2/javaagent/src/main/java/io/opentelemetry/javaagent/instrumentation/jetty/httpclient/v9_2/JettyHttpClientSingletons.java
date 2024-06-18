@@ -9,14 +9,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetry;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.HttpHeaderSetter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.HttpClientInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
 public class JettyHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-      HttpClientInstrumenterFactory.builder(
+      JavaagentHttpClientInstrumenterBuilder.create(
               JettyClientTelemetry.INSTRUMENTATION_NAME, JettyClientHttpAttributesGetter.INSTANCE)
           .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
 

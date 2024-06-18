@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.HttpHeaderSetter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
 import org.eclipse.jetty.client.HttpClientTransport;
@@ -17,7 +17,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 /** A builder of {@link JettyClientTelemetry}. */
 public final class JettyClientTelemetryBuilder
-    extends HttpClientConfigBuilder<JettyClientTelemetryBuilder, Request, Response> {
+    extends AbstractHttpClientTelemetryBuilder<JettyClientTelemetryBuilder, Request, Response> {
 
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;

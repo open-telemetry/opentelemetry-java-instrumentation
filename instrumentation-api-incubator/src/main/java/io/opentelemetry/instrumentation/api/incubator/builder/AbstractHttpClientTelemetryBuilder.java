@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-public abstract class HttpClientConfigBuilder<SELF, REQUEST, RESPONSE> {
+public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE> {
 
   private final String instrumentationName;
   protected final OpenTelemetry openTelemetry;
@@ -42,7 +42,7 @@ public abstract class HttpClientConfigBuilder<SELF, REQUEST, RESPONSE> {
       spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
 
-  protected HttpClientConfigBuilder(
+  public AbstractHttpClientTelemetryBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {

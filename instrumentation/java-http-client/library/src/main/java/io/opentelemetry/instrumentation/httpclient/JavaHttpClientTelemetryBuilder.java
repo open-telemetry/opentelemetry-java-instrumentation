@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.httpclient;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
@@ -15,7 +15,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public final class JavaHttpClientTelemetryBuilder
-    extends HttpClientConfigBuilder<JavaHttpClientTelemetryBuilder, HttpRequest, HttpResponse<?>> {
+    extends AbstractHttpClientTelemetryBuilder<
+        JavaHttpClientTelemetryBuilder, HttpRequest, HttpResponse<?>> {
 
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
 

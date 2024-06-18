@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import org.apache.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClientTelemetry}. */
 public final class ApacheHttpClientTelemetryBuilder
-    extends HttpClientConfigBuilder<
+    extends AbstractHttpClientTelemetryBuilder<
         ApacheHttpClientTelemetryBuilder, ApacheHttpClientRequest, HttpResponse> {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";

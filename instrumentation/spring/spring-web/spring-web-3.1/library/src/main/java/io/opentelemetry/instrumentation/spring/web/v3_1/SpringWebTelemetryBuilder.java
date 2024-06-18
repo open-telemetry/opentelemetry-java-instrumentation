@@ -6,13 +6,14 @@
 package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientConfigBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
 /** A builder of {@link SpringWebTelemetry}. */
 public final class SpringWebTelemetryBuilder
-    extends HttpClientConfigBuilder<SpringWebTelemetryBuilder, HttpRequest, ClientHttpResponse> {
+    extends AbstractHttpClientTelemetryBuilder<
+        SpringWebTelemetryBuilder, HttpRequest, ClientHttpResponse> {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-web-3.1";
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {

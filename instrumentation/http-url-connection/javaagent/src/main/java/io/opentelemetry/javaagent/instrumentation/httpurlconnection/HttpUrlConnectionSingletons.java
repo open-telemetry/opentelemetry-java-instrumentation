@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.HttpClientInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 import java.net.HttpURLConnection;
 
 public final class HttpUrlConnectionSingletons {
@@ -16,7 +16,7 @@ public final class HttpUrlConnectionSingletons {
 
   static {
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(
+        JavaagentHttpClientInstrumenterBuilder.create(
                 "io.opentelemetry.http-url-connection", new HttpUrlHttpAttributesGetter())
             .addAttributesExtractor(
                 HttpMethodAttributeExtractor.create(

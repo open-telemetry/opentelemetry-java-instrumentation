@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.HttpClientInstrumenterFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 
 public class GoogleHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.google-http-client-1.19";
@@ -17,7 +17,7 @@ public class GoogleHttpClientSingletons {
 
   static {
     INSTRUMENTER =
-        HttpClientInstrumenterFactory.builder(
+        JavaagentHttpClientInstrumenterBuilder.create(
                 INSTRUMENTATION_NAME, new GoogleHttpClientHttpAttributesGetter())
             .buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
   }
