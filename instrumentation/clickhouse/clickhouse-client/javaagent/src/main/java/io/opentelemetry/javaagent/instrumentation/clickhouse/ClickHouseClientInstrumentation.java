@@ -15,7 +15,6 @@ import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -46,9 +45,8 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This ClickHouseRequest<ClickHouseRequest.Mutation> clickHouseRequest,
+        @Advice.This ClickHouseRequest<?> clickHouseRequest,
         @Advice.Argument(0) String query,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (query == null) {
@@ -75,7 +73,6 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") ClickHouseDbRequest clickHouseRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -93,9 +90,8 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This ClickHouseRequest<ClickHouseRequest.Mutation> clickHouseRequest,
+        @Advice.This ClickHouseRequest<?> clickHouseRequest,
         @Advice.Argument(0) ClickHouseParameterizedQuery query,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (query == null) {
@@ -122,7 +118,6 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") ClickHouseDbRequest clickHouseRequest,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {

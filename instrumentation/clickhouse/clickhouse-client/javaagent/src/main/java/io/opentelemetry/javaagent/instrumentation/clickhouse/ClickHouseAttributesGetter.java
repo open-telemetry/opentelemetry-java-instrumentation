@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
 import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class ClickHouseAttributesGetter implements DbClientAttributesGetter<ClickHouseDbRequest> {
@@ -29,7 +30,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
   @Nullable
   @Override
   public String getSystem(ClickHouseDbRequest request) {
-    return "clickhouse";
+    return DbIncubatingAttributes.DbSystemValues.CLICKHOUSE;
   }
 
   @Nullable
