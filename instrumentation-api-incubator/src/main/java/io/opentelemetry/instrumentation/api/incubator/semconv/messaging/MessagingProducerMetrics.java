@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 /**
  * {@link OperationListener} which keeps track of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#http-server">Producer
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.26.0/docs/messaging/messaging-metrics.md#metric-messagingpublishduration">Producer
  * metrics</a>.
  */
 public final class MessagingProducerMetrics implements OperationListener {
