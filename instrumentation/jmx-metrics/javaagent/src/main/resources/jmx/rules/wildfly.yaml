@@ -67,7 +67,7 @@ rules:
     unit: "{transaction}"
     mapping:
       numberOfTransactions:
-        metric: transaction.NumberOfTransactions
+        metric: transaction.numberOfTransactions
       numberOfApplicationRollbacks:
         metric: rollback.count
         metricAttribute:
