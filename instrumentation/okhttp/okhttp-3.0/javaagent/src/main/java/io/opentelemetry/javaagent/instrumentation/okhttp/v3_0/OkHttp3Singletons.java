@@ -23,8 +23,10 @@ import okhttp3.Response;
 /** Holder of singleton interceptors for adding to instrumented clients. */
 public final class OkHttp3Singletons {
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER = JavaagentHttpClientInstrumenterBuilder.create(
-      OkHttpTelemetry.builder(GlobalOpenTelemetry.get())).buildInstrumenter(alwaysClient());
+  private static final Instrumenter<Request, Response> INSTRUMENTER =
+      JavaagentHttpClientInstrumenterBuilder.create(
+              OkHttpTelemetry.builder(GlobalOpenTelemetry.get()))
+          .buildInstrumenter(alwaysClient());
 
   public static final Interceptor CONTEXT_INTERCEPTOR =
       chain -> {

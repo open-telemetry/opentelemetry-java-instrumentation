@@ -12,8 +12,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import org.apache.hc.core5.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClient5Telemetry}. */
-public final class ApacheHttpClient5TelemetryBuilder extends
-    AbstractHttpClientTelemetryBuilder<ApacheHttpClient5TelemetryBuilder, ApacheHttpClient5Request, HttpResponse> {
+public final class ApacheHttpClient5TelemetryBuilder
+    extends AbstractHttpClientTelemetryBuilder<
+        ApacheHttpClient5TelemetryBuilder, ApacheHttpClient5Request, HttpResponse> {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.2";
 
@@ -26,7 +27,8 @@ public final class ApacheHttpClient5TelemetryBuilder extends
    * ApacheHttpClient5TelemetryBuilder}.
    */
   public ApacheHttpClient5Telemetry build() {
-    Instrumenter<ApacheHttpClient5Request, HttpResponse> instrumenter = instrumenterBuilder()
+    Instrumenter<ApacheHttpClient5Request, HttpResponse> instrumenter =
+        instrumenterBuilder()
             // We manually inject because we need to inject internal requests for redirects.
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 

@@ -14,7 +14,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /** A builder of {@link OkHttpTelemetry}. */
-public final class OkHttpTelemetryBuilder extends AbstractHttpClientTelemetryBuilder<OkHttpTelemetryBuilder, Request, Response>{
+public final class OkHttpTelemetryBuilder
+    extends AbstractHttpClientTelemetryBuilder<OkHttpTelemetryBuilder, Request, Response> {
 
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-3.0";
 
@@ -27,8 +28,6 @@ public final class OkHttpTelemetryBuilder extends AbstractHttpClientTelemetryBui
    */
   public OkHttpTelemetry build() {
     return new OkHttpTelemetry(
-        instrumenterBuilder().buildInstrumenter(
-            alwaysClient()),
-        openTelemetry.getPropagators());
+        instrumenterBuilder().buildInstrumenter(alwaysClient()), openTelemetry.getPropagators());
   }
 }
