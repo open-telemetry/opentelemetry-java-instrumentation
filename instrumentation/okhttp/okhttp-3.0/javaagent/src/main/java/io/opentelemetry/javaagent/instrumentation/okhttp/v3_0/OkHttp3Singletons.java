@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -25,8 +23,7 @@ public final class OkHttp3Singletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER =
       JavaagentHttpClientInstrumenterBuilder.create(
-              OkHttpTelemetry.builder(GlobalOpenTelemetry.get()))
-          .buildInstrumenter(alwaysClient());
+          OkHttpTelemetry.builder(GlobalOpenTelemetry.get()));
 
   public static final Interceptor CONTEXT_INTERCEPTOR =
       chain -> {

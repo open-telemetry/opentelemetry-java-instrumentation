@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 import java.net.HttpURLConnection;
+import java.util.Optional;
 
 public final class HttpUrlConnectionSingletons {
 
@@ -16,15 +17,18 @@ public final class HttpUrlConnectionSingletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpClientInstrumenterBuilder.create(
-                "io.opentelemetry.http-url-connection", new HttpUrlHttpAttributesGetter())
-            .addAttributesExtractor(
-                HttpMethodAttributeExtractor.create(
-                    CommonConfig.get().getKnownHttpRequestMethods()))
-            .addContextCustomizer(
-                (context, httpRequestPacket, startAttributes) ->
-                    GetOutputStreamContext.init(context))
-            .buildClientInstrumenter(RequestPropertySetter.INSTANCE);
+        JavaagentHttpClientInstrumenterBuilder.createWithCustomizer(
+            "io.opentelemetry.http-url-connection",
+            new HttpUrlHttpAttributesGetter(),
+            Optional.of(RequestPropertySetter.INSTANCE),
+            builder ->
+                builder
+                    .addAttributesExtractor(
+                        HttpMethodAttributeExtractor.create(
+                            CommonConfig.get().getKnownHttpRequestMethods()))
+                    .addContextCustomizer(
+                        (context, httpRequestPacket, startAttributes) ->
+                            GetOutputStreamContext.init(context)));
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {

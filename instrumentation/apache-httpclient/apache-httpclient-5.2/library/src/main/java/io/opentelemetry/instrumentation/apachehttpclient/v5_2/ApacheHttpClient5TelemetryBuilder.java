@@ -7,8 +7,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import java.util.Optional;
 import org.apache.hc.core5.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClient5Telemetry}. */
@@ -19,7 +18,12 @@ public final class ApacheHttpClient5TelemetryBuilder
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.2";
 
   ApacheHttpClient5TelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClient5HttpAttributesGetter.INSTANCE);
+    super(
+        INSTRUMENTATION_NAME,
+        openTelemetry,
+        ApacheHttpClient5HttpAttributesGetter.INSTANCE,
+        // We manually inject because we need to inject internal requests for redirects.
+        Optional.empty());
   }
 
   /**
@@ -27,11 +31,6 @@ public final class ApacheHttpClient5TelemetryBuilder
    * ApacheHttpClient5TelemetryBuilder}.
    */
   public ApacheHttpClient5Telemetry build() {
-    Instrumenter<ApacheHttpClient5Request, HttpResponse> instrumenter =
-        instrumenterBuilder()
-            // We manually inject because we need to inject internal requests for redirects.
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
-
-    return new ApacheHttpClient5Telemetry(instrumenter, openTelemetry.getPropagators());
+    return new ApacheHttpClient5Telemetry(instrumenter(), openTelemetry.getPropagators());
   }
 }

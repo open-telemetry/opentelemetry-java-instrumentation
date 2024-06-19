@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.HttpHeaderSetter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
+import java.util.Optional;
 import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -24,7 +25,11 @@ public final class JettyClientTelemetryBuilder
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(INSTRUMENTATION_NAME, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE);
+    super(
+        INSTRUMENTATION_NAME,
+        openTelemetry,
+        JettyClientHttpAttributesGetter.INSTANCE,
+        Optional.of(HttpHeaderSetter.INSTANCE));
   }
 
   @CanIgnoreReturnValue
@@ -46,10 +51,7 @@ public final class JettyClientTelemetryBuilder
    */
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(
-            instrumenterBuilder().buildClientInstrumenter(HttpHeaderSetter.INSTANCE),
-            sslContextFactory,
-            httpClientTransport);
+        TracingHttpClient.buildNew(instrumenter(), sslContextFactory, httpClientTransport);
 
     return new JettyClientTelemetry(tracingHttpClient);
   }

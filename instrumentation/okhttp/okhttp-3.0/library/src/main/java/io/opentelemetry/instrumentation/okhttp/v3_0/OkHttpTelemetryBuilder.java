@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpAttributesGetter;
+import java.util.Optional;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -20,14 +19,13 @@ public final class OkHttpTelemetryBuilder
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-3.0";
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE);
+    super(INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE, Optional.empty());
   }
 
   /**
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
   public OkHttpTelemetry build() {
-    return new OkHttpTelemetry(
-        instrumenterBuilder().buildInstrumenter(alwaysClient()), openTelemetry.getPropagators());
+    return new OkHttpTelemetry(instrumenter(), openTelemetry.getPropagators());
   }
 }

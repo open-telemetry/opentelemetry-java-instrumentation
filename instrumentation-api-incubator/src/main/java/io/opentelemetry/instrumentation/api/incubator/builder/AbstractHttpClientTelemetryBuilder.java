@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -14,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceRes
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
@@ -24,7 +26,9 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBu
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE> {
@@ -37,6 +41,7 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
   private final HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
+  private final Optional<TextMapSetter<REQUEST>> headerSetter;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
   private Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
@@ -45,12 +50,14 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
   public AbstractHttpClientTelemetryBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      Optional<TextMapSetter<REQUEST>> headerSetter) {
     this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
     this.attributesGetter = attributesGetter;
+    this.headerSetter = headerSetter;
   }
 
   /**
@@ -134,7 +141,12 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
-  public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder() {
+  public Instrumenter<REQUEST, RESPONSE> instrumenter() {
+    return instrumenter(b -> {});
+  }
+
+  public Instrumenter<REQUEST, RESPONSE> instrumenter(
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -150,8 +162,12 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
+    instrumenterBuilderConsumer.accept(builder);
 
-    return builder;
+    if (headerSetter.isPresent()) {
+      return builder.buildClientInstrumenter(headerSetter.get());
+    }
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   @SuppressWarnings("unchecked")

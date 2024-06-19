@@ -7,9 +7,12 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -22,17 +25,33 @@ public class JavaagentHttpClientInstrumenterBuilder<REQUEST, RESPONSE>
     extends AbstractHttpClientTelemetryBuilder<
         JavaagentHttpClientInstrumenterBuilder, REQUEST, RESPONSE> {
 
-  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       String instrumentationName,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return create(
-        new JavaagentHttpClientInstrumenterBuilder<>(
-            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter));
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      Optional<TextMapSetter<REQUEST>> headerSetter) {
+    return createWithCustomizer(
+        instrumentationName, httpAttributesGetter, headerSetter, customizer -> {});
   }
 
-  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       AbstractHttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder) {
+    return createWithCustomizer(builder, customizer -> {});
+  }
 
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createWithCustomizer(
+      String instrumentationName,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
+      Optional<TextMapSetter<REQUEST>> headerSetter,
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
+    return createWithCustomizer(
+        new JavaagentHttpClientInstrumenterBuilder<>(
+            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, headerSetter),
+        instrumenterBuilderConsumer);
+  }
+
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createWithCustomizer(
+      AbstractHttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder,
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     CommonConfig config = CommonConfig.get();
     set(config::getKnownHttpRequestMethods, builder::setKnownMethods);
     set(config::getClientRequestHeaders, builder::setCapturedRequestHeaders);
@@ -41,14 +60,15 @@ public class JavaagentHttpClientInstrumenterBuilder<REQUEST, RESPONSE>
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         builder::setEmitExperimentalHttpClientMetrics);
-    return builder.instrumenterBuilder();
+    return builder.instrumenter(instrumenterBuilderConsumer);
   }
 
   private JavaagentHttpClientInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    super(instrumentationName, openTelemetry, attributesGetter);
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      Optional<TextMapSetter<REQUEST>> headerSetter) {
+    super(instrumentationName, openTelemetry, attributesGetter, headerSetter);
   }
 
   private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {

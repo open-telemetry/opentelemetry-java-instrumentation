@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import java.util.Optional;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
@@ -27,11 +28,14 @@ public final class NettyClientSingletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpClientInstrumenterBuilder.create(
-                INSTRUMENTATION_NAME, new NettyHttpClientAttributesGetter())
-            .addContextCustomizer(
-                (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context))
-            .buildClientInstrumenter(HttpRequestHeadersSetter.INSTANCE);
+        JavaagentHttpClientInstrumenterBuilder.createWithCustomizer(
+            INSTRUMENTATION_NAME,
+            new NettyHttpClientAttributesGetter(),
+            Optional.empty(),
+            builder -> {
+              builder.addContextCustomizer(
+                  (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context));
+            });
 
     CONNECTION_INSTRUMENTER =
         Instrumenter.<NettyConnectionRequest, Channel>builder(

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.httpclient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
@@ -24,8 +23,7 @@ public class JavaHttpClientSingletons {
 
     INSTRUMENTER =
         JavaagentHttpClientInstrumenterBuilder.create(
-                JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get()))
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get()));
   }
 
   public static Instrumenter<HttpRequest, HttpResponse<?>> instrumenter() {

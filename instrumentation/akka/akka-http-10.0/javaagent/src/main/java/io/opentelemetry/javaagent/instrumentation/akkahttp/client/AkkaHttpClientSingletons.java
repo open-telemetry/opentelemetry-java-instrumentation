@@ -9,9 +9,9 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
+import java.util.Optional;
 
 public class AkkaHttpClientSingletons {
 
@@ -22,8 +22,9 @@ public class AkkaHttpClientSingletons {
     SETTER = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
     INSTRUMENTER =
         JavaagentHttpClientInstrumenterBuilder.create(
-                AkkaHttpUtil.instrumentationName(), new AkkaHttpClientAttributesGetter())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            AkkaHttpUtil.instrumentationName(),
+            new AkkaHttpClientAttributesGetter(),
+            Optional.empty());
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

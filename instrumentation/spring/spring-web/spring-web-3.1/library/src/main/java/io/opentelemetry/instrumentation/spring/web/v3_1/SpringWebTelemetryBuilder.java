@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.AbstractHttpClientTelemetryBuilder;
+import java.util.Optional;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
@@ -17,7 +18,11 @@ public final class SpringWebTelemetryBuilder
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-web-3.1";
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(INSTRUMENTATION_NAME, openTelemetry, SpringWebHttpAttributesGetter.INSTANCE);
+    super(
+        INSTRUMENTATION_NAME,
+        openTelemetry,
+        SpringWebHttpAttributesGetter.INSTANCE,
+        Optional.of(HttpRequestSetter.INSTANCE));
   }
 
   /**
@@ -25,7 +30,6 @@ public final class SpringWebTelemetryBuilder
    * SpringWebTelemetryBuilder}.
    */
   public SpringWebTelemetry build() {
-    return new SpringWebTelemetry(
-        instrumenterBuilder().buildClientInstrumenter(HttpRequestSetter.INSTANCE));
+    return new SpringWebTelemetry(instrumenter());
   }
 }
