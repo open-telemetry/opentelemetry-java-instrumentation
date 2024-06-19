@@ -19,14 +19,12 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 public final class JettyClientTelemetryBuilder
     extends AbstractHttpClientTelemetryBuilder<JettyClientTelemetryBuilder, Request, Response> {
 
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    super(
-        JettyClientTelemetry.INSTRUMENTATION_NAME,
-        openTelemetry,
-        JettyClientHttpAttributesGetter.INSTANCE);
+    super(INSTRUMENTATION_NAME, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE);
   }
 
   @CanIgnoreReturnValue

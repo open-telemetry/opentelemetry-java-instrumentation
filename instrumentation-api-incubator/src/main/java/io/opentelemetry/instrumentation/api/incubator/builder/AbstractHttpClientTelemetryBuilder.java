@@ -134,7 +134,7 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
-  protected InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder() {
+  public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder() {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 

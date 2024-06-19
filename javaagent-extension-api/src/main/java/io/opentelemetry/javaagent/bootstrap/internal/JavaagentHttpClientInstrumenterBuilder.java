@@ -20,15 +20,19 @@ import java.util.function.Supplier;
 @SuppressWarnings("rawtypes")
 public class JavaagentHttpClientInstrumenterBuilder<REQUEST, RESPONSE>
     extends AbstractHttpClientTelemetryBuilder<
-    JavaagentHttpClientInstrumenterBuilder, REQUEST, RESPONSE> {
+        JavaagentHttpClientInstrumenterBuilder, REQUEST, RESPONSE> {
 
   public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> create(
       String instrumentationName,
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-
-    JavaagentHttpClientInstrumenterBuilder<REQUEST, RESPONSE> builder =
+    return create(
         new JavaagentHttpClientInstrumenterBuilder<>(
-            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter);
+            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter));
+  }
+
+  public static <REQUEST, RESPONSE> InstrumenterBuilder<REQUEST, RESPONSE> create(
+      AbstractHttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder) {
+
     CommonConfig config = CommonConfig.get();
     set(config::getKnownHttpRequestMethods, builder::setKnownMethods);
     set(config::getClientRequestHeaders, builder::setCapturedRequestHeaders);

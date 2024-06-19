@@ -18,7 +18,7 @@ public final class JavaHttpClientTelemetryBuilder
     extends AbstractHttpClientTelemetryBuilder<
         JavaHttpClientTelemetryBuilder, HttpRequest, HttpResponse<?>> {
 
-  public static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     super(INSTRUMENTATION_NAME, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
