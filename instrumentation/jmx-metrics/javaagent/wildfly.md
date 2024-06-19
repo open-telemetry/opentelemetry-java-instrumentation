@@ -12,7 +12,6 @@ Here is the list of metrics based on MBeans exposed by Wildfly.
 | wildfly.session.rejectedSessions                   | Counter       | deployment                               | Number of rejected sessions                                             |
 | wildfly.session.sessionsCreated                    | Counter       | deployment                               | Total sessions created                                                  |
 | wildfly.session.activeSessions                     | UpDownCounter | deployment                               | Number of active sessions                                               |
-| wildfly.db.client.connection.usage                 | Gauge         | data_source, db.client.connections.state | The number of open jdbc connections                                     |
-| wildfly.db.client.connection.WaitCount             | Counter       | data_source                              | The number of requests that had to wait to obtain a physical connection |
+| wildfly.db.client.connection.count                 | Gauge         | data_source, db.client.connections.state | The number of open jdbc connections                                     |
 | wildfly.db.client.rollback.count                   | Counter       | cause                                    | The total number of transactions rolled back                            |
 | wildfly.db.client.transaction.NumberOfTransactions | Counter       |                                          | The total number of transactions (top-level and nested) created         |

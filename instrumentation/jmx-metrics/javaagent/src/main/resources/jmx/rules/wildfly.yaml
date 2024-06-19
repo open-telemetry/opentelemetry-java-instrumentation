@@ -51,16 +51,17 @@ rules:
         metric: wildfly.db.client.connection.count
         metricAttribute:
           db.client.connection.state: const(used)
-        desc: The number of open jdbc connections
+        desc: The number of in-use physical jdbc connections
       IdleCount:
-        metric: wildfly.db.client.connections.usage
+        metric: wildfly.db.client.connections.count
         metricAttribute:
           db.client.connection.state: const(idle)
-        desc: The number of idle jdbc connections
+        desc: The number of idle physical jdbc connections
       WaitCount:
-        metric: wildfly.db.client.connections.WaitCount
-        type: counter
-        desc: The number of waiting jdbc connections
+        metric: wildfly.db.client.connection.count
+        metricAttribute:
+          db.client.connection.state: const(idle)
+        desc: The number of waiting logical jdbc connections
   - bean: jboss.as:subsystem=transactions
     type: counter
     prefix: wildfly.db.client.
