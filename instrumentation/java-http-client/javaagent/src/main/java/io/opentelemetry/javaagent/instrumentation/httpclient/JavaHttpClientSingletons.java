@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientAttributesGetter;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
@@ -23,7 +24,7 @@ public class JavaHttpClientSingletons {
     SETTER = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
 
     INSTRUMENTER =
-        ConfiguredHttpClientInstrumenterBuilder.create(
+        JavaagentHttpClientInstrumenterBuilder.create(
                 JavaHttpClientTelemetryBuilder.INSTRUMENTATION_NAME,
                 JavaHttpClientAttributesGetter.INSTANCE)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
