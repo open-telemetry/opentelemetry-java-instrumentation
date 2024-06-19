@@ -77,43 +77,32 @@ public class CountedInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Origin Method originMethod,
-        @Advice.Local("otelMethod") Method method,
+        @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
         @Advice.Local("otelRequest") MethodRequest request) {
-
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to local variable so that there would be only one call to Class.getMethod.
-      method = originMethod;
       request = new MethodRequest(method, args);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Local("otelMethod") Method method,
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      CountedHelper.recordCountWithAttributes(request, returnValue, throwable);
+      returnValue = CountedHelper.recordCountWithAttributes(request, returnValue, throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class CountedAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Origin Method originMethod, @Advice.Local("otelMethod") Method method) {
-      // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
-      // to local variable so that there would be only one call to Class.getMethod.
-      method = originMethod;
-    }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Local("otelMethod") Method method,
+        @Advice.Origin Method method,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      CountedHelper.recordCount(method, returnValue, throwable);
+      returnValue = CountedHelper.recordCount(method, returnValue, throwable);
     }
   }
 }

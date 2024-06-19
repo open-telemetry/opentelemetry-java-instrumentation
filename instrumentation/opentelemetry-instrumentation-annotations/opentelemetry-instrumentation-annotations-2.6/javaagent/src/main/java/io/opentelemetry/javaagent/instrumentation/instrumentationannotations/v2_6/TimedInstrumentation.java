@@ -77,27 +77,24 @@ public class TimedInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Origin Method originMethod,
-        @Advice.Local("otelMethod") Method method,
+        @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("startNanoTime") long startNanoTime) {
-
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to local variable so that there would be only one call to Class.getMethod.
-      method = originMethod;
       request = new MethodRequest(method, args);
       startNanoTime = System.nanoTime();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Local("otelMethod") Method method,
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("startNanoTime") long startNanoTime,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      TimedHelper.recordHistogramWithAttributes(request, throwable, returnValue, startNanoTime);
+      returnValue =
+          TimedHelper.recordHistogramWithAttributes(request, returnValue, throwable, startNanoTime);
     }
   }
 
@@ -121,7 +118,7 @@ public class TimedInstrumentation implements TypeInstrumentation {
         @Advice.Local("startNanoTime") long startNanoTime,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      TimedHelper.recordHistogram(method, throwable, returnValue, startNanoTime);
+      returnValue = TimedHelper.recordHistogram(method, returnValue, throwable, startNanoTime);
     }
   }
 }

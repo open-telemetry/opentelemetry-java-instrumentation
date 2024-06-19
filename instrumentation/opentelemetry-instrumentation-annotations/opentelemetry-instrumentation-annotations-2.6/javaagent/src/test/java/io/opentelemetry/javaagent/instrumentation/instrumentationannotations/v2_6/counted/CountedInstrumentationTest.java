@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -143,5 +144,31 @@ class CountedInstrumentationTest {
     new CountedExample().exampleIgnore();
     Thread.sleep(500); // sleep a bit just to make sure no metric is captured
     assertThat(testing.metrics()).isEmpty();
+  }
+
+  @Test
+  void testCompletableFuture() throws Exception {
+    CompletableFuture<String> future = new CompletableFuture<>();
+    new CountedExample().completableFuture(future);
+
+    Thread.sleep(500); // sleep a bit just to make sure no metric is captured
+    assertThat(testing.metrics()).isEmpty();
+
+    future.complete("Done");
+
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("example.completable.future.count")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    "Done"
+                                        .equals(
+                                            p.getAttributes()
+                                                .get(AttributeKey.stringKey("returnValue"))))));
   }
 }

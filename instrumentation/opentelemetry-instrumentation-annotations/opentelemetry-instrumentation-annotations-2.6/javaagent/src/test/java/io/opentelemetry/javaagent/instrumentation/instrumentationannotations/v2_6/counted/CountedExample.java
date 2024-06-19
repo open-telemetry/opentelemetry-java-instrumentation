@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted;
 
 import io.opentelemetry.instrumentation.annotations.Counted;
+import java.util.concurrent.CompletableFuture;
 
 public class CountedExample {
 
@@ -45,6 +46,11 @@ public class CountedExample {
 
   @Counted("example.ignore.count")
   public void exampleIgnore() {}
+
+  @Counted(value = "example.completable.future.count", returnValueAttribute = "returnValue")
+  public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
+    return future;
+  }
 
   public static class ReturnObject {
     @Override

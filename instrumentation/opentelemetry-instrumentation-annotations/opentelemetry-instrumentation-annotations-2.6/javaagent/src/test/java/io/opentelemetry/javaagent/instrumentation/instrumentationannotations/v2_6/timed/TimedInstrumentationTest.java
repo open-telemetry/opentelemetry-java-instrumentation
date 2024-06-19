@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -150,5 +151,31 @@ class TimedInstrumentationTest {
                                     TimedExample.RETURN_STRING.equals(
                                         p.getAttributes()
                                             .get(AttributeKey.stringKey("returnValue"))))));
+  }
+
+  @Test
+  void testCompletableFuture() throws Exception {
+    CompletableFuture<String> future = new CompletableFuture<>();
+    new TimedExample().completableFuture(future);
+
+    Thread.sleep(500); // sleep a bit just to make sure no metric is captured
+    assertThat(testing.metrics()).isEmpty();
+
+    future.complete("Done");
+
+    testing.waitAndAssertMetrics(
+        TIMED_INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("example.completable.future.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    "Done"
+                                        .equals(
+                                            p.getAttributes()
+                                                .get(AttributeKey.stringKey("returnValue"))))));
   }
 }

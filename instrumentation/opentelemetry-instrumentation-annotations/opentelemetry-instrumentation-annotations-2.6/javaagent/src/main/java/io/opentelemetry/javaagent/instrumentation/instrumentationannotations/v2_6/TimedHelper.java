@@ -11,11 +11,14 @@ import application.io.opentelemetry.instrumentation.annotations.Timed;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public final class TimedHelper extends MetricsAnnotationHelper {
 
@@ -27,23 +30,40 @@ public final class TimedHelper extends MetricsAnnotationHelper {
         }
       };
 
-  public static void recordHistogramWithAttributes(
-      MethodRequest methodRequest, Throwable throwable, Object returnValue, long startNanoTime) {
-    Timed timedAnnotation = methodRequest.method().getAnnotation(Timed.class);
-    AttributesBuilder attributesBuilder =
-        getCommonAttributeBuilder(throwable, returnValue, timedAnnotation);
-    double duration = getTransformedDuration(startNanoTime, timedAnnotation);
-    extractMetricAttributes(methodRequest, attributesBuilder);
-    getHistogram(methodRequest.method()).record(duration, attributesBuilder.build());
+  public static Object recordHistogramWithAttributes(
+      MethodRequest methodRequest, Object returnValue, Throwable throwable, long startNanoTime) {
+    return recordHistogram(
+        methodRequest.method(),
+        returnValue,
+        throwable,
+        startNanoTime,
+        attributesBuilder -> extractMetricAttributes(methodRequest, attributesBuilder));
   }
 
-  public static void recordHistogram(
-      Method method, Throwable throwable, Object returnValue, long startNanoTime) {
-    Timed timedAnnotation = method.getAnnotation(Timed.class);
-    AttributesBuilder attributesBuilder =
-        getCommonAttributeBuilder(throwable, returnValue, timedAnnotation);
-    double duration = getTransformedDuration(startNanoTime, timedAnnotation);
-    getHistogram(method).record(duration, attributesBuilder.build());
+  public static Object recordHistogram(
+      Method method, Object returnValue, Throwable throwable, long startNanoTime) {
+    return recordHistogram(method, returnValue, throwable, startNanoTime, attributesBuilder -> {});
+  }
+
+  public static Object recordHistogram(
+      Method method,
+      Object returnValue,
+      Throwable throwable,
+      long startNanoTime,
+      Consumer<AttributesBuilder> additionalAttributes) {
+    AsyncOperationEndSupport<Method, Object> operationEndSupport =
+        AsyncOperationEndSupport.create(
+            (context, method1, object, error) -> {
+              Timed timedAnnotation = method.getAnnotation(Timed.class);
+              AttributesBuilder attributesBuilder =
+                  getCommonAttributeBuilder(error, object, timedAnnotation);
+              additionalAttributes.accept(attributesBuilder);
+              double duration = getTransformedDuration(startNanoTime, timedAnnotation);
+              getHistogram(method).record(duration, attributesBuilder.build());
+            },
+            Object.class,
+            method.getReturnType());
+    return operationEndSupport.asyncEnd(Context.current(), method, returnValue, throwable);
   }
 
   private static AttributesBuilder getCommonAttributeBuilder(
@@ -69,8 +89,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
 
   private static void extractReturnValue(
       Timed countedAnnotation, Object returnValue, AttributesBuilder attributesBuilder) {
-    if (null != countedAnnotation.returnValueAttribute()
-        && !countedAnnotation.returnValueAttribute().isEmpty()) {
+    if (returnValue != null && !countedAnnotation.returnValueAttribute().isEmpty()) {
       attributesBuilder.put(countedAnnotation.returnValueAttribute(), returnValue.toString());
     }
   }

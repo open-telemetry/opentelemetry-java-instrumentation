@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed;
 
 import io.opentelemetry.instrumentation.annotations.Timed;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class TimedExample {
@@ -45,6 +46,11 @@ public class TimedExample {
   @Timed(value = "example.with.return.duration", returnValueAttribute = "returnValue")
   public ReturnObject exampleWithReturnValueAttribute() {
     return new ReturnObject();
+  }
+
+  @Timed(value = "example.completable.future.duration", returnValueAttribute = "returnValue")
+  public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
+    return future;
   }
 
   public static class ReturnObject {

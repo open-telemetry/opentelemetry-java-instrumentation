@@ -9,10 +9,13 @@ import application.io.opentelemetry.instrumentation.annotations.Counted;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public final class CountedHelper extends MetricsAnnotationHelper {
 
@@ -24,20 +27,36 @@ public final class CountedHelper extends MetricsAnnotationHelper {
         }
       };
 
-  public static void recordCountWithAttributes(
+  public static Object recordCountWithAttributes(
       MethodRequest methodRequest, Object returnValue, Throwable throwable) {
-    Counted countedAnnotation = methodRequest.method().getAnnotation(Counted.class);
-    AttributesBuilder attributesBuilder =
-        getCommonAttributesBuilder(countedAnnotation, returnValue, throwable);
-    extractMetricAttributes(methodRequest, attributesBuilder);
-    getCounter(methodRequest.method()).add(1, attributesBuilder.build());
+    return recordCount(
+        methodRequest.method(),
+        returnValue,
+        throwable,
+        attributesBuilder -> extractMetricAttributes(methodRequest, attributesBuilder));
   }
 
-  public static void recordCount(Method method, Object returnValue, Throwable throwable) {
-    Counted countedAnnotation = method.getAnnotation(Counted.class);
-    AttributesBuilder attributesBuilder =
-        getCommonAttributesBuilder(countedAnnotation, returnValue, throwable);
-    getCounter(method).add(1, attributesBuilder.build());
+  public static Object recordCount(Method method, Object returnValue, Throwable throwable) {
+    return recordCount(method, returnValue, throwable, attributesBuilder -> {});
+  }
+
+  private static Object recordCount(
+      Method method,
+      Object returnValue,
+      Throwable throwable,
+      Consumer<AttributesBuilder> additionalAttributes) {
+    AsyncOperationEndSupport<Method, Object> operationEndSupport =
+        AsyncOperationEndSupport.create(
+            (context, method1, object, error) -> {
+              Counted countedAnnotation = method1.getAnnotation(Counted.class);
+              AttributesBuilder attributesBuilder =
+                  getCommonAttributesBuilder(countedAnnotation, object, error);
+              additionalAttributes.accept(attributesBuilder);
+              getCounter(method1).add(1, attributesBuilder.build());
+            },
+            Object.class,
+            method.getReturnType());
+    return operationEndSupport.asyncEnd(Context.current(), method, returnValue, throwable);
   }
 
   private static AttributesBuilder getCommonAttributesBuilder(
@@ -57,8 +76,7 @@ public final class CountedHelper extends MetricsAnnotationHelper {
 
   private static void extractReturnValue(
       Counted countedAnnotation, Object returnValue, AttributesBuilder attributesBuilder) {
-    if (null != countedAnnotation.returnValueAttribute()
-        && !countedAnnotation.returnValueAttribute().isEmpty()) {
+    if (returnValue != null && !countedAnnotation.returnValueAttribute().isEmpty()) {
       attributesBuilder.put(countedAnnotation.returnValueAttribute(), returnValue.toString());
     }
   }
