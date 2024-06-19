@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.javalin.v5_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -31,7 +30,7 @@ public class JavalinInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("handle").and(takesArgument(0, named("io.javalin.http.Context"))),
+        named("handle").and(takesArgument(0, named("io.javalin.http.Context"))),
         this.getClass().getName() + "$HandlerAdapterAdvice");
   }
 
