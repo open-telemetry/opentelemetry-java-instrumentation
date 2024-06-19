@@ -95,6 +95,7 @@ public class AgentStarterImpl implements AgentStarter {
     try {
       loggingCustomizer.init(earlyConfig);
       earlyConfig.logEarlyConfigErrorsIfAny();
+      ExtensionClassLoader.logWarningIfAny();
 
       AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader, earlyConfig);
       WeakConcurrentMapCleaner.start();
