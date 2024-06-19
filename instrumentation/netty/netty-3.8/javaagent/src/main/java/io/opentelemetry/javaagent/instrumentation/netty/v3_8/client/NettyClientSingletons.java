@@ -31,7 +31,7 @@ public final class NettyClientSingletons {
         JavaagentHttpClientInstrumenterBuilder.createWithCustomizer(
             INSTRUMENTATION_NAME,
             new NettyHttpClientAttributesGetter(),
-            Optional.empty(),
+            Optional.of(HttpRequestHeadersSetter.INSTANCE),
             builder -> {
               builder.addContextCustomizer(
                   (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context));
