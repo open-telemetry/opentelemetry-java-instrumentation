@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.javalin.v5_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import io.javalin.Javalin;
 import io.opentelemetry.api.trace.SpanKind;
@@ -42,9 +41,7 @@ class JavalinTest {
   @BeforeAll
   static void setup() {
     port = PortUtils.findOpenPort();
-
     app = TestJavalinJavaApplication.initJavalin(port);
-
     client = WebClient.of("http://localhost:" + port);
   }
 
@@ -59,8 +56,8 @@ class JavalinTest {
     AggregatedHttpResponse response = client.get("/param/" + id).aggregate().join();
     String content = response.contentUtf8();
 
-    assertNotEquals(port, 0);
-    assertEquals(content, id);
+    assertThat(content).isEqualTo(id);
+    assertThat(response.status().code()).isEqualTo(200);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -91,7 +88,6 @@ class JavalinTest {
   void testSpanNameAndHttpRouteSpanResponseError() {
     client.get("/error").aggregate().join();
 
-    assertNotEquals(port, 0);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -121,9 +117,9 @@ class JavalinTest {
 
   @Test
   public void testSpanNameAndHttpRouteSpanAsyncRouteResponseSuccessful() {
-    client.get("/async").aggregate().join();
+    AggregatedHttpResponse response = client.get("/async").aggregate().join();
 
-    assertNotEquals(port, 0);
+    assertThat(response.status().code()).isEqualTo(200);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -157,22 +153,18 @@ class JavalinTest {
     String content = response.contentUtf8();
     String instrumentation = "io.opentelemetry.jetty-11.0";
 
-    assertNotEquals(port, 0);
-    assertEquals(content, id);
-
+    assertThat(content).isEqualTo(id);
+    assertThat(response.status().code()).isEqualTo(200);
     testing.waitAndAssertMetrics(
         instrumentation,
         "http.server.request.duration",
         metrics ->
             metrics.anySatisfy(
-                metric -> {
-                  String metricHttpRoute =
-                      metric.getData().getPoints().stream()
-                          .findFirst()
-                          .get()
-                          .getAttributes()
-                          .get(HTTP_ROUTE);
-                  assertEquals("/param/{id}", metricHttpRoute);
-                }));
+                metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}")))));
   }
 }
