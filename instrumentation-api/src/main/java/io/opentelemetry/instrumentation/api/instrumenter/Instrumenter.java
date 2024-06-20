@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -40,6 +41,9 @@ import javax.annotation.Nullable;
  * the Instrumenter API</a> page.
  */
 public class Instrumenter<REQUEST, RESPONSE> {
+
+  private static final ContextKey<OperationListener[]> START_OPERATION_LISTENERS =
+      ContextKey.named("instrumenter-start-operation-listeners");
 
   /**
    * Returns a new {@link InstrumenterBuilder}.
@@ -197,6 +201,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       for (int i = 0; i < operationListeners.length; i++) {
         context = operationListeners[i].onStart(context, attributes, startNanos);
       }
+      // when start and end are not called on the same instrumenter we need to use the operation
+      // listeners that were used during start in end too to correctly handle metrics like
+      // http.server.active_requests that is recorded both in start and end
+      context = context.with(START_OPERATION_LISTENERS, operationListeners);
     }
 
     if (localRoot) {
@@ -228,10 +236,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     span.setAllAttributes(attributes);
 
-    if (operationListeners.length != 0) {
+    OperationListener[] startOperationListeners = context.get(START_OPERATION_LISTENERS);
+    if (startOperationListeners != null) {
       long endNanos = getNanos(endTime);
-      for (int i = operationListeners.length - 1; i >= 0; i--) {
-        operationListeners[i].onEnd(context, attributes, endNanos);
+      for (int i = startOperationListeners.length - 1; i >= 0; i--) {
+        startOperationListeners[i].onEnd(context, attributes, endNanos);
       }
     }
 
