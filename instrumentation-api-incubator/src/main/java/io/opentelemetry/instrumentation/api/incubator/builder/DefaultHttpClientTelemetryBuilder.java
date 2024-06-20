@@ -31,10 +31,12 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE> {
+public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
+    implements HttpClientTelemetryBuilder<
+        DefaultHttpClientTelemetryBuilder<?, ?>, REQUEST, RESPONSE> {
 
   private final String instrumentationName;
-  protected final OpenTelemetry openTelemetry;
+  private final OpenTelemetry openTelemetry;
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
@@ -47,7 +49,7 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
       spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
 
-  public AbstractHttpClientTelemetryBuilder(
+  public DefaultHttpClientTelemetryBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
@@ -60,83 +62,60 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
     this.headerSetter = headerSetter;
   }
 
-  /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items. The {@link AttributesExtractor} will be executed after all default extractors.
-   */
+  @Override
   @CanIgnoreReturnValue
-  public SELF addAttributeExtractor(
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> addAttributeExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
-    return self();
+    return this;
   }
 
-  /**
-   * Configures the HTTP request headers that will be captured as span attributes.
-   *
-   * @param requestHeaders A list of HTTP header names.
-   */
+  @Override
   @CanIgnoreReturnValue
-  public SELF setCapturedRequestHeaders(List<String> requestHeaders) {
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
+      List<String> requestHeaders) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
-    return self();
+    return this;
   }
 
-  /**
-   * Configures the HTTP response headers that will be captured as span attributes.
-   *
-   * @param responseHeaders A list of HTTP header names.
-   */
+  @Override
   @CanIgnoreReturnValue
-  public SELF setCapturedResponseHeaders(List<String> responseHeaders) {
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
+      List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
-    return self();
+    return this;
   }
 
-  /**
-   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
-   *
-   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
-   *
-   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
-   * not supplement it.
-   *
-   * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
-   */
+  @Override
   @CanIgnoreReturnValue
-  public SELF setKnownMethods(Set<String> knownMethods) {
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setKnownMethods(
+      Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
-    return self();
+    return this;
   }
 
-  /**
-   * Configures the instrumentation to emit experimental HTTP client metrics.
-   *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
-   */
+  @Override
   @CanIgnoreReturnValue
-  public SELF setEmitExperimentalHttpClientMetrics(boolean emitExperimentalHttpClientMetrics) {
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setEmitExperimentalHttpClientMetrics(
+      boolean emitExperimentalHttpClientMetrics) {
     this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
-    return self();
+    return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
-  public SELF setSpanNameExtractor(
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
       Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
           spanNameExtractorTransformer) {
     this.spanNameExtractorTransformer = spanNameExtractorTransformer;
-    return self();
+    return this;
   }
 
   /** Sets custom {@link PeerServiceResolver}. */
   @CanIgnoreReturnValue
-  public SELF setPeerServiceResolver(PeerServiceResolver peerServiceResolver) {
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setPeerServiceResolver(
+      PeerServiceResolver peerServiceResolver) {
     return addAttributeExtractor(
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
@@ -170,8 +149,7 @@ public abstract class AbstractHttpClientTelemetryBuilder<SELF, REQUEST, RESPONSE
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  @SuppressWarnings("unchecked")
-  private SELF self() {
-    return (SELF) this;
+  public OpenTelemetry getOpenTelemetry() {
+    return openTelemetry;
   }
 }
