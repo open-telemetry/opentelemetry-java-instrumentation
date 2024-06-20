@@ -131,6 +131,7 @@ include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-incubator")
 include(":instrumentation-annotations")
+include(":instrumentation-annotations-incubator")
 include(":instrumentation-annotations-support")
 include(":instrumentation-annotations-support-testing")
 

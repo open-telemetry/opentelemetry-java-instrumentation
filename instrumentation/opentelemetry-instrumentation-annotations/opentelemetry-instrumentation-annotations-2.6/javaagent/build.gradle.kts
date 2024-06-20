@@ -9,7 +9,7 @@ plugins {
 muzzle {
   pass {
     group.set("io.opentelemetry")
-    module.set("opentelemetry-instrumentation-annotations")
+    module.set("opentelemetry-instrumentation-annotations-incubator")
     versions.set("(,)")
   }
 }
@@ -25,7 +25,7 @@ dependencies {
   // see the comment in opentelemetry-api-1.0.gradle for more details
   compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
-  testImplementation(project(":instrumentation-annotations"))
+  testImplementation(project(":instrumentation-annotations-incubator"))
   testImplementation(project(":instrumentation-annotations-support"))
 }
 
