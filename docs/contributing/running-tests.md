@@ -38,6 +38,18 @@ To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradle
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <GROOVY TEST FILE NAME>` will run only the selected test.
 
+### How to prevent linting and formatting warnings from failing tests
+
+During local development, you may want to ignore lint warnings when running tests.
+
+To ignore warnings, formatting issues, or other non-fatal issues in tests, use
+
+```
+./gradlew test -Ddev=true -x spotlessCheck -x checkstyleMain
+```
+
+The `dev` flag will ignore warnings in tests.
+
 ## Smoke tests
 
 The smoke tests are not run as part of a global `test` task run since they take a long time and are

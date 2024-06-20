@@ -38,6 +38,7 @@ abstract class TestLatestDepsRule : ComponentMetadataRule {
       || version.contains("-beta", true)
       || version.contains("-rc", true)
       || version.contains("-m", true) // e.g. spring milestones are published to grails repo
+      || version.contains(".m", true) // e.g. lettuce
       || version.contains(".alpha", true) // e.g. netty
       || version.contains(".beta", true) // e.g. hibernate
       || version.contains(".cr", true) // e.g. hibernate
