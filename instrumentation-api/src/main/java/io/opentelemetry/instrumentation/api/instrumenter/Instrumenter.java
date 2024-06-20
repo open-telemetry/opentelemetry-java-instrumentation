@@ -201,11 +201,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
       for (int i = 0; i < operationListeners.length; i++) {
         context = operationListeners[i].onStart(context, attributes, startNanos);
       }
-      // when start and end are not called on the same instrumenter we need to use the operation
-      // listeners that were used during start in end too to correctly handle metrics like
-      // http.server.active_requests that is recorded both in start and end
-      context = context.with(START_OPERATION_LISTENERS, operationListeners);
     }
+    // when start and end are not called on the same instrumenter we need to use the operation
+    // listeners that were used during start in end too to correctly handle metrics like
+    // http.server.active_requests that is recorded both in start and end
+    context = context.with(START_OPERATION_LISTENERS, operationListeners);
 
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
@@ -237,7 +237,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     span.setAllAttributes(attributes);
 
     OperationListener[] startOperationListeners = context.get(START_OPERATION_LISTENERS);
-    if (startOperationListeners != null) {
+    if (startOperationListeners != null && startOperationListeners.length != 0) {
       long endNanos = getNanos(endTime);
       for (int i = startOperationListeners.length - 1; i >= 0; i--) {
         startOperationListeners[i].onEnd(context, attributes, endNanos);
