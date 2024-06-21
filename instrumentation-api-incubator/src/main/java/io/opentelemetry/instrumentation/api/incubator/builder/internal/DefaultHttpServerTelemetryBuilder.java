@@ -44,7 +44,7 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
   private Function<
-      SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
           ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
       statusExtractorTransformer = Function.identity();
   private final HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE>
@@ -58,8 +58,10 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
   private boolean emitExperimentalHttpServerMetrics = false;
 
   public DefaultHttpServerTelemetryBuilder(
-      String instrumentationName, OpenTelemetry openTelemetry, HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-            Optional<TextMapGetter<REQUEST>> headerSetter) {
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      Optional<TextMapGetter<REQUEST>> headerSetter) {
     this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
     httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
@@ -83,7 +85,7 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setStatusExtractor(
       Function<
-          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+              SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
               ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
           statusExtractor) {
     this.statusExtractorTransformer = statusExtractor;
@@ -96,7 +98,8 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(List<String> requestHeaders) {
+  public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
+      List<String> requestHeaders) {
     httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -107,7 +110,8 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(List<String> responseHeaders) {
+  public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
+      List<String> responseHeaders) {
     httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -126,7 +130,8 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
-  public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setKnownMethods(Set<String> knownMethods) {
+  public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setKnownMethods(
+      Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     httpServerRouteBuilder.setKnownMethods(knownMethods);
@@ -156,19 +161,19 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> instrumenter() {
-      return instrumenter(b -> {});
+    return instrumenter(b -> {});
+  }
+
+  public Instrumenter<REQUEST, RESPONSE> instrumenter(
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
+
+    InstrumenterBuilder<REQUEST, RESPONSE> builder =
+        instrumenterBuilder(instrumenterBuilderConsumer);
+
+    if (headerSetter.isPresent()) {
+      return builder.buildServerInstrumenter(headerSetter.get());
     }
-
-    public Instrumenter<REQUEST, RESPONSE> instrumenter(
-        Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
-
-      InstrumenterBuilder<REQUEST, RESPONSE> builder = instrumenterBuilder(
-          instrumenterBuilderConsumer);
-
-      if (headerSetter.isPresent()) {
-        return builder.buildServerInstrumenter(headerSetter.get());
-      }
-      return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(
@@ -179,7 +184,8 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
-            .setSpanStatusExtractor(statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
+            .setSpanStatusExtractor(
+                statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())

@@ -27,15 +27,22 @@ public final class SpringWebfluxTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.3";
 
   private final DefaultHttpClientTelemetryBuilder<ClientRequest, ClientResponse> clientBuilder;
-  private final DefaultHttpServerTelemetryBuilder<ServerWebExchange, ServerWebExchange> serverBuilder;
+  private final DefaultHttpServerTelemetryBuilder<ServerWebExchange, ServerWebExchange>
+      serverBuilder;
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
-              openTelemetry,
-        WebClientHttpAttributesGetter.INSTANCE,
-        Optional.empty());
-          serverBuilder = new DefaultHttpServerTelemetryBuilder<>(INSTRUMENTATION_NAME, openTelemetry,
-              WebfluxServerHttpAttributesGetter.INSTANCE, Optional.of(WebfluxTextMapGetter.INSTANCE));
+    clientBuilder =
+        new DefaultHttpClientTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            WebClientHttpAttributesGetter.INSTANCE,
+            Optional.empty());
+    serverBuilder =
+        new DefaultHttpServerTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            WebfluxServerHttpAttributesGetter.INSTANCE,
+            Optional.of(WebfluxTextMapGetter.INSTANCE));
   }
 
   /**

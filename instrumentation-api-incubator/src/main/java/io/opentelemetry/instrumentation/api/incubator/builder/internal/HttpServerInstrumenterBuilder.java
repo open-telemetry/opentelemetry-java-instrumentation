@@ -22,12 +22,12 @@ public class HttpServerInstrumenterBuilder {
   public static <REQUEST, RESPONSE> DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> configure(
       CoreCommonConfig config, Object builder) {
     DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
-       set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
-       set(config::getServerRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
-       set(config::getServerResponseHeaders, defaultBuilder::setCapturedResponseHeaders);
-       set(
-           config::shouldEmitExperimentalHttpServerTelemetry,
-           defaultBuilder::setEmitExperimentalHttpServerMetrics);
+    set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
+    set(config::getServerRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
+    set(config::getServerResponseHeaders, defaultBuilder::setCapturedResponseHeaders);
+    set(
+        config::shouldEmitExperimentalHttpServerTelemetry,
+        defaultBuilder::setEmitExperimentalHttpServerMetrics);
     return defaultBuilder;
   }
 

@@ -40,12 +40,18 @@ public final class ArmeriaTelemetryBuilder {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   ArmeriaTelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
-        openTelemetry,
-        (HttpClientAttributesGetter)ArmeriaHttpClientAttributesGetter.INSTANCE,
-        Optional.of(ClientRequestContextSetter.INSTANCE));
-    serverBuilder = new DefaultHttpServerTelemetryBuilder<>(INSTRUMENTATION_NAME, openTelemetry,
-        (HttpServerAttributesGetter)ArmeriaHttpServerAttributesGetter.INSTANCE, Optional.of(RequestContextGetter.INSTANCE));
+    clientBuilder =
+        new DefaultHttpClientTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            (HttpClientAttributesGetter) ArmeriaHttpClientAttributesGetter.INSTANCE,
+            Optional.of(ClientRequestContextSetter.INSTANCE));
+    serverBuilder =
+        new DefaultHttpServerTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            (HttpServerAttributesGetter) ArmeriaHttpServerAttributesGetter.INSTANCE,
+            Optional.of(RequestContextGetter.INSTANCE));
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -55,8 +61,8 @@ public final class ArmeriaTelemetryBuilder {
               SpanStatusExtractor<RequestContext, RequestLog>,
               ? extends SpanStatusExtractor<? super RequestContext, ? super RequestLog>>
           statusExtractor) {
-    clientBuilder.setStatusExtractor((Function)statusExtractor);
-    serverBuilder.setStatusExtractor((Function)statusExtractor);
+    clientBuilder.setStatusExtractor((Function) statusExtractor);
+    serverBuilder.setStatusExtractor((Function) statusExtractor);
     return this;
   }
 
@@ -69,7 +75,7 @@ public final class ArmeriaTelemetryBuilder {
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
     clientBuilder.addAttributeExtractor(attributesExtractor);
-    serverBuilder.addAttributesExtractor((AttributesExtractor)attributesExtractor);
+    serverBuilder.addAttributesExtractor((AttributesExtractor) attributesExtractor);
     return this;
   }
 
@@ -193,7 +199,7 @@ public final class ArmeriaTelemetryBuilder {
               SpanNameExtractor<RequestContext>,
               ? extends SpanNameExtractor<? super RequestContext>>
           clientSpanNameExtractor) {
-    clientBuilder.setSpanNameExtractor((Function)clientSpanNameExtractor);
+    clientBuilder.setSpanNameExtractor((Function) clientSpanNameExtractor);
     return this;
   }
 
@@ -205,18 +211,19 @@ public final class ArmeriaTelemetryBuilder {
               SpanNameExtractor<RequestContext>,
               ? extends SpanNameExtractor<? super RequestContext>>
           serverSpanNameExtractor) {
-    serverBuilder.setSpanNameExtractor((Function)serverSpanNameExtractor);
+    serverBuilder.setSpanNameExtractor((Function) serverSpanNameExtractor);
     return this;
   }
 
   public ArmeriaTelemetry build() {
     return new ArmeriaTelemetry(
-        clientBuilder.instrumenter(clientInstrumenterBuilder -> {
-          if (peerService != null) {
-               clientInstrumenterBuilder.addAttributesExtractor(
-                   AttributesExtractor.constant(PEER_SERVICE, peerService));
-             }
-        }),
+        clientBuilder.instrumenter(
+            clientInstrumenterBuilder -> {
+              if (peerService != null) {
+                clientInstrumenterBuilder.addAttributesExtractor(
+                    AttributesExtractor.constant(PEER_SERVICE, peerService));
+              }
+            }),
         serverBuilder.instrumenter());
   }
 }

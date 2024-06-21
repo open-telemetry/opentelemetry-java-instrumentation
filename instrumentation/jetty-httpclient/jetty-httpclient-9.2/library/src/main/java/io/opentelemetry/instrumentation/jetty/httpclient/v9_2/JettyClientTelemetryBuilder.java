@@ -129,7 +129,8 @@ public final class JettyClientTelemetryBuilder {
    */
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(clientBuilder.build(), sslContextFactory, httpClientTransport);
+        TracingHttpClient.buildNew(
+            clientBuilder.build(), sslContextFactory, httpClientTransport);
 
     return new JettyClientTelemetry(tracingHttpClient);
   }

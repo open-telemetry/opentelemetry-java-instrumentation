@@ -17,21 +17,22 @@ public final class GrizzlySingletons {
   private static final Instrumenter<HttpRequestPacket, HttpResponsePacket> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
-        "io.opentelemetry.grizzly-2.3",
-        new GrizzlyHttpAttributesGetter(),
-        Optional.of(HttpRequestHeadersGetter.INSTANCE),
-        builder ->
-            builder
-                .addContextCustomizer(
-                    (context, request, attributes) ->
-                        new AppServerBridge.Builder()
-                            .captureServletAttributes()
-                            .recordException()
-                            .init(context))
-                .addContextCustomizer(
-                    (context, httpRequestPacket, startAttributes) -> GrizzlyErrorHolder.init(
-                        context)));
+    INSTRUMENTER =
+        JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+            "io.opentelemetry.grizzly-2.3",
+            new GrizzlyHttpAttributesGetter(),
+            Optional.of(HttpRequestHeadersGetter.INSTANCE),
+            builder ->
+                builder
+                    .addContextCustomizer(
+                        (context, request, attributes) ->
+                            new AppServerBridge.Builder()
+                                .captureServletAttributes()
+                                .recordException()
+                                .init(context))
+                    .addContextCustomizer(
+                        (context, httpRequestPacket, startAttributes) ->
+                            GrizzlyErrorHolder.init(context)));
   }
 
   public static Instrumenter<HttpRequestPacket, HttpResponsePacket> instrumenter() {

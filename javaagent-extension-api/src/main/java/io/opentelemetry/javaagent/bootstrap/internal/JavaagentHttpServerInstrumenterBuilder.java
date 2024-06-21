@@ -49,7 +49,7 @@ public final class JavaagentHttpServerInstrumenterBuilder {
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createWithCustomizer(
       Object builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
-    return HttpServerInstrumenterBuilder.<REQUEST, RESPONSE>configure(CommonConfig.get(), builder).instrumenter(instrumenterBuilderConsumer);
+    return HttpServerInstrumenterBuilder.<REQUEST, RESPONSE>configure(CommonConfig.get(), builder)
+        .instrumenter(instrumenterBuilderConsumer);
   }
-
 }

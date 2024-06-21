@@ -21,13 +21,18 @@ import java.util.Set;
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
 
-  private final DefaultHttpServerTelemetryBuilder<HttpRequestAndChannel, HttpResponse> serverBuilder;
+  private final DefaultHttpServerTelemetryBuilder<HttpRequestAndChannel, HttpResponse>
+      serverBuilder;
 
   private boolean emitExperimentalHttpServerEvents = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
-    serverBuilder = new DefaultHttpServerTelemetryBuilder<>("io.opentelemetry.netty-4.1", openTelemetry, new NettyHttpServerAttributesGetter(), Optional.of(
-        HttpRequestHeadersGetter.INSTANCE));
+    serverBuilder =
+        new DefaultHttpServerTelemetryBuilder<>(
+            "io.opentelemetry.netty-4.1",
+            openTelemetry,
+            new NettyHttpServerAttributesGetter(),
+            Optional.of(HttpRequestHeadersGetter.INSTANCE));
   }
 
   /**

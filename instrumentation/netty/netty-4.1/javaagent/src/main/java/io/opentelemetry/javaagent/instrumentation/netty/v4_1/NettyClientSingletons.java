@@ -35,9 +35,9 @@ public final class NettyClientSingletons {
   private static final NettyClientHandlerFactory CLIENT_HANDLER_FACTORY;
 
   static {
-    NettyClientInstrumenterBuilder builder = new NettyClientInstrumenterBuilder(
-            "io.opentelemetry.netty-4.1", GlobalOpenTelemetry.get());
-        HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    NettyClientInstrumenterBuilder builder =
+        new NettyClientInstrumenterBuilder("io.opentelemetry.netty-4.1", GlobalOpenTelemetry.get());
+    HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
     NettyClientInstrumenterFactory factory =
         new NettyClientInstrumenterFactory(
             builder,

@@ -120,8 +120,7 @@ public final class NettyClientTelemetryBuilder {
         new NettyClientInstrumenterFactory(
                 builder,
                 NettyConnectionInstrumentationFlag.DISABLED,
-                NettyConnectionInstrumentationFlag.DISABLED
-        )
+                NettyConnectionInstrumentationFlag.DISABLED)
             .instrumenter(),
         emitExperimentalHttpClientEvents);
   }
