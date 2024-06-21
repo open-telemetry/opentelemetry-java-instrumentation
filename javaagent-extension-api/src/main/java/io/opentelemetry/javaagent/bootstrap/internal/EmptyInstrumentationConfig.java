@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
