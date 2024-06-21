@@ -11,27 +11,22 @@ import io.ktor.http.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
+import java.util.*
 
 class KtorClientTracingBuilder {
 
-  private var openTelemetry: OpenTelemetry? = null
-  private val additionalExtractors = mutableListOf<AttributesExtractor<in HttpRequestData, in HttpResponse>>()
-  private val httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(KtorHttpClientAttributesGetter)
-  private val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpClientAttributesGetter)
-  private var emitExperimentalHttpClientMetrics = false
+  private lateinit var builder: DefaultHttpClientTelemetryBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
-    this.openTelemetry = openTelemetry
+    this.builder = DefaultHttpClientTelemetryBuilder(
+      INSTRUMENTATION_NAME,
+      openTelemetry,
+      KtorHttpClientAttributesGetter,
+      Optional.empty()
+    )
   }
 
   @Deprecated(
@@ -49,7 +44,7 @@ class KtorClientTracingBuilder {
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
-    httpAttributesExtractorBuilder.setCapturedRequestHeaders(headers.toList())
+    builder.setCapturedRequestHeaders(headers.toList())
   }
 
   @Deprecated(
@@ -67,7 +62,7 @@ class KtorClientTracingBuilder {
   fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
-    httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers.toList())
+    builder.setCapturedResponseHeaders(headers.toList())
   }
 
   @Deprecated(
@@ -84,10 +79,7 @@ class KtorClientTracingBuilder {
   fun knownMethods(methods: Iterable<HttpMethod>) = knownMethods(methods.map { it.value })
 
   fun knownMethods(methods: Iterable<String>) {
-    methods.toSet().apply {
-      httpAttributesExtractorBuilder.setKnownMethods(this)
-      httpSpanNameExtractorBuilder.setKnownMethods(this)
-    }
+    builder.setKnownMethods(methods.toSet())
   }
 
   @Deprecated("Please use method `attributeExtractor`")
@@ -105,7 +97,7 @@ class KtorClientTracingBuilder {
 
   fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    additionalExtractors.add(
+    this.builder.addAttributeExtractor(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))
@@ -164,35 +156,11 @@ class KtorClientTracingBuilder {
   }
 
   fun emitExperimentalHttpClientMetrics() {
-    emitExperimentalHttpClientMetrics = true
+    builder.setEmitExperimentalHttpClientMetrics(true)
   }
 
-  internal fun build(): KtorClientTracing {
-    val initializedOpenTelemetry = openTelemetry
-      ?: throw IllegalArgumentException("OpenTelemetry must be set")
-
-    val instrumenterBuilder = Instrumenter.builder<HttpRequestData, HttpResponse>(
-      initializedOpenTelemetry,
-      INSTRUMENTATION_NAME,
-      httpSpanNameExtractorBuilder.build()
-    )
-      .setSpanStatusExtractor(HttpSpanStatusExtractor.create(KtorHttpClientAttributesGetter))
-      .addAttributesExtractor(httpAttributesExtractorBuilder.build())
-      .addAttributesExtractors(additionalExtractors)
-      .addOperationMetrics(HttpClientMetrics.get())
-
-    if (emitExperimentalHttpClientMetrics) {
-      instrumenterBuilder
-        .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(KtorHttpClientAttributesGetter))
-        .addOperationMetrics(HttpClientExperimentalMetrics.get())
-    }
-
-    val instrumenter = instrumenterBuilder
-      .buildInstrumenter(alwaysClient())
-
-    return KtorClientTracing(
-      instrumenter = instrumenter,
-      propagators = initializedOpenTelemetry.propagators,
-    )
-  }
+  internal fun build(): KtorClientTracing = KtorClientTracing(
+    instrumenter = builder.instrumenter(),
+    propagators = builder.openTelemetry.propagators,
+  )
 }

@@ -147,6 +147,17 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
     public Instrumenter<REQUEST, RESPONSE> instrumenter(
         Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
 
+      InstrumenterBuilder<REQUEST, RESPONSE> builder = instrumenterBuilder(
+          instrumenterBuilderConsumer);
+
+      if (headerSetter.isPresent()) {
+        return builder.buildServerInstrumenter(headerSetter.get());
+      }
+      return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
+  }
+
+  public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder(
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -164,12 +175,8 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
 
-      instrumenterBuilderConsumer.accept(builder);
-
-      if (headerSetter.isPresent()) {
-        return builder.buildServerInstrumenter(headerSetter.get());
-      }
-      return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
+    instrumenterBuilderConsumer.accept(builder);
+    return builder;
   }
 
   public OpenTelemetry getOpenTelemetry() {
