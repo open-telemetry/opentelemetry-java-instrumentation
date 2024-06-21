@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
@@ -12,6 +13,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceRes
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.Optional;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class NettyClientInstrumenterBuilder
     extends DefaultHttpClientTelemetryBuilder<HttpRequestAndChannel, HttpResponse> {
   private PeerServiceResolver peerServiceResolver;
@@ -24,6 +29,7 @@ public class NettyClientInstrumenterBuilder
         Optional.of(HttpRequestHeadersSetter.INSTANCE));
   }
 
+  @CanIgnoreReturnValue
   @Override
   public NettyClientInstrumenterBuilder setPeerServiceResolver(
       PeerServiceResolver peerServiceResolver) {
