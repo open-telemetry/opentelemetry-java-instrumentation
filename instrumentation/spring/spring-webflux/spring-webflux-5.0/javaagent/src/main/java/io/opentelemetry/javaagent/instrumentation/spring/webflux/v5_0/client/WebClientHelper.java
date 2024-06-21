@@ -18,11 +18,11 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 
 public final class WebClientHelper {
 
-  private static final Instrumenter<ClientRequest, ClientResponse> instrumenter = JavaagentHttpClientInstrumenterBuilder.create(
-      "io.opentelemetry.spring-webflux-5.3",
-      WebClientHttpAttributesGetter.INSTANCE,
-      Optional.empty()
-      );
+  private static final Instrumenter<ClientRequest, ClientResponse> instrumenter =
+      JavaagentHttpClientInstrumenterBuilder.create(
+          "io.opentelemetry.spring-webflux-5.3",
+          WebClientHttpAttributesGetter.INSTANCE,
+          Optional.empty());
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {

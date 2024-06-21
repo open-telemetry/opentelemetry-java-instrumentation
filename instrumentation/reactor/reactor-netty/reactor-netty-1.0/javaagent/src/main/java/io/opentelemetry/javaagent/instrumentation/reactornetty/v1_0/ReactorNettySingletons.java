@@ -36,12 +36,12 @@ public final class ReactorNettySingletons {
             new ReactorNettyHttpClientAttributesGetter(),
             HttpClientRequestHeadersSetter.INSTANCE);
 
-    NettyClientInstrumenterBuilder builder = new NettyClientInstrumenterBuilder(
-            INSTRUMENTATION_NAME, GlobalOpenTelemetry.get());
-        HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    NettyClientInstrumenterBuilder builder =
+        new NettyClientInstrumenterBuilder(INSTRUMENTATION_NAME, GlobalOpenTelemetry.get());
+    HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
-           builder,
+            builder,
             connectionTelemetryEnabled
                 ? NettyConnectionInstrumentationFlag.ENABLED
                 : NettyConnectionInstrumentationFlag.DISABLED,

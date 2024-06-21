@@ -17,10 +17,11 @@ public final class PekkoHttpServerSingletons {
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = JavaagentHttpServerInstrumenterBuilder.create(
-        PekkoHttpUtil.instrumentationName(),
-        new PekkoHttpServerAttributesGetter(),
-        Optional.of(PekkoHttpServerHeaders.INSTANCE));
+    INSTRUMENTER =
+        JavaagentHttpServerInstrumenterBuilder.create(
+            PekkoHttpUtil.instrumentationName(),
+            new PekkoHttpServerAttributesGetter(),
+            Optional.of(PekkoHttpServerHeaders.INSTANCE));
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

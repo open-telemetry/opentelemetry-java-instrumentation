@@ -19,8 +19,9 @@ public final class RestletSingletons {
   private static final Instrumenter<Request, Response> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = JavaagentHttpServerInstrumenterBuilder.create(
-        RestletTelemetry.builder(GlobalOpenTelemetry.get()));
+    INSTRUMENTER =
+        JavaagentHttpServerInstrumenterBuilder.create(
+            RestletTelemetry.builder(GlobalOpenTelemetry.get()));
   }
 
   public static Instrumenter<Request, Response> instrumenter() {

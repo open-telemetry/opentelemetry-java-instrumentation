@@ -24,13 +24,14 @@ public final class TomcatInstrumenterFactory {
         instrumentationName,
         new TomcatHttpAttributesGetter(),
         Optional.of(TomcatRequestGetter.INSTANCE),
-        builder -> builder.setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
-            .addContextCustomizer(
-                (context, request, attributes) ->
-                    new AppServerBridge.Builder()
-                        .captureServletAttributes()
-                        .recordException()
-                        .init(context))
-    );
+        builder ->
+            builder
+                .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
+                .addContextCustomizer(
+                    (context, request, attributes) ->
+                        new AppServerBridge.Builder()
+                            .captureServletAttributes()
+                            .recordException()
+                            .init(context)));
   }
 }

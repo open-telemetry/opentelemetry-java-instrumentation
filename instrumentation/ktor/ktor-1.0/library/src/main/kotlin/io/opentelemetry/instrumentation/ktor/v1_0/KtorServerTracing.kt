@@ -48,7 +48,7 @@ class KtorServerTracing private constructor(
     fun setStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
-      serverBuilder.setStatusExtractor{ prevExtractor ->
+      serverBuilder.setStatusExtractor { prevExtractor ->
         SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
                               request: ApplicationRequest,
                               response: ApplicationResponse?,

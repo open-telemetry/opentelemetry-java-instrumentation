@@ -22,14 +22,16 @@ import java.util.function.Function;
 public final class SpringWebMvcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-6.0";
-  private final DefaultHttpServerTelemetryBuilder<HttpServletRequest, HttpServletResponse> serverBuilder;
+  private final DefaultHttpServerTelemetryBuilder<HttpServletRequest, HttpServletResponse>
+      serverBuilder;
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
- serverBuilder = new DefaultHttpServerTelemetryBuilder<>(
-     INSTRUMENTATION_NAME,
-     openTelemetry,
-     SpringWebMvcHttpAttributesGetter.INSTANCE,
-     Optional.of(JakartaHttpServletRequestGetter.INSTANCE));
+    serverBuilder =
+        new DefaultHttpServerTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            SpringWebMvcHttpAttributesGetter.INSTANCE,
+            Optional.of(JakartaHttpServletRequestGetter.INSTANCE));
   }
 
   /**
@@ -69,8 +71,8 @@ public final class SpringWebMvcTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
       Function<
-          SpanNameExtractor<HttpServletRequest>,
-          ? extends SpanNameExtractor<? super HttpServletRequest>>
+              SpanNameExtractor<HttpServletRequest>,
+              ? extends SpanNameExtractor<? super HttpServletRequest>>
           spanNameExtractor) {
     serverBuilder.setSpanNameExtractor(spanNameExtractor);
     return this;
@@ -113,7 +115,6 @@ public final class SpringWebMvcTelemetryBuilder {
    * SpringWebMvcTelemetryBuilder}.
    */
   public SpringWebMvcTelemetry build() {
-    return new SpringWebMvcTelemetry(
-        serverBuilder.instrumenter());
+    return new SpringWebMvcTelemetry(serverBuilder.instrumenter());
   }
 }

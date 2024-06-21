@@ -59,13 +59,16 @@ class KtorServerTracing private constructor(
     }
 
     fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
-      serverBuilder.setStatusExtractor{ prevExtractor ->
+      serverBuilder.setStatusExtractor { prevExtractor ->
         SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
                               request: ApplicationRequest,
                               response: ApplicationResponse?,
                               throwable: Throwable? ->
           @Suppress("UNCHECKED_CAST")
-          extract(SpanStatusData(spanStatusBuilder, request, response, throwable), prevExtractor as SpanStatusExtractor<ApplicationRequest, ApplicationResponse>)
+          extract(
+            SpanStatusData(spanStatusBuilder, request, response, throwable),
+            prevExtractor as SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
+          )
         }
       }
     }

@@ -26,7 +26,12 @@ public final class RestletTelemetryBuilder {
   private final DefaultHttpServerTelemetryBuilder<Request, Response> serverBuilder;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
-    serverBuilder = new DefaultHttpServerTelemetryBuilder<>(INSTRUMENTATION_NAME, openTelemetry,  RestletHttpAttributesGetter.INSTANCE, Optional.of(RestletHeadersGetter.INSTANCE));
+    serverBuilder =
+        new DefaultHttpServerTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            RestletHttpAttributesGetter.INSTANCE,
+            Optional.of(RestletHeadersGetter.INSTANCE));
   }
 
   /**
