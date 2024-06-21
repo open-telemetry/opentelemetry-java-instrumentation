@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import application.io.opentelemetry.instrumentation.annotations.Timed;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
@@ -18,98 +16,48 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 public final class TimedHelper extends MetricsAnnotationHelper {
 
-  private static final ClassValue<Map<Method, DoubleHistogram>> histograms =
-      new ClassValue<Map<Method, DoubleHistogram>>() {
+  private static final ClassValue<Map<Method, MethodTimer>> timers =
+      new ClassValue<Map<Method, MethodTimer>>() {
         @Override
-        protected Map<Method, DoubleHistogram> computeValue(Class<?> type) {
+        protected Map<Method, MethodTimer> computeValue(Class<?> type) {
           return new ConcurrentHashMap<>();
         }
       };
 
-  public static Object recordHistogramWithAttributes(
+  public static Object recordWithAttributes(
       MethodRequest methodRequest, Object returnValue, Throwable throwable, long startNanoTime) {
-    return recordHistogram(
-        methodRequest.method(),
-        returnValue,
-        throwable,
-        startNanoTime,
-        attributesBuilder -> extractMetricAttributes(methodRequest, attributesBuilder));
+    return record(
+        methodRequest.method(), returnValue, throwable, startNanoTime, methodRequest.args());
   }
 
-  public static Object recordHistogram(
+  public static Object record(
       Method method, Object returnValue, Throwable throwable, long startNanoTime) {
-    return recordHistogram(method, returnValue, throwable, startNanoTime, attributesBuilder -> {});
+    return record(method, returnValue, throwable, startNanoTime, null);
   }
 
-  public static Object recordHistogram(
+  private static Object record(
       Method method,
       Object returnValue,
       Throwable throwable,
       long startNanoTime,
-      Consumer<AttributesBuilder> additionalAttributes) {
+      Object[] arguments) {
     AsyncOperationEndSupport<Method, Object> operationEndSupport =
         AsyncOperationEndSupport.create(
-            (context, method1, object, error) -> {
-              Timed timedAnnotation = method.getAnnotation(Timed.class);
-              AttributesBuilder attributesBuilder =
-                  getCommonAttributeBuilder(error, object, timedAnnotation);
-              additionalAttributes.accept(attributesBuilder);
-              double duration = getTransformedDuration(startNanoTime, timedAnnotation);
-              getHistogram(method).record(duration, attributesBuilder.build());
-            },
+            (context, m, object, error) ->
+                getMethodTimer(m).record(object, arguments, error, startNanoTime),
             Object.class,
             method.getReturnType());
     return operationEndSupport.asyncEnd(Context.current(), method, returnValue, throwable);
   }
 
-  private static AttributesBuilder getCommonAttributeBuilder(
-      Throwable throwable, Object returnValue, Timed timedAnnotation) {
-    AttributesBuilder attributesBuilder = Attributes.builder();
-    extractAdditionAttributes(timedAnnotation.additionalAttributes(), attributesBuilder);
-    extractReturnValue(timedAnnotation, returnValue, attributesBuilder);
-    extractException(throwable, attributesBuilder);
-    return attributesBuilder;
+  private static MethodTimer getMethodTimer(Method method) {
+    return timers.get(method.getDeclaringClass()).computeIfAbsent(method, MethodTimer::new);
   }
 
-  private static double getTransformedDuration(long startNanoTime, Timed timedAnnotation) {
-    TimeUnit unit = timedAnnotation.unit();
-    long nanoDelta = System.nanoTime() - startNanoTime;
-    return (double) nanoDelta / NANOSECONDS.convert(1, unit);
-  }
-
-  private static void extractException(Throwable throwable, AttributesBuilder attributesBuilder) {
-    if (null != throwable) {
-      attributesBuilder.put("exception", throwable.getClass().getName());
-    }
-  }
-
-  private static void extractReturnValue(
-      Timed countedAnnotation, Object returnValue, AttributesBuilder attributesBuilder) {
-    if (returnValue != null && !countedAnnotation.returnValueAttribute().isEmpty()) {
-      attributesBuilder.put(countedAnnotation.returnValueAttribute(), returnValue.toString());
-    }
-  }
-
-  private static DoubleHistogram getHistogram(Method method) {
-    return histograms
-        .get(method.getDeclaringClass())
-        .computeIfAbsent(
-            method,
-            m -> {
-              Timed timedAnnotation = m.getAnnotation(Timed.class);
-              return METER
-                  .histogramBuilder(timedAnnotation.value())
-                  .setDescription(timedAnnotation.description())
-                  .setUnit(toString(timedAnnotation.unit()))
-                  .build();
-            });
-  }
-
-  private static String toString(TimeUnit timeUnit) {
+  private static String timeUnitToString(TimeUnit timeUnit) {
     switch (timeUnit) {
       case NANOSECONDS:
         return "ns";
@@ -127,6 +75,36 @@ public final class TimedHelper extends MetricsAnnotationHelper {
         return "d";
     }
     throw new IllegalArgumentException("Unsupported time unit " + timeUnit);
+  }
+
+  private static double getDuration(long startNanoTime, TimeUnit unit) {
+    long nanoDelta = System.nanoTime() - startNanoTime;
+    return (double) nanoDelta / NANOSECONDS.convert(1, unit);
+  }
+
+  private static class MethodTimer {
+    private final TimeUnit unit;
+    private final DoubleHistogram histogram;
+    private final MetricAttributeHelper attributeHelper;
+
+    MethodTimer(Method method) {
+      Timed timedAnnotation = method.getAnnotation(Timed.class);
+      unit = timedAnnotation.unit();
+      histogram =
+          METER
+              .histogramBuilder(timedAnnotation.value())
+              .setDescription(timedAnnotation.description())
+              .setUnit(timeUnitToString(unit))
+              .build();
+
+      String returnValueAttribute = timedAnnotation.returnValueAttribute();
+      attributeHelper = new MetricAttributeHelper(method, returnValueAttribute);
+    }
+
+    void record(Object returnValue, Object[] arguments, Throwable throwable, long startNanoTime) {
+      double duration = getDuration(startNanoTime, unit);
+      histogram.record(duration, attributeHelper.getAttributes(returnValue, arguments, throwable));
+    }
   }
 
   private TimedHelper() {}

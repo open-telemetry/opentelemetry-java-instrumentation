@@ -94,7 +94,7 @@ public class TimedInstrumentation implements TypeInstrumentation {
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
       returnValue =
-          TimedHelper.recordHistogramWithAttributes(request, returnValue, throwable, startNanoTime);
+          TimedHelper.recordWithAttributes(request, returnValue, throwable, startNanoTime);
     }
   }
 
@@ -118,7 +118,7 @@ public class TimedInstrumentation implements TypeInstrumentation {
         @Advice.Local("startNanoTime") long startNanoTime,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      returnValue = TimedHelper.recordHistogram(method, returnValue, throwable, startNanoTime);
+      returnValue = TimedHelper.record(method, returnValue, throwable, startNanoTime);
     }
   }
 }

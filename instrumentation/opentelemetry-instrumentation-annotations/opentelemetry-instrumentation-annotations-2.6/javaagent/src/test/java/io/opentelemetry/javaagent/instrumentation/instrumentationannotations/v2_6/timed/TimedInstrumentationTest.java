@@ -79,32 +79,6 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithAdditionalAttributes2() {
-    new TimedExample().exampleWithAdditionalAttributes2();
-    testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("example.with.attributes2.duration")
-                .satisfies(
-                    metricData ->
-                        assertThat(metricData.getData().getPoints())
-                            .allMatch(
-                                p ->
-                                    "value1"
-                                            .equals(
-                                                p.getAttributes()
-                                                    .get(AttributeKey.stringKey("key1")))
-                                        && "value2"
-                                            .equals(
-                                                p.getAttributes()
-                                                    .get(AttributeKey.stringKey("key2")))
-                                        && null
-                                            == p.getAttributes()
-                                                .get(AttributeKey.stringKey("key3")))));
-  }
-
-  @Test
   void testExampleIgnore() throws Exception {
     new TimedExample().exampleIgnore();
     Thread.sleep(500);
@@ -132,7 +106,7 @@ class TimedInstrumentationTest {
                                         .getName()
                                         .equals(
                                             p.getAttributes()
-                                                .get(AttributeKey.stringKey("exception"))))));
+                                                .get(AttributeKey.stringKey("exception.type"))))));
   }
 
   @Test

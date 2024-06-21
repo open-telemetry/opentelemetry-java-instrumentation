@@ -90,7 +90,7 @@ public class CountedInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      returnValue = CountedHelper.recordCountWithAttributes(request, returnValue, throwable);
+      returnValue = CountedHelper.recordWithAttributes(request, returnValue, throwable);
     }
   }
 
@@ -102,7 +102,7 @@ public class CountedInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method method,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
-      returnValue = CountedHelper.recordCount(method, returnValue, throwable);
+      returnValue = CountedHelper.record(method, returnValue, throwable);
     }
   }
 }

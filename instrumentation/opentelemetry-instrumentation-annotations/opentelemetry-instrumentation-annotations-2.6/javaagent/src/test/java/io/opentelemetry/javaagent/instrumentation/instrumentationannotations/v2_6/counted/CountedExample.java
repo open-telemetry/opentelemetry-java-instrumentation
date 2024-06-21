@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted;
 
 import io.opentelemetry.instrumentation.annotations.Counted;
+import io.opentelemetry.instrumentation.annotations.StaticMetricAttribute;
 import java.util.concurrent.CompletableFuture;
 
 public class CountedExample {
@@ -24,15 +25,11 @@ public class CountedExample {
   @Counted(value = "example.with.unit.count", unit = METRIC_UNIT)
   public void exampleWithUnit() {}
 
-  @Counted(
-      value = "example.with.attributes.count",
-      additionalAttributes = {"key1", "value1", "key2", "value2"})
+  @Counted("example.with.attributes.count")
+  @StaticMetricAttribute(name = "key1", value = "value1")
+  @StaticMetricAttribute(name = "key2", value = "value2")
+  @StaticMetricAttribute(name = "key2", value = "value2")
   public void exampleWithAdditionalAttributes1() {}
-
-  @Counted(
-      value = "example.with.attributes2.count",
-      additionalAttributes = {"key1", "value1", "key2", "value2", "key3"})
-  public void exampleWithAdditionalAttributes2() {}
 
   @Counted(value = "example.with.return.count", returnValueAttribute = "returnValue")
   public ReturnObject exampleWithReturnValueAttribute() {

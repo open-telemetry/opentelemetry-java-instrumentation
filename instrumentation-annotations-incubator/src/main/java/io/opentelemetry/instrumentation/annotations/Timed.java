@@ -12,17 +12,16 @@ import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This annotation creates a {@link io.opentelemetry.api.metrics.LongHistogram Histogram} instrument
- * observing the duration of invocations of the annotated method or constructor.
+ * This annotation creates a {@link io.opentelemetry.api.metrics.DoubleHistogram Histogram}
+ * instrument observing the duration of invocations of the annotated method or constructor.
  *
  * <p>By default, the Histogram instrument will have the following attributes:
  *
  * <ul>
  *   <li><b>code.namespace:</b> The fully qualified name of the class whose method is invoked.
- *   <li><b>code.function:</b> The name of the annotated method, or "new" of the annotation is on a
- *       constructor.
+ *   <li><b>code.function:</b> The name of the annotated method.
  *   <li><b>exception.type:</b> This is only present if an Exception is thrown, and contains the
- *       {@link Class#getCanonicalName canonical name} of the Exception.
+ *       {@link Class#getName name} of the Exception class.
  * </ul>
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
@@ -60,27 +59,12 @@ public @interface Timed {
   TimeUnit unit() default TimeUnit.SECONDS;
 
   /**
-   * List of key-value pairs to supply additional attributes.
-   *
-   * <p>Example:
-   *
-   * <pre>
-   * {@literal @}Timed(
-   *     additionalAttributes = {
-   *       "key1", "value1",
-   *       "key2", "value2",
-   * })
-   * </pre>
-   */
-  String[] additionalAttributes() default {};
-
-  /**
    * Attribute name for the return value.
    *
    * <p>The name of the attribute for the return value of the method call. {@link Object#toString()}
-   * will be called on the return value to convert it to a String.
+   * may be called on the return value to convert it to a String.
    *
-   * <p>By default, the instrument will not have an attribute with the return value.
+   * <p>By default, the instrument will not record an attribute with the return value.
    *
    * <p>Warning: be careful to fill it because it might cause an explosion of the cardinality on
    * your metric

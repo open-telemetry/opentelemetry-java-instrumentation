@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed;
 
+import io.opentelemetry.instrumentation.annotations.StaticMetricAttribute;
 import io.opentelemetry.instrumentation.annotations.Timed;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -25,15 +26,10 @@ public class TimedExample {
     Thread.sleep(2000);
   }
 
-  @Timed(
-      value = "example.with.attributes.duration",
-      additionalAttributes = {"key1", "value1", "key2", "value2"})
+  @Timed("example.with.attributes.duration")
+  @StaticMetricAttribute(name = "key1", value = "value1")
+  @StaticMetricAttribute(name = "key2", value = "value2")
   public void exampleWithAdditionalAttributes1() {}
-
-  @Timed(
-      value = "example.with.attributes2.duration",
-      additionalAttributes = {"key1", "value1", "key2", "value2", "key3"})
-  public void exampleWithAdditionalAttributes2() {}
 
   @Timed("example.ignore.duration")
   public void exampleIgnore() {}

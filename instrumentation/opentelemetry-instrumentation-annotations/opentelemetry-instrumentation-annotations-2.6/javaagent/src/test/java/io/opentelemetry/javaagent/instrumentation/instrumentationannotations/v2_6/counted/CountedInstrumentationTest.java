@@ -72,32 +72,6 @@ class CountedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithAdditionalAttributes2() {
-    new CountedExample().exampleWithAdditionalAttributes2();
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("example.with.attributes2.count")
-                .satisfies(
-                    metricData ->
-                        assertThat(metricData.getData().getPoints())
-                            .allMatch(
-                                p ->
-                                    "value1"
-                                            .equals(
-                                                p.getAttributes()
-                                                    .get(AttributeKey.stringKey("key1")))
-                                        && "value2"
-                                            .equals(
-                                                p.getAttributes()
-                                                    .get(AttributeKey.stringKey("key2")))
-                                        && null
-                                            == p.getAttributes()
-                                                .get(AttributeKey.stringKey("key3")))));
-  }
-
-  @Test
   void testExampleWithReturnAttribute() {
     new CountedExample().exampleWithReturnValueAttribute();
     testing.waitAndAssertMetrics(
@@ -136,7 +110,7 @@ class CountedInstrumentationTest {
                                         .getName()
                                         .equals(
                                             p.getAttributes()
-                                                .get(AttributeKey.stringKey("exception"))))));
+                                                .get(AttributeKey.stringKey("exception.type"))))));
   }
 
   @Test

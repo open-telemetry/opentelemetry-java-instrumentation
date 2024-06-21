@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6;
 
 import application.io.opentelemetry.instrumentation.annotations.Counted;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
@@ -15,85 +13,60 @@ import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.Met
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 public final class CountedHelper extends MetricsAnnotationHelper {
 
-  private static final ClassValue<Map<Method, LongCounter>> counters =
-      new ClassValue<Map<Method, LongCounter>>() {
+  private static final ClassValue<Map<Method, MethodCounter>> counters =
+      new ClassValue<Map<Method, MethodCounter>>() {
         @Override
-        protected Map<Method, LongCounter> computeValue(Class<?> type) {
+        protected Map<Method, MethodCounter> computeValue(Class<?> type) {
           return new ConcurrentHashMap<>();
         }
       };
 
-  public static Object recordCountWithAttributes(
+  public static Object recordWithAttributes(
       MethodRequest methodRequest, Object returnValue, Throwable throwable) {
-    return recordCount(
-        methodRequest.method(),
-        returnValue,
-        throwable,
-        attributesBuilder -> extractMetricAttributes(methodRequest, attributesBuilder));
+    return record(methodRequest.method(), returnValue, throwable, methodRequest.args());
   }
 
-  public static Object recordCount(Method method, Object returnValue, Throwable throwable) {
-    return recordCount(method, returnValue, throwable, attributesBuilder -> {});
+  public static Object record(Method method, Object returnValue, Throwable throwable) {
+    return record(method, returnValue, throwable, null);
   }
 
-  private static Object recordCount(
-      Method method,
-      Object returnValue,
-      Throwable throwable,
-      Consumer<AttributesBuilder> additionalAttributes) {
+  private static Object record(
+      Method method, Object returnValue, Throwable throwable, Object[] arguments) {
     AsyncOperationEndSupport<Method, Object> operationEndSupport =
         AsyncOperationEndSupport.create(
-            (context, method1, object, error) -> {
-              Counted countedAnnotation = method1.getAnnotation(Counted.class);
-              AttributesBuilder attributesBuilder =
-                  getCommonAttributesBuilder(countedAnnotation, object, error);
-              additionalAttributes.accept(attributesBuilder);
-              getCounter(method1).add(1, attributesBuilder.build());
-            },
+            (context, m, object, error) -> getMethodCounter(m).record(object, arguments, error),
             Object.class,
             method.getReturnType());
     return operationEndSupport.asyncEnd(Context.current(), method, returnValue, throwable);
   }
 
-  private static AttributesBuilder getCommonAttributesBuilder(
-      Counted countedAnnotation, Object returnValue, Throwable throwable) {
-    AttributesBuilder attributesBuilder = Attributes.builder();
-    extractAdditionAttributes(countedAnnotation.additionalAttributes(), attributesBuilder);
-    extractReturnValue(countedAnnotation, returnValue, attributesBuilder);
-    extractException(throwable, attributesBuilder);
-    return attributesBuilder;
+  private static MethodCounter getMethodCounter(Method method) {
+    return counters.get(method.getDeclaringClass()).computeIfAbsent(method, MethodCounter::new);
   }
 
-  private static void extractException(Throwable throwable, AttributesBuilder attributesBuilder) {
-    if (null != throwable) {
-      attributesBuilder.put("exception", throwable.getClass().getName());
+  private static class MethodCounter {
+    private final LongCounter counter;
+    private final MetricAttributeHelper attributeHelper;
+
+    MethodCounter(Method method) {
+      Counted countedAnnotation = method.getAnnotation(Counted.class);
+      counter =
+          METER
+              .counterBuilder(countedAnnotation.value())
+              .setDescription(countedAnnotation.description())
+              .setUnit(countedAnnotation.unit())
+              .build();
+
+      String returnValueAttribute = countedAnnotation.returnValueAttribute();
+      attributeHelper = new MetricAttributeHelper(method, returnValueAttribute);
     }
-  }
 
-  private static void extractReturnValue(
-      Counted countedAnnotation, Object returnValue, AttributesBuilder attributesBuilder) {
-    if (returnValue != null && !countedAnnotation.returnValueAttribute().isEmpty()) {
-      attributesBuilder.put(countedAnnotation.returnValueAttribute(), returnValue.toString());
+    void record(Object returnValue, Object[] arguments, Throwable throwable) {
+      counter.add(1, attributeHelper.getAttributes(returnValue, arguments, throwable));
     }
-  }
-
-  private static LongCounter getCounter(Method method) {
-    return counters
-        .get(method.getDeclaringClass())
-        .computeIfAbsent(
-            method,
-            m -> {
-              Counted countedAnnotation = m.getAnnotation(Counted.class);
-              return METER
-                  .counterBuilder(countedAnnotation.value())
-                  .setDescription(countedAnnotation.description())
-                  .setUnit(countedAnnotation.unit())
-                  .build();
-            });
   }
 
   private CountedHelper() {}
