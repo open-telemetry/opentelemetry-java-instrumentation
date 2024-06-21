@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
@@ -22,7 +22,7 @@ public class JavaHttpClientSingletons {
     SETTER = new HttpHeadersSetter(GlobalOpenTelemetry.getPropagators());
 
     INSTRUMENTER =
-        JavaagentHttpClientInstrumenterBuilder.create(
+        JavaagentHttpClientInstrumenters.create(
             JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get()));
   }
 

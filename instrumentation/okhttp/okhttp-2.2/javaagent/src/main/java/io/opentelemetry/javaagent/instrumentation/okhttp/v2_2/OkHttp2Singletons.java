@@ -10,8 +10,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
-import java.util.Optional;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 
 public final class OkHttp2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-2.2";
@@ -21,8 +20,8 @@ public final class OkHttp2Singletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpClientInstrumenterBuilder.create(
-            INSTRUMENTATION_NAME, new OkHttp2HttpAttributesGetter(), Optional.empty());
+        JavaagentHttpClientInstrumenters.create(
+            INSTRUMENTATION_NAME, new OkHttp2HttpAttributesGetter());
 
     TRACING_INTERCEPTOR =
         new TracingInterceptor(INSTRUMENTER, GlobalOpenTelemetry.get().getPropagators());
