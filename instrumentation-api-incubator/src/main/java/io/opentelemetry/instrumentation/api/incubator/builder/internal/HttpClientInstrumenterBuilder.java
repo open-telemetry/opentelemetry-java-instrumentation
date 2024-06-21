@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -18,10 +19,11 @@ import java.util.function.Supplier;
 public class HttpClientInstrumenterBuilder {
   private HttpClientInstrumenterBuilder() {}
 
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE> DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> configure(
-      CoreCommonConfig config, Object builder) {
-    DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> configure(
+      CoreCommonConfig config,
+      Object builder,
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
+    DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
     set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
     set(config::getClientRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
     set(config::getClientResponseHeaders, defaultBuilder::setCapturedResponseHeaders);
@@ -29,7 +31,8 @@ public class HttpClientInstrumenterBuilder {
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         defaultBuilder::setEmitExperimentalHttpClientMetrics);
-    return defaultBuilder;
+    defaultBuilder.setBuilderCustomizer(builderCustomizer);
+    return defaultBuilder.build();
   }
 
   private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
@@ -46,14 +49,14 @@ public class HttpClientInstrumenterBuilder {
    */
   @SuppressWarnings("unchecked")
   private static <REQUEST, RESPONSE>
-      DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> unwrapBuilder(Object builder) {
-    if (builder instanceof DefaultHttpClientTelemetryBuilder<?, ?>) {
-      return (DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>) builder;
+      DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> unwrapBuilder(Object builder) {
+    if (builder instanceof DefaultHttpClientInstrumenterBuilder<?, ?>) {
+      return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) builder;
     }
     try {
       Field field = builder.getClass().getDeclaredField("builder");
       field.setAccessible(true);
-      return (DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>) field.get(builder);
+      return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) field.get(builder);
     } catch (Exception e) {
       throw new IllegalStateException("Could not access builder field", e);
     }
