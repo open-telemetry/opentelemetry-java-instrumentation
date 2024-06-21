@@ -19,7 +19,6 @@ permissions:
 jobs:
   test-indy:
     name: testIndy${{ matrix.test-partition }}
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'test indy') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
