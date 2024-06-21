@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
@@ -21,7 +23,7 @@ public final class ReactorNettySingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.reactor-netty-1.0";
 
   private static final boolean connectionTelemetryEnabled =
-      AgentInstrumentationConfig.get()
+      InstrumentationConfig.get()
           .getBoolean("otel.instrumentation.reactor-netty.connection-telemetry.enabled", false);
 
   private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER;
@@ -34,16 +36,16 @@ public final class ReactorNettySingletons {
             new ReactorNettyHttpClientAttributesGetter(),
             HttpClientRequestHeadersSetter.INSTANCE);
 
+    NettyClientInstrumenterBuilder builder = new NettyClientInstrumenterBuilder(
+            INSTRUMENTATION_NAME, GlobalOpenTelemetry.get());
+        HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
-            GlobalOpenTelemetry.get(),
-            INSTRUMENTATION_NAME,
+           builder,
             connectionTelemetryEnabled
                 ? NettyConnectionInstrumentationFlag.ENABLED
                 : NettyConnectionInstrumentationFlag.DISABLED,
-            NettyConnectionInstrumentationFlag.DISABLED,
-            AgentCommonConfig.get().getPeerServiceResolver(),
-            AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
+            NettyConnectionInstrumentationFlag.DISABLED);
     CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
   }
 
