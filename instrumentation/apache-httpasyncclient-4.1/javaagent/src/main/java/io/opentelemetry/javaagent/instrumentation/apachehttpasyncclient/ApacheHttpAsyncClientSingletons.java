@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenterBuilder;
-import java.util.Optional;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import org.apache.http.HttpResponse;
 
 public final class ApacheHttpAsyncClientSingletons {
@@ -17,10 +16,10 @@ public final class ApacheHttpAsyncClientSingletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpClientInstrumenterBuilder.create(
+        JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ApacheHttpAsyncClientHttpAttributesGetter(),
-            Optional.of(HttpHeaderSetter.INSTANCE));
+            HttpHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter() {

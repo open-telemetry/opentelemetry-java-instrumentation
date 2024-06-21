@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.httpclient;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
@@ -16,22 +16,18 @@ import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientAttrib
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
 public final class JavaHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
-  private final DefaultHttpClientTelemetryBuilder<HttpRequest, HttpResponse<?>> builder;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpClientTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            JavaHttpClientAttributesGetter.INSTANCE,
-            Optional.empty());
+        new DefaultHttpClientInstrumenterBuilder<>(
+            INSTRUMENTATION_NAME, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
   }
 
   /**
@@ -110,6 +106,6 @@ public final class JavaHttpClientTelemetryBuilder {
 
   public JavaHttpClientTelemetry build() {
     return new JavaHttpClientTelemetry(
-        builder.instrumenter(), new HttpHeadersSetter(builder.getOpenTelemetry().getPropagators()));
+        builder.build(), new HttpHeadersSetter(builder.getOpenTelemetry().getPropagators()));
   }
 }

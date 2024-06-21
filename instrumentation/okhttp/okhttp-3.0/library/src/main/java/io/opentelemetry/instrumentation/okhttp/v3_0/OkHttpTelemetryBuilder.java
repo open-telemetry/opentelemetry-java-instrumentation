@@ -7,13 +7,12 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpAttributesGetter;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import okhttp3.Request;
@@ -23,12 +22,12 @@ import okhttp3.Response;
 public final class OkHttpTelemetryBuilder {
 
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-3.0";
-  private final DefaultHttpClientTelemetryBuilder<Request, Response> builder;
+  private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpClientTelemetryBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE, Optional.empty());
+        new DefaultHttpClientInstrumenterBuilder<>(
+            INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE);
   }
 
   /**
@@ -109,6 +108,6 @@ public final class OkHttpTelemetryBuilder {
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
   public OkHttpTelemetry build() {
-    return new OkHttpTelemetry(builder.instrumenter(), builder.getOpenTelemetry().getPropagators());
+    return new OkHttpTelemetry(builder.build(), builder.getOpenTelemetry().getPropagators());
   }
 }

@@ -7,12 +7,11 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import org.apache.http.HttpResponse;
@@ -21,16 +20,12 @@ import org.apache.http.HttpResponse;
 public final class ApacheHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";
-  private final DefaultHttpClientTelemetryBuilder<ApacheHttpClientRequest, HttpResponse> builder;
+  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpClientTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            ApacheHttpClientHttpAttributesGetter.INSTANCE,
-            // We manually inject because we need to inject internal requests for redirects.
-            Optional.empty());
+        new DefaultHttpClientInstrumenterBuilder<>(
+            INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
   }
 
   /**
@@ -116,6 +111,6 @@ public final class ApacheHttpClientTelemetryBuilder {
    */
   public ApacheHttpClientTelemetry build() {
     return new ApacheHttpClientTelemetry(
-        builder.instrumenter(), builder.getOpenTelemetry().getPropagators());
+        builder.build(), builder.getOpenTelemetry().getPropagators());
   }
 }

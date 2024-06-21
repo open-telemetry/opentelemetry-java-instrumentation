@@ -7,14 +7,13 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.HttpHeaderSetter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import org.eclipse.jetty.client.HttpClientTransport;
@@ -26,17 +25,15 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 public final class JettyClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
-  private final DefaultHttpClientTelemetryBuilder<Request, Response> builder;
+  private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpClientTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            JettyClientHttpAttributesGetter.INSTANCE,
-            Optional.of(HttpHeaderSetter.INSTANCE));
+        new DefaultHttpClientInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE)
+            .setHeaderSetter(HttpHeaderSetter.INSTANCE);
   }
 
   @CanIgnoreReturnValue
@@ -132,7 +129,7 @@ public final class JettyClientTelemetryBuilder {
    */
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(builder.instrumenter(), sslContextFactory, httpClientTransport);
+        TracingHttpClient.buildNew(builder.build(), sslContextFactory, httpClientTransport);
 
     return new JettyClientTelemetry(tracingHttpClient);
   }

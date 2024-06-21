@@ -7,12 +7,11 @@ package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import org.springframework.http.HttpRequest;
@@ -21,15 +20,13 @@ import org.springframework.http.client.ClientHttpResponse;
 /** A builder of {@link SpringWebTelemetry}. */
 public final class SpringWebTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-web-3.1";
-  private final DefaultHttpClientTelemetryBuilder<HttpRequest, ClientHttpResponse> builder;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> builder;
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpClientTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            SpringWebHttpAttributesGetter.INSTANCE,
-            Optional.of(HttpRequestSetter.INSTANCE));
+        new DefaultHttpClientInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME, openTelemetry, SpringWebHttpAttributesGetter.INSTANCE)
+            .setHeaderSetter(HttpRequestSetter.INSTANCE);
   }
 
   /**
@@ -111,6 +108,6 @@ public final class SpringWebTelemetryBuilder {
    * SpringWebTelemetryBuilder}.
    */
   public SpringWebTelemetry build() {
-    return new SpringWebTelemetry(builder.instrumenter());
+    return new SpringWebTelemetry(builder.build());
   }
 }
