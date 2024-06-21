@@ -18,13 +18,18 @@ public final class Jetty12Singletons {
   private static final Instrumenter<Request, Response> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
-        INSTRUMENTATION_NAME, new Jetty12HttpAttributesGetter(), Optional.of(Jetty12TextMapGetter.INSTANCE), builder -> builder.addContextCustomizer(
-                        (context, request, attributes) ->
-                            new AppServerBridge.Builder()
-                                .captureServletAttributes()
-                                .recordException()
-                                .init(context)));
+    INSTRUMENTER =
+        JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+            INSTRUMENTATION_NAME,
+            new Jetty12HttpAttributesGetter(),
+            Optional.of(Jetty12TextMapGetter.INSTANCE),
+            builder ->
+                builder.addContextCustomizer(
+                    (context, request, attributes) ->
+                        new AppServerBridge.Builder()
+                            .captureServletAttributes()
+                            .recordException()
+                            .init(context)));
   }
 
   private static final Jetty12Helper HELPER = new Jetty12Helper(INSTRUMENTER);

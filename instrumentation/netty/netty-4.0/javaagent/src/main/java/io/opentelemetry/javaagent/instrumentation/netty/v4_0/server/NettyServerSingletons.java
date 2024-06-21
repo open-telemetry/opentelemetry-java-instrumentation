@@ -20,11 +20,10 @@ public final class NettyServerSingletons {
       JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
           "io.opentelemetry.netty-4.0",
           new NettyHttpServerAttributesGetter(),
-          Optional.of(
-              HttpRequestHeadersGetter.INSTANCE),
-          builder -> builder.addContextCustomizer(
-              (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context)));
-
+          Optional.of(HttpRequestHeadersGetter.INSTANCE),
+          builder ->
+              builder.addContextCustomizer(
+                  (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context)));
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
     return INSTRUMENTER;

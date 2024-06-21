@@ -20,7 +20,8 @@ import org.apache.http.HttpResponse;
 public final class ApacheHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";
-  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> clientBuilder;
+  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse>
+      clientBuilder;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =

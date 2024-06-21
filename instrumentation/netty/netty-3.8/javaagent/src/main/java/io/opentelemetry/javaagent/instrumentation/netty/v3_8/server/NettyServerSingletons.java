@@ -17,9 +17,15 @@ final class NettyServerSingletons {
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
-        "io.opentelemetry.netty-3.8", new NettyHttpServerAttributesGetter(), Optional.of(NettyHeadersGetter.INSTANCE), builder -> builder.addContextCustomizer(
-            (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context)));
+    INSTRUMENTER =
+        JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+            "io.opentelemetry.netty-3.8",
+            new NettyHttpServerAttributesGetter(),
+            Optional.of(NettyHeadersGetter.INSTANCE),
+            builder ->
+                builder.addContextCustomizer(
+                    (context, requestAndChannel, startAttributes) ->
+                        NettyErrorHolder.init(context)));
   }
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {

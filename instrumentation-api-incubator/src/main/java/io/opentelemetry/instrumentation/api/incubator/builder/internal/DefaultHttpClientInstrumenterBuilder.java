@@ -85,7 +85,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setStatusExtractor(
       Function<
-          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+              SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
               ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
           statusExtractor) {
     this.statusExtractorTransformer = statusExtractor;
@@ -189,7 +189,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
-            .setSpanStatusExtractor(statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
+            .setSpanStatusExtractor(
+                statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());

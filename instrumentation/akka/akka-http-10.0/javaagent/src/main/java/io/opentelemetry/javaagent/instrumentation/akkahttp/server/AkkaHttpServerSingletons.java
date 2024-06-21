@@ -17,7 +17,8 @@ public final class AkkaHttpServerSingletons {
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = JavaagentHttpServerInstrumenterBuilder.create(
+    INSTRUMENTER =
+        JavaagentHttpServerInstrumenterBuilder.create(
             AkkaHttpUtil.instrumentationName(),
             new AkkaHttpServerAttributesGetter(),
             Optional.of(AkkaHttpServerHeaders.INSTANCE));

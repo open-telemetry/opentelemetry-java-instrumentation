@@ -23,17 +23,19 @@ public final class UndertowSingletons {
             INSTRUMENTATION_NAME,
             new UndertowHttpAttributesGetter(),
             Optional.of(UndertowExchangeGetter.INSTANCE),
-            builder -> builder.addContextCustomizer(
-                (context, request, attributes) -> {
-                  // span is ended when counter reaches 0, we start from 2 which accounts for the
-                  // handler that started the span and exchange completion listener
-                  context = UndertowActiveHandlers.init(context, 2);
+            builder ->
+                builder.addContextCustomizer(
+                    (context, request, attributes) -> {
+                      // span is ended when counter reaches 0, we start from 2 which accounts for
+                      // the
+                      // handler that started the span and exchange completion listener
+                      context = UndertowActiveHandlers.init(context, 2);
 
-                  return new AppServerBridge.Builder()
-                      .captureServletAttributes()
-                      .recordException()
-                      .init(context);
-                }));
+                      return new AppServerBridge.Builder()
+                          .captureServletAttributes()
+                          .recordException()
+                          .init(context);
+                    }));
   }
 
   private static final UndertowHelper HELPER = new UndertowHelper(INSTRUMENTER);

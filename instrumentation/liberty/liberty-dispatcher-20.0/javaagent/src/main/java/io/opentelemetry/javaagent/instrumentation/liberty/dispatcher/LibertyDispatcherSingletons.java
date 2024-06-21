@@ -15,10 +15,11 @@ public final class LibertyDispatcherSingletons {
   private static final Instrumenter<LibertyRequest, LibertyResponse> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = JavaagentHttpServerInstrumenterBuilder.create(
-        INSTRUMENTATION_NAME, new LibertyDispatcherHttpAttributesGetter(),
-        Optional.of(LibertyDispatcherRequestGetter.INSTANCE)
-    );
+    INSTRUMENTER =
+        JavaagentHttpServerInstrumenterBuilder.create(
+            INSTRUMENTATION_NAME,
+            new LibertyDispatcherHttpAttributesGetter(),
+            Optional.of(LibertyDispatcherRequestGetter.INSTANCE));
   }
 
   public static Instrumenter<LibertyRequest, LibertyResponse> instrumenter() {

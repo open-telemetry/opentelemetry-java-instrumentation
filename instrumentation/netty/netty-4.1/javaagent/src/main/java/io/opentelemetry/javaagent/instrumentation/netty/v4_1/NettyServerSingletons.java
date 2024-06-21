@@ -15,7 +15,7 @@ public final class NettyServerSingletons {
 
   static {
     NettyServerTelemetryBuilder builder = NettyServerTelemetry.builder(GlobalOpenTelemetry.get());
-     HttpServerInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    HttpServerInstrumenterBuilder.configure(CommonConfig.get(), builder);
     SERVER_TELEMETRY = builder.build();
   }
 
