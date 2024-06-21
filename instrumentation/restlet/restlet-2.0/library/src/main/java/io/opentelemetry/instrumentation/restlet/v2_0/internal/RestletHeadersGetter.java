@@ -18,7 +18,11 @@ import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.util.Series;
 
-final class RestletHeadersGetter implements TextMapGetter<Request> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class RestletHeadersGetter implements TextMapGetter<Request> {
 
   private static final MethodHandle GET_ATTRIBUTES;
 
