@@ -31,9 +31,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
-    implements HttpClientTelemetryBuilder<
-        DefaultHttpClientTelemetryBuilder<?, ?>, REQUEST, RESPONSE> {
+public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> {
 
   private final String instrumentationName;
   private final OpenTelemetry openTelemetry;
@@ -62,7 +60,10 @@ public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
     this.headerSetter = headerSetter;
   }
 
-  @Override
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   */
   @CanIgnoreReturnValue
   public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> addAttributeExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
@@ -70,7 +71,11 @@ public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
     return this;
   }
 
-  @Override
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
   @CanIgnoreReturnValue
   public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       List<String> requestHeaders) {
@@ -78,7 +83,11 @@ public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
     return this;
   }
 
-  @Override
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
   @CanIgnoreReturnValue
   public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       List<String> responseHeaders) {
@@ -86,7 +95,19 @@ public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
     return this;
   }
 
-  @Override
+  /**
+   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   */
   @CanIgnoreReturnValue
   public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setKnownMethods(
       Set<String> knownMethods) {
@@ -95,7 +116,12 @@ public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
     return this;
   }
 
-  @Override
+  /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
   @CanIgnoreReturnValue
   public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
@@ -103,7 +129,7 @@ public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>
     return this;
   }
 
-  @Override
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
       Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>

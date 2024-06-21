@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.builder.DefaultHttpClientTelemetryBuilder;
-import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -33,8 +32,7 @@ public final class JavaagentHttpClientInstrumenterBuilder {
         instrumentationName, httpAttributesGetter, headerSetter, customizer -> {});
   }
 
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
-      HttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder) {
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(Object builder) {
     return createWithCustomizer(builder, customizer -> {});
   }
 
@@ -50,7 +48,7 @@ public final class JavaagentHttpClientInstrumenterBuilder {
   }
 
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createWithCustomizer(
-      HttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder,
+      Object builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     CommonConfig config = CommonConfig.get();
     DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
@@ -67,15 +65,13 @@ public final class JavaagentHttpClientInstrumenterBuilder {
   }
 
   /**
-   * This method is used to access the builder field of the {@link HttpClientTelemetryBuilder}
-   * class. This is a workaround to access the builder field which is not exposed in the public API.
+   * This method is used to access the builder field of the builder object.
    *
    * <p>This approach allows us to re-use the existing builder classes from the library modules
    */
   @SuppressWarnings("unchecked")
   private static <REQUEST, RESPONSE>
-      DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> unwrapBuilder(
-          HttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder) {
+      DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> unwrapBuilder(Object builder) {
     if (builder instanceof DefaultHttpClientTelemetryBuilder<?, ?>) {
       return (DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>) builder;
     }

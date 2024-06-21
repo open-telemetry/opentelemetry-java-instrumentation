@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.httpclient;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.DefaultHttpClientTelemetryBuilder;
-import io.opentelemetry.instrumentation.api.incubator.builder.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientAttributesGetter;
 import java.net.http.HttpRequest;
@@ -20,9 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-public final class JavaHttpClientTelemetryBuilder
-    implements HttpClientTelemetryBuilder<
-        JavaHttpClientTelemetryBuilder, HttpRequest, HttpResponse<?>> {
+public final class JavaHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
   private final DefaultHttpClientTelemetryBuilder<HttpRequest, HttpResponse<?>> builder;
@@ -36,7 +34,10 @@ public final class JavaHttpClientTelemetryBuilder
             Optional.empty());
   }
 
-  @Override
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
@@ -44,28 +45,53 @@ public final class JavaHttpClientTelemetryBuilder
     return this;
   }
 
-  @Override
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
-  @Override
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
-  @Override
+  /**
+   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
 
-  @Override
+  /**
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
+   */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
@@ -73,7 +99,7 @@ public final class JavaHttpClientTelemetryBuilder
     return this;
   }
 
-  @Override
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
