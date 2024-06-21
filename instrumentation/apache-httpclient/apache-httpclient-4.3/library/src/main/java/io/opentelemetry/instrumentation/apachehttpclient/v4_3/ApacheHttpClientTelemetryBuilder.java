@@ -29,6 +29,7 @@ public final class ApacheHttpClientTelemetryBuilder {
             INSTRUMENTATION_NAME,
             openTelemetry,
             ApacheHttpClientHttpAttributesGetter.INSTANCE,
+            // We manually inject because we need to inject internal requests for redirects.
             Optional.empty());
   }
 
@@ -114,7 +115,6 @@ public final class ApacheHttpClientTelemetryBuilder {
    * ApacheHttpClientTelemetryBuilder}.
    */
   public ApacheHttpClientTelemetry build() {
-    // We manually inject because we need to inject internal requests for redirects.
     return new ApacheHttpClientTelemetry(
         builder.instrumenter(), builder.getOpenTelemetry().getPropagators());
   }
