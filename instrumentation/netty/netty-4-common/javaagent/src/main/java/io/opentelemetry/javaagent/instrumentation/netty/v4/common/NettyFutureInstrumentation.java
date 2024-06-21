@@ -61,7 +61,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
-    public static Object wrapListener(
+    public static Object wrapListener( // WIP this triggers "Handler on array requires positive index for"
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
 
       GenericFutureListener<? extends Future<?>> listener = listenerArg;
@@ -78,7 +78,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
-    public static Object wrapListener(
+    public static Object[] wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
       Context context = Java8BytecodeBridge.currentContext();
@@ -113,7 +113,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
-    public static Object wrapListener(
+    public static Object[] wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
       @SuppressWarnings({"unchecked", "rawtypes"})
