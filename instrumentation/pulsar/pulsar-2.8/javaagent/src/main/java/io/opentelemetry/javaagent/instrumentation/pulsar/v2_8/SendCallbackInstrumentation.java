@@ -31,8 +31,7 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("sendComplete"))
-            .and(takesArgument(0, named("java.lang.Exception"))),
+        isMethod().and(named("sendComplete")).and(takesArgument(0, named("java.lang.Exception"))),
         SendCallbackInstrumentation.class.getName() + "$SendCallbackSendCompleteAdvice");
   }
 
@@ -47,7 +46,9 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") PulsarRequest request) {
       // Extract the Context and PulsarRequest from the SendCallback instance.
       Object[] objects = VirtualFieldStore.extract(callback);
-      if (objects != null && objects.length == 2 && objects[0] instanceof Context
+      if (objects != null
+          && objects.length == 2
+          && objects[0] instanceof Context
           && objects[1] instanceof PulsarRequest) {
         // If the extraction was successful, store the Context and PulsarRequest in local variables.
         otelContext = (Context) objects[0];
@@ -69,5 +70,4 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
       }
     }
   }
-
 }
