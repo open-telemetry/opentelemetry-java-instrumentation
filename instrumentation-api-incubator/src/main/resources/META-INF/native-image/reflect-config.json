@@ -1,0 +1,8 @@
+[
+  {
+    "name": "io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder",
+    "fields": [
+      { "name" : "builder" }
+    ]
+  }
+]
