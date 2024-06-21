@@ -8,9 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetry;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetryBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import java.util.function.Function;
 
@@ -22,28 +23,16 @@ public final class ArmeriaSingletons {
   public static final Function<? super HttpService, ? extends HttpService> SERVER_DECORATOR;
 
   static {
-    ArmeriaTelemetry telemetry =
-        ArmeriaTelemetry.builder(GlobalOpenTelemetry.get())
-            .setCapturedClientRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-            .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-            .setCapturedServerRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-            .setCapturedServerResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-            .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-            .addClientAttributeExtractor(
-                HttpClientPeerServiceAttributesExtractor.create(
-                    ArmeriaHttpClientAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceResolver()))
-            .setEmitExperimentalHttpClientMetrics(
-                CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry())
-            .setEmitExperimentalHttpServerMetrics(
-                CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
-            .build();
+    ArmeriaTelemetryBuilder builder = ArmeriaTelemetry.builder(GlobalOpenTelemetry.get());
+    HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    HttpServerInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    ArmeriaTelemetry telemetry = builder.build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();
     Function<? super HttpService, ? extends HttpService> libraryDecorator =
         telemetry
             .newServiceDecorator()
-            .compose(service -> new ResponseCustomizingDecorator(service));
+            .compose(ResponseCustomizingDecorator::new);
     SERVER_DECORATOR = service -> new ServerDecorator(service, libraryDecorator.apply(service));
   }
 
