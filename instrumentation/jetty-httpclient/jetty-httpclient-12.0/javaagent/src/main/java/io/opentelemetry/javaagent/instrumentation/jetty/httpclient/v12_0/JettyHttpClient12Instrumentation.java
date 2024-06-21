@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClient12TracingInterceptor;
+import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientTracingListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -52,10 +52,7 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       // start span
       Context parentContext = Context.current();
-      JettyHttpClient12TracingInterceptor interceptor =
-          new JettyHttpClient12TracingInterceptor(parentContext, instrumenter());
-      interceptor.attachToRequest(request);
-      context = interceptor.getContext();
+      context = JettyClientTracingListener.handleRequest(parentContext, request, instrumenter());
       if (context == null) {
         return;
       }

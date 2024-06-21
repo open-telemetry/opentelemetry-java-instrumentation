@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClient12TracingInterceptor;
+import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientTracingListener;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import org.eclipse.jetty.client.HttpClient;
@@ -20,6 +20,8 @@ import org.eclipse.jetty.client.transport.HttpRequest;
 class TracingHttpRequest extends HttpRequest {
 
   private Context parentContext;
+
+  private Context clientContext;
 
   private final Instrumenter<Request, Response> instrumenter;
 
@@ -35,13 +37,11 @@ class TracingHttpRequest extends HttpRequest {
   @Override
   public void send(Response.CompleteListener listener) {
     parentContext = Context.current();
-    JettyHttpClient12TracingInterceptor interceptor =
-        new JettyHttpClient12TracingInterceptor(parentContext, instrumenter);
-    // start span
-    interceptor.attachToRequest(this);
+    // start span and attach listeners.
+    clientContext = JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
     super.send(
         result -> {
-          if (parentContext != null) {
+          if (clientContext != null) {
             try (Scope scope = parentContext.makeCurrent()) {
               listener.onComplete(result);
             }
@@ -53,7 +53,7 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifyQueued() {
-    if (parentContext != null) {
+    if (clientContext != null) {
       try (Scope scope = parentContext.makeCurrent()) {
         super.notifyQueued();
       }
@@ -64,7 +64,7 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifyBegin() {
-    if (parentContext != null) {
+    if (clientContext != null) {
       try (Scope scope = parentContext.makeCurrent()) {
         super.notifyBegin();
       }
@@ -75,7 +75,7 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifyHeaders() {
-    if (parentContext != null) {
+    if (clientContext != null) {
       try (Scope scope = parentContext.makeCurrent()) {
         super.notifyHeaders();
       }
@@ -86,7 +86,7 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifyCommit() {
-    if (parentContext != null) {
+    if (clientContext != null) {
       try (Scope scope = parentContext.makeCurrent()) {
         super.notifyCommit();
       }
@@ -97,7 +97,7 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifyContent(ByteBuffer byteBuffer) {
-    if (parentContext != null) {
+    if (clientContext != null) {
       try (Scope scope = parentContext.makeCurrent()) {
         super.notifyContent(byteBuffer);
       }
@@ -108,7 +108,7 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifySuccess() {
-    if (parentContext != null) {
+    if (clientContext != null) {
       try (Scope scope = parentContext.makeCurrent()) {
         super.notifySuccess();
       }
@@ -119,7 +119,7 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifyFailure(Throwable failure) {
-    if (parentContext != null) {
+    if (clientContext != null) {
       try (Scope scope = parentContext.makeCurrent()) {
         super.notifyFailure(failure);
       }
