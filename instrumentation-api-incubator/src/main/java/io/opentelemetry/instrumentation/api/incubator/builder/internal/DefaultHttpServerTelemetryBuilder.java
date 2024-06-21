@@ -41,7 +41,7 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
   private final String instrumentationName;
   private final OpenTelemetry openTelemetry;
 
-  private final List<AttributesExtractor<REQUEST, RESPONSE>> additionalExtractors =
+  private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
   private Function<
       SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
@@ -75,7 +75,7 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> addAttributesExtractor(
-      AttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
+      AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
   }
