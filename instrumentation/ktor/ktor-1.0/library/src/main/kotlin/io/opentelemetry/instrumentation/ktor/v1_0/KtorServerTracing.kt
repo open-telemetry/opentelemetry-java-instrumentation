@@ -97,7 +97,7 @@ class KtorServerTracing private constructor(
   }
 
   companion object Feature : ApplicationFeature<Application, Configuration, KtorServerTracing> {
-    private val INSTRUMENTATION_NAME = "io.opentelemetry.ktor-1.0"
+    private const val INSTRUMENTATION_NAME = "io.opentelemetry.ktor-1.0"
 
     private val contextKey = AttributeKey<Context>("OpenTelemetry")
     private val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
