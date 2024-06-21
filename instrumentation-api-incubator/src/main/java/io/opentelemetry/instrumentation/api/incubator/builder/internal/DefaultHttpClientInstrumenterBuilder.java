@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -45,6 +46,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
+  private Function<
+          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+          ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+      statusExtractorTransformer = Function.identity();
   private final HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
@@ -75,6 +80,16 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> addAttributeExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setStatusExtractor(
+      Function<
+          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+              ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+          statusExtractor) {
+    this.statusExtractorTransformer = statusExtractor;
     return this;
   }
 
@@ -175,7 +190,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(attributesGetter))
+            .setSpanStatusExtractor(statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
