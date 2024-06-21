@@ -70,12 +70,11 @@ public final class ArmeriaTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
     clientBuilder.addAttributeExtractor(attributesExtractor);
-    serverBuilder.addAttributesExtractor((AttributesExtractor) attributesExtractor);
+    serverBuilder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
