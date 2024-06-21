@@ -31,12 +31,18 @@ public final class RatpackTelemetryBuilder {
   private final DefaultHttpServerTelemetryBuilder<Request, Response> serverBuilder;
 
   RatpackTelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
-           openTelemetry,
-        RatpackHttpClientAttributesGetter.INSTANCE,
-           Optional.of(RequestHeaderSetter.INSTANCE));
-       serverBuilder = new DefaultHttpServerTelemetryBuilder<>(INSTRUMENTATION_NAME, openTelemetry,
-           RatpackHttpAttributesGetter.INSTANCE, Optional.of(RatpackGetter.INSTANCE));
+    clientBuilder =
+        new DefaultHttpClientTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            RatpackHttpClientAttributesGetter.INSTANCE,
+            Optional.of(RequestHeaderSetter.INSTANCE));
+    serverBuilder =
+        new DefaultHttpServerTelemetryBuilder<>(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            RatpackHttpAttributesGetter.INSTANCE,
+            Optional.of(RatpackGetter.INSTANCE));
   }
 
   /**
@@ -47,8 +53,8 @@ public final class RatpackTelemetryBuilder {
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
-    clientBuilder.addAttributeExtractor((AttributesExtractor)attributesExtractor);
-       serverBuilder.addAttributesExtractor((AttributesExtractor)attributesExtractor);
+    clientBuilder.addAttributeExtractor((AttributesExtractor) attributesExtractor);
+    serverBuilder.addAttributesExtractor((AttributesExtractor) attributesExtractor);
     return this;
   }
 

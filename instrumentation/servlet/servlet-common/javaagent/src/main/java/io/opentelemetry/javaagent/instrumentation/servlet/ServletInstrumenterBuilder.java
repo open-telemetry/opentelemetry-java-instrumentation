@@ -45,9 +45,14 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           httpAttributesGetter) {
 
-    DefaultHttpServerTelemetryBuilder<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> serverBuilder = new DefaultHttpServerTelemetryBuilder<>(
-        instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter,
-        Optional.of(new ServletRequestGetter<>(accessor)));
+    DefaultHttpServerTelemetryBuilder<
+            ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+        serverBuilder =
+            new DefaultHttpServerTelemetryBuilder<>(
+                instrumentationName,
+                GlobalOpenTelemetry.get(),
+                httpAttributesGetter,
+                Optional.of(new ServletRequestGetter<>(accessor)));
     serverBuilder.setSpanNameExtractor(e -> spanNameExtractor);
     return JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
         serverBuilder,
@@ -63,8 +68,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
           }
 
           builder
-              .addAttributesExtractor(
-                  new ServletAdditionalAttributesExtractor<>(accessor))
+              .addAttributesExtractor(new ServletAdditionalAttributesExtractor<>(accessor))
               .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor));
         });
   }
