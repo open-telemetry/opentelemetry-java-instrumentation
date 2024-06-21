@@ -9,7 +9,11 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import javax.annotation.Nullable;
 
-enum HttpRequestHeadersGetter implements TextMapGetter<HttpRequestAndChannel> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public enum HttpRequestHeadersGetter implements TextMapGetter<HttpRequestAndChannel> {
   INSTANCE;
 
   @Override
