@@ -9,16 +9,16 @@ import static io.opentelemetry.instrumentation.netty.v4.common.internal.client.N
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import java.util.Collections;
-import java.util.function.Function;
 
 public final class NettyClientSingletons {
 
@@ -35,24 +35,15 @@ public final class NettyClientSingletons {
   private static final NettyClientHandlerFactory CLIENT_HANDLER_FACTORY;
 
   static {
+    NettyClientInstrumenterBuilder builder = new NettyClientInstrumenterBuilder(
+            "io.opentelemetry.netty-4.1", GlobalOpenTelemetry.get());
+        HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
     NettyClientInstrumenterFactory factory =
         new NettyClientInstrumenterFactory(
-            GlobalOpenTelemetry.get(),
-            "io.opentelemetry.netty-4.1",
+            builder,
             enabledOrErrorOnly(connectionTelemetryEnabled),
-            enabledOrErrorOnly(sslTelemetryEnabled),
-            CommonConfig.get().getPeerServiceResolver(),
-            CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
-    INSTRUMENTER =
-        factory.createHttpInstrumenter(
-            builder ->
-                builder
-                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-            builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-            Function.identity(),
-            Collections.emptyList());
+            enabledOrErrorOnly(sslTelemetryEnabled));
+    INSTRUMENTER = factory.instrumenter();
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
     CLIENT_HANDLER_FACTORY =

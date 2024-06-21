@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
+public class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private final String instrumentationName;
   private final OpenTelemetry openTelemetry;
@@ -209,6 +209,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   public OpenTelemetry getOpenTelemetry() {
     return openTelemetry;
+  }
+
+  public String getInstrumentationName() {
+    return instrumentationName;
   }
 
   public static <REQUEST, RESPONSE>
