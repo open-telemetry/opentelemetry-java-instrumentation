@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
-import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreCommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /**

@@ -9,7 +9,7 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
-import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;

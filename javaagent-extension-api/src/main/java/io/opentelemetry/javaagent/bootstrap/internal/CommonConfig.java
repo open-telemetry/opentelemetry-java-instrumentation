@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreCommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

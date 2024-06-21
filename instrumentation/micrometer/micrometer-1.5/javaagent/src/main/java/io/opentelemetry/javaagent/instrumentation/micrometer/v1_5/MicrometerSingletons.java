@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 

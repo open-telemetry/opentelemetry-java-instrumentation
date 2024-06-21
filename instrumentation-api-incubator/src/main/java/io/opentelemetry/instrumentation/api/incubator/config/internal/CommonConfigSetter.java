@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.internal.config;
+package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.incubator.internal.config.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
 import java.util.List;
 
 /**

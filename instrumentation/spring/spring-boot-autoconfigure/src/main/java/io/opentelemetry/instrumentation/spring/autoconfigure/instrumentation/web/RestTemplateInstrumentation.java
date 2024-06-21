@@ -7,9 +7,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.we
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.internal.instrumenter.HttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.CommonConfigUtil;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
+import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -23,11 +24,9 @@ class RestTemplateInstrumentation {
   static RestTemplate addIfNotPresent(
       RestTemplate restTemplate, OpenTelemetry openTelemetry, ConfigProperties config) {
 
-    ClientHttpRequestInterceptor instrumentationInterceptor =
-        HttpClientInstrumenterBuilder.configure(
-                CommonConfigUtil.getCommonConfig(config), SpringWebTelemetry.builder(openTelemetry))
-            .build()
-            .newInterceptor();
+    SpringWebTelemetryBuilder builder = SpringWebTelemetry.builder(openTelemetry);
+    HttpClientInstrumenterBuilder.configure(CommonConfigUtil.getCommonConfig(config), builder);
+    ClientHttpRequestInterceptor instrumentationInterceptor = builder.build().newInterceptor();
 
     List<ClientHttpRequestInterceptor> restTemplateInterceptors = restTemplate.getInterceptors();
     if (restTemplateInterceptors.stream()
