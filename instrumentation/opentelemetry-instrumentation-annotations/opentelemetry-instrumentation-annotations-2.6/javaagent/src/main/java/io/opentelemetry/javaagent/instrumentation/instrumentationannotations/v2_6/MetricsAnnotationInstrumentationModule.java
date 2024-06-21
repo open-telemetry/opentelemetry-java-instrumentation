@@ -41,6 +41,12 @@ public class MetricsAnnotationInstrumentationModule extends InstrumentationModul
   }
 
   @Override
+  public boolean isIndyModule() {
+    // TimedInstrumentation does not work with indy
+    return false;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new CountedInstrumentation(), new TimedInstrumentation());
   }
