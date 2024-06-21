@@ -31,6 +31,10 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> {
 
   private final String instrumentationName;
