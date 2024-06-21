@@ -25,12 +25,12 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 public final class JettyClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
-  private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
+  private final DefaultHttpClientInstrumenterBuilder<Request, Response> clientBuilder;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
+    clientBuilder =
         new DefaultHttpClientInstrumenterBuilder<>(
                 INSTRUMENTATION_NAME, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE)
             .setHeaderSetter(HttpHeaderSetter.INSTANCE);
@@ -56,7 +56,7 @@ public final class JettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -67,7 +67,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+    clientBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -78,7 +78,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+    clientBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -97,7 +97,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    builder.setKnownMethods(knownMethods);
+    clientBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -110,7 +110,7 @@ public final class JettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -119,7 +119,7 @@ public final class JettyClientTelemetryBuilder {
   public JettyClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
           spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+    clientBuilder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -129,7 +129,7 @@ public final class JettyClientTelemetryBuilder {
    */
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(builder.build(), sslContextFactory, httpClientTransport);
+        TracingHttpClient.buildNew(clientBuilder.build(), sslContextFactory, httpClientTransport);
 
     return new JettyClientTelemetry(tracingHttpClient);
   }

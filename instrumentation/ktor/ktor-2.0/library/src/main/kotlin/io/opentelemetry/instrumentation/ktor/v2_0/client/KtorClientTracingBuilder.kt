@@ -18,10 +18,10 @@ import java.util.*
 
 class KtorClientTracingBuilder {
 
-  private lateinit var builder: DefaultHttpClientTelemetryBuilder<HttpRequestData, HttpResponse>
+  private lateinit var clientBuilder: DefaultHttpClientTelemetryBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
-    this.builder = DefaultHttpClientTelemetryBuilder(
+    this.clientBuilder = DefaultHttpClientTelemetryBuilder(
       INSTRUMENTATION_NAME,
       openTelemetry,
       KtorHttpClientAttributesGetter,
@@ -44,7 +44,7 @@ class KtorClientTracingBuilder {
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
-    builder.setCapturedRequestHeaders(headers.toList())
+    clientBuilder.setCapturedRequestHeaders(headers.toList())
   }
 
   @Deprecated(
@@ -62,7 +62,7 @@ class KtorClientTracingBuilder {
   fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
-    builder.setCapturedResponseHeaders(headers.toList())
+    clientBuilder.setCapturedResponseHeaders(headers.toList())
   }
 
   @Deprecated(
@@ -79,7 +79,7 @@ class KtorClientTracingBuilder {
   fun knownMethods(methods: Iterable<HttpMethod>) = knownMethods(methods.map { it.value })
 
   fun knownMethods(methods: Iterable<String>) {
-    builder.setKnownMethods(methods.toSet())
+    clientBuilder.setKnownMethods(methods.toSet())
   }
 
   @Deprecated("Please use method `attributeExtractor`")
@@ -97,7 +97,7 @@ class KtorClientTracingBuilder {
 
   fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    this.builder.addAttributeExtractor(
+    this.clientBuilder.addAttributeExtractor(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))
@@ -156,11 +156,11 @@ class KtorClientTracingBuilder {
   }
 
   fun emitExperimentalHttpClientMetrics() {
-    builder.setEmitExperimentalHttpClientMetrics(true)
+    clientBuilder.setEmitExperimentalHttpClientMetrics(true)
   }
 
   internal fun build(): KtorClientTracing = KtorClientTracing(
-    instrumenter = builder.instrumenter(),
-    propagators = builder.openTelemetry.propagators,
+    instrumenter = clientBuilder.instrumenter(),
+    propagators = clientBuilder.openTelemetry.propagators,
   )
 }

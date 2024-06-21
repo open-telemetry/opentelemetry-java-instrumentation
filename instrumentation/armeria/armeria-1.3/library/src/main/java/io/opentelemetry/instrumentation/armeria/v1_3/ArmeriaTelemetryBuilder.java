@@ -35,12 +35,12 @@ public final class ArmeriaTelemetryBuilder {
   private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   @Nullable private String peerService;
-  private final DefaultHttpClientTelemetryBuilder<ClientRequestContext, RequestLog> builder;
+  private final DefaultHttpClientTelemetryBuilder<ClientRequestContext, RequestLog> clientBuilder;
   private final DefaultHttpServerTelemetryBuilder<ServiceRequestContext, RequestLog> serverBuilder;
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   ArmeriaTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
+    clientBuilder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
         openTelemetry,
         (HttpClientAttributesGetter)ArmeriaHttpClientAttributesGetter.INSTANCE,
         Optional.of(ClientRequestContextSetter.INSTANCE));
@@ -55,7 +55,7 @@ public final class ArmeriaTelemetryBuilder {
               SpanStatusExtractor<RequestContext, RequestLog>,
               ? extends SpanStatusExtractor<? super RequestContext, ? super RequestLog>>
           statusExtractor) {
-    builder.setStatusExtractor((Function)statusExtractor);
+    clientBuilder.setStatusExtractor((Function)statusExtractor);
     serverBuilder.setStatusExtractor((Function)statusExtractor);
     return this;
   }
@@ -68,7 +68,7 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributeExtractor(attributesExtractor);
     serverBuilder.addAttributesExtractor((AttributesExtractor)attributesExtractor);
     return this;
   }
@@ -81,7 +81,7 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -99,7 +99,7 @@ public final class ArmeriaTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+    clientBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -110,7 +110,7 @@ public final class ArmeriaTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+    clientBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -152,7 +152,7 @@ public final class ArmeriaTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    builder.setKnownMethods(knownMethods);
+    clientBuilder.setKnownMethods(knownMethods);
     serverBuilder.setKnownMethods(knownMethods);
     return this;
   }
@@ -166,7 +166,7 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
@@ -180,7 +180,7 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpServerMetrics);
+    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpServerMetrics);
     serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
@@ -193,7 +193,7 @@ public final class ArmeriaTelemetryBuilder {
               SpanNameExtractor<RequestContext>,
               ? extends SpanNameExtractor<? super RequestContext>>
           clientSpanNameExtractor) {
-    builder.setSpanNameExtractor((Function)clientSpanNameExtractor);
+    clientBuilder.setSpanNameExtractor((Function)clientSpanNameExtractor);
     return this;
   }
 
@@ -211,7 +211,7 @@ public final class ArmeriaTelemetryBuilder {
 
   public ArmeriaTelemetry build() {
     return new ArmeriaTelemetry(
-        builder.instrumenter(clientInstrumenterBuilder -> {
+        clientBuilder.instrumenter(clientInstrumenterBuilder -> {
           if (peerService != null) {
                clientInstrumenterBuilder.addAttributesExtractor(
                    AttributesExtractor.constant(PEER_SERVICE, peerService));

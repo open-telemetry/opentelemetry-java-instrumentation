@@ -26,11 +26,11 @@ import org.springframework.web.server.ServerWebExchange;
 public final class SpringWebfluxTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.3";
 
-  private final DefaultHttpClientTelemetryBuilder<ClientRequest, ClientResponse> builder;
+  private final DefaultHttpClientTelemetryBuilder<ClientRequest, ClientResponse> clientBuilder;
   private final DefaultHttpServerTelemetryBuilder<ServerWebExchange, ServerWebExchange> serverBuilder;
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
+    clientBuilder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
               openTelemetry,
         WebClientHttpAttributesGetter.INSTANCE,
         Optional.empty());
@@ -45,7 +45,7 @@ public final class SpringWebfluxTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder addClientAttributesExtractor(
       AttributesExtractor<ClientRequest, ClientResponse> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -57,7 +57,7 @@ public final class SpringWebfluxTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setCapturedClientRequestHeaders(
       List<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+    clientBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -69,7 +69,7 @@ public final class SpringWebfluxTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setCapturedClientResponseHeaders(
       List<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+    clientBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -126,7 +126,7 @@ public final class SpringWebfluxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    builder.setKnownMethods(knownMethods);
+    clientBuilder.setKnownMethods(knownMethods);
     serverBuilder.setKnownMethods(knownMethods);
     return this;
   }
@@ -140,7 +140,7 @@ public final class SpringWebfluxTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpClientTelemetry(
       boolean emitExperimentalHttpClientTelemetry) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientTelemetry);
+    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientTelemetry);
     return this;
   }
 
@@ -162,7 +162,7 @@ public final class SpringWebfluxTelemetryBuilder {
   public SpringWebfluxTelemetryBuilder setClientSpanNameExtractor(
       Function<SpanNameExtractor<ClientRequest>, ? extends SpanNameExtractor<? super ClientRequest>>
           clientSpanNameExtractor) {
-    builder.setSpanNameExtractor(clientSpanNameExtractor);
+    clientBuilder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
   }
 
@@ -183,8 +183,8 @@ public final class SpringWebfluxTelemetryBuilder {
    */
   public SpringWebfluxTelemetry build() {
     return new SpringWebfluxTelemetry(
-        builder.instrumenter(),
+        clientBuilder.instrumenter(),
         serverBuilder.instrumenter(),
-        builder.getOpenTelemetry().getPropagators());
+        clientBuilder.getOpenTelemetry().getPropagators());
   }
 }
