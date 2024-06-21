@@ -128,7 +128,7 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
       def job = {
         latch.await()
         runWithSpan("client " + index) {
-          HttpRequestBuilder builder = HttpRequest.build()
+          HttpRequestBuilder builder = HttpRequest.builder()
             .get("${baseUrl}?${TEST_REQUEST_ID_PARAMETER}=${index}")
           Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index)
           propagator.inject(Context.current(), builder, setter)
