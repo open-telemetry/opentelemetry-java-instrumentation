@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -37,9 +36,6 @@ class KtorServerTracing private constructor(
 
   class Configuration {
     internal lateinit var serverBuilder: DefaultHttpServerTelemetryBuilder<ApplicationRequest, ApplicationResponse>
-
-    internal var statusExtractor:
-      (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
 
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
@@ -63,12 +59,13 @@ class KtorServerTracing private constructor(
     }
 
     fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
-      statusExtractor = { prevExtractor ->
-        SpanStatusExtractor<ApplicationRequest, ApplicationResponse> { spanStatusBuilder: SpanStatusBuilder,
-                                                                       request: ApplicationRequest,
-                                                                       response: ApplicationResponse?,
-                                                                       throwable: Throwable? ->
-          extract(SpanStatusData(spanStatusBuilder, request, response, throwable), prevExtractor)
+      serverBuilder.setStatusExtractor{ prevExtractor ->
+        SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
+                              request: ApplicationRequest,
+                              response: ApplicationResponse?,
+                              throwable: Throwable? ->
+          @Suppress("UNCHECKED_CAST")
+          extract(SpanStatusData(spanStatusBuilder, request, response, throwable), prevExtractor as SpanStatusExtractor<ApplicationRequest, ApplicationResponse>)
         }
       }
     }
@@ -226,16 +223,8 @@ class KtorServerTracing private constructor(
 
       require(configuration.isOpenTelemetryInitialized()) { "OpenTelemetry must be set" }
 
-      val httpAttributesGetter = KtorHttpServerAttributesGetter.INSTANCE
-
-      val instrumenterBuilder = configuration.serverBuilder.instrumenterBuilder { }
-
-      with(instrumenterBuilder) {
-        setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
-      }
-
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
-        instrumenterBuilder,
+        configuration.serverBuilder.instrumenterBuilder { },
         ApplicationRequestGetter,
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )
