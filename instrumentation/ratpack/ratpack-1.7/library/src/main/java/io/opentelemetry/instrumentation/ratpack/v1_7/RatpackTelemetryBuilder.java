@@ -7,26 +7,14 @@ package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import ratpack.http.Request;
@@ -39,55 +27,35 @@ public final class RatpackTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
 
-  private final OpenTelemetry openTelemetry;
-
-  private final List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors =
-      new ArrayList<>();
-  private final HttpClientAttributesExtractorBuilder<RequestSpec, HttpResponse>
-      httpClientAttributesExtractorBuilder =
-          HttpClientAttributesExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
-  private final HttpServerAttributesExtractorBuilder<Request, Response>
-      httpServerAttributesExtractorBuilder =
-          HttpServerAttributesExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
-
-  private final HttpSpanNameExtractorBuilder<RequestSpec> httpClientSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(RatpackHttpClientAttributesGetter.INSTANCE);
-  private final HttpSpanNameExtractorBuilder<Request> httpServerSpanNameExtractorBuilder =
-      HttpSpanNameExtractor.builder(RatpackHttpAttributesGetter.INSTANCE);
-
-  private Function<SpanNameExtractor<RequestSpec>, ? extends SpanNameExtractor<? super RequestSpec>>
-      clientSpanNameExtractorTransformer = Function.identity();
-  private Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
-      serverSpanNameExtractorTransformer = Function.identity();
-
-  private final HttpServerRouteBuilder<Request> httpServerRouteBuilder =
-      HttpServerRoute.builder(RatpackHttpAttributesGetter.INSTANCE);
-
-  private final List<AttributesExtractor<? super RequestSpec, ? super HttpResponse>>
-      additionalHttpClientExtractors = new ArrayList<>();
-
-  private boolean emitExperimentalHttpClientMetrics = false;
-  private boolean emitExperimentalHttpServerMetrics = false;
+  private final DefaultHttpClientTelemetryBuilder<RequestSpec, HttpResponse> builder;
+  private final DefaultHttpServerTelemetryBuilder<Request, Response> serverBuilder;
 
   RatpackTelemetryBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+    builder = new DefaultHttpClientTelemetryBuilder<>(INSTRUMENTATION_NAME,
+           openTelemetry,
+        RatpackHttpClientAttributesGetter.INSTANCE,
+           Optional.of(RequestHeaderSetter.INSTANCE));
+       serverBuilder = new DefaultHttpServerTelemetryBuilder<>(INSTRUMENTATION_NAME, openTelemetry,
+           RatpackHttpAttributesGetter.INSTANCE, Optional.of(RatpackGetter.INSTANCE));
   }
 
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
+  @SuppressWarnings({"unchecked", "rawtypes"})
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
-    additionalExtractors.add(attributesExtractor);
+    builder.addAttributeExtractor((AttributesExtractor)attributesExtractor);
+       serverBuilder.addAttributesExtractor((AttributesExtractor)attributesExtractor);
     return this;
   }
 
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
-    additionalHttpClientExtractors.add(attributesExtractor);
+    builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -98,7 +66,7 @@ public final class RatpackTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedServerRequestHeaders(List<String> requestHeaders) {
-    httpServerAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    serverBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -109,7 +77,7 @@ public final class RatpackTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedServerResponseHeaders(List<String> responseHeaders) {
-    httpServerAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    serverBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -120,7 +88,7 @@ public final class RatpackTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
-    httpClientAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -131,7 +99,7 @@ public final class RatpackTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
-    httpClientAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -151,11 +119,8 @@ public final class RatpackTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    httpClientAttributesExtractorBuilder.setKnownMethods(knownMethods);
-    httpServerAttributesExtractorBuilder.setKnownMethods(knownMethods);
-    httpClientSpanNameExtractorBuilder.setKnownMethods(knownMethods);
-    httpServerSpanNameExtractorBuilder.setKnownMethods(knownMethods);
-    httpServerRouteBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
+    serverBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -168,7 +133,7 @@ public final class RatpackTelemetryBuilder {
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -181,7 +146,7 @@ public final class RatpackTelemetryBuilder {
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 
@@ -190,7 +155,7 @@ public final class RatpackTelemetryBuilder {
   public RatpackTelemetryBuilder setClientSpanNameExtractor(
       Function<SpanNameExtractor<RequestSpec>, ? extends SpanNameExtractor<? super RequestSpec>>
           clientSpanNameExtractor) {
-    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+    builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
   }
 
@@ -199,53 +164,12 @@ public final class RatpackTelemetryBuilder {
   public RatpackTelemetryBuilder setServerSpanNameExtractor(
       Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
           serverSpanNameExtractor) {
-    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+    serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
   }
 
   /** Returns a new {@link RatpackTelemetry} with the configuration of this builder. */
   public RatpackTelemetry build() {
-    return new RatpackTelemetry(buildServerInstrumenter(), httpClientInstrumenter());
-  }
-
-  private Instrumenter<Request, Response> buildServerInstrumenter() {
-    RatpackHttpAttributesGetter httpAttributes = RatpackHttpAttributesGetter.INSTANCE;
-    SpanNameExtractor<? super Request> spanNameExtractor =
-        serverSpanNameExtractorTransformer.apply(httpServerSpanNameExtractorBuilder.build());
-
-    InstrumenterBuilder<Request, Response> builder =
-        Instrumenter.<Request, Response>builder(
-                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
-            .addAttributesExtractor(httpServerAttributesExtractorBuilder.build())
-            .addAttributesExtractors(additionalExtractors)
-            .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(httpServerRouteBuilder.build());
-    if (emitExperimentalHttpServerMetrics) {
-      builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributes))
-          .addOperationMetrics(HttpServerExperimentalMetrics.get());
-    }
-    return builder.buildServerInstrumenter(RatpackGetter.INSTANCE);
-  }
-
-  private Instrumenter<RequestSpec, HttpResponse> httpClientInstrumenter() {
-    RatpackHttpClientAttributesGetter httpAttributes = RatpackHttpClientAttributesGetter.INSTANCE;
-    SpanNameExtractor<? super RequestSpec> spanNameExtractor =
-        clientSpanNameExtractorTransformer.apply(httpClientSpanNameExtractorBuilder.build());
-
-    InstrumenterBuilder<RequestSpec, HttpResponse> builder =
-        Instrumenter.<RequestSpec, HttpResponse>builder(
-                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributes))
-            .addAttributesExtractor(httpClientAttributesExtractorBuilder.build())
-            .addAttributesExtractors(additionalHttpClientExtractors)
-            .addOperationMetrics(HttpClientMetrics.get());
-    if (emitExperimentalHttpClientMetrics) {
-      builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributes))
-          .addOperationMetrics(HttpClientExperimentalMetrics.get());
-    }
-    return builder.buildClientInstrumenter(RequestHeaderSetter.INSTANCE);
+    return new RatpackTelemetry(serverBuilder.instrumenter(), builder.instrumenter());
   }
 }

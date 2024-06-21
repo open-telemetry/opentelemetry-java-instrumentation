@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
@@ -42,6 +43,10 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
 
   private final List<AttributesExtractor<REQUEST, RESPONSE>> additionalExtractors =
       new ArrayList<>();
+  private Function<
+      SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+          ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+      statusExtractorTransformer = Function.identity();
   private final HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
@@ -72,6 +77,16 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
   public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> addAttributesExtractor(
       AttributesExtractor<REQUEST, RESPONSE> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> setStatusExtractor(
+      Function<
+          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+              ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+          statusExtractor) {
+    this.statusExtractorTransformer = statusExtractor;
     return this;
   }
 
@@ -164,7 +179,7 @@ public final class DefaultHttpServerTelemetryBuilder<REQUEST, RESPONSE> {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(attributesGetter))
+            .setSpanStatusExtractor(statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
