@@ -53,7 +53,7 @@ public final class JavaagentHttpClientInstrumenterBuilder {
       HttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     CommonConfig config = CommonConfig.get();
-    DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> defaultBuilder = builderField(builder);
+    DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
     set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
     set(config::getClientRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
     set(config::getClientResponseHeaders, defaultBuilder::setCapturedResponseHeaders);
@@ -74,8 +74,11 @@ public final class JavaagentHttpClientInstrumenterBuilder {
    */
   @SuppressWarnings("unchecked")
   private static <REQUEST, RESPONSE>
-      DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> builderField(
+      DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> unwrapBuilder(
           HttpClientTelemetryBuilder<?, REQUEST, RESPONSE> builder) {
+    if (builder instanceof DefaultHttpClientTelemetryBuilder<?, ?>) {
+      return (DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE>) builder;
+    }
     try {
       Field field = builder.getClass().getDeclaredField("builder");
       field.setAccessible(true);
