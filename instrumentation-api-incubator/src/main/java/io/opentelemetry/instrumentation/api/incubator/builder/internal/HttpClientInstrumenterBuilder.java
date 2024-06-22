@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -19,10 +17,9 @@ import java.util.function.Supplier;
 public class HttpClientInstrumenterBuilder {
   private HttpClientInstrumenterBuilder() {}
 
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> configure(
-      CoreCommonConfig config,
-      Object builder,
-      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
+  public static <REQUEST, RESPONSE>
+      DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(
+          CoreCommonConfig config, Object builder) {
     DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
     set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
     set(config::getClientRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
@@ -31,8 +28,7 @@ public class HttpClientInstrumenterBuilder {
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         defaultBuilder::setEmitExperimentalHttpClientMetrics);
-    defaultBuilder.setBuilderCustomizer(builderCustomizer);
-    return defaultBuilder.build();
+    return defaultBuilder;
   }
 
   private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {

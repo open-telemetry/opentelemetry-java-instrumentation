@@ -13,11 +13,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public final class ConfigPropertiesBridge implements CoreInstrumentationConfig {
+final class ConfigPropertiesBridge implements CoreInstrumentationConfig {
 
   private final ConfigProperties configProperties;
 
