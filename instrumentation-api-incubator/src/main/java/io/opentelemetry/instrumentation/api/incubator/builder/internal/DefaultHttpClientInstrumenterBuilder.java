@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -24,11 +25,13 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -191,5 +194,46 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   public OpenTelemetry getOpenTelemetry() {
     return openTelemetry;
+  }
+
+  public static <REQUEST, RESPONSE>
+      DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> unwrapAndConfigure(
+          CoreCommonConfig config, Object builder) {
+    DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
+    set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
+    set(config::getClientRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
+    set(config::getClientResponseHeaders, defaultBuilder::setCapturedResponseHeaders);
+    set(config::getPeerServiceResolver, defaultBuilder::setPeerServiceResolver);
+    set(
+        config::shouldEmitExperimentalHttpClientTelemetry,
+        defaultBuilder::setEmitExperimentalHttpClientMetrics);
+    return defaultBuilder;
+  }
+
+  private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
+    T t = supplier.get();
+    if (t != null) {
+      consumer.accept(t);
+    }
+  }
+
+  /**
+   * This method is used to access the builder field of the builder object.
+   *
+   * <p>This approach allows us to re-use the existing builder classes from the library modules
+   */
+  @SuppressWarnings("unchecked")
+  private static <REQUEST, RESPONSE>
+      DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> unwrapBuilder(Object builder) {
+    if (builder instanceof DefaultHttpClientInstrumenterBuilder<?, ?>) {
+      return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) builder;
+    }
+    try {
+      Field field = builder.getClass().getDeclaredField("builder");
+      field.setAccessible(true);
+      return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) field.get(builder);
+    } catch (Exception e) {
+      throw new IllegalStateException("Could not access builder field", e);
+    }
   }
 }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -58,7 +57,7 @@ public final class JavaagentHttpClientInstrumenters {
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       Object builder, Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
     DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> defaultBuilder =
-        HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
+        DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(CommonConfig.get(), builder);
     defaultBuilder.setBuilderCustomizer(builderCustomizer);
     return defaultBuilder.build();
   }
