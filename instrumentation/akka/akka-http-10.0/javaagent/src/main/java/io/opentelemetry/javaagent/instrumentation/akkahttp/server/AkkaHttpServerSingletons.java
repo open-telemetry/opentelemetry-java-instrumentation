@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.AkkaHttpUtil;
-import java.util.Optional;
 
 public final class AkkaHttpServerSingletons {
 
@@ -18,10 +17,10 @@ public final class AkkaHttpServerSingletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpServerInstrumenterBuilder.create(
+        JavaagentHttpServerInstrumenters.create(
             AkkaHttpUtil.instrumentationName(),
             new AkkaHttpServerAttributesGetter(),
-            Optional.of(AkkaHttpServerHeaders.INSTANCE));
+            AkkaHttpServerHeaders.INSTANCE);
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

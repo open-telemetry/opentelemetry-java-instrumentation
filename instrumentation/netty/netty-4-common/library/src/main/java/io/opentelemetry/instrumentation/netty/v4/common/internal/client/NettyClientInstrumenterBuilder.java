@@ -11,7 +11,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import java.util.Optional;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -22,11 +21,8 @@ public class NettyClientInstrumenterBuilder
   private PeerServiceResolver peerServiceResolver;
 
   public NettyClientInstrumenterBuilder(String instrumentationName, OpenTelemetry openTelemetry) {
-    super(
-        instrumentationName,
-        openTelemetry,
-        new NettyHttpClientAttributesGetter(),
-        Optional.of(HttpRequestHeadersSetter.INSTANCE));
+    super(instrumentationName, openTelemetry, new NettyHttpClientAttributesGetter());
+    setHeaderSetter(HttpRequestHeadersSetter.INSTANCE);
   }
 
   @CanIgnoreReturnValue

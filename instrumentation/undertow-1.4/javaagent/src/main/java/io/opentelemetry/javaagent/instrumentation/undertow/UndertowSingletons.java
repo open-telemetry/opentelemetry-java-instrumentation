@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.HttpServerExchange;
-import java.util.Optional;
 
 public final class UndertowSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.undertow-1.4";
@@ -19,10 +18,10 @@ public final class UndertowSingletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+        JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new UndertowHttpAttributesGetter(),
-            Optional.of(UndertowExchangeGetter.INSTANCE),
+            UndertowExchangeGetter.INSTANCE,
             builder ->
                 builder.addContextCustomizer(
                     (context, request, attributes) -> {

@@ -6,9 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import java.util.Optional;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 
@@ -18,10 +17,10 @@ public final class GrizzlySingletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+        JavaagentHttpServerInstrumenters.create(
             "io.opentelemetry.grizzly-2.3",
             new GrizzlyHttpAttributesGetter(),
-            Optional.of(HttpRequestHeadersGetter.INSTANCE),
+            HttpRequestHeadersGetter.INSTANCE,
             builder ->
                 builder
                     .addContextCustomizer(

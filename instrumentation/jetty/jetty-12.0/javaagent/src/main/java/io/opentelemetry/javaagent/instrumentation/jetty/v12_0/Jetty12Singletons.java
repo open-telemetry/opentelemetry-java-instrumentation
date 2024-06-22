@@ -6,9 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import java.util.Optional;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
@@ -19,10 +18,10 @@ public final class Jetty12Singletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+        JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
             new Jetty12HttpAttributesGetter(),
-            Optional.of(Jetty12TextMapGetter.INSTANCE),
+            Jetty12TextMapGetter.INSTANCE,
             builder ->
                 builder.addContextCustomizer(
                     (context, request, attributes) ->

@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.RestletTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -17,8 +17,7 @@ import org.restlet.Response;
 public final class RestletSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-      JavaagentHttpServerInstrumenterBuilder.create(
-          RestletTelemetry.create(GlobalOpenTelemetry.get()));
+      JavaagentHttpServerInstrumenters.create(RestletTelemetry.create(GlobalOpenTelemetry.get()));
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
