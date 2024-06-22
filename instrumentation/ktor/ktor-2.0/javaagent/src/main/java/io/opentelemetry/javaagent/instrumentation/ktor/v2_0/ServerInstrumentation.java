@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.ktor.server.application.Application;
 import io.ktor.server.application.ApplicationPluginKt;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.ktor.v2_0.server.KtorServerTracing;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -49,7 +49,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
     @Override
     public Unit invoke(KtorServerTracing.Configuration configuration) {
       configuration.setOpenTelemetry(GlobalOpenTelemetry.get());
-      HttpServerInstrumenterBuilder.configure(CommonConfig.get(), configuration);
+      DefaultHttpServerInstrumenterBuilder.unwrapAndConfigure(CommonConfig.get(), configuration);
       return kotlin.Unit.INSTANCE;
     }
   }

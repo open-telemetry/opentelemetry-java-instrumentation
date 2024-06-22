@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 import com.linecorp.armeria.client.HttpClient;
 import com.linecorp.armeria.server.HttpService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetry;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetryBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
@@ -24,8 +24,8 @@ public final class ArmeriaSingletons {
 
   static {
     ArmeriaTelemetryBuilder builder = ArmeriaTelemetry.builder(GlobalOpenTelemetry.get());
-    HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
-    HttpServerInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(CommonConfig.get(), builder);
+    DefaultHttpServerInstrumenterBuilder.unwrapAndConfigure(CommonConfig.get(), builder);
     ArmeriaTelemetry telemetry = builder.build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();

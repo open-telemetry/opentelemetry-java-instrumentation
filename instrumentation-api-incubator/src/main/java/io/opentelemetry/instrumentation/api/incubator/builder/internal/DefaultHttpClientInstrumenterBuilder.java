@@ -84,7 +84,7 @@ public class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setStatusExtractor(
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
       Function<
               SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
               ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
@@ -249,7 +249,7 @@ public class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) builder;
     }
     try {
-      Field field = builder.getClass().getDeclaredField("builder");
+      Field field = builder.getClass().getDeclaredField("clientBuilder");
       field.setAccessible(true);
       return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) field.get(builder);
     } catch (Exception e) {

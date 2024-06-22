@@ -14,7 +14,7 @@ import io.ktor.util.pipeline.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
@@ -24,25 +24,24 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
 import kotlinx.coroutines.withContext
-import java.util.Optional
 
 class KtorServerTracing private constructor(
   private val instrumenter: Instrumenter<ApplicationRequest, ApplicationResponse>,
 ) {
 
   class Configuration {
-    internal lateinit var serverBuilder: DefaultHttpServerTelemetryBuilder<ApplicationRequest, ApplicationResponse>
+    internal lateinit var serverBuilder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
 
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
     fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
-      this.serverBuilder = DefaultHttpServerTelemetryBuilder(
-        INSTRUMENTATION_NAME,
-        openTelemetry,
-        KtorHttpServerAttributesGetter.INSTANCE,
-        Optional.empty()
-      )
+      this.serverBuilder =
+        DefaultHttpServerInstrumenterBuilder(
+          INSTRUMENTATION_NAME,
+          openTelemetry,
+          KtorHttpServerAttributesGetter.INSTANCE
+        )
     }
 
     fun setStatusExtractor(
@@ -112,7 +111,7 @@ class KtorServerTracing private constructor(
       }
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
-        configuration.serverBuilder.instrumenterBuilder {},
+        configuration.serverBuilder.builder(),
         ApplicationRequestGetter,
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )

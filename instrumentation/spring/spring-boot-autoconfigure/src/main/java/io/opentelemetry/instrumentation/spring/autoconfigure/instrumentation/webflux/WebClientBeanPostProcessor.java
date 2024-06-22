@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.CommonConfigUtil;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetryBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -34,9 +32,9 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
   static SpringWebfluxTelemetry getWebfluxTelemetry(
       OpenTelemetry openTelemetry, ConfigProperties config) {
-    SpringWebfluxTelemetryBuilder builder = SpringWebfluxTelemetry.builder(openTelemetry);
-    HttpServerInstrumenterBuilder.configure(CommonConfigUtil.getCommonConfig(config), builder);
-    return builder.build();
+    return InstrumentationConfigUtil.configureBuilder(
+            config, SpringWebfluxTelemetry.builder(openTelemetry))
+        .build();
   }
 
   @Override

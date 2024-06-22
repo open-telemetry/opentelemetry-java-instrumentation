@@ -7,14 +7,13 @@ package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -22,16 +21,14 @@ import java.util.function.Function;
 public final class SpringWebMvcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-6.0";
-  private final DefaultHttpServerTelemetryBuilder<HttpServletRequest, HttpServletResponse>
+  private final DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
       serverBuilder;
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     serverBuilder =
-        new DefaultHttpServerTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            SpringWebMvcHttpAttributesGetter.INSTANCE,
-            Optional.of(JakartaHttpServletRequestGetter.INSTANCE));
+        new DefaultHttpServerInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME, openTelemetry, SpringWebMvcHttpAttributesGetter.INSTANCE)
+            .setHeaderGetter(JakartaHttpServletRequestGetter.INSTANCE);
   }
 
   /**
@@ -115,6 +112,6 @@ public final class SpringWebMvcTelemetryBuilder {
    * SpringWebMvcTelemetryBuilder}.
    */
   public SpringWebMvcTelemetry build() {
-    return new SpringWebMvcTelemetry(serverBuilder.instrumenter());
+    return new SpringWebMvcTelemetry(serverBuilder.build());
   }
 }

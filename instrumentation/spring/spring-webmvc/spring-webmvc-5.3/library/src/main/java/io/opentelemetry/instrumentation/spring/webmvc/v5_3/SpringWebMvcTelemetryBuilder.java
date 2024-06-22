@@ -7,12 +7,11 @@ package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import javax.servlet.http.HttpServletRequest;
@@ -23,16 +22,14 @@ public final class SpringWebMvcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-5.3";
 
-  private final DefaultHttpServerTelemetryBuilder<HttpServletRequest, HttpServletResponse>
+  private final DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
       serverBuilder;
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     serverBuilder =
-        new DefaultHttpServerTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            SpringWebMvcHttpAttributesGetter.INSTANCE,
-            Optional.of(JavaxHttpServletRequestGetter.INSTANCE));
+        new DefaultHttpServerInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME, openTelemetry, SpringWebMvcHttpAttributesGetter.INSTANCE)
+            .setHeaderGetter(JavaxHttpServletRequestGetter.INSTANCE);
   }
 
   /**
@@ -116,6 +113,6 @@ public final class SpringWebMvcTelemetryBuilder {
    * SpringWebMvcTelemetryBuilder}.
    */
   public SpringWebMvcTelemetry build() {
-    return new SpringWebMvcTelemetry(serverBuilder.instrumenter());
+    return new SpringWebMvcTelemetry(serverBuilder.build());
   }
 }

@@ -12,8 +12,8 @@ import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -35,23 +34,32 @@ public final class ArmeriaTelemetryBuilder {
   private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   @Nullable private String peerService;
-  private final DefaultHttpClientTelemetryBuilder<ClientRequestContext, RequestLog> clientBuilder;
-  private final DefaultHttpServerTelemetryBuilder<ServiceRequestContext, RequestLog> serverBuilder;
+  private final DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
+      clientBuilder;
+  private final DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
+      serverBuilder;
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   ArmeriaTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
-        new DefaultHttpClientTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            (HttpClientAttributesGetter) ArmeriaHttpClientAttributesGetter.INSTANCE,
-            Optional.of(ClientRequestContextSetter.INSTANCE));
+        new DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>(
+                INSTRUMENTATION_NAME,
+                openTelemetry,
+                (HttpClientAttributesGetter) ArmeriaHttpClientAttributesGetter.INSTANCE)
+            .setHeaderSetter(ClientRequestContextSetter.INSTANCE)
+            .setBuilderCustomizer(
+                builder -> {
+                  if (peerService != null) {
+                    builder.addAttributesExtractor(
+                        AttributesExtractor.constant(PEER_SERVICE, peerService));
+                  }
+                });
     serverBuilder =
-        new DefaultHttpServerTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            (HttpServerAttributesGetter) ArmeriaHttpServerAttributesGetter.INSTANCE,
-            Optional.of(RequestContextGetter.INSTANCE));
+        new DefaultHttpServerInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME,
+                openTelemetry,
+                (HttpServerAttributesGetter) ArmeriaHttpServerAttributesGetter.INSTANCE)
+            .setHeaderGetter(RequestContextGetter.INSTANCE);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -215,14 +223,6 @@ public final class ArmeriaTelemetryBuilder {
   }
 
   public ArmeriaTelemetry build() {
-    return new ArmeriaTelemetry(
-        clientBuilder.instrumenter(
-            clientInstrumenterBuilder -> {
-              if (peerService != null) {
-                clientInstrumenterBuilder.addAttributesExtractor(
-                    AttributesExtractor.constant(PEER_SERVICE, peerService));
-              }
-            }),
-        serverBuilder.instrumenter());
+    return new ArmeriaTelemetry(clientBuilder.build(), serverBuilder.build());
   }
 }

@@ -7,12 +7,11 @@ package io.opentelemetry.instrumentation.restlet.v1_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import org.restlet.data.Request;
@@ -23,15 +22,13 @@ public final class RestletTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.restlet-1.1";
 
-  private final DefaultHttpServerTelemetryBuilder<Request, Response> serverBuilder;
+  private final DefaultHttpServerInstrumenterBuilder<Request, Response> serverBuilder;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
     serverBuilder =
-        new DefaultHttpServerTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            RestletHttpAttributesGetter.INSTANCE,
-            Optional.of(RestletHeadersGetter.INSTANCE));
+        new DefaultHttpServerInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME, openTelemetry, RestletHttpAttributesGetter.INSTANCE)
+            .setHeaderGetter(RestletHeadersGetter.INSTANCE);
   }
 
   /**
@@ -113,6 +110,6 @@ public final class RestletTelemetryBuilder {
    * RestletTelemetryBuilder}.
    */
   public RestletTelemetry build() {
-    return new RestletTelemetry(serverBuilder.instrumenter());
+    return new RestletTelemetry(serverBuilder.build());
   }
 }

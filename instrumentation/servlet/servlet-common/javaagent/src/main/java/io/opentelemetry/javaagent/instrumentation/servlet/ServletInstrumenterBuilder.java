@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -18,7 +18,6 @@ import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
@@ -45,14 +44,12 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           httpAttributesGetter) {
 
-    DefaultHttpServerTelemetryBuilder<
+    DefaultHttpServerInstrumenterBuilder<
             ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         serverBuilder =
-            new DefaultHttpServerTelemetryBuilder<>(
-                instrumentationName,
-                GlobalOpenTelemetry.get(),
-                httpAttributesGetter,
-                Optional.of(new ServletRequestGetter<>(accessor)));
+            new DefaultHttpServerInstrumenterBuilder<>(
+                    instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter)
+                .setHeaderGetter(new ServletRequestGetter<>(accessor));
     serverBuilder.setSpanNameExtractor(e -> spanNameExtractor);
     return JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
         serverBuilder,

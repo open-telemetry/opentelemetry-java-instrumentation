@@ -23,4 +23,9 @@ public class InstrumentationConfigUtil {
         new CoreCommonConfig(new ConfigPropertiesBridge(config)), builder);
     return builder;
   }
+
+  public static boolean isStatementSanitizationEnabled(ConfigProperties config, String key) {
+    return config.getBoolean(
+        key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true));
+  }
 }

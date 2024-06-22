@@ -7,14 +7,13 @@ package io.opentelemetry.instrumentation.restlet.v2_0;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHeadersGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import org.restlet.Request;
@@ -23,15 +22,13 @@ import org.restlet.Response;
 /** A builder of {@link RestletTelemetry}. */
 public final class RestletTelemetryBuilder {
 
-  private final DefaultHttpServerTelemetryBuilder<Request, Response> serverBuilder;
+  private final DefaultHttpServerInstrumenterBuilder<Request, Response> serverBuilder;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
     serverBuilder =
-        new DefaultHttpServerTelemetryBuilder<>(
-            "io.opentelemetry.restlet-2.0",
-            openTelemetry,
-            RestletHttpAttributesGetter.INSTANCE,
-            Optional.of(new RestletHeadersGetter()));
+        new DefaultHttpServerInstrumenterBuilder<>(
+                "io.opentelemetry.restlet-2.0", openTelemetry, RestletHttpAttributesGetter.INSTANCE)
+            .setHeaderGetter(new RestletHeadersGetter());
   }
 
   /**
@@ -113,6 +110,6 @@ public final class RestletTelemetryBuilder {
    * RestletTelemetryBuilder}.
    */
   public RestletTelemetry build() {
-    return new RestletTelemetry(serverBuilder.instrumenter());
+    return new RestletTelemetry(serverBuilder.build());
   }
 }

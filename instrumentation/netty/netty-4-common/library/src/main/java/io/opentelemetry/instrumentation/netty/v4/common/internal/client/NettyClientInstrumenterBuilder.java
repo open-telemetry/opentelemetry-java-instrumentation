@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import java.util.Optional;
@@ -18,7 +18,7 @@ import java.util.Optional;
  * any time.
  */
 public class NettyClientInstrumenterBuilder
-    extends DefaultHttpClientTelemetryBuilder<HttpRequestAndChannel, HttpResponse> {
+    extends DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> {
   private PeerServiceResolver peerServiceResolver;
 
   public NettyClientInstrumenterBuilder(String instrumentationName, OpenTelemetry openTelemetry) {
