@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
@@ -38,7 +38,7 @@ public final class ReactorNettySingletons {
 
     NettyClientInstrumenterBuilder builder =
         new NettyClientInstrumenterBuilder(INSTRUMENTATION_NAME, GlobalOpenTelemetry.get());
-    HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(CommonConfig.get(), builder);
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
             builder,

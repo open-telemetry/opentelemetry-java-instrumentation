@@ -11,21 +11,20 @@ import io.ktor.http.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
 import java.util.*
 
 class KtorClientTracingBuilder {
 
-  private lateinit var clientBuilder: DefaultHttpClientTelemetryBuilder<HttpRequestData, HttpResponse>
+  private lateinit var clientBuilder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
-    this.clientBuilder = DefaultHttpClientTelemetryBuilder(
+    this.clientBuilder = DefaultHttpClientInstrumenterBuilder(
       INSTRUMENTATION_NAME,
       openTelemetry,
-      KtorHttpClientAttributesGetter,
-      Optional.empty()
+      KtorHttpClientAttributesGetter
     )
   }
 
@@ -160,7 +159,7 @@ class KtorClientTracingBuilder {
   }
 
   internal fun build(): KtorClientTracing = KtorClientTracing(
-    instrumenter = clientBuilder.instrumenter(),
+    instrumenter = clientBuilder.build(),
     propagators = clientBuilder.openTelemetry.propagators,
   )
 }

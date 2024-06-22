@@ -7,14 +7,13 @@ package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientTelemetryBuilder;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import ratpack.http.Request;
@@ -27,22 +26,18 @@ public final class RatpackTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
 
-  private final DefaultHttpClientTelemetryBuilder<RequestSpec, HttpResponse> clientBuilder;
-  private final DefaultHttpServerTelemetryBuilder<Request, Response> serverBuilder;
+  private final DefaultHttpClientInstrumenterBuilder<RequestSpec, HttpResponse> clientBuilder;
+  private final DefaultHttpServerInstrumenterBuilder<Request, Response> serverBuilder;
 
   RatpackTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
-        new DefaultHttpClientTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            RatpackHttpClientAttributesGetter.INSTANCE,
-            Optional.of(RequestHeaderSetter.INSTANCE));
+        new DefaultHttpClientInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME, openTelemetry, RatpackHttpClientAttributesGetter.INSTANCE)
+            .setHeaderSetter(RequestHeaderSetter.INSTANCE);
     serverBuilder =
-        new DefaultHttpServerTelemetryBuilder<>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            RatpackHttpAttributesGetter.INSTANCE,
-            Optional.of(RatpackGetter.INSTANCE));
+        new DefaultHttpServerInstrumenterBuilder<>(
+                INSTRUMENTATION_NAME, openTelemetry, RatpackHttpAttributesGetter.INSTANCE)
+            .setHeaderGetter(RatpackGetter.INSTANCE);
   }
 
   /**
@@ -174,6 +169,6 @@ public final class RatpackTelemetryBuilder {
 
   /** Returns a new {@link RatpackTelemetry} with the configuration of this builder. */
   public RatpackTelemetry build() {
-    return new RatpackTelemetry(serverBuilder.instrumenter(), clientBuilder.instrumenter());
+    return new RatpackTelemetry(serverBuilder.build(), clientBuilder.build());
   }
 }

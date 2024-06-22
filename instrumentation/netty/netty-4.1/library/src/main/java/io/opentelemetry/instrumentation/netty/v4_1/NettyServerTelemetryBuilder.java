@@ -8,31 +8,28 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.HttpRequestHeadersGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyHttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
 
-  private final DefaultHttpServerTelemetryBuilder<HttpRequestAndChannel, HttpResponse>
+  private final DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse>
       serverBuilder;
 
   private boolean emitExperimentalHttpServerEvents = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     serverBuilder =
-        new DefaultHttpServerTelemetryBuilder<>(
-            "io.opentelemetry.netty-4.1",
-            openTelemetry,
-            new NettyHttpServerAttributesGetter(),
-            Optional.of(HttpRequestHeadersGetter.INSTANCE));
+        new DefaultHttpServerInstrumenterBuilder<>(
+                "io.opentelemetry.netty-4.1", openTelemetry, new NettyHttpServerAttributesGetter())
+            .setHeaderGetter(HttpRequestHeadersGetter.INSTANCE);
   }
 
   /**
@@ -106,7 +103,7 @@ public final class NettyServerTelemetryBuilder {
   /** Returns a new {@link NettyServerTelemetry} with the given configuration. */
   public NettyServerTelemetry build() {
     return new NettyServerTelemetry(
-        serverBuilder.instrumenter(),
+        serverBuilder.build(),
         emitExperimentalHttpServerEvents
             ? ProtocolEventHandler.Enabled.INSTANCE
             : ProtocolEventHandler.Noop.INSTANCE);

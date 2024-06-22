@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.netty.v4.common.internal.client.N
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilder;
@@ -37,7 +37,7 @@ public final class NettyClientSingletons {
   static {
     NettyClientInstrumenterBuilder builder =
         new NettyClientInstrumenterBuilder("io.opentelemetry.netty-4.1", GlobalOpenTelemetry.get());
-    HttpClientInstrumenterBuilder.configure(CommonConfig.get(), builder);
+    DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(CommonConfig.get(), builder);
     NettyClientInstrumenterFactory factory =
         new NettyClientInstrumenterFactory(
             builder,

@@ -37,7 +37,7 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
-    return builder.instrumenter();
+    return builder.build();
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter() {

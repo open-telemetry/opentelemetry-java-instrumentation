@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerTelemetryBuilder;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
@@ -41,15 +40,16 @@ public final class JavaagentHttpServerInstrumenterBuilder {
       Optional<TextMapGetter<REQUEST>> headerGetter,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     return createWithCustomizer(
-        new DefaultHttpServerTelemetryBuilder<>(
-            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, headerGetter),
+        new DefaultHttpServerInstrumenterBuilder<>(
+            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter),
         instrumenterBuilderConsumer);
   }
 
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createWithCustomizer(
       Object builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
-    return HttpServerInstrumenterBuilder.<REQUEST, RESPONSE>configure(CommonConfig.get(), builder)
-        .instrumenter(instrumenterBuilderConsumer);
+    return DefaultHttpServerInstrumenterBuilder.<REQUEST, RESPONSE>unwrapAndConfigure(
+            CommonConfig.get(), builder)
+        .build(instrumenterBuilderConsumer);
   }
 }
