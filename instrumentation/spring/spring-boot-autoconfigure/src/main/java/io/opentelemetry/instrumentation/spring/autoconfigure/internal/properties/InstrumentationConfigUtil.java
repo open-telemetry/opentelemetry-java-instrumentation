@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.HttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
@@ -17,7 +17,7 @@ public class InstrumentationConfigUtil {
   private InstrumentationConfigUtil() {}
 
   public static <T> T configureBuilder(ConfigProperties config, T builder) {
-    HttpClientInstrumenterBuilder.configure(
+    DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(
         new CoreCommonConfig(new ConfigPropertiesBridge(config)), builder);
     return builder;
   }
