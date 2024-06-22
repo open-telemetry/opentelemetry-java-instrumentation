@@ -7,9 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
-import java.util.Optional;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
 final class NettyServerSingletons {
@@ -18,10 +17,10 @@ final class NettyServerSingletons {
 
   static {
     INSTRUMENTER =
-        JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+        JavaagentHttpServerInstrumenters.create(
             "io.opentelemetry.netty-3.8",
             new NettyHttpServerAttributesGetter(),
-            Optional.of(NettyHeadersGetter.INSTANCE),
+            NettyHeadersGetter.INSTANCE,
             builder ->
                 builder.addContextCustomizer(
                     (context, requestAndChannel, startAttributes) ->

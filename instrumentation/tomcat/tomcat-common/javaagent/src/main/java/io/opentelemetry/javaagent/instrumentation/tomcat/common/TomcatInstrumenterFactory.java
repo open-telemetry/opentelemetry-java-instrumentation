@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtractor;
-import java.util.Optional;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 
@@ -20,10 +19,10 @@ public final class TomcatInstrumenterFactory {
 
   public static <REQUEST, RESPONSE> Instrumenter<Request, Response> create(
       String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
-    return JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+    return JavaagentHttpServerInstrumenters.create(
         instrumentationName,
         new TomcatHttpAttributesGetter(),
-        Optional.of(TomcatRequestGetter.INSTANCE),
+        TomcatRequestGetter.INSTANCE,
         builder ->
             builder
                 .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))

@@ -6,11 +6,9 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.CommonConfigUtil;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetry;
-import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetryBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.servlet.Filter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -27,9 +25,9 @@ public class SpringWebMvc5InstrumentationAutoConfiguration {
 
   @Bean
   Filter otelWebMvcFilter(OpenTelemetry openTelemetry, ConfigProperties config) {
-    SpringWebMvcTelemetryBuilder builder = SpringWebMvcTelemetry.builder(openTelemetry);
-    DefaultHttpServerInstrumenterBuilder.unwrapAndConfigure(
-        CommonConfigUtil.getCommonConfig(config), builder);
-    return builder.build().createServletFilter();
+    return InstrumentationConfigUtil.configureBuilder(
+            config, SpringWebMvcTelemetry.builder(openTelemetry))
+        .build()
+        .createServletFilter();
   }
 }

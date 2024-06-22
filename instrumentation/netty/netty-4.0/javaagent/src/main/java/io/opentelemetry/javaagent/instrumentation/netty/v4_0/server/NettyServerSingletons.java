@@ -11,16 +11,15 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.HttpRequestHeadersGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyHttpServerAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
-import java.util.Optional;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 
 public final class NettyServerSingletons {
 
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER =
-      JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+      JavaagentHttpServerInstrumenters.create(
           "io.opentelemetry.netty-4.0",
           new NettyHttpServerAttributesGetter(),
-          Optional.of(HttpRequestHeadersGetter.INSTANCE),
+          HttpRequestHeadersGetter.INSTANCE,
           builder ->
               builder.addContextCustomizer(
                   (context, requestAndChannel, startAttributes) -> NettyErrorHolder.init(context)));

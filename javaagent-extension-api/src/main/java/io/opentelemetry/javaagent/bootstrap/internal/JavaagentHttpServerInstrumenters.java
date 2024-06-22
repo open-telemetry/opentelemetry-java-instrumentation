@@ -11,41 +11,40 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JavaagentHttpServerInstrumenterBuilder {
+public final class JavaagentHttpServerInstrumenters {
 
-  private JavaagentHttpServerInstrumenterBuilder() {}
+  private JavaagentHttpServerInstrumenters() {}
 
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       String instrumentationName,
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      Optional<TextMapGetter<REQUEST>> headerGetter) {
-    return createWithCustomizer(
-        instrumentationName, httpAttributesGetter, headerGetter, customizer -> {});
+      TextMapGetter<REQUEST> headerGetter) {
+    return create(instrumentationName, httpAttributesGetter, headerGetter, customizer -> {});
   }
 
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(Object builder) {
-    return createWithCustomizer(builder, customizer -> {});
+    return create(builder, customizer -> {});
   }
 
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createWithCustomizer(
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       String instrumentationName,
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      Optional<TextMapGetter<REQUEST>> headerGetter,
+      TextMapGetter<REQUEST> headerGetter,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
-    return createWithCustomizer(
+    return create(
         new DefaultHttpServerInstrumenterBuilder<>(
-            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter),
+                instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter)
+            .setHeaderGetter(headerGetter),
         instrumenterBuilderConsumer);
   }
 
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createWithCustomizer(
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       Object builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     return DefaultHttpServerInstrumenterBuilder.<REQUEST, RESPONSE>unwrapAndConfigure(

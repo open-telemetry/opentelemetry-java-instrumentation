@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenterBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +51,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
                     instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter)
                 .setHeaderGetter(new ServletRequestGetter<>(accessor));
     serverBuilder.setSpanNameExtractor(e -> spanNameExtractor);
-    return JavaagentHttpServerInstrumenterBuilder.createWithCustomizer(
+    return JavaagentHttpServerInstrumenters.create(
         serverBuilder,
         builder -> {
           if (ServletRequestParametersExtractor.enabled()) {
