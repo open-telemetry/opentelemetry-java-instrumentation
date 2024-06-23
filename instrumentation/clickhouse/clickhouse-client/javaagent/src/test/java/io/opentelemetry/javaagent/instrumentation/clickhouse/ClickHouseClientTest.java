@@ -24,6 +24,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.List;
@@ -81,8 +82,7 @@ class ClickHouseClientTest {
   }
 
   @Test
-  void testQuery() throws ClickHouseException {
-
+  void testExecuteAndWaitWithStringQuery() throws ClickHouseException {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -123,7 +123,7 @@ class ClickHouseClientTest {
   }
 
   @Test
-  void testQueryWithId() throws ClickHouseException {
+  void testExecuteAndWaitWithStringQueryAndId() throws ClickHouseException {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -149,8 +149,7 @@ class ClickHouseClientTest {
   }
 
   @Test
-  void testQueryThrowsException() {
-
+  void testExecuteAndWaitThrowsException() {
     Throwable thrown =
         catchThrowable(
             () -> {
@@ -171,13 +170,61 @@ class ClickHouseClientTest {
                 span ->
                     span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions("select * from non_existent_table", "SELECT"))));
   }
 
   @Test
-  void testQueryWithCompletableFuture() throws Exception {
+  void testAsyncExecuteQuery() throws Exception {
+    CompletableFuture<ClickHouseResponse> response =
+        client
+            .read(server)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + tableName)
+            .execute();
+
+    ClickHouseResponse result = response.get();
+    assertThat(result).isNotNull();
+    result.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions("select * from " + tableName, "SELECT"))));
+  }
+
+  @Test
+  void testSendQuery() throws Exception {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          CompletableFuture<List<ClickHouseResponseSummary>> future =
+              ClickHouseClient.send(server, "select * from " + tableName + " limit 1");
+          List<ClickHouseResponseSummary> results = future.get();
+          assertThat(results).hasSize(1);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("SELECT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                "select * from " + tableName + " limit ?", "SELECT"))));
+  }
+
+  @Test
+  void testSendMultipleQueries() throws Exception {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -211,7 +258,7 @@ class ClickHouseClientTest {
   }
 
   @Test
-  void testClickHouseParameterizedQueryInput() throws ClickHouseException {
+  void testParameterizedQueryInput() throws ClickHouseException {
     ClickHouseRequest<?> request =
         client.read(server).format(ClickHouseFormat.RowBinaryWithNamesAndTypes);
 
@@ -262,7 +309,7 @@ class ClickHouseClientTest {
 
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
-        equalTo(DbIncubatingAttributes.DB_SYSTEM, "clickhouse"),
+        equalTo(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.CLICKHOUSE),
         equalTo(DbIncubatingAttributes.DB_NAME, dbName),
         equalTo(ServerAttributes.SERVER_ADDRESS, host),
         equalTo(ServerAttributes.SERVER_PORT, port),
