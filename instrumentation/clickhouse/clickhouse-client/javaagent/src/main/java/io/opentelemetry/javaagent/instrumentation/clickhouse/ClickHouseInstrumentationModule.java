@@ -15,7 +15,7 @@ import java.util.List;
 public class ClickHouseInstrumentationModule extends InstrumentationModule {
 
   public ClickHouseInstrumentationModule() {
-    super("clickhouse");
+    super("clickhouse", "clickhouse-client");
   }
 
   @Override

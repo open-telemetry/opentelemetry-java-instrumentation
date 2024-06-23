@@ -7,28 +7,27 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.clickhouse.client.ClickHouseClient;
-import com.clickhouse.client.ClickHouseConfig;
 import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseParameterizedQuery;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseResponse;
-import com.clickhouse.client.config.ClickHouseClientOption;
-import com.clickhouse.config.ClickHouseOption;
+import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -58,12 +57,8 @@ class ClickHouseClientTest {
     clickhouseServer.start();
     port = clickhouseServer.getMappedPort(8123);
     host = clickhouseServer.getHost();
-    server = ClickHouseNode.of("http://" + host + ":" + port + "/" + dbName);
-
-    Map<ClickHouseOption, Serializable> options = new HashMap<>();
-    options.put(ClickHouseClientOption.COMPRESS, false);
-
-    client = ClickHouseClient.builder().config(new ClickHouseConfig(options)).build();
+    server = ClickHouseNode.of("http://" + host + ":" + port + "/" + dbName + "?compress=0");
+    client = ClickHouseClient.builder().build();
 
     ClickHouseResponse response =
         client
@@ -87,50 +82,88 @@ class ClickHouseClientTest {
 
   @Test
   void testQuery() throws ClickHouseException {
-    ClickHouseResponse response;
 
-    response =
-        client
-            .read(server)
-            .query("insert into " + tableName + " values('1')('2')('3')")
-            .executeAndWait();
-    response.close();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ClickHouseResponse response;
+          response =
+              client
+                  .write(server)
+                  .query("insert into " + tableName + " values('1')('2')('3')")
+                  .executeAndWait();
+          response.close();
 
-    response =
-        client
-            .read(server)
-            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-            .query("select * from " + tableName)
-            .executeAndWait();
-    response.close();
+          response =
+              client
+                  .read(server)
+                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+                  .query("select * from " + tableName)
+                  .executeAndWait();
+          response.close();
+        });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("INSERT " + dbName)
                         .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "insert into " + tableName + " values(?)(?)(?)", "INSERT"))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
+                                "insert into " + tableName + " values(?)(?)(?)", "INSERT")),
                 span ->
                     span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions("select * from " + tableName, "SELECT"))));
   }
 
   @Test
   void testQueryWithId() throws ClickHouseException {
-    ClickHouseResponse response =
-        client
-            .read(server)
-            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-            .query("select * from " + tableName, "test_query_id")
-            .executeAndWait();
-    response.close();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ClickHouseResponse response =
+              client
+                  .read(server)
+                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+                  .query("select * from " + tableName, "test_query_id")
+                  .executeAndWait();
+          response.close();
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("SELECT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions("select * from " + tableName, "SELECT"))));
+  }
+
+  @Test
+  void testQueryThrowsException() {
+
+    Throwable thrown =
+        catchThrowable(
+            () -> {
+              ClickHouseResponse response =
+                  client
+                      .read(server)
+                      .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+                      .query("select * from non_existent_table")
+                      .executeAndWait();
+              response.close();
+            });
+
+    assertThat(thrown).isInstanceOf(ClickHouseException.class);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -138,8 +171,43 @@ class ClickHouseClientTest {
                 span ->
                     span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
+                        .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
-                            attributeAssertions("select * from " + tableName, "SELECT"))));
+                            attributeAssertions("select * from non_existent_table", "SELECT"))));
+  }
+
+  @Test
+  void testQueryWithCompletableFuture() throws Exception {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          CompletableFuture<List<ClickHouseResponseSummary>> future =
+              ClickHouseClient.send(
+                  server,
+                  "insert into " + tableName + " values('1')('2')('3')",
+                  "select * from " + tableName + " limit 1");
+          List<ClickHouseResponseSummary> results = future.get();
+          assertThat(results).hasSize(2);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("INSERT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                "insert into " + tableName + " values(?)(?)(?)", "INSERT")),
+                span ->
+                    span.hasName("SELECT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                "select * from " + tableName + " limit ?", "SELECT"))));
   }
 
   @Test
@@ -147,41 +215,46 @@ class ClickHouseClientTest {
     ClickHouseRequest<?> request =
         client.read(server).format(ClickHouseFormat.RowBinaryWithNamesAndTypes);
 
-    ClickHouseResponse response =
-        client
-            .read(server)
-            .query(
-                ClickHouseParameterizedQuery.of(
-                    request.getConfig(),
-                    "insert into " + tableName + " values(:val1)(:val2)(:val3)"))
-            .params(ImmutableMap.of("val1", "1", "val2", "2", "val3", "3"))
-            .executeAndWait();
-    response.close();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ClickHouseResponse response =
+              client
+                  .write(server)
+                  .query(
+                      ClickHouseParameterizedQuery.of(
+                          request.getConfig(),
+                          "insert into " + tableName + " values(:val1)(:val2)(:val3)"))
+                  .params(ImmutableMap.of("val1", "1", "val2", "2", "val3", "3"))
+                  .executeAndWait();
+          response.close();
 
-    response =
-        request
-            .query(
-                ClickHouseParameterizedQuery.of(
-                    request.getConfig(), "select * from " + tableName + " where s=:val"))
-            .params(ImmutableMap.of("val", "'2'"))
-            .executeAndWait();
-    response.close();
+          response =
+              request
+                  .query(
+                      ClickHouseParameterizedQuery.of(
+                          request.getConfig(), "select * from " + tableName + " where s=:val"))
+                  .params(ImmutableMap.of("val", "'2'"))
+                  .executeAndWait();
+          response.close();
+        });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("INSERT " + dbName)
                         .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
                                 "insert into " + tableName + " values(:val1)(:val2)(:val3)",
-                                "INSERT"))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
+                                "INSERT")),
                 span ->
                     span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
                                 "select * from " + tableName + " where s=:val", "SELECT"))));

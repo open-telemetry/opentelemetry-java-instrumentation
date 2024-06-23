@@ -14,17 +14,21 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
   @Nullable
   @Override
   public String getStatement(ClickHouseDbRequest request) {
-    return request.getSqlStatementInfo().getFullStatement();
+    if (request.getSqlStatementInfo() == null) {
+      return null;
+    }
+    String statement = request.getSqlStatementInfo().getFullStatement();
+    return StringUtils.isNullOrEmpty(statement) ? null : statement;
   }
 
   @Nullable
   @Override
   public String getOperation(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() != null) {
-      String operation = request.getSqlStatementInfo().getOperation();
-      return StringUtils.isNullOrEmpty(operation) ? request.getSql() : operation;
+    if (request.getSqlStatementInfo() == null) {
+      return null;
     }
-    return null;
+    String operation = request.getSqlStatementInfo().getOperation();
+    return StringUtils.isNullOrEmpty(operation) ? null : operation;
   }
 
   @Nullable
@@ -48,7 +52,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
 
   @Nullable
   @Override
-  public String getConnectionString(ClickHouseDbRequest influxDbRequest) {
+  public String getConnectionString(ClickHouseDbRequest request) {
     return null;
   }
 }

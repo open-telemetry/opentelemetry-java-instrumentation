@@ -17,7 +17,7 @@ public abstract class ClickHouseDbRequest {
       SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
 
   public static ClickHouseDbRequest create(String host, Integer port, String dbName, String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sql, sanitizer.sanitize(sql));
+    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sanitizer.sanitize(sql));
   }
 
   public abstract String getHost();
@@ -25,8 +25,6 @@ public abstract class ClickHouseDbRequest {
   public abstract Integer getPort();
 
   public abstract String getDbName();
-
-  public abstract String getSql();
 
   public abstract SqlStatementInfo getSqlStatementInfo();
 }
