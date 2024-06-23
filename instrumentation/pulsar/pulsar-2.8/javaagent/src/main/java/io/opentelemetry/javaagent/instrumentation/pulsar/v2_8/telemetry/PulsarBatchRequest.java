@@ -30,7 +30,10 @@ public final class PulsarBatchRequest extends BasePulsarRequest {
       if (topicName == null) {
         topicName = name;
       } else if (!topicName.equals(name)) {
-        return null;
+        // this is a partitioned topic
+        // persistent://public/default/test-partition-0 persistent://public/default/test-partition-1
+        // return persistent://public/default/test
+        return topicName.substring(0, topicName.lastIndexOf("-partition-"));
       }
     }
     return topicName;

@@ -10,7 +10,9 @@ import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.util.List;
@@ -41,6 +43,35 @@ final class MessagingMetricsAdvice {
                 MESSAGING_DESTINATION_NAME,
                 MESSAGING_OPERATION,
                 MESSAGING_BATCH_MESSAGE_COUNT,
+                ErrorAttributes.ERROR_TYPE,
+                ServerAttributes.SERVER_PORT,
+                ServerAttributes.SERVER_ADDRESS));
+  }
+  static void applyReceiveDurationAdvice(DoubleHistogramBuilder builder) {
+    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
+      return;
+    }
+    ((ExtendedDoubleHistogramBuilder) builder)
+        .setAttributesAdvice(
+            asList(
+                MESSAGING_SYSTEM,
+                MESSAGING_DESTINATION_NAME,
+                MESSAGING_OPERATION,
+                ErrorAttributes.ERROR_TYPE,
+                ServerAttributes.SERVER_PORT,
+                ServerAttributes.SERVER_ADDRESS));
+  }
+
+  static void applyReceiveMessagesAdvice(LongCounterBuilder builder) {
+    if (!(builder instanceof ExtendedLongCounterBuilder)) {
+      return;
+    }
+    ((ExtendedLongCounterBuilder) builder)
+        .setAttributesAdvice(
+            asList(
+                MESSAGING_SYSTEM,
+                MESSAGING_DESTINATION_NAME,
+                MESSAGING_OPERATION,
                 ErrorAttributes.ERROR_TYPE,
                 ServerAttributes.SERVER_PORT,
                 ServerAttributes.SERVER_ADDRESS));

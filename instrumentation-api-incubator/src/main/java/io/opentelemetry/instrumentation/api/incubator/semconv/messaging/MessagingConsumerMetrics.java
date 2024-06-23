@@ -12,6 +12,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -33,7 +35,8 @@ public final class MessagingConsumerMetrics implements OperationListener {
       ContextKey.named("messaging-consumer-metrics-state");
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
 
-  private final DoubleHistogram publishDurationHistogram;
+  private final DoubleHistogram receiveDurationHistogram;
+  private final LongCounter receiveMessageCount;
 
   private MessagingConsumerMetrics(Meter meter) {
     DoubleHistogramBuilder durationBuilder =
@@ -42,8 +45,14 @@ public final class MessagingConsumerMetrics implements OperationListener {
             .setDescription("Measures the duration of receive operation")
             .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
             .setUnit("s");
-    MessagingMetricsAdvice.applyPublishDurationAdvice(durationBuilder);
-    publishDurationHistogram = durationBuilder.build();
+    MessagingMetricsAdvice.applyReceiveDurationAdvice(durationBuilder);
+    receiveDurationHistogram = durationBuilder.build();
+
+    LongCounterBuilder longCounterBuilder = meter.counterBuilder("messaging.receive.messages")
+        .setDescription("Measures the number of received messages")
+        .setUnit("{message}");
+    MessagingMetricsAdvice.applyReceiveMessagesAdvice(longCounterBuilder);
+    receiveMessageCount = longCounterBuilder.build();
   }
 
   public static OperationMetrics get() {
@@ -70,9 +79,23 @@ public final class MessagingConsumerMetrics implements OperationListener {
     }
 
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-
-    publishDurationHistogram.record(
+    receiveDurationHistogram.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
+
+    Long receiveMessagesCount = getReceiveMessagesCount(state.startAttributes(), endAttributes);
+    if (receiveMessagesCount != null && receiveMessagesCount > 0) {
+      receiveMessageCount.add(receiveMessagesCount, attributes, context);
+    }
+  }
+
+  private static Long getReceiveMessagesCount(Attributes... attributesList){
+    for (Attributes attributes : attributesList) {
+      Long value = attributes.get(MessagingAttributesExtractor.MESSAGING_BATCH_MESSAGE_COUNT);
+      if (value != null) {
+        return value;
+      }
+    }
+    return null;
   }
 
   @AutoValue
