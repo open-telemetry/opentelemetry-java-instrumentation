@@ -24,7 +24,6 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
   @Nullable
   @Override
   public String getDestination(PulsarRequest request) {
-    System.out.println("PulsarRequest.getDestination destination: " + request.getDestination());
     return request.getDestination();
   }
 

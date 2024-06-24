@@ -24,7 +24,6 @@ enum PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestination(PulsarBatchRequest request) {
-    System.out.println("PulsarBatchMessagingAttributesGetter.getDestination destination: " + request.getDestination());
     return request.getDestination();
   }
 

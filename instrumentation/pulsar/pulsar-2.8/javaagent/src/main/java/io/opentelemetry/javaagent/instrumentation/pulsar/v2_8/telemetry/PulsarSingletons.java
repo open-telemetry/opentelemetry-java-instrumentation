@@ -191,11 +191,6 @@ public final class PulsarSingletons {
       Timer timer,
       Consumer<?> consumer,
       Throwable throwable) {
-    for (Message<?> message : messages) {
-      System.out.println("===batchsingle receive===, topic: " + message.getTopicName() + " id=" + message.getMessageId());
-    }
-
-    System.out.println("===batch receive===, messages: " + messages.size());
     if (messages == null || messages.size() == 0) {
       return null;
     }
