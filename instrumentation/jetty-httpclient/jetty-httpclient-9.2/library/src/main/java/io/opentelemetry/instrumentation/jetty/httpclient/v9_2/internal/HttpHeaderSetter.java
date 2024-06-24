@@ -8,7 +8,11 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import org.eclipse.jetty.client.api.Request;
 
-enum HttpHeaderSetter implements TextMapSetter<Request> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public enum HttpHeaderSetter implements TextMapSetter<Request> {
   INSTANCE;
 
   @Override

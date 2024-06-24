@@ -17,6 +17,8 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
+  testInstrumentation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
+
   // we use methods that weren't present before 2.14 in tests
   testLibrary("org.influxdb:influxdb-java:2.14")
 }
@@ -43,4 +45,10 @@ tasks {
       dependsOn(testing.suites)
     }
   }
+}
+
+tasks.withType<Test>().configureEach {
+  // we disable the okhttp instrumentation, so we don't need to assert on the okhttp spans
+  // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
+  jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
 }
