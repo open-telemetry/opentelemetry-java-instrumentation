@@ -50,6 +50,10 @@ class AdviceTransformer {
       return cw.toByteArray();
     }
 
+    //Advices already using Advice.AssignReturned are assumed to be already compatible
+    //Those won't be transformed except for setting inline to false
+    boolean justDelegateAdvice = usesAssignReturned(classNode);
+
     // sort enter advice method before exit advice
     classNode.methods.sort(
         Comparator.comparingInt(
@@ -75,7 +79,7 @@ class AdviceTransformer {
               public void visitEnd() {
                 super.visitEnd();
 
-                instrument(context, this, classVisitor);
+                instrument(context, this, classVisitor, justDelegateAdvice);
               }
             };
           }
@@ -223,6 +227,25 @@ class AdviceTransformer {
     }
 
     return result;
+  }
+
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED = Type.getType(Advice.AssignReturned.ToReturned.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS = Type.getType(Advice.AssignReturned.ToArguments.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_FIELDS = Type.getType(Advice.AssignReturned.ToFields.class);
+
+  private static boolean usesAssignReturned(MethodNode source) {
+    return hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_RETURNED)
+         || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS)
+         || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_FIELDS);
+  }
+
+  private static boolean usesAssignReturned(ClassNode classNode) {
+    for (MethodNode mn : classNode.methods) {
+      if (usesAssignReturned(mn)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
@@ -554,105 +577,109 @@ class AdviceTransformer {
   }
 
   private static void instrument(
-      TransformationContext context, MethodNode methodNode, ClassVisitor classVisitor) {
+      TransformationContext context, MethodNode methodNode, ClassVisitor classVisitor, boolean justDelegateAdvice) {
+
     String originalDescriptor = methodNode.desc;
     String[] exceptionsArray = methodNode.exceptions.toArray(new String[0]);
 
-    List<OutputArgument> writableArguments = getWritableArguments(methodNode);
-    OutputArgument writableReturn = getWritableReturnValue(methodNode);
-    OutputArgument enterArgument = getEnterArgument(methodNode);
-    List<AdviceLocal> adviceLocals = getLocals(methodNode);
-    boolean isEnterAdvice = isEnterAdvice(methodNode);
-    boolean isExitAdvice = isExitAdvice(methodNode);
-    Type returnType = Type.getReturnType(methodNode.desc);
+    if (!justDelegateAdvice) {
 
-    // currently we don't support rewriting enter advice returning a primitive type
-    if (isEnterAdvice
-        && !(returnType.getSort() == Type.VOID
-            || returnType.getSort() == Type.OBJECT
-            || returnType.getSort() == Type.ARRAY)) {
-      context.disableReturnTypeChange();
-    }
-    // context is shared by enter and exit advice, if entry advice was rejected don't attempt to
-    // rewrite usages of @Advice.Enter in the exit advice
-    if (!context.canChangeReturnType()) {
-      enterArgument = null;
-    }
+      List<OutputArgument> writableArguments = getWritableArguments(methodNode);
+      OutputArgument writableReturn = getWritableReturnValue(methodNode);
+      OutputArgument enterArgument = getEnterArgument(methodNode);
+      List<AdviceLocal> adviceLocals = getLocals(methodNode);
+      boolean isEnterAdvice = isEnterAdvice(methodNode);
+      boolean isExitAdvice = isExitAdvice(methodNode);
+      Type returnType = Type.getReturnType(methodNode.desc);
 
-    if (context.canChangeReturnType() || (isExitAdvice && Type.VOID_TYPE.equals(returnType))) {
-      if (!writableArguments.isEmpty()
-          || writableReturn != null
-          || !Type.VOID_TYPE.equals(returnType)
-          || (!adviceLocals.isEmpty() && isEnterAdvice)) {
-        Type[] argumentTypes = Type.getArgumentTypes(methodNode.desc);
-        if (!adviceLocals.isEmpty() && isEnterAdvice) {
-          // Set type of arguments annotated with @Advice.Local to Object. These arguments are
-          // likely to be helper classes which currently breaks because the invokedynamic call in
-          // advised class needs access to the parameter types of the advice method.
-          for (AdviceLocal adviceLocal : adviceLocals) {
-            argumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
-          }
-        }
-
-        methodNode.desc = Type.getMethodDescriptor(OBJECT_ARRAY_TYPE, argumentTypes);
-
-        MethodNode tmp =
-            new MethodNode(
-                methodNode.access,
-                methodNode.name,
-                methodNode.desc,
-                methodNode.signature,
-                exceptionsArray);
-        MethodVisitor mv =
-            instrumentOurParameters(
-                context,
-                tmp,
-                methodNode,
-                originalDescriptor,
-                writableArguments,
-                writableReturn,
-                adviceLocals);
-        methodNode.accept(mv);
-
-        methodNode = tmp;
-        adviceLocals = getLocals(methodNode);
+      // currently we don't support rewriting enter advice returning a primitive type
+      if (isEnterAdvice
+          && !(returnType.getSort() == Type.VOID
+          || returnType.getSort() == Type.OBJECT
+          || returnType.getSort() == Type.ARRAY)) {
+        context.disableReturnTypeChange();
+      }
+      // context is shared by enter and exit advice, if entry advice was rejected don't attempt to
+      // rewrite usages of @Advice.Enter in the exit advice
+      if (!context.canChangeReturnType()) {
+        enterArgument = null;
       }
 
-      // this is the only transformation that does not change the return type of the advice method,
-      // thus it is also the only transformation that can be applied on top of the other transforms
-      if ((!adviceLocals.isEmpty() || enterArgument != null) && isExitAdvice) {
-        // Set type of arguments annotated with @Advice.Local to Object. These arguments are likely
-        // to be helper classes which currently breaks because the invokedynamic call in advised
-        // class needs access to the parameter types of the advice method.
-        Type[] newArgumentTypes = Type.getArgumentTypes(methodNode.desc);
-        for (AdviceLocal adviceLocal : adviceLocals) {
-          newArgumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
+      if (context.canChangeReturnType() || (isExitAdvice && Type.VOID_TYPE.equals(returnType))) {
+        if (!writableArguments.isEmpty()
+            || writableReturn != null
+            || !Type.VOID_TYPE.equals(returnType)
+            || (!adviceLocals.isEmpty() && isEnterAdvice)) {
+          Type[] argumentTypes = Type.getArgumentTypes(methodNode.desc);
+          if (!adviceLocals.isEmpty() && isEnterAdvice) {
+            // Set type of arguments annotated with @Advice.Local to Object. These arguments are
+            // likely to be helper classes which currently breaks because the invokedynamic call in
+            // advised class needs access to the parameter types of the advice method.
+            for (AdviceLocal adviceLocal : adviceLocals) {
+              argumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
+            }
+          }
+
+          methodNode.desc = Type.getMethodDescriptor(OBJECT_ARRAY_TYPE, argumentTypes);
+
+          MethodNode tmp =
+              new MethodNode(
+                  methodNode.access,
+                  methodNode.name,
+                  methodNode.desc,
+                  methodNode.signature,
+                  exceptionsArray);
+          MethodVisitor mv =
+              instrumentOurParameters(
+                  context,
+                  tmp,
+                  methodNode,
+                  originalDescriptor,
+                  writableArguments,
+                  writableReturn,
+                  adviceLocals);
+          methodNode.accept(mv);
+
+          methodNode = tmp;
+          adviceLocals = getLocals(methodNode);
         }
-        if (enterArgument != null) {
-          newArgumentTypes[enterArgument.adviceIndex] = OBJECT_TYPE;
+
+        // this is the only transformation that does not change the return type of the advice method,
+        // thus it is also the only transformation that can be applied on top of the other transforms
+        if ((!adviceLocals.isEmpty() || enterArgument != null) && isExitAdvice) {
+          // Set type of arguments annotated with @Advice.Local to Object. These arguments are likely
+          // to be helper classes which currently breaks because the invokedynamic call in advised
+          // class needs access to the parameter types of the advice method.
+          Type[] newArgumentTypes = Type.getArgumentTypes(methodNode.desc);
+          for (AdviceLocal adviceLocal : adviceLocals) {
+            newArgumentTypes[adviceLocal.adviceIndex] = OBJECT_TYPE;
+          }
+          if (enterArgument != null) {
+            newArgumentTypes[enterArgument.adviceIndex] = OBJECT_TYPE;
+          }
+          List<Type> typeList = new ArrayList<>(Arrays.asList(newArgumentTypes));
+          // add Object array as the last argument, this array is used to pass info from the enter
+          // advice
+          typeList.add(OBJECT_ARRAY_TYPE);
+
+          methodNode.desc =
+              Type.getMethodDescriptor(
+                  Type.getReturnType(methodNode.desc), typeList.toArray(new Type[0]));
+
+          MethodNode tmp =
+              new MethodNode(
+                  methodNode.access,
+                  methodNode.name,
+                  methodNode.desc,
+                  methodNode.signature,
+                  exceptionsArray);
+          MethodVisitor mv =
+              instrumentAdviceLocals(
+                  false, tmp, methodNode, originalDescriptor, adviceLocals, enterArgument, -1);
+          methodNode.accept(mv);
+
+          methodNode = tmp;
         }
-        List<Type> typeList = new ArrayList<>(Arrays.asList(newArgumentTypes));
-        // add Object array as the last argument, this array is used to pass info from the enter
-        // advice
-        typeList.add(OBJECT_ARRAY_TYPE);
-
-        methodNode.desc =
-            Type.getMethodDescriptor(
-                Type.getReturnType(methodNode.desc), typeList.toArray(new Type[0]));
-
-        MethodNode tmp =
-            new MethodNode(
-                methodNode.access,
-                methodNode.name,
-                methodNode.desc,
-                methodNode.signature,
-                exceptionsArray);
-        MethodVisitor mv =
-            instrumentAdviceLocals(
-                false, tmp, methodNode, originalDescriptor, adviceLocals, enterArgument, -1);
-        methodNode.accept(mv);
-
-        methodNode = tmp;
       }
     }
 
