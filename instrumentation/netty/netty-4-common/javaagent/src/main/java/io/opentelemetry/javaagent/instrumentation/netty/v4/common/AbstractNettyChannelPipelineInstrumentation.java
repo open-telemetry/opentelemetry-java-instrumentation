@@ -159,7 +159,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
     public static Object removeHandler(
         @Advice.This ChannelPipeline pipeline,
-        @Advice.Return(readOnly = false) ChannelHandler returnHandler) {
+        @Advice.Return ChannelHandler returnHandler) {
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       ChannelHandler handler = returnHandler;
