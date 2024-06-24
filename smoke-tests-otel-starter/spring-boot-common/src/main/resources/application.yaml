@@ -8,6 +8,9 @@ otel:
     logback-appender:
       experimental:
         capture-code-attributes: true
+    http:
+      client:
+        emit-experimental-telemetry: true
   propagators:
     - b3
   resource:

@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -227,14 +229,19 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                nestedClientSpan ->
-                    nestedClientSpan
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
-                nestedServerSpan ->
-                    nestedServerSpan
-                        .hasKind(SpanKind.SERVER)
+                span -> assertClientSpan(span, "/ping"),
+                span ->
+                    span.hasKind(SpanKind.SERVER)
                         .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+  }
+
+  public static void assertClientSpan(SpanDataAssert nestedClientSpan, String path) {
+    nestedClientSpan
+        .hasKind(SpanKind.CLIENT)
+        .hasAttributesSatisfying(
+            OpenTelemetryAssertions.satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
+            // this attribute is set by the experimental http instrumentation
+            OpenTelemetryAssertions.satisfies(
+                AttributeKey.longKey("http.response.body.size"), AbstractLongAssert::isPositive));
   }
 }

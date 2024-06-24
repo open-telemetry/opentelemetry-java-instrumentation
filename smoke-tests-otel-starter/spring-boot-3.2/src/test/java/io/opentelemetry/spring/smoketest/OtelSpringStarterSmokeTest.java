@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,14 +51,7 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   private static void assertClient(TraceAssert traceAssert) {
     traceAssert.hasSpansSatisfyingExactly(
-        nestedClientSpan ->
-            nestedClientSpan
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfying(
-                    a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
-        nestedServerSpan ->
-            nestedServerSpan
-                .hasKind(SpanKind.SERVER)
-                .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"));
+        span -> AbstractOtelSpringStarterSmokeTest.assertClientSpan(span, "/ping"),
+        span -> span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"));
   }
 }
