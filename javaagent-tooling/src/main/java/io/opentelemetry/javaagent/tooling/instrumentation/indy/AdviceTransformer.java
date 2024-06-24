@@ -50,8 +50,8 @@ class AdviceTransformer {
       return cw.toByteArray();
     }
 
-    //Advices already using Advice.AssignReturned are assumed to be already compatible
-    //Those won't be transformed except for setting inline to false
+    // Advices already using Advice.AssignReturned are assumed to be already compatible
+    // Those won't be transformed except for setting inline to false
     boolean justDelegateAdvice = usesAssignReturned(classNode);
 
     // sort enter advice method before exit advice
@@ -229,14 +229,17 @@ class AdviceTransformer {
     return result;
   }
 
-  private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED = Type.getType(Advice.AssignReturned.ToReturned.class);
-  private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS = Type.getType(Advice.AssignReturned.ToArguments.class);
-  private static final Type ADVICE_ASSIGN_RETURNED_TO_FIELDS = Type.getType(Advice.AssignReturned.ToFields.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED =
+      Type.getType(Advice.AssignReturned.ToReturned.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS =
+      Type.getType(Advice.AssignReturned.ToArguments.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_FIELDS =
+      Type.getType(Advice.AssignReturned.ToFields.class);
 
   private static boolean usesAssignReturned(MethodNode source) {
     return hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_RETURNED)
-         || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS)
-         || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_FIELDS);
+        || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS)
+        || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_FIELDS);
   }
 
   private static boolean usesAssignReturned(ClassNode classNode) {
@@ -577,7 +580,10 @@ class AdviceTransformer {
   }
 
   private static void instrument(
-      TransformationContext context, MethodNode methodNode, ClassVisitor classVisitor, boolean justDelegateAdvice) {
+      TransformationContext context,
+      MethodNode methodNode,
+      ClassVisitor classVisitor,
+      boolean justDelegateAdvice) {
 
     String originalDescriptor = methodNode.desc;
     String[] exceptionsArray = methodNode.exceptions.toArray(new String[0]);
@@ -595,8 +601,8 @@ class AdviceTransformer {
       // currently we don't support rewriting enter advice returning a primitive type
       if (isEnterAdvice
           && !(returnType.getSort() == Type.VOID
-          || returnType.getSort() == Type.OBJECT
-          || returnType.getSort() == Type.ARRAY)) {
+              || returnType.getSort() == Type.OBJECT
+              || returnType.getSort() == Type.ARRAY)) {
         context.disableReturnTypeChange();
       }
       // context is shared by enter and exit advice, if entry advice was rejected don't attempt to
@@ -644,10 +650,13 @@ class AdviceTransformer {
           adviceLocals = getLocals(methodNode);
         }
 
-        // this is the only transformation that does not change the return type of the advice method,
-        // thus it is also the only transformation that can be applied on top of the other transforms
+        // this is the only transformation that does not change the return type of the advice
+        // method,
+        // thus it is also the only transformation that can be applied on top of the other
+        // transforms
         if ((!adviceLocals.isEmpty() || enterArgument != null) && isExitAdvice) {
-          // Set type of arguments annotated with @Advice.Local to Object. These arguments are likely
+          // Set type of arguments annotated with @Advice.Local to Object. These arguments are
+          // likely
           // to be helper classes which currently breaks because the invokedynamic call in advised
           // class needs access to the parameter types of the advice method.
           Type[] newArgumentTypes = Type.getArgumentTypes(methodNode.desc);
