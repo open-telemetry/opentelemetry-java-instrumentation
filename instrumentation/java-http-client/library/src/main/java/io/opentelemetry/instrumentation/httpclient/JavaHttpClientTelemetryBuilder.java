@@ -22,10 +22,10 @@ import java.util.function.Function;
 public final class JavaHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
-  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> clientBuilder;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
+    clientBuilder =
         new DefaultHttpClientInstrumenterBuilder<>(
             INSTRUMENTATION_NAME, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
   }
@@ -37,7 +37,7 @@ public final class JavaHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -48,7 +48,7 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+    clientBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -59,7 +59,7 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+    clientBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -78,7 +78,7 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    builder.setKnownMethods(knownMethods);
+    clientBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -91,7 +91,7 @@ public final class JavaHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -100,12 +100,13 @@ public final class JavaHttpClientTelemetryBuilder {
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
           spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+    clientBuilder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
   public JavaHttpClientTelemetry build() {
     return new JavaHttpClientTelemetry(
-        builder.build(), new HttpHeadersSetter(builder.getOpenTelemetry().getPropagators()));
+        clientBuilder.build(),
+        new HttpHeadersSetter(clientBuilder.getOpenTelemetry().getPropagators()));
   }
 }

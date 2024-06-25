@@ -22,10 +22,10 @@ import okhttp3.Response;
 public final class OkHttpTelemetryBuilder {
 
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-3.0";
-  private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
+  private final DefaultHttpClientInstrumenterBuilder<Request, Response> clientBuilder;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
+    clientBuilder =
         new DefaultHttpClientInstrumenterBuilder<>(
             INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE);
   }
@@ -37,7 +37,7 @@ public final class OkHttpTelemetryBuilder {
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -48,7 +48,7 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+    clientBuilder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -59,7 +59,7 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+    clientBuilder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -78,7 +78,7 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    builder.setKnownMethods(knownMethods);
+    clientBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -91,7 +91,7 @@ public final class OkHttpTelemetryBuilder {
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -100,7 +100,7 @@ public final class OkHttpTelemetryBuilder {
   public OkHttpTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
           spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+    clientBuilder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -108,6 +108,7 @@ public final class OkHttpTelemetryBuilder {
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
   public OkHttpTelemetry build() {
-    return new OkHttpTelemetry(builder.build(), builder.getOpenTelemetry().getPropagators());
+    return new OkHttpTelemetry(
+        clientBuilder.build(), clientBuilder.getOpenTelemetry().getPropagators());
   }
 }

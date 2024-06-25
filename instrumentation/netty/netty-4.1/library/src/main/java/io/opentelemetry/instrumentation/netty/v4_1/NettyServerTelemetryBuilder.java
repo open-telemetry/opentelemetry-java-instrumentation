@@ -8,32 +8,28 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyServerInstrumenterFactory;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.server.HttpRequestHeadersGetter;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyHttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
 
-  private final OpenTelemetry openTelemetry;
+  private final DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse>
+      serverBuilder;
 
-  private Consumer<HttpServerAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
-      extractorConfigurer = builder -> {};
-  private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
-      spanNameExtractorConfigurer = builder -> {};
-  private Consumer<HttpServerRouteBuilder<HttpRequestAndChannel>> httpServerRouteConfigurer =
-      builder -> {};
-  private boolean emitExperimentalHttpServerMetrics = false;
   private boolean emitExperimentalHttpServerEvents = false;
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+    serverBuilder =
+        new DefaultHttpServerInstrumenterBuilder<>(
+                "io.opentelemetry.netty-4.1", openTelemetry, new NettyHttpServerAttributesGetter())
+            .setHeaderGetter(HttpRequestHeadersGetter.INSTANCE);
   }
 
   /**
@@ -56,9 +52,7 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedRequestHeaders(
       List<String> capturedRequestHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(
-            builder -> builder.setCapturedRequestHeaders(capturedRequestHeaders));
+    serverBuilder.setCapturedRequestHeaders(capturedRequestHeaders);
     return this;
   }
 
@@ -70,9 +64,7 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedResponseHeaders(
       List<String> capturedResponseHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(
-            builder -> builder.setCapturedResponseHeaders(capturedResponseHeaders));
+    serverBuilder.setCapturedResponseHeaders(capturedResponseHeaders);
     return this;
   }
 
@@ -91,12 +83,7 @@ public final class NettyServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    spanNameExtractorConfigurer =
-        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    httpServerRouteConfigurer =
-        httpServerRouteConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    serverBuilder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -109,20 +96,14 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 
   /** Returns a new {@link NettyServerTelemetry} with the given configuration. */
   public NettyServerTelemetry build() {
     return new NettyServerTelemetry(
-        NettyServerInstrumenterFactory.create(
-            openTelemetry,
-            "io.opentelemetry.netty-4.1",
-            extractorConfigurer,
-            spanNameExtractorConfigurer,
-            httpServerRouteConfigurer,
-            emitExperimentalHttpServerMetrics),
+        serverBuilder.build(),
         emitExperimentalHttpServerEvents
             ? ProtocolEventHandler.Enabled.INSTANCE
             : ProtocolEventHandler.Noop.INSTANCE);
