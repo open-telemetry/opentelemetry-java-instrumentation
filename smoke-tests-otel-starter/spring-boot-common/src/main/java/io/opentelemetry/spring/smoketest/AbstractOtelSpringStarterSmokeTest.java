@@ -5,6 +5,8 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -19,7 +21,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -143,15 +144,13 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributes ->
-                                OpenTelemetryAssertions.assertThat(attributes)
-                                    .hasEntrySatisfying(
-                                        UrlAttributes.URL_FULL,
-                                        url -> assertThat(url).endsWith("/ping"))
-                                    .containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost")
-                                    .hasEntrySatisfying(
-                                        ServerAttributes.SERVER_PORT,
-                                        port -> assertThat(port).isNotZero())),
+                            satisfies(
+                                UrlAttributes.URL_FULL,
+                                stringAssert -> stringAssert.endsWith("/ping")),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            satisfies(
+                                ServerAttributes.SERVER_PORT,
+                                integerAssert -> integerAssert.isNotZero())),
                 serverSpan ->
                     serverSpan
                         .hasKind(SpanKind.SERVER)
@@ -162,20 +161,18 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                     .hasAttribute(
                                         AttributeKey.stringKey("attributeFromYaml"), "true")
                                     .hasAttribute(
-                                        OpenTelemetryAssertions.satisfies(
+                                        satisfies(
                                             ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
                                             AbstractCharSequenceAssert::isNotBlank)))
                         .hasAttributesSatisfying(
-                            attributes ->
-                                OpenTelemetryAssertions.assertThat(attributes)
-                                    .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-                                    .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                                    .containsEntry(HttpAttributes.HTTP_ROUTE, "/ping")
-                                    .containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost")
-                                    .containsEntry(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
-                                    .hasEntrySatisfying(
-                                        ServerAttributes.SERVER_PORT,
-                                        port -> assertThat(port).isNotZero()))));
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                ServerAttributes.SERVER_PORT,
+                                integerAssert -> integerAssert.isNotZero()))));
 
     // Metric
     testing.waitAndAssertMetrics(
