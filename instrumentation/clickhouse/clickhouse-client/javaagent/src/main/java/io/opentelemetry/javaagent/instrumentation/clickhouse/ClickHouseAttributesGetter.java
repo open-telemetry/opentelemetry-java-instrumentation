@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
-import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
@@ -17,8 +16,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     if (request.getSqlStatementInfo() == null) {
       return null;
     }
-    String statement = request.getSqlStatementInfo().getFullStatement();
-    return StringUtils.isNullOrEmpty(statement) ? null : statement;
+    return request.getSqlStatementInfo().getFullStatement();
   }
 
   @Nullable
@@ -27,8 +25,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     if (request.getSqlStatementInfo() == null) {
       return null;
     }
-    String operation = request.getSqlStatementInfo().getOperation();
-    return StringUtils.isNullOrEmpty(operation) ? null : operation;
+    return request.getSqlStatementInfo().getOperation();
   }
 
   @Nullable
@@ -47,7 +44,10 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
   @Override
   public String getName(ClickHouseDbRequest request) {
     String dbName = request.getDbName();
-    return StringUtils.isNullOrEmpty(dbName) ? null : dbName;
+    if (dbName == null || dbName.isEmpty()) {
+      return null;
+    }
+    return dbName;
   }
 
   @Nullable

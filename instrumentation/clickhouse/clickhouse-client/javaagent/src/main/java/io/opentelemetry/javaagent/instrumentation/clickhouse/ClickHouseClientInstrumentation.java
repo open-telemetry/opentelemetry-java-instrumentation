@@ -13,9 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -39,12 +41,17 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ClickHouseExecuteAndWaitAdvice {
-
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(ClickHouseClient.class);
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       if (clickHouseRequest == null) {
         return;
       }
