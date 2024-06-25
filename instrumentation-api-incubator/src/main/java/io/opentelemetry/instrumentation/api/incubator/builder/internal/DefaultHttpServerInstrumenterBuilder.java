@@ -243,12 +243,13 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     if (builder instanceof DefaultHttpServerInstrumenterBuilder<?, ?>) {
       return (DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>) builder;
     }
+    Class<?> builderClass = builder.getClass();
     try {
-      Field field = builder.getClass().getDeclaredField("serverBuilder");
+      Field field = builderClass.getDeclaredField("serverBuilder");
       field.setAccessible(true);
       return (DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>) field.get(builder);
     } catch (Exception e) {
-      throw new IllegalStateException("Could not access builder field", e);
+      throw new IllegalStateException("Could not access serverBuilder field in " + builderClass, e);
     }
   }
 }

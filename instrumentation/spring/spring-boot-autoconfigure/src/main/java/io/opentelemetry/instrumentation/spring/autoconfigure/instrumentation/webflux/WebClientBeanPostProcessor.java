@@ -32,7 +32,7 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
 
   static SpringWebfluxTelemetry getWebfluxTelemetry(
       OpenTelemetry openTelemetry, ConfigProperties config) {
-    return InstrumentationConfigUtil.configureBuilder(
+    return InstrumentationConfigUtil.configureClientAndServerBuilder(
             config, SpringWebfluxTelemetry.builder(openTelemetry))
         .build();
   }
