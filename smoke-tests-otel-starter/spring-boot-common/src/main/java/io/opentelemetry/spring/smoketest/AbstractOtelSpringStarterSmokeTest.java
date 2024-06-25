@@ -20,7 +20,9 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -29,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -141,7 +144,12 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
+                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping"))
+                        .hasAttribute(ServerAttributes.SERVER_ADDRESS, "localhost")
+                        .hasAttribute(
+                            OpenTelemetryAssertions.satisfies(
+                                ServerAttributes.SERVER_PORT,
+                                AbstractLongAssert::isNotZero)),
                 serverSpan ->
                     serverSpan
                         .hasKind(SpanKind.SERVER)
@@ -157,7 +165,13 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                             AbstractCharSequenceAssert::isNotBlank)))
                         .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
                         .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")
+                        .hasAttribute(ServerAttributes.SERVER_ADDRESS, "localhost")
+                        .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
+                        .hasAttribute(
+                            OpenTelemetryAssertions.satisfies(
+                                ServerAttributes.SERVER_PORT,
+                                AbstractLongAssert::isNotZero))));
 
     // Metric
     testing.waitAndAssertMetrics(
