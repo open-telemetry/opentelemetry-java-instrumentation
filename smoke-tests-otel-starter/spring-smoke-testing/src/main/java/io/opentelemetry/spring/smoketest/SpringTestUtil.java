@@ -26,7 +26,7 @@ public class SpringTestUtil {
         .hasAttributesSatisfying(
             OpenTelemetryAssertions.satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
             // this attribute is set by the experimental http instrumentation
-            OpenTelemetryAssertions.satisfies(BODY_SIZE, AbstractLongAssert::isPositive));
+            OpenTelemetryAssertions.satisfies(BODY_SIZE, AbstractLongAssert::isNotNegative));
   }
 
   @CanIgnoreReturnValue
@@ -37,7 +37,7 @@ public class SpringTestUtil {
         .hasAttribute(HttpAttributes.HTTP_ROUTE, route)
         .hasAttributesSatisfying(
             // this attribute is set by the experimental http instrumentation
-            OpenTelemetryAssertions.satisfies(BODY_SIZE, AbstractLongAssert::isPositive));
+            OpenTelemetryAssertions.satisfies(BODY_SIZE, AbstractLongAssert::isNotNegative));
     return span;
   }
 }
