@@ -25,7 +25,7 @@ public class SpringWebMvc5InstrumentationAutoConfiguration {
 
   @Bean
   Filter otelWebMvcFilter(OpenTelemetry openTelemetry, ConfigProperties config) {
-    return InstrumentationConfigUtil.configureBuilder(
+    return InstrumentationConfigUtil.configureServerBuilder(
             config, SpringWebMvcTelemetry.builder(openTelemetry))
         .build()
         .createServletFilter();
