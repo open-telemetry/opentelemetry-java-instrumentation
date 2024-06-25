@@ -69,13 +69,21 @@ public class ExtensionClassLoader extends URLClassLoader {
 
     includeEmbeddedExtensionsIfFound(extensions, javaagentFile);
 
-    String extensionLocation = earlyConfig.getString(EXTENSIONS_CONFIG);
-    extensions.addAll(parseLocation(extensionLocation, javaagentFile));
+    String externalExtensionsLocation = earlyConfig.getString(EXTENSIONS_CONFIG);
+    if (externalExtensionsLocation != null && !externalExtensionsLocation.isEmpty()) {
+      List<URL> externalExtensions = parseLocation(externalExtensionsLocation, javaagentFile);
+      if (externalExtensions.isEmpty()) {
+        extensionClassLoadWarningMessage =
+            "No external extensions found for configured location \""
+                + externalExtensionsLocation
+                + "\"";
+      } else {
+        extensions.addAll(externalExtensions);
+      }
+    }
 
     // TODO when logging is configured add warning about deprecated property
-
     if (extensions.isEmpty()) {
-      extensionClassLoadWarningMessage = "Extension file \"" + extensionLocation + "\" not found.";
       return parent;
     }
 
