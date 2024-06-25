@@ -14,7 +14,9 @@ import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
@@ -35,13 +37,14 @@ public class LocalSchedulerActivationInstrumentation implements TypeInstrumentat
   public static class WrapRunnableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrap(@Advice.Argument(value = 0, readOnly = false) Runnable task) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
+    public static Object wrap(@Advice.Argument(value = 0) Runnable task) {
       if (task == null) {
-        return;
+        return null;
       }
 
       Context context = Java8BytecodeBridge.currentContext();
-      task = ContextPropagatingRunnable.propagateContext(task, context);
+      return ContextPropagatingRunnable.propagateContext(task, context);
     }
   }
 }
