@@ -26,6 +26,7 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.Collections;
+import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.MethodOrderer;
@@ -165,7 +166,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         AbstractIterableAssert::isNotEmpty);
 
     // Log
-    LogRecordData firstLog = testing.getExportedLogRecords().get(0);
+    List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
+    assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
+    LogRecordData firstLog = exportedLogRecords.get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
         .startsWith("Starting ")
