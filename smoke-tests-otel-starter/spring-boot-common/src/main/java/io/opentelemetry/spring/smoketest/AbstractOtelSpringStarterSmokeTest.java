@@ -148,8 +148,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                         .hasAttribute(ServerAttributes.SERVER_ADDRESS, "localhost")
                         .hasAttribute(
                             OpenTelemetryAssertions.satisfies(
-                                ServerAttributes.SERVER_PORT,
-                                AbstractLongAssert::isNotZero)),
+                                ServerAttributes.SERVER_PORT, AbstractLongAssert::isNotZero)),
                 serverSpan ->
                     serverSpan
                         .hasKind(SpanKind.SERVER)
@@ -170,8 +169,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                         .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
                         .hasAttribute(
                             OpenTelemetryAssertions.satisfies(
-                                ServerAttributes.SERVER_PORT,
-                                AbstractLongAssert::isNotZero))));
+                                ServerAttributes.SERVER_PORT, AbstractLongAssert::isNotZero))));
 
     // Metric
     testing.waitAndAssertMetrics(
