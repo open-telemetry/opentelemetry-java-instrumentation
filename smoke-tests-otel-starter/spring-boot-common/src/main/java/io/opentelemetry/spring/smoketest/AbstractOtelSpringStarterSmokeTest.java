@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -144,11 +143,15 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping"))
-                        .hasAttribute(ServerAttributes.SERVER_ADDRESS, "localhost")
-                        .hasAttribute(
-                            OpenTelemetryAssertions.satisfies(
-                                ServerAttributes.SERVER_PORT, AbstractLongAssert::isNotZero)),
+                            attributes ->
+                                OpenTelemetryAssertions.assertThat(attributes)
+                                    .hasEntrySatisfying(
+                                        UrlAttributes.URL_FULL,
+                                        url -> assertThat(url).endsWith("/ping"))
+                                    .containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost")
+                                    .hasEntrySatisfying(
+                                        ServerAttributes.SERVER_PORT,
+                                        port -> assertThat(port).isNotZero())),
                 serverSpan ->
                     serverSpan
                         .hasKind(SpanKind.SERVER)
@@ -162,14 +165,17 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                         OpenTelemetryAssertions.satisfies(
                                             ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
                                             AbstractCharSequenceAssert::isNotBlank)))
-                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-                        .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")
-                        .hasAttribute(ServerAttributes.SERVER_ADDRESS, "localhost")
-                        .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
-                        .hasAttribute(
-                            OpenTelemetryAssertions.satisfies(
-                                ServerAttributes.SERVER_PORT, AbstractLongAssert::isNotZero))));
+                        .hasAttributesSatisfying(
+                            attributes ->
+                                OpenTelemetryAssertions.assertThat(attributes)
+                                    .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+                                    .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
+                                    .containsEntry(HttpAttributes.HTTP_ROUTE, "/ping")
+                                    .containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost")
+                                    .containsEntry(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
+                                    .hasEntrySatisfying(
+                                        ServerAttributes.SERVER_PORT,
+                                        port -> assertThat(port).isNotZero()))));
 
     // Metric
     testing.waitAndAssertMetrics(
