@@ -23,6 +23,7 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -34,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -155,8 +155,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
                 serverSpan ->
-                    serverSpan
-                        .hasKind(SpanKind.SERVER)
+                    SpringTestUtil.assertServerSpan(serverSpan, "/ping")
                         .hasResourceSatisfying(
                             r ->
                                 r.hasAttribute(
@@ -235,18 +234,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "/ping"),
+                span -> SpringTestUtil.assertClientSpan(span, "/ping"),
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
                 span -> withSpanAssert(span)));
-  }
-
-  public static void assertClientSpan(SpanDataAssert span, String path) {
-    span.hasKind(SpanKind.CLIENT)
-        .hasAttributesSatisfying(
-            satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
-            // this attribute is set by the experimental http instrumentation
-            satisfies(
-                HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, AbstractLongAssert::isPositive));
   }
 }
