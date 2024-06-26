@@ -381,19 +381,22 @@ invokedynamic bytecode instructions.
 
 ### Indy modules and transition
 
-Having all instrumentation rely on native "indy" instrumentation is a tedious task and can't be
-achieved in a "big bang" step, we thus have to use intermediate steps.
+Making an instrumentation "indy" compatible (or native "indy") is not as straightforward as making it "inlined".
+However, bytebuddy provides a set of tools and APIs that are mentioned below to make the process as smooth as possible.
 
-Instrumentation modules that are "indy native" must have their `InstrumentationModule#isIndyModule`
-implementation return `true`. Also, all the instrumentation advice methods annotated with
-`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must have the `inlined = false` explicitly set.
+Due to the changes needed on most of the instrumentation modules the migration can't be achieved in a single step,
+we thus have to use intermediate steps.
+
+Instrumentation modules that are "indy native" must have:
+- `InstrumentationModule#isIndyModule` implementation return `true`
+- advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit` with `inlined = false` explicitly set.
 
 The `otel.javaagent.experimental.indy` (default `false`) configuration option allows to opt-in for
 using "indy". When set to `true`, the `io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer`
-will transform advices automatically to make them "indy native".
+will transform advices automatically to make them "indy native". Using this option is temporary and will
+be removed once all the instrumentations are "indy native".
 
-This configuration is automatically enabled in CI when `test indy` label is added to a pull-request
-or when the `-PtestIndy=true` parameter is added to gradle.
+This configuration is automatically enabled in CI with `testIndy*` checks or when the `-PtestIndy=true` parameter is added to gradle.
 
 In order to preserve compatibility with both instrumentation strategies, we have to omit the `inlined = false`
 from the advice method annotations.
@@ -466,12 +469,12 @@ allows to modify instrumented method return value on exit advice.
 
 When using non-inlined advices, reading the original return value is still done with `@Advice.Return`
 annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToReturned`
+and `@Advice.AssignReturned.ToReturned`.
 
 ```java
 @Advice.OnMethodExit(suppress = Throwable.class)
 @Advice.AssignReturned.ToReturned
-public static Object onEnter(@Advice.Return Object returnValue) {
+public static Object onExit(@Advice.Return Object returnValue) {
   return "hello";
 }
 ```
