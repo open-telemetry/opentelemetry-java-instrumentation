@@ -58,9 +58,9 @@ public class DirectLambdaTest {
     InvokeRequest newR =
         (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
-    String newCC = newR.clientContext();
-    newCC = new String(Base64.getDecoder().decode(newCC), StandardCharsets.UTF_8);
-    assertThat(newCC.contains("traceparent")).isTrue();
+    String newClientContext = newR.clientContext();
+    newClientContext = new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
+    assertThat(newClientContext.contains("traceparent")).isTrue();
   }
 
   @Test
@@ -73,11 +73,11 @@ public class DirectLambdaTest {
     InvokeRequest newR =
         (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
-    String newCC = newR.clientContext();
-    newCC = new String(Base64.getDecoder().decode(newCC), StandardCharsets.UTF_8);
-    assertThat(newCC.contains("traceparent")).isTrue();
-    assertThat(newCC.contains("preExisting")).isTrue();
-    assertThat(newCC.contains("otherStuff")).isTrue();
+    String newClientContext = newR.clientContext();
+    newClientContext = new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
+    assertThat(newClientContext.contains("traceparent")).isTrue();
+    assertThat(newClientContext.contains("preExisting")).isTrue();
+    assertThat(newClientContext.contains("otherStuff")).isTrue();
   }
 
   @Test
@@ -85,20 +85,20 @@ public class DirectLambdaTest {
     // awkward way to build a valid json that is almost but not quite too long
     boolean continueLengthingInput = true;
     StringBuffer x = new StringBuffer("x");
-    String base64edCC = "";
+    String long64edClientContext = "";
     while (continueLengthingInput) {
       x.append("x");
-      String newCC = base64ify("{\"" + x + "\": \"" + x + "\"}");
-      if (newCC.length() >= DirectLambdaImpl.MAX_CLIENT_CONTEXT_LENGTH) {
+      String newClientContext = base64ify("{\"" + x + "\": \"" + x + "\"}");
+      if (newClientContext.length() >= DirectLambdaImpl.MAX_CLIENT_CONTEXT_LENGTH) {
         continueLengthingInput = false;
         break;
       }
-      base64edCC = newCC;
-      continueLengthingInput = base64edCC.length() < DirectLambdaImpl.MAX_CLIENT_CONTEXT_LENGTH;
+      long64edClientContext = newClientContext;
+      continueLengthingInput = long64edClientContext.length() < DirectLambdaImpl.MAX_CLIENT_CONTEXT_LENGTH;
     }
 
-    InvokeRequest r = InvokeRequest.builder().clientContext(base64edCC).build();
-    assertThat(r.clientContext().equals(base64edCC)).isTrue();
+    InvokeRequest r = InvokeRequest.builder().clientContext(long64edClientContext).build();
+    assertThat(r.clientContext().equals(long64edClientContext)).isTrue();
 
     InvokeRequest newR =
         (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
