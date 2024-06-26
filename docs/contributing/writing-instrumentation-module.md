@@ -421,6 +421,15 @@ to preserve the semantics of `static` fields and to share classes.
 In order to load multiple `InstrumentationModule` implementations in the same classloader, you need to
 override the `ExperimentalInstrumentationModule#getModuleGroup` to return an identical value.
 
+### classes injected in application classloader
+
+Injecting classes in the application classloader is possible by implementing the
+`ExperimentalInstrumentationModule#injectedClassNames` method. All the class names listed by the
+returned value will be loaded in the application classloader instead of the agent or instrumentation
+module classloader.
+
+This allows for example to access package-private methods that would not be accessible otherwise.
+
 ### advice local variables
 
 With inlined advices, declaring an advice method argument with `@Advice.Local` allows to define
