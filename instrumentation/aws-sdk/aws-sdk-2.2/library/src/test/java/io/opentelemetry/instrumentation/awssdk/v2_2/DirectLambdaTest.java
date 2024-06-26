@@ -26,7 +26,6 @@ public class DirectLambdaTest{
   private Span parent;
   @Before
   public void setup() {
-    System.out.println("BEFORE");
     OpenTelemetrySdk.builder()
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
                 .buildAndRegisterGlobal();
@@ -37,7 +36,6 @@ public class DirectLambdaTest{
 
   @After
   public void cleanup() {
-    System.out.println("AFTER");
     if (parent != null) {
       parent.end();
     }
