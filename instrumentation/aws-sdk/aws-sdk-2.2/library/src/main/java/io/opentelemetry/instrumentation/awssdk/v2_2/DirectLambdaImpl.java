@@ -71,13 +71,10 @@ final class DirectLambdaImpl {
       return null; // no modifications made
     }
 
-    System.out.println("JBLEY addHeader added headers: "+customFields);
-
     parsedJson.put(CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, customFields);
 
     // turn it back into a string (json encode)
     String newJson = OBJECT_MAPPER.writeValueAsString(parsedJson);
-    System.out.println("JBLEY addHeader newJson: "+newJson);
     // turn it back into a base64 string
     String newJson64 = Base64.getEncoder().encodeToString(newJson.getBytes(StandardCharsets.UTF_8));
     // check it for length (err on the safe side with >=)
