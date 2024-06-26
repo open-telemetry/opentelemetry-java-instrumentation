@@ -431,12 +431,14 @@ return a value from the enter advice and get the value in the exit advice with a
 with `@Advice.Enter`, for example:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
+// for "indy compatible", "inlined = false" needs to be omitted
+@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "enterValue";
 }
 
-@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+// for "indy compatible", "inlined = false" needs to be omitted
+@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inlined = false)
 public static void onExit(@Advice.Argument(1) Object request,
                           @Advice.Enter Object enterValue) {
   // do something with enterValue
@@ -453,7 +455,8 @@ annotated parameters, however modifying the values is done through the advice me
 and `@Advice.AssignReturned.ToArguments` annotation:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
+// for "indy compatible", "inlined = false" needs to be omitted
+@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToArguments(@ToArgument(1))
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "hello";
@@ -473,7 +476,8 @@ annotated parameter, however modifying the value is done through the advice meth
 and `@Advice.AssignReturned.ToReturned`.
 
 ```java
-@Advice.OnMethodExit(suppress = Throwable.class)
+// for "indy compatible", "inlined = false" needs to be omitted
+@Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToReturned
 public static Object onExit(@Advice.Return Object returnValue) {
   return "hello";
@@ -490,7 +494,8 @@ annotated parameter, however modifying the value is done through the advice meth
 and `@Advice.AssignReturned.ToFields` annotation:
 
 ```java
-@Advice.OnMethodExit(suppress = Throwable.class)
+// for "indy compatible", "inlined = false" needs to be omitted
+@Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToFields(@ToField(value = "fieldName"))
 public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
   return "newFieldValue";
