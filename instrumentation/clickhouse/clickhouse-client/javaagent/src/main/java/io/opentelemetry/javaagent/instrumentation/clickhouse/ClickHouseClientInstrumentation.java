@@ -47,8 +47,9 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
+
       callDepth = CallDepth.forClass(ClickHouseClient.class);
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth.getAndIncrement() > 0) {
         return;
       }
 
@@ -78,7 +79,13 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelRequest") ClickHouseDbRequest clickHouseRequest,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       if (scope == null) {
         return;
       }
