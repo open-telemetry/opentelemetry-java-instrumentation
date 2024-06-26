@@ -26,6 +26,8 @@ public class DirectLambdaTest {
 
   @Before
   public void setup() {
+    GlobalOpenTelemetry.resetForTest();
+    ;
     OpenTelemetrySdk.builder()
         .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
         .buildAndRegisterGlobal();
