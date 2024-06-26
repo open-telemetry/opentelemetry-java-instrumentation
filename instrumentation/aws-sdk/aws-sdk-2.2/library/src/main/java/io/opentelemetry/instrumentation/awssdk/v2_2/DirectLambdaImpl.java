@@ -39,8 +39,6 @@ final class DirectLambdaImpl {
       try {
         return modifyOrAddCustomContextHeader((InvokeRequest) request, otelContext);
       } catch (Exception e) {
-        System.out.println("JBLEY addHeader faile: "+e);
-        e.printStackTrace();
         return null;
       }
 
@@ -55,7 +53,6 @@ final class DirectLambdaImpl {
   static SdkRequest modifyOrAddCustomContextHeader(
       InvokeRequest request,
       io.opentelemetry.context.Context otelContext) throws Exception{
-    System.out.println("JBLEY addHeader start");
     InvokeRequest.Builder builder = request.toBuilder();
     // Unfortunately the value of this thing is a base64-encoded json with a character limit; also
     // therefore not comma-composable like many http headers
@@ -68,8 +65,12 @@ final class DirectLambdaImpl {
     Map<String, Object> customFields = (Map<String,Object>) parsedJson.getOrDefault(
         CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, new HashMap<String, Object>());
 
+    int numCustomFields = customFields.size();
     GlobalOpenTelemetry.getPropagators().getTextMapPropagator().inject(otelContext, customFields, Map::put);
-    // FIXME if no headers added, bail out
+    if (numCustomFields == customFields.size()) {
+      return null; // no modifications made
+    }
+
     System.out.println("JBLEY addHeader added headers: "+customFields);
 
     parsedJson.put(CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, customFields);
@@ -79,15 +80,11 @@ final class DirectLambdaImpl {
     System.out.println("JBLEY addHeader newJson: "+newJson);
     // turn it back into a base64 string
     String newJson64 = Base64.getEncoder().encodeToString(newJson.getBytes(StandardCharsets.UTF_8));
-    System.out.println("JBLEY addHeader newJson64: "+newJson64);
     // check it for length (err on the safe side with >=)
     if (newJson64.length() >= MAX_CLIENT_CONTEXT_LENGTH) {
-      //log("Skipping propagation, resulting custom context length would be too long");
-      System.out.println("JBLEY addHeader too long??");
       return null;
     }
     builder.clientContext(newJson64);
-    System.out.println("JBLEY addHeader almost done");
     return builder.build();
   }
 
