@@ -454,10 +454,14 @@ When using non-inlined advices, reading the argument values is still done with `
 annotated parameters, however modifying the values is done through the advice method return value
 and `@Advice.AssignReturned.ToArguments` annotation:
 
+The advice method return value must be `Object` unless it's a type that is provided by the JDK.
+Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to properly cast the
+value to the appropriate type.
+
 ```java
 // for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
-@Advice.AssignReturned.ToArguments(@ToArgument(1))
+@Advice.AssignReturned.ToArguments(@ToArgument(value = 1, typing = Assigner.Typing.DYNAMIC))
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "hello";
 }
@@ -475,10 +479,14 @@ When using non-inlined advices, reading the original return value is still done 
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToReturned`.
 
+The advice method return value must be `Object` unless it's a type that is provided by the JDK.
+Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to properly cast the
+value to the appropriate type.
+
 ```java
 // for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
-@Advice.AssignReturned.ToReturned
+@Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
 public static Object onExit(@Advice.Return Object returnValue) {
   return "hello";
 }
@@ -491,12 +499,16 @@ on advice method parameter allows to modify the `fieldName` field of the instrum
 
 When using non-inlined advices, reading the original field value is still done with `@Advice.FieldValue`
 annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToFields` annotation:
+and `@Advice.AssignReturned.ToFields` annotation.
+
+The advice method return value must be `Object` unless it's a type that is provided by the JDK.
+Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to properly cast the
+value to the appropriate type.
 
 ```java
 // for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
-@Advice.AssignReturned.ToFields(@ToField(value = "fieldName"))
+@Advice.AssignReturned.ToFields(@ToField(value = "fieldName", typing = Assigner.Typing.DYNAMIC))
 public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
   return "newFieldValue";
 }
