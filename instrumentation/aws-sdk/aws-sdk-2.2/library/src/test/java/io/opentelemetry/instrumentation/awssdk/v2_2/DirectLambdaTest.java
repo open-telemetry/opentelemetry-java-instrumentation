@@ -59,7 +59,8 @@ public class DirectLambdaTest {
         (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
     String newClientContext = newR.clientContext();
-    newClientContext = new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
+    newClientContext =
+        new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
     assertThat(newClientContext.contains("traceparent")).isTrue();
   }
 
@@ -74,7 +75,8 @@ public class DirectLambdaTest {
         (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
     String newClientContext = newR.clientContext();
-    newClientContext = new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
+    newClientContext =
+        new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
     assertThat(newClientContext.contains("traceparent")).isTrue();
     assertThat(newClientContext.contains("preExisting")).isTrue();
     assertThat(newClientContext.contains("otherStuff")).isTrue();
@@ -94,7 +96,8 @@ public class DirectLambdaTest {
         break;
       }
       long64edClientContext = newClientContext;
-      continueLengthingInput = long64edClientContext.length() < DirectLambdaImpl.MAX_CLIENT_CONTEXT_LENGTH;
+      continueLengthingInput =
+          long64edClientContext.length() < DirectLambdaImpl.MAX_CLIENT_CONTEXT_LENGTH;
     }
 
     InvokeRequest r = InvokeRequest.builder().clientContext(long64edClientContext).build();
