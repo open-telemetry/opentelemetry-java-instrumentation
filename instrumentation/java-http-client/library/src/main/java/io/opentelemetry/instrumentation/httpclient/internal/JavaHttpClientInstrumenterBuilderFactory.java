@@ -14,8 +14,8 @@ import java.net.http.HttpResponse;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class JavaHttpClientInstrumenterFactory {
-  private JavaHttpClientInstrumenterFactory() {}
+public class JavaHttpClientInstrumenterBuilderFactory {
+  private JavaHttpClientInstrumenterBuilderFactory() {}
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
 

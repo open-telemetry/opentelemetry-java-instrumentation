@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
@@ -24,7 +24,7 @@ public final class JavaHttpClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder = JavaHttpClientInstrumenterFactory.create(openTelemetry);
+    builder = JavaHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
 
   /**
