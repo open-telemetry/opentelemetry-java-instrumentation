@@ -59,9 +59,17 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
   }
 
   @Override
+  String getContextPath() {
+    "/vertx-app"
+  }
+
+  @Override
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (method == HttpConstants._OTHER) {
       return getContextPath() + endpoint.path
+    }
+    if (endpoint == ServerEndpoint.NOT_FOUND) {
+      return getContextPath()
     }
     return super.expectedHttpRoute(endpoint, method)
   }

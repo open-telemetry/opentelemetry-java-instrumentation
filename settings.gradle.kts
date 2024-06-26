@@ -12,8 +12,8 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.17.4"
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.1"
+  id("com.gradle.develocity") version "3.17.5"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -27,6 +27,23 @@ dependencyResolutionManagement {
   repositories {
     mavenCentral()
     mavenLocal()
+  }
+
+  versionCatalogs {
+    fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
+      val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+      create(name) {
+        val version =
+          gradle.startParameter.projectProperties["${name}Version"]
+            ?: (if (latestDepTest) maxVersion else minVersion)
+        plugin("versions", "org.springframework.boot").version(version)
+      }
+    }
+    // r2dbc is not compatible with earlier versions
+    addSpringBootCatalog("springBoot2", "2.6.15", "2.+")
+    // spring boot 3.0 is not compatible with graalvm native image
+    addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
+    addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
   }
 }
 
@@ -141,6 +158,7 @@ include(":smoke-tests:images:spring-boot")
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
+include(":smoke-tests-otel-starter:spring-boot-3.2")
 include(":smoke-tests-otel-starter:spring-boot-common")
 include(":smoke-tests-otel-starter:spring-boot-reactive-2")
 include(":smoke-tests-otel-starter:spring-boot-reactive-3")

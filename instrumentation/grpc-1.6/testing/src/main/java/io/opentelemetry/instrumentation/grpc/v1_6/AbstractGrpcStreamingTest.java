@@ -24,7 +24,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
-import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
+import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
@@ -153,12 +153,12 @@ public abstract class AbstractGrpcStreamingTest {
                 .sorted()
                 .collect(Collectors.toList()));
 
-    List<Consumer<EventDataAssert>> events = new ArrayList<>();
+    List<Consumer<EventData>> events = new ArrayList<>();
     for (int i = 1; i <= clientMessageCount * serverMessageCount + clientMessageCount; i++) {
       long messageId = i;
       events.add(
           event ->
-              event
+              assertThat(event)
                   .hasName("message")
                   .hasAttributesSatisfying(
                       attrs ->
@@ -192,7 +192,11 @@ public abstract class AbstractGrpcStreamingTest {
                                         (long) Status.Code.OK.value()),
                                     equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                     equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(events.toArray(new Consumer[0])),
+                            .satisfies(
+                                spanData ->
+                                    assertThat(spanData.getEvents())
+                                        .satisfiesExactlyInAnyOrder(
+                                            events.toArray(new Consumer[0]))),
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.SERVER)
@@ -211,7 +215,11 @@ public abstract class AbstractGrpcStreamingTest {
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))
-                            .hasEventsSatisfyingExactly(events.toArray(new Consumer[0]))));
+                            .satisfies(
+                                spanData ->
+                                    assertThat(spanData.getEvents())
+                                        .satisfiesExactlyInAnyOrder(
+                                            events.toArray(new Consumer[0])))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",

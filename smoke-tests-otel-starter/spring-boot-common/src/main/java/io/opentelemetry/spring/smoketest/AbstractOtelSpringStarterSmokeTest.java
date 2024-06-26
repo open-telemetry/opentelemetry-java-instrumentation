@@ -10,10 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -26,6 +26,7 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.Collections;
+import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.MethodOrderer;
@@ -33,9 +34,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,8 +60,11 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private RestTemplateBuilder restTemplateBuilder;
-  @LocalServerPort private int port;
   @Autowired private JdbcTemplate jdbcTemplate;
+
+  // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
+  @Value("${local.server.port}")
+  private int port;
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
@@ -162,7 +166,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         AbstractIterableAssert::isNotEmpty);
 
     // Log
-    LogRecordData firstLog = testing.getExportedLogRecords().get(0);
+    List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
+    assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
+    LogRecordData firstLog = exportedLogRecords.get(0);
     assertThat(firstLog.getBody().asString())
         .as("Should instrument logs")
         .startsWith("Starting ")
@@ -203,10 +209,6 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
-    assertClient();
-  }
-
-  protected void assertClient() {
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(

@@ -6,8 +6,7 @@ plugins {
 base.archivesName.set("opentelemetry-spring-boot")
 group = "io.opentelemetry.instrumentation"
 
-val versions: Map<String, String> by project
-val springBootVersion = versions["org.springframework.boot"]
+val springBootVersion = "2.7.18" // AutoConfiguration is added in 2.7.0, but can be used with older versions
 
 // r2dbc-proxy is shadowed to prevent org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
 // from being loaded by Spring Boot (by the presence of META-INF/services/io.r2dbc.spi.ConnectionFactoryProvider) - even if the user doesn't want to use R2DBC.
@@ -22,7 +21,7 @@ sourceSets {
 }
 
 dependencies {
-  implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
   implementation("javax.validation:validation-api")

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Collections.emptyMap;
 
+import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
@@ -36,6 +37,9 @@ public final class CommonConfig {
   private final boolean statementSanitizationEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
+  private final String loggingTraceIdKey;
+  private final String loggingSpanIdKey;
+  private final String loggingTraceFlagsKey;
 
   CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
@@ -62,6 +66,15 @@ public final class CommonConfig {
     emitExperimentalHttpServerTelemetry =
         config.getBoolean("otel.instrumentation.http.server.emit-experimental-telemetry", false);
     enduserConfig = new EnduserConfig(config);
+    loggingTraceIdKey =
+        config.getString(
+            "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID);
+    loggingSpanIdKey =
+        config.getString(
+            "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID);
+    loggingTraceFlagsKey =
+        config.getString(
+            "otel.instrumentation.common.logging.trace-flags", LoggingContextConstants.TRACE_FLAGS);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {
@@ -102,5 +115,17 @@ public final class CommonConfig {
 
   public boolean shouldEmitExperimentalHttpServerTelemetry() {
     return emitExperimentalHttpServerTelemetry;
+  }
+
+  public String getTraceIdKey() {
+    return loggingTraceIdKey;
+  }
+
+  public String getSpanIdKey() {
+    return loggingSpanIdKey;
+  }
+
+  public String getTraceFlagsKey() {
+    return loggingTraceFlagsKey;
   }
 }

@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.38.0"
+val otelSdkVersion = "1.39.0"
 val otelContribVersion = "1.36.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -29,7 +29,7 @@ val groovyVersion = "4.0.21"
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.17.1",
   "com.squareup.okio:okio-bom:3.9.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.2.0-jre",
+  "com.google.guava:guava-bom:33.2.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -39,8 +39,8 @@ val DEPENDENCY_BOMS = listOf(
 )
 
 val autoServiceVersion = "1.1.1"
-val autoValueVersion = "1.10.4"
-val errorProneVersion = "2.27.1"
+val autoValueVersion = "1.11.0"
+val errorProneVersion = "2.28.0"
 val byteBuddyVersion = "1.14.17"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.10.26",
+  "com.uber.nullaway:nullaway:0.11.0",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.8.0",
   "commons-codec:commons-codec:1.17.0",
@@ -113,8 +113,6 @@ val DEPENDENCIES = listOf(
   "org.codehaus.mojo:animal-sniffer-annotations:1.23",
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
-  // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.18",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.7"
 )

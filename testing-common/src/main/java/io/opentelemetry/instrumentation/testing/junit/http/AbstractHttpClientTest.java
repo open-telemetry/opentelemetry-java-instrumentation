@@ -130,7 +130,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     String method = "TEST";
     int responseCode = doRequest(method, uri);
 
-    assertThat(responseCode).isEqualTo(405);
+    assertThat(responseCode)
+        .isEqualTo("2".equals(options.getHttpProtocolVersion().apply(uri)) ? 400 : 405);
 
     testing.waitAndAssertTraces(
         trace ->

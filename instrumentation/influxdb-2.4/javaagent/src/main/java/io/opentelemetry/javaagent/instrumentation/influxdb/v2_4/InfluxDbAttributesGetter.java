@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import javax.annotation.Nullable;
 
@@ -20,14 +19,12 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getOperation(InfluxDbRequest request) {
-    if (request.getSqlStatementInfo() != null) {
-      String operation = request.getSqlStatementInfo().getOperation();
-      return StringUtils.isNullOrEmpty(operation) ? request.getSql() : operation;
+    if (request.getOperation() != null) {
+      return request.getOperation();
     }
-    return null;
+    return request.getSqlStatementInfo().getOperation();
   }
 
-  @Nullable
   @Override
   public String getSystem(InfluxDbRequest request) {
     return "influxdb";
@@ -43,7 +40,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Override
   public String getName(InfluxDbRequest request) {
     String dbName = request.getDbName();
-    return StringUtils.isNullOrEmpty(dbName) ? null : dbName;
+    return "".equals(dbName) ? null : dbName;
   }
 
   @Nullable
