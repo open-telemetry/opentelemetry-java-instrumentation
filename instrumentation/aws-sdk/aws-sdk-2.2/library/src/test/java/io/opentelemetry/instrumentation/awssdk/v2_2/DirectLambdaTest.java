@@ -14,24 +14,28 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
-public class DirectLambdaTest{
+public class DirectLambdaTest {
   private Context context;
+
   @Before
   public void setup() {
     OpenTelemetrySdk.builder()
-            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-                .buildAndRegisterGlobal();
+        .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+        .buildAndRegisterGlobal();
 
-    Span parent = GlobalOpenTelemetry.getTracer("test").spanBuilder("parentSpan").setSpanKind(SpanKind.SERVER).startSpan();
-    context =  parent.storeInContext(Context.current());
+    Span parent =
+        GlobalOpenTelemetry.getTracer("test")
+            .spanBuilder("parentSpan")
+            .setSpanKind(SpanKind.SERVER)
+            .startSpan();
+    context = parent.storeInContext(Context.current());
     assertThat(context.toString().equals("{}")).isFalse();
     parent.end();
   }
@@ -45,13 +49,12 @@ public class DirectLambdaTest{
     return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
 
-
-
   @Test
   public void noExistingClientContext() throws Exception {
     InvokeRequest r = InvokeRequest.builder().build();
 
-    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
+    InvokeRequest newR =
+        (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
     String newCC = newR.clientContext();
     newCC = new String(Base64.getDecoder().decode(newCC), StandardCharsets.UTF_8);
@@ -60,10 +63,13 @@ public class DirectLambdaTest{
 
   @Test
   public void withExistingClientContext() throws Exception {
-    String clientContext = base64ify("{\"otherStuff\": \"otherValue\", \"custom\": {\"preExisting\": \"somevalue\"} }");
+    String clientContext =
+        base64ify(
+            "{\"otherStuff\": \"otherValue\", \"custom\": {\"preExisting\": \"somevalue\"} }");
     InvokeRequest r = InvokeRequest.builder().clientContext(clientContext).build();
 
-    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
+    InvokeRequest newR =
+        (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
     String newCC = newR.clientContext();
     newCC = new String(Base64.getDecoder().decode(newCC), StandardCharsets.UTF_8);
@@ -78,9 +84,9 @@ public class DirectLambdaTest{
     boolean continueLengthingInput = true;
     StringBuffer x = new StringBuffer("x");
     String base64edCC = "";
-    while(continueLengthingInput) {
+    while (continueLengthingInput) {
       x.append("x");
-      String newCC = base64ify("{\""+x+"\": \""+x+"\"}");
+      String newCC = base64ify("{\"" + x + "\": \"" + x + "\"}");
       if (newCC.length() >= DirectLambdaImpl.MAX_CLIENT_CONTEXT_LENGTH) {
         continueLengthingInput = false;
         break;
@@ -92,9 +98,8 @@ public class DirectLambdaTest{
     InvokeRequest r = InvokeRequest.builder().clientContext(base64edCC).build();
     assertThat(r.clientContext().equals(base64edCC)).isTrue();
 
-    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
+    InvokeRequest newR =
+        (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
     assertThat(newR == null).isTrue(); // null return means no modification performed
   }
-
-
 }

@@ -15,8 +15,7 @@ final class DirectLambdaAccess {
   private static final boolean enabled = PluginImplUtil.isImplPresent("DirectLambdaImpl");
 
   @NoMuzzle
-  public static SdkRequest modifyRequest(
-      SdkRequest request, Context otelContext) {
+  public static SdkRequest modifyRequest(SdkRequest request, Context otelContext) {
     return enabled ? DirectLambdaImpl.modifyRequest(request, otelContext) : null;
   }
 }

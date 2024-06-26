@@ -52,14 +52,14 @@ public class AwsLambdaFunctionInstrumenter {
     // Look in both the http headers and the custom client context
     Map<String, String> headers = input.getHeaders();
     if (input.getAwsContext() != null && input.getAwsContext().getClientContext() != null) {
-      Map<String,String> customContext = input.getAwsContext().getClientContext().getCustom();
+      Map<String, String> customContext = input.getAwsContext().getClientContext().getCustom();
       if (customContext != null) {
         headers = new HashMap<>(headers);
         headers.putAll(customContext);
       }
     }
 
-   return openTelemetry
+    return openTelemetry
         .getPropagators()
         .getTextMapPropagator()
         .extract(Context.root(), headers, MapGetter.INSTANCE);
