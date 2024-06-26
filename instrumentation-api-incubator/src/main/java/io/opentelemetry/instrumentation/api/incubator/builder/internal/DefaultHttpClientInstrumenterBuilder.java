@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -196,44 +195,23 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return openTelemetry;
   }
 
-  public static <REQUEST, RESPONSE>
-      DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> unwrapAndConfigure(
-          CoreCommonConfig config, Object builder) {
-    DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
-    set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
-    set(config::getClientRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
-    set(config::getClientResponseHeaders, defaultBuilder::setCapturedResponseHeaders);
-    set(config::getPeerServiceResolver, defaultBuilder::setPeerServiceResolver);
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(
+      CoreCommonConfig config) {
+    set(config::getKnownHttpRequestMethods, this::setKnownMethods);
+    set(config::getClientRequestHeaders, this::setCapturedRequestHeaders);
+    set(config::getClientResponseHeaders, this::setCapturedResponseHeaders);
+    set(config::getPeerServiceResolver, this::setPeerServiceResolver);
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
-        defaultBuilder::setEmitExperimentalHttpClientMetrics);
-    return defaultBuilder;
+        this::setEmitExperimentalHttpClientMetrics);
+    return this;
   }
 
   private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
     T t = supplier.get();
     if (t != null) {
       consumer.accept(t);
-    }
-  }
-
-  /**
-   * This method is used to access the builder field of the builder object.
-   *
-   * <p>This approach allows us to re-use the existing builder classes from the library modules
-   */
-  @SuppressWarnings("unchecked")
-  private static <REQUEST, RESPONSE>
-      DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> unwrapBuilder(Object builder) {
-    if (builder instanceof DefaultHttpClientInstrumenterBuilder<?, ?>) {
-      return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) builder;
-    }
-    try {
-      Field field = builder.getClass().getDeclaredField("builder");
-      field.setAccessible(true);
-      return (DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>) field.get(builder);
-    } catch (Exception e) {
-      throw new IllegalStateException("Could not access builder field", e);
     }
   }
 }

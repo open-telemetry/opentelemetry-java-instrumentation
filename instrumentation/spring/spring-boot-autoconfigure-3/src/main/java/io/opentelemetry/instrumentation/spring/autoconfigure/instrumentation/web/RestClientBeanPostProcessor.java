@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.we
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
+import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -56,7 +57,7 @@ public final class RestClientBeanPostProcessor implements BeanPostProcessor {
   static ClientHttpRequestInterceptor getInterceptor(
       OpenTelemetry openTelemetry, ConfigProperties config) {
     return InstrumentationConfigUtil.configureBuilder(
-            config, SpringWebTelemetry.builder(openTelemetry))
+            config, SpringWebTelemetry.builder(openTelemetry), WebTelemetryUtil.GET_BUILDER)
         .build()
         .newInterceptor();
   }

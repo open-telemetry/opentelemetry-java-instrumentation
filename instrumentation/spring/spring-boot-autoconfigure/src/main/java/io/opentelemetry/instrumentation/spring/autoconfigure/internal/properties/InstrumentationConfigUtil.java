@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.function.Function;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -18,9 +19,11 @@ public class InstrumentationConfigUtil {
   private InstrumentationConfigUtil() {}
 
   @CanIgnoreReturnValue
-  public static <T> T configureBuilder(ConfigProperties config, T builder) {
-    DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(
-        new CoreCommonConfig(new ConfigPropertiesBridge(config)), builder);
+  public static <T, REQUEST, RESPONSE> T configureBuilder(
+      ConfigProperties config,
+      T builder,
+      Function<T, DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
+    getBuilder.apply(builder).configure(new CoreCommonConfig(new ConfigPropertiesBridge(config)));
     return builder;
   }
 }
