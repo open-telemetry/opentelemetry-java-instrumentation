@@ -401,9 +401,10 @@ This configuration is automatically enabled in CI with `testIndy*` checks or whe
 In order to preserve compatibility with both instrumentation strategies, we have to omit the `inlined = false`
 from the advice method annotations.
 
-We have two sets of instrumentation modules:
-- "indy compatible": compatible with both "indy" and "inlined", do not override `isIndyModule`
+We have three sets of instrumentation modules:
 - "inlined only": only compatible with "inlined", `isIndyModule` returns `false`.
+- "indy compatible": compatible with both "indy" and "inlined", do not override `isIndyModule`, advices are modified with `AdviceTransformer` to be made "indy native" or "inlined" at runtime.
+- "indy native": only compatible with "indy" `isIndyModule` returns `true`.
 
 The first step of the migration is to move all the "inlined only" to the "indy compatible" category
 by refactoring them with the limitations described below.
