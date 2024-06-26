@@ -23,22 +23,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class DirectLambdaTest{
-  private Span parent;
+  private Context context;
   @Before
   public void setup() {
     OpenTelemetrySdk.builder()
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
                 .buildAndRegisterGlobal();
 
-    parent = GlobalOpenTelemetry.getTracer("test").spanBuilder("parentSpan").setSpanKind(SpanKind.SERVER).startSpan();
-    parent.storeInContext(Context.current()).makeCurrent(); // why is this necessary?
+    Span parent = GlobalOpenTelemetry.getTracer("test").spanBuilder("parentSpan").setSpanKind(SpanKind.SERVER).startSpan();
+    context =  parent.storeInContext(Context.current());
+    assertThat(context.toString().equals("{}")).isFalse();
+    parent.end();
   }
 
   @After
   public void cleanup() {
-    if (parent != null) {
-      parent.end();
-    }
     GlobalOpenTelemetry.resetForTest();
   }
 
@@ -51,10 +50,8 @@ public class DirectLambdaTest{
   @Test
   public void noExistingClientContext() throws Exception {
     InvokeRequest r = InvokeRequest.builder().build();
-    Context ctx = Context.current();
-    assertThat(ctx.toString().equals("{}")).isFalse();
 
-    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, ctx);
+    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
     String newCC = newR.clientContext();
     newCC = new String(Base64.getDecoder().decode(newCC), StandardCharsets.UTF_8);
@@ -66,7 +63,7 @@ public class DirectLambdaTest{
     String clientContext = base64ify("{\"otherStuff\": \"otherValue\", \"custom\": {\"preExisting\": \"somevalue\"} }");
     InvokeRequest r = InvokeRequest.builder().clientContext(clientContext).build();
 
-    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, Context.current());
+    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
 
     String newCC = newR.clientContext();
     newCC = new String(Base64.getDecoder().decode(newCC), StandardCharsets.UTF_8);
@@ -95,7 +92,7 @@ public class DirectLambdaTest{
     InvokeRequest r = InvokeRequest.builder().clientContext(base64edCC).build();
     assertThat(r.clientContext().equals(base64edCC)).isTrue();
 
-    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, Context.current());
+    InvokeRequest newR = (InvokeRequest) DirectLambdaImpl.modifyOrAddCustomContextHeader(r, context);
     assertThat(newR == null).isTrue(); // null return means no modification performed
   }
 
