@@ -7,43 +7,28 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 
 public class DirectLambdaTest {
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
+
   private Context context;
 
   @Before
   public void setup() {
-    GlobalOpenTelemetry.resetForTest();
-    OpenTelemetrySdk.builder()
-        .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-        .buildAndRegisterGlobal();
-
-    Span parent =
-        GlobalOpenTelemetry.getTracer("test")
-            .spanBuilder("parentSpan")
-            .setSpanKind(SpanKind.SERVER)
-            .startSpan();
-    context = parent.storeInContext(Context.current());
-    assertThat(context.toString().equals("{}")).isFalse();
-    parent.end();
-  }
-
-  @After
-  public void cleanup() {
-    GlobalOpenTelemetry.resetForTest();
+    testing.runWithHttpServerSpan(
+        () -> {
+          context = Context.current();
+        });
   }
 
   private static String base64ify(String json) {
