@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,11 @@ public final class SpringWebfluxTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse> clientBuilder;
   private final DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>
       serverBuilder;
+
+  static {
+    SpringWebfluxUtil.GET_CLIENT_BUILDER = SpringWebfluxTelemetryBuilder::getClientBuilder;
+    SpringWebfluxUtil.GET_SERVER_BUILDER = SpringWebfluxTelemetryBuilder::getServerBuilder;
+  }
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
@@ -187,5 +193,14 @@ public final class SpringWebfluxTelemetryBuilder {
         clientBuilder.build(),
         serverBuilder.build(),
         clientBuilder.getOpenTelemetry().getPropagators());
+  }
+
+  private DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse> getClientBuilder() {
+    return clientBuilder;
+  }
+
+  private DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>
+      getServerBuilder() {
+    return serverBuilder;
   }
 }
