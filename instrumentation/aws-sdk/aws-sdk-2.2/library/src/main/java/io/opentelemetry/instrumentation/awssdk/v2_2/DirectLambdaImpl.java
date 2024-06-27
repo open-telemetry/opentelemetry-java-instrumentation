@@ -27,6 +27,14 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 // https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html#API_Invoke_RequestParameters
 
 final class DirectLambdaImpl {
+  static {
+    // Force loading of InvokeRequest; this ensures that an exception is thrown at this point when
+    // the Lambda library is not present, which will cause DirectLambdaAccess to have
+    // enabled=false in library mode.
+    @SuppressWarnings("unused")
+    String ensureLoadedDummy = InvokeRequest.class.getName();
+  }
+
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String CLIENT_CONTEXT_CUSTOM_FIELDS_KEY = "custom";
   static final int MAX_CLIENT_CONTEXT_LENGTH = 3583; // visible for testing
