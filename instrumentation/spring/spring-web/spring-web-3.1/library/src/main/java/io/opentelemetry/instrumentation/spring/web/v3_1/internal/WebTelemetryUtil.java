@@ -18,6 +18,7 @@ import org.springframework.http.client.ClientHttpResponse;
 public class WebTelemetryUtil {
   private WebTelemetryUtil() {}
 
+  @SuppressWarnings("ConstantField")
   public static Function<
           SpringWebTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse>>
