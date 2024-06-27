@@ -53,8 +53,6 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    // todo (gregor) use AbstractOtelSpringStarterSmokeTest.assertClient
-                    // when DefaultHttpClientInstrumenterBuilder is used
                     span.hasKind(SpanKind.CLIENT)
                         .hasName("GET")
                         .hasAttributesSatisfying(
