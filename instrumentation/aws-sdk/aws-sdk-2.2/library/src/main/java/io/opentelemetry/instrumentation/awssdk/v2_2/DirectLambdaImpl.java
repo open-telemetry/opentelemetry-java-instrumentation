@@ -28,8 +28,8 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 
 final class DirectLambdaImpl {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  public static final String CLIENT_CONTEXT_CUSTOM_FIELDS_KEY = "custom";
-  public static final int MAX_CLIENT_CONTEXT_LENGTH = 3583;
+  private static final String CLIENT_CONTEXT_CUSTOM_FIELDS_KEY = "custom";
+  static final int MAX_CLIENT_CONTEXT_LENGTH = 3583; // visible for testing
 
   private DirectLambdaImpl() {}
 
