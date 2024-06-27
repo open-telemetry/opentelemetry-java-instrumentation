@@ -35,8 +35,6 @@ public final class JavaagentHttpClientInstrumenters {
     return create(instrumentationName, httpAttributesGetter, headerSetter, b -> {});
   }
 
-  // this is where an HttpClientTelemetryBuilder interface would be nice
-  // instead of having to pass Object and using reflection to unwrap the underlying builder
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> builder) {
     return create(builder, customizer -> {});
@@ -63,14 +61,11 @@ public final class JavaagentHttpClientInstrumenters {
     set(config::getKnownHttpRequestMethods, builder::setKnownMethods);
     set(config::getClientRequestHeaders, builder::setCapturedRequestHeaders);
     set(config::getClientResponseHeaders, builder::setCapturedResponseHeaders);
-    // is not exposed in the public API
     set(config::getPeerServiceResolver, builder::setPeerServiceResolver);
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         builder::setEmitExperimentalHttpClientMetrics);
-    // is not exposed in the public API
-    builder.setBuilderCustomizer(builderCustomizer);
-    return builder.build();
+    return builder.setBuilderCustomizer(builderCustomizer).build();
   }
 
   private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
