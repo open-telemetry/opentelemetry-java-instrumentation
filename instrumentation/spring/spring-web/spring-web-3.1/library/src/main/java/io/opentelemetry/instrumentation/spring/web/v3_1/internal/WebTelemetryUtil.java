@@ -18,6 +18,7 @@ import org.springframework.http.client.ClientHttpResponse;
 public class WebTelemetryUtil {
   private WebTelemetryUtil() {}
 
+  // allows access to the private field for the spring starter
   @SuppressWarnings("ConstantField")
   public static Function<
           SpringWebTelemetryBuilder,
