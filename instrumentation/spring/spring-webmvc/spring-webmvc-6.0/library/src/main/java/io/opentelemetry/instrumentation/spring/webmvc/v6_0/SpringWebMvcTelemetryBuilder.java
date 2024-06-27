@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -22,10 +23,14 @@ public final class SpringWebMvcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-6.0";
   private final DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
-      serverBuilder;
+      builder;
+
+  static {
+    SpringMvcUtil.GET_BUILDER = SpringWebMvcTelemetryBuilder::getBuilder;
+  }
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
-    serverBuilder =
+    builder =
         new DefaultHttpServerInstrumenterBuilder<>(
                 INSTRUMENTATION_NAME, openTelemetry, SpringWebMvcHttpAttributesGetter.INSTANCE)
             .setHeaderGetter(JakartaHttpServletRequestGetter.INSTANCE);
@@ -38,7 +43,7 @@ public final class SpringWebMvcTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpServletRequest, HttpServletResponse> attributesExtractor) {
-    serverBuilder.addAttributesExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -49,7 +54,7 @@ public final class SpringWebMvcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    serverBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -60,7 +65,7 @@ public final class SpringWebMvcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    serverBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -71,7 +76,7 @@ public final class SpringWebMvcTelemetryBuilder {
               SpanNameExtractor<HttpServletRequest>,
               ? extends SpanNameExtractor<? super HttpServletRequest>>
           spanNameExtractor) {
-    serverBuilder.setSpanNameExtractor(spanNameExtractor);
+    builder.setSpanNameExtractor(spanNameExtractor);
     return this;
   }
 
@@ -90,7 +95,7 @@ public final class SpringWebMvcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    serverBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -103,7 +108,7 @@ public final class SpringWebMvcTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
+    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 
@@ -112,6 +117,11 @@ public final class SpringWebMvcTelemetryBuilder {
    * SpringWebMvcTelemetryBuilder}.
    */
   public SpringWebMvcTelemetry build() {
-    return new SpringWebMvcTelemetry(serverBuilder.build());
+    return new SpringWebMvcTelemetry(builder.build());
+  }
+
+  public DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
+      getBuilder() {
+    return builder;
   }
 }

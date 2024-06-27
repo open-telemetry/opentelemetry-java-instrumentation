@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -212,44 +211,21 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> unwrapAndConfigure(
-          CoreCommonConfig config, Object builder) {
-    DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> defaultBuilder = unwrapBuilder(builder);
-    set(config::getKnownHttpRequestMethods, defaultBuilder::setKnownMethods);
-    set(config::getServerRequestHeaders, defaultBuilder::setCapturedRequestHeaders);
-    set(config::getServerResponseHeaders, defaultBuilder::setCapturedResponseHeaders);
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(
+      CoreCommonConfig config) {
+    set(config::getKnownHttpRequestMethods, this::setKnownMethods);
+    set(config::getServerRequestHeaders, this::setCapturedRequestHeaders);
+    set(config::getServerResponseHeaders, this::setCapturedResponseHeaders);
     set(
         config::shouldEmitExperimentalHttpServerTelemetry,
-        defaultBuilder::setEmitExperimentalHttpServerMetrics);
-    return defaultBuilder;
+        this::setEmitExperimentalHttpServerMetrics);
+    return this;
   }
 
   private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
     T t = supplier.get();
     if (t != null) {
       consumer.accept(t);
-    }
-  }
-
-  /**
-   * This method is used to access the builder field of the builder object.
-   *
-   * <p>This approach allows us to re-use the existing builder classes from the library modules
-   */
-  @SuppressWarnings("unchecked")
-  private static <REQUEST, RESPONSE>
-      DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> unwrapBuilder(Object builder) {
-    if (builder instanceof DefaultHttpServerInstrumenterBuilder<?, ?>) {
-      return (DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>) builder;
-    }
-    Class<?> builderClass = builder.getClass();
-    try {
-      Field field = builderClass.getDeclaredField("serverBuilder");
-      field.setAccessible(true);
-      return (DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>) field.get(builder);
-    } catch (Exception e) {
-      throw new IllegalStateException("Could not access serverBuilder field in " + builderClass, e);
     }
   }
 }

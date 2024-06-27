@@ -20,11 +20,10 @@ import org.apache.http.HttpResponse;
 public final class ApacheHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";
-  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse>
-      clientBuilder;
+  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder =
+    builder =
         new DefaultHttpClientInstrumenterBuilder<>(
             INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
   }
@@ -37,7 +36,7 @@ public final class ApacheHttpClientTelemetryBuilder {
   public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
           attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -48,7 +47,7 @@ public final class ApacheHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    clientBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -59,7 +58,7 @@ public final class ApacheHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    clientBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -78,7 +77,7 @@ public final class ApacheHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    clientBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -91,7 +90,7 @@ public final class ApacheHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -102,7 +101,7 @@ public final class ApacheHttpClientTelemetryBuilder {
               SpanNameExtractor<ApacheHttpClientRequest>,
               ? extends SpanNameExtractor<? super ApacheHttpClientRequest>>
           spanNameExtractorTransformer) {
-    clientBuilder.setSpanNameExtractor(spanNameExtractorTransformer);
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -112,6 +111,6 @@ public final class ApacheHttpClientTelemetryBuilder {
    */
   public ApacheHttpClientTelemetry build() {
     return new ApacheHttpClientTelemetry(
-        clientBuilder.build(), clientBuilder.getOpenTelemetry().getPropagators());
+        builder.build(), builder.getOpenTelemetry().getPropagators());
   }
 }

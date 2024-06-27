@@ -21,10 +21,10 @@ public final class ApacheHttpClient5TelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.2";
   private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClient5Request, HttpResponse>
-      clientBuilder;
+      builder;
 
   ApacheHttpClient5TelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder =
+    builder =
         new DefaultHttpClientInstrumenterBuilder<>(
             INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClient5HttpAttributesGetter.INSTANCE);
   }
@@ -37,7 +37,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
   public ApacheHttpClient5TelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super ApacheHttpClient5Request, ? super HttpResponse>
           attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -48,7 +48,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ApacheHttpClient5TelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    clientBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -60,7 +60,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClient5TelemetryBuilder setCapturedResponseHeaders(
       List<String> responseHeaders) {
-    clientBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -79,7 +79,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ApacheHttpClient5TelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    clientBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -92,7 +92,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClient5TelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -103,7 +103,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
               SpanNameExtractor<ApacheHttpClient5Request>,
               ? extends SpanNameExtractor<? super ApacheHttpClient5Request>>
           spanNameExtractorTransformer) {
-    clientBuilder.setSpanNameExtractor(spanNameExtractorTransformer);
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -113,6 +113,6 @@ public final class ApacheHttpClient5TelemetryBuilder {
    */
   public ApacheHttpClient5Telemetry build() {
     return new ApacheHttpClient5Telemetry(
-        clientBuilder.build(), clientBuilder.getOpenTelemetry().getPropagators());
+        builder.build(), builder.getOpenTelemetry().getPropagators());
   }
 }

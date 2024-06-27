@@ -21,14 +21,14 @@ import org.springframework.http.client.ClientHttpResponse;
 /** A builder of {@link SpringWebTelemetry}. */
 public final class SpringWebTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-web-3.1";
-  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> clientBuilder;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> builder;
 
   static {
     WebTelemetryUtil.setBuilderExtractor(SpringWebTelemetryBuilder::getBuilder);
   }
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder =
+    builder =
         new DefaultHttpClientInstrumenterBuilder<>(
                 INSTRUMENTATION_NAME, openTelemetry, SpringWebHttpAttributesGetter.INSTANCE)
             .setHeaderSetter(HttpRequestSetter.INSTANCE);
@@ -45,7 +45,7 @@ public final class SpringWebTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super HttpRequest, ? super ClientHttpResponse> attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -56,7 +56,7 @@ public final class SpringWebTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    clientBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -67,7 +67,7 @@ public final class SpringWebTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    clientBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -76,7 +76,7 @@ public final class SpringWebTelemetryBuilder {
   public SpringWebTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
           spanNameExtractorTransformer) {
-    clientBuilder.setSpanNameExtractor(spanNameExtractorTransformer);
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -95,7 +95,7 @@ public final class SpringWebTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    clientBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -108,7 +108,7 @@ public final class SpringWebTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -117,6 +117,6 @@ public final class SpringWebTelemetryBuilder {
    * SpringWebTelemetryBuilder}.
    */
   public SpringWebTelemetry build() {
-    return new SpringWebTelemetry(clientBuilder.build());
+    return new SpringWebTelemetry(builder.build());
   }
 }

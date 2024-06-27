@@ -20,28 +20,40 @@ public class InstrumentationConfigUtil {
   private InstrumentationConfigUtil() {}
 
   @CanIgnoreReturnValue
-  public static <T, REQUEST, RESPONSE> T configureClientAndServerBuilder(ConfigProperties config, T builder) {
-    DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(
-        new CoreCommonConfig(new ConfigPropertiesBridge(config)), builder);
-    DefaultHttpServerInstrumenterBuilder.unwrapAndConfigure(
-        new CoreCommonConfig(new ConfigPropertiesBridge(config)), builder);
+  public static <T, CLIENT_REQUEST, CLIENT_RESPONSE, SERVER_REQUEST, SERVER_RESPONSE>
+      T configureClientAndServerBuilder(
+          ConfigProperties config,
+          T builder,
+          Function<T, DefaultHttpClientInstrumenterBuilder<CLIENT_REQUEST, CLIENT_RESPONSE>>
+              getClientBuilder,
+          Function<T, DefaultHttpServerInstrumenterBuilder<SERVER_REQUEST, SERVER_RESPONSE>>
+              getServerBuilder) {
+    CoreCommonConfig commonConfig = getConfig(config);
+    getClientBuilder.apply(builder).configure(commonConfig);
+    getServerBuilder.apply(builder).configure(commonConfig);
     return builder;
   }
 
   @CanIgnoreReturnValue
-  public static <T> T configureClientBuilder(
+  public static <T, REQUEST, RESPONSE> T configureClientBuilder(
       ConfigProperties config,
       T builder,
       Function<T, DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(new CommonConfig(new ConfigPropertiesBridge(config)));
+    getBuilder.apply(builder).configure(getConfig(config));
     return builder;
   }
 
   @CanIgnoreReturnValue
-  public static <T> T configureServerBuilder(ConfigProperties config, T builder) {
-    DefaultHttpServerInstrumenterBuilder.unwrapAndConfigure(
-        new CoreCommonConfig(new ConfigPropertiesBridge(config)), builder);
+  public static <T, REQUEST, RESPONSE> T configureServerBuilder(
+      ConfigProperties config,
+      T builder,
+      Function<T, DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
+    getBuilder.apply(builder).configure(getConfig(config));
     return builder;
+  }
+
+  private static CoreCommonConfig getConfig(ConfigProperties config) {
+    return new CoreCommonConfig(new ConfigPropertiesBridge(config));
   }
 
   public static boolean isStatementSanitizationEnabled(ConfigProperties config, String key) {
