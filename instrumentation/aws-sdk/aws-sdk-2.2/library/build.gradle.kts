@@ -40,10 +40,12 @@ testing {
           implementation("software.amazon.awssdk:aws-core:+")
           implementation("software.amazon.awssdk:aws-json-protocol:+")
           implementation("software.amazon.awssdk:dynamodb:+")
+          implementation("software.amazon.awssdk:lambda:+")
         } else {
           implementation("software.amazon.awssdk:aws-core:2.2.0")
           implementation("software.amazon.awssdk:aws-json-protocol:2.2.0")
           implementation("software.amazon.awssdk:dynamodb:2.2.0")
+          implementation("software.amazon.awssdk:lambda:2.2.0")
         }
       }
     }
