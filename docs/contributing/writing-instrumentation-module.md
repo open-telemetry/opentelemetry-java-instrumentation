@@ -516,7 +516,7 @@ value to the appropriate type.
 
 ```java
 // for "indy compatible", "inlined = false" needs to be omitted
-@Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
+@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToFields(@ToField(value = "fieldName", typing = Assigner.Typing.DYNAMIC))
 public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
   return "newFieldValue";
