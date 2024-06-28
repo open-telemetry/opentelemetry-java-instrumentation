@@ -30,7 +30,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
+        uses: github/codeql-action/init@89d78ba4572c7854683ec144d212bf0b52cd2a2a # v1.0.13
         with:
           languages: java
           # using "latest" helps to keep up with the latest Kotlin support
