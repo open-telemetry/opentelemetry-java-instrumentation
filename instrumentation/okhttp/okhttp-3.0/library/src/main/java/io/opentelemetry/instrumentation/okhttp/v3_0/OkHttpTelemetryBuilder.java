@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpAttributesGetter;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -21,13 +21,10 @@ import okhttp3.Response;
 /** A builder of {@link OkHttpTelemetry}. */
 public final class OkHttpTelemetryBuilder {
 
-  public static final String INSTRUMENTATION_NAME = "io.opentelemetry.okhttp-3.0";
   private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
-        new DefaultHttpClientInstrumenterBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE);
+    builder = OkHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
 
   /**

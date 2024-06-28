@@ -11,8 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.HttpHeaderSetter;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -24,16 +23,12 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 /** A builder of {@link JettyClientTelemetry}. */
 public final class JettyClientTelemetryBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
   private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
-        new DefaultHttpClientInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE)
-            .setHeaderSetter(HttpHeaderSetter.INSTANCE);
+    builder = JettyHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
 
   @CanIgnoreReturnValue
