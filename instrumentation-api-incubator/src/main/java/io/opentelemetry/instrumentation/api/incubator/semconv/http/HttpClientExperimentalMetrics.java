@@ -24,9 +24,9 @@ import java.util.logging.Logger;
  * {@link OperationListener} which keeps track of <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client">non-stable
  * HTTP client metrics</a>: <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpclientrequestsize">the
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpclientrequestbodysize">the
  * request size </a> and <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpclientresponsesize">
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpclientresponsebodysize">
  * the response size</a>.
  */
 public final class HttpClientExperimentalMetrics implements OperationListener {
@@ -53,7 +53,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
   private HttpClientExperimentalMetrics(Meter meter) {
     LongHistogramBuilder requestSizeBuilder =
         meter
-            .histogramBuilder("http.client.request.size")
+            .histogramBuilder("http.client.request.body.size")
             .setUnit("By")
             .setDescription("Size of HTTP client request bodies.")
             .ofLongs();
@@ -61,7 +61,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
     requestSize = requestSizeBuilder.build();
     LongHistogramBuilder responseSizeBuilder =
         meter
-            .histogramBuilder("http.client.response.size")
+            .histogramBuilder("http.client.response.body.size")
             .setUnit("By")
             .setDescription("Size of HTTP client response bodies.")
             .ofLongs();

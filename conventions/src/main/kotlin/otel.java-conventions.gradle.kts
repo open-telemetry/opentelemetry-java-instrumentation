@@ -360,8 +360,10 @@ tasks.withType<Test>().configureEach {
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
-  // Don't set for camel as we have tests that interact with AWS and need normal trustStore
-  if (project.name != "jaxrs-2.0-payara-testing" && project.description != "camel-2-20") {
+  // Don't set for:
+  // - camel as we have tests that interact with AWS and need normal trustStore
+  // - vaadin as tests need to be able to download nodejs when not cached in ~/.vaadin/
+  if (project.name != "jaxrs-2.0-payara-testing" && !project.path.contains("vaadin") && project.description != "camel-2-20") {
     jvmArgumentProviders.add(KeystoreArgumentsProvider(trustStore))
   }
 
