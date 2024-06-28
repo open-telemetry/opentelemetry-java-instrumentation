@@ -21,8 +21,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -235,13 +235,12 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                         .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
   }
 
-  public static void assertClientSpan(SpanDataAssert nestedClientSpan, String path) {
-    nestedClientSpan
-        .hasKind(SpanKind.CLIENT)
+  public static void assertClientSpan(SpanDataAssert span, String path) {
+    span.hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
-            OpenTelemetryAssertions.satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
+            satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
             // this attribute is set by the experimental http instrumentation
-            OpenTelemetryAssertions.satisfies(
+            satisfies(
                 AttributeKey.longKey("http.response.body.size"), AbstractLongAssert::isPositive));
   }
 }
