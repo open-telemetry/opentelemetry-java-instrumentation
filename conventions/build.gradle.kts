@@ -67,11 +67,11 @@ dependencies {
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.17")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
-  implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.0.0")
+  implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.0.1")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.0.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.2"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.26.0")
