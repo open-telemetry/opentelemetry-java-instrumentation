@@ -10,7 +10,7 @@ jobs:
   markdown-lint-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@b4483adec309c0d01a5435c5e24eb40de5773ad9 # v2.3.0
 
       - name: Install mardkdownlint
         run: npm install -g markdownlint-cli
