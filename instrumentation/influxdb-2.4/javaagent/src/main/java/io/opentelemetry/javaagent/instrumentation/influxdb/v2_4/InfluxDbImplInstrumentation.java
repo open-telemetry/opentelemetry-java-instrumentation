@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -90,7 +90,8 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
           InfluxDbRequest.create(
               httpUrl.host(), httpUrl.port(), query.getDatabase(), null, query.getCommand());
 
-      if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
+      Instrumenter<InfluxDbRequest, Void> instrumenter = instrumenter();
+      if (!instrumenter.shouldStart(parentContext, influxDbRequest)) {
         return arguments;
       }
 
@@ -100,11 +101,8 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         newArguments[i] = InfluxDbObjetWrapper.wrap(arguments[i], parentContext);
       }
 
-      Context context = instrumenter().start(parentContext, influxDbRequest);
-      Scope scope = context.makeCurrent();
-
       newArguments[arguments.length] =
-          new InfluxDbScope(callDepth, influxDbRequest, context, scope);
+          InfluxDbScope.start(instrumenter, callDepth, parentContext, influxDbRequest);
 
       return newArguments;
     }
@@ -112,27 +110,9 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter Object[] enterArgs) {
-      if (enterArgs == null) {
-        return;
-      }
-
       Object extraObject = enterArgs[enterArgs.length - 1];
-      if (!(extraObject instanceof InfluxDbScope)) {
-        return;
-      }
-      InfluxDbScope influxDbScope = (InfluxDbScope) extraObject;
 
-      if (influxDbScope.callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (influxDbScope.scope == null) {
-        return;
-      }
-
-      influxDbScope.scope.close();
-
-      instrumenter().end(influxDbScope.context, influxDbScope.influxDbRequest, null, throwable);
+      InfluxDbScope.end(extraObject, instrumenter(), throwable);
     }
   }
 
@@ -174,34 +154,17 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       InfluxDbRequest influxDbRequest =
           InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operation, null);
 
-      if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
+      Instrumenter<InfluxDbRequest, Void> instrumenter = instrumenter();
+      if (!instrumenter.shouldStart(parentContext, influxDbRequest)) {
         return null;
       }
 
-      Context context = instrumenter().start(parentContext, influxDbRequest);
-      Scope scope = context.makeCurrent();
-
-      return new InfluxDbScope(callDepth, influxDbRequest, context, scope);
+      return InfluxDbScope.start(instrumenter, callDepth, parentContext, influxDbRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Thrown Throwable throwable, @Advice.Enter Object scope) {
-      if (!(scope instanceof InfluxDbScope)) {
-        return;
-      }
-
-      InfluxDbScope influxDbScope = (InfluxDbScope) scope;
-
-      if (influxDbScope.callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (influxDbScope.scope == null) {
-        return;
-      }
-      influxDbScope.scope.close();
-
-      instrumenter().end(influxDbScope.context, influxDbScope.influxDbRequest, null, throwable);
+      InfluxDbScope.end(scope, instrumenter(), throwable);
     }
   }
 }
