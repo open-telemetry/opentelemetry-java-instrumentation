@@ -69,7 +69,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InfluxDbQueryAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
     public static Object[] onEnter(
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
