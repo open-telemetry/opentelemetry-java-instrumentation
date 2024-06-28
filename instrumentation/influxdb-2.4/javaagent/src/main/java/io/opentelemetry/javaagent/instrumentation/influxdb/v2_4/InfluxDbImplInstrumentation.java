@@ -110,6 +110,11 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter Object[] enterArgs) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       Object extraObject = enterArgs[enterArgs.length - 1];
 
       InfluxDbScope.end(extraObject, instrumenter(), throwable);
