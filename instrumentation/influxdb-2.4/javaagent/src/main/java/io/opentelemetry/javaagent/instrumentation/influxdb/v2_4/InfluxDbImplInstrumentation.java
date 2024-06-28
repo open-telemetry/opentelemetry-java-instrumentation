@@ -102,7 +102,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       }
 
       newArguments[arguments.length] =
-          InfluxDbScope.start(instrumenter, callDepth, parentContext, influxDbRequest);
+          InfluxDbScope.start(instrumenter, parentContext, influxDbRequest);
 
       return newArguments;
     }
@@ -159,11 +159,15 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      return InfluxDbScope.start(instrumenter, callDepth, parentContext, influxDbRequest);
+      return InfluxDbScope.start(instrumenter, parentContext, influxDbRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.Thrown Throwable throwable, @Advice.Enter Object scope) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
       InfluxDbScope.end(scope, instrumenter(), throwable);
     }
   }

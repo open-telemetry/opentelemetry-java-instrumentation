@@ -3,17 +3,13 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
 
 public class InfluxDbScope {
-  private final CallDepth callDepth;
   private final InfluxDbRequest influxDbRequest;
   private final Context context;
   private final Scope scope;
 
-  private InfluxDbScope(
-      CallDepth callDepth, InfluxDbRequest influxDbRequest, Context context, Scope scope) {
-    this.callDepth = callDepth;
+  private InfluxDbScope(InfluxDbRequest influxDbRequest, Context context, Scope scope) {
     this.influxDbRequest = influxDbRequest;
     this.context = context;
     this.scope = scope;
@@ -21,11 +17,10 @@ public class InfluxDbScope {
 
   public static InfluxDbScope start(
       Instrumenter<InfluxDbRequest, Void> instrumenter,
-      CallDepth callDepth,
       Context parentContext,
       InfluxDbRequest influxDbRequest) {
     Context context = instrumenter.start(parentContext, influxDbRequest);
-    return new InfluxDbScope(callDepth, influxDbRequest, context, context.makeCurrent());
+    return new InfluxDbScope(influxDbRequest, context, context.makeCurrent());
   }
 
   public static void end(
@@ -34,10 +29,6 @@ public class InfluxDbScope {
       return;
     }
     InfluxDbScope influxDbScope = (InfluxDbScope) scope;
-
-    if (influxDbScope.callDepth.decrementAndGet() > 0) {
-      return;
-    }
 
     if (influxDbScope.scope == null) {
       return;
