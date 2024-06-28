@@ -69,19 +69,19 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InfluxDbQueryAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter
     @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
     public static Object[] onEnter(
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.getAndIncrement() > 0) {
-        return null;
+        return arguments;
       }
 
       Query query = arguments[0] instanceof Query ? (Query) arguments[0] : null;
       if (query == null) {
-        return null;
+        return arguments;
       }
       Context parentContext = currentContext();
 
@@ -91,7 +91,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
               httpUrl.host(), httpUrl.port(), query.getDatabase(), null, query.getCommand());
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
-        return null;
+        return arguments;
       }
 
       // wrap callbacks so they'd run in the context of the parent span
