@@ -27,7 +27,7 @@ public class ExceptionFilter implements Filter {
       Exception tmp = exception;
       if (exception.getCause() != null
           && exception.getCause().getMessage().contains("submit exception")) {
-        throw new RootCauseException(tmp);
+        throw new ServletException(tmp);
       }
       throw exception;
     }

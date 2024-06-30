@@ -30,6 +30,7 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
+import jakarta.servlet.ServletException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -255,10 +256,8 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
 
     AggregatedHttpResponse response2 = client.execute(request2).aggregate().join();
     assertThat(response2.status().code()).isEqualTo(500);
-    String error = response2.contentUtf8();
-    assertThat(error).isNotNull();
 
-    RootCauseException ex = new RootCauseException(new Exception("submit exception"));
+    ServletException ex = new ServletException("submit exception");
 
     testing.waitAndAssertTraces(
         trace ->
