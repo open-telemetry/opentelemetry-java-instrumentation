@@ -19,11 +19,8 @@ import org.eclipse.jetty.client.transport.HttpRequest;
 
 class TracingHttpRequest extends HttpRequest {
 
-  private Context parentContext;
-
-  private Context clientContext;
-
   private final Instrumenter<Request, Response> instrumenter;
+  private Context parentContext;
 
   public TracingHttpRequest(
       HttpClient client,
@@ -38,92 +35,64 @@ class TracingHttpRequest extends HttpRequest {
   public void send(Response.CompleteListener listener) {
     parentContext = Context.current();
     // start span and attach listeners.
-    clientContext = JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
+    JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
     super.send(
         result -> {
-          if (clientContext != null) {
-            try (Scope scope = parentContext.makeCurrent()) {
-              listener.onComplete(result);
-            }
-          } else {
+          try (Scope scope = openScope()) {
             listener.onComplete(result);
           }
         });
   }
 
+  private Scope openScope() {
+    return parentContext != null ? parentContext.makeCurrent() : null;
+  }
+
   @Override
   public void notifyQueued() {
-    if (clientContext != null) {
-      try (Scope scope = parentContext.makeCurrent()) {
-        super.notifyQueued();
-      }
-    } else {
+    try (Scope scope = openScope()) {
       super.notifyQueued();
     }
   }
 
   @Override
   public void notifyBegin() {
-    if (clientContext != null) {
-      try (Scope scope = parentContext.makeCurrent()) {
-        super.notifyBegin();
-      }
-    } else {
+    try (Scope scope = openScope()) {
       super.notifyBegin();
     }
   }
 
   @Override
   public void notifyHeaders() {
-    if (clientContext != null) {
-      try (Scope scope = parentContext.makeCurrent()) {
-        super.notifyHeaders();
-      }
-    } else {
+    try (Scope scope = openScope()) {
       super.notifyHeaders();
     }
   }
 
   @Override
   public void notifyCommit() {
-    if (clientContext != null) {
-      try (Scope scope = parentContext.makeCurrent()) {
-        super.notifyCommit();
-      }
-    } else {
+    try (Scope scope = openScope()) {
       super.notifyCommit();
     }
   }
 
   @Override
   public void notifyContent(ByteBuffer byteBuffer) {
-    if (clientContext != null) {
-      try (Scope scope = parentContext.makeCurrent()) {
-        super.notifyContent(byteBuffer);
-      }
-    } else {
+    try (Scope scope = openScope()) {
       super.notifyContent(byteBuffer);
     }
   }
 
   @Override
   public void notifySuccess() {
-    if (clientContext != null) {
-      try (Scope scope = parentContext.makeCurrent()) {
-        super.notifySuccess();
-      }
-    } else {
+    try (Scope scope = openScope()) {
       super.notifySuccess();
     }
   }
 
   @Override
   public void notifyFailure(Throwable failure) {
-    if (clientContext != null) {
-      try (Scope scope = parentContext.makeCurrent()) {
-        super.notifyFailure(failure);
-      }
-    } else {
+    try (Scope scope = openScope()) {
       super.notifyFailure(failure);
     }
   }
