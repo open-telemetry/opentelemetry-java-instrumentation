@@ -440,13 +440,11 @@ return a value from the enter advice and get the value in the exit advice with a
 with `@Advice.Enter`, for example:
 
 ```java
-// for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "enterValue";
 }
 
-// for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inlined = false)
 public static void onExit(@Advice.Argument(1) Object request,
                           @Advice.Enter Object enterValue) {
@@ -468,7 +466,6 @@ Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to 
 value to the appropriate type.
 
 ```java
-// for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToArguments(@ToArgument(value = 1, typing = Assigner.Typing.DYNAMIC))
 public static Object onEnter(@Advice.Argument(1) Object request) {
@@ -493,7 +490,6 @@ Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to 
 value to the appropriate type.
 
 ```java
-// for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
 public static Object onExit(@Advice.Return Object returnValue) {
@@ -515,7 +511,6 @@ Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to 
 value to the appropriate type.
 
 ```java
-// for "indy compatible", "inlined = false" needs to be omitted
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToFields(@ToField(value = "fieldName", typing = Assigner.Typing.DYNAMIC))
 public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
