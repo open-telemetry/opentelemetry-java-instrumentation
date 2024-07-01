@@ -22,7 +22,7 @@ public final class ClickHouseSingletons {
     INSTRUMENTER =
         Instrumenter.<ClickHouseDbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
-                "io.opentelemetry.clickhouse-client",
+                "io.opentelemetry.clickhouse-client-0.5",
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
