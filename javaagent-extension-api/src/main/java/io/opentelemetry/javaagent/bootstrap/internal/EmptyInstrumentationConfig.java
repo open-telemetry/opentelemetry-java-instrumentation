@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class EmptyInstrumentationConfig implements CoreInstrumentationConfig {
+final class EmptyInstrumentationConfig implements InstrumentationConfig {
 
   @Nullable
   @Override

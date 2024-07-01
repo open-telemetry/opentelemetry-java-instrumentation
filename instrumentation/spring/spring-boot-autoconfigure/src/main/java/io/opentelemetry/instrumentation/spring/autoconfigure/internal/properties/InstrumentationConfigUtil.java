@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.propertie
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.function.Function;
 
@@ -23,7 +23,7 @@ public class InstrumentationConfigUtil {
       ConfigProperties config,
       T builder,
       Function<T, DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(new CoreCommonConfig(new ConfigPropertiesBridge(config)));
+    getBuilder.apply(builder).configure(new CommonConfig(new ConfigPropertiesBridge(config)));
     return builder;
   }
 }

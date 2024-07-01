@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -22,7 +22,7 @@ public final class DeprecatedConfigProperties {
   private static final Logger logger = Logger.getLogger(DeprecatedConfigProperties.class.getName());
 
   public static boolean getBoolean(
-      CoreInstrumentationConfig config,
+      InstrumentationConfig config,
       String deprecatedPropertyName,
       String newPropertyName,
       boolean defaultValue) {
@@ -32,14 +32,14 @@ public final class DeprecatedConfigProperties {
   }
 
   public static List<String> getList(
-      CoreInstrumentationConfig config, String deprecatedPropertyName, String newPropertyName) {
+      InstrumentationConfig config, String deprecatedPropertyName, String newPropertyName) {
     warnIfUsed(config, deprecatedPropertyName, newPropertyName);
     List<String> value = config.getList(deprecatedPropertyName, emptyList());
     return config.getList(newPropertyName, value);
   }
 
   private static void warnIfUsed(
-      CoreInstrumentationConfig config, String deprecatedPropertyName, String newPropertyName) {
+      InstrumentationConfig config, String deprecatedPropertyName, String newPropertyName) {
     if (config.getString(deprecatedPropertyName) != null) {
       logger.log(
           WARNING,

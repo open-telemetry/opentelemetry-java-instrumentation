@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public final class ConfigPropertiesBridge implements CoreInstrumentationConfig {
+public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   private final ConfigProperties configProperties;
 

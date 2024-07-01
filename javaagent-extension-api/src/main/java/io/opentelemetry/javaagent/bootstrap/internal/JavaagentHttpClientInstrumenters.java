@@ -56,6 +56,9 @@ public final class JavaagentHttpClientInstrumenters {
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
-    return builder.configure(CommonConfig.get()).setBuilderCustomizer(builderCustomizer).build();
+    return builder
+        .configure(AgentCommonConfig.get())
+        .setBuilderCustomizer(builderCustomizer)
+        .build();
   }
 }

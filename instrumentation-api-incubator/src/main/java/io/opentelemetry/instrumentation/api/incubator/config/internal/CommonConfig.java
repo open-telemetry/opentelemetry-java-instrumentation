@@ -19,7 +19,7 @@ import java.util.Set;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class CoreCommonConfig {
+public final class CommonConfig {
 
   private final PeerServiceResolver peerServiceResolver;
   private final List<String> clientRequestHeaders;
@@ -35,7 +35,7 @@ public final class CoreCommonConfig {
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
 
-  public CoreCommonConfig(CoreInstrumentationConfig config) {
+  public CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
         PeerServiceResolver.create(
             config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));

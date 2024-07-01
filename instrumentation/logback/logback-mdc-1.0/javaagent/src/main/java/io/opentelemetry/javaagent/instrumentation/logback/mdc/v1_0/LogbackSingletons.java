@@ -5,15 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class LogbackSingletons {
   private static final boolean ADD_BAGGAGE =
-      InstrumentationConfig.get().getBoolean("otel.instrumentation.logback-mdc.add-baggage", false);
-  private static final String TRACE_ID_KEY = CommonConfig.get().getTraceIdKey();
-  private static final String SPAN_ID_KEY = CommonConfig.get().getSpanIdKey();
-  private static final String TRACE_FLAGS_KEY = CommonConfig.get().getTraceFlagsKey();
+      AgentInstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.logback-mdc.add-baggage", false);
+  private static final String TRACE_ID_KEY = AgentCommonConfig.get().getTraceIdKey();
+  private static final String SPAN_ID_KEY = AgentCommonConfig.get().getSpanIdKey();
+  private static final String TRACE_FLAGS_KEY = AgentCommonConfig.get().getTraceFlagsKey();
 
   public static boolean addBaggage() {
     return ADD_BAGGAGE;

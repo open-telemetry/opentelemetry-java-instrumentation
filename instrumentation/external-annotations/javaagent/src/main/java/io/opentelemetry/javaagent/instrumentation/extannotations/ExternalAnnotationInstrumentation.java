@@ -17,10 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
@@ -79,7 +79,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   public ExternalAnnotationInstrumentation() {
     Set<String> additionalTraceAnnotations =
-        configureAdditionalTraceAnnotations(InstrumentationConfig.get());
+        configureAdditionalTraceAnnotations(AgentInstrumentationConfig.get());
 
     if (additionalTraceAnnotations.isEmpty()) {
       classLoaderOptimization = none();
@@ -114,7 +114,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   }
 
   // visible for testing
-  static Set<String> configureAdditionalTraceAnnotations(CoreInstrumentationConfig config) {
+  static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
     String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
     if (configString == null) {
       return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
@@ -147,7 +147,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
-            InstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+            AgentInstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =

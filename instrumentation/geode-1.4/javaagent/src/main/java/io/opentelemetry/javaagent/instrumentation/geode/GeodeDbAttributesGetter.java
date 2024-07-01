@@ -7,14 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest> {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
   public String getSystem(GeodeRequest request) {

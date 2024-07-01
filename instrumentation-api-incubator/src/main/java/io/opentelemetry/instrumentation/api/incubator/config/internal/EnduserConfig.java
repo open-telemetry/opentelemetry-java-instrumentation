@@ -39,7 +39,7 @@ public class EnduserConfig {
   private final boolean roleEnabled;
   private final boolean scopeEnabled;
 
-  EnduserConfig(CoreInstrumentationConfig instrumentationConfig) {
+  EnduserConfig(InstrumentationConfig instrumentationConfig) {
     Objects.requireNonNull(instrumentationConfig, "instrumentationConfig must not be null");
 
     /*

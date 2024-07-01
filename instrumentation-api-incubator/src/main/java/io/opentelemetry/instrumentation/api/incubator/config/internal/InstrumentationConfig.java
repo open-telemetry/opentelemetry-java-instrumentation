@@ -19,14 +19,14 @@ import javax.annotation.Nullable;
  *
  * <p>In case any {@code get*()} method variant gets called for the same property more than once
  * (e.g. each time an advice class executes) it is suggested to cache the result instead of
- * repeatedly calling {@link CoreInstrumentationConfig}. Instrumentation configuration does not
- * change during the runtime so retrieving the property once and storing its result in a static
- * final field allows JIT to do its magic and remove some code branches.
+ * repeatedly calling {@link InstrumentationConfig}. Instrumentation configuration does not change
+ * during the runtime so retrieving the property once and storing its result in a static final field
+ * allows JIT to do its magic and remove some code branches.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public interface CoreInstrumentationConfig {
+public interface InstrumentationConfig {
 
   /**
    * Returns a string-valued configuration property or {@code null} if a property with name {@code
