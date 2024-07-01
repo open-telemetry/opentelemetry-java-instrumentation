@@ -506,9 +506,9 @@ public static Object onExit(@Advice.Return Object returnValue) {
 ### writing to internal class fields
 
 With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
-on advice method parameter allows to modify the `fieldName` field of the instrumented class.
+on advice method parameters allows modifying the `fieldName` field of the instrumented class.
 
-When using non-inlined advices, reading the original field value is still done with `@Advice.FieldValue`
+When using non-inlined advices, reading the original field value is still done with the `@Advice.FieldValue`
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToFields` annotation.
 
