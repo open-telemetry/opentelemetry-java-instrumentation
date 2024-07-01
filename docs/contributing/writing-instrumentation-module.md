@@ -379,6 +379,12 @@ application classloader and the agent classloader.
 The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
 invokedynamic bytecode instructions.
 
+Making the instrumentation indy
+
+- allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques
+- provides clean isolation of instrumentation advice from the application and other instrumentations
+- allows advice classes to contain non-static fields and method - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
+
 ### Indy modules and transition
 
 Making an instrumentation "indy" compatible (or native "indy") is not as straightforward as making it "inlined".
