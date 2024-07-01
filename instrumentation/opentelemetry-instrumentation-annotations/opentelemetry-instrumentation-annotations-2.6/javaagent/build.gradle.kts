@@ -9,15 +9,15 @@ plugins {
 muzzle {
   pass {
     group.set("io.opentelemetry")
-    module.set("opentelemetry-instrumentation-annotations")
+    module.set("opentelemetry-instrumentation-annotations-incubator")
     versions.set("(,)")
   }
 }
 
 dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
-
   compileOnly(project(":javaagent-tooling"))
+  implementation(project(":instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-common:javaagent"))
 
   // this instrumentation needs to do similar shading dance as opentelemetry-api-1.0 because
   // the @WithSpan annotation references the OpenTelemetry API's SpanKind class
@@ -25,13 +25,8 @@ dependencies {
   // see the comment in opentelemetry-api-1.0.gradle for more details
   compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
-  // Used by byte-buddy but not brought in as a transitive dependency.
-  compileOnly("com.google.code.findbugs:annotations")
-  testCompileOnly("com.google.code.findbugs:annotations")
-
-  testImplementation(project(":instrumentation-annotations"))
+  testImplementation(project(":instrumentation-annotations-incubator"))
   testImplementation(project(":instrumentation-annotations-support"))
-  testImplementation("net.bytebuddy:byte-buddy")
 }
 
 tasks {
@@ -39,6 +34,8 @@ tasks {
     options.compilerArgs.add("-parameters")
   }
   test {
-    jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
+    jvmArgs(
+      "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.counted.CountedExample[exampleIgnore];io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v2_6.timed.TimedExample[exampleIgnore]"
+    )
   }
 }
