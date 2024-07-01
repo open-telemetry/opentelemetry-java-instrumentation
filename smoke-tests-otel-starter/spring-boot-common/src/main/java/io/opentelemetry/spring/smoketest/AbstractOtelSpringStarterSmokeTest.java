@@ -28,6 +28,7 @@ import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.Collections;
 import java.util.List;
@@ -241,6 +242,6 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
             satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
             // this attribute is set by the experimental http instrumentation
             satisfies(
-                AttributeKey.longKey("http.response.body.size"), AbstractLongAssert::isPositive));
+                HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, AbstractLongAssert::isPositive));
   }
 }
