@@ -24,8 +24,9 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
         .registerType(
             TypeReference.of(
                 "org.springframework.data.mongodb.core.aggregation.AggregationOperation"),
-            hint -> {
-              hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-            });
+            hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS))
+        .registerType(
+            TypeReference.of("org.apache.kafka.common.serialization.StringDeserializer"),
+            hint -> hint.withMembers(MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS));
   }
 }
