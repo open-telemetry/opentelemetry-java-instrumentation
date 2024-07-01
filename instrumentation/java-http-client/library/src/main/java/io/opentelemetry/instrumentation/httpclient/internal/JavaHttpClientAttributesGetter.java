@@ -12,7 +12,11 @@ import java.net.http.HttpResponse;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum JavaHttpClientAttributesGetter
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public enum JavaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse<?>> {
   INSTANCE;
 
