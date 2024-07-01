@@ -4,6 +4,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
+/** Container used to carry state between enter and exit advices */
 public class InfluxDbScope {
   private final InfluxDbRequest influxDbRequest;
   private final Context context;
