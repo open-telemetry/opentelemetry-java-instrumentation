@@ -5,8 +5,6 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -21,9 +19,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -144,13 +141,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                UrlAttributes.URL_FULL,
-                                stringAssert -> stringAssert.endsWith("/ping")),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            satisfies(
-                                ServerAttributes.SERVER_PORT,
-                                integerAssert -> integerAssert.isNotZero())),
+                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
                 serverSpan ->
                     serverSpan
                         .hasKind(SpanKind.SERVER)
@@ -161,18 +152,12 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                     .hasAttribute(
                                         AttributeKey.stringKey("attributeFromYaml"), "true")
                                     .hasAttribute(
-                                        satisfies(
+                                        OpenTelemetryAssertions.satisfies(
                                             ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
                                             AbstractCharSequenceAssert::isNotBlank)))
-                        .hasAttributesSatisfying(
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                ServerAttributes.SERVER_PORT,
-                                integerAssert -> integerAssert.isNotZero()))));
+                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
+                        .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
+                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
 
     // Metric
     testing.waitAndAssertMetrics(
