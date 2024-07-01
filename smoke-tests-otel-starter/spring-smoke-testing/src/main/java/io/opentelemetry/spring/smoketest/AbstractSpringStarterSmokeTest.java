@@ -8,6 +8,8 @@ package io.opentelemetry.spring.smoketest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,11 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 
 @ExtendWith(OutputCaptureExtension.class)
 public abstract class AbstractSpringStarterSmokeTest {
+
+  private static final List<String> IGNORED_WARNINGS =
+      Arrays.asList(
+          "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider",
+          "The architecture 'amd64' for image");
 
   @Autowired protected OpenTelemetry openTelemetry;
 
@@ -47,11 +54,10 @@ public abstract class AbstractSpringStarterSmokeTest {
         // only look for WARN and ERROR log level, e.g. [Test worker] WARN
         .satisfies(
             s -> {
-              if (!s.toString()
-                      .contains(
-                          "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider")
-                  && !s.toString().contains("The architecture 'amd64' for image")) {
-                assertThat(s).doesNotContain("] WARN").doesNotContain("] ERROR");
+              for (String line : s.toString().split("\n")) {
+                if (IGNORED_WARNINGS.stream().noneMatch(line::contains)) {
+                  assertThat(line).doesNotContain("] WARN").doesNotContain("] ERROR");
+                }
               }
             });
   }
