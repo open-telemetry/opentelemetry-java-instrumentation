@@ -24,7 +24,7 @@ public final class SpringWebTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> builder;
 
   static {
-    WebTelemetryUtil.GET_BUILDER = SpringWebTelemetryBuilder::getBuilder;
+    WebTelemetryUtil.setGetBuilder(SpringWebTelemetryBuilder::getBuilder);
   }
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {

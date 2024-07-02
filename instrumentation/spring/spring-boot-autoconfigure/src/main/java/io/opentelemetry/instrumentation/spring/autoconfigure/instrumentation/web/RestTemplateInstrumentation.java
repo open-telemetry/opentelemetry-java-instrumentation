@@ -25,7 +25,7 @@ class RestTemplateInstrumentation {
 
     ClientHttpRequestInterceptor instrumentationInterceptor =
         InstrumentationConfigUtil.configureBuilder(
-                config, SpringWebTelemetry.builder(openTelemetry), WebTelemetryUtil.GET_BUILDER)
+                config, SpringWebTelemetry.builder(openTelemetry), WebTelemetryUtil.getBuilder())
             .build()
             .newInterceptor();
 

@@ -19,9 +19,23 @@ public class WebTelemetryUtil {
   private WebTelemetryUtil() {}
 
   // allows access to the private field for the spring starter
-  @SuppressWarnings("ConstantField")
+  private static Function<
+          SpringWebTelemetryBuilder,
+          DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse>>
+      getBuilder;
+
   public static Function<
           SpringWebTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse>>
-      GET_BUILDER;
+      getBuilder() {
+    return getBuilder;
+  }
+
+  public static void setGetBuilder(
+      Function<
+              SpringWebTelemetryBuilder,
+              DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse>>
+          getBuilder) {
+    WebTelemetryUtil.getBuilder = getBuilder;
+  }
 }
