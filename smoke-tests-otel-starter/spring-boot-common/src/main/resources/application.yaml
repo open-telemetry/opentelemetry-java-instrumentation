@@ -16,6 +16,7 @@ otel:
 
 spring:
   kafka:
+    bootstrap-servers: localhost:9094
     consumer:
       auto-offset-reset: earliest
     listener:
