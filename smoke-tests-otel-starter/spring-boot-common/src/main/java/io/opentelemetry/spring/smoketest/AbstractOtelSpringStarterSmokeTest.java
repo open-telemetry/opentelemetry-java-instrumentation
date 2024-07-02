@@ -186,15 +186,19 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    LogRecordData firstLog = exportedLogRecords.get(0);
-    assertThat(firstLog.getBody().asString())
-        .as("Should instrument logs")
-        .startsWith("Starting ")
-        .contains(this.getClass().getSimpleName());
-    assertThat(firstLog.getAttributes().asMap())
-        .as("Should capture code attributes")
-        .containsEntry(
-            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+    if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
+      // log records differ in native image mode due to different startup timing
+      LogRecordData firstLog = exportedLogRecords.get(0);
+      assertThat(firstLog.getBody().asString())
+          .as("Should instrument logs")
+          .startsWith("Starting ")
+          .contains(this.getClass().getSimpleName());
+      assertThat(firstLog.getAttributes().asMap())
+          .as("Should capture code attributes")
+          .containsEntry(
+              CodeIncubatingAttributes.CODE_NAMESPACE,
+              "org.springframework.boot.StartupInfoLogger");
+    }
   }
 
   @Test
