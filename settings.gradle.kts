@@ -145,6 +145,7 @@ include(":testing-common:library-for-integration-tests")
 
 // smoke tests
 include(":smoke-tests")
+include(":smoke-tests:images:early-jdk8")
 include(":smoke-tests:images:fake-backend")
 include(":smoke-tests:images:grpc")
 include(":smoke-tests:images:play")
