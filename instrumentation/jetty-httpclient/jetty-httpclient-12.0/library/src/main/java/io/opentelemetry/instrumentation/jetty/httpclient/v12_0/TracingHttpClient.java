@@ -3,19 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
+package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
-import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
-
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientTracingListener;
-import java.util.List;
+import java.net.URI;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpClientTransport;
-import org.eclipse.jetty.client.HttpRequest;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.client.transport.HttpConversation;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 class TracingHttpClient extends HttpClient {
@@ -27,24 +23,25 @@ class TracingHttpClient extends HttpClient {
   }
 
   TracingHttpClient(
-      Instrumenter<Request, Response> instrumenter, SslContextFactory sslContextFactory) {
-    super(sslContextFactory);
+      Instrumenter<Request, Response> instrumenter, SslContextFactory.Client sslContextFactory) {
+    setSslContextFactory(sslContextFactory);
     this.instrumenter = instrumenter;
   }
 
   TracingHttpClient(
       Instrumenter<Request, Response> instrumenter,
       HttpClientTransport transport,
-      SslContextFactory sslContextFactory) {
-    super(transport, sslContextFactory);
+      SslContextFactory.Client sslContextFactory) {
+    super(transport);
+    setSslContextFactory(sslContextFactory);
     this.instrumenter = instrumenter;
   }
 
   static TracingHttpClient buildNew(
       Instrumenter<Request, Response> instrumenter,
-      SslContextFactory sslContextFactory,
+      SslContextFactory.Client sslContextFactory,
       HttpClientTransport httpClientTransport) {
-    TracingHttpClient tracingHttpClient = null;
+    TracingHttpClient tracingHttpClient;
     if (sslContextFactory != null && httpClientTransport != null) {
       tracingHttpClient =
           new TracingHttpClient(instrumenter, httpClientTransport, sslContextFactory);
@@ -57,14 +54,7 @@ class TracingHttpClient extends HttpClient {
   }
 
   @Override
-  protected void send(HttpRequest request, List<Response.ResponseListener> listeners) {
-    Context parentContext = Context.current();
-    Context context =
-        JettyClientTracingListener.handleRequest(parentContext, request, instrumenter);
-    // wrap listeners only when a span was started (context is not null)
-    if (context != null) {
-      listeners = wrapResponseListeners(parentContext, listeners);
-    }
-    super.send(request, listeners);
+  public Request newRequest(URI uri) {
+    return new TracingHttpRequest(this, new HttpConversation(), uri, instrumenter);
   }
 }
