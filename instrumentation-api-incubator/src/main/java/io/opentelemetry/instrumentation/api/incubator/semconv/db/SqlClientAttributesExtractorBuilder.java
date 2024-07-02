@@ -58,6 +58,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, dbTableAttribute, SqlStatementSanitizer.create(statementSanitizationEnabled));
+        getter, dbTableAttribute, statementSanitizationEnabled);
   }
 }

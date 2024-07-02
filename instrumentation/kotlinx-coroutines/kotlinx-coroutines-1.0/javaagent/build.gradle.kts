@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
@@ -42,14 +42,13 @@ dependencies {
 
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.0.0")
+  testLibrary("io.vertx:vertx-lang-kotlin-coroutines:3.6.0")
 }
 
-tasks {
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "1.8"
-      // generate metadata for Java 1.8 reflection on method parameters, used in @WithSpan tests
-      javaParameters = true
-    }
+kotlin {
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_1_8)
+    // generate metadata for Java 1.8 reflection on method parameters, used in @WithSpan tests
+    javaParameters = true
   }
 }

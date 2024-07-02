@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
@@ -33,10 +33,10 @@ dependencies {
   testLibrary("io.ktor:ktor-client-cio:$ktorVersion")
 }
 
-tasks {
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "1.8"
-    }
+kotlin {
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_1_8)
+    // generate metadata for Java 1.8 reflection on method parameters, used in @WithSpan tests
+    javaParameters = true
   }
 }

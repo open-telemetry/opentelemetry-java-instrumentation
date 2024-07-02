@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.gateway.common;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -21,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.util.StringUtils;
 
 public abstract class AbstractRouteMappingTest {
   @TestConfiguration
@@ -49,7 +49,7 @@ public abstract class AbstractRouteMappingTest {
   protected List<AttributeAssertion> buildAttributeAssertions(
       String routeId, String uri, int order, int filterSize) {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    if (!StringUtils.isNullOrEmpty(routeId)) {
+    if (!StringUtils.isEmpty(routeId)) {
       assertions.add(equalTo(AttributeKey.stringKey("spring-cloud-gateway.route.id"), routeId));
     }
     assertions.add(equalTo(AttributeKey.stringKey("spring-cloud-gateway.route.uri"), uri));

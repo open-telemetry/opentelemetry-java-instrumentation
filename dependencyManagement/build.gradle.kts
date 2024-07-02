@@ -8,12 +8,12 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.38.0"
-val otelContribVersion = "1.35.0-alpha"
+val otelSdkVersion = "1.39.0"
+val otelContribVersion = "1.36.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.21"
+val groovyVersion = "4.0.22"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -29,19 +29,19 @@ val groovyVersion = "4.0.21"
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.17.1",
   "com.squareup.okio:okio-bom:3.9.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.2.0-jre",
+  "com.google.guava:guava-bom:33.2.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.10.2",
+  "org.junit:junit-bom:5.10.3",
   "org.testcontainers:testcontainers-bom:1.19.8",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
-val autoValueVersion = "1.10.4"
-val errorProneVersion = "2.27.1"
-val byteBuddyVersion = "1.14.16"
+val autoValueVersion = "1.11.0"
+val errorProneVersion = "2.28.0"
+val byteBuddyVersion = "1.14.17"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.10.26",
+  "com.uber.nullaway:nullaway:0.11.0",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.8.0",
   "commons-codec:commons-codec:1.17.0",
@@ -97,14 +97,14 @@ val DEPENDENCIES = listOf(
   "commons-io:commons-io:2.16.1",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.2",
-  "commons-validator:commons-validator:1.8.0",
+  "commons-validator:commons-validator:1.9.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.3.1-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.25.3",
+  "org.assertj:assertj-core:3.26.0",
   "org.awaitility:awaitility:4.2.1",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
@@ -113,8 +113,6 @@ val DEPENDENCIES = listOf(
   "org.codehaus.mojo:animal-sniffer-annotations:1.23",
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
-  // Note that this is only referenced as "org.springframework.boot" in build files, not the artifact name.
-  "org.springframework.boot:spring-boot-dependencies:2.7.18",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.7"
 )

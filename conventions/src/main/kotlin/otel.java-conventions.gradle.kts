@@ -72,12 +72,13 @@ tasks.withType<JavaCompile>().configureEach {
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
           // jdk21 generates more serial warnings than previous versions
-          "-Xlint:-serial",
-
-          // Fail build on any warning
-          "-Werror"
+          "-Xlint:-serial"
         )
       )
+      if (System.getProperty("dev") != "true") {
+        // Fail build on any warning
+        compilerArgs.add("-Werror")
+      }
     }
 
     encoding = "UTF-8"
@@ -142,7 +143,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.110.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.111.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -160,7 +161,7 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:3.4.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.21"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.22"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -293,8 +294,12 @@ tasks {
   withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
-    dirMode = Integer.parseInt("0755", 8)
-    fileMode = Integer.parseInt("0644", 8)
+    dirPermissions {
+      unix("755")
+    }
+    filePermissions {
+      unix("644")
+    }
   }
 
   // Convenient when updating errorprone
@@ -355,8 +360,10 @@ tasks.withType<Test>().configureEach {
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
-  // Don't set for camel as we have tests that interact with AWS and need normal trustStore
-  if (project.name != "jaxrs-2.0-payara-testing" && project.description != "camel-2-20") {
+  // Don't set for:
+  // - camel as we have tests that interact with AWS and need normal trustStore
+  // - vaadin as tests need to be able to download nodejs when not cached in ~/.vaadin/
+  if (project.name != "jaxrs-2.0-payara-testing" && !project.path.contains("vaadin") && project.description != "camel-2-20") {
     jvmArgumentProviders.add(KeystoreArgumentsProvider(trustStore))
   }
 
@@ -427,7 +434,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.16.0"
+  toolVersion = "10.17.0"
   maxWarnings = 0
 }
 

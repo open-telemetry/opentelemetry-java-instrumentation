@@ -31,3 +31,11 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 }
+
+// Tomcat 10 uses deprecation annotation methods `forRemoval()` and `since()`
+// in jakarta.servlet.http.HttpServlet that don't work with Java 8
+if (findProperty("testLatestDeps") as Boolean) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  }
+}
