@@ -22,20 +22,20 @@ public class WebTelemetryUtil {
   private static Function<
           SpringWebTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse>>
-      getBuilder;
+      builderExtractor;
 
   public static Function<
           SpringWebTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse>>
-      getBuilder() {
-    return getBuilder;
+      getBuilderExtractor() {
+    return builderExtractor;
   }
 
-  public static void setGetBuilder(
+  public static void setBuilderExtractor(
       Function<
               SpringWebTelemetryBuilder,
               DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse>>
-          getBuilder) {
-    WebTelemetryUtil.getBuilder = getBuilder;
+          builderExtractor) {
+    WebTelemetryUtil.builderExtractor = builderExtractor;
   }
 }
