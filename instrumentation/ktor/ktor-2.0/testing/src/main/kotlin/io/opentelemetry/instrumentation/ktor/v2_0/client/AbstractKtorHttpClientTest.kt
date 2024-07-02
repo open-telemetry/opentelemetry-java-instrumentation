@@ -94,6 +94,7 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
         Assertions.assertThat(span.endEpochNanos - span.startEpochNanos >= 1000000)
           .describedAs("Span duration should be at least 1000ms")
           .isTrue()
-      })
+      }
+    )
   }
 }

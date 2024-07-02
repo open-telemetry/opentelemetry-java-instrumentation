@@ -108,14 +108,17 @@ public final class HttpClientTestServer extends ServerExtension {
               writer.write(ResponseHeaders.of(HttpStatus.OK));
               writer.write(HttpData.ofUtf8("Hello"));
 
-              ctx.eventLoop().schedule(() -> {
-                writer.write(HttpData.ofUtf8("World"));
-                writer.close();
-              }, 1, TimeUnit.SECONDS);
+              ctx.eventLoop()
+                  .schedule(
+                      () -> {
+                        writer.write(HttpData.ofUtf8("World"));
+                        writer.close();
+                      },
+                      1,
+                      TimeUnit.SECONDS);
 
               return writer;
-            }
-        )
+            })
         .decorator(
             (delegate, ctx, req) -> {
               for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {
