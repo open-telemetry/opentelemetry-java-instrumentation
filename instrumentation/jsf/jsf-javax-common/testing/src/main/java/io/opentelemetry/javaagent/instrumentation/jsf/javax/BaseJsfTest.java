@@ -78,6 +78,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
 
     WebAppContext webAppContext = new WebAppContext();
     webAppContext.setContextPath(getContextPath());
+    webAppContext.setConfigurationClasses(configurationClasses);
     // set up test application
     webAppContext.setBaseResource(Resource.newSystemResource("test-app-" + getJsfVersion()));
     // add additional resources for test app
