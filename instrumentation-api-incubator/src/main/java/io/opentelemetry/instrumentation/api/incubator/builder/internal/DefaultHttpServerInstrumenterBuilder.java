@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CoreCommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -211,8 +211,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(
-      CoreCommonConfig config) {
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
     set(config::getServerRequestHeaders, this::setCapturedRequestHeaders);
     set(config::getServerResponseHeaders, this::setCapturedResponseHeaders);

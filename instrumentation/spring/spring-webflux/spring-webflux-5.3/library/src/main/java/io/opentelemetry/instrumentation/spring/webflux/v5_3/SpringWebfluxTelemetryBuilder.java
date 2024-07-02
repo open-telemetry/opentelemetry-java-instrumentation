@@ -31,8 +31,8 @@ public final class SpringWebfluxTelemetryBuilder {
       serverBuilder;
 
   static {
-    SpringWebfluxUtil.GET_CLIENT_BUILDER = SpringWebfluxTelemetryBuilder::getClientBuilder;
-    SpringWebfluxUtil.GET_SERVER_BUILDER = SpringWebfluxTelemetryBuilder::getServerBuilder;
+    SpringWebfluxUtil.setClientBuilderExtractor(SpringWebfluxTelemetryBuilder::getClientBuilder);
+    SpringWebfluxUtil.setServerBuilderExtractor(SpringWebfluxTelemetryBuilder::getServerBuilder);
   }
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {

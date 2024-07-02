@@ -27,7 +27,7 @@ public final class SpringWebMvcTelemetryBuilder {
       builder;
 
   static {
-    SpringMvcUtil.GET_BUILDER = SpringWebMvcTelemetryBuilder::getBuilder;
+    SpringMvcUtil.setBuilderExtractor(SpringWebMvcTelemetryBuilder::getBuilder);
   }
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
