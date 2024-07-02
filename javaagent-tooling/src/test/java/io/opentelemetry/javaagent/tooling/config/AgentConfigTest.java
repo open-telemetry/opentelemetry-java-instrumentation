@@ -25,16 +25,14 @@ class AgentConfigTest {
   @ArgumentsSource(InstrumentationEnabledParams.class)
   void testIsInstrumentationEnabled(
       @SuppressWarnings("unused") String description,
-      boolean firstEnabled,
-      boolean secondEnabled,
+      Boolean firstEnabled,
+      Boolean secondEnabled,
       boolean defaultEnabled,
       boolean expected) {
 
     ConfigProperties config = mock(ConfigProperties.class);
-    when(config.getBoolean("otel.instrumentation.first.enabled", defaultEnabled))
-        .thenReturn(firstEnabled);
-    when(config.getBoolean("otel.instrumentation.second.enabled", defaultEnabled))
-        .thenReturn(secondEnabled);
+    when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
+    when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
 
     assertEquals(
         expected,
@@ -49,13 +47,41 @@ class AgentConfigTest {
       return Stream.of(
           Arguments.of(
               "enabled by default, both instrumentations are off", false, false, true, false),
-          Arguments.of("enabled by default, one instrumentation is on", true, false, true, false),
+          Arguments.of("enabled by default, first instrumentation is on", true, null, true, true),
+          Arguments.of("enabled by default, second instrumentation is on", null, true, true, true),
           Arguments.of("enabled by default, both instrumentations are on", true, true, true, true),
           Arguments.of(
-              "disabled by default, both instrumentations are off", false, false, false, false),
-          Arguments.of("disabled by default, one instrumentation is on", true, false, false, true),
+              "enabled by default, first instrumentation is off, second is on",
+              false,
+              true,
+              true,
+              false),
           Arguments.of(
-              "disabled by default, both instrumentation are on", true, true, false, true));
+              "enabled by default, first instrumentation is on, second is off",
+              true,
+              false,
+              true,
+              true),
+          Arguments.of("enabled by default", null, null, true, true),
+          Arguments.of(
+              "disabled by default, both instrumentations are off", false, false, false, false),
+          Arguments.of("disabled by default, first instrumentation is on", true, null, false, true),
+          Arguments.of(
+              "disabled by default, second instrumentation is on", null, true, false, true),
+          Arguments.of("disabled by default, both instrumentation are on", true, true, false, true),
+          Arguments.of(
+              "disabled by default, first instrumentation is off, second is on",
+              false,
+              true,
+              false,
+              false),
+          Arguments.of(
+              "disabled by default, first instrumentation is on, second is off",
+              true,
+              false,
+              false,
+              true),
+          Arguments.of("disabled by default", null, null, false, false));
     }
   }
 }
