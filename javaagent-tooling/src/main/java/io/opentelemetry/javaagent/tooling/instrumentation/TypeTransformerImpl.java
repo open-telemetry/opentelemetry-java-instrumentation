@@ -19,8 +19,9 @@ final class TypeTransformerImpl implements TypeTransformer {
 
   TypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
     this.agentBuilder = agentBuilder;
-    adviceMapping = Advice.withCustomMapping()
-        .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class));
+    adviceMapping =
+        Advice.withCustomMapping()
+            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class));
   }
 
   @Override
