@@ -20,15 +20,43 @@ import org.springframework.web.server.ServerWebExchange;
 public class SpringWebfluxUtil {
   private SpringWebfluxUtil() {}
 
-  @SuppressWarnings("ConstantField")
-  public static Function<
+  private static Function<
           SpringWebfluxTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
-      GET_CLIENT_BUILDER;
+      clientBuilderExtractor;
 
-  @SuppressWarnings("ConstantField")
+  private static Function<
+          SpringWebfluxTelemetryBuilder,
+          DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
+      serverBuilderExtractor;
+
   public static Function<
           SpringWebfluxTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
-      GET_SERVER_BUILDER;
+      getServerBuilderExtractor() {
+    return serverBuilderExtractor;
+  }
+
+  public static void setServerBuilderExtractor(
+      Function<
+              SpringWebfluxTelemetryBuilder,
+              DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
+          serverBuilderExtractor) {
+    SpringWebfluxUtil.serverBuilderExtractor = serverBuilderExtractor;
+  }
+
+  public static Function<
+          SpringWebfluxTelemetryBuilder,
+          DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
+      getClientBuilderExtractor() {
+    return clientBuilderExtractor;
+  }
+
+  public static void setClientBuilderExtractor(
+      Function<
+              SpringWebfluxTelemetryBuilder,
+              DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
+          clientBuilderExtractor) {
+    SpringWebfluxUtil.clientBuilderExtractor = clientBuilderExtractor;
+  }
 }

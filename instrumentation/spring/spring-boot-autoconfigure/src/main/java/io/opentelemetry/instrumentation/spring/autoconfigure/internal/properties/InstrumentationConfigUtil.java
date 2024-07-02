@@ -28,7 +28,7 @@ public class InstrumentationConfigUtil {
               getClientBuilder,
           Function<T, DefaultHttpServerInstrumenterBuilder<SERVERREQUEST, SERVERRESPONSE>>
               getServerBuilder) {
-    CoreCommonConfig commonConfig = getConfig(config);
+    CommonConfig commonConfig = getConfig(config);
     getClientBuilder.apply(builder).configure(commonConfig);
     getServerBuilder.apply(builder).configure(commonConfig);
     return builder;
@@ -52,8 +52,8 @@ public class InstrumentationConfigUtil {
     return builder;
   }
 
-  private static CoreCommonConfig getConfig(ConfigProperties config) {
-    return new CoreCommonConfig(new ConfigPropertiesBridge(config));
+  private static CommonConfig getConfig(ConfigProperties config) {
+    return new CommonConfig(new ConfigPropertiesBridge(config));
   }
 
   public static boolean isStatementSanitizationEnabled(ConfigProperties config, String key) {

@@ -24,7 +24,9 @@ public class SpringTestUtil {
         .hasAttributesSatisfying(
             satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
             // this attribute is set by the experimental http instrumentation
-            satisfies(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+            satisfies(
+                HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE,
+                AbstractLongAssert::isNotNegative));
   }
 
   @CanIgnoreReturnValue
@@ -35,6 +37,8 @@ public class SpringTestUtil {
         .hasAttribute(HttpAttributes.HTTP_ROUTE, route)
         .hasAttributesSatisfying(
             // this attribute is set by the experimental http instrumentation
-            satisfies(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+            satisfies(
+                HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE,
+                AbstractLongAssert::isNotNegative));
   }
 }

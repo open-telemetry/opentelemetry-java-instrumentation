@@ -18,9 +18,23 @@ import java.util.function.Function;
 public class SpringMvcUtil {
   private SpringMvcUtil() {}
 
-  @SuppressWarnings("ConstantField")
+  private static Function<
+          SpringWebMvcTelemetryBuilder,
+          DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
+      builderExtractor;
+
   public static Function<
           SpringWebMvcTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
-      GET_BUILDER;
+      getBuilderExtractor() {
+    return builderExtractor;
+  }
+
+  public static void setBuilderExtractor(
+      Function<
+              SpringWebMvcTelemetryBuilder,
+              DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
+          builderExtractor) {
+    SpringMvcUtil.builderExtractor = builderExtractor;
+  }
 }
