@@ -34,18 +34,18 @@ public class ChannelTransportInstrumentation implements TypeInstrumentation {
   public static class WriteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(@Advice.Local("otelScope") Scope scope) {
+    public static Object methodEnter() {
       Option<Context> ref = Helpers.CONTEXT_LOCAL.apply();
       if (ref.isDefined()) {
-        scope = ref.get().makeCurrent();
+        return ref.get().makeCurrent();
       }
+      return null;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void methodExit(
-        @Advice.Local("otelScope") Scope scope, @Advice.Thrown Throwable thrown) {
-      if (scope != null) {
-        scope.close();
+    public static void methodExit(@Advice.Enter Object scope, @Advice.Thrown Throwable thrown) {
+      if (scope instanceof Scope) {
+        ((Scope) scope).close();
       }
     }
   }
