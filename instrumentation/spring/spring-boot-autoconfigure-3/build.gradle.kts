@@ -14,6 +14,7 @@ dependencies {
   val springBootVersion = "3.2.4"
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
   compileOnly(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
 
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import java.net.HttpURLConnection;
 
@@ -24,7 +24,7 @@ public final class HttpUrlConnectionSingletons {
                 builder
                     .addAttributesExtractor(
                         HttpMethodAttributeExtractor.create(
-                            CommonConfig.get().getKnownHttpRequestMethods()))
+                            AgentCommonConfig.get().getKnownHttpRequestMethods()))
                     .addContextCustomizer(
                         (context, httpRequestPacket, startAttributes) ->
                             GetOutputStreamContext.init(context)));

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap.internal;
+package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyMap;
 
@@ -21,12 +21,6 @@ import java.util.Set;
  */
 public final class CommonConfig {
 
-  private static final CommonConfig instance = new CommonConfig(InstrumentationConfig.get());
-
-  public static CommonConfig get() {
-    return instance;
-  }
-
   private final PeerServiceResolver peerServiceResolver;
   private final List<String> clientRequestHeaders;
   private final List<String> clientResponseHeaders;
@@ -41,7 +35,7 @@ public final class CommonConfig {
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
 
-  CommonConfig(InstrumentationConfig config) {
+  public CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
         PeerServiceResolver.create(
             config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));

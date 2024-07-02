@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetry;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 
 // Holds singleton references to decorators to match against during suppression.
@@ -24,19 +24,19 @@ public final class ArmeriaSingletons {
   static {
     ArmeriaTelemetry telemetry =
         ArmeriaTelemetry.builder(GlobalOpenTelemetry.get())
-            .setCapturedClientRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-            .setCapturedClientResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-            .setCapturedServerRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-            .setCapturedServerResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-            .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+            .setCapturedClientRequestHeaders(AgentCommonConfig.get().getClientRequestHeaders())
+            .setCapturedClientResponseHeaders(AgentCommonConfig.get().getClientResponseHeaders())
+            .setCapturedServerRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+            .setCapturedServerResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
+            .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
             .addClientAttributeExtractor(
                 HttpClientPeerServiceAttributesExtractor.create(
                     ArmeriaHttpClientAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceResolver()))
+                    AgentCommonConfig.get().getPeerServiceResolver()))
             .setEmitExperimentalHttpClientMetrics(
-                CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry())
+                AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry())
             .setEmitExperimentalHttpServerMetrics(
-                CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
+                AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
             .build();
 
     CLIENT_DECORATOR = telemetry.newClientDecorator();
