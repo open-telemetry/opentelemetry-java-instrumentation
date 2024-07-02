@@ -21,8 +21,8 @@ public class ExceptionFilter implements Filter {
       throws ServletException {
     try {
       chain.doFilter(request, response);
-    } catch (Exception exception) {
-      throw new ServletException(exception);
+    } catch (Exception unused) {
+      throw new ServletException("submit exception");
     }
   }
 
