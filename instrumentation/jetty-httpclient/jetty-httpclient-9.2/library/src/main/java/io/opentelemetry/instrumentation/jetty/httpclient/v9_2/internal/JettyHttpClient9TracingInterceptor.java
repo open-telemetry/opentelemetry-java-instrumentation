@@ -29,8 +29,7 @@ import org.eclipse.jetty.client.api.Result;
  * at any time.
  */
 public class JettyHttpClient9TracingInterceptor
-    implements Request.BeginListener,
-        Request.FailureListener,
+    implements Request.FailureListener,
         Response.SuccessListener,
         Response.FailureListener,
         Response.CompleteListener {
@@ -80,15 +79,10 @@ public class JettyHttpClient9TracingInterceptor
     List<Request.RequestListener> existingListeners = jettyRequest.getRequestListeners(null);
     wrapRequestListeners(existingListeners);
 
-    jettyRequest
-        .onRequestBegin(this)
-        .onRequestFailure(this)
-        .onResponseFailure(this)
-        .onResponseSuccess(this);
+    jettyRequest.onRequestFailure(this).onResponseFailure(this).onResponseSuccess(this);
   }
 
   private void wrapRequestListeners(List<Request.RequestListener> requestListeners) {
-
     ListIterator<Request.RequestListener> iterator = requestListeners.listIterator();
 
     while (iterator.hasNext()) {
@@ -125,15 +119,11 @@ public class JettyHttpClient9TracingInterceptor
   }
 
   private void startSpan(Request request) {
-
     if (!instrumenter.shouldStart(this.parentContext, request)) {
       return;
     }
     this.context = instrumenter.start(this.parentContext, request);
   }
-
-  @Override
-  public void onBegin(Request request) {}
 
   @Override
   public void onComplete(Result result) {
@@ -160,7 +150,6 @@ public class JettyHttpClient9TracingInterceptor
   }
 
   private void closeIfPossible(Response response) {
-
     if (this.context != null) {
       instrumenter.end(this.context, response.getRequest(), response, null);
     } else {

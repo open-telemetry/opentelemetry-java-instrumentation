@@ -20,10 +20,7 @@ import org.eclipse.jetty.client.Response;
  * at any time.
  */
 public final class JettyClientTracingListener
-    implements Request.BeginListener,
-        Request.FailureListener,
-        Response.SuccessListener,
-        Response.FailureListener {
+    implements Request.FailureListener, Response.SuccessListener, Response.FailureListener {
 
   private final Context context;
 
@@ -45,16 +42,9 @@ public final class JettyClientTracingListener
     Context context = instrumenter.start(parentContext, jettyRequest);
 
     JettyClientTracingListener listener = new JettyClientTracingListener(context, instrumenter);
-    jettyRequest
-        .onRequestBegin(listener)
-        .onRequestFailure(listener)
-        .onResponseFailure(listener)
-        .onResponseSuccess(listener);
+    jettyRequest.onRequestFailure(listener).onResponseFailure(listener).onResponseSuccess(listener);
     return context;
   }
-
-  @Override
-  public void onBegin(Request request) {}
 
   @Override
   public void onFailure(Response response, Throwable t) {

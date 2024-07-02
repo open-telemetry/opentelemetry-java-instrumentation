@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
-import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
 public class JettyHttpClient12InstrumentationModule extends InstrumentationModule {
@@ -25,10 +23,5 @@ public class JettyHttpClient12InstrumentationModule extends InstrumentationModul
     return asList(
         new JettyHttpClient12Instrumentation(),
         new JettyClient12ResponseListenersInstrumentation());
-  }
-
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.eclipse.jetty.client.transport.HttpRequest");
   }
 }

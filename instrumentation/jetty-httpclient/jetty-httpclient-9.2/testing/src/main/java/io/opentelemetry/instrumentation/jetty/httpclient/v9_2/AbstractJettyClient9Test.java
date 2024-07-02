@@ -17,16 +17,16 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Request> {
 
   private HttpClient client;
   private HttpClient httpsClient;
 
-  @BeforeEach
-  public void before() throws Exception {
+  @BeforeAll
+  public void setup() throws Exception {
     // Start the main Jetty HttpClient and a https client
     client = createStandardClient();
     client.setConnectTimeout(5000L);
@@ -38,8 +38,8 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     httpsClient.start();
   }
 
-  @AfterEach
-  public void after() throws Exception {
+  @AfterAll
+  public void cleanup() throws Exception {
     client.stop();
     httpsClient.stop();
   }

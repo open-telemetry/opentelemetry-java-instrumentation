@@ -23,7 +23,6 @@ class TracingHttpClient extends HttpClient {
   private final Instrumenter<Request, Response> instrumenter;
 
   TracingHttpClient(Instrumenter<Request, Response> instrumenter) {
-    super();
     this.instrumenter = instrumenter;
   }
 

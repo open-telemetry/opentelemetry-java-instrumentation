@@ -20,8 +20,8 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
@@ -30,11 +30,10 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   protected abstract HttpClient createHttpsClient(SslContextFactory.Client sslContextFactory);
 
   protected HttpClient client = createStandardClient();
-
   protected HttpClient httpsClient;
 
-  @BeforeEach
-  public void before() throws Exception {
+  @BeforeAll
+  public void setup() throws Exception {
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
 
@@ -44,8 +43,8 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     httpsClient.start();
   }
 
-  @AfterEach
-  public void after() throws Exception {
+  @AfterAll
+  public void cleanup() throws Exception {
     client.stop();
     httpsClient.stop();
   }
@@ -60,8 +59,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   }
 
   @Override
-  public Request buildRequest(String method, URI uri, Map<String, String> headers)
-      throws Exception {
+  public Request buildRequest(String method, URI uri, Map<String, String> headers) {
     HttpClient theClient = Objects.equals(uri.getScheme(), "https") ? httpsClient : client;
 
     Request request = theClient.newRequest(uri);
@@ -89,18 +87,17 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
       String method,
       URI uri,
       Map<String, String> headers,
-      HttpClientResult requestResult)
-      throws Exception {
-    JettyClientListener jcl = new JettyClientListener();
+      HttpClientResult requestResult) {
+    JettyClientListener clientListener = new JettyClientListener();
 
-    request.onRequestFailure(jcl);
-    request.onResponseFailure(jcl);
+    request.onRequestFailure(clientListener);
+    request.onResponseFailure(clientListener);
     headers.forEach((k, v) -> request.headers(httpFields -> httpFields.put(new HttpField(k, v))));
 
     request.send(
         result -> {
-          if (jcl.failure != null) {
-            requestResult.complete(jcl.failure);
+          if (clientListener.failure != null) {
+            requestResult.complete(clientListener.failure);
             return;
           }
 
@@ -113,12 +110,12 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     volatile Throwable failure;
 
     @Override
-    public void onFailure(Request requestF, Throwable failure) {
+    public void onFailure(Request request, Throwable failure) {
       this.failure = failure;
     }
 
     @Override
-    public void onFailure(Response responseF, Throwable failure) {
+    public void onFailure(Response response, Throwable failure) {
       this.failure = failure;
     }
   }

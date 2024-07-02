@@ -19,5 +19,7 @@ dependencies {
 
   library("org.eclipse.jetty:jetty-client:12.0.0")
 
+  testInstrumentation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:javaagent"))
+
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing"))
 }

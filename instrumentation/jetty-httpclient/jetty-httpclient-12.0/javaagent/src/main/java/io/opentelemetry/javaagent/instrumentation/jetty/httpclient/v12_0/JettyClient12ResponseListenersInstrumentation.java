@@ -16,7 +16,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -24,6 +23,7 @@ import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 
 public class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.eclipse.jetty.client.transport.ResponseListeners");
@@ -59,7 +59,6 @@ public class JettyClient12ResponseListenersInstrumentation implements TypeInstru
         @Advice.Argument(0) Response response,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      Map<String, Object> attr = response.getRequest().getAttributes();
       context = (Context) response.getRequest().getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       if (context != null) {
         scope = context.makeCurrent();
