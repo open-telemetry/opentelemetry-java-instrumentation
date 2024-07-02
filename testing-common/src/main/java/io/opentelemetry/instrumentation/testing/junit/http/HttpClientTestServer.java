@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.HttpResponseWriter;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders;
 import io.opentelemetry.testing.internal.armeria.common.ResponseHeadersBuilder;
@@ -29,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 
 public final class HttpClientTestServer extends ServerExtension {
@@ -99,6 +101,21 @@ public final class HttpClientTestServer extends ServerExtension {
             "/read-timeout",
             (ctx, req) ->
                 HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofSeconds(20)))
+        .service(
+            "/long_body_receiving",
+            (ctx, req) -> {
+              HttpResponseWriter writer = HttpResponse.streaming();
+              writer.write(ResponseHeaders.of(HttpStatus.OK));
+              writer.write(HttpData.ofUtf8("Hello"));
+
+              ctx.eventLoop().schedule(() -> {
+                writer.write(HttpData.ofUtf8("World"));
+                writer.close();
+              }, 1, TimeUnit.SECONDS);
+
+              return writer;
+            }
+        )
         .decorator(
             (delegate, ctx, req) -> {
               for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {
