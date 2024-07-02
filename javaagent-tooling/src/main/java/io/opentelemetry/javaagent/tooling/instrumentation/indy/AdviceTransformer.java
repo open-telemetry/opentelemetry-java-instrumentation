@@ -50,8 +50,8 @@ class AdviceTransformer {
       return cw.toByteArray();
     }
 
-    //Advices already using Advice.AssignReturned are assumed to be already compatible
-    //Those won't be transformed except for setting inline to false
+    // Advices already using Advice.AssignReturned are assumed to be already compatible
+    // Those won't be transformed except for setting inline to false
     boolean justDelegateAdvice = usesAssignReturned(classNode);
 
     // sort enter advice method before exit advice
@@ -232,11 +232,13 @@ class AdviceTransformer {
   private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED = Type.getType(Advice.AssignReturned.ToReturned.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS = Type.getType(Advice.AssignReturned.ToArguments.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_FIELDS = Type.getType(Advice.AssignReturned.ToFields.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_ALL_ARGUMENTS = Type.getType(Advice.AssignReturned.ToAllArguments.class);
 
   private static boolean usesAssignReturned(MethodNode source) {
     return hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_RETURNED)
          || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS)
-         || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_FIELDS);
+         || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_FIELDS)
+         || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_ALL_ARGUMENTS);
   }
 
   private static boolean usesAssignReturned(ClassNode classNode) {

@@ -76,12 +76,12 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.getAndIncrement() > 0) {
-        return arguments;
+        return new Object[] {arguments};
       }
 
       Query query = arguments[0] instanceof Query ? (Query) arguments[0] : null;
       if (query == null) {
-        return arguments;
+        return new Object[] {arguments};
       }
       Context parentContext = currentContext();
 
@@ -92,19 +92,18 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
       Instrumenter<InfluxDbRequest, Void> instrumenter = instrumenter();
       if (!instrumenter.shouldStart(parentContext, influxDbRequest)) {
-        return arguments;
+        return new Object[] {arguments};
       }
 
       // wrap callbacks so they'd run in the context of the parent span
-      Object[] newArguments = new Object[arguments.length + 1];
+      Object[] newArguments = new Object[arguments.length];
       for (int i = 0; i < arguments.length; i++) {
         newArguments[i] = InfluxDbObjetWrapper.wrap(arguments[i], parentContext);
       }
 
-      newArguments[arguments.length] =
-          InfluxDbScope.start(instrumenter, parentContext, influxDbRequest);
-
-      return newArguments;
+      return new Object[] {
+        newArguments, InfluxDbScope.start(instrumenter, parentContext, influxDbRequest)
+      };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
