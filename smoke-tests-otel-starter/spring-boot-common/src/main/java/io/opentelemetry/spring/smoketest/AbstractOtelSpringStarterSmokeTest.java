@@ -32,9 +32,11 @@ import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.AbstractLongAssert;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -185,20 +187,33 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
+
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
-      // log records differ in native image mode due to different startup timing
-      LogRecordData firstLog = exportedLogRecords.get(0);
-      assertThat(firstLog.getBody().asString())
-          .as("Should instrument logs")
-          .startsWith("Starting ")
-          .contains(this.getClass().getSimpleName());
-      assertThat(firstLog.getAttributes().asMap())
-          .as("Should capture code attributes")
-          .containsEntry(
-              CodeIncubatingAttributes.CODE_NAMESPACE,
-              "org.springframework.boot.StartupInfoLogger");
-    }
+
+    Optional<LogRecordData> startingTestLog =
+        findLogRecordWithBodyStartingWith("Starting ", exportedLogRecords);
+
+    assertThat(startingTestLog).as("No log record starting with 'Starting '").isPresent();
+
+    assertThat(startingTestLog.get().getBody().asString())
+        .contains(this.getClass().getSimpleName());
+
+    assertThat(startingTestLog.get().getAttributes().asMap())
+        .as("Should capture code attributes")
+        .containsEntry(
+            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+  }
+
+  private static @NotNull Optional<LogRecordData> findLogRecordWithBodyStartingWith(
+      String starting, List<LogRecordData> exportedLogRecords) {
+    Optional<LogRecordData> logHavingBodyStartingWith =
+        exportedLogRecords.stream()
+            .filter(
+                log -> {
+                  return log.getBody().asString().startsWith(starting);
+                })
+            .findFirst();
+    return logHavingBodyStartingWith;
   }
 
   @Test
