@@ -8,6 +8,7 @@ package io.opentelemetry.spring.smoketest;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -186,22 +187,28 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         AbstractIterableAssert::isNotEmpty);
 
     // Log
-    List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
+    await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
 
-    assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
+              assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
 
-    Optional<LogRecordData> startingTestLog =
-        findLogRecordWithBodyStartingWith("Starting ", exportedLogRecords);
+              Optional<LogRecordData> startingTestLog =
+                  findLogRecordWithBodyStartingWith("Starting ", exportedLogRecords);
 
-    assertThat(startingTestLog).as("No log record starting with 'Starting '").isPresent();
+              assertThat(startingTestLog).as("No log record starting with 'Starting '").isPresent();
 
-    assertThat(startingTestLog.get().getBody().asString())
-        .contains(this.getClass().getSimpleName());
+              assertThat(startingTestLog.get().getBody().asString())
+                  .contains(this.getClass().getSimpleName());
 
-    assertThat(startingTestLog.get().getAttributes().asMap())
-        .as("Should capture code attributes")
-        .containsEntry(
-            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+              assertThat(startingTestLog.get().getAttributes().asMap())
+                  .as("Should capture code attributes")
+                  .containsEntry(
+                      CodeIncubatingAttributes.CODE_NAMESPACE,
+                      "org.springframework.boot.StartupInfoLogger");
+            });
+
   }
 
   private static @NotNull Optional<LogRecordData> findLogRecordWithBodyStartingWith(
