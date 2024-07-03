@@ -10,8 +10,7 @@
       }
     ],
     "name": "org.apache.commons.pool2.impl.DefaultEvictionPolicy"
-  }
-,
+  },
   {
     "condition": {
       "typeReachable": "com.zaxxer.hikari.util.ConcurrentBag"
