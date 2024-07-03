@@ -203,7 +203,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       }
     }
     // when start and end are not called on the same instrumenter we need to use the operation
-    // listeners that were used during start in end too to correctly handle metrics like
+    // listeners that were used during start and end to correctly handle metrics like
     // http.server.active_requests that is recorded both in start and end
     context = context.with(START_OPERATION_LISTENERS, operationListeners);
 
