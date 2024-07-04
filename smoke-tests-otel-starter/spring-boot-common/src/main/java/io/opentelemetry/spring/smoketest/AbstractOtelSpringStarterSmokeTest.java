@@ -37,6 +37,7 @@ import java.util.Optional;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.AbstractLongAssert;
+import org.awaitility.core.DeadlockException;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -186,8 +187,26 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         AbstractIterableAssert::isNotEmpty);
 
     // Log
+    try {
+      await()
+          .untilAsserted(
+              () ->
+                  assertThat(testing.getExportedLogRecords().size())
+                      .as("No log record exported.")
+                      .isGreaterThan(2));
+    } catch (
+        Throwable
+            throwable) { // IntelliJ refuses to compile with org.awaitility.core.DeadlockException
+      // (extending Throwable)
+      // This is a workaround for Awaitility deadlock issue
+      if (throwable instanceof DeadlockException) {
+        System.err.println("Awaitability deadlock");
+      } else {
+        throw throwable;
+      }
+    }
     await()
-        .untilAsserted(() -> assertThat(testing.getExportedLogRecords().size()).isGreaterThan(1));
+        .untilAsserted(() -> assertThat(testing.getExportedLogRecords().size()).isGreaterThan(3));
 
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
