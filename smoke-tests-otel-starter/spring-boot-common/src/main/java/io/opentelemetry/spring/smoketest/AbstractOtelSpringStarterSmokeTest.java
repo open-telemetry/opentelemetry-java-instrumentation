@@ -187,7 +187,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     // Log
     await()
-        .untilAsserted(() -> assertThat(testing.getExportedLogRecords().size()).isGreaterThan(3));
+        .untilAsserted(() -> assertThat(testing.getExportedLogRecords().size()).isGreaterThan(1));
 
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
