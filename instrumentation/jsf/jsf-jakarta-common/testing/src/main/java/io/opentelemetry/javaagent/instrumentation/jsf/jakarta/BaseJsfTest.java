@@ -17,7 +17,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -30,7 +29,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
-import jakarta.servlet.ServletException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -257,7 +255,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
     AggregatedHttpResponse response2 = client.execute(request2).aggregate().join();
     assertThat(response2.status().code()).isEqualTo(500);
 
-    ServletException ex = new ServletException("submit exception");
+    IllegalStateException expectedException = new IllegalStateException("submit exception");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -267,21 +265,8 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            ex.getClass().getName()),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            stacktrace -> stacktrace.contains("submit exception")),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            message -> message.endsWith(ex.getMessage())))),
-                span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", ex)));
+                        .hasException(expectedException),
+                span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", expectedException)));
   }
 
   List<Consumer<SpanDataAssert>> handlerSpan(
@@ -295,22 +280,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         .hasParent(trace.getSpan(parentIndex))));
 
     if (expectedException != null) {
-      assertions.add(
-          span ->
-              span.hasStatus(StatusData.error())
-                  .hasEventsSatisfyingExactly(
-                      event ->
-                          event
-                              .hasName("exception")
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(
-                                      ExceptionAttributes.EXCEPTION_TYPE,
-                                      expectedException.getClass().getName()),
-                                  satisfies(
-                                      ExceptionAttributes.EXCEPTION_MESSAGE,
-                                      message ->
-                                          message.startsWithIgnoringCase(
-                                              expectedException.getMessage())))));
+      assertions.add(span -> span.hasStatus(StatusData.error()).hasException(expectedException));
     }
     return assertions;
   }

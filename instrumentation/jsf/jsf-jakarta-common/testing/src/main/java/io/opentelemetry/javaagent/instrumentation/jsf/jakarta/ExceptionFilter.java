@@ -11,6 +11,7 @@ import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import java.io.IOException;
 
 public class ExceptionFilter implements Filter {
   @Override
@@ -18,11 +19,19 @@ public class ExceptionFilter implements Filter {
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-      throws ServletException {
+      throws ServletException, IOException {
     try {
       chain.doFilter(request, response);
-    } catch (Exception exception) {
-      throw new ServletException(exception);
+    } catch (ServletException exception) {
+      // to ease testing unwrap our exception to root cause
+      Throwable tmp = exception;
+      while (tmp.getCause() != null) {
+        tmp = tmp.getCause();
+      }
+      if (tmp.getMessage() != null && tmp.getMessage().contains("submit exception")) {
+        throw (IllegalStateException) tmp;
+      }
+      throw exception;
     }
   }
 
