@@ -187,28 +187,25 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     // Log
     await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
+        .untilAsserted(() -> assertThat(testing.getExportedLogRecords().size()).isGreaterThan(3));
 
-              assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
+    List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
+    assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
 
-              Optional<LogRecordData> startingTestLog =
-                  exportedLogRecords.stream()
-                      .filter(log -> log.getBody().asString().startsWith("Starting "))
-                      .findFirst();
+    Optional<LogRecordData> startingTestLog =
+        exportedLogRecords.stream()
+            .filter(log -> log.getBody().asString().startsWith("Starting "))
+            .findFirst();
 
-              assertThat(startingTestLog).as("No log record starting with 'Starting '").isPresent();
+    assertThat(startingTestLog).as("No log record starting with 'Starting '").isPresent();
 
-              assertThat(startingTestLog.get().getBody().asString())
-                  .contains(this.getClass().getSimpleName());
+    assertThat(startingTestLog.get().getBody().asString())
+        .contains(this.getClass().getSimpleName());
 
-              assertThat(startingTestLog.get().getAttributes().asMap())
-                  .as("Should capture code attributes")
-                  .containsEntry(
-                      CodeIncubatingAttributes.CODE_NAMESPACE,
-                      "org.springframework.boot.StartupInfoLogger");
-            });
+    assertThat(startingTestLog.get().getAttributes().asMap())
+        .as("Should capture code attributes")
+        .containsEntry(
+            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
   }
 
   @Test
