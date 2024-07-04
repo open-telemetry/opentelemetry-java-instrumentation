@@ -545,7 +545,6 @@
     },
     "name": "java.util.concurrent.atomic.LongAdder"
   },
-  ,
   {
     "name": "org.apache.kafka.clients.consumer.CooperativeStickyAssignor",
     "condition": {
