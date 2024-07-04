@@ -208,7 +208,6 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                       CodeIncubatingAttributes.CODE_NAMESPACE,
                       "org.springframework.boot.StartupInfoLogger");
             });
-
   }
 
   private static @NotNull Optional<LogRecordData> findLogRecordWithBodyStartingWith(
