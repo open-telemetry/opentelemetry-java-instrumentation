@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf.javax;
 
+import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -18,11 +19,19 @@ public class ExceptionFilter implements Filter {
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-      throws ServletException {
+      throws ServletException, IOException {
     try {
       chain.doFilter(request, response);
-    } catch (Exception unused) {
-      throw new ServletException("submit exception");
+    } catch (ServletException exception) {
+      // to ease testing unwrap our exception to root cause
+      Throwable tmp = exception;
+      while (tmp.getCause() != null) {
+        tmp = tmp.getCause();
+      }
+      if (tmp.getMessage() != null && tmp.getMessage().contains("submit exception")) {
+        throw (IllegalStateException) tmp;
+      }
+      throw exception;
     }
   }
 

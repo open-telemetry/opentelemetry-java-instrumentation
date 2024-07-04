@@ -22,10 +22,10 @@ public class GreetingForm {
     return message;
   }
 
-  public void submit() throws Exception {
+  public void submit() {
     message = "Hello " + name;
     if (name.equals("exception")) {
-      throw new Exception("submit exception");
+      throw new IllegalStateException("submit exception");
     }
   }
 }
