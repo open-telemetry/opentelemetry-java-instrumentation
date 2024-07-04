@@ -5,7 +5,7 @@
 
   <managed-bean>
     <managed-bean-name>greetingForm</managed-bean-name>
-    <managed-bean-class>GreetingForm</managed-bean-class>
+    <managed-bean-class>io.opentelemetry.javaagent.instrumentation.jsf.jakarta.GreetingForm</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 

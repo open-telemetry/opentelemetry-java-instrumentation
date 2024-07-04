@@ -13,6 +13,7 @@ dependencies {
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
+  implementation(project(":instrumentation-api-incubator"))
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
   implementation(project(":sdk-autoconfigure-support"))

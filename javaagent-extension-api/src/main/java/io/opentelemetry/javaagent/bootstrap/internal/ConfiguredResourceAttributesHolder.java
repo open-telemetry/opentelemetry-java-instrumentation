@@ -28,7 +28,7 @@ public final class ConfiguredResourceAttributesHolder {
 
   public static void initialize(Attributes resourceAttribute) {
     List<String> mdcResourceAttributes =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getList(
                 "otel.instrumentation.common.mdc.resource-attributes", Collections.emptyList());
     for (String key : mdcResourceAttributes) {

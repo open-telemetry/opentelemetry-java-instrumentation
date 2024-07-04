@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -191,5 +193,24 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   public OpenTelemetry getOpenTelemetry() {
     return openTelemetry;
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
+    set(config::getKnownHttpRequestMethods, this::setKnownMethods);
+    set(config::getClientRequestHeaders, this::setCapturedRequestHeaders);
+    set(config::getClientResponseHeaders, this::setCapturedResponseHeaders);
+    set(config::getPeerServiceResolver, this::setPeerServiceResolver);
+    set(
+        config::shouldEmitExperimentalHttpClientTelemetry,
+        this::setEmitExperimentalHttpClientMetrics);
+    return this;
+  }
+
+  private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
+    T t = supplier.get();
+    if (t != null) {
+      consumer.accept(t);
+    }
   }
 }

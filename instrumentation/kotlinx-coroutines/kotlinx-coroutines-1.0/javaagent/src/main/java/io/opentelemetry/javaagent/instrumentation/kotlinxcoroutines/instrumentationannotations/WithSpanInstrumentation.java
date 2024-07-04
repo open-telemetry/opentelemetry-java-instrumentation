@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
@@ -54,10 +54,10 @@ import org.objectweb.asm.util.CheckClassAdapter;
 class WithSpanInstrumentation implements TypeInstrumentation {
   // whether to check the transformed bytecode with asm CheckClassAdapter
   private static final boolean CHECK_CLASS =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean(
               "otel.instrumentation.kotlinx-coroutines.check-class",
-              InstrumentationConfig.get().getBoolean("otel.javaagent.debug", false));
+              AgentInstrumentationConfig.get().getBoolean("otel.javaagent.debug", false));
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   // this matcher matches all methods that should be excluded from transformation

@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.List;
 import java.util.function.Function;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -27,16 +27,16 @@ public final class WebClientHelper {
           GlobalOpenTelemetry.get(),
           builder ->
               builder
-                  .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                  .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+                  .setCapturedRequestHeaders(AgentCommonConfig.get().getClientRequestHeaders())
+                  .setCapturedResponseHeaders(AgentCommonConfig.get().getClientResponseHeaders())
+                  .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods()),
+          builder -> builder.setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods()),
           Function.identity(),
           singletonList(
               HttpClientPeerServiceAttributesExtractor.create(
                   WebClientHttpAttributesGetter.INSTANCE,
-                  CommonConfig.get().getPeerServiceResolver())),
-          CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
+                  AgentCommonConfig.get().getPeerServiceResolver())),
+          AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -22,11 +23,19 @@ public final class SpringWebTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-web-3.1";
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> builder;
 
+  static {
+    WebTelemetryUtil.setBuilderExtractor(SpringWebTelemetryBuilder::getBuilder);
+  }
+
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         new DefaultHttpClientInstrumenterBuilder<>(
                 INSTRUMENTATION_NAME, openTelemetry, SpringWebHttpAttributesGetter.INSTANCE)
             .setHeaderSetter(HttpRequestSetter.INSTANCE);
+  }
+
+  private DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> getBuilder() {
+    return builder;
   }
 
   /**
