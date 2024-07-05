@@ -50,8 +50,8 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
             trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE testdb.player")),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> SpringTestUtil.assertClientSpan(span, "/webflux"),
-                span -> SpringTestUtil.assertServerSpan(span, "/webflux"),
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/webflux"),
+                span -> HttpSpanDataAssert.create(span).assertServerGetRequest("/webflux"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .satisfies(

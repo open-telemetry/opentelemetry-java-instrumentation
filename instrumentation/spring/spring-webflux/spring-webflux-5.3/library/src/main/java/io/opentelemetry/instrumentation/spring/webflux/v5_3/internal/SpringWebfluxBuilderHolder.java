@@ -17,8 +17,8 @@ import org.springframework.web.server.ServerWebExchange;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class SpringWebfluxUtil {
-  private SpringWebfluxUtil() {}
+public class SpringWebfluxBuilderHolder {
+  private SpringWebfluxBuilderHolder() {}
 
   private static Function<
           SpringWebfluxTelemetryBuilder,
@@ -42,7 +42,7 @@ public class SpringWebfluxUtil {
               SpringWebfluxTelemetryBuilder,
               DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
           serverBuilderExtractor) {
-    SpringWebfluxUtil.serverBuilderExtractor = serverBuilderExtractor;
+    SpringWebfluxBuilderHolder.serverBuilderExtractor = serverBuilderExtractor;
   }
 
   public static Function<
@@ -57,6 +57,6 @@ public class SpringWebfluxUtil {
               SpringWebfluxTelemetryBuilder,
               DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
           clientBuilderExtractor) {
-    SpringWebfluxUtil.clientBuilderExtractor = clientBuilderExtractor;
+    SpringWebfluxBuilderHolder.clientBuilderExtractor = clientBuilderExtractor;
   }
 }

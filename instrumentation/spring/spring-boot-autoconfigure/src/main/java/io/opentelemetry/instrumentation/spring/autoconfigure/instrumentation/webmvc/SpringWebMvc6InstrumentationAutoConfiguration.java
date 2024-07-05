@@ -9,7 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.webmvc.v6_0.SpringWebMvcTelemetry;
-import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcUtil;
+import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBuilderHolder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import jakarta.servlet.Filter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -29,7 +29,7 @@ public class SpringWebMvc6InstrumentationAutoConfiguration {
     return InstrumentationConfigUtil.configureServerBuilder(
             config,
             SpringWebMvcTelemetry.builder(openTelemetry),
-            SpringMvcUtil.getBuilderExtractor())
+            SpringMvcBuilderHolder.getBuilderExtractor())
         .build()
         .createServletFilter();
   }

@@ -152,7 +152,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
                 serverSpan ->
-                    SpringTestUtil.assertServerSpan(serverSpan, "/ping")
+                    HttpSpanDataAssert.create(serverSpan)
+                        .assertServerGetRequest("/ping")
                         .hasResourceSatisfying(
                             r ->
                                 r.hasAttribute(
@@ -231,7 +232,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                span -> SpringTestUtil.assertClientSpan(span, "/ping"),
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
                 span -> withSpanAssert(span)));

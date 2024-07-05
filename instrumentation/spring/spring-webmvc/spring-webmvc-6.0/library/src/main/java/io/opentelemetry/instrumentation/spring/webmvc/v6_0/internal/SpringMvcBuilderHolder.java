@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal;
+package io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetryBuilder;
+import io.opentelemetry.instrumentation.spring.webmvc.v6_0.SpringWebMvcTelemetryBuilder;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Function;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class SpringMvcUtil {
-  private SpringMvcUtil() {}
+public class SpringMvcBuilderHolder {
+  private SpringMvcBuilderHolder() {}
 
   private static Function<
           SpringWebMvcTelemetryBuilder,
@@ -35,6 +35,6 @@ public class SpringMvcUtil {
               SpringWebMvcTelemetryBuilder,
               DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
           builderExtractor) {
-    SpringMvcUtil.builderExtractor = builderExtractor;
+    SpringMvcBuilderHolder.builderExtractor = builderExtractor;
   }
 }
