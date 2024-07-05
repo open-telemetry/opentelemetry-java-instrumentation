@@ -12,7 +12,7 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
 class QueryProtocolModelTest extends AbstractQueryProtocolModelTest {
   @RegisterExtension
-  public final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected ClientOverrideConfiguration.Builder createClientOverrideConfigurationBuilder() {
