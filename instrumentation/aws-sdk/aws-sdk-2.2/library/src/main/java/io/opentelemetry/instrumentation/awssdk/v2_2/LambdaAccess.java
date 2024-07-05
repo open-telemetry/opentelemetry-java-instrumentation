@@ -9,13 +9,13 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import software.amazon.awssdk.core.SdkRequest;
 
-final class DirectLambdaAccess {
-  private DirectLambdaAccess() {}
+final class LambdaAccess {
+  private LambdaAccess() {}
 
-  private static final boolean enabled = PluginImplUtil.isImplPresent("DirectLambdaImpl");
+  private static final boolean enabled = PluginImplUtil.isImplPresent("LambdaImpl");
 
   @NoMuzzle
   public static SdkRequest modifyRequest(SdkRequest request, Context otelContext) {
-    return enabled ? DirectLambdaImpl.modifyRequest(request, otelContext) : null;
+    return enabled ? LambdaImpl.modifyRequest(request, otelContext) : null;
   }
 }
