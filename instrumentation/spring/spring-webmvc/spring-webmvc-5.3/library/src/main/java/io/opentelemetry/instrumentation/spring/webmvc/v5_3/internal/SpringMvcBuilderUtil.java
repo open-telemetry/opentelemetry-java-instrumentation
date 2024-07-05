@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class SpringMvcBuilderUtil {
+public final class SpringMvcBuilderUtil {
   private SpringMvcBuilderUtil() {}
 
   private static Function<

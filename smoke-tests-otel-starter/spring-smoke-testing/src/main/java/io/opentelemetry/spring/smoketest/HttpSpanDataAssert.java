@@ -17,7 +17,7 @@ import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import java.util.function.Consumer;
 import org.assertj.core.api.AbstractLongAssert;
 
-public class HttpSpanDataAssert {
+public final class HttpSpanDataAssert {
 
   private final SpanDataAssert span;
 
