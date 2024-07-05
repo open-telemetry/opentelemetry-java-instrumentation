@@ -37,6 +37,7 @@ import java.util.Optional;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.AbstractLongAssert;
+import org.awaitility.core.ConditionTimeoutException;
 import org.awaitility.core.DeadlockException;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -194,16 +195,10 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                   assertThat(testing.getExportedLogRecords().size())
                       .as("No log record exported.")
                       .isGreaterThan(2));
-    } catch (
-        Throwable
-            throwable) { // IntelliJ refuses to compile with org.awaitility.core.DeadlockException
-      // (extending Throwable)
-      // This is a workaround for Awaitility deadlock issue
-      if (throwable instanceof DeadlockException) {
-        System.err.println("Awaitability deadlock");
-      } else {
-        throw throwable;
-      }
+    } catch (ConditionTimeoutException conditionTimeoutException) {
+      assertThat(testing.getExportedLogRecords().size())
+          .as("No log record exported.")
+          .isGreaterThan(2);
     }
     await()
         .untilAsserted(() -> assertThat(testing.getExportedLogRecords().size()).isGreaterThan(3));
