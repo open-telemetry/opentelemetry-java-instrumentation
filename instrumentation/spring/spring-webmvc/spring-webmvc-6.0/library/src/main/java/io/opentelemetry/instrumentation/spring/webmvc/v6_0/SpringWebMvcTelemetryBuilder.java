@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBuilderHolder;
+import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBuilderUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -26,7 +26,7 @@ public final class SpringWebMvcTelemetryBuilder {
       builder;
 
   static {
-    SpringMvcBuilderHolder.setBuilderExtractor(SpringWebMvcTelemetryBuilder::getBuilder);
+    SpringMvcBuilderUtil.setBuilderExtractor(SpringWebMvcTelemetryBuilder::getBuilder);
   }
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {

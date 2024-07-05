@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderHolder;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import java.util.List;
 import java.util.Set;
@@ -31,9 +31,9 @@ public final class SpringWebfluxTelemetryBuilder {
       serverBuilder;
 
   static {
-    SpringWebfluxBuilderHolder.setClientBuilderExtractor(
+    SpringWebfluxBuilderUtil.setClientBuilderExtractor(
         SpringWebfluxTelemetryBuilder::getClientBuilder);
-    SpringWebfluxBuilderHolder.setServerBuilderExtractor(
+    SpringWebfluxBuilderUtil.setServerBuilderExtractor(
         SpringWebfluxTelemetryBuilder::getServerBuilder);
   }
 

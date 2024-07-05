@@ -15,8 +15,8 @@ import javax.servlet.http.HttpServletResponse;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class SpringMvcBuilderHolder {
-  private SpringMvcBuilderHolder() {}
+public class SpringMvcBuilderUtil {
+  private SpringMvcBuilderUtil() {}
 
   private static Function<
           SpringWebMvcTelemetryBuilder,
@@ -35,6 +35,6 @@ public class SpringMvcBuilderHolder {
               SpringWebMvcTelemetryBuilder,
               DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
           builderExtractor) {
-    SpringMvcBuilderHolder.builderExtractor = builderExtractor;
+    SpringMvcBuilderUtil.builderExtractor = builderExtractor;
   }
 }
