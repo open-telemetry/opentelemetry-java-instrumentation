@@ -10,14 +10,13 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -25,9 +24,6 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
-import io.opentelemetry.testing.internal.armeria.common.MediaType;
-import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.stream.Stream;
@@ -43,7 +39,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
-class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
+class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat> {
   @RegisterExtension
   public static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
@@ -73,7 +69,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
 
     tomcatServer.addWebapp(
         "/" + getContextPath(),
-        JspInstrumentationBasicTests.class.getResource("/webapps/jsptest").getPath());
+        JspInstrumentationForwardTests.class.getResource("/webapps/jsptest").getPath());
 
     tomcatServer.start();
     System.out.println(
@@ -102,11 +98,18 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     cleanupServer();
   }
 
-  @ParameterizedTest
-  @ArgumentsSource(NonErroneousArgs.class)
-  void testNonErroneousGet(String jspFileName, String jspClassName, String jspClassNamePrefix) {
-    AggregatedHttpResponse res = client.get("/" + jspFileName).aggregate().join();
-    String route = "/" + getContextPath() + "/" + jspFileName;
+  @ParameterizedTest(name = "Forward to {0}")
+  @ArgumentsSource(NonErroneousGetForwardArgs.class)
+  void testNonErroneousGetForwardTo(
+      String name,
+      String forwardFromFileName,
+      String forwardDestFileName,
+      String jspForwardFromClassName,
+      String jspForwardFromClassPrefix,
+      String jspForwardDestClassName,
+      String jspForwardDestClassPrefix) {
+    AggregatedHttpResponse res = client.get("/" + forwardFromFileName).aggregate().join();
+    String route = "/" + getContextPath() + "/" + forwardFromFileName;
 
     testing.waitAndAssertTraces(
         trace ->
@@ -133,245 +136,74 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
-                    span.hasName("Compile /" + jspFileName)
+                    span.hasName("Compile /" + forwardFromFileName)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.classFQCN"),
-                                "org.apache.jsp." + jspClassNamePrefix + jspClassName),
+                                "org.apache.jsp."
+                                    + jspForwardFromClassPrefix
+                                    + jspForwardFromClassName),
                             equalTo(
                                 stringKey("jsp.compiler"),
                                 "org.apache.jasper.compiler.JDTCompiler")),
                 span ->
-                    span.hasName("Render /" + jspFileName)
+                    span.hasName("Render /" + forwardFromFileName)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/" + jspFileName))));
+                            equalTo(
+                                stringKey("jsp.requestURL"), baseUrl + "/" + forwardFromFileName)),
+                span ->
+                    span.hasName("Compile /" + forwardDestFileName)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.classFQCN"),
+                                "org.apache.jsp."
+                                    + jspForwardDestClassPrefix
+                                    + jspForwardDestClassName),
+                            equalTo(
+                                stringKey("jsp.compiler"),
+                                "org.apache.jasper.compiler.JDTCompiler")),
+                span ->
+                    span.hasName("Render /" + forwardDestFileName)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("jsp.forwardOrigin"), "/" + forwardFromFileName),
+                            equalTo(
+                                stringKey("jsp.requestURL"),
+                                baseUrl + "/" + forwardDestFileName))));
 
     assertThat(res.status().code()).isEqualTo(200);
   }
 
-  static class NonErroneousArgs implements ArgumentsProvider {
+  static class NonErroneousGetForwardArgs implements ArgumentsProvider {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-          Arguments.of("nojava.jsp", "nojava_jsp", ""),
-          Arguments.of("common/loop.jsp", "loop_jsp", "common."),
-          Arguments.of("invalidMarkup.jsp", "invalidMarkup_jsp", ""));
-    }
-  }
-
-  @Test
-  void testNonErroneousGetWithQueryString() {
-    String queryString = "HELLO";
-    AggregatedHttpResponse res = client.get("/getQuery.jsp?" + queryString).aggregate().join();
-    String route = "/" + getContextPath() + "/getQuery.jsp";
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(UrlAttributes.URL_QUERY, queryString),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
-                span ->
-                    span.hasName("Compile /getQuery.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp.getQuery_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
-                span ->
-                    span.hasName("Render /getQuery.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/getQuery.jsp"))));
-    assertThat(res.status().code()).isEqualTo(200);
-  }
-
-  @Test
-  void testNonErroneousPost() {
-    RequestHeaders headers =
-        RequestHeaders.builder(HttpMethod.POST, "/post.jsp")
-            .contentType(MediaType.FORM_DATA)
-            .build();
-
-    AggregatedHttpResponse res = client.execute(headers, "name=world").aggregate().join();
-
-    String route = "/" + getContextPath() + "/post.jsp";
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("POST " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
-                span ->
-                    span.hasName("Compile /post.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp.post_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
-                span ->
-                    span.hasName("Render /post.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/post.jsp"))));
-    assertThat(res.status().code()).isEqualTo(200);
-  }
-
-  @ParameterizedTest
-  @ArgumentsSource(ErroneousRuntimeErrorsArgs.class)
-  void testErroneousRuntimeErrorsGet(
-      String jspFileName,
-      String jspClassName,
-      Class<?> exceptionClass,
-      Boolean errorMessageOptional) {
-    AggregatedHttpResponse res = client.get("/" + jspFileName).aggregate().join();
-
-    String route = "/" + getContextPath() + "/" + jspFileName;
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> val.isEqualTo(exceptionClass.getName()),
-                                                    v ->
-                                                        val.contains(
-                                                            exceptionClass.getSimpleName()))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> assertThat(errorMessageOptional).isTrue(),
-                                                    v -> val.isInstanceOf(String.class))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
-                            equalTo(ErrorAttributes.ERROR_TYPE, "500")),
-                span ->
-                    span.hasName("Compile /" + jspFileName)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp." + jspClassName),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
-                span ->
-                    span.hasName("Render /" + jspFileName)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> val.isEqualTo(exceptionClass.getName()),
-                                                    v ->
-                                                        val.contains(
-                                                            exceptionClass.getSimpleName()))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> assertThat(errorMessageOptional).isTrue(),
-                                                    v -> val.isInstanceOf(String.class))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/" + jspFileName))));
-    assertThat(res.status().code()).isEqualTo(500);
-  }
-
-  static class ErroneousRuntimeErrorsArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("runtimeError.jsp", "runtimeError_jsp", ArithmeticException.class, false),
           Arguments.of(
-              "invalidWrite.jsp", "invalidWrite_jsp", IndexOutOfBoundsException.class, true),
-          Arguments.of("getQuery.jsp", "getQuery_jsp", NullPointerException.class, true));
+              "no java jsp",
+              "forwards/forwardToNoJavaJsp.jsp",
+              "nojava.jsp",
+              "forwardToNoJavaJsp_jsp",
+              "forwards.",
+              "nojava_jsp",
+              ""),
+          Arguments.of(
+              "normal java jsp",
+              "forwards/forwardToSimpleJava.jsp",
+              "common/loop.jsp",
+              "forwardToSimpleJava_jsp",
+              "forwards.",
+              "loop_jsp",
+              "common."));
     }
   }
 
   @Test
-  void testNonErroneousIncludePlainHtmlGet() {
-    AggregatedHttpResponse res = client.get("/includes/includeHtml.jsp").aggregate().join();
-    String route = "/" + getContextPath() + "/includes/includeHtml.jsp";
+  void testNonErroneousGetForwardToPlainHtml() {
+    AggregatedHttpResponse res = client.get("/forwards/forwardToHtml.jsp").aggregate().join();
+    String route = "/" + getContextPath() + "/forwards/forwardToHtml.jsp";
 
     testing.waitAndAssertTraces(
         trace ->
@@ -398,29 +230,30 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
-                    span.hasName("Compile /includes/includeHtml.jsp")
+                    span.hasName("Compile /forwards/forwardToHtml.jsp")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.classFQCN"),
-                                "org.apache.jsp.includes.includeHtml_jsp"),
+                                "org.apache.jsp.forwards.forwardToHtml_jsp"),
                             equalTo(
                                 stringKey("jsp.compiler"),
                                 "org.apache.jasper.compiler.JDTCompiler")),
                 span ->
-                    span.hasName("Render /includes/includeHtml.jsp")
+                    span.hasName("Render /forwards/forwardToHtml.jsp")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeHtml.jsp"))));
+                                baseUrl + "/forwards/forwardToHtml.jsp"))));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
   @Test
-  void testNonErroneousMultiGet() {
-    AggregatedHttpResponse res = client.get("/includes/includeMulti.jsp").aggregate().join();
-    String route = "/" + getContextPath() + "/includes/includeMulti.jsp";
+  void testNonErroneousGetForwardedToJspWithMultipleIncludes() {
+    AggregatedHttpResponse res =
+        client.get("/forwards/forwardToIncludeMulti.jsp").aggregate().join();
+    String route = "/" + getContextPath() + "/forwards/forwardToIncludeMulti.jsp";
 
     testing.waitAndAssertTraces(
         trace ->
@@ -447,8 +280,25 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
-                    span.hasName("Compile /includes/includeMulti.jsp")
+                    span.hasName("Compile /forwards/forwardToIncludeMulti.jsp")
                         .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.classFQCN"),
+                                "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"),
+                            equalTo(
+                                stringKey("jsp.compiler"),
+                                "org.apache.jasper.compiler.JDTCompiler")),
+                span ->
+                    span.hasName("Render /forwards/forwardToIncludeMulti.jsp")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.requestURL"),
+                                baseUrl + "/forwards/forwardToIncludeMulti.jsp")),
+                span ->
+                    span.hasName("Compile /includes/includeMulti.jsp")
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.classFQCN"),
@@ -458,53 +308,147 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                 "org.apache.jasper.compiler.JDTCompiler")),
                 span ->
                     span.hasName("Render /includes/includeMulti.jsp")
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.forwardOrigin"),
+                                "/forwards/forwardToIncludeMulti.jsp"),
+                            equalTo(
+                                stringKey("jsp.requestURL"),
+                                baseUrl + "/includes/includeMulti.jsp")),
+                span ->
+                    span.hasName("Compile /common/javaLoopH2.jsp")
+                        .hasParent(trace.getSpan(4))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.classFQCN"), "org.apache.jsp.common.javaLoopH2_jsp"),
+                            equalTo(
+                                stringKey("jsp.compiler"),
+                                "org.apache.jasper.compiler.JDTCompiler")),
+                span ->
+                    span.hasName("Render /common/javaLoopH2.jsp")
+                        .hasParent(trace.getSpan(4))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.requestURL"),
+                                baseUrl + "/includes/includeMulti.jsp"),
+                            equalTo(
+                                stringKey("jsp.forwardOrigin"),
+                                "/forwards/forwardToIncludeMulti.jsp")),
+                span ->
+                    span.hasName("Compile /common/javaLoopH2.jsp")
+                        .hasParent(trace.getSpan(4))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.classFQCN"), "org.apache.jsp.common.javaLoopH2_jsp"),
+                            equalTo(
+                                stringKey("jsp.compiler"),
+                                "org.apache.jasper.compiler.JDTCompiler")),
+                span ->
+                    span.hasName("Render /common/javaLoopH2.jsp")
+                        .hasParent(trace.getSpan(4))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.requestURL"),
+                                baseUrl + "/includes/includeMulti.jsp"),
+                            equalTo(
+                                stringKey("jsp.forwardOrigin"),
+                                "/forwards/forwardToIncludeMulti.jsp"))));
+    assertThat(res.status().code()).isEqualTo(200);
+  }
+
+  @Test
+  void testNonErroneousGetForwardToAnotherForward() {
+    AggregatedHttpResponse res = client.get("/forwards/forwardToJspForward.jsp").aggregate().join();
+    String route = "/" + getContextPath() + "/forwards/forwardToJspForward.jsp";
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + route)
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(UrlAttributes.URL_PATH, route),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            satisfies(
+                                UserAgentAttributes.USER_AGENT_ORIGINAL,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(HttpAttributes.HTTP_ROUTE, route),
+                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                            equalTo(ServerAttributes.SERVER_PORT, port),
+                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                val -> val.isInstanceOf(Long.class))),
+                span ->
+                    span.hasName("Compile /forwards/forwardToJspForward.jsp")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.classFQCN"),
+                                "org.apache.jsp.forwards.forwardToJspForward_jsp"),
+                            equalTo(
+                                stringKey("jsp.compiler"),
+                                "org.apache.jasper.compiler.JDTCompiler")),
+                span ->
+                    span.hasName("Render /forwards/forwardToJspForward.jsp")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeMulti.jsp")),
+                                baseUrl + "/forwards/forwardToJspForward.jsp")),
                 span ->
-                    span.hasName("Compile /common/javaLoopH2.jsp")
+                    span.hasName("Compile /forwards/forwardToSimpleJava.jsp")
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("jsp.classFQCN"), "org.apache.jsp.common.javaLoopH2_jsp"),
+                                stringKey("jsp.classFQCN"),
+                                "org.apache.jsp.forwards.forwardToSimpleJava_jsp"),
                             equalTo(
                                 stringKey("jsp.compiler"),
                                 "org.apache.jasper.compiler.JDTCompiler")),
                 span ->
-                    span.hasName("Render /common/javaLoopH2.jsp")
+                    span.hasName("Render /forwards/forwardToSimpleJava.jsp")
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.forwardOrigin"),
+                                "/forwards/forwardToJspForward.jsp"),
                             equalTo(
                                 stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeMulti.jsp")),
+                                baseUrl + "/forwards/forwardToSimpleJava.jsp")),
                 span ->
-                    span.hasName("Compile /common/javaLoopH2.jsp")
-                        .hasParent(trace.getSpan(2))
+                    span.hasName("Compile /common/loop.jsp")
+                        .hasParent(trace.getSpan(4))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.classFQCN"), "org.apache.jsp.common.javaLoopH2_jsp"),
+                            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp.common.loop_jsp"),
                             equalTo(
                                 stringKey("jsp.compiler"),
                                 "org.apache.jasper.compiler.JDTCompiler")),
                 span ->
-                    span.hasName("Render /common/javaLoopH2.jsp")
-                        .hasParent(trace.getSpan(2))
+                    span.hasName("Render /common/loop.jsp")
+                        .hasParent(trace.getSpan(4))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/common/loop.jsp"),
                             equalTo(
-                                stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeMulti.jsp"))));
+                                stringKey("jsp.forwardOrigin"),
+                                "/forwards/forwardToJspForward.jsp"))));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
-  @ParameterizedTest
-  @ArgumentsSource(CompileErrorsArgs.class)
-  void testCompileErrorShouldNotProduceRenderTracesAndSpans(
-      String jspFileName, String jspClassName, String jspClassNamePrefix) {
-    AggregatedHttpResponse res = client.get("/" + jspFileName).aggregate().join();
+  @Test
+  void testForwardToJspWithCompileErrorShouldNotProduceSecondRenderSpan() {
+    AggregatedHttpResponse res =
+        client.get("/forwards/forwardToCompileError.jsp").aggregate().join();
+    String route = "/" + getContextPath() + "/forwards/forwardToCompileError.jsp";
 
-    String route = "/" + getContextPath() + "/" + jspFileName;
+    JasperException exception = new JasperException(new Exception());
 
     testing.waitAndAssertTraces(
         trace ->
@@ -514,20 +458,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            JasperException.class.getCanonicalName()),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            val -> val.isInstanceOf(String.class))))
+                        .hasException(exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(UrlAttributes.URL_SCHEME, "http"),
                             equalTo(UrlAttributes.URL_PATH, route),
@@ -544,53 +475,46 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
-                            equalTo(ErrorAttributes.ERROR_TYPE, "500")),
+                                val -> val.isInstanceOf(Long.class))),
                 span ->
-                    span.hasName("Compile /" + jspFileName)
+                    span.hasName("Compile /forwards/forwardToCompileError.jsp")
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            JasperException.class.getCanonicalName()),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.classFQCN"),
-                                "org.apache.jsp." + jspClassNamePrefix + jspClassName),
+                                "org.apache.jsp.forwards.forwardToCompileError_jsp"),
+                            equalTo(
+                                stringKey("jsp.compiler"),
+                                "org.apache.jasper.compiler.JDTCompiler")),
+                span ->
+                    span.hasName("Render /forwards/forwardToCompileError_jsp")
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.requestURL"),
+                                baseUrl + "/forwards/forwardToCompileError_jsp")),
+                span ->
+                    span.hasName("Compile /compileError.jsp")
+                        .hasParent(trace.getSpan(2))
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.classFQCN"),
+                                "org.apache.jsp.forwards.compileError_jsp"),
                             equalTo(
                                 stringKey("jsp.compiler"),
                                 "org.apache.jasper.compiler.JDTCompiler"))));
     assertThat(res.status().code()).isEqualTo(500);
   }
 
-  static class CompileErrorsArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("compileError.jsp", "compileError_jsp", ""),
-          Arguments.of(
-              "forwards/forwardWithCompileError.jsp", "forwardWithCompileError_jsp", "forwards."));
-    }
-  }
-
   @Test
-  void testDirectStaticFileReference() {
-    String staticFile = "common/hello.html";
-    String route = "/" + getContextPath() + "/*";
-
-    AggregatedHttpResponse res = client.get("/" + staticFile).aggregate().join();
-    assertThat(res.status().code()).isEqualTo(200);
+  void testForwardToNonExistentJspShouldBe404() {
+    AggregatedHttpResponse res =
+        client.get("/forwards/forwardToNonExistent.jsp").aggregate().join();
+    String route = "/" + getContextPath() + "/forwards/forwardToNonExistent.jsp";
 
     testing.waitAndAssertTraces(
         trace ->
@@ -599,12 +523,12 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                     span.hasName("GET " + route)
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
+                        .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(
-                                UrlAttributes.URL_PATH, "/" + getContextPath() + "/" + staticFile),
+                            equalTo(UrlAttributes.URL_PATH, route),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 404),
                             satisfies(
                                 UserAgentAttributes.USER_AGENT_ORIGINAL,
                                 val -> val.isInstanceOf(String.class)),
@@ -616,6 +540,28 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)))));
+                                val -> val.isInstanceOf(Long.class))),
+                span ->
+                    span.hasName("Compile /forwards/forwardToNonExistent.jsp")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.classFQCN"),
+                                "org.apache.jsp.forwards.forwardToNonExistent_jsp"),
+                            equalTo(
+                                stringKey("jsp.compiler"),
+                                "org.apache.jasper.compiler.JDTCompiler")),
+                span ->
+                    span.hasName("Render /forwards/forwardToNonExistent.jps")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("jsp.requestURL"),
+                                baseUrl + "/forwards/forwardToNonExistent.jsp")),
+                span ->
+                    span.hasName("ResponseFacade.sendError")
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributes(Attributes.empty())));
+    assertThat(res.status().code()).isEqualTo(404);
   }
 }
