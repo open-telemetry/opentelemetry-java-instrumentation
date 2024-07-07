@@ -193,7 +193,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
               () ->
                   assertThat(testing.getExportedLogRecords().size())
                       .as("Not at least 3 log records exported.")
-                      .isGreaterThan(2);
+                      .isGreaterThan(2));
     } catch (ConditionTimeoutException conditionTimeoutException) {
       assertThat(testing.getExportedLogRecords().size())
           .as("Not at least 3 log records exported.")
