@@ -212,7 +212,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (modifiedRequest != null) {
       return modifiedRequest;
     }
-    modifiedRequest = DirectLambdaAccess.modifyRequest(request, otelContext);
+    modifiedRequest = LambdaAccess.modifyRequest(request, otelContext);
     if (modifiedRequest != null) {
       return modifiedRequest;
     }

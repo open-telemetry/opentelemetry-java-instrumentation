@@ -81,6 +81,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:dynamodb:2.2.0")
   testLibrary("software.amazon.awssdk:ec2:2.2.0")
   testLibrary("software.amazon.awssdk:kinesis:2.2.0")
+  testLibrary("software.amazon.awssdk:lambda:2.2.0")
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:sqs:2.2.0")

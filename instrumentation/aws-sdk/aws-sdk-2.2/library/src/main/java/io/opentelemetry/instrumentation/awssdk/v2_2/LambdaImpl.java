@@ -5,51 +5,49 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.StringJsonNode;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 
-// this class is only used from DirectLambdaAccess from method with @NoMuzzle annotation
+// this class is only used from LambdaAccess from method with @NoMuzzle annotation
 
 // Direct lambda invocations (e.g., not through an api gateway) currently strip
-// away the otel propagation headers (but leave x-ray ones intact).  Use the
+// away the otel propagation headers (but leave x-ray ones intact). Use the
 // custom client context header as an additional propagation mechanism for this
-// very specific scenario.  For reference, the header is named "X-Amz-Client-Context" but the api to
-// manipulate
-// it abstracts that away.  The client context field is documented in
+// very specific scenario. For reference, the header is named "X-Amz-Client-Context" but the api to
+// manipulate it abstracts that away. The client context field is documented in
 // https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html#API_Invoke_RequestParameters
 
-final class DirectLambdaImpl {
+final class LambdaImpl {
   static {
     // Force loading of InvokeRequest; this ensures that an exception is thrown at this point when
     // the Lambda library is not present, which will cause DirectLambdaAccess to have
     // enabled=false in library mode.
     @SuppressWarnings("unused")
-    String ensureLoadedDummy = InvokeRequest.class.getName();
+    String invokeRequestName = InvokeRequest.class.getName();
+    // was added in 2.17.0
+    @SuppressWarnings("unused")
+    String jsonNodeName = JsonNode.class.getName();
   }
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String CLIENT_CONTEXT_CUSTOM_FIELDS_KEY = "custom";
   static final int MAX_CLIENT_CONTEXT_LENGTH = 3583; // visible for testing
 
-  private DirectLambdaImpl() {}
+  private LambdaImpl() {}
 
   @Nullable
   static SdkRequest modifyRequest(
       SdkRequest request, io.opentelemetry.context.Context otelContext) {
     if (isDirectLambdaInvocation(request)) {
-      try {
-        return modifyOrAddCustomContextHeader((InvokeRequest) request, otelContext);
-      } catch (Exception e) {
-        return null;
-      }
+      return modifyOrAddCustomContextHeader((InvokeRequest) request, otelContext);
     }
     return null;
   }
@@ -58,9 +56,8 @@ final class DirectLambdaImpl {
     return request instanceof InvokeRequest;
   }
 
-  @SuppressWarnings("unchecked")
   static SdkRequest modifyOrAddCustomContextHeader(
-      InvokeRequest request, io.opentelemetry.context.Context otelContext) throws Exception {
+      InvokeRequest request, io.opentelemetry.context.Context otelContext) {
     InvokeRequest.Builder builder = request.toBuilder();
     // Unfortunately the value of this thing is a base64-encoded json with a character limit; also
     // therefore not comma-composable like many http headers
@@ -70,26 +67,29 @@ final class DirectLambdaImpl {
       clientContextJsonString =
           new String(Base64.getDecoder().decode(clientContextString), StandardCharsets.UTF_8);
     }
-    Map<String, Object> parsedJson =
-        (Map<String, Object>)
-            OBJECT_MAPPER.readValue(clientContextJsonString, new TypeReference<Object>() {});
-    Map<String, Object> customFields =
-        (Map<String, Object>)
-            parsedJson.getOrDefault(
-                CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, new HashMap<String, Object>());
-
-    int numCustomFields = customFields.size();
+    JsonNode jsonNode = JsonNode.parser().parse(clientContextJsonString);
+    if (!jsonNode.isObject()) {
+      return null;
+    }
+    JsonNode customNode =
+        jsonNode
+            .asObject()
+            .computeIfAbsent(
+                CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, (k) -> new ObjectJsonNode(new LinkedHashMap<>()));
+    if (!customNode.isObject()) {
+      return null;
+    }
+    Map<String, JsonNode> map = customNode.asObject();
     GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
-        .inject(otelContext, customFields, Map::put);
-    if (numCustomFields == customFields.size()) {
-      return null; // no modifications made
+        .inject(otelContext, map, (nodes, key, value) -> nodes.put(key, new StringJsonNode(value)));
+    if (map.isEmpty()) {
+      return null;
     }
 
-    parsedJson.put(CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, customFields);
-
     // turn it back into a string (json encode)
-    String newJson = OBJECT_MAPPER.writeValueAsString(parsedJson);
+    String newJson = jsonNode.toString();
+
     // turn it back into a base64 string
     String newJson64 = Base64.getEncoder().encodeToString(newJson.getBytes(StandardCharsets.UTF_8));
     // check it for length (err on the safe side with >=)
