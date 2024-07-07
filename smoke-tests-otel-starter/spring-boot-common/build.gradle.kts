@@ -20,6 +20,8 @@ dependencies {
   compileOnly("org.testcontainers:kafka")
   compileOnly("org.testcontainers:mongodb")
 
+  implementation("org.springframework.boot:spring-boot-starter-aop")
+
   api(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
