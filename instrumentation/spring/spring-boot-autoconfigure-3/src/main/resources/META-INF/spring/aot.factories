@@ -1,2 +1,2 @@
 org.springframework.aot.hint.RuntimeHintsRegistrar=\
-opentelemetry.instrumentation.spring.autoconfigure.instrumentation.annotations.OpenTelemetryRuntimeHints
+opentelemetry.instrumentation.spring.autoconfigure.instrumentation.annotations.OpenTelemetryAnnotationsRuntimeHints
