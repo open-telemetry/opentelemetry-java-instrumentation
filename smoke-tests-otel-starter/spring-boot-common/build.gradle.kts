@@ -19,8 +19,7 @@ dependencies {
   compileOnly("org.testcontainers:junit-jupiter")
   compileOnly("org.testcontainers:kafka")
   compileOnly("org.testcontainers:mongodb")
-
-  implementation("org.springframework.boot:spring-boot-starter-aop")
+  compileOnly("org.springframework.boot:spring-boot-starter-aop")
 
   api(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 
