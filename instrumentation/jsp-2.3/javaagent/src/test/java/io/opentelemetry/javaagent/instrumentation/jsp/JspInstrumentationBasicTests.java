@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.jsp.AbstractJspInstrumentationTest.assertServerSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsi
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
@@ -42,13 +42,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   @RegisterExtension
   public static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  private static String baseUrl = "";
+  protected static String baseUrl = "";
+
 
   @Override
   protected Tomcat setupServer() throws Exception {
@@ -102,51 +104,31 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     cleanupServer();
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "GET {0}")
   @ArgumentsSource(NonErroneousArgs.class)
-  void testNonErroneousGet(String jspFileName, String jspClassName, String jspClassNamePrefix) {
-    AggregatedHttpResponse res = client.get("/" + jspFileName).aggregate().join();
-    String route = "/" + getContextPath() + "/" + jspFileName;
+  void testNonErroneousGet(
+      String testName, String jspFileName, String jspClassName, String jspClassNamePrefix) {
+    AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
+                    assertServerSpan(new AbstractJspInstrumentationTest.ServerSpanAssertionBuilder()
+                        .withSpan(span)
+                        .withMethod("GET")
+                        .withRoute("/" + getContextPath() + jspFileName)
+                        .withPort(port)
+                        .withResponseStatus(200)
+                        .build()),
                 span ->
-                    span.hasName("Compile /" + jspFileName)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.classFQCN"),
-                                "org.apache.jsp." + jspClassNamePrefix + jspClassName),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
-                span ->
-                    span.hasName("Render /" + jspFileName)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/" + jspFileName))));
+                    assertCompileSpan(
+                        span,
+                        trace.getSpan(0),
+                        jspFileName,
+                        jspClassNamePrefix + jspClassName,
+                        null),
+                span -> assertRenderSpan(span, trace.getSpan(0), jspFileName, null, null, null)));
 
     assertThat(res.status().code()).isEqualTo(200);
   }
@@ -155,9 +137,9 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-          Arguments.of("nojava.jsp", "nojava_jsp", ""),
-          Arguments.of("common/loop.jsp", "loop_jsp", "common."),
-          Arguments.of("invalidMarkup.jsp", "invalidMarkup_jsp", ""));
+          Arguments.of("no java jsp", "/nojava.jsp", "nojava_jsp", ""),
+          Arguments.of("basic loop jsp", "/common/loop.jsp", "loop_jsp", "common."),
+          Arguments.of("invalid HTML markup", "/invalidMarkup.jsp", "invalidMarkup_jsp", ""));
     }
   }
 
@@ -193,18 +175,10 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
-                    span.hasName("Compile /getQuery.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp.getQuery_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
+                    assertCompileSpan(
+                        span, trace.getSpan(0), "/getQuery.jsp", "getQuery_jsp", null),
                 span ->
-                    span.hasName("Render /getQuery.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/getQuery.jsp"))));
+                    assertRenderSpan(span, trace.getSpan(0), "/getQuery.jsp", null, null, null)));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -217,143 +191,41 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
 
     AggregatedHttpResponse res = client.execute(headers, "name=world").aggregate().join();
 
-    String route = "/" + getContextPath() + "/post.jsp";
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("POST " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
-                span ->
-                    span.hasName("Compile /post.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp.post_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
-                span ->
-                    span.hasName("Render /post.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/post.jsp"))));
+                    assertServerSpan(
+                        span, new ServerSpanAssertionBuilder()
+                            .withMethod("POST")
+                            .withRoute("/" + getContextPath() + "/post.jsp")
+                            .withResponseStatus(200L)
+                            .build()),
+                span -> assertCompileSpan(span, trace.getSpan(0), "/post.jsp", "post_jsp", null),
+                span -> assertRenderSpan(span, trace.getSpan(0), "/post.jsp", null, null, null)));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "GET jsp with {0}")
   @ArgumentsSource(ErroneousRuntimeErrorsArgs.class)
   void testErroneousRuntimeErrorsGet(
-      String jspFileName,
-      String jspClassName,
-      Class<?> exceptionClass,
-      Boolean errorMessageOptional) {
-    AggregatedHttpResponse res = client.get("/" + jspFileName).aggregate().join();
-
-    String route = "/" + getContextPath() + "/" + jspFileName;
+      String testName, String jspFileName, String jspClassName, Class<?> exceptionClass) {
+    AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
+    String route = "/" + getContextPath() + jspFileName;
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> assertServerSpan(span, new ServerSpanAssertionBuilder()
+                    .withMethod("GET")
+                    .withRoute(route)
+                    .withResponseStatus(500L)
+                    .withExceptionClass(exceptionClass)
+                    .build()),
+                span -> assertCompileSpan(span, trace.getSpan(0), jspFileName, jspClassName, null),
                 span ->
-                    span.hasName("GET " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> val.isEqualTo(exceptionClass.getName()),
-                                                    v ->
-                                                        val.contains(
-                                                            exceptionClass.getSimpleName()))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> assertThat(errorMessageOptional).isTrue(),
-                                                    v -> val.isInstanceOf(String.class))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
-                            equalTo(ErrorAttributes.ERROR_TYPE, "500")),
-                span ->
-                    span.hasName("Compile /" + jspFileName)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp." + jspClassName),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
-                span ->
-                    span.hasName("Render /" + jspFileName)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> val.isEqualTo(exceptionClass.getName()),
-                                                    v ->
-                                                        val.contains(
-                                                            exceptionClass.getSimpleName()))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.satisfiesAnyOf(
-                                                    v -> assertThat(errorMessageOptional).isTrue(),
-                                                    v -> val.isInstanceOf(String.class))),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("jsp.requestURL"), baseUrl + "/" + jspFileName))));
+                    assertRenderSpan(
+                        span, trace.getSpan(0), jspFileName, null, null, exceptionClass)));
     assertThat(res.status().code()).isEqualTo(500);
   }
 
@@ -361,140 +233,104 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-          Arguments.of("runtimeError.jsp", "runtimeError_jsp", ArithmeticException.class, false),
           Arguments.of(
-              "invalidWrite.jsp", "invalidWrite_jsp", IndexOutOfBoundsException.class, true),
-          Arguments.of("getQuery.jsp", "getQuery_jsp", NullPointerException.class, true));
+              "java runtime error",
+              "/runtimeError.jsp",
+              "runtimeError_jsp",
+              ArithmeticException.class),
+          Arguments.of(
+              "invalid write",
+              "/invalidWrite.jsp",
+              "invalidWrite_jsp",
+              IndexOutOfBoundsException.class),
+          Arguments.of(
+              "invalid write", "/getQuery.jsp", "getQuery_jsp", NullPointerException.class));
     }
   }
 
   @Test
   void testNonErroneousIncludePlainHtmlGet() {
     AggregatedHttpResponse res = client.get("/includes/includeHtml.jsp").aggregate().join();
-    String route = "/" + getContextPath() + "/includes/includeHtml.jsp";
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
+                    assertServerSpan(
+                        span,
+                        new ServerSpanAssertionBuilder()
+                            .withMethod("GET")
+                            .withRoute("/" + getContextPath() + "/includes/includeHtml.jsp")
+                            .withResponseStatus(200L)
+                            .build()),
                 span ->
-                    span.hasName("Compile /includes/includeHtml.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.classFQCN"),
-                                "org.apache.jsp.includes.includeHtml_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
+                    assertCompileSpan(
+                        span,
+                        trace.getSpan(0),
+                        "/includes/includeHtml.jsp",
+                        "includes.includeHtml_jsp",
+                        null),
                 span ->
-                    span.hasName("Render /includes/includeHtml.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeHtml.jsp"))));
+                    assertRenderSpan(
+                        span, trace.getSpan(0), "/includes/includeHtml.jsp", null, null, null)));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
   @Test
   void testNonErroneousMultiGet() {
     AggregatedHttpResponse res = client.get("/includes/includeMulti.jsp").aggregate().join();
-    String route = "/" + getContextPath() + "/includes/includeMulti.jsp";
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
+                    assertServerSpan(
+                        span,
+                        new ServerSpanAssertionBuilder()
+                            .withMethod("GET")
+                            .withRoute("/" + getContextPath() + "/includes/includeMulti.jsp")
+                            .withResponseStatus(200L)
+                            .build()),
                 span ->
-                    span.hasName("Compile /includes/includeMulti.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.classFQCN"),
-                                "org.apache.jsp.includes.includeMulti_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
+                    assertCompileSpan(
+                        span,
+                        trace.getSpan(0),
+                        "/includes/includeMulti.jsp",
+                        "includes.includeMulti_jsp",
+                        null),
                 span ->
-                    span.hasName("Render /includes/includeMulti.jsp")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeMulti.jsp")),
+                    assertRenderSpan(
+                        span, trace.getSpan(0), "/includes/includeMulti.jsp", null, null, null),
                 span ->
-                    span.hasName("Compile /common/javaLoopH2.jsp")
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.classFQCN"), "org.apache.jsp.common.javaLoopH2_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
+                    assertCompileSpan(
+                        span,
+                        trace.getSpan(2),
+                        "/common/javaLoopH2.jsp",
+                        "common.javaLoopH2_jsp",
+                        null),
                 span ->
-                    span.hasName("Render /common/javaLoopH2.jsp")
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeMulti.jsp")),
+                    assertRenderSpan(
+                        span,
+                        trace.getSpan(2),
+                        "/common/javaLoopH2.jsp",
+                        "/includes/includeMulti.jsp",
+                        null,
+                        null),
                 span ->
-                    span.hasName("Compile /common/javaLoopH2.jsp")
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.classFQCN"), "org.apache.jsp.common.javaLoopH2_jsp"),
-                            equalTo(
-                                stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler")),
+                    assertCompileSpan(
+                        span,
+                        trace.getSpan(2),
+                        "/common/javaLoopH2.jsp",
+                        "common.javaLoopH2_jsp",
+                        null),
                 span ->
-                    span.hasName("Render /common/javaLoopH2.jsp")
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("jsp.requestURL"),
-                                baseUrl + "/includes/includeMulti.jsp"))));
+                    assertRenderSpan(
+                        span,
+                        trace.getSpan(2),
+                        "/common/javaLoopH2.jsp",
+                        "/includes/includeMulti.jsp",
+                        null,
+                        null)));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -502,52 +338,21 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   @ArgumentsSource(CompileErrorsArgs.class)
   void testCompileErrorShouldNotProduceRenderTracesAndSpans(
       String jspFileName, String jspClassName, String jspClassNamePrefix) {
-    AggregatedHttpResponse res = client.get("/" + jspFileName).aggregate().join();
+    AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
 
-    String route = "/" + getContextPath() + "/" + jspFileName;
+    String route = "/" + getContextPath() + jspFileName;
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> assertServerSpan(span, new ServerSpanAssertionBuilder()
+                    .withMethod("GET")
+                    .withRoute(route)
+                    .withResponseStatus(500L)
+                    .withExceptionClass(JasperException.class)
+                    .build()),
                 span ->
-                    span.hasName("GET " + route)
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            JasperException.class.getCanonicalName()),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
-                            equalTo(ErrorAttributes.ERROR_TYPE, "500")),
-                span ->
-                    span.hasName("Compile /" + jspFileName)
+                    span.hasName("Compile " + jspFileName)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(
@@ -578,19 +383,17 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-          Arguments.of("compileError.jsp", "compileError_jsp", ""),
+          Arguments.of("/compileError.jsp", "compileError_jsp", ""),
           Arguments.of(
-              "forwards/forwardWithCompileError.jsp", "forwardWithCompileError_jsp", "forwards."));
+              "/forwards/forwardWithCompileError.jsp", "forwardWithCompileError_jsp", "forwards."));
     }
   }
 
-  @Test
-  void testDirectStaticFileReference() {
-    String staticFile = "common/hello.html";
+  @ParameterizedTest
+  @ValueSource(strings = {"/common/hello.html"})
+  void testDirectStaticFileReference(String staticFile) {
     String route = "/" + getContextPath() + "/*";
-
-    AggregatedHttpResponse res = client.get("/" + staticFile).aggregate().join();
-    assertThat(res.status().code()).isEqualTo(200);
+    AggregatedHttpResponse res = client.get(staticFile).aggregate().join();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -601,8 +404,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(
-                                UrlAttributes.URL_PATH, "/" + getContextPath() + "/" + staticFile),
+                            equalTo(UrlAttributes.URL_PATH, "/" + getContextPath() + staticFile),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(
@@ -617,5 +419,6 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 val -> val.isInstanceOf(Long.class)))));
+    assertThat(res.status().code()).isEqualTo(200);
   }
 }
