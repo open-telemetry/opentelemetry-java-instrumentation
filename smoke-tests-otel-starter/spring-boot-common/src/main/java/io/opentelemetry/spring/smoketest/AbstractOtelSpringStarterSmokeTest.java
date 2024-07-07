@@ -176,9 +176,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             satisfies(
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
-                span ->
-                    span.hasName("SpringComponent.withSpanMethod")
-                        .hasAttribute(AttributeKey.stringKey("paramName"), "from-controller")));
+                span -> withSpanAssert(span)));
 
     // Metric
     testing.waitAndAssertMetrics(
@@ -202,6 +200,11 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
               CodeIncubatingAttributes.CODE_NAMESPACE,
               "org.springframework.boot.StartupInfoLogger");
     }
+  }
+
+  private static SpanDataAssert withSpanAssert(SpanDataAssert span) {
+    return span.hasName("SpringComponent.withSpanMethod")
+        .hasAttribute(AttributeKey.stringKey("paramName"), "from-controller");
   }
 
   @Test
@@ -240,7 +243,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                 span -> assertClientSpan(span, "/ping"),
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
-                span -> span.hasName("SpringComponent.withSpanMethod")));
+                span1 -> withSpanAssert(span1)));
   }
 
   public static void assertClientSpan(SpanDataAssert span, String path) {
