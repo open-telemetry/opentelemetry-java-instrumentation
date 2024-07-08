@@ -71,6 +71,16 @@ class SpringWebInstrumentationAutoConfigurationTest {
   }
 
   @Test
+  void instrumentationDisabledButAllEnabled() {
+    contextRunner
+        .withPropertyValues("otel.instrumentation.spring-web.enabled=false")
+        .withPropertyValues("otel.instrumentation.common.default-enabled=true")
+        .run(
+            context ->
+                assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse());
+  }
+
+  @Test
   void allInstrumentationDisabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.common.default-enabled=false")
