@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Arrays;
 import java.util.List;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,5 +62,10 @@ public abstract class AbstractSpringStarterSmokeTest {
                 }
               }
             });
+  }
+
+  static SpanDataAssert withSpanAssert(SpanDataAssert span) {
+    return span.hasName("SpringComponent.withSpanMethod")
+        .hasAttribute(AttributeKey.stringKey("paramName"), "from-controller");
   }
 }

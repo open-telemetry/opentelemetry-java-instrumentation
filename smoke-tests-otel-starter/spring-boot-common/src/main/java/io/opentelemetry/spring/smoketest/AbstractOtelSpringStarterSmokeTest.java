@@ -202,11 +202,6 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     }
   }
 
-  private static SpanDataAssert withSpanAssert(SpanDataAssert span) {
-    return span.hasName("SpringComponent.withSpanMethod")
-        .hasAttribute(AttributeKey.stringKey("paramName"), "from-controller");
-  }
-
   @Test
   void databaseQuery() {
     testing.clearAllExportedData();

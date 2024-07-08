@@ -7,7 +7,6 @@ package io.opentelemetry.spring.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.HttpAttributes;
@@ -54,8 +53,6 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
     traceAssert.hasSpansSatisfyingExactly(
         span -> AbstractOtelSpringStarterSmokeTest.assertClientSpan(span, "/ping"),
         span -> span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
-        span ->
-            span.hasName("SpringComponent.withSpanMethod")
-                .hasAttribute(AttributeKey.stringKey("paramName"), "from-controller"));
+        span -> withSpanAssert(span));
   }
 }
