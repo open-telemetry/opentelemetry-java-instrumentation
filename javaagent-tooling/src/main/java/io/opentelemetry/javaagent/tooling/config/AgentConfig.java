@@ -11,8 +11,8 @@ public final class AgentConfig {
 
   public static boolean isInstrumentationEnabled(
       ConfigProperties config, Iterable<String> instrumentationNames, boolean defaultEnabled) {
-    // If default is enabled, we want to enable individually,
-    // if default is disabled, we want to disable individually.
+    // If default is enabled, we want to disable individually,
+    // if default is disabled, we want to enable individually.
     boolean anyEnabled = defaultEnabled;
     for (String name : instrumentationNames) {
       String propertyName = "otel.instrumentation." + name + ".enabled";
