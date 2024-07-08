@@ -13,6 +13,6 @@ import org.springframework.stereotype.Component;
 public class SpringComponent {
 
   @SuppressWarnings("MethodCanBeStatic")
-  @WithSpan()
+  @WithSpan
   public void withSpanMethod(@SpanAttribute String paramName) {}
 }
