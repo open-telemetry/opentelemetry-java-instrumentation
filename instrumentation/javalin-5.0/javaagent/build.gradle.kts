@@ -7,6 +7,8 @@ muzzle {
     group.set("io.javalin")
     module.set("javalin")
     versions.set("[5.0.0,)")
+    // 3.2.0 depends on org.meteogroup.jbrotli:jbrotli:0.5.0 that is not available in central
+    skip("3.2.0")
     assertInverse.set(true)
   }
 }
