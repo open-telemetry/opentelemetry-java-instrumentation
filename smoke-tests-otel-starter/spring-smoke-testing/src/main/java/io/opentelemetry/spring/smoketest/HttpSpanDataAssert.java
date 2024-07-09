@@ -5,6 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -44,10 +45,10 @@ public final class HttpSpanDataAssert {
   @CanIgnoreReturnValue
   public HttpSpanDataAssert assertServerGetRequest(String route) {
     span.hasKind(SpanKind.SERVER)
-        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-        .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-        .hasAttribute(HttpAttributes.HTTP_ROUTE, route)
         .hasAttributesSatisfying(
+            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+            equalTo(HttpAttributes.HTTP_ROUTE, route),
             // this attribute is set by the experimental http instrumentation
             satisfies(
                 HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE,
