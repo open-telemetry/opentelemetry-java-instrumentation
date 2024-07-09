@@ -238,7 +238,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                 span -> assertClientSpan(span, "/ping"),
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
-                span1 -> withSpanAssert(span1)));
+                span -> withSpanAssert(span)));
   }
 
   public static void assertClientSpan(SpanDataAssert span, String path) {
