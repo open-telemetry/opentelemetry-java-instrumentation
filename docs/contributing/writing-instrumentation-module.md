@@ -364,20 +364,26 @@ For example:
 ## Use non-inlined advice code with `invokedynamic`
 
 Using non-inlined advice code is possible thanks to the `invokedynamic` instruction, this strategy
-is referred as "indy" in reference to this, by extension "indy modules" are the instrumentation
+is referred as "indy" in reference to this. By extension "indy modules" are the instrumentation
 modules using this instrumentation strategy.
 
 The most common way to instrument code with bytebuddy relies on inlining, this strategy will be
-referred as "inlined" strategy in opposition to "indy".
+referred as "inlined" strategy as opposed to "indy".
 
 For inlined advices, the advice code is directly copied into the instrumented method.
 In addition, all helper classes are injected into the classloader of the instrumented classes.
 
-For indy, advice classes are not inlined. Instead, they loaded alongside with all helper classes
+For indy, advice classes are not inlined. Instead, they are loaded alongside all helper classes
 into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
 application classloader and the agent classloader.
 The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
 invokedynamic bytecode instructions.
+
+Making the instrumentation indy
+
+- allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques
+- provides clean isolation of instrumentation advice from the application and other instrumentations
+- allows advice classes to contain non-static fields and methods - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
 
 ### Indy modules and transition
 
@@ -466,7 +472,7 @@ public static void onExit(@Advice.Argument(1) Object request,
 
 ### advice local variables
 
-With inlined advices, declaring an advice method argument with `@Advice.Local` allows to define
+With inlined advices, declaring an advice method argument with `@Advice.Local` allows defining
 a variable that is local to the advice execution for communication between the enter and exit advices.
 
 When advices are not inlined, usage of `@Advice.Local` is not possible. It is however possible to
@@ -489,7 +495,7 @@ public static void onExit(@Advice.Argument(1) Object request,
 ### modifying method arguments
 
 With inlined advices, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
-allows to modify instrumented method arguments.
+allows modifying instrumented method arguments.
 
 When using non-inlined advices, reading the argument values is still done with `@Advice.Argument`
 annotated parameters, however modifying the values is done through the advice method return value
@@ -513,9 +519,9 @@ It is possible to modify multiple arguments at once by using an array, see usage
 ### modifying method return value
 
 With inlined advices, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
-allows to modify instrumented method return value on exit advice.
+allows modifying instrumented method return value on exit advice.
 
-When using non-inlined advices, reading the original return value is still done with `@Advice.Return`
+When using non-inlined advices, reading the original return value is still done with the `@Advice.Return`
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToReturned`.
 
@@ -534,9 +540,9 @@ public static Object onExit(@Advice.Return Object returnValue) {
 ### writing to internal class fields
 
 With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
-on advice method parameter allows to modify the `fieldName` field of the instrumented class.
+on advice method parameters allows modifying the `fieldName` field of the instrumented class.
 
-When using non-inlined advices, reading the original field value is still done with `@Advice.FieldValue`
+When using non-inlined advices, reading the original field value is still done with the `@Advice.FieldValue`
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToFields` annotation.
 
