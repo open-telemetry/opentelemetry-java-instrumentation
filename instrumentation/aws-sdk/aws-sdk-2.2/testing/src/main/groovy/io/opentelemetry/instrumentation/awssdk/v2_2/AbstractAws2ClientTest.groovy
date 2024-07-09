@@ -120,7 +120,19 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
+            } else if (service == "Bedrock" && operation == "GetGuardrail") {
+              "aws.bedrock.guardrail.id" "guardrailId"
+            } else if (service == "BedrockAgent" && operation == "GetAgent") {
+              "aws.bedrock.agent.id" "agentId"
+            } else if (service == "BedrockAgent" && operation == "GetKnowledgeBase") {
+              "aws.bedrock.knowledge_base.id" "knowledgeBaseId"
+            } else if (service == "BedrockAgent" && operation == "GetDataSource") {
+              "aws.bedrock.data_source.id" "datasourceId"
+            } else if (service == "BedrockRuntime" && operation == "InvokeModel") {
+              "gen_ai.request.model" "meta.llama2-13b-chat-v1"
+              "gen_ai.system" "aws_bedrock"
             }
+
           }
         }
       }

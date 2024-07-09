@@ -5,6 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCK;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKAGENTOPERATION;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKDATASOURCEOPERATION;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKKNOWLEDGEBASEOPERATION;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKRUNTIME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.KINESIS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.S3;
@@ -32,6 +37,45 @@ enum AwsSdkRequest {
   S3Request(S3, "S3Request"),
   SqsRequest(SQS, "SqsRequest"),
   KinesisRequest(KINESIS, "KinesisRequest"),
+  BedrockRequest(BEDROCK, "BedrockRequest"),
+  BedrockAgentRuntimeRequest(BEDROCKAGENTOPERATION, "BedrockAgentRuntimeRequest"),
+  BedrockRuntimeRequest(BEDROCKRUNTIME, "BedrockRuntimeRequest"),
+  // BedrockAgent API based requests. We only support operations that are related to
+  // Agent/DataSources/KnowledgeBases
+  // resources and the request/response context contains the resource ID.
+  BedrockCreateAgentActionGroupRequest(BEDROCKAGENTOPERATION, "CreateAgentActionGroupRequest"),
+  BedrockCreateAgentAliasRequest(BEDROCKAGENTOPERATION, "CreateAgentAliasRequest"),
+  BedrockDeleteAgentActionGroupRequest(BEDROCKAGENTOPERATION, "DeleteAgentActionGroupRequest"),
+  BedrockDeleteAgentAliasRequest(BEDROCKAGENTOPERATION, "DeleteAgentAliasRequest"),
+  BedrockDeleteAgentVersionRequest(BEDROCKAGENTOPERATION, "DeleteAgentVersionRequest"),
+  BedrockGetAgentActionGroupRequest(BEDROCKAGENTOPERATION, "GetAgentActionGroupRequest"),
+  BedrockGetAgentAliasRequest(BEDROCKAGENTOPERATION, "GetAgentAliasRequest"),
+  BedrockGetAgentRequest(BEDROCKAGENTOPERATION, "GetAgentRequest"),
+  BedrockGetAgentVersionRequest(BEDROCKAGENTOPERATION, "GetAgentVersionRequest"),
+  BedrockListAgentActionGroupsRequest(BEDROCKAGENTOPERATION, "ListAgentActionGroupsRequest"),
+  BedrockListAgentAliasesRequest(BEDROCKAGENTOPERATION, "ListAgentAliasesRequest"),
+  BedrockListAgentKnowledgeBasesRequest(BEDROCKAGENTOPERATION, "ListAgentKnowledgeBasesRequest"),
+  BedrocListAgentVersionsRequest(BEDROCKAGENTOPERATION, "ListAgentVersionsRequest"),
+  BedrockPrepareAgentRequest(BEDROCKAGENTOPERATION, "PrepareAgentRequest"),
+  BedrockUpdateAgentActionGroupRequest(BEDROCKAGENTOPERATION, "UpdateAgentActionGroupRequest"),
+  BedrockUpdateAgentAliasRequest(BEDROCKAGENTOPERATION, "UpdateAgentAliasRequest"),
+  BedrockUpdateAgentRequest(BEDROCKAGENTOPERATION, "UpdateAgentRequest"),
+  BedrockBedrockAgentRequest(BEDROCKAGENTOPERATION, "BedrockAgentRequest"),
+  BedrockDeleteDataSourceRequest(BEDROCKDATASOURCEOPERATION, "DeleteDataSourceRequest"),
+  BedrockGetDataSourceRequest(BEDROCKDATASOURCEOPERATION, "GetDataSourceRequest"),
+  BedrockUpdateDataSourceRequest(BEDROCKDATASOURCEOPERATION, "UpdateDataSourceRequest"),
+  BedrocAssociateAgentKnowledgeBaseRequest(
+      BEDROCKKNOWLEDGEBASEOPERATION, "AssociateAgentKnowledgeBaseRequest"),
+  BedrockCreateDataSourceRequest(BEDROCKKNOWLEDGEBASEOPERATION, "CreateDataSourceRequest"),
+  BedrockDeleteKnowledgeBaseRequest(BEDROCKKNOWLEDGEBASEOPERATION, "DeleteKnowledgeBaseRequest"),
+  BedrockDisassociateAgentKnowledgeBaseRequest(
+      BEDROCKKNOWLEDGEBASEOPERATION, "DisassociateAgentKnowledgeBaseRequest"),
+  BedrockGetAgentKnowledgeBaseRequest(
+      BEDROCKKNOWLEDGEBASEOPERATION, "GetAgentKnowledgeBaseRequest"),
+  BedrockGetKnowledgeBaseRequest(BEDROCKKNOWLEDGEBASEOPERATION, "GetKnowledgeBaseRequest"),
+  BedrockListDataSourcesRequest(BEDROCKKNOWLEDGEBASEOPERATION, "ListDataSourcesRequest"),
+  BedrockUpdateAgentKnowledgeBaseRequest(
+      BEDROCKKNOWLEDGEBASEOPERATION, "UpdateAgentKnowledgeBaseRequest"),
   // specific requests
   BatchGetItem(
       DYNAMODB,
