@@ -280,6 +280,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.common.default-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables all instrumentations. Set to <code>false</code> to disable all instrumentations and then enable specific modules individually, e.g. <code>otel.instrumentation.jdbc.enabled=true</code>.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.common.peer-service-mapping",
       "type": "java.util.Map<java.lang.String, java.lang.String>",
       "description": "Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of <code>host_or_ip=user_assigned_name</code> pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
