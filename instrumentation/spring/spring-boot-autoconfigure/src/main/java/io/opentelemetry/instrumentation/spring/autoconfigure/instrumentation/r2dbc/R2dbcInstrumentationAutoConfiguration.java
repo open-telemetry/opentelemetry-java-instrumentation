@@ -6,21 +6,18 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.r2dbc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.r2dbc.spi.ConnectionFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @ConditionalOnBean(OpenTelemetry.class)
 @ConditionalOnClass(ConnectionFactory.class)
-@ConditionalOnProperty(name = "otel.instrumentation.r2dbc.enabled", matchIfMissing = true)
-@Conditional(SdkEnabled.class)
+@ConditionalOnEnabledInstrumentation(module = "r2dbc")
 @Configuration(proxyBeanMethods = false)
 public class R2dbcInstrumentationAutoConfiguration {
 

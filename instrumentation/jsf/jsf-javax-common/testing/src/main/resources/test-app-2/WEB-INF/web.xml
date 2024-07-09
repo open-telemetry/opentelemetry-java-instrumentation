@@ -6,7 +6,7 @@
 
   <filter>
     <filter-name>ExceptionFilter</filter-name>
-    <filter-class>ExceptionFilter</filter-class>
+    <filter-class>io.opentelemetry.javaagent.instrumentation.jsf.javax.ExceptionFilter</filter-class>
   </filter>
 
   <filter-mapping>
