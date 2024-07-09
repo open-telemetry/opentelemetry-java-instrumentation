@@ -99,7 +99,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.36.0-alpha",
   "io.opentelemetry.proto:opentelemetry-proto:1.3.2-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.26.0",
+  "org.assertj:assertj-core:3.26.3",
   "org.awaitility:awaitility:4.2.1",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
