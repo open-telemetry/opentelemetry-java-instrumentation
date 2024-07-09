@@ -27,6 +27,14 @@ import com.amazonaws.services.rds.AmazonRDSClientBuilder
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.bedrockagent.AWSBedrockAgentClientBuilder
+import com.amazonaws.services.bedrockagent.model.GetAgentRequest
+import com.amazonaws.services.bedrockagent.model.GetKnowledgeBaseRequest
+import com.amazonaws.services.bedrockagent.model.GetDataSourceRequest
+import com.amazonaws.services.bedrock.AmazonBedrockClientBuilder
+import com.amazonaws.services.bedrock.model.GetGuardrailRequest
+import com.amazonaws.services.bedrockruntime.AmazonBedrockRuntimeClientBuilder
+import com.amazonaws.services.bedrockruntime.model.InvokeModelRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
@@ -38,6 +46,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 import java.time.Duration
+import java.nio.charset.StandardCharsets
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER
@@ -155,6 +164,48 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
+      """
+    "Bedrock"    | "GetGuardrail"      | "GET" | "/"                   | AmazonBedrockClientBuilder.standard()                             | { c -> c.getGuardrail(new GetGuardrailRequest().withGuardrailIdentifier("guardrailId")) } | ["aws.bedrock.guardrail.id": "guardrailId"] | """
+        {
+           "blockedInputMessaging": "string",
+           "blockedOutputsMessaging": "string",
+           "contentPolicy": {},
+           "createdAt": "2024-06-12T18:31:45Z",
+           "description": "string",
+           "guardrailArn": "string",
+           "guardrailId": "guardrailId",
+           "kmsKeyArn": "string",
+           "name": "string",
+           "sensitiveInformationPolicy": {},
+           "status": "READY",
+           "topicPolicy": {
+              "topics": [
+                 {
+                    "definition": "string",
+                    "examples": [ "string" ],
+                    "name": "string",
+                    "type": "string"
+                 }
+              ]
+           },
+           "updatedAt": "2024-06-12T18:31:48Z",
+           "version": "DRAFT",
+           "wordPolicy": {}
+        }
+      """
+    "AWSBedrockAgent"    | "GetAgent"      | "GET" | "/"                   | AWSBedrockAgentClientBuilder.standard()                             | { c -> c.getAgent(new GetAgentRequest().withAgentId("agentId")) } | ["aws.bedrock.agent.id": "agentId"] | ""
+    "AWSBedrockAgent"    | "GetKnowledgeBase"      | "GET" | "/"                   | AWSBedrockAgentClientBuilder.standard()                             | { c -> c.getKnowledgeBase(new GetKnowledgeBaseRequest().withKnowledgeBaseId("knowledgeBaseId")) } | ["aws.bedrock.knowledgebase.id": "knowledgeBaseId"] | ""
+    "AWSBedrockAgent"    | "GetDataSource"      | "GET" | "/"                   | AWSBedrockAgentClientBuilder.standard()                             | { c -> c.getDataSource(new GetDataSourceRequest().withDataSourceId("datasourceId").withKnowledgeBaseId("knowledgeBaseId")) } | ["aws.bedrock.datasource.id": "datasourceId"] | ""
+    "BedrockRuntime"    | "InvokeModel"      | "POST" | "/"                   | AmazonBedrockRuntimeClientBuilder.standard()                             |
+      { c -> c.invokeModel(
+        new InvokeModelRequest().withModelId("anthropic.claude-v2").withBody(StandardCharsets.UTF_8.encode(
+          "{\"prompt\":\"Hello, world!\",\"temperature\":0.7,\"top_p\":0.9,\"max_tokens_to_sample\":100}\n"
+        ))) } | ["gen_ai.request.model": "anthropic.claude-v2", "gen_ai.system": "aws_bedrock"] | """
+        {
+            "completion": " Here is a simple explanation of black ",
+            "stop_reason": "length",
+            "stop": "holes"
+        }
       """
   }
 

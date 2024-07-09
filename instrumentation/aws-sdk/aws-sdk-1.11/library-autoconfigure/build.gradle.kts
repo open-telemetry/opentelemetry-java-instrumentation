@@ -18,6 +18,10 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-bedrock:1.12.744")
+  testLibrary("com.amazonaws:aws-java-sdk-bedrockagent:1.12.744")
+  testLibrary("com.amazonaws:aws-java-sdk-bedrockagentruntime:1.12.744")
+  testLibrary("com.amazonaws:aws-java-sdk-bedrockruntime:1.12.744")
 
   // last version that does not use json protocol
   latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583")

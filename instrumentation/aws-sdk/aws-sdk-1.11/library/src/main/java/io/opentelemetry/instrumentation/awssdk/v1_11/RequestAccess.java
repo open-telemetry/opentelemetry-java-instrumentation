@@ -51,6 +51,36 @@ final class RequestAccess {
   }
 
   @Nullable
+  static String getAgentId(Object request) {
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getAgentId, request);
+  }
+
+  @Nullable
+  static String getKnowledgeBaseId(Object request) {
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getKnowledgeBaseId, request);
+  }
+
+  @Nullable
+  static String getDataSourceId(Object request) {
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getDataSourceId, request);
+  }
+
+  @Nullable
+  static String getGuardrailId(Object request) {
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getGuardrailId, request);
+  }
+
+  @Nullable
+  static String getModelId(Object request) {
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getModelId, request);
+  }
+
+  @Nullable
   private static String invokeOrNull(@Nullable MethodHandle method, Object obj) {
     if (method == null) {
       return null;
@@ -67,6 +97,11 @@ final class RequestAccess {
   @Nullable private final MethodHandle getQueueName;
   @Nullable private final MethodHandle getStreamName;
   @Nullable private final MethodHandle getTableName;
+  @Nullable private final MethodHandle getAgentId;
+  @Nullable private final MethodHandle getKnowledgeBaseId;
+  @Nullable private final MethodHandle getDataSourceId;
+  @Nullable private final MethodHandle getGuardrailId;
+  @Nullable private final MethodHandle getModelId;
 
   private RequestAccess(Class<?> clz) {
     getBucketName = findAccessorOrNull(clz, "getBucketName");
@@ -74,6 +109,11 @@ final class RequestAccess {
     getQueueName = findAccessorOrNull(clz, "getQueueName");
     getStreamName = findAccessorOrNull(clz, "getStreamName");
     getTableName = findAccessorOrNull(clz, "getTableName");
+    getAgentId = findAccessorOrNull(clz, "getAgentId");
+    getKnowledgeBaseId = findAccessorOrNull(clz, "getKnowledgeBaseId");
+    getDataSourceId = findAccessorOrNull(clz, "getDataSourceId");
+    getGuardrailId = findAccessorOrNull(clz, "getGuardrailId");
+    getModelId = findAccessorOrNull(clz, "getModelId");
   }
 
   @Nullable
