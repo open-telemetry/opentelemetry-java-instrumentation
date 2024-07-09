@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.context.Context;
@@ -31,7 +32,7 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor(), LettuceAsyncCommandInstrumentation.class.getName() + "$SaveContextAdvice");
     transformer.applyAdviceToMethod(
-        named("complete").or(named("completeExceptionally")).or(named("cancel")),
+        namedOneOf("complete", "completeExceptionally", "cancel"),
         LettuceAsyncCommandInstrumentation.class.getName() + "$RestoreContextAdvice");
   }
 

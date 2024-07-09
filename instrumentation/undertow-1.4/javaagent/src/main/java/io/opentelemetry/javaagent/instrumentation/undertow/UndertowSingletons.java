@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.HttpServerExchange;
@@ -33,18 +33,18 @@ public final class UndertowSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 HttpSpanNameExtractor.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(
                 HttpServerRoute.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(
                 (context, request, attributes) -> {
@@ -58,7 +58,7 @@ public final class UndertowSingletons {
                       .init(context);
                 })
             .addOperationMetrics(HttpServerMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+    if (AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());

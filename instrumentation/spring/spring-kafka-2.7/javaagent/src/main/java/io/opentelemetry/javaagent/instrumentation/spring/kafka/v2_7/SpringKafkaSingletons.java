@@ -11,8 +11,8 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.SpringKafkaErrorCauseExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 
 public final class SpringKafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-kafka-2.7";
@@ -21,7 +21,7 @@ public final class SpringKafkaSingletons {
       SpringKafkaTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
-              InstrumentationConfig.get()
+              AgentInstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
           .setMessagingReceiveInstrumentationEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
@@ -33,7 +33,7 @@ public final class SpringKafkaSingletons {
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
             .setCaptureExperimentalSpanAttributes(
-                InstrumentationConfig.get()
+                AgentInstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
             .setMessagingReceiveInstrumentationEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())

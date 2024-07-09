@@ -58,7 +58,11 @@ public final class AgentInitializer {
   }
 
   private static void execute(PrivilegedExceptionAction<Void> action) throws Exception {
-    if (isSecurityManagerSupportEnabled && System.getSecurityManager() != null) {
+    // When security manager support is enabled we use doPrivileged even if security manager is not
+    // present because security manager could be installed later. ByteBuddy initialization captures
+    // the access control context used during transformation. If we don't use doPrivileged here then
+    // that context will not have the privileges if security manager is installed later.
+    if (isSecurityManagerSupportEnabled) {
       doPrivilegedExceptionAction(action);
     } else {
       action.run();

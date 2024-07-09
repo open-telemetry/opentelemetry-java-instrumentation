@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.we
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -30,15 +30,18 @@ public class RestClientInstrumentationAutoConfiguration {
 
   @Bean
   static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
-    return new RestClientBeanPostProcessor(openTelemetryProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+    return new RestClientBeanPostProcessor(openTelemetryProvider, configPropertiesProvider);
   }
 
   @Bean
   RestClientCustomizer otelRestClientCustomizer(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
     return builder ->
         builder.requestInterceptor(
-            SpringWebTelemetry.create(openTelemetryProvider.getObject()).newInterceptor());
+            RestClientBeanPostProcessor.getInterceptor(
+                openTelemetryProvider.getObject(), configPropertiesProvider.getObject()));
   }
 }

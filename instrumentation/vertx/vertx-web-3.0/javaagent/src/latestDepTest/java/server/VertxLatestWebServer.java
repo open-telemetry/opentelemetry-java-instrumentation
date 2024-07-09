@@ -25,7 +25,9 @@ public class VertxLatestWebServer extends AbstractVertxWebServer {
   public void start(Promise<Void> startPromise) {
     int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
     Router router = buildRouter();
+    Router mainRouter = Router.router(vertx);
+    mainRouter.route("/vertx-app/*").subRouter(router);
 
-    vertx.createHttpServer().requestHandler(router).listen(port, it -> startPromise.complete());
+    vertx.createHttpServer().requestHandler(mainRouter).listen(port, it -> startPromise.complete());
   }
 }

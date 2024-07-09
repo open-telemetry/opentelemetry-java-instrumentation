@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id("org.jetbrains.kotlin.jvm")
@@ -36,13 +36,12 @@ dependencies {
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.3.0")
 }
 
-tasks {
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "1.8"
-    }
+kotlin {
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_1_8)
   }
-  withType<Test>().configureEach {
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-  }
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 }

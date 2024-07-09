@@ -4,10 +4,10 @@ plugins {
 
 dependencies {
   testImplementation("org.testcontainers:testcontainers:1.19.8")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
   testImplementation("com.google.protobuf:protobuf-java-util:3.25.3")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.3.1-alpha")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.3.2-alpha")
   testImplementation("io.opentelemetry:opentelemetry-api")
 
   testImplementation("ch.qos.logback:logback-classic:1.5.6")
