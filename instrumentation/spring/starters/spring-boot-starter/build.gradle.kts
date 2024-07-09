@@ -1,15 +1,20 @@
 plugins {
+  id("io.spring.dependency-management") version "1.1.6"
   id("otel.java-conventions")
   id("otel.publish-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
 
-val springBootVersion = "2.6.15"
+dependencyManagement {
+  imports {
+    mavenBom("org.springframework.boot:spring-boot-dependencies:2.6.15")
+  }
+}
 
 dependencies {
-  compileOnly("org.springframework.boot:spring-boot-starter:$springBootVersion")
-  compileOnly("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
+  api("org.springframework.boot:spring-boot-starter")
+  api("org.springframework.boot:spring-boot-starter-aop")
   api(project(":instrumentation:spring:spring-boot-autoconfigure"))
   api(project(":instrumentation:spring:spring-boot-autoconfigure-3"))
   api(project(":instrumentation-annotations"))
