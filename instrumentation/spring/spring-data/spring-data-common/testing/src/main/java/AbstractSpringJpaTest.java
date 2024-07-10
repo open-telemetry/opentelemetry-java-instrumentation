@@ -82,7 +82,6 @@ public abstract class AbstractSpringJpaTest<
                 .hasAttributesSatisfyingExactly(
                     equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                     equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                    equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                     equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                     satisfies(
                         DbIncubatingAttributes.DB_QUERY_TEXT, val -> val.startsWith("insert ")),
@@ -105,7 +104,6 @@ public abstract class AbstractSpringJpaTest<
                 .hasAttributesSatisfyingExactly(
                     equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                     equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                    equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                     equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                     satisfies(
                         DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -118,7 +116,6 @@ public abstract class AbstractSpringJpaTest<
                 .hasAttributesSatisfyingExactly(
                     equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                     equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                    equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                     equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                     satisfies(
                         DbIncubatingAttributes.DB_QUERY_TEXT, val -> val.startsWith("insert ")),
@@ -154,7 +151,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -192,7 +188,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -206,7 +201,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -232,7 +226,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -258,7 +251,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -272,7 +264,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -307,7 +298,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -354,7 +344,6 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,

@@ -192,9 +192,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
-            if (username != null) {
-              "$DbIncubatingAttributes.DB_USER" username
-            }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
@@ -252,9 +249,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
-            if (username != null) {
-              "$DbIncubatingAttributes.DB_USER" username
-            }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
@@ -304,9 +298,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
-            if (username != null) {
-              "$DbIncubatingAttributes.DB_USER" username
-            }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
@@ -356,9 +347,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_NAMESPACE" dbName.toLowerCase()
-            if (username != null) {
-              "$DbIncubatingAttributes.DB_USER" username
-            }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
@@ -408,9 +396,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
-            if (username != null) {
-              "$DbIncubatingAttributes.DB_USER" username
-            }
             "$DbIncubatingAttributes.DB_QUERY_TEXT" query
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "CREATE TABLE"
@@ -463,9 +448,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_NAMESPACE" dbName.toLowerCase()
-            if (username != null) {
-              "$DbIncubatingAttributes.DB_USER" username
-            }
             "$DbIncubatingAttributes.DB_QUERY_TEXT" query
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "CREATE TABLE"
@@ -530,9 +512,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
-            if (username != null) {
-              "$DbIncubatingAttributes.DB_USER" username
-            }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
             "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
@@ -588,7 +567,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
             "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
             "$DbIncubatingAttributes.DB_NAMESPACE" "jdbcunittest"
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
           }
@@ -602,7 +580,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
               "$CodeIncubatingAttributes.CODE_NAMESPACE" datasource.class.name
               "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
               "$DbIncubatingAttributes.DB_SYSTEM" system
-              "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
               "$DbIncubatingAttributes.DB_NAMESPACE" "jdbcunittest"
               "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
             }
@@ -751,7 +728,6 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
-              "$DbIncubatingAttributes.DB_USER" "SA"
               "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_QUERY_TEXT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
               "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"

@@ -245,7 +245,6 @@ public class SessionTest extends AbstractHibernateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -810,7 +809,6 @@ public class SessionTest extends AbstractHibernateTest {
         .hasAttributesSatisfyingExactly(
             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
-            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
             satisfies(DbIncubatingAttributes.DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
             satisfies(
@@ -827,7 +825,6 @@ public class SessionTest extends AbstractHibernateTest {
         .hasAttributesSatisfyingExactly(
             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
-            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
             satisfies(
                 DbIncubatingAttributes.DB_QUERY_TEXT,

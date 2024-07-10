@@ -68,7 +68,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -123,7 +122,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -166,7 +164,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
                                 "call next value for hibernate_sequence"),
@@ -190,7 +187,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -237,7 +233,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -265,7 +260,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -303,7 +297,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -341,7 +334,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -373,7 +365,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -406,7 +397,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,
@@ -446,7 +436,6 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
                                 DbIncubatingAttributes.DB_QUERY_TEXT,

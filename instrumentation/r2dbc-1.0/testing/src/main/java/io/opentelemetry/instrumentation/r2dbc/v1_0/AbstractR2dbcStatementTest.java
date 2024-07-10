@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
@@ -171,7 +170,6 @@ public abstract class AbstractR2dbcStatementTest {
                                     parameter.system + "://localhost:" + port),
                                 equalTo(DB_SYSTEM, parameter.system),
                                 equalTo(DB_NAMESPACE, DB),
-                                equalTo(DB_USER, USER_DB),
                                 equalTo(DB_QUERY_TEXT, parameter.expectedStatement),
                                 equalTo(DB_OPERATION_NAME, parameter.operation),
                                 equalTo(DB_COLLECTION_NAME, parameter.table),

@@ -84,7 +84,6 @@ class SlickTest {
                       DbSystemValues.H2
                     ),
                     equalTo(DbIncubatingAttributes.DB_NAMESPACE, Db),
-                    equalTo(DbIncubatingAttributes.DB_USER, Username),
                     equalTo(
                       DbIncubatingAttributes.DB_CONNECTION_STRING,
                       "h2:mem:"
