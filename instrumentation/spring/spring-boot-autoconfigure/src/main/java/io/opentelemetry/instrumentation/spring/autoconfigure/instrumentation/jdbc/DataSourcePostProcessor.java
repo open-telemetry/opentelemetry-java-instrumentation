@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jd
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.InstrumentationConfigUtil;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.sql.DataSource;
 import org.springframework.aop.scope.ScopedProxyUtils;
