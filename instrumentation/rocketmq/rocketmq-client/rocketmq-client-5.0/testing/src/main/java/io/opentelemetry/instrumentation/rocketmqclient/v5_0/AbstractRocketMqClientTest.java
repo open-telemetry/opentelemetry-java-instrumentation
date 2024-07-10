@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
@@ -420,7 +421,7 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "publish")));
+                equalTo(MESSAGING_OPERATION_TYPE, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -451,7 +452,7 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "publish")));
+                equalTo(MESSAGING_OPERATION_TYPE, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -482,7 +483,7 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "publish")));
+                equalTo(MESSAGING_OPERATION_TYPE, "publish")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -500,7 +501,7 @@ public abstract class AbstractRocketMqClientTest {
             equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
             equalTo(MESSAGING_DESTINATION_NAME, topic),
-            equalTo(MESSAGING_OPERATION, "receive"),
+            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
   }
 
@@ -524,7 +525,7 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "process")));
+                equalTo(MESSAGING_OPERATION_TYPE, "process")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.CONSUMER)
@@ -557,7 +558,7 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "process")));
+                equalTo(MESSAGING_OPERATION_TYPE, "process")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.CONSUMER)
@@ -590,7 +591,7 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "process")));
+                equalTo(MESSAGING_OPERATION_TYPE, "process")));
     attributeAssertions.addAll(Arrays.asList(extraAttributes));
 
     return span.hasKind(SpanKind.CONSUMER)

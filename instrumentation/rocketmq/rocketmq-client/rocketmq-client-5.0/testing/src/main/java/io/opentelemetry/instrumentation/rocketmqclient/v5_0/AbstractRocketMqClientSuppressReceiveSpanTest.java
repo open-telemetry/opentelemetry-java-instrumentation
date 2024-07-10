@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
@@ -123,7 +124,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                         MESSAGING_MESSAGE_ID,
                                         sendReceipt.getMessageId().toString()),
                                     equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                    equalTo(MESSAGING_OPERATION, "publish")),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "publish")),
                         span ->
                             span.hasKind(SpanKind.CONSUMER)
                                 .hasName(topic + " process")
@@ -140,7 +141,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                         MESSAGING_MESSAGE_ID,
                                         sendReceipt.getMessageId().toString()),
                                     equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                    equalTo(MESSAGING_OPERATION, "process")),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "process")),
                         span ->
                             span.hasName("child")
                                 .hasKind(SpanKind.INTERNAL)
