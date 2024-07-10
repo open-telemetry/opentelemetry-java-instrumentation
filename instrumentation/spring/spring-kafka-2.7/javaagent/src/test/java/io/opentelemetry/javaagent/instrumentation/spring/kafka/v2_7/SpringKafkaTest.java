@@ -77,7 +77,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               "testSingleTopic"),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               AbstractStringAssert::isNotEmpty),
@@ -102,7 +103,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testSingleTopic"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testSingleListener"),
@@ -121,7 +123,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testSingleTopic"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 AbstractLongAssert::isNotNegative),
@@ -212,7 +215,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               "testSingleTopic"),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               AbstractStringAssert::isNotEmpty),
@@ -286,7 +290,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               "testBatchTopic"),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               AbstractStringAssert::isNotEmpty),
@@ -306,7 +311,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               "testBatchTopic"),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               AbstractStringAssert::isNotEmpty),
@@ -332,7 +338,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testBatchTopic"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testBatchListener"),
@@ -353,7 +360,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testBatchTopic"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testBatchListener"),
@@ -393,7 +401,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               "testBatchTopic"),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               AbstractStringAssert::isNotEmpty),

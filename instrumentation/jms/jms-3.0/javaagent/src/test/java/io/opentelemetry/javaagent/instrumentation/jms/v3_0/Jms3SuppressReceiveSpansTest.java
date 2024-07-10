@@ -63,7 +63,8 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -76,7 +77,8 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId))),
         trace ->

@@ -133,7 +133,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
@@ -163,7 +164,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
@@ -242,7 +244,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
@@ -272,7 +275,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),

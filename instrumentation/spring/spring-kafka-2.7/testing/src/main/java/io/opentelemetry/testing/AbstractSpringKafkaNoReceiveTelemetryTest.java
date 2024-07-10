@@ -56,7 +56,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSingleTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("producer")),
@@ -80,7 +81,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSingleTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     AbstractLongAssert::isNotNegative),
@@ -152,7 +154,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSingleTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("producer")),
@@ -216,7 +219,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testBatchTopic"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                              equalTo(
+                                  MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                  "publish"),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
@@ -237,7 +242,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testBatchTopic"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                              equalTo(
+                                  MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                  "publish"),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
@@ -270,7 +277,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testBatchTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                     "testBatchListener"),
@@ -325,7 +333,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testBatchTopic"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                              equalTo(
+                                  MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                  "publish"),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),

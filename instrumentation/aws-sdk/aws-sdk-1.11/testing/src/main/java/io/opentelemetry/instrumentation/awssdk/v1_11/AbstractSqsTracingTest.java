@@ -165,7 +165,8 @@ public abstract class AbstractSqsTracingTest {
                                       MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                       "testSdkSqs"),
                                   equalTo(
-                                      MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                      "publish"),
                                   satisfies(
                                       MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
@@ -209,7 +210,8 @@ public abstract class AbstractSqsTracingTest {
                                       MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                       "testSdkSqs"),
                                   equalTo(
-                                      MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                      "receive"),
                                   equalTo(
                                       MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
                                       1),
@@ -251,7 +253,8 @@ public abstract class AbstractSqsTracingTest {
                                       MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                       "testSdkSqs"),
                                   equalTo(
-                                      MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                      "process"),
                                   satisfies(
                                       MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class)),
@@ -342,7 +345,8 @@ public abstract class AbstractSqsTracingTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),

@@ -64,7 +64,8 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               destinationName),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                           equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -83,7 +84,8 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }

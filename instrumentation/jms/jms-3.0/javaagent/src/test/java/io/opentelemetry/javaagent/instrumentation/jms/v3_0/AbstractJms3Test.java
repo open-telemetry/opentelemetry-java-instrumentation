@@ -147,7 +147,8 @@ abstract class AbstractJms3Test {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -159,7 +160,8 @@ abstract class AbstractJms3Test {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
@@ -231,7 +233,8 @@ abstract class AbstractJms3Test {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 producerDestinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -249,7 +252,8 @@ abstract class AbstractJms3Test {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 actualDestinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
                             equalTo(
                                 stringArrayKey("messaging.header.test_message_header"),

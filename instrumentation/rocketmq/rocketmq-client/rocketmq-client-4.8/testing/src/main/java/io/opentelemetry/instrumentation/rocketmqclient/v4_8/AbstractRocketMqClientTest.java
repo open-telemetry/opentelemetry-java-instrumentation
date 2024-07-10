@@ -143,7 +143,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
@@ -166,7 +167,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
@@ -219,7 +221,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
@@ -242,7 +245,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
@@ -307,7 +311,9 @@ abstract class AbstractRocketMqClientTest {
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   sharedTopic),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                              equalTo(
+                                  MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                  "publish"),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                   val -> val.isInstanceOf(String.class)),
@@ -334,7 +340,8 @@ abstract class AbstractRocketMqClientTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive")),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "receive")),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -346,7 +353,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
@@ -376,7 +384,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
@@ -434,7 +443,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                     val -> val.isInstanceOf(String.class)),
@@ -461,7 +471,8 @@ abstract class AbstractRocketMqClientTest {
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     sharedTopic),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
+                                    "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),

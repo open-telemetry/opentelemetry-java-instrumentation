@@ -813,7 +813,8 @@ public class SessionTest extends AbstractHibernateTest {
             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
             satisfies(DbIncubatingAttributes.DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
-            satisfies(DbIncubatingAttributes.DB_OPERATION_NAME, val -> val.isInstanceOf(String.class)),
+            satisfies(
+                DbIncubatingAttributes.DB_OPERATION_NAME, val -> val.isInstanceOf(String.class)),
             equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "Value"));
   }
 

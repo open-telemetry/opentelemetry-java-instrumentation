@@ -89,7 +89,8 @@ public class AwsLambdaSqsMessageHandlerTest {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                 MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"))
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -111,7 +112,8 @@ public class AwsLambdaSqsMessageHandlerTest {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                 MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message1"),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, "queue1"))
@@ -130,7 +132,8 @@ public class AwsLambdaSqsMessageHandlerTest {
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                 MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message2"),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, "queue1"))

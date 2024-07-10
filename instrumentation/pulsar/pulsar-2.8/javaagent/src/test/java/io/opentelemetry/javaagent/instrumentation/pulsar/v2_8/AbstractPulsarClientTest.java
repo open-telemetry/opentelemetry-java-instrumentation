@@ -292,7 +292,7 @@ abstract class AbstractPulsarClientTest {
             Arrays.asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                equalTo(MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
