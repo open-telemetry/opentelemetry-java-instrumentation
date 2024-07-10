@@ -213,6 +213,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (modifiedRequest != null) {
       return modifiedRequest;
     }
+    modifiedRequest = LambdaAccess.modifyRequest(request, otelContext);
+    if (modifiedRequest != null) {
+      return modifiedRequest;
+    }
 
     // Insert other special handling here, following the same pattern as SQS and SNS.
 
