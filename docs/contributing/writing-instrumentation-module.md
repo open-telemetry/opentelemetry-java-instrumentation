@@ -438,19 +438,19 @@ This allows for example to access package-private methods that would not be acce
 
 ### advice method signatures
 
-With inlined advices, the advice method signature does not have any limitations. It enables to refer
+With inlined advices, the advice method signature does not have any limitations. It enables referring
 to types in the OpenTelemetry API, SDK or instrumentation helper classes directly because those
 are injected in the target classloader or the bootstrap classloader for visibility.
 
-With indy advices however, the advice method signature can't introduce types that are not already
-visible from the instrumented method.
+With indy advices however, the advice method signature can't introduce types that are only
+visible in the advice classes.
 In practice, two sets of types can be used in the advice method signature:
 - types from the JDK in the bootstrap classloader like `Object`
 - types already visible from the instrumented code
 
 For example, when trying to instrument a method that has `HttpServletRequest` as argument:
 - the `HttpServletRequest` type can be used as it's part of the instrumented code
-- the `HttpServletRequestScope` is part of instrumentation and has to be of type `Object` from enter return value and exit argument.
+- the `HttpServletRequestScope` is part of instrumentation and has to be of type `Object` for both the enter return value and the exit argument.
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
