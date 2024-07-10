@@ -204,7 +204,7 @@ class VertxRedisClientTest {
       equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
       equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, statement),
       equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, operation),
-      equalTo(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, 1),
+      equalTo(DbIncubatingAttributes.DB_NAMESPACE, "1"),
       equalTo(ServerAttributes.SERVER_ADDRESS, host),
       equalTo(ServerAttributes.SERVER_PORT, port),
       equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
