@@ -1,0 +1,137 @@
+Comparing source compatibility of opentelemetry-spring-boot-2.6.0-SNAPSHOT.jar against 
++++  NEW ANNOTATION: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.spring.autoconfigure.EnableOpenTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: java.lang.annotation.Annotation
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: java.lang.annotation.Target
+		+++  NEW ELEMENT: value=java.lang.annotation.ElementType.TYPE (+)
+	+++  NEW ANNOTATION: org.springframework.context.annotation.ComponentScan
+		+++  NEW ELEMENT: basePackages=io.opentelemetry.instrumentation.spring.autoconfigure (+)
+	+++  NEW ANNOTATION: java.lang.annotation.Retention
+		+++  NEW ELEMENT: value=java.lang.annotation.RetentionPolicy.RUNTIME (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.annotations.InstrumentationAnnotationsAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) InstrumentationAnnotationsAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=org.aspectj.lang.annotation.Aspect (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=annotations (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jdbc.JdbcInstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) JdbcInstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+		+++  NEW ELEMENT: proxyBeanMethods=false (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+		+++  NEW ELEMENT: value=javax.sql.DataSource (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.AutoConfiguration
+		+++  NEW ELEMENT: after=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=jdbc (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.kafka.KafkaInstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) KafkaInstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=org.springframework.kafka.core.KafkaTemplate,org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=kafka (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.logging.LogbackAppenderApplicationListener  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) LogbackAppenderApplicationListener()
+	+++  NEW METHOD: PUBLIC(+) int getOrder()
+	+++  NEW METHOD: PUBLIC(+) void onApplicationEvent(org.springframework.context.ApplicationEvent)
+	+++  NEW METHOD: PUBLIC(+) boolean supportsEventType(org.springframework.core.ResolvableType)
+	+++  NEW METHOD: PUBLIC(+) boolean supportsSourceType(java.lang.Class<?>)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.logging.OpenTelemetryAppenderAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) OpenTelemetryAppenderAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.micrometer.MicrometerBridgeAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) MicrometerBridgeAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+		+++  NEW ELEMENT: value=io.micrometer.core.instrument.Clock (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=io.micrometer.core.instrument.MeterRegistry (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.AutoConfigureBefore
+		+++  NEW ELEMENT: value=org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=micrometer (+)
+		+++  NEW ELEMENT: enabledByDefault=false (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.AutoConfigureAfter
+		+++  NEW ELEMENT: value=org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.mongo.MongoClientInstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) MongoClientInstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+		+++  NEW ELEMENT: value=io.opentelemetry.api.OpenTelemetry (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=com.mongodb.MongoClientSettings (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=mongo (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.r2dbc.R2dbcInstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) R2dbcInstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+		+++  NEW ELEMENT: proxyBeanMethods=false (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+		+++  NEW ELEMENT: value=io.opentelemetry.api.OpenTelemetry (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=io.r2dbc.spi.ConnectionFactory (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=r2dbc (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web.SpringWebInstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) SpringWebInstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=org.springframework.web.client.RestTemplate (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=spring-web (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webflux.SpringWebfluxInstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) SpringWebfluxInstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=org.springframework.web.reactive.function.client.WebClient (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=spring-webflux (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webmvc.SpringWebMvc5InstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) SpringWebMvc5InstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=javax.servlet.Filter,org.springframework.web.filter.OncePerRequestFilter,org.springframework.web.servlet.DispatcherServlet (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=spring-webmvc (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webmvc.SpringWebMvc6InstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) SpringWebMvc6InstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=jakarta.servlet.Filter,org.springframework.web.filter.OncePerRequestFilter,org.springframework.web.servlet.DispatcherServlet (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=spring-webmvc (+)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) OpenTelemetryAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.context.properties.EnableConfigurationProperties
+		+++  NEW ELEMENT: value=io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties (+)

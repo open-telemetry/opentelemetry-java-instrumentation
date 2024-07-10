@@ -1,0 +1,17 @@
+Comparing source compatibility of opentelemetry-spring-boot-3-2.6.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web.RestClientBeanPostProcessor  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 61.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) RestClientBeanPostProcessor(org.springframework.beans.factory.ObjectProvider<io.opentelemetry.api.OpenTelemetry>, org.springframework.beans.factory.ObjectProvider<io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties>)
+	+++  NEW METHOD: PUBLIC(+) java.lang.Object postProcessAfterInitialization(java.lang.Object, java.lang.String)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web.RestClientInstrumentationAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 61.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) RestClientInstrumentationAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+		+++  NEW ELEMENT: value=org.springframework.web.client.RestClient (+)
+	+++  NEW ANNOTATION: org.springframework.boot.autoconfigure.AutoConfiguration
+		+++  NEW ELEMENT: after=org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration (+)
+	+++  NEW ANNOTATION: io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation
+		+++  NEW ELEMENT: module=spring-web (+)
