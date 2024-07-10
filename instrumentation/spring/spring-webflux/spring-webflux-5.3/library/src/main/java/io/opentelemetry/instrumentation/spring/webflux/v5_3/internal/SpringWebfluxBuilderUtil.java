@@ -20,11 +20,13 @@ import org.springframework.web.server.ServerWebExchange;
 public final class SpringWebfluxBuilderUtil {
   private SpringWebfluxBuilderUtil() {}
 
+  // allows access to the private field for the spring starter
   private static Function<
           SpringWebfluxTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
       clientBuilderExtractor;
 
+  // allows access to the private field for the spring starter
   private static Function<
           SpringWebfluxTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
