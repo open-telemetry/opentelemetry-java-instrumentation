@@ -118,8 +118,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))));
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -151,8 +151,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SADD set1 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SADD"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -225,7 +225,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
@@ -235,8 +235,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET batch2 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET batch2 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("EXEC")
@@ -246,8 +246,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "EXEC"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EXEC"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "EXEC"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "EXEC"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }

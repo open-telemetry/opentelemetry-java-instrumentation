@@ -310,10 +310,10 @@ class ClickHouseClientTest {
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
         equalTo(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.CLICKHOUSE),
-        equalTo(DbIncubatingAttributes.DB_NAME, dbName),
+        equalTo(DbIncubatingAttributes.DB_NAMESPACE, dbName),
         equalTo(ServerAttributes.SERVER_ADDRESS, host),
         equalTo(ServerAttributes.SERVER_PORT, port),
-        equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
-        equalTo(DbIncubatingAttributes.DB_OPERATION, operation));
+        equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, statement),
+        equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, operation));
   }
 }

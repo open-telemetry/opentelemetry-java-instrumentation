@@ -152,7 +152,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET TESTSETKEY ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -198,7 +198,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                       equalTo(ServerAttributes.SERVER_PORT, port),
                                       equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET TESTKEY"))
+                                      equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "GET TESTKEY"))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -277,7 +277,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(ServerAttributes.SERVER_PORT, port),
                                       equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                       equalTo(
-                                          DbIncubatingAttributes.DB_STATEMENT,
+                                          DbIncubatingAttributes.DB_QUERY_TEXT,
                                           "GET NON_EXISTENT_KEY"))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
@@ -343,7 +343,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                       equalTo(ServerAttributes.SERVER_PORT, port),
                                       equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"))
+                                      equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "RANDOMKEY"))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -403,7 +403,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_STATEMENT,
+                                    DbIncubatingAttributes.DB_QUERY_TEXT,
                                     "HMSET TESTHM firstname ? lastname ? age ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -420,7 +420,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "HGETALL TESTHM"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "HGETALL TESTHM"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

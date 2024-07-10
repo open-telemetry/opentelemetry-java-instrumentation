@@ -103,11 +103,11 @@ public class ProcedureCallTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "{call TEST_PROC()}"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "CALL")),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "{call TEST_PROC()}"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(SpanKind.INTERNAL)

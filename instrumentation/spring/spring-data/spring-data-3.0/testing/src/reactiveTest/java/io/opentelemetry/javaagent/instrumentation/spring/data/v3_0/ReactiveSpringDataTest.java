@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,11 +82,11 @@ class ReactiveSpringDataTest {
                                     .isLessThanOrEqualTo(trace.getSpan(1).getEndEpochNanos()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
-                            equalTo(DB_NAME, "db"),
+                            equalTo(DB_NAMESPACE, "db"),
                             equalTo(DB_USER, "sa"),
-                            equalTo(DB_STATEMENT, "SELECT CUSTOMER.* FROM CUSTOMER"),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "CUSTOMER"),
+                            equalTo(DB_QUERY_TEXT, "SELECT CUSTOMER.* FROM CUSTOMER"),
+                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            equalTo(DB_COLLECTION_NAME, "CUSTOMER"),
                             equalTo(DB_CONNECTION_STRING, "h2:mem://localhost"),
                             equalTo(SERVER_ADDRESS, "localhost"))));
   }

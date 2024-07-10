@@ -160,7 +160,7 @@ public abstract class KafkaClientBaseTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -193,7 +193,7 @@ public abstract class KafkaClientBaseTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),
@@ -220,7 +220,7 @@ public abstract class KafkaClientBaseTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),

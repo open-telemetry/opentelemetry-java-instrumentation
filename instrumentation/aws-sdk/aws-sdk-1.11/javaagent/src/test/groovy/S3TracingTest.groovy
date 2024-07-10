@@ -199,7 +199,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "s3ToSqsTestQueue"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
@@ -535,7 +535,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "s3ToSnsToSqsTestQueue"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }

@@ -100,7 +100,7 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT,
+                                  DbIncubatingAttributes.DB_QUERY_TEXT,
                                   "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -115,10 +115,10 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(DbIncubatingAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(DbIncubatingAttributes.DB_NAMESPACE, parameter.keyspace),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                                  DbIncubatingAttributes.DB_QUERY_TEXT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
                               equalTo(
                                   DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     } else {
@@ -137,8 +137,8 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                                  DbIncubatingAttributes.DB_QUERY_TEXT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
                               equalTo(
                                   DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
     }
@@ -178,7 +178,7 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT,
+                                  DbIncubatingAttributes.DB_QUERY_TEXT,
                                   "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -194,10 +194,10 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(DbIncubatingAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(DbIncubatingAttributes.DB_NAMESPACE, parameter.keyspace),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                                  DbIncubatingAttributes.DB_QUERY_TEXT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
                               equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
@@ -220,8 +220,8 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
+                                  DbIncubatingAttributes.DB_QUERY_TEXT, parameter.expectedStatement),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
                               equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                   span ->
                       span.hasName("callbackListener")

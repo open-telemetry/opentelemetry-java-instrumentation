@@ -94,7 +94,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" "producer-1"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -109,7 +109,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
@@ -133,7 +133,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -147,7 +147,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String

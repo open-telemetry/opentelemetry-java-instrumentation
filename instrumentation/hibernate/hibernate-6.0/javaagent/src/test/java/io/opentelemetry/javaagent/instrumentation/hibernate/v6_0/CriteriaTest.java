@@ -77,14 +77,14 @@ public class CriteriaTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 stringAssert -> stringAssert.startsWith("select")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
+                            equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(SpanKind.INTERNAL)

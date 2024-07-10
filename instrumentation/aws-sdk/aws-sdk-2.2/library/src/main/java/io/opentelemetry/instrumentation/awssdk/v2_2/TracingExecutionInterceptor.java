@@ -44,7 +44,7 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_OPERATION_NAME = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   // copied from DbIncubatingAttributes.DbSystemValues
   private static final String DB_SYSTEM_DYNAMODB = "dynamodb";
@@ -319,7 +319,7 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
       span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
       String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
       if (operation != null) {
-        span.setAttribute(DB_OPERATION, operation);
+        span.setAttribute(DB_OPERATION_NAME, operation);
       }
     }
   }

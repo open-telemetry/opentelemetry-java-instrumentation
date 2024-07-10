@@ -98,8 +98,8 @@ public class OpenSearchRestTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "opensearch"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET _cluster/health")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -163,8 +163,8 @@ public class OpenSearchRestTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "opensearch"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET _cluster/health")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)

@@ -74,8 +74,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
@@ -100,8 +100,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
@@ -116,8 +116,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "GET foo"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
@@ -142,8 +142,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
@@ -158,8 +158,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "RANDOMKEY"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "RANDOMKEY"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, host),
                             equalTo(ServerAttributes.SERVER_PORT, port),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),

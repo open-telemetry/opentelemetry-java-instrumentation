@@ -191,7 +191,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -221,7 +221,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -283,7 +283,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET")),
                 span ->
                     span.hasName("callback1")
                         .hasKind(SpanKind.INTERNAL)
@@ -324,7 +324,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY")),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "RANDOMKEY")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -368,7 +368,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "HMSET"))),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "HMSET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -376,7 +376,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "HGETALL"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "HGETALL"))));
   }
 
   @Test
@@ -418,7 +418,7 @@ class LettuceAsyncClientTest {
                         .hasException(new IllegalStateException("TestException"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DEL"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "DEL"))));
   }
 
   @Test
@@ -455,7 +455,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SADD"),
                             equalTo(booleanKey("lettuce.command.cancelled"), true)),
                 span ->
                     span.hasName("callback")
@@ -492,7 +492,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DEBUG"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "DEBUG"))));
   }
 
   @Test
@@ -526,6 +526,6 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SHUTDOWN"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SHUTDOWN"))));
   }
 }

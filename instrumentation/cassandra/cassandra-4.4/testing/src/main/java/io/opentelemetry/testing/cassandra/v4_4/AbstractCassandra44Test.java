@@ -17,9 +17,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASS
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
@@ -70,9 +70,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
-                                equalTo(DB_NAME, parameter.keyspace),
-                                equalTo(DB_STATEMENT, parameter.expectedStatement),
-                                equalTo(DB_OPERATION, parameter.operation),
+                                equalTo(DB_NAMESPACE, parameter.keyspace),
+                                equalTo(DB_QUERY_TEXT, parameter.expectedStatement),
+                                equalTo(DB_OPERATION_NAME, parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
                                 satisfies(

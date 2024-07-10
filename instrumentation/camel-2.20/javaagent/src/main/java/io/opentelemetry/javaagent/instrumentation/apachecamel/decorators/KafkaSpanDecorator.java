@@ -60,7 +60,7 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process");
+    attributes.put(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process");
 
     Integer partition = exchange.getIn().getHeader(PARTITION, Integer.class);
     if (partition != null) {

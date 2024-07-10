@@ -9,10 +9,10 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
@@ -170,11 +170,11 @@ public abstract class AbstractR2dbcStatementTest {
                                     DB_CONNECTION_STRING,
                                     parameter.system + "://localhost:" + port),
                                 equalTo(DB_SYSTEM, parameter.system),
-                                equalTo(DB_NAME, DB),
+                                equalTo(DB_NAMESPACE, DB),
                                 equalTo(DB_USER, USER_DB),
-                                equalTo(DB_STATEMENT, parameter.expectedStatement),
-                                equalTo(DB_OPERATION, parameter.operation),
-                                equalTo(DB_SQL_TABLE, parameter.table),
+                                equalTo(DB_QUERY_TEXT, parameter.expectedStatement),
+                                equalTo(DB_OPERATION_NAME, parameter.operation),
+                                equalTo(DB_COLLECTION_NAME, parameter.table),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->

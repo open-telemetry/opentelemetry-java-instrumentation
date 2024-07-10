@@ -40,7 +40,7 @@ final class OpenTelemetryTracing implements Tracing {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.statement");
   // copied from DbIncubatingAttributes.DbSystemValues
   private static final String REDIS = "redis";
 
@@ -338,7 +338,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (name != null) {
         String statement =
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
-        span.setAttribute(DB_STATEMENT, statement);
+        span.setAttribute(DB_QUERY_TEXT, statement);
       }
       span.end();
     }

@@ -125,11 +125,11 @@ class DbSpanDecorator extends BaseSpanDecorator {
     attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
     String statement = getStatement(exchange, endpoint);
     if (statement != null) {
-      attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
+      attributes.put(DbIncubatingAttributes.DB_QUERY_TEXT, statement);
     }
     String dbName = getDbName(endpoint);
     if (dbName != null) {
-      attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+      attributes.put(DbIncubatingAttributes.DB_NAMESPACE, dbName);
     }
   }
 }

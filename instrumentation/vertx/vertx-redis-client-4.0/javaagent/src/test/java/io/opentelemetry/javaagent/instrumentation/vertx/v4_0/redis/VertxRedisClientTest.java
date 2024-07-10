@@ -202,8 +202,8 @@ class VertxRedisClientTest {
   private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
     return new AttributeAssertion[] {
       equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-      equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
-      equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
+      equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, statement),
+      equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, operation),
       equalTo(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, 1),
       equalTo(ServerAttributes.SERVER_ADDRESS, host),
       equalTo(ServerAttributes.SERVER_PORT, port),

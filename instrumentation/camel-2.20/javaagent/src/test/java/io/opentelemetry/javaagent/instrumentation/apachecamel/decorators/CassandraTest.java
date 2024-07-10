@@ -116,9 +116,9 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 stringKey("camel.uri"),
                                 "cql://" + host + ":" + cassandraPort + "/test"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 "select * from test.users where id=? ALLOW FILTERING"),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"))));
   }

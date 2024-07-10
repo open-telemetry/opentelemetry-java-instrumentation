@@ -100,17 +100,17 @@ class AwsSpanAssertions {
                   MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS)));
       if (spanName.endsWith("receive")) {
         attributeAssertions.add(
-            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"));
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"));
       } else if (spanName.endsWith("process")) {
         attributeAssertions.add(
-            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"));
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"));
         attributeAssertions.add(
             satisfies(
                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                 val -> assertThat(val).isNotNull()));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(
-            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"));
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"));
         attributeAssertions.add(
             satisfies(
                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,

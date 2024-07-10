@@ -100,7 +100,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "SearchAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -138,7 +138,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -156,7 +156,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -189,7 +189,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -226,7 +226,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -244,7 +244,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -269,7 +269,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -305,7 +305,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "DeleteAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "DeleteAction"
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
@@ -322,7 +322,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -348,7 +348,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentInstrumentationSpecificat
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "SearchAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

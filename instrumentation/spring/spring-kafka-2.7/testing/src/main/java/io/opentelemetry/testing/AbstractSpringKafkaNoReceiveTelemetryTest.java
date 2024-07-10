@@ -56,7 +56,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSingleTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("producer")),
@@ -80,7 +80,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSingleTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                     AbstractLongAssert::isNotNegative),
@@ -120,7 +120,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         Arrays.asList(
             equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
             equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
             satisfies(
                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                 AbstractLongAssert::isNotNegative),
@@ -152,7 +152,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSingleTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                                 satisfies(
                                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("producer")),
@@ -216,7 +216,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testBatchTopic"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
@@ -237,7 +237,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testBatchTopic"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
@@ -270,7 +270,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testBatchTopic"),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                     "testBatchListener"),
@@ -302,7 +302,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         Arrays.asList(
             equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
             equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
             equalTo(
                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
             satisfies(
@@ -325,7 +325,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testBatchTopic"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),

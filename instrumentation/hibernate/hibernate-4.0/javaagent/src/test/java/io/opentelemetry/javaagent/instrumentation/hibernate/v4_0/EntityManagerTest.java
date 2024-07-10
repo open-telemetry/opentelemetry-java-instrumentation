@@ -101,16 +101,16 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
+                                DbIncubatingAttributes.DB_OPERATION_NAME,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")));
+                            equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "Value")));
 
           } else {
             trace.hasSpansSatisfyingExactly(
@@ -132,16 +132,16 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
+                                DbIncubatingAttributes.DB_OPERATION_NAME,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -218,16 +218,16 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
+                                DbIncubatingAttributes.DB_OPERATION_NAME,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -244,16 +244,16 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
+                                DbIncubatingAttributes.DB_OPERATION_NAME,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"))));
+                            equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "Value"))));
   }
 
   @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
@@ -293,16 +293,16 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "db1"),
                             equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
+                                DbIncubatingAttributes.DB_OPERATION_NAME,
                                 val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)

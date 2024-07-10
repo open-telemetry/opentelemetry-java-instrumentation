@@ -77,11 +77,11 @@ class SqlClientAttributesExtractorTest {
         .containsOnly(
             entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
             entry(DbIncubatingAttributes.DB_USER, "username"),
-            entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+            entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
             entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-            entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"));
+            entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
+            entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
+            entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
@@ -104,8 +104,8 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
+            entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT *"),
+            entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
   }
 
   @Test
@@ -128,8 +128,8 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+            entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
+            entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
             entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
   }
 

@@ -61,7 +61,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
           }
@@ -79,7 +79,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
             "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == "ipv6" || it == null }
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY" String
           }
@@ -93,7 +93,7 @@ class SpringIntegrationAndRabbitTest extends AgentInstrumentationSpecification i
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "rabbitmq"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testTopic"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
           }

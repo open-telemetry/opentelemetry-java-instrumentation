@@ -81,10 +81,10 @@ class DbClientAttributesExtractorTest {
         .containsOnly(
             entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
             entry(DbIncubatingAttributes.DB_USER, "username"),
-            entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+            entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
             entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
+            entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
+            entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }

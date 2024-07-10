@@ -27,8 +27,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
 
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
+  private static final AttributeKey<String> DB_OPERATION_NAME_NAME = AttributeKey.stringKey("db.operation.name");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -70,9 +70,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     String operation = sanitizedStatement.getOperation();
     internalSet(
         attributes,
-        DB_STATEMENT,
+        DB_QUERY_TEXT,
         statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
-    internalSet(attributes, DB_OPERATION, operation);
+    internalSet(attributes, DB_OPERATION_NAME_NAME, operation);
     if (!SQL_CALL.equals(operation)) {
       internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());
     }

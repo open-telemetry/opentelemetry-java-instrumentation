@@ -118,7 +118,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET TESTSETKEY ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -143,7 +143,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET TESTKEY"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "GET TESTKEY"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -169,7 +169,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"))
+                                    DbIncubatingAttributes.DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -194,7 +194,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "RANDOMKEY"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -224,7 +224,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "LPUSH TESTLIST ?"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "LPUSH TESTLIST ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -250,7 +250,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_STATEMENT,
+                                    DbIncubatingAttributes.DB_QUERY_TEXT,
                                     "HMSET user firstname ? lastname ? age ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -276,7 +276,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "HGETALL TESTHM"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "HGETALL TESTHM"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -309,7 +309,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_STATEMENT,
+                                    DbIncubatingAttributes.DB_QUERY_TEXT,
                                     "EVAL " + b64Script + " 1 TESTLIST ? ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -336,7 +336,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "MSET key1 ? key2 ?"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "MSET key1 ? key2 ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -366,7 +366,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "DEBUG SEGFAULT")));
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "DEBUG SEGFAULT")));
               } else {
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -380,7 +380,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "DEBUG SEGFAULT"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "DEBUG SEGFAULT"))
                             // these are no longer recorded since Lettuce 6.1.6
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -415,7 +415,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE")));
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SHUTDOWN NOSAVE")));
               } else {
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -430,7 +430,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "SHUTDOWN NOSAVE"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SHUTDOWN NOSAVE"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end")));

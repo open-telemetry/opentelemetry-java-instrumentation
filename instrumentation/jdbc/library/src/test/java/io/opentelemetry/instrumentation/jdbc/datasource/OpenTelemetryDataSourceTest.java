@@ -56,7 +56,7 @@ class OpenTelemetryDataSourceTest {
                                 TestDataSource.class.getName()),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "postgresql"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "dbname"),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "dbname"),
                             equalTo(
                                 DbIncubatingAttributes.DB_CONNECTION_STRING,
                                 "postgresql://127.0.0.1:5432"))));

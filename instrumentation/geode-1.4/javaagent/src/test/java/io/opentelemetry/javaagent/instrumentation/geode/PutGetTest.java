@@ -133,23 +133,23 @@ class PutGetTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "geode"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test-region"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "clear")),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test-region"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "geode"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test-region"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "put")),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test-region"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "put")),
                 span ->
                     span.hasName(verb.concat(" test-region"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "geode"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test-region"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, verb),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, query))));
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test-region"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, verb),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, query))));
   }
 
   static class Card implements DataSerializable {

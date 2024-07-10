@@ -88,7 +88,7 @@ public class AwsLambdaSqsEventWrapperTest {
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                 MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                             equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))));
+                                MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"))));
   }
 
   public static final class TestRequestHandler implements RequestHandler<SQSEvent, Void> {

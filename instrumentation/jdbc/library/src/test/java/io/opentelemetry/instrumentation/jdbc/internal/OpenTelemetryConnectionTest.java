@@ -188,13 +188,13 @@ class OpenTelemetryConnectionTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, dbInfo.getSystem()),
-                            equalTo(DbIncubatingAttributes.DB_NAME, dbInfo.getName()),
+                            equalTo(DbIncubatingAttributes.DB_NAMESPACE, dbInfo.getName()),
                             equalTo(DbIncubatingAttributes.DB_USER, dbInfo.getUser()),
                             equalTo(
                                 DbIncubatingAttributes.DB_CONNECTION_STRING, dbInfo.getShortUrl()),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "users"),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, query),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
+                            equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, "users"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, dbInfo.getHost()),
                             equalTo(ServerAttributes.SERVER_PORT, dbInfo.getPort()))));
   }

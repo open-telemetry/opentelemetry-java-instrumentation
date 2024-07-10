@@ -221,7 +221,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                       MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                       "testSdkSqs"),
                                   equalTo(
-                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                      MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                                   satisfies(
                                       MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                       v -> v.isInstanceOf(String.class))));
@@ -305,7 +305,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                         MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                         "testSdkSqs"),
                                     equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_OPERATION,
+                                        MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
                                         "receive"),
                                     equalTo(
                                         MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
@@ -352,7 +352,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                         MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                         "testSdkSqs"),
                                     equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_OPERATION,
+                                        MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
                                         "process"),
                                     satisfies(
                                         MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
@@ -532,7 +532,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testSdkSqs"),
                               equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish")));
+                                  MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish")));
             },
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
@@ -560,7 +560,7 @@ public abstract class AbstractAws2SqsTracingTest {
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   "testSdkSqs"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "receive"),
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 3)));
 
@@ -609,7 +609,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                           MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                           "testSdkSqs"),
                                       equalTo(
-                                          MessagingIncubatingAttributes.MESSAGING_OPERATION,
+                                          MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE,
                                           "process"),
                                       satisfies(
                                           MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,

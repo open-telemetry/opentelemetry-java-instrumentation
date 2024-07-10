@@ -159,7 +159,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$ServerAttributes.SERVER_PORT" sqsPort
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
           }
         }
@@ -180,7 +180,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$ServerAttributes.SERVER_PORT" sqsPort
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
           }
         }
@@ -331,7 +331,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$ServerAttributes.SERVER_PORT" sqsPort
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
           }
         }
         for (int i: 1..(xrayInjectionEnabled ? 3 : 2)) {
@@ -353,7 +353,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "$ServerAttributes.SERVER_PORT" sqsPort
               "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             }
           }
@@ -381,7 +381,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "$ServerAttributes.SERVER_PORT" sqsPort
               "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
-              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
             }
           }

@@ -418,13 +418,13 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
       attributes {
         "$ServerAttributes.SERVER_ADDRESS" host
         "$ServerAttributes.SERVER_PORT" port
-        "$DbIncubatingAttributes.DB_STATEMENT" {
+        "$DbIncubatingAttributes.DB_QUERY_TEXT" {
           statementEval.call(it.replaceAll(" ", ""))
         }
         "$DbIncubatingAttributes.DB_SYSTEM" "mongodb"
         "$DbIncubatingAttributes.DB_CONNECTION_STRING" "mongodb://localhost:" + port
-        "$DbIncubatingAttributes.DB_NAME" dbName
-        "$DbIncubatingAttributes.DB_OPERATION" operation
+        "$DbIncubatingAttributes.DB_NAMESPACE" dbName
+        "$DbIncubatingAttributes.DB_OPERATION_NAME" operation
         "$DbIncubatingAttributes.DB_MONGODB_COLLECTION" collection
       }
     }

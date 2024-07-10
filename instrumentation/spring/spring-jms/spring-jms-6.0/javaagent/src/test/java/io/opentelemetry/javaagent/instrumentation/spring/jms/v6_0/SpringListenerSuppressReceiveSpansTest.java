@@ -30,7 +30,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank)),
@@ -44,7 +44,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "spring-jms-listener"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank)),

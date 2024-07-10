@@ -191,14 +191,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
-            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
           }
         }
       }
@@ -251,14 +251,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
-            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
           }
         }
       }
@@ -303,14 +303,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
-            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
           }
         }
       }
@@ -355,14 +355,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_NAME" dbName.toLowerCase()
+            "$DbIncubatingAttributes.DB_NAMESPACE" dbName.toLowerCase()
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
-            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
           }
         }
       }
@@ -407,14 +407,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
-            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" query
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
-            "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "CREATE TABLE"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
           }
         }
       }
@@ -462,14 +462,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_NAME" dbName.toLowerCase()
+            "$DbIncubatingAttributes.DB_NAMESPACE" dbName.toLowerCase()
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
-            "$DbIncubatingAttributes.DB_STATEMENT" query
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" query
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
-            "$DbIncubatingAttributes.DB_OPERATION" "CREATE TABLE"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "CREATE TABLE"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
           }
         }
       }
@@ -529,14 +529,14 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" system
-            "$DbIncubatingAttributes.DB_NAME" dbNameLower
+            "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
             if (username != null) {
               "$DbIncubatingAttributes.DB_USER" username
             }
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" url
-            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
           }
         }
       }
@@ -589,7 +589,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
             "$DbIncubatingAttributes.DB_SYSTEM" system
             "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
-            "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
+            "$DbIncubatingAttributes.DB_NAMESPACE" "jdbcunittest"
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
           }
         }
@@ -603,7 +603,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
               "$CodeIncubatingAttributes.CODE_FUNCTION" "getConnection"
               "$DbIncubatingAttributes.DB_SYSTEM" system
               "$DbIncubatingAttributes.DB_USER" { user == null | user == it }
-              "$DbIncubatingAttributes.DB_NAME" "jdbcunittest"
+              "$DbIncubatingAttributes.DB_NAMESPACE" "jdbcunittest"
               "$DbIncubatingAttributes.DB_CONNECTION_STRING" connectionString
             }
           }
@@ -652,7 +652,7 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
-            "$DbIncubatingAttributes.DB_STATEMENT" "testing ?"
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" "testing ?"
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
@@ -693,11 +693,11 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
-            "$DbIncubatingAttributes.DB_NAME" databaseName
+            "$DbIncubatingAttributes.DB_NAMESPACE" databaseName
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$DbIncubatingAttributes.DB_STATEMENT" sanitizedQuery
-            "$DbIncubatingAttributes.DB_OPERATION" operation
-            "$DbIncubatingAttributes.DB_SQL_TABLE" table
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" sanitizedQuery
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" operation
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" table
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }
@@ -750,12 +750,12 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
             kind CLIENT
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-              "$DbIncubatingAttributes.DB_NAME" dbNameLower
+              "$DbIncubatingAttributes.DB_NAMESPACE" dbNameLower
               "$DbIncubatingAttributes.DB_USER" "SA"
               "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$DbIncubatingAttributes.DB_STATEMENT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-              "$DbIncubatingAttributes.DB_SQL_TABLE" "INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$DbIncubatingAttributes.DB_QUERY_TEXT" "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+              "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+              "$DbIncubatingAttributes.DB_COLLECTION_NAME" "INFORMATION_SCHEMA.SYSTEM_USERS"
             }
           }
         }
@@ -800,9 +800,9 @@ class JdbcInstrumentationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "other_sql"
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" "testdb://localhost"
-            "$DbIncubatingAttributes.DB_STATEMENT" "SELECT * FROM table"
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" "table"
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" "SELECT * FROM table"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" "table"
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
           }
         }

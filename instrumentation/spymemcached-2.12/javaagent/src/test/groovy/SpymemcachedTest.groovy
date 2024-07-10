@@ -623,7 +623,7 @@ class SpymemcachedTest extends AgentInstrumentationSpecification {
 
       attributes {
         "$DbIncubatingAttributes.DB_SYSTEM" "memcached"
-        "$DbIncubatingAttributes.DB_OPERATION" operation
+        "$DbIncubatingAttributes.DB_OPERATION_NAME" operation
 
         if (error == "canceled") {
           "spymemcached.command.cancelled" true

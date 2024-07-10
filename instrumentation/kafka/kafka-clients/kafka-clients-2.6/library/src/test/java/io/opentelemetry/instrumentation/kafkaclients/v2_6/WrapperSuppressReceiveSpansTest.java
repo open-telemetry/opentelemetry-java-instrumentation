@@ -59,7 +59,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -84,7 +84,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                 equalTo(
                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     greeting.getBytes(StandardCharsets.UTF_8).length),

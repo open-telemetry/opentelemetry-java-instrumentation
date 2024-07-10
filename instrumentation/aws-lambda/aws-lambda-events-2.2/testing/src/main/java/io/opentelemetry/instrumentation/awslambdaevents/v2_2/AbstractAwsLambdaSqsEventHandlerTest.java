@@ -84,7 +84,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                     MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
@@ -133,7 +133,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                     MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
+                                    MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)

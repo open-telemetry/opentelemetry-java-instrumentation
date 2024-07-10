@@ -99,12 +99,12 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           childOf span(2)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-            "$DbIncubatingAttributes.DB_NAME" "test"
+            "$DbIncubatingAttributes.DB_NAMESPACE" "test"
             "$DbIncubatingAttributes.DB_USER" "SA"
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$DbIncubatingAttributes.DB_STATEMENT" "SELECT id, name, price, weight FROM products"
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" "products"
+            "$DbIncubatingAttributes.DB_QUERY_TEXT" "SELECT id, name, price, weight FROM products"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+            "$DbIncubatingAttributes.DB_COLLECTION_NAME" "products"
           }
         }
       }
@@ -199,12 +199,12 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             childOf(span(3))
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-              "$DbIncubatingAttributes.DB_NAME" "test"
+              "$DbIncubatingAttributes.DB_NAMESPACE" "test"
               "$DbIncubatingAttributes.DB_USER" "SA"
               "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$DbIncubatingAttributes.DB_STATEMENT" "SELECT id AS request$requestId, name, price, weight FROM products"
-              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-              "$DbIncubatingAttributes.DB_SQL_TABLE" "products"
+              "$DbIncubatingAttributes.DB_QUERY_TEXT" "SELECT id AS request$requestId, name, price, weight FROM products"
+              "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
+              "$DbIncubatingAttributes.DB_COLLECTION_NAME" "products"
             }
           }
         }
