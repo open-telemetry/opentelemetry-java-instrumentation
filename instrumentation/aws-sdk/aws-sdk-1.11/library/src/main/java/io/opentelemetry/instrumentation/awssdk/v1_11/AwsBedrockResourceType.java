@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_AGENT_ID;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_DATASOURCE_ID;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_KNOWLEDGEBASE_ID;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_DATA_SOURCE_ID;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_KNOWLEDGE_BASE_ID;
 
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.Arrays;
@@ -18,8 +18,8 @@ import java.util.function.Function;
 
 enum AwsBedrockResourceType {
   AGENT_TYPE(AWS_AGENT_ID, RequestAccess::getAgentId),
-  DATA_SOURCE_TYPE(AWS_DATASOURCE_ID, RequestAccess::getDataSourceId),
-  KNOWLEDGE_BASE_TYPE(AWS_KNOWLEDGEBASE_ID, RequestAccess::getKnowledgeBaseId);
+  DATA_SOURCE_TYPE(AWS_DATA_SOURCE_ID, RequestAccess::getDataSourceId),
+  KNOWLEDGE_BASE_TYPE(AWS_KNOWLEDGE_BASE_ID, RequestAccess::getKnowledgeBaseId);
 
   @SuppressWarnings("ImmutableEnumChecker")
   private final AttributeKey<String> keyAttribute;

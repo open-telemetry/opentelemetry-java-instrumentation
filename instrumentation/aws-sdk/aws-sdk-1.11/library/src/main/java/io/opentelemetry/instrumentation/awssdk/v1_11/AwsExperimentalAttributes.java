@@ -19,9 +19,9 @@ final class AwsExperimentalAttributes {
   static final AttributeKey<String> AWS_TABLE_NAME = stringKey("aws.table.name");
   static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.requestId");
   static final AttributeKey<String> AWS_AGENT_ID = stringKey("aws.bedrock.agent.id");
-  static final AttributeKey<String> AWS_KNOWLEDGEBASE_ID =
-      stringKey("aws.bedrock.knowledgebase.id");
-  static final AttributeKey<String> AWS_DATASOURCE_ID = stringKey("aws.bedrock.datasource.id");
+  static final AttributeKey<String> AWS_KNOWLEDGE_BASE_ID =
+      stringKey("aws.bedrock.knowledge_base.id");
+  static final AttributeKey<String> AWS_DATA_SOURCE_ID = stringKey("aws.bedrock.data_source.id");
   static final AttributeKey<String> AWS_GUARDRAIL_ID = stringKey("aws.bedrock.guardrail.id");
 
   // TODO: Merge in gen_ai attributes in opentelemetry-semconv-incubating once upgrade to v1.26.0

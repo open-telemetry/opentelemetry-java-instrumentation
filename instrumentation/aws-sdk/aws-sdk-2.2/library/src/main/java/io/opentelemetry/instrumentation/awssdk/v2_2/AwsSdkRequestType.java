@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_BEDROCK_AGENT_ID;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_BEDROCK_DATASOURCE_ID;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_BEDROCK_GUARDRAIL_ID;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_BEDROCK_KNOWLEDGEBASE_ID;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_AGENT_ID;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_BUCKET_NAME;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_DATA_SOURCE_ID;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_GUARDRAIL_ID;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_KNOWLEDGE_BASE_ID;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_QUEUE_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_QUEUE_URL;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_STREAM_NAME;
@@ -27,16 +27,15 @@ enum AwsSdkRequestType {
   SQS(request(AWS_QUEUE_URL.getKey(), "QueueUrl"), request(AWS_QUEUE_NAME.getKey(), "QueueName")),
   KINESIS(request(AWS_STREAM_NAME.getKey(), "StreamName")),
   DYNAMODB(request(AWS_TABLE_NAME.getKey(), "TableName")),
-  BEDROCK(request(AWS_BEDROCK_GUARDRAIL_ID.getKey(), "guardrailIdentifier")),
+  BEDROCK(request(AWS_GUARDRAIL_ID.getKey(), "guardrailIdentifier")),
   BEDROCKAGENTOPERATION(
-      request(AWS_BEDROCK_AGENT_ID.getKey(), "agentId"),
-      response(AWS_BEDROCK_AGENT_ID.getKey(), "agentId")),
+      request(AWS_AGENT_ID.getKey(), "agentId"), response(AWS_AGENT_ID.getKey(), "agentId")),
   BEDROCKDATASOURCEOPERATION(
-      request(AWS_BEDROCK_DATASOURCE_ID.getKey(), "dataSourceId"),
-      response(AWS_BEDROCK_DATASOURCE_ID.getKey(), "dataSourceId")),
+      request(AWS_DATA_SOURCE_ID.getKey(), "dataSourceId"),
+      response(AWS_DATA_SOURCE_ID.getKey(), "dataSourceId")),
   BEDROCKKNOWLEDGEBASEOPERATION(
-      request(AWS_BEDROCK_KNOWLEDGEBASE_ID.getKey(), "knowledgeBaseId"),
-      response(AWS_BEDROCK_KNOWLEDGEBASE_ID.getKey(), "knowledgeBaseId")),
+      request(AWS_KNOWLEDGE_BASE_ID.getKey(), "knowledgeBaseId"),
+      response(AWS_KNOWLEDGE_BASE_ID.getKey(), "knowledgeBaseId")),
   BEDROCKRUNTIME(request(GEN_AI_MODEL.getKey(), "modelId"));
 
   // Wrapping in unmodifiableMap

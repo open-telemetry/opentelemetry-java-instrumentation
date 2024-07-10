@@ -12,7 +12,7 @@ import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttri
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_BUCKET_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_ENDPOINT;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_GUARDRAIL_ID;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_KNOWLEDGEBASE_ID;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_KNOWLEDGE_BASE_ID;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_URL;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_REQUEST_ID;
@@ -107,7 +107,7 @@ class AwsSdkExperimentalAttributesExtractor
       case BEDROCK_AGENT_RUNTIME_SERVICE:
         setAttribute(attributes, AWS_AGENT_ID, originalRequest, RequestAccess::getAgentId);
         setAttribute(
-            attributes, AWS_KNOWLEDGEBASE_ID, originalRequest, RequestAccess::getKnowledgeBaseId);
+            attributes, AWS_KNOWLEDGE_BASE_ID, originalRequest, RequestAccess::getKnowledgeBaseId);
         break;
       case BEDROCK_RUNTIME_SERVICE:
         if (!Objects.equals(requestClassName, "InvokeModelRequest")) {
@@ -143,7 +143,7 @@ class AwsSdkExperimentalAttributesExtractor
         break;
       case BEDROCK_AGENT_RUNTIME_SERVICE:
         setAttribute(attributes, AWS_AGENT_ID, awsResp, RequestAccess::getAgentId);
-        setAttribute(attributes, AWS_KNOWLEDGEBASE_ID, awsResp, RequestAccess::getKnowledgeBaseId);
+        setAttribute(attributes, AWS_KNOWLEDGE_BASE_ID, awsResp, RequestAccess::getKnowledgeBaseId);
         break;
       default:
         break;
