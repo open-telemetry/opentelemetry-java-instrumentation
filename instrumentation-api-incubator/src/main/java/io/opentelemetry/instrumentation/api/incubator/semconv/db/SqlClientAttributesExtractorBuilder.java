@@ -16,7 +16,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_COLLECTION_NAME =
-      AttributeKey.stringKey("db.sql.table");
+      AttributeKey.stringKey("db.collection.name");
 
   final SqlClientAttributesGetter<REQUEST> getter;
   AttributeKey<String> dbTableAttribute = DB_COLLECTION_NAME;

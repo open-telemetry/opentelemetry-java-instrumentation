@@ -19,7 +19,7 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   INSTANCE;
 
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.name");
+  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");

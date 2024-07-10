@@ -425,7 +425,7 @@ abstract class AbstractMongoClientTest<T> extends InstrumentationSpecification {
         "$DbIncubatingAttributes.DB_CONNECTION_STRING" "mongodb://localhost:" + port
         "$DbIncubatingAttributes.DB_NAMESPACE" dbName
         "$DbIncubatingAttributes.DB_OPERATION_NAME" operation
-        "$DbIncubatingAttributes.DB_MONGODB_COLLECTION" collection
+        "$DbIncubatingAttributes.DB_COLLECTION_NAME" collection
       }
     }
   }
