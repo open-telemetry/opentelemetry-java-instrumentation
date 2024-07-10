@@ -8,6 +8,9 @@ otel:
     logback-appender:
       experimental:
         capture-code-attributes: true
+    http:
+      client:
+        emit-experimental-telemetry: true
   propagators:
     - b3
   resource:
@@ -16,6 +19,7 @@ otel:
 
 spring:
   kafka:
+    bootstrap-servers: localhost:9094
     consumer:
       auto-offset-reset: earliest
     listener:

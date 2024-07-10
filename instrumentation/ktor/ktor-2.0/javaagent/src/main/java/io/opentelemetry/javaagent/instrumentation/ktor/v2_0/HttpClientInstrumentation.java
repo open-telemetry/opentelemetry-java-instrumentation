@@ -16,7 +16,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracing;
 import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracingBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import kotlin.Unit;
@@ -56,9 +56,9 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public Unit invoke(KtorClientTracingBuilder builder) {
       OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
       builder.setOpenTelemetry(openTelemetry);
-      builder.capturedRequestHeaders(CommonConfig.get().getClientRequestHeaders());
-      builder.capturedResponseHeaders(CommonConfig.get().getClientResponseHeaders());
-      builder.knownMethods(CommonConfig.get().getKnownHttpRequestMethods());
+      builder.capturedRequestHeaders(AgentCommonConfig.get().getClientRequestHeaders());
+      builder.capturedResponseHeaders(AgentCommonConfig.get().getClientResponseHeaders());
+      builder.knownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods());
 
       return kotlin.Unit.INSTANCE;
     }

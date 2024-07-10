@@ -6,9 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_NEW;
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_OLD;
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_STATEMENT;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -94,7 +91,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       HttpUrl httpUrl = retrofit.baseUrl();
       influxDbRequest =
           InfluxDbRequest.create(
-              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
+              httpUrl.host(), httpUrl.port(), query.getDatabase(), null, query.getCommand());
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;
@@ -142,7 +139,6 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.This InfluxDBImpl influxDbImpl,
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) Object arg0,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit,
@@ -168,17 +164,17 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
               // write data by UDP protocol, in this way, can't get database name.
               : arg0 instanceof Integer ? "" : String.valueOf(arg0);
 
-      String sql = methodName;
+      String operation;
       if ("createDatabase".equals(methodName)) {
-        sql =
-            influxDbImpl.version().startsWith("0.")
-                ? String.format(CREATE_DATABASE_STATEMENT_OLD, database)
-                : String.format(CREATE_DATABASE_STATEMENT_NEW, database);
+        operation = "CREATE DATABASE";
       } else if ("deleteDatabase".equals(methodName)) {
-        sql = String.format(DELETE_DATABASE_STATEMENT, database);
+        operation = "DROP DATABASE";
+      } else {
+        operation = "WRITE";
       }
 
-      influxDbRequest = InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, sql);
+      influxDbRequest =
+          InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operation, null);
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return;
