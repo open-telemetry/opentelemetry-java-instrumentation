@@ -21,7 +21,6 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.name");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");
 
@@ -40,7 +39,6 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
       return;
     }
     internalSet(attributes, DB_SYSTEM, dbInfo.getSystem());
-    internalSet(attributes, DB_USER, dbInfo.getUser());
     internalSet(attributes, DB_NAMESPACE, getName(dbInfo));
     internalSet(attributes, DB_CONNECTION_STRING, dbInfo.getShortUrl());
   }

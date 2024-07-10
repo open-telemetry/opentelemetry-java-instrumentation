@@ -80,7 +80,6 @@ class DbClientAttributesExtractorTest {
     assertThat(startAttributes.build())
         .containsOnly(
             entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-            entry(DbIncubatingAttributes.DB_USER, "username"),
             entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
             entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
             entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),

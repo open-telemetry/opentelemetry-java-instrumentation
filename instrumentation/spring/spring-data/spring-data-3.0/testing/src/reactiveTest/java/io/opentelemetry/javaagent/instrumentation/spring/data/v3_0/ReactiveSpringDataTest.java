@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -83,7 +82,6 @@ class ReactiveSpringDataTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
                             equalTo(DB_NAMESPACE, "db"),
-                            equalTo(DB_USER, "sa"),
                             equalTo(DB_QUERY_TEXT, "SELECT CUSTOMER.* FROM CUSTOMER"),
                             equalTo(DB_OPERATION_NAME, "SELECT"),
                             equalTo(DB_COLLECTION_NAME, "CUSTOMER"),

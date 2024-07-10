@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_COLL
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -297,7 +296,6 @@ class HibernateReactiveTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_USER, USER_DB),
                             equalTo(
                                 DB_QUERY_TEXT,
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),

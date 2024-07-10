@@ -100,7 +100,6 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
             "$DbIncubatingAttributes.DB_NAMESPACE" "test"
-            "$DbIncubatingAttributes.DB_USER" "SA"
             "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
             "$DbIncubatingAttributes.DB_QUERY_TEXT" "SELECT id, name, price, weight FROM products"
             "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
@@ -200,7 +199,6 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "$DbIncubatingAttributes.DB_NAMESPACE" "test"
-              "$DbIncubatingAttributes.DB_USER" "SA"
               "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
               "$DbIncubatingAttributes.DB_QUERY_TEXT" "SELECT id AS request$requestId, name, price, weight FROM products"
               "$DbIncubatingAttributes.DB_OPERATION_NAME" "SELECT"
