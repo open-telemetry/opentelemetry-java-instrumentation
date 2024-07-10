@@ -52,6 +52,7 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
   private static void assertClient(TraceAssert traceAssert) {
     traceAssert.hasSpansSatisfyingExactly(
         span -> AbstractOtelSpringStarterSmokeTest.assertClientSpan(span, "/ping"),
-        span -> span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"));
+        span -> span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+        span -> withSpanAssert(span));
   }
 }

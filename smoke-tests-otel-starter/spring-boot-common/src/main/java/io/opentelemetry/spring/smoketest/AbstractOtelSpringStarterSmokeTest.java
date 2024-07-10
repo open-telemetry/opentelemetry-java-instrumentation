@@ -175,7 +175,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 ServerAttributes.SERVER_PORT,
-                                integerAssert -> integerAssert.isNotZero()))));
+                                integerAssert -> integerAssert.isNotZero())),
+                span -> withSpanAssert(span)));
 
     // Metric
     testing.waitAndAssertMetrics(
@@ -236,8 +237,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
             traceAssert.hasSpansSatisfyingExactly(
                 span -> assertClientSpan(span, "/ping"),
                 span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                span -> withSpanAssert(span)));
   }
 
   public static void assertClientSpan(SpanDataAssert span, String path) {
