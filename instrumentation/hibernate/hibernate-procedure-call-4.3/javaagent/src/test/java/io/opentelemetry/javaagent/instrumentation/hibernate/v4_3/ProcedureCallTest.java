@@ -116,7 +116,6 @@ class ProcedureCallTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAMESPACE, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
                             equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "{call TEST_PROC()}"),
                             equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "CALL")),
