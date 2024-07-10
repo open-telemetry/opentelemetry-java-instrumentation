@@ -122,7 +122,7 @@ public class CassandraClientTest {
                               equalTo(
                                   DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
                               equalTo(
-                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                                  DbIncubatingAttributes.DB_COLLECTION_NAME, parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -144,7 +144,7 @@ public class CassandraClientTest {
                               equalTo(
                                   DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
                               equalTo(
-                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                                  DbIncubatingAttributes.DB_COLLECTION_NAME, parameter.table))));
     }
 
     session.close();
@@ -204,7 +204,7 @@ public class CassandraClientTest {
                                   parameter.expectedStatement),
                               equalTo(
                                   DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
-                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -230,7 +230,7 @@ public class CassandraClientTest {
                                   parameter.expectedStatement),
                               equalTo(
                                   DbIncubatingAttributes.DB_OPERATION_NAME, parameter.operation),
-                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                              equalTo(DbIncubatingAttributes.DB_COLLECTION_NAME, parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)

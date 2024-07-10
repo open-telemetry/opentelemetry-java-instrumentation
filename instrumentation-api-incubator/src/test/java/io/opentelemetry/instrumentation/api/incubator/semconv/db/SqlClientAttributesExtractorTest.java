@@ -118,7 +118,7 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
-            .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
+            .setTableAttribute(DbIncubatingAttributes.DB_COLLECTION_NAME)
             .build();
 
     // when
@@ -130,7 +130,7 @@ class SqlClientAttributesExtractorTest {
         .containsOnly(
             entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
             entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
-            entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
+            entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "table"));
   }
 
   @Test
