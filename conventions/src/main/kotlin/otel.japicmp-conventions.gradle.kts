@@ -91,7 +91,7 @@ if (project.findProperty("otel.stable") == "true") {
 
         // this is needed so that we only consider the current artifact, and not dependencies
         ignoreMissingClasses.set(true)
-        packageExcludes.addAll("*.internal", "*.internal.*")
+        packageExcludes.addAll("*.internal", "*.internal.*", "*.shaded", "*.shaded.*")
         val baseVersionString = if (apiBaseVersion == null) "latest" else baselineVersion
         txtOutputFile.set(
           apiNewVersion?.let { file("$rootDir/docs/apidiffs/${apiNewVersion}_vs_$baselineVersion/${base.archivesName.get()}.txt") }

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.instrumentation.r2dbc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.R2dbcTelemetry;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.shaded.R2dbcTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.r2dbc.spi.ConnectionFactory;

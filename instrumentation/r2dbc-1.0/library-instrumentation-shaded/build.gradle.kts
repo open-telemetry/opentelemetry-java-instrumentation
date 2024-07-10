@@ -25,6 +25,10 @@ tasks {
       "io.r2dbc.proxy",
       "io.opentelemetry.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy"
     )
+    relocate(
+      "io.opentelemetry.instrumentation.r2dbc.v1_0",
+      "io.opentelemetry.instrumentation.r2dbc.v1_0.shaded"
+    )
   }
 
   val extractShadowJar by registering(Copy::class) {
