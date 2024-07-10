@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.R2dbcTelemetry;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcNetAttributesGetter;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.shaded.R2dbcTelemetry;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.shaded.internal.R2dbcNetAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
