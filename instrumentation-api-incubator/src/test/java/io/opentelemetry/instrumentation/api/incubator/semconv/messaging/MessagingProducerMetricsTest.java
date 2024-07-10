@@ -42,7 +42,7 @@ class MessagingProducerMetricsTest {
             .put(
                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                 "persistent://public/default/topic")
-            .put(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish")
+            .put(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish")
             .put(ServerAttributes.SERVER_PORT, 6650)
             .put(ServerAttributes.SERVER_ADDRESS, "localhost")
             .build();
