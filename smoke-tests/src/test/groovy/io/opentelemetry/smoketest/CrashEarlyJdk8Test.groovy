@@ -13,7 +13,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
-import spock.lang.Ignore
 import spock.lang.IgnoreIf
 import spock.lang.Specification
 
@@ -25,12 +24,6 @@ import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContaine
 // java.lang.invoke.CallSite
 // This test verifies that such jvm does not crash with opentelemetry agent
 @IgnoreIf({ useWindowsContainers() })
-// com.github.dockerjava.api.exception.DockerClientException: Could not pull image: [DEPRECATION NOTICE]
-// Docker Image Format v1 and Docker Image manifest version 2, schema 1 support is disabled by default
-// and will be removed in an upcoming release. Suggest the author of docker.io/azul/zulu-openjdk:8u31
-// to upgrade the image to the OCI Format or Docker Image manifest v2, schema 2. More information
-// at https://docs.docker.com/go/deprecated-image-specs/
-@Ignore
 class CrashEarlyJdk8Test extends Specification {
   private static final Logger logger = LoggerFactory.getLogger(CrashEarlyJdk8Test)
 
@@ -40,7 +33,7 @@ class CrashEarlyJdk8Test extends Specification {
   def "test crash on early jdk8"() {
     setup:
     GenericContainer target =
-      new GenericContainer<>(DockerImageName.parse("azul/zulu-openjdk:8u31"))
+      new GenericContainer<>(DockerImageName.parse("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-zulu-openjdk-8u31:20240709.9848833570"))
         .withStartupTimeout(Duration.ofMinutes(5))
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withCopyFileToContainer(
