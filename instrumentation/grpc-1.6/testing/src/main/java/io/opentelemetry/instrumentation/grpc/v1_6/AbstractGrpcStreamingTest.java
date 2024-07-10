@@ -27,7 +27,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -165,13 +164,13 @@ public abstract class AbstractGrpcStreamingTest {
                           assertThat(attrs)
                               .hasSize(2)
                               .hasEntrySatisfying(
-                                  MessageIncubatingAttributes.MESSAGE_TYPE,
+                                  RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                   val ->
                                       assertThat(val)
                                           .satisfiesAnyOf(
                                               v -> assertThat(v).isEqualTo("RECEIVED"),
                                               v -> assertThat(v).isEqualTo("SENT")))
-                              .containsEntry(MessageIncubatingAttributes.MESSAGE_ID, messageId)));
+                              .containsEntry(RpcIncubatingAttributes.RPC_MESSAGE_ID, messageId)));
     }
 
     testing()

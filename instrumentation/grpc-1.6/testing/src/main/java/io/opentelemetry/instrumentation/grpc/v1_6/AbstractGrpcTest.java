@@ -50,7 +50,6 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -150,16 +149,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -184,16 +183,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -318,16 +317,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -352,16 +351,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -498,16 +497,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -532,16 +531,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -653,8 +652,8 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -681,8 +680,8 @@ public abstract class AbstractGrpcTest {
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                              RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L));
                                   if (status.getCause() == null) {
                                     assertThat(events).hasSize(1);
                                   } else {
@@ -805,8 +804,8 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -833,8 +832,8 @@ public abstract class AbstractGrpcTest {
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                              RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L));
                                   span.hasException(status.asRuntimeException());
                                 })));
     testing()
@@ -1053,16 +1052,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1087,16 +1086,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L)))));
   }
 
   @Test
@@ -1176,14 +1175,14 @@ public abstract class AbstractGrpcTest {
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                          equalTo(RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                          equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L));
                                   assertThat(events.get(1))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L));
+                                              RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L));
                                   span.hasException(thrown);
                                 }),
                     span ->
@@ -1210,16 +1209,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L)))));
   }
 
   @Test
@@ -1298,16 +1297,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName(
                                 "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
@@ -1335,16 +1334,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L)))));
   }
 
   @Test
@@ -1408,16 +1407,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1442,16 +1441,16 @@ public abstract class AbstractGrpcTest {
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                                RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                            equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L)))));
   }
 
   // Regression test for
