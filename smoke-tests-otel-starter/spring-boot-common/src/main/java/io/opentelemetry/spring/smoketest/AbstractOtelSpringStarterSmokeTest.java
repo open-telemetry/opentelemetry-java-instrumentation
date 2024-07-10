@@ -217,7 +217,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 span -> span.hasName("server"),
-                span -> span.satisfies(s -> assertThat(s.getName()).endsWith(".getConnection")),
+                span -> span.matches(s -> s.getName().endsWith(".getConnection")),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttribute(
