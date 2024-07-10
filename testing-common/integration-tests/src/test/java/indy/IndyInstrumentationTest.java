@@ -59,6 +59,9 @@ public class IndyInstrumentationTest {
   private Class<?> getHelperClass(boolean local) {
     return null;
   }
+  private Object instrumentWithErasedTypes() {
+    return "replace_me";
+  }
 
   @AfterEach
   public void reset() {
@@ -110,6 +113,12 @@ public class IndyInstrumentationTest {
   @Test
   void testThrowExceptionIntoUserCode() {
     assertThatThrownBy(this::exceptionPlease).isInstanceOf(RuntimeException.class);
+  }
+
+  @Test
+  void testAdviceSignatureReferenceInternalHelper() {
+    Object result = instrumentWithErasedTypes();
+    assertThat(result.getClass().getName()).contains("LocalHelper");
   }
 
   @Test

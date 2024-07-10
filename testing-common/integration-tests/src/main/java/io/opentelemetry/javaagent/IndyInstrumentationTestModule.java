@@ -21,6 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -84,6 +85,8 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
       transformer.applyAdviceToMethod(named("exceptionPlease"), prefix + "$ThrowExceptionAdvice");
       transformer.applyAdviceToMethod(
           named("noExceptionPlease"), prefix + "$SuppressExceptionAdvice");
+      transformer.applyAdviceToMethod(
+          named("instrumentWithErasedTypes"), prefix + "$SignatureErasureAdvice");
     }
 
     @SuppressWarnings({"unused"})
@@ -175,7 +178,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
         throw new RuntimeException("This exception should be suppressed");
       }
 
-      @Advice.AssignReturned.ToReturned
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
       @Advice.OnMethodExit(
           suppress = Throwable.class,
           onThrowable = Throwable.class,
@@ -184,6 +187,24 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
         throw new RuntimeException("This exception should be suppressed");
       }
     }
+
+
+    @SuppressWarnings({"unused", "ThrowSpecificExceptions"})
+    public static class SignatureErasureAdvice {
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+  public static LocalHelper onMethodEnter() {
+    return new LocalHelper();
+  }
+
+  @Advice.AssignReturned.ToReturned
+  @Advice.OnMethodExit(
+      suppress = Throwable.class,
+      onThrowable = Throwable.class,
+      inline = false)
+  public static LocalHelper onMethodExit(@Advice.Enter LocalHelper enterVal) {
+    return enterVal;
+  }
+}
   }
 
   public static class GlobalHelper {}
