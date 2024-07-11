@@ -23,13 +23,13 @@ import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 
+interface AbstractJspInstrumentationTest {
+  String getBaseUrl();
 
-class AbstractJspInstrumentationTest {
+  int getPort();
 
-  static SpanDataAssert assertServerSpan(
-      SpanDataAssert span,
-      ServerSpanAssertion serverSpanAssertion) {
-    if (serverSpanAssertion.getExceptionClass() != null) {
+  default SpanDataAssert assertServerSpan(SpanDataAssert span, JspSpanAssertion spanAssertion) {
+    if (spanAssertion.getExceptionClass() != null) {
       span.hasStatus(StatusData.error())
           .hasEventsSatisfyingExactly(
               event ->
@@ -40,8 +40,12 @@ class AbstractJspInstrumentationTest {
                               ExceptionAttributes.EXCEPTION_TYPE,
                               val ->
                                   val.satisfiesAnyOf(
-                                      v -> val.isEqualTo(serverSpanAssertion.getExceptionClass().getName()),
-                                      v -> val.contains(serverSpanAssertion.getExceptionClass().getSimpleName()))),
+                                      v ->
+                                          val.isEqualTo(
+                                              spanAssertion.getExceptionClass().getName()),
+                                      v ->
+                                          val.contains(
+                                              spanAssertion.getExceptionClass().getSimpleName()))),
                           satisfies(
                               ExceptionAttributes.EXCEPTION_MESSAGE,
                               val -> val.isInstanceOf(String.class)),
@@ -50,20 +54,20 @@ class AbstractJspInstrumentationTest {
                               val -> val.isInstanceOf(String.class))));
     }
 
-    return span.hasName(serverSpanAssertion.getMethod() + " " + serverSpanAssertion.getRoute())
+    return span.hasName(spanAssertion.getMethod() + " " + spanAssertion.getRoute())
         .hasNoParent()
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
             equalTo(UrlAttributes.URL_SCHEME, "http"),
-            equalTo(UrlAttributes.URL_PATH, serverSpanAssertion.getRoute()),
-            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, serverSpanAssertion.getMethod()),
-            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, serverSpanAssertion.getResponseStatus()),
+            equalTo(UrlAttributes.URL_PATH, spanAssertion.getRoute()),
+            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, spanAssertion.getMethod()),
+            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, spanAssertion.getResponseStatus()),
             satisfies(
                 UserAgentAttributes.USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-            equalTo(HttpAttributes.HTTP_ROUTE, serverSpanAssertion.getRoute()),
+            equalTo(HttpAttributes.HTTP_ROUTE, spanAssertion.getRoute()),
             equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-            equalTo(ServerAttributes.SERVER_PORT, serverSpanAssertion.getPort()),
+            equalTo(ServerAttributes.SERVER_PORT, getPort()),
             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
             satisfies(NetworkAttributes.NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
@@ -71,74 +75,119 @@ class AbstractJspInstrumentationTest {
                 ErrorAttributes.ERROR_TYPE,
                 val ->
                     val.satisfiesAnyOf(
-                        v -> assertThat(serverSpanAssertion.getExceptionClass()).isNull(),
+                        v -> assertThat(spanAssertion.getExceptionClass()).isNull(),
                         v -> assertThat(v).isEqualTo("500"))));
   }
 
-  static final class ServerSpanAssertionBuilder {
-    private SpanDataAssert span;
-    private String method;
-    private String route;
-    private int port;
-    private int responseStatus;
-    private Class<?> exceptionClass;
-
-    public ServerSpanAssertionBuilder withSpan(SpanDataAssert span) {
-      this.span = span;
-      return this;
+  default SpanDataAssert assertCompileSpan(SpanDataAssert span, JspSpanAssertion spanAssertion) {
+    if (spanAssertion.getExceptionClass() != null) {
+      span.hasStatus(StatusData.error())
+          .hasEventsSatisfyingExactly(
+              event ->
+                  event
+                      .hasName("exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              ExceptionAttributes.EXCEPTION_TYPE,
+                              spanAssertion.getExceptionClass().getCanonicalName()),
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_STACKTRACE,
+                              val -> val.isInstanceOf(String.class)),
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_MESSAGE,
+                              val -> val.isInstanceOf(String.class))));
     }
 
-    public ServerSpanAssertionBuilder withMethod(String method) {
-      this.method = method;
-      return this;
-    }
-
-    public ServerSpanAssertionBuilder withRoute(String route) {
-      this.route = route;
-      return this;
-    }
-
-    public ServerSpanAssertionBuilder withPort(int port) {
-      this.port = port;
-      return this;
-    }
-
-    public ServerSpanAssertionBuilder withResponseStatus(int responseStatus) {
-      this.responseStatus = responseStatus;
-      return this;
-    }
-
-    public ServerSpanAssertionBuilder withExceptionClass(Class<?> exceptionClass) {
-      this.exceptionClass = exceptionClass;
-      return this;
-    }
-
-    public ServerSpanAssertion build() {
-      ServerSpanAssertion serverSpan = new ServerSpanAssertion();
-      serverSpan.setSpan(this.span);
-      serverSpan.setMethod(this.method);
-      serverSpan.setRoute(this.route);
-      serverSpan.setPort(this.port);
-      serverSpan.setResponseStatus(this.responseStatus);
-      serverSpan.setExceptionClass(this.exceptionClass);
-      return serverSpan;
-    }
+    return span.hasName("Compile " + spanAssertion.getRoute())
+        .hasParent(spanAssertion.getParent())
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp." + spanAssertion.getClassName()),
+            equalTo(stringKey("jsp.compiler"), "org.apache.jasper.compiler.JDTCompiler"));
   }
 
-  public static class ServerSpanAssertion {
-    private SpanDataAssert span;
+  default SpanDataAssert assertRenderSpan(SpanDataAssert span, JspSpanAssertion spanAssertion) {
+    String requestURL = spanAssertion.getRoute();
+    if (spanAssertion.getRequestURLOverride() != null) {
+      requestURL = spanAssertion.getRequestURLOverride();
+    }
+
+    if (spanAssertion.getExceptionClass() != null) {
+      span.hasStatus(StatusData.error())
+          .hasEventsSatisfyingExactly(
+              event ->
+                  event
+                      .hasName("exception")
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_TYPE,
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v ->
+                                          val.isEqualTo(
+                                              spanAssertion.getExceptionClass().getName()),
+                                      v ->
+                                          val.contains(
+                                              spanAssertion.getExceptionClass().getSimpleName()))),
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_MESSAGE,
+                              val -> val.isInstanceOf(String.class)),
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_STACKTRACE,
+                              val -> val.isInstanceOf(String.class))));
+    }
+
+    return span.hasName("Render " + spanAssertion.getRoute())
+        .hasParent(spanAssertion.getParent())
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("jsp.requestURL"), getBaseUrl() + requestURL),
+            satisfies(
+                stringKey("jsp.forwardOrigin"),
+                val ->
+                    val.satisfiesAnyOf(
+                        v -> assertThat(spanAssertion.getForwardOrigin()).isNull(),
+                        v -> assertThat(v).isEqualTo(spanAssertion.getForwardOrigin()))));
+  }
+
+  class JspSpanAssertion {
+    private SpanData parent;
     private String method;
+    private String className;
+    private String requestURLOverride;
+    private String forwardOrigin;
     private String route;
-    private int port;
     private int responseStatus;
     private Class<?> exceptionClass;
 
-    public SpanDataAssert getSpan() {
-      return span;
+    public SpanData getParent() {
+      return parent;
     }
 
-    public void setSpan(SpanDataAssert span) {
-      this.span = span;
+    public void setParent(SpanData parent) {
+      this.parent = parent;
+    }
+
+    public String getRequestURLOverride() {
+      return requestURLOverride;
+    }
+
+    public void setRequestURLOverride(String requestURLOverride) {
+      this.requestURLOverride = requestURLOverride;
+    }
+
+    public String getForwardOrigin() {
+      return forwardOrigin;
+    }
+
+    public void setForwardOrigin(String forwardOrigin) {
+      this.forwardOrigin = forwardOrigin;
+    }
+
+    public SpanData getSpanData() {
+      return parent;
+    }
+
+    public void setSpanData(SpanData parent) {
+      this.parent = parent;
     }
 
     public String getMethod() {
@@ -149,20 +198,20 @@ class AbstractJspInstrumentationTest {
       this.method = method;
     }
 
+    public String getClassName() {
+      return className;
+    }
+
+    public void setClassName(String className) {
+      this.className = className;
+    }
+
     public String getRoute() {
       return route;
     }
 
     public void setRoute(String route) {
       this.route = route;
-    }
-
-    public int getPort() {
-      return port;
-    }
-
-    public void setPort(int port) {
-      this.port = port;
     }
 
     public int getResponseStatus() {
@@ -182,80 +231,67 @@ class AbstractJspInstrumentationTest {
     }
   }
 
-  SpanDataAssert assertCompileSpan(
-      SpanDataAssert span,
-      SpanData parent,
-      String route,
-      String className,
-      Class<?> exceptionClass) {
+  final class JspSpanAssertionBuilder {
+    private SpanData parent;
+    private String method;
+    private String route;
+    private String className;
+    private String requestURLOverride;
+    private String forwardOrigin;
+    private int responseStatus;
+    private Class<?> exceptionClass;
 
-    if (exceptionClass != null) {
-      span.hasStatus(StatusData.error())
-          .hasEventsSatisfyingExactly(
-              event ->
-                  event
-                      .hasName("exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              ExceptionAttributes.EXCEPTION_TYPE,
-                              exceptionClass.getCanonicalName()),
-                          satisfies(
-                              ExceptionAttributes.EXCEPTION_STACKTRACE,
-                              val -> val.isInstanceOf(String.class)),
-                          satisfies(
-                              ExceptionAttributes.EXCEPTION_MESSAGE,
-                              val -> val.isInstanceOf(String.class))));
+    public JspSpanAssertionBuilder withParent(SpanData parent) {
+      this.parent = parent;
+      return this;
     }
 
-    return span.hasName("Compile " + route)
-        .hasParent(parent)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp." + className),
-            equalTo(stringKey("jsp.compiler"), "org.apache.jasper.compiler.JDTCompiler"));
-  }
-
-  SpanDataAssert assertRenderSpan(
-      SpanDataAssert span,
-      SpanData parent,
-      String route,
-      String requestURLOverride,
-      String forwardOrigin,
-      Class<?> exceptionClass) {
-    String requestURL = route;
-    if (requestURLOverride != null) {
-      requestURL = requestURLOverride;
+    public JspSpanAssertionBuilder withMethod(String method) {
+      this.method = method;
+      return this;
     }
 
-    if (exceptionClass != null) {
-      span.hasStatus(StatusData.error())
-          .hasEventsSatisfyingExactly(
-              event ->
-                  event
-                      .hasName("exception")
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              ExceptionAttributes.EXCEPTION_TYPE,
-                              val ->
-                                  val.satisfiesAnyOf(
-                                      v -> val.isEqualTo(exceptionClass.getName()),
-                                      v -> val.contains(exceptionClass.getSimpleName()))),
-                          satisfies(
-                              ExceptionAttributes.EXCEPTION_MESSAGE,
-                              val -> val.isInstanceOf(String.class)),
-                          satisfies(
-                              ExceptionAttributes.EXCEPTION_STACKTRACE,
-                              val -> val.isInstanceOf(String.class))));
+    public JspSpanAssertionBuilder withRoute(String route) {
+      this.route = route;
+      return this;
     }
 
-    return span.hasName("Render " + route)
-        .hasParent(parent)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("jsp.requestURL"), baseUrl + requestURL),
-            satisfies(
-                stringKey("jsp.forwardOrigin"),
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(forwardOrigin).isNull(),
-                        v -> assertThat(v).isEqualTo(forwardOrigin))));
+    public JspSpanAssertionBuilder withClassName(String className) {
+      this.className = className;
+      return this;
+    }
+
+    public JspSpanAssertionBuilder withRequestURLOverride(String requestURLOverride) {
+      this.requestURLOverride = requestURLOverride;
+      return this;
+    }
+
+    public JspSpanAssertionBuilder withForwardOrigin(String forwardOrigin) {
+      this.forwardOrigin = forwardOrigin;
+      return this;
+    }
+
+    public JspSpanAssertionBuilder withResponseStatus(int responseStatus) {
+      this.responseStatus = responseStatus;
+      return this;
+    }
+
+    public JspSpanAssertionBuilder withExceptionClass(Class<?> exceptionClass) {
+      this.exceptionClass = exceptionClass;
+      return this;
+    }
+
+    public JspSpanAssertion build() {
+      JspSpanAssertion serverSpan = new JspSpanAssertion();
+      serverSpan.setParent(this.parent);
+      serverSpan.setMethod(this.method);
+      serverSpan.setRoute(this.route);
+      serverSpan.setClassName(this.className);
+      serverSpan.setRequestURLOverride(this.requestURLOverride);
+      serverSpan.setForwardOrigin(this.forwardOrigin);
+      serverSpan.setResponseStatus(this.responseStatus);
+      serverSpan.setExceptionClass(this.exceptionClass);
+      return serverSpan;
+    }
   }
 }

@@ -37,12 +37,21 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
-class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat> {
+class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
+    implements AbstractJspInstrumentationTest {
   @RegisterExtension
   public static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  protected static String baseUrl = "";
+  @Override
+  public String getBaseUrl() {
+    return "http://localhost:" + port + "/" + getContextPath();
+  }
+
+  @Override
+  public int getPort() {
+    return port;
+  }
 
   @Override
   protected Tomcat setupServer() throws Exception {
@@ -62,8 +71,7 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
     // https://stackoverflow.com/questions/48998387/code-works-with-embedded-apache-tomcat-8-but-not-with-9-whats-changed
     tomcatServer.getConnector();
 
-    baseUrl = "http://localhost:" + port + "/" + getContextPath();
-    client = WebClient.of(baseUrl);
+    client = WebClient.of(getBaseUrl());
 
     tomcatServer.addWebapp(
         "/" + getContextPath(),
@@ -112,36 +120,43 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    assertServerSpan(span,
-                        new ServerSpanAssertionBuilder()
+                    assertServerSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
                             .withMethod("GET")
                             .withRoute("/" + getContextPath() + forwardFromFileName)
-                            .withResponseStatus(200L)
+                            .withResponseStatus(200)
                             .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        forwardFromFileName,
-                        jspForwardFromClassPrefix + jspForwardFromClassName,
-                        null),
-                span ->
-                    assertRenderSpan(span, trace.getSpan(0), forwardFromFileName, null, null, null),
-                span ->
-                    assertCompileSpan(
-                        span,
-                        trace.getSpan(2),
-                        forwardDestFileName,
-                        jspForwardDestClassPrefix + jspForwardDestClassName,
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute(forwardFromFileName)
+                            .withClassName(jspForwardFromClassPrefix + jspForwardFromClassName)
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(2),
-                        forwardDestFileName,
-                        null,
-                        forwardFromFileName,
-                        null)));
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute(forwardFromFileName)
+                            .build()),
+                span ->
+                    assertCompileSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute(forwardDestFileName)
+                            .withClassName(jspForwardDestClassPrefix + jspForwardDestClassName)
+                            .build()),
+                span ->
+                    assertRenderSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute(forwardDestFileName)
+                            .build())));
 
     assertThat(res.status().code()).isEqualTo(200);
   }
@@ -179,21 +194,26 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                 span ->
                     assertServerSpan(
                         span,
-                        new ServerSpanAssertionBuilder()
+                        new JspSpanAssertionBuilder()
                             .withMethod("GET")
                             .withRoute("/" + getContextPath() + "/forwards/forwardToHtml.jsp")
-                            .withResponseStatus(200L)
+                            .withResponseStatus(200)
                             .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToHtml.jsp",
-                        "forwards.forwardToHtml_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToHtml.jsp")
+                            .withClassName("forwards.forwardToHtml_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
-                        span, trace.getSpan(0), "/forwards/forwardToHtml.jsp", null, null, null)));
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToHtml.jsp")
+                            .build())));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -208,71 +228,76 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                 span ->
                     assertServerSpan(
                         span,
-                        new ServerSpanAssertionBuilder()
+                        new JspSpanAssertionBuilder()
                             .withMethod("GET")
-                            .withRoute("/" + getContextPath() + "/forwards/forwardToIncludeMulti.jsp")
-                            .withResponseStatus(200L)
+                            .withRoute(
+                                "/" + getContextPath() + "/forwards/forwardToIncludeMulti.jsp")
+                            .withResponseStatus(200)
                             .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToIncludeMulti.jsp",
-                        "forwards.forwardToIncludeMulti_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToIncludeMulti.jsp")
+                            .withClassName("forwards.forwardToIncludeMulti_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToIncludeMulti.jsp",
-                        null,
-                        null,
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToIncludeMulti.jsp")
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(2),
-                        "/includes/includeMulti.jsp",
-                        "includes.includeMulti_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/includes/includeMulti.jsp")
+                            .withClassName("includes.includeMulti_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(2),
-                        "/includes/includeMulti.jsp",
-                        null,
-                        "/forwards/forwardToIncludeMulti.jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/includes/includeMulti.jsp")
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(4),
-                        "/common/javaLoopH2.jsp",
-                        "common.javaLoopH2_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(4))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withClassName("common.javaLoopH2_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(4),
-                        "/common/javaLoopH2.jsp",
-                        "/includes/includeMulti.jsp",
-                        "/forwards/forwardToIncludeMulti.jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(4))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .withForwardOrigin("/forwards/forwardToIncludeMulti.jsp")
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(4),
-                        "/common/javaLoopH2.jsp",
-                        "common.javaLoopH2_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(4))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withClassName("common.javaLoopH2_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(4),
-                        "/common/javaLoopH2.jsp",
-                        "/includes/includeMulti.jsp",
-                        "/forwards/forwardToIncludeMulti.jsp",
-                        null)));
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(4))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .withForwardOrigin("/forwards/forwardToIncludeMulti.jsp")
+                            .build())));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -286,52 +311,56 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                 span ->
                     assertServerSpan(
                         span,
-                        new ServerSpanAssertionBuilder()
+                        new JspSpanAssertionBuilder()
                             .withMethod("GET")
                             .withRoute("/" + getContextPath() + "/forwards/forwardToJspForward.jsp")
-                            .withResponseStatus(200L)
+                            .withResponseStatus(200)
                             .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToJspForward.jsp",
-                        "forwards.forwardToJspForward_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToJspForward.jsp")
+                            .withClassName("forwards.forwardToJspForward_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToJspForward.jsp",
-                        null,
-                        null,
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToJspForward.jsp")
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(2),
-                        "/forwards/forwardToSimpleJava.jsp",
-                        "forwards.forwardToSimpleJava_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/forwards/forwardToSimpleJava.jsp")
+                            .withClassName("forwards.forwardToSimpleJava_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(2),
-                        "/forwards/forwardToSimpleJava.jsp",
-                        null,
-                        "/forwards/forwardToJspForward.jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/forwards/forwardToSimpleJava.jsp")
+                            .build()),
                 span ->
                     assertCompileSpan(
-                        span, trace.getSpan(4), "/common/loop.jsp", "common.loop_jsp", null),
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(4))
+                            .withRoute("/common/loop.jsp")
+                            .withClassName("common.loop_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(4),
-                        "/common/loop.jsp",
-                        null,
-                        "/forwards/forwardToJspForward.jsp",
-                        null)));
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(4))
+                            .withRoute("/common/loop.jsp")
+                            .build())));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -344,34 +373,40 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertServerSpan(span, new ServerSpanAssertionBuilder()
-                    .withMethod("GET")
-                    .withRoute(route)
-                    .withResponseStatus(500L)
-                    .withExceptionClass(JasperException.class)
-                    .build()),
+                span ->
+                    assertServerSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withMethod("GET")
+                            .withRoute(route)
+                            .withResponseStatus(500)
+                            .withExceptionClass(JasperException.class)
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToCompileError.jsp",
-                        "forwards.forwardToCompileError_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToCompileError.jsp")
+                            .withClassName("forwards.forwardToCompileError_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToCompileError.jsp",
-                        null,
-                        null,
-                        JasperException.class),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToCompileError.jsp")
+                            .withExceptionClass(JasperException.class)
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(2),
-                        "/compileError.jsp",
-                        "compileError_jsp",
-                        JasperException.class)));
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/compileError.jsp")
+                            .withClassName("compileError_jsp")
+                            .withExceptionClass(JasperException.class)
+                            .build())));
     assertThat(res.status().code()).isEqualTo(500);
   }
 
@@ -409,21 +444,19 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToNonExistent.jsp",
-                        "forwards.forwardToNonExistent_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToNonExistent.jsp")
+                            .withClassName("forwards.forwardToNonExistent_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(0),
-                        "/forwards/forwardToNonExistent.jsp",
-                        null,
-                        null,
-                        null),
-                span ->
-                    span.hasName("ResponseFacade.sendError")
-                        .hasParent(trace.getSpan(2))));
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/forwards/forwardToNonExistent.jsp")
+                            .build()),
+                span -> span.hasName("ResponseFacade.sendError").hasParent(trace.getSpan(2))));
     assertThat(res.status().code()).isEqualTo(404);
   }
 }

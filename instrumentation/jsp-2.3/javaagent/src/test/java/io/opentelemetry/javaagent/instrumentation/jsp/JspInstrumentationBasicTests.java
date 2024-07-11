@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.javaagent.instrumentation.jsp.AbstractJspInstrumentationTest.assertServerSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -44,13 +43,21 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
+class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat>
+    implements AbstractJspInstrumentationTest {
   @RegisterExtension
   public static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  protected static String baseUrl = "";
+  @Override
+  public String getBaseUrl() {
+    return "http://localhost:" + port + "/" + getContextPath();
+  }
 
+  @Override
+  public int getPort() {
+    return port;
+  }
 
   @Override
   protected Tomcat setupServer() throws Exception {
@@ -70,8 +77,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     // https://stackoverflow.com/questions/48998387/code-works-with-embedded-apache-tomcat-8-but-not-with-9-whats-changed
     tomcatServer.getConnector();
 
-    baseUrl = "http://localhost:" + port + "/" + getContextPath();
-    client = WebClient.of(baseUrl);
+    client = WebClient.of(getBaseUrl());
 
     tomcatServer.addWebapp(
         "/" + getContextPath(),
@@ -114,21 +120,28 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    assertServerSpan(new AbstractJspInstrumentationTest.ServerSpanAssertionBuilder()
-                        .withSpan(span)
-                        .withMethod("GET")
-                        .withRoute("/" + getContextPath() + jspFileName)
-                        .withPort(port)
-                        .withResponseStatus(200)
-                        .build()),
+                    assertServerSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withMethod("GET")
+                            .withRoute("/" + getContextPath() + jspFileName)
+                            .withResponseStatus(200)
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        jspFileName,
-                        jspClassNamePrefix + jspClassName,
-                        null),
-                span -> assertRenderSpan(span, trace.getSpan(0), jspFileName, null, null, null)));
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute(jspFileName)
+                            .withClassName(jspClassNamePrefix + jspClassName)
+                            .build()),
+                span ->
+                    assertRenderSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute(jspFileName)
+                            .build())));
 
     assertThat(res.status().code()).isEqualTo(200);
   }
@@ -176,9 +189,19 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                 val -> val.isInstanceOf(Long.class))),
                 span ->
                     assertCompileSpan(
-                        span, trace.getSpan(0), "/getQuery.jsp", "getQuery_jsp", null),
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/getQuery.jsp")
+                            .withClassName("getQuery_jsp")
+                            .build()),
                 span ->
-                    assertRenderSpan(span, trace.getSpan(0), "/getQuery.jsp", null, null, null)));
+                    assertRenderSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/getQuery.jsp")
+                            .build())));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -196,13 +219,27 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     assertServerSpan(
-                        span, new ServerSpanAssertionBuilder()
+                        span,
+                        new JspSpanAssertionBuilder()
                             .withMethod("POST")
                             .withRoute("/" + getContextPath() + "/post.jsp")
-                            .withResponseStatus(200L)
+                            .withResponseStatus(200)
                             .build()),
-                span -> assertCompileSpan(span, trace.getSpan(0), "/post.jsp", "post_jsp", null),
-                span -> assertRenderSpan(span, trace.getSpan(0), "/post.jsp", null, null, null)));
+                span ->
+                    assertCompileSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/post.jsp")
+                            .withClassName("post_jsp")
+                            .build()),
+                span ->
+                    assertRenderSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/post.jsp")
+                            .build())));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -216,16 +253,30 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertServerSpan(span, new ServerSpanAssertionBuilder()
-                    .withMethod("GET")
-                    .withRoute(route)
-                    .withResponseStatus(500L)
-                    .withExceptionClass(exceptionClass)
-                    .build()),
-                span -> assertCompileSpan(span, trace.getSpan(0), jspFileName, jspClassName, null),
+                span ->
+                    assertServerSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withMethod("GET")
+                            .withRoute(route)
+                            .withResponseStatus(500)
+                            .withExceptionClass(exceptionClass)
+                            .build()),
+                span ->
+                    assertCompileSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute(jspFileName)
+                            .withClassName(jspClassName)
+                            .build()),
                 span ->
                     assertRenderSpan(
-                        span, trace.getSpan(0), jspFileName, null, null, exceptionClass)));
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute(jspFileName)
+                            .build())));
     assertThat(res.status().code()).isEqualTo(500);
   }
 
@@ -258,21 +309,26 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                 span ->
                     assertServerSpan(
                         span,
-                        new ServerSpanAssertionBuilder()
+                        new JspSpanAssertionBuilder()
                             .withMethod("GET")
                             .withRoute("/" + getContextPath() + "/includes/includeHtml.jsp")
-                            .withResponseStatus(200L)
+                            .withResponseStatus(200)
                             .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        "/includes/includeHtml.jsp",
-                        "includes.includeHtml_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/includes/includeHtml.jsp")
+                            .withClassName("includes.includeHtml_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
-                        span, trace.getSpan(0), "/includes/includeHtml.jsp", null, null, null)));
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/includes/includeHtml.jsp")
+                            .build())));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -286,51 +342,58 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                 span ->
                     assertServerSpan(
                         span,
-                        new ServerSpanAssertionBuilder()
+                        new JspSpanAssertionBuilder()
                             .withMethod("GET")
                             .withRoute("/" + getContextPath() + "/includes/includeMulti.jsp")
-                            .withResponseStatus(200L)
+                            .withResponseStatus(200)
                             .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(0),
-                        "/includes/includeMulti.jsp",
-                        "includes.includeMulti_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/includes/includeMulti.jsp")
+                            .withClassName("includes.includeMulti_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
-                        span, trace.getSpan(0), "/includes/includeMulti.jsp", null, null, null),
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(0))
+                            .withRoute("/includes/includeMulti.jsp")
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(2),
-                        "/common/javaLoopH2.jsp",
-                        "common.javaLoopH2_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withClassName("common.javaLoopH2_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(2),
-                        "/common/javaLoopH2.jsp",
-                        "/includes/includeMulti.jsp",
-                        null,
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .build()),
                 span ->
                     assertCompileSpan(
                         span,
-                        trace.getSpan(2),
-                        "/common/javaLoopH2.jsp",
-                        "common.javaLoopH2_jsp",
-                        null),
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withClassName("common.javaLoopH2_jsp")
+                            .build()),
                 span ->
                     assertRenderSpan(
                         span,
-                        trace.getSpan(2),
-                        "/common/javaLoopH2.jsp",
-                        "/includes/includeMulti.jsp",
-                        null,
-                        null)));
+                        new JspSpanAssertionBuilder()
+                            .withParent(trace.getSpan(2))
+                            .withRoute("/common/javaLoopH2.jsp")
+                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .build())));
     assertThat(res.status().code()).isEqualTo(200);
   }
 
@@ -345,12 +408,15 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertServerSpan(span, new ServerSpanAssertionBuilder()
-                    .withMethod("GET")
-                    .withRoute(route)
-                    .withResponseStatus(500L)
-                    .withExceptionClass(JasperException.class)
-                    .build()),
+                span ->
+                    assertServerSpan(
+                        span,
+                        new JspSpanAssertionBuilder()
+                            .withMethod("GET")
+                            .withRoute(route)
+                            .withResponseStatus(500)
+                            .withExceptionClass(JasperException.class)
+                            .build()),
                 span ->
                     span.hasName("Compile " + jspFileName)
                         .hasParent(trace.getSpan(0))
