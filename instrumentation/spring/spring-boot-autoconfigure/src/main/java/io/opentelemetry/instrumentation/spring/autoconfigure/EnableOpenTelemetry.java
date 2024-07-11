@@ -12,7 +12,10 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-/** Convenient annotation to leverage Spring autoconfiguration for OpenTelemetry in non-Spring Boot projects. */
+/**
+ * Convenient annotation to leverage Spring autoconfiguration for OpenTelemetry in non-Spring Boot
+ * projects.
+ */
 @Configuration
 @ComponentScan(basePackages = "io.opentelemetry.instrumentation.spring.autoconfigure")
 @Target(ElementType.TYPE)
