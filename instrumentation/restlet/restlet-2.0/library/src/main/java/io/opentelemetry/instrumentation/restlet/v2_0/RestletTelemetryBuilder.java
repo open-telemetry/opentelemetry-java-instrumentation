@@ -11,8 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHeadersGetter;
-import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
+import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletTelemetryBuilderFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -25,10 +24,7 @@ public final class RestletTelemetryBuilder {
   private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
-        new DefaultHttpServerInstrumenterBuilder<>(
-                "io.opentelemetry.restlet-2.0", openTelemetry, RestletHttpAttributesGetter.INSTANCE)
-            .setHeaderGetter(new RestletHeadersGetter());
+    builder = RestletTelemetryBuilderFactory.create(openTelemetry);
   }
 
   /**
