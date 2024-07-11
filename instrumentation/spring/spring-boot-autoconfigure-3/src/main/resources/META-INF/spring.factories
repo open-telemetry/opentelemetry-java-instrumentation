@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web.RestClientInstrumentationAutoConfiguration
+io.opentelemetry.instrumentation.spring.autoconfigure.v3.instrumentation.web.RestClientInstrumentationAutoConfiguration

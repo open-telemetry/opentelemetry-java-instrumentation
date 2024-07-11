@@ -13,11 +13,11 @@ otelJava {
 dependencies {
   val springBootVersion = "3.2.4"
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-  implementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  implementation(project(":instrumentation:spring:spring-boot-autoconfigure-2"))
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
 
-  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure-2"))
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
