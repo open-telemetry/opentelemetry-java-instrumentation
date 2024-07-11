@@ -14,19 +14,23 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.HttpRequestHeadersGetter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyHttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.server.NettyServerInstrumenterBuilderUtil;
 import java.util.List;
 import java.util.Set;
 
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
 
-  private final DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse>
-      serverBuilder;
+  private final DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
 
   private boolean emitExperimentalHttpServerEvents = false;
 
+  static {
+    NettyServerInstrumenterBuilderUtil.setBuilderExtractor(NettyServerTelemetryBuilder::getBuilder);
+  }
+
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
-    serverBuilder =
+    builder =
         new DefaultHttpServerInstrumenterBuilder<>(
                 "io.opentelemetry.netty-4.1", openTelemetry, new NettyHttpServerAttributesGetter())
             .setHeaderGetter(HttpRequestHeadersGetter.INSTANCE);
@@ -52,7 +56,7 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedRequestHeaders(
       List<String> capturedRequestHeaders) {
-    serverBuilder.setCapturedRequestHeaders(capturedRequestHeaders);
+    builder.setCapturedRequestHeaders(capturedRequestHeaders);
     return this;
   }
 
@@ -64,7 +68,7 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedResponseHeaders(
       List<String> capturedResponseHeaders) {
-    serverBuilder.setCapturedResponseHeaders(capturedResponseHeaders);
+    builder.setCapturedResponseHeaders(capturedResponseHeaders);
     return this;
   }
 
@@ -83,7 +87,7 @@ public final class NettyServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    serverBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -96,16 +100,20 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
+    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 
   /** Returns a new {@link NettyServerTelemetry} with the given configuration. */
   public NettyServerTelemetry build() {
     return new NettyServerTelemetry(
-        serverBuilder.build(),
+        builder.build(),
         emitExperimentalHttpServerEvents
             ? ProtocolEventHandler.Enabled.INSTANCE
             : ProtocolEventHandler.Noop.INSTANCE);
+  }
+
+  private DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> getBuilder() {
+    return builder;
   }
 }

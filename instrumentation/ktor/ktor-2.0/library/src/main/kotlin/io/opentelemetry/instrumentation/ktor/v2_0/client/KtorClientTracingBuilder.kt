@@ -14,9 +14,14 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
-import java.util.*
+import io.opentelemetry.instrumentation.ktor.v2_0.internal.KtorBuilderUtil
 
 class KtorClientTracingBuilder {
+  companion object {
+    init {
+      KtorBuilderUtil.clientBuilderExtractor = { it.clientBuilder }
+    }
+  }
 
   private lateinit var clientBuilder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 

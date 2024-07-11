@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.restlet.v1_1;
+package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Locale;

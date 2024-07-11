@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.restlet.v1_1.internal.RestletTelemetryBuilderFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -20,15 +21,10 @@ import org.restlet.data.Response;
 /** A builder of {@link RestletTelemetry}. */
 public final class RestletTelemetryBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.restlet-1.1";
-
-  private final DefaultHttpServerInstrumenterBuilder<Request, Response> serverBuilder;
+  private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
-    serverBuilder =
-        new DefaultHttpServerInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, RestletHttpAttributesGetter.INSTANCE)
-            .setHeaderGetter(RestletHeadersGetter.INSTANCE);
+    builder = RestletTelemetryBuilderFactory.create(openTelemetry);
   }
 
   /**
@@ -38,7 +34,7 @@ public final class RestletTelemetryBuilder {
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<Request, Response> attributesExtractor) {
-    serverBuilder.addAttributesExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -49,7 +45,7 @@ public final class RestletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    serverBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -60,7 +56,7 @@ public final class RestletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    serverBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -79,7 +75,7 @@ public final class RestletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    serverBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -92,7 +88,7 @@ public final class RestletTelemetryBuilder {
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
+    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 
@@ -101,7 +97,7 @@ public final class RestletTelemetryBuilder {
   public RestletTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
           spanNameExtractorTransformer) {
-    serverBuilder.setSpanNameExtractor(spanNameExtractorTransformer);
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -110,6 +106,6 @@ public final class RestletTelemetryBuilder {
    * RestletTelemetryBuilder}.
    */
   public RestletTelemetry build() {
-    return new RestletTelemetry(serverBuilder.build());
+    return new RestletTelemetry(builder.build());
   }
 }

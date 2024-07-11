@@ -30,13 +30,13 @@ class KtorServerTracing private constructor(
 ) {
 
   class Configuration {
-    internal lateinit var serverBuilder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
+    internal lateinit var builder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
 
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
     fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
-      this.serverBuilder =
+      this.builder =
         DefaultHttpServerInstrumenterBuilder(
           INSTRUMENTATION_NAME,
           openTelemetry,
@@ -47,7 +47,7 @@ class KtorServerTracing private constructor(
     fun setStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
-      serverBuilder.setStatusExtractor { prevExtractor ->
+      builder.setStatusExtractor { prevExtractor ->
         SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
                               request: ApplicationRequest,
                               response: ApplicationResponse?,
@@ -64,22 +64,22 @@ class KtorServerTracing private constructor(
     }
 
     fun addAttributeExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
-      serverBuilder.addAttributesExtractor(extractor)
+      builder.addAttributesExtractor(extractor)
     }
 
     fun setCapturedRequestHeaders(requestHeaders: List<String>) {
-      serverBuilder.setCapturedRequestHeaders(requestHeaders)
+      builder.setCapturedRequestHeaders(requestHeaders)
     }
 
     fun setCapturedResponseHeaders(responseHeaders: List<String>) {
-      serverBuilder.setCapturedResponseHeaders(responseHeaders)
+      builder.setCapturedResponseHeaders(responseHeaders)
     }
 
     fun setKnownMethods(knownMethods: Set<String>) {
-      serverBuilder.setKnownMethods(knownMethods)
+      builder.setKnownMethods(knownMethods)
     }
 
-    internal fun isOpenTelemetryInitialized(): Boolean = this::serverBuilder.isInitialized
+    internal fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
   }
 
   private fun start(call: ApplicationCall): Context? {
@@ -111,7 +111,7 @@ class KtorServerTracing private constructor(
       }
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
-        configuration.serverBuilder.builder(),
+        configuration.builder.builder(),
         ApplicationRequestGetter,
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )

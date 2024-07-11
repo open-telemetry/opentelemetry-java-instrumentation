@@ -8,11 +8,12 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
 import java.util.List;
@@ -22,11 +23,12 @@ import java.util.function.Function;
 /** A builder of {@link NettyClientTelemetry}. */
 public final class NettyClientTelemetryBuilder {
 
-  private final NettyClientInstrumenterBuilder builder;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
   private boolean emitExperimentalHttpClientEvents = false;
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder = new NettyClientInstrumenterBuilder("io.opentelemetry.netty-4.1", openTelemetry);
+    builder =
+        NettyClientInstrumenterBuilderFactory.create("io.opentelemetry.netty-4.1", openTelemetry);
   }
 
   @CanIgnoreReturnValue

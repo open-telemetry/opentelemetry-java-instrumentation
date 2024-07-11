@@ -11,55 +11,37 @@ import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaHttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 public final class ArmeriaTelemetryBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.armeria-1.3";
-  // copied from PeerIncubatingAttributes
-  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
-
-  @Nullable private String peerService;
   private final DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
       clientBuilder;
   private final DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
       serverBuilder;
 
+  static {
+    ArmeriaInstrumenterBuilderUtil.setClientBuilderExtractor(
+        ArmeriaTelemetryBuilder::getClientBuilder);
+    ArmeriaInstrumenterBuilderUtil.setServerBuilderExtractor(
+        ArmeriaTelemetryBuilder::getServerBuilder);
+  }
+
   @SuppressWarnings({"rawtypes", "unchecked"})
   ArmeriaTelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder =
-        new DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>(
-                INSTRUMENTATION_NAME,
-                openTelemetry,
-                (HttpClientAttributesGetter) ArmeriaHttpClientAttributesGetter.INSTANCE)
-            .setHeaderSetter(ClientRequestContextSetter.INSTANCE)
-            .setBuilderCustomizer(
-                builder -> {
-                  if (peerService != null) {
-                    builder.addAttributesExtractor(
-                        AttributesExtractor.constant(PEER_SERVICE, peerService));
-                  }
-                });
-    serverBuilder =
-        new DefaultHttpServerInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME,
-                openTelemetry,
-                (HttpServerAttributesGetter) ArmeriaHttpServerAttributesGetter.INSTANCE)
-            .setHeaderGetter(RequestContextGetter.INSTANCE);
+    clientBuilder = ArmeriaInstrumenterBuilderFactory.getClientBuilder(openTelemetry);
+    serverBuilder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -101,7 +83,7 @@ public final class ArmeriaTelemetryBuilder {
   /** Sets the {@code peer.service} attribute for http client spans. */
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setPeerService(String peerService) {
-    this.peerService = peerService;
+    clientBuilder.setPeerService(peerService);
     return this;
   }
 
@@ -224,5 +206,15 @@ public final class ArmeriaTelemetryBuilder {
 
   public ArmeriaTelemetry build() {
     return new ArmeriaTelemetry(clientBuilder.build(), serverBuilder.build());
+  }
+
+  private DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
+      getClientBuilder() {
+    return clientBuilder;
+  }
+
+  private DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
+      getServerBuilder() {
+    return serverBuilder;
   }
 }

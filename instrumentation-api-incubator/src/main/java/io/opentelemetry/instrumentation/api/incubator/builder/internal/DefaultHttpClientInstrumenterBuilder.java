@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
@@ -39,6 +40,9 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
+
+  // copied from PeerIncubatingAttributes
+  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final String instrumentationName;
   private final OpenTelemetry openTelemetry;
@@ -83,7 +87,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public DefaultHttpClientTelemetryBuilder<REQUEST, RESPONSE> setStatusExtractor(
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
       Function<
               SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
               ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
@@ -174,6 +178,13 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
+  /** Sets the {@code peer.service} attribute for http client spans. */
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerService(
+      String peerService) {
+    return addAttributeExtractor(AttributesExtractor.constant(PEER_SERVICE, peerService));
+  }
+
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setBuilderCustomizer(
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
@@ -209,6 +220,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   public OpenTelemetry getOpenTelemetry() {
     return openTelemetry;
+  }
+
+  public String getInstrumentationName() {
+    return instrumentationName;
   }
 
   @CanIgnoreReturnValue

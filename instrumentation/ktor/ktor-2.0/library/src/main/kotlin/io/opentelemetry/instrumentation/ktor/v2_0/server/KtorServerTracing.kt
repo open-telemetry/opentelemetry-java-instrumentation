@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
+import io.opentelemetry.instrumentation.ktor.v2_0.internal.KtorBuilderUtil
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(
@@ -34,6 +35,12 @@ class KtorServerTracing private constructor(
 ) {
 
   class Configuration {
+    companion object {
+      init {
+        KtorBuilderUtil.serverBuilderExtractor = { it.serverBuilder }
+      }
+    }
+
     internal lateinit var serverBuilder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
 
     internal var spanKindExtractor:

@@ -16,11 +16,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public enum ArmeriaHttpClientAttributesGetter
+enum ArmeriaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<RequestContext, RequestLog> {
   INSTANCE;
 

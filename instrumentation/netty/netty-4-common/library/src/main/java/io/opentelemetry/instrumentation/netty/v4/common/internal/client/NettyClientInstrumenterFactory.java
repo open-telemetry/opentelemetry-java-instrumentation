@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
 
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -23,12 +23,12 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
  */
 public final class NettyClientInstrumenterFactory {
 
-  private final NettyClientInstrumenterBuilder builder;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
   private final NettyConnectionInstrumentationFlag connectionTelemetryState;
   private final NettyConnectionInstrumentationFlag sslTelemetryState;
 
   public NettyClientInstrumenterFactory(
-      NettyClientInstrumenterBuilder builder,
+      DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder,
       NettyConnectionInstrumentationFlag connectionTelemetryState,
       NettyConnectionInstrumentationFlag sslTelemetryState) {
     this.builder = builder;
@@ -50,13 +50,10 @@ public final class NettyClientInstrumenterFactory {
     NettyConnectHttpAttributesGetter getter = NettyConnectHttpAttributesGetter.INSTANCE;
 
     InstrumenterBuilder<NettyConnectionRequest, Channel> builder =
-        Instrumenter.<NettyConnectionRequest, Channel>builder(
-                this.builder.getOpenTelemetry(),
-                this.builder.getInstrumentationName(),
-                NettyConnectionRequest::spanName)
-            .addAttributesExtractor(
-                HttpClientPeerServiceAttributesExtractor.create(
-                    getter, this.builder.getPeerServiceResolver()));
+        Instrumenter.builder(
+            this.builder.getOpenTelemetry(),
+            this.builder.getInstrumentationName(),
+            NettyConnectionRequest::spanName);
 
     if (connectionTelemetryFullyEnabled) {
       // when the connection telemetry is fully enabled, CONNECT spans are created for every

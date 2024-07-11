@@ -12,20 +12,20 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class NettyClientSingletons {
 
   private static final boolean connectionTelemetryEnabled =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.netty.connection-telemetry.enabled", false);
   private static final boolean sslTelemetryEnabled =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
 
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
@@ -33,9 +33,10 @@ public final class NettyClientSingletons {
   private static final NettySslInstrumenter SSL_INSTRUMENTER;
 
   static {
-    NettyClientInstrumenterBuilder builder =
-        new NettyClientInstrumenterBuilder("io.opentelemetry.netty-4.0", GlobalOpenTelemetry.get());
-    DefaultHttpClientInstrumenterBuilder.unwrapAndConfigure(CommonConfig.get(), builder);
+    DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
+        NettyClientInstrumenterBuilderFactory.create(
+                "io.opentelemetry.netty-4.0", GlobalOpenTelemetry.get())
+            .configure(AgentCommonConfig.get());
 
     NettyClientInstrumenterFactory factory =
         new NettyClientInstrumenterFactory(

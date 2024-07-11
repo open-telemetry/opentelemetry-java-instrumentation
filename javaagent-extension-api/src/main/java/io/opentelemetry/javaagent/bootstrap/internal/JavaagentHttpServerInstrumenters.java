@@ -28,7 +28,8 @@ public final class JavaagentHttpServerInstrumenters {
     return create(instrumentationName, httpAttributesGetter, headerGetter, customizer -> {});
   }
 
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(Object builder) {
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
+      DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> builder) {
     return create(builder, customizer -> {});
   }
 
@@ -45,10 +46,11 @@ public final class JavaagentHttpServerInstrumenters {
   }
 
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
-      Object builder,
-      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
-    return DefaultHttpServerInstrumenterBuilder.<REQUEST, RESPONSE>unwrapAndConfigure(
-            CommonConfig.get(), builder)
-        .build(instrumenterBuilderConsumer);
+      DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> builder,
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
+    return builder
+        .configure(AgentCommonConfig.get())
+        .setBuilderCustomizer(builderCustomizer)
+        .build();
   }
 }
