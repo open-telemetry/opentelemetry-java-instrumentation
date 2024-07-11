@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
@@ -18,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -39,11 +41,18 @@ import javax.annotation.Nullable;
  */
 public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
+  // copied from PeerIncubatingAttributes
+  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
+
   private final String instrumentationName;
   private final OpenTelemetry openTelemetry;
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
+  private Function<
+          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+          ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+      statusExtractorTransformer = Function.identity();
   private final HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
@@ -74,6 +83,16 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> addAttributeExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
+      Function<
+              SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
+              ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+          statusExtractor) {
+    this.statusExtractorTransformer = statusExtractor;
     return this;
   }
 
@@ -159,6 +178,13 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
+  /** Sets the {@code peer.service} attribute for http client spans. */
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerService(
+      String peerService) {
+    return addAttributeExtractor(AttributesExtractor.constant(PEER_SERVICE, peerService));
+  }
+
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setBuilderCustomizer(
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
@@ -174,7 +200,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(attributesGetter))
+            .setSpanStatusExtractor(
+                statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
