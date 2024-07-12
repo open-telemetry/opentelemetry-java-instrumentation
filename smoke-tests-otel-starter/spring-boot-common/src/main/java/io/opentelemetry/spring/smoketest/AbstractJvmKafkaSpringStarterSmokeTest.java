@@ -7,7 +7,7 @@ package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.v2.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.kafka.KafkaInstrumentationAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.instrumentation.kafka.KafkaInstrumentationAutoConfiguration;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
