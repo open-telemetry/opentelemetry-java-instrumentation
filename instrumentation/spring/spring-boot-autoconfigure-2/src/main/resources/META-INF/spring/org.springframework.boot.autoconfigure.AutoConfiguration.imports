@@ -8,4 +8,3 @@ io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.microme
 io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.r2dbc.R2dbcInstrumentationAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.web.SpringWebInstrumentationAutoConfiguration
 io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.webflux.SpringWebfluxInstrumentationAutoConfiguration
-io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.webmvc.SpringWebMvc6InstrumentationAutoConfiguration

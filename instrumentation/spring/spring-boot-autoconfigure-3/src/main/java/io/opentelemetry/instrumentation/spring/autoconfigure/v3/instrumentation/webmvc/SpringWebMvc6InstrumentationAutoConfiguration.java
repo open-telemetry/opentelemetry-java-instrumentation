@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.webmvc;
+package io.opentelemetry.instrumentation.spring.autoconfigure.v3.instrumentation.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.ConditionalOnEnabledInstrumentation;

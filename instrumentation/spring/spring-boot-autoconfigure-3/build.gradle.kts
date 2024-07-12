@@ -16,6 +16,8 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-boot-autoconfigure-2"))
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
+  implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+  compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure-2"))
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
