@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.japicmp-conventions")
 }
 
 base.archivesName.set("opentelemetry-autoconfigure-spring-boot-2")

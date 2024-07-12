@@ -1,6 +1,7 @@
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
+  id("otel.japicmp-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
