@@ -1,6 +1,8 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.render.InventoryMarkdownReportRenderer
+import java.nio.file.Files
+import java.util.regex.Pattern
 
 plugins {
   id("com.github.jk1.dependency-license-report")
@@ -237,11 +239,30 @@ tasks {
     delete(rootProject.file("licenses"))
   }
 
+  val removeLicenseDate by registering {
+    // removing the license report date makes it idempotent
+    doLast {
+      val filePath = rootDir.toPath().resolve("licenses").resolve("licenses.md")
+      if (Files.exists(filePath)) {
+        val datePattern = Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
+        val lines = Files.readAllLines(filePath).map {
+          if (datePattern.matcher(it).matches()) {
+            ""
+          } else {
+            it
+          }
+        }.toCollection(ArrayList<String>());
+        Files.write(filePath, lines)
+      }
+    }
+  }
+
   val generateLicenseReportEnabled =
     gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
   named("generateLicenseReport").configure {
     dependsOn(cleanLicenses)
     finalizedBy(":spotlessApply")
+    finalizedBy(removeLicenseDate)
     // disable licence report generation unless this task is explicitly run
     // the files produced by this task are used by other tasks without declaring them as dependency
     // which gradle considers an error
