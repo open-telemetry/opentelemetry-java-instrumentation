@@ -35,7 +35,7 @@ If you are working on a specific instrumentation, you can load only the modules 
 For example, to load the modules for the Spring Boot autoconfigure instrumentation, run:
 
 ```shell
-./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure/
+./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure-2/
 ```
 
 Install the [Kotlin executable](https://kotlinlang.org/docs/tutorials/command-line.html)
