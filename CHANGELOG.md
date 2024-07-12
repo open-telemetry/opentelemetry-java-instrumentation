@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## Version 1.33.4 (2024-06-19)
+
+### 📈 Enhancements
+
+- Backport: Undertow, run response customizer on all ServerConnection implementations
+  ([#11548](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11548))
+- Backport: Improve security manager support
+  ([#11606](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11606))
+- Backport: Update the OpenTelemetry SDK version to 1.39.0
+  ([#11603](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11603))
+
+### 🛠️ Bug fixes
+
+- Backport: Avoid NullPointerException when JMS destination is not available
+  ([#11577](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11577))
+- Backport: Fix Spring Kafka instrumentation closing the trace too early
+  ([#11592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11592))
+- Backport: Fix gRPC instrumentation adding duplicates to metadata instead of overwriting
+  ([#11604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11604))
+- Backport: Fix request header capture corrupting tomcat request
+  ([#11607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11607))
+
 ## Version 2.5.0 (2024-06-17)
 
 ### 📈 Enhancements

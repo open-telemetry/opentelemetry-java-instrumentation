@@ -12,7 +12,7 @@ main(args)
 
 fun main(args: Array<String>) {
   if (args.isEmpty()) {
-    println("Usage: ./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure/ <module to include2> ...")
+    println("Usage: ./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure-2/ <module to include2> ...")
     return
   }
 

@@ -19,11 +19,10 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getOperation(InfluxDbRequest request) {
-    if (request.getSqlStatementInfo() != null) {
-      String operation = request.getSqlStatementInfo().getOperation();
-      return operation == null ? request.getSql() : operation;
+    if (request.getOperation() != null) {
+      return request.getOperation();
     }
-    return null;
+    return request.getSqlStatementInfo().getOperation();
   }
 
   @Override

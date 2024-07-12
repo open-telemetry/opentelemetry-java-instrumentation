@@ -15,15 +15,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import okhttp3.Request;
 
 public class KubernetesClientSingletons {
 
   private static final Instrumenter<Request, ApiResponse<?>> INSTRUMENTER;
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kubernetes-client.experimental-span-attributes", false);
   private static final ContextPropagators CONTEXT_PROPAGATORS;
 
@@ -38,9 +38,9 @@ public class KubernetesClientSingletons {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setCapturedRequestHeaders(AgentCommonConfig.get().getClientRequestHeaders())
+                    .setCapturedResponseHeaders(AgentCommonConfig.get().getClientResponseHeaders())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build());
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

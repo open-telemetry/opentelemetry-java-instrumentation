@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import java.util.Collections;
 import org.restlet.Request;
@@ -25,18 +25,18 @@ public final class RestletSingletons {
       RestletInstrumenterFactory.newServerInstrumenter(
           GlobalOpenTelemetry.get(),
           HttpServerAttributesExtractor.builder(RestletHttpAttributesGetter.INSTANCE)
-              .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-              .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-              .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+              .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+              .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
+              .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           HttpSpanNameExtractor.builder(RestletHttpAttributesGetter.INSTANCE)
-              .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+              .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           HttpServerRoute.builder(RestletHttpAttributesGetter.INSTANCE)
-              .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+              .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
               .build(),
           Collections.emptyList(),
-          CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry());
+          AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry());
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
