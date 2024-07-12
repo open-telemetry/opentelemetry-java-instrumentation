@@ -2,8 +2,8 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-// Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration.custom-starter
-base.archivesName.set("opentelemetry-spring-boot")
+// Name the Spring Boot modules in accordance with https://docs.spring.io/spring-boot/docs/current/reference/html/featurres.html#features.developing-auto-configuration.custom-starter
+base.archivesName.set("opentelemetry-spring-boot-2")
 group = "io.opentelemetry.instrumentation"
 
 val springBootVersion = "2.7.18" // AutoConfiguration is added in 2.7.0, but can be used with older versions

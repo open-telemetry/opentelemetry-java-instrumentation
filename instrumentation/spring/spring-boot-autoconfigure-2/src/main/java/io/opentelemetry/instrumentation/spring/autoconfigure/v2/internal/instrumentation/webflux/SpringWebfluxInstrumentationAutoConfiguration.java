@@ -18,7 +18,10 @@ import org.springframework.web.server.WebFilter;
 /**
  * Configures {@link WebClient} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to WebClient beans after initialization
+ * <p>Adds Open Telemetry instrumentation to WebClient beans after initialization.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-webflux")
 @ConditionalOnClass(WebClient.class)

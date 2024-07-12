@@ -18,6 +18,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.DispatcherServlet;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @ConditionalOnEnabledInstrumentation(module = "spring-webmvc")
 @ConditionalOnClass({Filter.class, OncePerRequestFilter.class, DispatcherServlet.class})
 @Configuration

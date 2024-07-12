@@ -15,7 +15,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestClient;
 
-public final class RestClientBeanPostProcessor implements BeanPostProcessor {
+final class RestClientBeanPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
   private final ObjectProvider<ConfigProperties> configPropertiesProvider;

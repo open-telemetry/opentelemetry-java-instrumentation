@@ -15,6 +15,9 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Convenient annotation to leverage Spring autoconfiguration for OpenTelemetry in non-Spring Boot
  * projects.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 @Configuration
 @ComponentScan(basePackages = "io.opentelemetry.instrumentation.spring.autoconfigure")

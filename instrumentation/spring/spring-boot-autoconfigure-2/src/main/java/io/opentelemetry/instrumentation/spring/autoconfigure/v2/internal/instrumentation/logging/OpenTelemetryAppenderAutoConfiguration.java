@@ -13,6 +13,10 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @Configuration
 @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
 public class OpenTelemetryAppenderAutoConfiguration {

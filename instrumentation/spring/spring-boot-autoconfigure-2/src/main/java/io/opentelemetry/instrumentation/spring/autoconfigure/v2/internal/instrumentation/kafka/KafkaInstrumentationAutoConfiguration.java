@@ -17,6 +17,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @ConditionalOnEnabledInstrumentation(module = "kafka")
 @ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
 @Configuration

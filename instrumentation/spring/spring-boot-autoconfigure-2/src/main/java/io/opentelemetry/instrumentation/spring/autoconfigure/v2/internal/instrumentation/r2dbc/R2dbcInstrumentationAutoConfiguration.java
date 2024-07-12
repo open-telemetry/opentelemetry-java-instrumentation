@@ -15,6 +15,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 @ConditionalOnBean(OpenTelemetry.class)
 @ConditionalOnClass(ConnectionFactory.class)
 @ConditionalOnEnabledInstrumentation(module = "r2dbc")

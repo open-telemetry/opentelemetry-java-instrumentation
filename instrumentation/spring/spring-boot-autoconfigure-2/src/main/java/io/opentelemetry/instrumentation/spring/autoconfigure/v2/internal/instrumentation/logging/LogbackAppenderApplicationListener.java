@@ -13,6 +13,10 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class LogbackAppenderApplicationListener implements GenericApplicationListener {
 
   private static final Class<?>[] SOURCE_TYPES = {

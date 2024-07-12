@@ -18,7 +18,7 @@ class OpenTelemetryAnnotationsRuntimeHints implements RuntimeHintsRegistrar {
         .reflection()
         .registerType(
             TypeReference.of(
-                "io.opentelemetry.instrumentation.spring.autoconfigure.v2.instrumentation.annotations.InstrumentationWithSpanAspect"),
+                "io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.instrumentation.annotations.InstrumentationWithSpanAspect"),
             hint -> hint.withMembers(MemberCategory.INVOKE_PUBLIC_METHODS));
   }
 }
