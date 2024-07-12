@@ -10,8 +10,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import org.elasticsearch.client.Response;
 
 /**
@@ -26,17 +28,22 @@ public final class ElasticsearchRestInstrumenterFactory {
       OpenTelemetry openTelemetry,
       String instrumentationName,
       List<AttributesExtractor<ElasticsearchRestRequest, Response>> attributesExtractors,
+      Function<
+              SpanNameExtractor<ElasticsearchRestRequest>,
+              ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
+          spanNameExtractorTransformer,
       Set<String> knownMethods,
       boolean captureSearchQuery) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
         new ElasticsearchDbAttributesGetter(captureSearchQuery);
     ElasticsearchClientAttributeExtractor esClientAtrributesExtractor =
         new ElasticsearchClientAttributeExtractor(knownMethods);
-    ElasticsearchSpanNameExtractor nameExtractor =
-        new ElasticsearchSpanNameExtractor(dbClientAttributesGetter);
+    SpanNameExtractor<? super ElasticsearchRestRequest> spanNameExtractor =
+        spanNameExtractorTransformer.apply(
+            new ElasticsearchSpanNameExtractor(dbClientAttributesGetter));
 
     return Instrumenter.<ElasticsearchRestRequest, Response>builder(
-            openTelemetry, instrumentationName, nameExtractor)
+            openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(esClientAtrributesExtractor)
         .addAttributesExtractors(attributesExtractors)

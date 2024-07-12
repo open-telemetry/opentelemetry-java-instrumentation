@@ -13,7 +13,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
@@ -60,13 +59,11 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
     return embeddedServer(Netty, port = port) {
       install(KtorServerTracing) {
         setOpenTelemetry(testing.openTelemetry)
-        setSpanKindExtractor {
-          SpanKindExtractor { req ->
-            if (req.uri.startsWith("/from-pubsub/")) {
-              SpanKind.CONSUMER
-            } else {
-              SpanKind.SERVER
-            }
+        spanKindExtractor {
+          if (uri.startsWith("/from-pubsub/")) {
+            SpanKind.CONSUMER
+          } else {
+            SpanKind.SERVER
           }
         }
       }

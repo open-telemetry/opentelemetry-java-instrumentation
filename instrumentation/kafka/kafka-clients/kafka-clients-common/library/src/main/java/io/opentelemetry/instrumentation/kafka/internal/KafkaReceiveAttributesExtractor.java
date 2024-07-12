@@ -5,14 +5,18 @@
 
 package io.opentelemetry.instrumentation.kafka.internal;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import javax.annotation.Nullable;
 
 enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, Void> {
   INSTANCE;
+
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
+      AttributeKey.stringKey("messaging.kafka.consumer.group");
 
   @Override
   public void onStart(
@@ -20,7 +24,7 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
 
     String consumerGroup = request.getConsumerGroup();
     if (consumerGroup != null) {
-      attributes.put(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
+      attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
     }
   }
 

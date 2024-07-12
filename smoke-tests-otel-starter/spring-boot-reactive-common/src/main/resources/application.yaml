@@ -1,0 +1,17 @@
+otel:
+  instrumentation:
+    common:
+      db-statement-sanitizer:
+        enabled: false
+    http:
+      client:
+        emit-experimental-telemetry: true
+      server:
+        emit-experimental-telemetry: true
+
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb
+  jpa:
+    hibernate:
+      ddl-auto: create

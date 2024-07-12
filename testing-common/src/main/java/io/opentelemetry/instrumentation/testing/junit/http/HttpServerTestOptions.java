@@ -48,6 +48,7 @@ public final class HttpServerTestOptions {
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
+  Predicate<ServerEndpoint> hasRenderSpan = unused -> false;
   Predicate<ServerEndpoint> hasErrorPageSpans = unused -> false;
   Predicate<ServerEndpoint> hasResponseCustomizer = unused -> false;
 
@@ -64,6 +65,7 @@ public final class HttpServerTestOptions {
   boolean testHttpPipelining = true;
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
+  boolean useHttp2 = false;
 
   HttpServerTestOptions() {}
 
@@ -129,6 +131,12 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setHasResponseSpan(Predicate<ServerEndpoint> hasResponseSpan) {
     this.hasResponseSpan = hasResponseSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasRenderSpan(Predicate<ServerEndpoint> hasRenderSpan) {
+    this.hasRenderSpan = hasRenderSpan;
     return this;
   }
 
@@ -218,6 +226,17 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setVerifyServerSpanEndTime(boolean verifyServerSpanEndTime) {
     this.verifyServerSpanEndTime = verifyServerSpanEndTime;
     return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setUseHttp2(boolean useHttp2) {
+    this.useHttp2 = useHttp2;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions useHttp2() {
+    return setUseHttp2(true);
   }
 
   @FunctionalInterface

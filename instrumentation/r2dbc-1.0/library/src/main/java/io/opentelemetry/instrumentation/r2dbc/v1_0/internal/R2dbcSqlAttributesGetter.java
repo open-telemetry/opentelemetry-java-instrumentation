@@ -34,6 +34,12 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Override
   @Nullable
+  public String getConnectionString(DbExecution request) {
+    return request.getConnectionString();
+  }
+
+  @Override
+  @Nullable
   public String getRawStatement(DbExecution request) {
     return request.getRawStatement();
   }

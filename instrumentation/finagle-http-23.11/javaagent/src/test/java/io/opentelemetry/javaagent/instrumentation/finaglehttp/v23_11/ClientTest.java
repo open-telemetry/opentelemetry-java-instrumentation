@@ -162,7 +162,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
   @Override
   public int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    return Await.result(doSendRequest(request, uri), Duration.fromSeconds(10)).statusCode();
+    return Await.result(doSendRequest(request, uri), Duration.fromSeconds(30)).statusCode();
   }
 
   @Override

@@ -7,22 +7,18 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.ka
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
-@ConditionalOnBean(OpenTelemetry.class)
+@ConditionalOnEnabledInstrumentation(module = "kafka")
 @ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
-@ConditionalOnProperty(name = "otel.instrumentation.kafka.enabled", matchIfMissing = true)
-@Conditional(SdkEnabled.class)
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {
 
@@ -37,7 +33,9 @@ public class KafkaInstrumentationAutoConfiguration {
   @Bean
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
-          ObjectProvider<OpenTelemetry> openTelemetryProvider) {
-    return new ConcurrentKafkaListenerContainerFactoryPostProcessor(openTelemetryProvider);
+          ObjectProvider<OpenTelemetry> openTelemetryProvider,
+          ObjectProvider<ConfigProperties> configPropertiesProvider) {
+    return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
+        openTelemetryProvider, configPropertiesProvider);
   }
 }

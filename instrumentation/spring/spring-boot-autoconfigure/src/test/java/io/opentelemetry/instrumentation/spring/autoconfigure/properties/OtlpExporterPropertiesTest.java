@@ -9,6 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Arrays;

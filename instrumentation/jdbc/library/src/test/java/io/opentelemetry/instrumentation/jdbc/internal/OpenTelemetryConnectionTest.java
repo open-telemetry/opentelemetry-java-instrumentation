@@ -167,6 +167,7 @@ class OpenTelemetryConnectionTest {
     return DbInfo.builder()
         .system("my_system")
         .subtype("my_sub_type")
+        .shortUrl("my_connection_string")
         .user("my_user")
         .name("my_name")
         .db("my_db")
@@ -175,6 +176,7 @@ class OpenTelemetryConnectionTest {
         .build();
   }
 
+  @SuppressWarnings("deprecation") // old semconv
   private static void jdbcTraceAssertion(DbInfo dbInfo, String query) {
     testing.waitAndAssertTraces(
         trace ->
@@ -188,6 +190,8 @@ class OpenTelemetryConnectionTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, dbInfo.getSystem()),
                             equalTo(DbIncubatingAttributes.DB_NAME, dbInfo.getName()),
                             equalTo(DbIncubatingAttributes.DB_USER, dbInfo.getUser()),
+                            equalTo(
+                                DbIncubatingAttributes.DB_CONNECTION_STRING, dbInfo.getShortUrl()),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "users"),

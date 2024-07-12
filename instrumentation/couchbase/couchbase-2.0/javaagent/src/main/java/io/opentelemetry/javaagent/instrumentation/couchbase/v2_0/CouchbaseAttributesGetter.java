@@ -30,6 +30,12 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
 
   @Override
   @Nullable
+  public String getConnectionString(CouchbaseRequestInfo couchbaseRequest) {
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getStatement(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.statement();
   }

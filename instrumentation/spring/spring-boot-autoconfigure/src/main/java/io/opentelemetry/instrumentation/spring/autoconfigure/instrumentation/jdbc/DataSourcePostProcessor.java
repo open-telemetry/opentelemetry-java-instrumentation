@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.jd
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.sql.DataSource;
 import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.ObjectProvider;
@@ -17,9 +19,13 @@ import org.springframework.core.Ordered;
 final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
+  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
 
-  DataSourcePostProcessor(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+  DataSourcePostProcessor(
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
+    this.configPropertiesProvider = configPropertiesProvider;
   }
 
   @CanIgnoreReturnValue
@@ -28,7 +34,13 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
     // Exclude scoped proxy beans to avoid double wrapping
     if (bean instanceof DataSource && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
-      return JdbcTelemetry.create(openTelemetryProvider.getObject()).wrap(dataSource);
+      return JdbcTelemetry.builder(openTelemetryProvider.getObject())
+          .setStatementSanitizationEnabled(
+              InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                  configPropertiesProvider.getObject(),
+                  "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+          .build()
+          .wrap(dataSource);
     }
     return bean;
   }

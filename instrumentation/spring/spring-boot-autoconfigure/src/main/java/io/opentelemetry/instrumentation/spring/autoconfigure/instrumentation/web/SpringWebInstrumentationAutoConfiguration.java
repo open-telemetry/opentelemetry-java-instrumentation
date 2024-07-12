@@ -6,14 +6,12 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.web;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,10 +20,8 @@ import org.springframework.web.client.RestTemplate;
  *
  * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization
  */
-@ConditionalOnBean(OpenTelemetry.class)
+@ConditionalOnEnabledInstrumentation(module = "spring-web")
 @ConditionalOnClass(RestTemplate.class)
-@ConditionalOnProperty(name = "otel.instrumentation.spring-web.enabled", matchIfMissing = true)
-@Conditional(SdkEnabled.class)
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 
@@ -34,15 +30,17 @@ public class SpringWebInstrumentationAutoConfiguration {
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
   static RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
-    return new RestTemplateBeanPostProcessor(openTelemetryProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+    return new RestTemplateBeanPostProcessor(openTelemetryProvider, configPropertiesProvider);
   }
 
   @Bean
   RestTemplateCustomizer otelRestTemplateCustomizer(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
     return restTemplate ->
         RestTemplateInstrumentation.addIfNotPresent(
-            restTemplate, openTelemetryProvider.getObject());
+            restTemplate, openTelemetryProvider.getObject(), configPropertiesProvider.getObject());
   }
 }

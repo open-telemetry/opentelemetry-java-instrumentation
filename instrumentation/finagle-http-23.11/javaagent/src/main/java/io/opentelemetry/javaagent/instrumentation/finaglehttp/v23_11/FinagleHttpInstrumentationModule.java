@@ -27,6 +27,12 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isIndyModule() {
+    // injects helpers to access package-private members
+    return false;
+  }
+
+  @Override
   public boolean isHelperClass(String className) {
     return className.equals("com.twitter.finagle.ChannelTransportHelpers")
         || className.equals("io.netty.channel.OpenTelemetryChannelInitializerDelegate");

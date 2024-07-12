@@ -11,7 +11,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 /**
  * Extractor of <a
@@ -19,13 +18,17 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
  * attributes</a>. This class is designed with SQL (or SQL-like) database clients in mind.
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
- * <code>{@link DbIncubatingAttributes#DB_SQL_TABLE}</code> attribute. The raw SQL statements
- * returned by the {@link SqlClientAttributesGetter#getRawStatement(Object)} method are sanitized
- * before use, all statement parameters are removed.
+ * <code>db.sql.table</code> attribute. The raw SQL statements returned by the {@link
+ * SqlClientAttributesGetter#getRawStatement(Object)} method are sanitized before use, all statement
+ * parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
         REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
+
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -43,28 +46,33 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private static final String SQL_CALL = "CALL";
+  // sanitizer is also used to extract operation and table name, so we have it always enable here
+  private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
   private final AttributeKey<String> dbTableAttribute;
-  private final SqlStatementSanitizer sanitizer;
+  private final boolean statementSanitizationEnabled;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST> getter,
       AttributeKey<String> dbTableAttribute,
-      SqlStatementSanitizer sanitizer) {
+      boolean statementSanitizationEnabled) {
     super(getter);
     this.dbTableAttribute = dbTableAttribute;
-    this.sanitizer = sanitizer;
+    this.statementSanitizationEnabled = statementSanitizationEnabled;
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawStatement(request));
+    String rawStatement = getter.getRawStatement(request);
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawStatement);
     String operation = sanitizedStatement.getOperation();
     internalSet(
-        attributes, DbIncubatingAttributes.DB_STATEMENT, sanitizedStatement.getFullStatement());
-    internalSet(attributes, DbIncubatingAttributes.DB_OPERATION, operation);
+        attributes,
+        DB_STATEMENT,
+        statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
+    internalSet(attributes, DB_OPERATION, operation);
     if (!SQL_CALL.equals(operation)) {
       internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());
     }

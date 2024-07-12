@@ -12,7 +12,6 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   api("io.opentelemetry.semconv:opentelemetry-semconv")
-  api("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
   api(project(":instrumentation-api"))
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 
@@ -22,6 +21,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
 }
 
 tasks {

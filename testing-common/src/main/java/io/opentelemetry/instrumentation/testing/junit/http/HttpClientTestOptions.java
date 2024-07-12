@@ -89,6 +89,8 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestNonStandardHttpMethod();
 
+  public abstract Function<URI, String> getHttpProtocolVersion();
+
   static Builder builder() {
     return new AutoValue_HttpClientTestOptions.Builder().withDefaults();
   }
@@ -116,7 +118,8 @@ public abstract class HttpClientTestOptions {
           .setTestCallback(true)
           .setTestCallbackWithParent(true)
           .setTestErrorWithCallback(true)
-          .setTestNonStandardHttpMethod(true);
+          .setTestNonStandardHttpMethod(true)
+          .setHttpProtocolVersion(uri -> "1.1");
     }
 
     Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
@@ -156,6 +159,8 @@ public abstract class HttpClientTestOptions {
     Builder setTestErrorWithCallback(boolean value);
 
     Builder setTestNonStandardHttpMethod(boolean value);
+
+    Builder setHttpProtocolVersion(Function<URI, String> value);
 
     @CanIgnoreReturnValue
     default Builder disableTestWithClientParent() {

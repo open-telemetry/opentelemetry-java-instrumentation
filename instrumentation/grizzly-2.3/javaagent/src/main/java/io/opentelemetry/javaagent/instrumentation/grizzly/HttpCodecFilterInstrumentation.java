@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import static io.opentelemetry.javaagent.instrumentation.grizzly.GrizzlySingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -36,9 +37,10 @@ public class HttpCodecFilterInstrumentation implements TypeInstrumentation {
                 takesArgument(
                     1,
                     // this is for 2.3.20+
-                    named("org.glassfish.grizzly.http.HttpHeader")
+                    namedOneOf(
+                        "org.glassfish.grizzly.http.HttpHeader",
                         // this is for 2.3 through 2.3.19
-                        .or(named("org.glassfish.grizzly.http.HttpPacketParsing"))))
+                        "org.glassfish.grizzly.http.HttpPacketParsing")))
             .and(isPublic()),
         HttpCodecFilterInstrumentation.class.getName() + "$HandleReadAdvice");
   }

@@ -14,17 +14,18 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.Collections;
+import java.util.function.Function;
 
 public final class NettyClientSingletons {
 
   private static final boolean connectionTelemetryEnabled =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.netty.connection-telemetry.enabled", false);
   private static final boolean sslTelemetryEnabled =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
 
   private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
@@ -38,16 +39,18 @@ public final class NettyClientSingletons {
             "io.opentelemetry.netty-4.0",
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled),
-            CommonConfig.get().getPeerServiceResolver(),
-            CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
+            AgentCommonConfig.get().getPeerServiceResolver(),
+            AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
     INSTRUMENTER =
         factory.createHttpInstrumenter(
             builder ->
                 builder
-                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-            builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
+                    .setCapturedRequestHeaders(AgentCommonConfig.get().getClientRequestHeaders())
+                    .setCapturedResponseHeaders(AgentCommonConfig.get().getClientResponseHeaders())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods()),
+            builder ->
+                builder.setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods()),
+            Function.identity(),
             Collections.emptyList());
     CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
     SSL_INSTRUMENTER = factory.createSslInstrumenter();

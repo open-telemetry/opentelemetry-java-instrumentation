@@ -104,9 +104,31 @@
     },
     {
       // intentionally using Spring Boot 2 in this smoke tests
-      "matchFileNames": ["smoke-tests/images/spring-boot/build.gradle.kts"],
-      "matchPackageNames": ["org.springframework.boot", "org.springframework.boot:spring-boot-dependencies"],
-      "matchUpdateTypes": ["major"],
+      // new versions of Spring Boot 3 are tested with
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/dc4330e0a3060bd7d8c4090ad0b8fc4727e68113/settings.gradle.kts#L43-L45
+      "matchFileNames": [
+        "smoke-tests/images/spring-boot/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-common/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-common/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-smoke-testing/build.gradle.kts"
+      ],
+      "matchPackageNames": [
+        "org.slf4j:slf4j-api",
+        "org.springframework.boot",
+        "org.springframework.boot:spring-boot-dependencies"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false,
+    },
+    {
+      // intentionally using Spring Boot 2 in this smoke tests
+      "matchFileNames": [
+        "smoke-tests-otel-starter/spring-boot-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts"
+      ],
+      "matchPackageNames": ["ch.qos.logback:logback-classic"],
+      "matchUpdateTypes": ["minor"],
       "enabled": false,
     },
     {

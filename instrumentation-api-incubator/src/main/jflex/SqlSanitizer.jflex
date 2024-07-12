@@ -18,19 +18,20 @@ import java.util.regex.Pattern;
 %unicode
 %ignorecase
 
-COMMA               = ","
-OPEN_PAREN          = "("
-CLOSE_PAREN         = ")"
-OPEN_COMMENT        = "/*"
-CLOSE_COMMENT       = "*/"
-IDENTIFIER          = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
-BASIC_NUM           = [.+-]* [0-9] ([0-9] | [eE.+-])*
-HEX_NUM             = "0x" ([a-f] | [A-F] | [0-9])+
-QUOTED_STR          = "'" ("''" | [^'])* "'"
-DOUBLE_QUOTED_STR   = "\"" ("\"\"" | [^\"])* "\""
-DOLLAR_QUOTED_STR   = "$$" [^$]* "$$"
-BACKTICK_QUOTED_STR = "`" [^`]* "`"
-WHITESPACE          = [ \t\r\n]+
+COMMA                = ","
+OPEN_PAREN           = "("
+CLOSE_PAREN          = ")"
+OPEN_COMMENT         = "/*"
+CLOSE_COMMENT        = "*/"
+IDENTIFIER           = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
+BASIC_NUM            = [.+-]* [0-9] ([0-9] | [eE.+-])*
+HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
+QUOTED_STR           = "'" ("''" | [^'])* "'"
+DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
+DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
+BACKTICK_QUOTED_STR  = "`" [^`]* "`"
+POSTGRE_PARAM_MARKER = "$"[0-9]*
+WHITESPACE           = [ \t\r\n]+
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
@@ -520,7 +521,7 @@ WHITESPACE          = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
-  {BACKTICK_QUOTED_STR} {
+  {BACKTICK_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
         if (!insideComment && !extractionDone) {
           extractionDone = operation.handleIdentifier();
         }

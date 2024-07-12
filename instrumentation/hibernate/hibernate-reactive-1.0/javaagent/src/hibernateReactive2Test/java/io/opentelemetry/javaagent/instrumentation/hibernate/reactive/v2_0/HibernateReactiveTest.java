@@ -300,7 +300,7 @@ class HibernateReactiveTest {
                             equalTo(DB_USER, USER_DB),
                             equalTo(
                                 DB_STATEMENT,
-                                "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$?"),
+                                "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),
                             equalTo(DB_OPERATION, "SELECT"),
                             equalTo(DB_SQL_TABLE, "Value"),
                             equalTo(SERVER_ADDRESS, host),

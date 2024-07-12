@@ -274,9 +274,94 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.common.db-statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.common.default-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables all instrumentations. Set to <code>false</code> to disable all instrumentations and then enable specific modules individually, e.g. <code>otel.instrumentation.jdbc.enabled=true</code>.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.common.peer-service-mapping",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of <code>host_or_ip=user_assigned_name</code> pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
+    },
+    {
+      "name": "otel.instrumentation.http.client.capture-request-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP request headers to capture in HTTP clients."
+    },
+    {
+      "name": "otel.instrumentation.http.client.capture-response-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP response headers to capture in HTTP clients."
+    },
+    {
+      "name": "otel.instrumentation.http.client.emit-experimental-telemetry",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental HTTP client telemetry. Add the <code>http.request.body.size</code> and <code>http.response.body.size> attributes to spans, and record the <code>http.client.request.size</code> and <code>http.client.response.size</code> metrics.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.http.known-methods",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as <code>_OTHER</code>.",
+      "defaultValue": "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+    },
+    {
+      "name": "otel.instrumentation.http.server.capture-request-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP request headers to capture in HTTP servers."
+    },
+    {
+      "name": "otel.instrumentation.http.server.capture-response-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP response headers to capture in HTTP servers."
+    },
+    {
+      "name": "otel.instrumentation.http.server.emit-experimental-telemetry",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental HTTP server telemetry. Add the <code>http.request.body.size</code> and <code>http.response.body.size</code> attributes to spans, and record the <code>http.server.request.body.size</code> and <code>http.server.response.body.size</code> metrics.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.jdbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the JDBC instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.jdbc.statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Kafka instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.kafka.experimental-span-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental Kafka span attributes.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.mongo.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Mongo client instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.mongo.statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
       "defaultValue": true
     },
     {
@@ -331,6 +416,18 @@
       "type": "java.lang.Boolean",
       "description": "Enable the Micrometer instrumentation.",
       "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.r2dbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the R2DBC (reactive JDBC) instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.r2dbc.statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
     },
     {
       "name": "otel.instrumentation.spring-web.enabled",

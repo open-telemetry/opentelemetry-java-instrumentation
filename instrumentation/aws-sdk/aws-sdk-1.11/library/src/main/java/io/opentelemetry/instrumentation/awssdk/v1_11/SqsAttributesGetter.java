@@ -15,9 +15,12 @@ import javax.annotation.Nullable;
 enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
   INSTANCE;
 
+  // copied from MessagingIncubatingAttributes.MessagingSystemValues
+  private static final String AWS_SQS = "aws_sqs";
+
   @Override
   public String getSystem(Request<?> request) {
-    return "AmazonSQS";
+    return AWS_SQS;
   }
 
   @Override

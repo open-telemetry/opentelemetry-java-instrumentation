@@ -6,28 +6,31 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.instrumentation.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.webmvc.v6_0.SpringWebMvcTelemetry;
+import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBuilderUtil;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import jakarta.servlet.Filter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.DispatcherServlet;
 
-@ConditionalOnBean(OpenTelemetry.class)
+@ConditionalOnEnabledInstrumentation(module = "spring-webmvc")
 @ConditionalOnClass({Filter.class, OncePerRequestFilter.class, DispatcherServlet.class})
-@ConditionalOnProperty(name = "otel.instrumentation.spring-webmvc.enabled", matchIfMissing = true)
-@Conditional(SdkEnabled.class)
 @Configuration
 @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
 public class SpringWebMvc6InstrumentationAutoConfiguration {
 
   @Bean
-  Filter otelWebMvcFilter(OpenTelemetry openTelemetry) {
-    return SpringWebMvcTelemetry.create(openTelemetry).createServletFilter();
+  Filter otelWebMvcFilter(OpenTelemetry openTelemetry, ConfigProperties config) {
+    return InstrumentationConfigUtil.configureServerBuilder(
+            config,
+            SpringWebMvcTelemetry.builder(openTelemetry),
+            SpringMvcBuilderUtil.getBuilderExtractor())
+        .build()
+        .createServletFilter();
   }
 }
