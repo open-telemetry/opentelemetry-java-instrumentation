@@ -204,10 +204,13 @@ public class Instrumenter<REQUEST, RESPONSE> {
         context = operationListeners[i].onStart(context, attributes, startNanos);
       }
     }
-    if (propagateOperationListenersToOnEnd) {
+    if (propagateOperationListenersToOnEnd || context.get(START_OPERATION_LISTENERS) != null) {
       // when start and end are not called on the same instrumenter we need to use the operation
       // listeners that were used during start and end to correctly handle metrics like
       // http.server.active_requests that is recorded both in start and end
+      //
+      // need to also add when there is already START_OPERATION_LISTENERS, otherwise this
+      // instrumenter will call its parent's operation listeners in doEnd
       context = context.with(START_OPERATION_LISTENERS, operationListeners);
     }
 
