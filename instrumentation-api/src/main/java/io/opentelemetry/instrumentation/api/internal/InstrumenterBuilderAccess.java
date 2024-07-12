@@ -28,5 +28,5 @@ public interface InstrumenterBuilderAccess {
       SpanKindExtractor<REQUEST> spanKindExtractor);
 
   <REQUEST, RESPONSE> void propagateOperationListenersToOnEnd(
-      InstrumenterBuilder<REQUEST,RESPONSE> builder);
+      InstrumenterBuilder<REQUEST, RESPONSE> builder);
 }
