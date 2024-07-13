@@ -28,7 +28,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
-  private static final AttributeKey<String> DB_OPERATION_NAME_NAME =
+  private static final AttributeKey<String> DB_OPERATION_NAME =
       AttributeKey.stringKey("db.operation.name");
 
   /** Creates the SQL client attributes extractor with default configuration. */
