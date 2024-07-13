@@ -59,6 +59,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
   private final HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private boolean emitExperimentalHttpServerMetrics = false;
+  private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
   public DefaultHttpServerInstrumenterBuilder(
       String instrumentationName,
@@ -168,6 +169,13 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setBuilderCustomizer(
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
+    this.builderCustomizer = builderCustomizer;
+    return this;
+  }
+
   public Instrumenter<REQUEST, RESPONSE> build() {
     InstrumenterBuilder<REQUEST, RESPONSE> builder = builder();
 
@@ -177,7 +185,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
-  private InstrumenterBuilder<REQUEST, RESPONSE> builder() {
+  public InstrumenterBuilder<REQUEST, RESPONSE> builder() {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -195,6 +203,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
+    builderCustomizer.accept(builder);
 
     return builder;
   }
