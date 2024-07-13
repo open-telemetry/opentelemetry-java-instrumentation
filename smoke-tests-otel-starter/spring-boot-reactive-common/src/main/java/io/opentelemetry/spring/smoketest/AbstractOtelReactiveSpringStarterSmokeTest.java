@@ -8,8 +8,6 @@ package io.opentelemetry.spring.smoketest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,17 +50,8 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
             trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE testdb.player")),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasName("GET")
-                        .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/webflux")),
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasName("GET /webflux")
-                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-                        .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/webflux"),
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/webflux"),
+                span -> HttpSpanDataAssert.create(span).assertServerGetRequest("/webflux"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .satisfies(

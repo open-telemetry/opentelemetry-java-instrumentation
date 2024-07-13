@@ -13,7 +13,7 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter")
   compileOnly("org.springframework.boot:spring-boot-starter-test")
   api(project(":testing-common"))
-  api(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  api(project(":instrumentation:spring:spring-boot-autoconfigure-2"))
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
 }
 
