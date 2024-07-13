@@ -44,6 +44,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     internalSet(attributes, DB_QUERY_TEXT, getter.getStatement(request));
-    internalSet(attributes, DB_OPERATION_NAME_NAME, getter.getOperation(request));
+    internalSet(attributes, DB_OPERATION_NAME, getter.getOperation(request));
   }
 }
