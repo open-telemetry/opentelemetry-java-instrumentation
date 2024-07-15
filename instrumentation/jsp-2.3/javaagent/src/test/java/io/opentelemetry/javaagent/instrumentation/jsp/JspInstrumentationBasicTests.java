@@ -240,7 +240,11 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   @ParameterizedTest(name = "GET jsp with {0}")
   @ArgumentsSource(ErroneousRuntimeErrorsArgs.class)
   void testErroneousRuntimeErrorsGet(
-      String testName, String jspFileName, String jspClassName, Class<?> exceptionClass) {
+      String testName,
+      String jspFileName,
+      String jspClassName,
+      Class<?> exceptionClass,
+      boolean errorMessageOptional) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
 
     testing.waitAndAssertTraces(
@@ -254,6 +258,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .withRoute("/" + getContextPath() + jspFileName)
                             .withResponseStatus(500)
                             .withExceptionClass(exceptionClass)
+                            .withErrorMessageOptional(errorMessageOptional)
                             .build()),
                 span ->
                     spanAsserts.assertCompileSpan(
@@ -269,6 +274,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         new JspSpanAssertionBuilder()
                             .withParent(trace.getSpan(0))
                             .withRoute(jspFileName)
+                            .withErrorMessageOptional(errorMessageOptional)
                             .build())));
 
     assertThat(res.status().code()).isEqualTo(500);
@@ -282,14 +288,16 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
               "java runtime error",
               "/runtimeError.jsp",
               "runtimeError_jsp",
-              ArithmeticException.class),
+              ArithmeticException.class,
+              false),
           Arguments.of(
               "invalid write",
               "/invalidWrite.jsp",
               "invalidWrite_jsp",
-              IndexOutOfBoundsException.class),
+              IndexOutOfBoundsException.class,
+              true),
           Arguments.of(
-              "invalid write", "/getQuery.jsp", "getQuery_jsp", NullPointerException.class));
+              "invalid write", "/getQuery.jsp", "getQuery_jsp", NullPointerException.class, true));
     }
   }
 

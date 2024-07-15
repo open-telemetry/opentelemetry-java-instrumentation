@@ -16,6 +16,7 @@ class JspSpan {
   private String route;
   private int responseStatus;
   private Class<?> exceptionClass;
+  private boolean errorMessageOptional;
 
   public SpanData getParent() {
     return parent;
@@ -79,5 +80,13 @@ class JspSpan {
 
   public void setExceptionClass(Class<?> exceptionClass) {
     this.exceptionClass = exceptionClass;
+  }
+
+  public boolean getErrorMessageOptional() {
+    return errorMessageOptional;
+  }
+
+  public void setErrorMessageOptional(boolean errorMessageOptional) {
+    this.errorMessageOptional = errorMessageOptional;
   }
 }

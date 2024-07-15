@@ -49,7 +49,10 @@ class JspSpanAssertions {
                                               spanData.getExceptionClass().getSimpleName()))),
                           satisfies(
                               ExceptionAttributes.EXCEPTION_MESSAGE,
-                              val -> val.isInstanceOf(String.class)),
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> val.isInstanceOf(String.class))),
                           satisfies(
                               ExceptionAttributes.EXCEPTION_STACKTRACE,
                               val -> val.isInstanceOf(String.class))));
@@ -129,7 +132,10 @@ class JspSpanAssertions {
                                               spanData.getExceptionClass().getSimpleName()))),
                           satisfies(
                               ExceptionAttributes.EXCEPTION_MESSAGE,
-                              val -> val.isInstanceOf(String.class)),
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v -> assertThat(spanData.getErrorMessageOptional()).isTrue(),
+                                      v -> val.isInstanceOf(String.class))),
                           satisfies(
                               ExceptionAttributes.EXCEPTION_STACKTRACE,
                               val -> val.isInstanceOf(String.class))));

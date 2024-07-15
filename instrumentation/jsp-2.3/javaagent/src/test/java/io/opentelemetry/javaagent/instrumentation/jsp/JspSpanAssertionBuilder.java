@@ -16,6 +16,7 @@ class JspSpanAssertionBuilder {
   private String forwardOrigin;
   private int responseStatus;
   private Class<?> exceptionClass;
+  private boolean errorMessageOptional;
 
   public JspSpanAssertionBuilder withParent(SpanData parent) {
     this.parent = parent;
@@ -57,6 +58,11 @@ class JspSpanAssertionBuilder {
     return this;
   }
 
+  public JspSpanAssertionBuilder withErrorMessageOptional(boolean errorMessageOptional) {
+    this.errorMessageOptional = errorMessageOptional;
+    return this;
+  }
+
   public JspSpan build() {
     JspSpan serverSpan = new JspSpan();
     serverSpan.setParent(this.parent);
@@ -67,6 +73,7 @@ class JspSpanAssertionBuilder {
     serverSpan.setForwardOrigin(this.forwardOrigin);
     serverSpan.setResponseStatus(this.responseStatus);
     serverSpan.setExceptionClass(this.exceptionClass);
+    serverSpan.setErrorMessageOptional(this.errorMessageOptional);
     return serverSpan;
   }
 }
