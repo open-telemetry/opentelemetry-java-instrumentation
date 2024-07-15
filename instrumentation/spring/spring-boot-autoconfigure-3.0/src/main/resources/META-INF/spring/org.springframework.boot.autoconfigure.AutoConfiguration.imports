@@ -1,2 +1,2 @@
-io.opentelemetry.instrumentation.spring.autoconfigure.v3.internal.instrumentation.web.RestClientInstrumentationAutoConfiguration
-io.opentelemetry.instrumentation.spring.autoconfigure.v3.internal.instrumentation.webmvc.SpringWebMvc6InstrumentationAutoConfiguration
+web.io.opentelemetry.instrumentation.spring.autoconfigure.v3_0.internal.instrumentation.RestClientInstrumentationAutoConfiguration
+webmvc.io.opentelemetry.instrumentation.spring.autoconfigure.v3_0.internal.instrumentation.SpringWebMvc6InstrumentationAutoConfiguration

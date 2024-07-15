@@ -7,8 +7,8 @@ package io.opentelemetry.spring.smoketest;
 
 import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.v2.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.instrumentation.mongo.MongoClientInstrumentationAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.v2_7.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.v2_7.internal.instrumentation.mongo.MongoClientInstrumentationAutoConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

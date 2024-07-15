@@ -1,8 +1,8 @@
 Comparing source compatibility of opentelemetry-spring-2.6.0-SNAPSHOT.jar against 
-+++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.v2.OpenTelemetryAutoConfiguration  (not serializable)
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.v2_7.OpenTelemetryAutoConfiguration  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW CONSTRUCTOR: PUBLIC(+) OpenTelemetryAutoConfiguration()
 	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
 	+++  NEW ANNOTATION: org.springframework.boot.context.properties.EnableConfigurationProperties
-		+++  NEW ELEMENT: value=io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.properties.OtlpExporterProperties,io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.properties.OtelResourceProperties,io.opentelemetry.instrumentation.spring.autoconfigure.v2.internal.properties.PropagationProperties (+)
+		+++  NEW ELEMENT: value=io.opentelemetry.instrumentation.spring.autoconfigure.v2_7.internal.properties.OtlpExporterProperties,io.opentelemetry.instrumentation.spring.autoconfigure.v2_7.internal.properties.OtelResourceProperties,io.opentelemetry.instrumentation.spring.autoconfigure.v2_7.internal.properties.PropagationProperties (+)
