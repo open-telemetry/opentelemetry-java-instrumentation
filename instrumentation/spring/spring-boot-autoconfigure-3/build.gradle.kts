@@ -3,7 +3,7 @@ plugins {
   id("otel.japicmp-conventions")
 }
 
-base.archivesName.set("opentelemetry-autoconfigure-spring-boot-3")
+base.archivesName.set("opentelemetry-spring-boot-autoconfigure-3")
 group = "io.opentelemetry.instrumentation"
 
 otelJava {
