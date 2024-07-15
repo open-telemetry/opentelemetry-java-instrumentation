@@ -1,10 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jk1.license.filter.LicenseBundleNormalizer
 import com.github.jk1.license.render.InventoryMarkdownReportRenderer
-import java.nio.file.Files
-import java.util.regex.Pattern
 import org.spdx.sbom.gradle.SpdxSbomTask
+import java.nio.file.Files
 import java.util.UUID
+import java.util.regex.Pattern
 
 plugins {
   id("com.github.jk1.dependency-license-report")
@@ -254,7 +254,7 @@ tasks {
           } else {
             it
           }
-        }.toCollection(ArrayList<String>());
+        }.toCollection(ArrayList<String>())
         Files.write(filePath, lines)
       }
     }
