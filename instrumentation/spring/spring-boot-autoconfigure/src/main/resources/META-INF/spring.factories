@@ -1,0 +1,15 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.annotations.InstrumentationAnnotationsAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.KafkaInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.mongo.MongoClientInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging.OpenTelemetryAppenderAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.jdbc.JdbcInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.micrometer.MicrometerBridgeAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.r2dbc.R2dbcInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webflux.SpringWebfluxInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webmvc.SpringWebMvc5InstrumentationAutoConfiguration
+
+org.springframework.context.ApplicationListener=\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging.LogbackAppenderApplicationListener
