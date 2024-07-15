@@ -2,123 +2,41 @@
 
 ## Unreleased
 
+The Spring Boot Starter (`opentelemetry-spring-boot-starter`) is now stable.
+
 ### Migration notes
 
-
-### 🌟 New javaagent instrumentation
-
-
-### 🌟 New library instrumentation
-
+- The Spring autoconfigure artifacts have been renamed
+  - `opentelemetry-spring-boot` &rarr; `opentelemetry-spring-boot-autoconfigure-2`
+  - `opentelemetry-spring-boot-3` &rarr; `opentelemetry-spring-boot-autoconfigure-3`
+- Two experimental HTTP metrics have been renamed:
+  - `http.server.request.size` &rarr; `http.server.request.body.size`,
+  - `http.server.response.size` &rarr; `http.server.response.body.size`
 
 ### 📈 Enhancements
 
-
-### 🛠️ Bug fixes
-
-
-### 🧰 Tooling
-
-- Update version to 2.6.0-SNAPSHOT
-  ([#11596](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11596))
-- Merge change log updates from release/v2.5.x
-  ([#11613](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11613))
-- Bump version in api diff compare
-  ([#11615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11615))
-- Simplify jetty9 http client instrumentation
-  ([#11595](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11595))
-- Merge change log updates from release/v1.33.x
-  ([#11628](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11628))
-- remove conditional indy test in CI
-  ([#11631](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11631))
-- make aws-sdk indy compatible
-  ([#11552](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11552))
-- Remove aws sqs latest dep limit
-  ([#11643](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11643))
-- Fix deprecation warning in build script
-  ([#11642](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11642))
-- re-use logic for http client configuration
+- Support HTTP client instrumentation configuration in Spring starter
   ([#11620](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11620))
-- fix link
-  ([#11656](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11656))
-- Influxdb client: don't fill db.statement for create/drop database and write operations
+- Influxdb client: don't fill `db.statement` for create/drop database and write operations
   ([#11557](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11557))
-- Update docs for bundled exporters
-  ([#11662](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11662))
-- Improve test error report
-  ([#11664](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11664))
-- Use more @ConditionalOnEnabledInstrumentation
-  ([#11665](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11665))
-- Fix typo
-  ([#11672](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11672))
-- Remove reflection from builder
-  ([#11673](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11673))
-- don't use test keystore for vaadin
-  ([#11679](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11679))
-- Add address and port assertions
-  ([#11668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11668))
-- Update http metrics to the latest version
-  ([#11659](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11659))
-- Fix running ./gradlew tasks
-  ([#11692](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11692))
-- fix build for graalvm native
-  ([#11709](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11709))
-- add javalin instrumentation
+- Add Javalin instrumentation
   ([#11587](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11587))
-- Fix kafka graalvm native
-  ([#11714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11714))
-- cleanup log filter
-  ([#11719](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11719))
-- config properties support for spring starter clients
-  ([#11605](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11605))
-- rebuild when labels change, so that we can trigger the right actions
-  ([#11725](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11725))
-- Add GraalVM Kafka hints
-  ([#11735](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11735))
-- Fix collector conf for overhead tests
-  ([#11730](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11730))
-- Convert jsf jakarta tests from groovy to java
-  ([#11694](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11694))
-- Fix GraalVM hint
-  ([#11737](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11737))
-- Jsf: simplify asserting exception
-  ([#11736](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11736))
-- Convert jsf javax tests from groovy to java
-  ([#11711](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11711))
-- Replace junit4 @Test annotation with junit5 annotation
-  ([#11745](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11745))
-- Exclude javalin 3.2.0 from muzzle
-  ([#11766](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11766))
-- Update the OpenTelemetry SDK version to 1.40.0
-  ([#11752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11752))
-- support otel.instrumentation.common.default-enabled in spring starter
+- Support `otel.instrumentation.common.default-enabled` in the Spring starter
   ([#11746](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11746))
-- Add link to SDK configuration page
-  ([#11729](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11729))
-- Build image for testing early jdk8
-  ([#11594](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11594))
-- Support tracing the ClickHouse Java HTTP client
+- Support ClickHouse Java client
   ([#11660](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11660))
-- support jettyclient 12
+- Support Jetty HTTP client 12
   ([#11519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11519))
-- Fix build
-  ([#11776](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11776))
-- Enable early jdk8 test
-  ([#11777](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11777))
-- Add Pulsar MessagingProducerMetrics
+- Add Pulsar `messaging.producer.duration` metric
   ([#11591](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11591))
 - Improve instrumentation suppression behavior
   ([#11640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11640))
-- Propagate otel context through custom aws client context for lambda direct calls
+- Propagate OpenTelemetry context through custom AWS client context for Lambda direct calls
   ([#11675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11675))
-- GraalVM native support for `@WithSpan`
+- Spring Native support for `@WithSpan`
   ([#11757](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11757))
-- Use config properties for spring starter (http server)
+- Support HTTP server instrumentation config properties in the Spring starter
   ([#11667](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11667))
-- rename spring autoconfigure to autoconfigure-2
-  ([#11800](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11800))
-- make spring starter stable
-  ([#11763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11763))
 
 ## Version 1.33.4 (2024-06-19)
 
