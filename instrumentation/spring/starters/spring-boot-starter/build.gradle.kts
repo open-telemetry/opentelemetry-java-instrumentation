@@ -11,8 +11,8 @@ val springBootVersion = "2.6.15"
 dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter:$springBootVersion")
   compileOnly("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
-  api(project(":instrumentation:spring:spring-boot-autoconfigure-2"))
-  api(project(":instrumentation:spring:spring-boot-autoconfigure-3"))
+  api(project(":instrumentation:spring:spring-boot-autoconfigure-2.7"))
+  api(project(":instrumentation:spring:spring-boot-autoconfigure-3.0"))
   api(project(":instrumentation-annotations"))
   implementation(project(":instrumentation:resources:library"))
   implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")

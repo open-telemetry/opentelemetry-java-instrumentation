@@ -28,7 +28,7 @@ import org.springframework.core.ParameterNameDiscoverer;
  * can not be applied to constructors.
  */
 abstract class WithSpanAspect {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-boot-autoconfigure-2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-boot-autoconfigure-2.7";
 
   private final Instrumenter<JoinPointRequest, Object> instrumenter;
   private final JoinPointRequest.Factory requestFactory;

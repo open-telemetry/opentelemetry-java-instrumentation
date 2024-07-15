@@ -19,7 +19,7 @@ import io.opentelemetry.sdk.resources.Resource;
 public class DistroVersionResourceProvider implements ResourceProvider {
 
   public static final String VERSION =
-      EmbeddedInstrumentationProperties.findVersion("io.opentelemetry.spring-boot-autoconfigure-2");
+      EmbeddedInstrumentationProperties.findVersion("io.opentelemetry.spring-boot-autoconfigure-2.7");
 
   private static final AttributeKey<String> TELEMETRY_DISTRO_NAME =
       AttributeKey.stringKey("telemetry.distro.name");
