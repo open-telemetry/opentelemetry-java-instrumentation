@@ -3,7 +3,7 @@ plugins {
   id("otel.japicmp-conventions")
 }
 
-base.archivesName.set("opentelemetry-autoconfigure-spring-boot-2")
+base.archivesName.set("opentelemetry-spring-boot-autoconfigure-2")
 group = "io.opentelemetry.instrumentation"
 
 val springBootVersion = "2.7.18" // AutoConfiguration is added in 2.7.0, but can be used with older versions
