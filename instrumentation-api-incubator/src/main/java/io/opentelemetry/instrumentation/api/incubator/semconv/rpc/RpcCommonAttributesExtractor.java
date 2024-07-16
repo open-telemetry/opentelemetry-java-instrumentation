@@ -49,14 +49,23 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    internalSet(
-        attributes, RPC_CLIENT_REQUEST_BODY_SIZE, (long) getter.getClientRequestSize(request));
-    internalSet(
-        attributes, RPC_CLIENT_RESPONSE_BODY_SIZE, (long) getter.getClientResponseSize(request));
+    int clientRequestSize = getter.getClientRequestSize(request);
+    if (clientRequestSize > 0) {
+      internalSet(attributes, RPC_CLIENT_REQUEST_BODY_SIZE, (long) clientRequestSize);
+    }
+    int clientResponseSize = getter.getClientResponseSize(request);
+    if (clientResponseSize > 0) {
+      internalSet(attributes, RPC_CLIENT_RESPONSE_BODY_SIZE, (long) clientResponseSize);
+    }
 
-    internalSet(
-        attributes, RPC_SERVER_REQUEST_BODY_SIZE, (long) getter.getServerRequestSize(request));
-    internalSet(
-        attributes, RPC_SERVER_RESPONSE_BODY_SIZE, (long) getter.getServerResponseSize(request));
+    int serverRequestSize = getter.getServerRequestSize(request);
+    if (serverRequestSize > 0) {
+      internalSet(attributes, RPC_SERVER_REQUEST_BODY_SIZE, (long) serverRequestSize);
+    }
+
+    int serverResponseSize = getter.getServerResponseSize(request);
+    if (serverResponseSize > 0) {
+      internalSet(attributes, RPC_SERVER_RESPONSE_BODY_SIZE, (long) serverResponseSize);
+    }
   }
 }
