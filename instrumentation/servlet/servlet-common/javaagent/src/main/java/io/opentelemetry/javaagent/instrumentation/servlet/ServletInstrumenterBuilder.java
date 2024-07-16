@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
@@ -31,6 +32,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
 
+  private boolean propagateOperationListenersToOnEnd;
+
   public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new ServletInstrumenterBuilder<>();
   }
@@ -39,6 +42,12 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer) {
     contextCustomizers.add(contextCustomizer);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> propagateOperationListenersToOnEnd() {
+    propagateOperationListenersToOnEnd = true;
     return this;
   }
 
@@ -84,6 +93,9 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    if (propagateOperationListenersToOnEnd) {
+      InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
     }
     return builder.buildServerInstrumenter(new ServletRequestGetter<>(accessor));
   }

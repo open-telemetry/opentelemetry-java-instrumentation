@@ -1,2 +1,0 @@
-Comparing source compatibility of opentelemetry-autoconfigure-spring-boot-3-2.6.0-SNAPSHOT.jar against 
-No changes.
