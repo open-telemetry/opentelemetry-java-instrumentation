@@ -110,9 +110,9 @@ class JspSpanAssertions {
   }
 
   SpanDataAssert assertRenderSpan(SpanDataAssert span, JspSpan spanData) {
-    String requestURL = spanData.getRoute();
-    if (spanData.getRequestURLOverride() != null) {
-      requestURL = spanData.getRequestURLOverride();
+    String requestUrl = spanData.getRoute();
+    if (spanData.getRequestUrlOverride() != null) {
+      requestUrl = spanData.getRequestUrlOverride();
     }
 
     if (spanData.getExceptionClass() != null) {
@@ -144,7 +144,7 @@ class JspSpanAssertions {
     return span.hasName("Render " + spanData.getRoute())
         .hasParent(spanData.getParent())
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("jsp.requestURL"), baseUrl + requestURL),
+            equalTo(stringKey("jsp.requestURL"), baseUrl + requestUrl),
             satisfies(
                 stringKey("jsp.forwardOrigin"),
                 val ->

@@ -11,7 +11,7 @@ class JspSpan {
   private SpanData parent;
   private String method;
   private String className;
-  private String requestURLOverride;
+  private String requestUrlOverride;
   private String forwardOrigin;
   private String route;
   private int responseStatus;
@@ -42,12 +42,12 @@ class JspSpan {
     this.className = className;
   }
 
-  public String getRequestURLOverride() {
-    return requestURLOverride;
+  public String getRequestUrlOverride() {
+    return requestUrlOverride;
   }
 
-  public void setRequestURLOverride(String requestURLOverride) {
-    this.requestURLOverride = requestURLOverride;
+  public void setRequestUrlOverride(String requestUrlOverride) {
+    this.requestUrlOverride = requestUrlOverride;
   }
 
   public String getForwardOrigin() {

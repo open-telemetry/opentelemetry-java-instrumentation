@@ -379,7 +379,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         new JspSpanAssertionBuilder()
                             .withParent(trace.getSpan(2))
                             .withRoute("/common/javaLoopH2.jsp")
-                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .withRequestUrlOverride("/includes/includeMulti.jsp")
                             .build()),
                 span ->
                     spanAsserts.assertCompileSpan(
@@ -395,7 +395,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         new JspSpanAssertionBuilder()
                             .withParent(trace.getSpan(2))
                             .withRoute("/common/javaLoopH2.jsp")
-                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .withRequestUrlOverride("/includes/includeMulti.jsp")
                             .build())));
 
     assertThat(res.status().code()).isEqualTo(200);

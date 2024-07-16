@@ -271,7 +271,7 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                         new JspSpanAssertionBuilder()
                             .withParent(trace.getSpan(4))
                             .withRoute("/common/javaLoopH2.jsp")
-                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .withRequestUrlOverride("/includes/includeMulti.jsp")
                             .withForwardOrigin("/forwards/forwardToIncludeMulti.jsp")
                             .build()),
                 span ->
@@ -288,7 +288,7 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                         new JspSpanAssertionBuilder()
                             .withParent(trace.getSpan(4))
                             .withRoute("/common/javaLoopH2.jsp")
-                            .withRequestURLOverride("/includes/includeMulti.jsp")
+                            .withRequestUrlOverride("/includes/includeMulti.jsp")
                             .withForwardOrigin("/forwards/forwardToIncludeMulti.jsp")
                             .build())));
 

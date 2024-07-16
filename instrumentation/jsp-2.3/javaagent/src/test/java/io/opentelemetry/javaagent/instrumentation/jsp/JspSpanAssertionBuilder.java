@@ -12,7 +12,7 @@ class JspSpanAssertionBuilder {
   private String method;
   private String route;
   private String className;
-  private String requestURLOverride;
+  private String requestUrlOverride;
   private String forwardOrigin;
   private int responseStatus;
   private Class<?> exceptionClass;
@@ -38,8 +38,8 @@ class JspSpanAssertionBuilder {
     return this;
   }
 
-  public JspSpanAssertionBuilder withRequestURLOverride(String requestURLOverride) {
-    this.requestURLOverride = requestURLOverride;
+  public JspSpanAssertionBuilder withRequestUrlOverride(String requestUrlOverride) {
+    this.requestUrlOverride = requestUrlOverride;
     return this;
   }
 
@@ -69,7 +69,7 @@ class JspSpanAssertionBuilder {
     serverSpan.setMethod(this.method);
     serverSpan.setRoute(this.route);
     serverSpan.setClassName(this.className);
-    serverSpan.setRequestURLOverride(this.requestURLOverride);
+    serverSpan.setRequestUrlOverride(this.requestUrlOverride);
     serverSpan.setForwardOrigin(this.forwardOrigin);
     serverSpan.setResponseStatus(this.responseStatus);
     serverSpan.setExceptionClass(this.exceptionClass);
