@@ -98,14 +98,14 @@ public final class RpcClientMetrics implements OperationListener {
     clientDurationHistogram.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
 
-    Long rpcClientRequestBodySize = RpcMessageBodySizeUtil.getRpcClientRequestBodySize(
-        endAttributes, state.startAttributes());
+    Long rpcClientRequestBodySize =
+        RpcMessageBodySizeUtil.getRpcClientRequestBodySize(endAttributes, state.startAttributes());
     if (rpcClientRequestBodySize != null && rpcClientRequestBodySize > 0) {
       clientRequestSize.record(rpcClientRequestBodySize, attributes, context);
     }
 
-    Long rpcClientResponseBodySize = RpcMessageBodySizeUtil.getRpcClientResponseBodySize(
-        endAttributes, state.startAttributes());
+    Long rpcClientResponseBodySize =
+        RpcMessageBodySizeUtil.getRpcClientResponseBodySize(endAttributes, state.startAttributes());
     if (rpcClientResponseBodySize != null && rpcClientResponseBodySize > 0) {
       clientResponseSize.record(rpcClientResponseBodySize, attributes, context);
     }

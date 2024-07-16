@@ -57,6 +57,7 @@ final class RpcMetricsAdvice {
                 ServerAttributes.SERVER_ADDRESS,
                 ServerAttributes.SERVER_PORT));
   }
+
   static void applyClientRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
