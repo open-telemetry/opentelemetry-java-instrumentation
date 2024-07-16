@@ -20,6 +20,14 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
   static final AttributeKey<String> RPC_SERVICE = AttributeKey.stringKey("rpc.service");
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
+  static final AttributeKey<Long> RPC_CLIENT_REQUEST_BODY_SIZE =
+      AttributeKey.longKey("rpc.client.request.body.size");
+  static final AttributeKey<Long> RPC_CLIENT_RESPONSE_BODY_SIZE =
+      AttributeKey.longKey("rpc.client.response.body.size");
+  static final AttributeKey<Long> RPC_SERVER_REQUEST_BODY_SIZE =
+      AttributeKey.longKey("rpc.server.request.body.size");
+  static final AttributeKey<Long> RPC_SERVER_RESPONSE_BODY_SIZE =
+      AttributeKey.longKey("rpc.server.response.body.size");
 
   private final RpcAttributesGetter<REQUEST> getter;
 
@@ -41,6 +49,14 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    // No response attributes
+    internalSet(attributes, RPC_CLIENT_REQUEST_BODY_SIZE,
+        (long) getter.getClientRequestSize(request));
+    internalSet(attributes, RPC_CLIENT_RESPONSE_BODY_SIZE,
+        (long) getter.getClientResponseSize(request));
+
+    internalSet(attributes, RPC_SERVER_REQUEST_BODY_SIZE,
+        (long) getter.getServerRequestSize(request));
+    internalSet(attributes, RPC_SERVER_RESPONSE_BODY_SIZE,
+        (long) getter.getServerResponseSize(request));
   }
 }
