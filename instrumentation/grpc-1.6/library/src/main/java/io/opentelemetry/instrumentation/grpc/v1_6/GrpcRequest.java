@@ -25,6 +25,7 @@ public final class GrpcRequest {
 
   private int serverRequestSize;
   private int serverResponseSize;
+
   GrpcRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
