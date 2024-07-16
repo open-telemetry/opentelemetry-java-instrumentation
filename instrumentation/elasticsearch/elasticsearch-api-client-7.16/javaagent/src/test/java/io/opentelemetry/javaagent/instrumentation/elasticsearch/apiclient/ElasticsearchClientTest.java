@@ -90,7 +90,7 @@ class ElasticsearchClientTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "info"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "info"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(UrlAttributes.URL_FULL, httpHost.toURI() + "/"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
@@ -126,7 +126,7 @@ class ElasticsearchClientTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "index"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "index"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "PUT"),
@@ -187,7 +187,7 @@ class ElasticsearchClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "elasticsearch"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "info"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "info"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(ServerAttributes.SERVER_PORT, httpHost.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),

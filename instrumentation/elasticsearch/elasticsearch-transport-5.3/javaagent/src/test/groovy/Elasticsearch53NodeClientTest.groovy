@@ -117,7 +117,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           childOf(span(0))
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "ClusterHealthAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -164,7 +164,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           errorEvent IndexNotFoundException, "no such index"
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -230,7 +230,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "CreateIndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -243,7 +243,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "ClusterHealthAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -255,7 +255,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -271,7 +271,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -290,7 +290,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

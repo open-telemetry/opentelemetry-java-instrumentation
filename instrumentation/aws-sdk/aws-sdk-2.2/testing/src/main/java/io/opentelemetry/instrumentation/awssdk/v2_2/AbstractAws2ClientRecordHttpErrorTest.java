@@ -175,7 +175,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                               .containsEntry("aws.requestId", requestId)
                               .containsEntry("aws.table.name", "sometable")
                               .containsEntry(DbIncubatingAttributes.DB_SYSTEM, "dynamodb")
-                              .containsEntry(DbIncubatingAttributes.DB_OPERATION, operation);
+                              .containsEntry(DbIncubatingAttributes.DB_OPERATION_NAME, operation);
                         });
                     if (isRecordIndividualHttpErrorEnabled()) {
                       span.hasEventsSatisfyingExactly(

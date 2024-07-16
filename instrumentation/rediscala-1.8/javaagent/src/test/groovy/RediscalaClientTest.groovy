@@ -91,7 +91,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "redis"
-            "$DbIncubatingAttributes.DB_OPERATION" "SET"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SET"
           }
         }
       }
@@ -126,7 +126,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "redis"
-            "$DbIncubatingAttributes.DB_OPERATION" "SET"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SET"
           }
         }
         span(2) {
@@ -135,7 +135,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "redis"
-            "$DbIncubatingAttributes.DB_OPERATION" "GET"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GET"
           }
         }
       }

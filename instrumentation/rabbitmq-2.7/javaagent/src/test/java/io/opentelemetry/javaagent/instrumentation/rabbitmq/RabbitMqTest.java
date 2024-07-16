@@ -839,7 +839,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             });
 
     if (operation != null && !operation.equals("publish")) {
-      span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation);
+      span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, operation);
     }
   }
 

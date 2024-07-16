@@ -202,7 +202,7 @@ public abstract class AbstractVertxKafkaTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -234,7 +234,7 @@ public abstract class AbstractVertxKafkaTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, operation),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),
@@ -255,7 +255,7 @@ public abstract class AbstractVertxKafkaTest {
             Arrays.asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "process"),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                     stringAssert -> stringAssert.startsWith("consumer")),

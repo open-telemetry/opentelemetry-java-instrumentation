@@ -104,7 +104,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           errorEvent IndexNotFoundException, "no such index"
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -153,7 +153,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "CreateIndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -166,7 +166,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "ClusterHealthAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -178,7 +178,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "SearchAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -192,7 +192,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -211,7 +211,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "RefreshAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "RefreshAction"
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -227,7 +227,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "SearchAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -304,7 +304,7 @@ class Elasticsearch53SpringTemplateTest extends AgentInstrumentationSpecificatio
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "SearchAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "SearchAction"
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

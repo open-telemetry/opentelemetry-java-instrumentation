@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -19,8 +21,8 @@ class SqsMessageAttributesExtractor implements AttributesExtractor<SQSMessage, V
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       AttributeKey.stringKey("messaging.message.id");
-  private static final AttributeKey<String> MESSAGING_OPERATION =
-      AttributeKey.stringKey("messaging.operation");
+  private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
+      stringKey("messaging.operation.type");
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
   // copied from MessagingIncubatingAttributes.MessagingSystemValues
@@ -29,7 +31,7 @@ class SqsMessageAttributesExtractor implements AttributesExtractor<SQSMessage, V
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, SQSMessage message) {
     attributes.put(MESSAGING_SYSTEM, AWS_SQS);
-    attributes.put(MESSAGING_OPERATION, "process");
+    attributes.put(MESSAGING_OPERATION_TYPE, "process");
     attributes.put(MESSAGING_MESSAGE_ID, message.getMessageId());
     attributes.put(MESSAGING_DESTINATION_NAME, message.getEventSource());
   }

@@ -110,7 +110,7 @@ public class SpringRabbitMqTest {
                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                     AbstractLongAssert::isNotNegative)));
     if (operation != null) {
-      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation));
+      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, operation));
     }
     if (peerAddress != null) {
       assertions.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));

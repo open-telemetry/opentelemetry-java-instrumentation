@@ -21,7 +21,9 @@ enum VertxRedisClientAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, VertxRedisClientRequest request) {
     internalSet(
-        attributes, DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, request.getDatabaseIndex());
+        attributes,
+        DbIncubatingAttributes.DB_NAMESPACE,
+        String.valueOf(request.getDatabaseIndex()));
   }
 
   @Override

@@ -20,8 +20,8 @@ public class CassandraTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.4";
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_CASSANDRA_TABLE =
-      AttributeKey.stringKey("db.cassandra.table");
+  private static final AttributeKey<String> DB_COLLECTION_NAME =
+      AttributeKey.stringKey("db.collection.name");
 
   private final OpenTelemetry openTelemetry;
 
@@ -58,7 +58,7 @@ public class CassandraTelemetryBuilder {
             openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
-                .setTableAttribute(DB_CASSANDRA_TABLE)
+                .setTableAttribute(DB_COLLECTION_NAME)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(

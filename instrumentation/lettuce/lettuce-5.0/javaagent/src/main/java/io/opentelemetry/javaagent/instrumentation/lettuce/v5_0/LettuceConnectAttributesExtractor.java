@@ -20,7 +20,7 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
 
     int database = redisUri.getDatabase();
     if (database != 0) {
-      attributes.put(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
+      attributes.put(DbIncubatingAttributes.DB_NAMESPACE, String.valueOf(database));
     }
   }
 

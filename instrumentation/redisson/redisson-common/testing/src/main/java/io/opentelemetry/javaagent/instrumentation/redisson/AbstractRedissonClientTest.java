@@ -121,8 +121,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))),
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -133,8 +133,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "GET foo"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET"))));
   }
 
   @Test
@@ -160,7 +160,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 "SET batch1 ?;SET batch2 ?"))));
   }
 
@@ -201,7 +201,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
@@ -211,8 +211,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET batch2 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET batch2 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("EXEC")
@@ -222,8 +222,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "EXEC"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EXEC"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "EXEC"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "EXEC"))
                         .hasParent(trace.getSpan(0))));
   }
 
@@ -244,8 +244,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "RPUSH list1 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RPUSH"))
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "RPUSH list1 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "RPUSH"))
                         .hasNoParent()));
   }
 
@@ -270,9 +270,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 String.format("EVAL %s 1 map1 ? ?", script)),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"))),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "EVAL"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -283,8 +283,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "HGET map1 key1"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "HGET"))));
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "HGET map1 key1"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "HGET"))));
   }
 
   @Test
@@ -304,8 +304,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"))));
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SADD set1 ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SADD"))));
   }
 
   @Test
@@ -333,8 +333,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT, "ZADD sort_set1 ? ? ? ? ? ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "ZADD"))));
+                                DbIncubatingAttributes.DB_QUERY_TEXT, "ZADD sort_set1 ? ? ? ? ? ?"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "ZADD"))));
   }
 
   private static void invokeAddAll(RScoredSortedSet<String> object, Map<String, Double> arg)
@@ -359,8 +359,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "INCR AtomicLong"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INCR"))));
+                            equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "INCR AtomicLong"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "INCR"))));
   }
 
   @Test
@@ -385,9 +385,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "EVAL"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     traceAsserts.add(
         trace ->
@@ -400,9 +400,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "EVAL"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DbIncubatingAttributes.DB_QUERY_TEXT,
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     if (lockHas3Traces()) {
       traceAsserts.add(
@@ -416,9 +416,9 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, "DEL"),
+                              equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "DEL"),
                               satisfies(
-                                  DbIncubatingAttributes.DB_STATEMENT,
+                                  DbIncubatingAttributes.DB_QUERY_TEXT,
                                   stringAssert -> stringAssert.startsWith("DEL")))));
     }
 

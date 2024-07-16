@@ -143,7 +143,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
-              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
               "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             } else if (service == "Kinesis") {
@@ -303,7 +303,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
-              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
               "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
             } else if (service == "Kinesis") {

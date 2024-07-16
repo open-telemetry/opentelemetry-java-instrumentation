@@ -25,8 +25,8 @@ final class MessagingMetricsAdvice {
       AttributeKey.stringKey("messaging.system");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
       AttributeKey.stringKey("messaging.destination.name");
-  private static final AttributeKey<String> MESSAGING_OPERATION =
-      AttributeKey.stringKey("messaging.operation");
+  private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
+      AttributeKey.stringKey("messaging.operation.type");
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
       AttributeKey.longKey("messaging.batch.message_count");
 
@@ -39,7 +39,7 @@ final class MessagingMetricsAdvice {
             asList(
                 MESSAGING_SYSTEM,
                 MESSAGING_DESTINATION_NAME,
-                MESSAGING_OPERATION,
+                MESSAGING_OPERATION_TYPE,
                 MESSAGING_BATCH_MESSAGE_COUNT,
                 ErrorAttributes.ERROR_TYPE,
                 ServerAttributes.SERVER_PORT,

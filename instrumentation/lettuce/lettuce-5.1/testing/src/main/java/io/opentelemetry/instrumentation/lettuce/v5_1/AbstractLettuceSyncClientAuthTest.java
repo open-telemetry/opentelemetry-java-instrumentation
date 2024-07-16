@@ -73,7 +73,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "AUTH ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

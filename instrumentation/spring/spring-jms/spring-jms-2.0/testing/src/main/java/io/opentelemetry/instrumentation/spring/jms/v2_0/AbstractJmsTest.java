@@ -40,7 +40,7 @@ public abstract class AbstractJmsTest {
             asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, "publish"),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                     val -> val.isInstanceOf(String.class))));
@@ -89,7 +89,7 @@ public abstract class AbstractJmsTest {
             asList(
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation)));
+                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, operation)));
     if (msgId != null) {
       attributeAssertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, msgId));
     } else {

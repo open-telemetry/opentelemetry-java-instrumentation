@@ -99,7 +99,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("producer") }
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -118,7 +118,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "receive"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "receive"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (Boolean.getBoolean("testLatestDeps")) {
@@ -135,7 +135,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PENDING
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
@@ -156,7 +156,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.endsWith("producer") }
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String
             "$MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET" 0
@@ -174,7 +174,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "receive"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "receive"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT" 1
             if (Boolean.getBoolean("testLatestDeps")) {
@@ -191,7 +191,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           attributes {
             "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" "kafka"
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" STREAM_PROCESSED
-            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE" "process"
             "$MessagingIncubatingAttributes.MESSAGING_CLIENT_ID" { it.startsWith("consumer") }
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE" Long
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID" String

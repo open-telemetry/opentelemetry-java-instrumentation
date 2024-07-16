@@ -90,7 +90,7 @@ class MessagingAttributesExtractorTest {
     expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
     expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_CLIENT_ID, "43"));
     expectedEntries.add(
-        entry(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation.operationName()));
+        entry(MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE, operation.operationName()));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =

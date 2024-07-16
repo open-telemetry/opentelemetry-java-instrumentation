@@ -136,7 +136,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                     spanDataAssert
                         .hasKind(SpanKind.CLIENT)
                         .hasAttribute(
-                            DbIncubatingAttributes.DB_STATEMENT,
+                            DbIncubatingAttributes.DB_QUERY_TEXT,
                             "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
@@ -219,7 +219,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttribute(
-                            DbIncubatingAttributes.DB_STATEMENT,
+                            DbIncubatingAttributes.DB_QUERY_TEXT,
                             "select name from customer where id = 1")));
   }
 

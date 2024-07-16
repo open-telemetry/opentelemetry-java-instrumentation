@@ -20,9 +20,8 @@ abstract class DbClientCommonAttributesExtractor<
     implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
+  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");
 
@@ -35,8 +34,7 @@ abstract class DbClientCommonAttributesExtractor<
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, DB_SYSTEM, getter.getSystem(request));
-    internalSet(attributes, DB_USER, getter.getUser(request));
-    internalSet(attributes, DB_NAME, getter.getName(request));
+    internalSet(attributes, DB_NAMESPACE, getter.getName(request));
     internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
   }
 

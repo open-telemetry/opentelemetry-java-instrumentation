@@ -25,8 +25,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
 
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
+  private static final AttributeKey<String> DB_OPERATION_NAME =
+      AttributeKey.stringKey("db.operation.name");
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -42,7 +43,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, DB_STATEMENT, getter.getStatement(request));
-    internalSet(attributes, DB_OPERATION, getter.getOperation(request));
+    internalSet(attributes, DB_QUERY_TEXT, getter.getStatement(request));
+    internalSet(attributes, DB_OPERATION_NAME, getter.getOperation(request));
   }
 }

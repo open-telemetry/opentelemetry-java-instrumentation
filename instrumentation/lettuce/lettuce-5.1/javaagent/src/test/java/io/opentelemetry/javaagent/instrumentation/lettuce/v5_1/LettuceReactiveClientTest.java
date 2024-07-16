@@ -58,7 +58,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET a ?"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SET a ?"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end")),
@@ -73,7 +73,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                 equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                 equalTo(ServerAttributes.SERVER_PORT, port),
                                 equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a"))
+                                equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "GET a"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

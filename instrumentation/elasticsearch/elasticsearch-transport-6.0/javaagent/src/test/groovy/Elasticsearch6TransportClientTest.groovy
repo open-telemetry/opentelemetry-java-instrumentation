@@ -110,7 +110,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "ClusterHealthAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "ClusterHealthAction"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
           }
@@ -155,7 +155,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           errorEvent RemoteTransportException, String
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -229,7 +229,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "CreateIndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "CreateIndexAction"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -245,7 +245,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -261,7 +261,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" ~/(Auto)?PutMappingAction/
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" ~/(Auto)?PutMappingAction/
             "elasticsearch.action" ~/(Auto)?PutMappingAction/
             "elasticsearch.request" "PutMappingRequest"
           }
@@ -276,7 +276,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "IndexAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "IndexAction"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -298,7 +298,7 @@ class Elasticsearch6TransportClientTest extends AbstractElasticsearchTransportCl
             "$NetworkAttributes.NETWORK_PEER_ADDRESS" tcpPublishAddress.address
             "$NetworkAttributes.NETWORK_PEER_PORT" tcpPublishAddress.port
             "$DbIncubatingAttributes.DB_SYSTEM" "elasticsearch"
-            "$DbIncubatingAttributes.DB_OPERATION" "GetAction"
+            "$DbIncubatingAttributes.DB_OPERATION_NAME" "GetAction"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

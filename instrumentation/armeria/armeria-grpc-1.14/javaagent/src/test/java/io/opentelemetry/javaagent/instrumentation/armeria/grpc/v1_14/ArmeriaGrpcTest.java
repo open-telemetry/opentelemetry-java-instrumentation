@@ -19,7 +19,6 @@ import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -87,15 +86,15 @@ class ArmeriaGrpcTest {
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                        equalTo(RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                        equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                             event ->
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "RECEIVED"),
+                                        equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L))),
                 span ->
                     span.hasName("example.Greeter/SayHello")
                         .hasKind(SpanKind.SERVER)
@@ -115,13 +114,13 @@ class ArmeriaGrpcTest {
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "RECEIVED"),
+                                        equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 1L)),
                             event ->
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                        equalTo(RpcIncubatingAttributes.RPC_MESSAGE_TYPE, "SENT"),
+                                        equalTo(RpcIncubatingAttributes.RPC_MESSAGE_ID, 2L)))));
   }
 }

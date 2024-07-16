@@ -19,15 +19,15 @@ import org.bson.BsonValue;
 
 class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEvent, Void> {
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_MONGODB_COLLECTION =
-      AttributeKey.stringKey("db.mongodb.collection");
+  private static final AttributeKey<String> DB_COLLECTION_NAME =
+      AttributeKey.stringKey("db.collection.name");
 
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, CommandStartedEvent event) {
     String collectionName = collectionName(event);
     if (collectionName != null) {
-      attributes.put(DB_MONGODB_COLLECTION, collectionName);
+      attributes.put(DB_COLLECTION_NAME, collectionName);
     }
   }
 

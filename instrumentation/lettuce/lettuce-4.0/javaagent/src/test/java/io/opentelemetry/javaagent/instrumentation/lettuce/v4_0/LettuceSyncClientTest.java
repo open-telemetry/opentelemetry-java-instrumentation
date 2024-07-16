@@ -161,7 +161,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -177,7 +177,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET"))));
   }
 
   @Test
@@ -193,7 +193,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET"))));
   }
 
   @Test
@@ -209,7 +209,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "RANDOMKEY"))));
   }
 
   @Test
@@ -225,7 +225,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "LPUSH"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "LPUSH"))));
   }
 
   @Test
@@ -241,7 +241,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "HMSET"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "HMSET"))));
   }
 
   @Test
@@ -257,7 +257,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "HGETALL"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "HGETALL"))));
   }
 
   @Test
@@ -289,7 +289,7 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DEBUG"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "DEBUG"))));
   }
 
   @Test
@@ -323,6 +323,6 @@ class LettuceSyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SHUTDOWN"))));
+                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SHUTDOWN"))));
   }
 }

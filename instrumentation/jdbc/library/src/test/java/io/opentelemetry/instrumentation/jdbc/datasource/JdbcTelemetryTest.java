@@ -41,7 +41,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT ?;"))));
+                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT ?;"))));
   }
 
   @Test
@@ -117,7 +117,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT 1;"))));
+                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT 1;"))));
   }
 
   @Test

@@ -50,13 +50,13 @@ class R2DbcInstrumentationAutoConfigurationTest {
                   trace.hasSpansSatisfyingExactly(
                       span ->
                           span.hasAttribute(
-                              DbIncubatingAttributes.DB_STATEMENT,
+                              DbIncubatingAttributes.DB_QUERY_TEXT,
                               "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
                           span.hasAttribute(
-                              DbIncubatingAttributes.DB_STATEMENT,
+                              DbIncubatingAttributes.DB_QUERY_TEXT,
                               "SELECT * FROM player WHERE id = ?")));
         });
   }

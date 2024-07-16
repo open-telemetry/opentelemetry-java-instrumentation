@@ -27,8 +27,9 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 final class TracingClientInterceptor implements ClientInterceptor {
 
   // copied from MessageIncubatingAttributes
-  private static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
-  private static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
+  private static final AttributeKey<Long> RPC_MESSAGE_ID = AttributeKey.longKey("rpc.message.id");
+  private static final AttributeKey<String> RPC_MESSAGE_TYPE =
+      AttributeKey.stringKey("rpc.message.type");
   // copied from MessageIncubatingAttributes.MessageTypeValues
   private static final String SENT = "SENT";
   private static final String RECEIVED = "RECEIVED";
@@ -117,7 +118,8 @@ final class TracingClientInterceptor implements ClientInterceptor {
       }
       Span span = Span.fromContext(context);
       Attributes attributes =
-          Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, MESSAGE_ID_UPDATER.incrementAndGet(this));
+          Attributes.of(
+              RPC_MESSAGE_TYPE, SENT, RPC_MESSAGE_ID, MESSAGE_ID_UPDATER.incrementAndGet(this));
       span.addEvent("message", attributes);
     }
 
@@ -144,9 +146,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
         Span span = Span.fromContext(context);
         Attributes attributes =
             Attributes.of(
-                MESSAGE_TYPE,
+                RPC_MESSAGE_TYPE,
                 RECEIVED,
-                MESSAGE_ID,
+                RPC_MESSAGE_ID,
                 MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this));
         span.addEvent("message", attributes);
         try (Scope ignored = context.makeCurrent()) {

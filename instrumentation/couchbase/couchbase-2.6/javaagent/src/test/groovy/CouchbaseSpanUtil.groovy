@@ -30,9 +30,9 @@ class CouchbaseSpanUtil {
       }
       attributes {
         "$DbIncubatingAttributes.DB_SYSTEM" "couchbase"
-        "$DbIncubatingAttributes.DB_NAME" bucketName
-        "$DbIncubatingAttributes.DB_STATEMENT" statement
-        "$DbIncubatingAttributes.DB_OPERATION"(operation ?: spanName)
+        "$DbIncubatingAttributes.DB_NAMESPACE" bucketName
+        "$DbIncubatingAttributes.DB_QUERY_TEXT" statement
+        "$DbIncubatingAttributes.DB_OPERATION_NAME"(operation ?: spanName)
 
         // Because of caching, not all requests hit the server so these attributes may be absent
         "$NetworkAttributes.NETWORK_TYPE" { it == "ipv4" || it == null }
