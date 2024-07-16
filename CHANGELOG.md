@@ -6,12 +6,19 @@ The Spring Boot Starter (`opentelemetry-spring-boot-starter`) is now stable.
 
 ### Migration notes
 
-- The Spring autoconfigure artifacts have been renamed
-  - `opentelemetry-spring-boot` &rarr; `opentelemetry-spring-boot-autoconfigure-2`
-  - `opentelemetry-spring-boot-3` &rarr; `opentelemetry-spring-boot-autoconfigure-3`
+- The `opentelemetry-spring-boot` and `opentelemetry-spring-boot-3` artifacts have been merged
+  into a single artifact named `opentelemetry-spring-boot-autoconfigure`
+  which supports both Spring Boot 2 and Spring Boot 3
 - Two experimental HTTP metrics have been renamed:
   - `http.server.request.size` &rarr; `http.server.request.body.size`,
   - `http.server.response.size` &rarr; `http.server.response.body.size`
+
+### 🌟 New javaagent instrumentation
+
+- Javalin
+  ([#11587](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11587))
+- ClickHouse
+  ([#11660](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11660))
 
 ### 📈 Enhancements
 
@@ -19,12 +26,8 @@ The Spring Boot Starter (`opentelemetry-spring-boot-starter`) is now stable.
   ([#11620](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11620))
 - Influxdb client: don't fill `db.statement` for create/drop database and write operations
   ([#11557](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11557))
-- Add Javalin instrumentation
-  ([#11587](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11587))
 - Support `otel.instrumentation.common.default-enabled` in the Spring starter
   ([#11746](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11746))
-- Support ClickHouse Java client
-  ([#11660](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11660))
 - Support Jetty HTTP client 12
   ([#11519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11519))
 - Add Pulsar `messaging.producer.duration` metric
@@ -37,6 +40,11 @@ The Spring Boot Starter (`opentelemetry-spring-boot-starter`) is now stable.
   ([#11757](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11757))
 - Support HTTP server instrumentation config properties in the Spring starter
   ([#11667](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11667))
+
+### 🛠️ Bug fixes
+
+- Fix `http.server.active_requests` metric with async requests
+  ([#11638](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11638))
 
 ## Version 1.33.4 (2024-06-19)
 
