@@ -114,6 +114,9 @@ if (latestDepTest) {
   }
 }
 
+val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+val testSpring3 = (testJavaVersion == null || testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
+
 testing {
   suites {
     val testLogbackAppender by registering(JvmTestSuite::class) {
@@ -202,6 +205,10 @@ tasks {
     sourceCompatibility = "17"
     targetCompatibility = "17"
     options.release.set(17)
+  }
+
+  named<Test>("testSpring3") {
+    isEnabled = testSpring3
   }
 
   withType(Jar::class) {
