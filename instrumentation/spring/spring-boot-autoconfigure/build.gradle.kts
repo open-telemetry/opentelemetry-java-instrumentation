@@ -31,18 +31,6 @@ configurations {
   }
 }
 
-tasks {
-  named<JavaCompile>("compileJavaSpring3Java") {
-    sourceCompatibility = "17"
-    targetCompatibility = "17"
-    options.release.set(17)
-  }
-
-  withType(Jar::class) {
-    from(sourceSets["javaSpring3"].output)
-  }
-}
-
 dependencies {
   compileOnly("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
@@ -106,15 +94,15 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
 
+  // needed for the Spring Boot 3 support
+  implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+
   // give access to common classes, e.g. InstrumentationConfigUtil
   add("javaSpring3CompileOnly", files(sourceSets.main.get().output.classesDirs))
   add("javaSpring3CompileOnly", "org.springframework.boot:spring-boot-starter-web:3.2.4")
   add("javaSpring3CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
-
-  // needed for the Spring Boot 3 support
-  implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -151,9 +139,7 @@ testing {
         }
       }
     }
-  }
 
-  suites {
     val testLogbackMissing by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
@@ -163,6 +149,20 @@ testing {
           version {
             strictly("1.7.32")
           }
+        }
+      }
+    }
+
+    val testSpring3 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("org.springframework.boot:spring-boot-starter-web:3.2.4")
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+        implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
+        implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+        implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-test:3.2.4") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
         }
       }
     }
@@ -190,5 +190,21 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  named<JavaCompile>("compileJavaSpring3Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<JavaCompile>("compileTestSpring3Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  withType(Jar::class) {
+    from(sourceSets["javaSpring3"].output)
   }
 }
