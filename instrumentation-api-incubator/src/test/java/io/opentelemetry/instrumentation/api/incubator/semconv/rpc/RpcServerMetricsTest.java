@@ -116,7 +116,8 @@ class RpcServerMetricsTest {
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
-                                    point.hasSum(20 /* bytes */)
+                                    point
+                                        .hasSum(20 /* bytes */)
                                         .hasAttributesSatisfying(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
@@ -142,7 +143,8 @@ class RpcServerMetricsTest {
                         histogram ->
                             histogram.hasPointsSatisfying(
                                 point ->
-                                    point.hasSum(10 /* bytes */)
+                                    point
+                                        .hasSum(10 /* bytes */)
                                         .hasAttributesSatisfying(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(

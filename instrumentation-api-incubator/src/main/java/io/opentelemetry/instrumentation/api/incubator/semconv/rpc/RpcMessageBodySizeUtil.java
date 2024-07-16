@@ -18,18 +18,17 @@ final class RpcMessageBodySizeUtil {
 
   @Nullable
   static Long getRpcClientResponseBodySize(Attributes... attributesList) {
-    return getAttribute(
-        RpcCommonAttributesExtractor.RPC_CLIENT_RESPONSE_BODY_SIZE, attributesList);
+    return getAttribute(RpcCommonAttributesExtractor.RPC_CLIENT_RESPONSE_BODY_SIZE, attributesList);
   }
 
   @Nullable
   static Long getRpcServerRequestBodySize(Attributes... attributesList) {
     return getAttribute(RpcCommonAttributesExtractor.RPC_SERVER_REQUEST_BODY_SIZE, attributesList);
   }
+
   @Nullable
   static Long getRpcServerResponseBodySize(Attributes... attributesList) {
-    return getAttribute(
-        RpcCommonAttributesExtractor.RPC_SERVER_RESPONSE_BODY_SIZE, attributesList);
+    return getAttribute(RpcCommonAttributesExtractor.RPC_SERVER_RESPONSE_BODY_SIZE, attributesList);
   }
 
   @Nullable
