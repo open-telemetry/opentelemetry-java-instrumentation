@@ -63,7 +63,6 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
     return request.getServerResponseSize();
   }
 
-
   List<String> metadataValue(GrpcRequest request, String key) {
     if (request.getMetadata() == null) {
       return Collections.emptyList();
