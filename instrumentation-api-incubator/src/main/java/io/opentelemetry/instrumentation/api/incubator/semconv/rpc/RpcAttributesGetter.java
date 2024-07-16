@@ -24,4 +24,20 @@ public interface RpcAttributesGetter<REQUEST> {
 
   @Nullable
   String getMethod(REQUEST request);
+
+  default int getClientRequestSize(REQUEST request) {
+    return 0;
+  }
+
+  default int getClientResponseSize(REQUEST request) {
+    return 0;
+  }
+
+  default int getServerRequestSize(REQUEST request) {
+    return 0;
+  }
+
+  default int getServerResponseSize(REQUEST request) {
+    return 0;
+  }
 }
