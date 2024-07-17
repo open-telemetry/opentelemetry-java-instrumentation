@@ -11,6 +11,8 @@ otel:
     http:
       client:
         emit-experimental-telemetry: true
+      server:
+        emit-experimental-telemetry: true
   propagators:
     - b3
   resource:

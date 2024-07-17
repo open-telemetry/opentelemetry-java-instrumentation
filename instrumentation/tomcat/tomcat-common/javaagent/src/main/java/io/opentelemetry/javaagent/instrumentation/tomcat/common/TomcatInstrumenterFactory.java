@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimen
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -61,6 +62,7 @@ public final class TomcatInstrumenterFactory {
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
+    InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
     return builder.buildServerInstrumenter(TomcatRequestGetter.INSTANCE);
   }
 }
