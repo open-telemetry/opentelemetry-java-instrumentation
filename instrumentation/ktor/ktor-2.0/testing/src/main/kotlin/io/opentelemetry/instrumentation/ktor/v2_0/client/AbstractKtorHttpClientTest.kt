@@ -81,7 +81,7 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
   @Test
   fun checkSpanEndsAfterBodyReceived() {
     val method = "GET"
-    val path = "/long_body_receiving"
+    val path = "/long-request"
     val uri = resolveAddress(path)
     val responseCode = doRequest(method, uri)
 

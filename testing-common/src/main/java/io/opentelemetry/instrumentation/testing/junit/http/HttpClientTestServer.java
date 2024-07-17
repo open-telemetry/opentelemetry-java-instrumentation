@@ -102,7 +102,7 @@ public final class HttpClientTestServer extends ServerExtension {
             (ctx, req) ->
                 HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofSeconds(20)))
         .service(
-            "/long_body_receiving",
+            "/long-request",
             (ctx, req) -> {
               HttpResponseWriter writer = HttpResponse.streaming();
               writer.write(ResponseHeaders.of(HttpStatus.OK));
