@@ -8,6 +8,7 @@ muzzle {
     module.set("grpc-core")
     versions.set("[1.6.0,)")
     assertInverse.set(true)
+    extraDependency("io.grpc:grpc-protobuf:1.6.0")
   }
 }
 
