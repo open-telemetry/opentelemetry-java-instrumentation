@@ -16,6 +16,7 @@ dependencies {
   api("io.grpc:grpc-stub:$grpcVersion")
 
   implementation("javax.annotation:javax.annotation-api:1.3.2")
+  implementation("com.google.protobuf:protobuf-java:3.25.3")
 
   implementation("com.google.guava:guava")
 
