@@ -38,7 +38,6 @@ public final class ArmeriaTelemetryBuilder {
         ArmeriaTelemetryBuilder::getServerBuilder);
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   ArmeriaTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder = ArmeriaInstrumenterBuilderFactory.getClientBuilder(openTelemetry);
     serverBuilder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
