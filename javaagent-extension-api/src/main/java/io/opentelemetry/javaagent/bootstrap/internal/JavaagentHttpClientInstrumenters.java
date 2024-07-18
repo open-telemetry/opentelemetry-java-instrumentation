@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -57,21 +56,9 @@ public final class JavaagentHttpClientInstrumenters {
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
-    CommonConfig config = CommonConfig.get();
-    set(config::getKnownHttpRequestMethods, builder::setKnownMethods);
-    set(config::getClientRequestHeaders, builder::setCapturedRequestHeaders);
-    set(config::getClientResponseHeaders, builder::setCapturedResponseHeaders);
-    set(config::getPeerServiceResolver, builder::setPeerServiceResolver);
-    set(
-        config::shouldEmitExperimentalHttpClientTelemetry,
-        builder::setEmitExperimentalHttpClientMetrics);
-    return builder.setBuilderCustomizer(builderCustomizer).build();
-  }
-
-  private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
-    T t = supplier.get();
-    if (t != null) {
-      consumer.accept(t);
-    }
+    return builder
+        .configure(AgentCommonConfig.get())
+        .setBuilderCustomizer(builderCustomizer)
+        .build();
   }
 }

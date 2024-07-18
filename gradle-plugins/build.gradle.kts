@@ -24,7 +24,7 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.14.17"
+val byteBuddyVersion = "1.14.18"
 val aetherVersion = "1.1.0"
 
 dependencies {
@@ -41,7 +41,7 @@ dependencies {
 
   implementation("com.github.johnrengelman:shadow:8.1.1")
 
-  testImplementation("org.assertj:assertj-core:3.26.0")
+  testImplementation("org.assertj:assertj-core:3.26.3")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

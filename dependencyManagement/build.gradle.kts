@@ -27,21 +27,21 @@ val groovyVersion = "4.0.22"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.17.1",
+  "com.fasterxml.jackson:jackson-bom:2.17.2",
   "com.squareup.okio:okio-bom:3.9.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.2.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.3",
-  "org.testcontainers:testcontainers-bom:1.19.8",
+  "org.testcontainers:testcontainers-bom:1.20.0",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
 val errorProneVersion = "2.28.0"
-val byteBuddyVersion = "1.14.17"
+val byteBuddyVersion = "1.14.18"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -90,27 +90,27 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.11.0",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.8.0",
-  "commons-codec:commons-codec:1.17.0",
+  "commons-codec:commons-codec:1.17.1",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
   "commons-io:commons-io:2.16.1",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.2",
+  "commons-logging:commons-logging:1.3.3",
   "commons-validator:commons-validator:1.9.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.3.1-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.3.2-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.26.0",
+  "org.assertj:assertj-core:3.26.3",
   "org.awaitility:awaitility:4.2.1",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.codehaus.mojo:animal-sniffer-annotations:1.23",
+  "org.codehaus.mojo:animal-sniffer-annotations:1.24",
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",

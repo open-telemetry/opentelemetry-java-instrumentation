@@ -15,7 +15,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -49,9 +49,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) Object value) {
-      if (CommonConfig.get().getTraceIdKey().equals(key)
-          || CommonConfig.get().getSpanIdKey().equals(key)
-          || CommonConfig.get().getTraceFlagsKey().equals(key)) {
+      if (AgentCommonConfig.get().getTraceIdKey().equals(key)
+          || AgentCommonConfig.get().getSpanIdKey().equals(key)
+          || AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -67,13 +67,13 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        if (CommonConfig.get().getTraceIdKey().equals(key)) {
+        if (AgentCommonConfig.get().getTraceIdKey().equals(key)) {
           value = spanContext.getTraceId();
         }
-        if (CommonConfig.get().getSpanIdKey().equals(key)) {
+        if (AgentCommonConfig.get().getSpanIdKey().equals(key)) {
           value = spanContext.getSpanId();
         }
-        if (CommonConfig.get().getTraceFlagsKey().equals(key)) {
+        if (AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
           value = spanContext.getTraceFlags().asHex();
         }
       } else if (value == null) {
