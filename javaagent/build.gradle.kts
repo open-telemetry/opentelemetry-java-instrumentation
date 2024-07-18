@@ -255,6 +255,7 @@ tasks {
             it
           }
         }.toCollection(ArrayList<String>())
+        Files.write(filePath, lines)
       }
     }
   }
