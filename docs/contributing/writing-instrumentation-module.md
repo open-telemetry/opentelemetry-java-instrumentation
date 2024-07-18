@@ -367,7 +367,7 @@ Using non-inlined advice code is possible thanks to the `invokedynamic` instruct
 is referred as "indy" in reference to this. By extension "indy modules" are the instrumentation
 modules using this instrumentation strategy.
 
-The most common way to instrument code with bytebuddy relies on inlining, this strategy will be
+The most common way to instrument code with ByteBuddy relies on inlining, this strategy will be
 referred as "inlined" strategy as opposed to "indy".
 
 For inlined advices, the advice code is directly copied into the instrumented method.
@@ -388,7 +388,7 @@ Making the instrumentation indy
 ### Indy modules and transition
 
 Making an instrumentation "indy" compatible (or native "indy") is not as straightforward as making it "inlined".
-However, bytebuddy provides a set of tools and APIs that are mentioned below to make the process as smooth as possible.
+However, ByteBuddy provides a set of tools and APIs that are mentioned below to make the process as smooth as possible.
 
 Due to the changes needed on most of the instrumentation modules the migration can't be achieved in a single step,
 we thus have to use intermediate steps.
@@ -502,7 +502,7 @@ annotated parameters, however modifying the values is done through the advice me
 and `@Advice.AssignReturned.ToArguments` annotation:
 
 The advice method return value must be `Object` unless it's a type that is provided by the JDK.
-Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to properly cast the
+Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
 value to the appropriate type.
 
 ```java
@@ -526,7 +526,7 @@ annotated parameter, however modifying the value is done through the advice meth
 and `@Advice.AssignReturned.ToReturned`.
 
 The advice method return value must be `Object` unless it's a type that is provided by the JDK.
-Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to properly cast the
+Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
 value to the appropriate type.
 
 ```java
@@ -547,7 +547,7 @@ annotated parameter, however modifying the value is done through the advice meth
 and `@Advice.AssignReturned.ToFields` annotation.
 
 The advice method return value must be `Object` unless it's a type that is provided by the JDK.
-Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct bytebuddy to properly cast the
+Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
 value to the appropriate type.
 
 ```java
