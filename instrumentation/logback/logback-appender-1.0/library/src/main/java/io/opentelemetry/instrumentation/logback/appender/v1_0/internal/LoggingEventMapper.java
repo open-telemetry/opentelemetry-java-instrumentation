@@ -60,6 +60,7 @@ public final class LoggingEventMapper {
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
+  private final boolean captureArguments;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
@@ -68,6 +69,7 @@ public final class LoggingEventMapper {
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
+    this.captureArguments = builder.captureArguments;
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
   }
@@ -168,6 +170,11 @@ public final class LoggingEventMapper {
       captureLoggerContext(attributes, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
+    if (captureArguments &&
+        loggingEvent.getArgumentArray()!=null && loggingEvent.getArgumentArray().length > 0) {
+     captureArguments(attributes, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+    }
+
     builder.setAllAttributes(attributes.build());
 
     // span context
@@ -189,6 +196,14 @@ public final class LoggingEventMapper {
         attributes.put(getMdcAttributeKey(key), value);
       }
     }
+  }
+
+  void captureArguments(AttributesBuilder attributes, String message, Object[] arguments){
+    attributes.put("src_msg_", message);
+      for (int idx = 0; idx < arguments.length; idx++) {
+          Object argument = arguments[idx];
+          attributes.put("log_arg_" + idx, String.valueOf(argument));
+      }
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {
@@ -331,6 +346,7 @@ public final class LoggingEventMapper {
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
+    private boolean captureArguments;
 
     Builder() {}
 
@@ -367,6 +383,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureLoggerContext(boolean captureLoggerContext) {
       this.captureLoggerContext = captureLoggerContext;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureArguments(boolean captureArguments) {
+      this.captureArguments = captureArguments;
       return this;
     }
 
