@@ -170,9 +170,10 @@ public final class LoggingEventMapper {
       captureLoggerContext(attributes, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
-    if (captureArguments &&
-        loggingEvent.getArgumentArray()!=null && loggingEvent.getArgumentArray().length > 0) {
-     captureArguments(attributes, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+    if (captureArguments
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
+      captureArguments(attributes, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
     }
 
     builder.setAllAttributes(attributes.build());
@@ -198,12 +199,12 @@ public final class LoggingEventMapper {
     }
   }
 
-  void captureArguments(AttributesBuilder attributes, String message, Object[] arguments){
+  void captureArguments(AttributesBuilder attributes, String message, Object[] arguments) {
     attributes.put("src_msg_", message);
-      for (int idx = 0; idx < arguments.length; idx++) {
-          Object argument = arguments[idx];
-          attributes.put("log_arg_" + idx, String.valueOf(argument));
-      }
+    for (int idx = 0; idx < arguments.length; idx++) {
+      Object argument = arguments[idx];
+      attributes.put("log_arg_" + idx, String.valueOf(argument));
+    }
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {

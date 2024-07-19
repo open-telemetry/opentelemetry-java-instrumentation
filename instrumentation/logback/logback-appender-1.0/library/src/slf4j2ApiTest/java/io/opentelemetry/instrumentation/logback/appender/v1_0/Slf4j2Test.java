@@ -117,7 +117,9 @@ public class Slf4j2Test {
   void arguments() {
     logger
         .atInfo()
-        .setMessage("log message {} and {}").addArgument("'world'").addArgument(Math.PI)
+        .setMessage("log message {} and {}")
+        .addArgument("'world'")
+        .addArgument(Math.PI)
         .log();
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
@@ -127,13 +129,11 @@ public class Slf4j2Test {
     assertThat(logData.getResource()).isEqualTo(resource);
     assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
     assertThat(logData.getBody().asString()).isEqualTo("log message 'world' and 3.141592653589793");
-    assertThat(logData.getAttributes().size())
-        .isEqualTo(7);
+    assertThat(logData.getAttributes().size()).isEqualTo(7);
     assertThat(logData)
         .hasAttributesSatisfying(
             equalTo(AttributeKey.stringKey("log_arg_0"), "'world'"),
             equalTo(AttributeKey.stringKey("log_arg_1"), "3.141592653589793"),
-            equalTo(AttributeKey.stringKey("src_msg_"), "log message {} and {}")
-            );
+            equalTo(AttributeKey.stringKey("src_msg_"), "log message {} and {}"));
   }
 }
