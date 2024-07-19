@@ -21,20 +21,17 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -155,8 +152,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
                 serverSpan ->
-                    serverSpan
-                        .hasKind(SpanKind.SERVER)
+                    HttpSpanDataAssert.create(serverSpan)
+                        .assertServerGetRequest("/ping")
                         .hasResourceSatisfying(
                             r ->
                                 r.hasAttribute(
@@ -175,7 +172,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 ServerAttributes.SERVER_PORT,
-                                integerAssert -> integerAssert.isNotZero()))));
+                                integerAssert -> integerAssert.isNotZero())),
+                span -> withSpanAssert(span)));
 
     // Metric
     testing.waitAndAssertMetrics(
@@ -234,18 +232,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "/ping"),
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
                 span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
-  }
-
-  public static void assertClientSpan(SpanDataAssert span, String path) {
-    span.hasKind(SpanKind.CLIENT)
-        .hasAttributesSatisfying(
-            satisfies(UrlAttributes.URL_FULL, a -> a.endsWith(path)),
-            // this attribute is set by the experimental http instrumentation
-            satisfies(
-                HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, AbstractLongAssert::isPositive));
+                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                span -> withSpanAssert(span)));
   }
 }
