@@ -15,10 +15,10 @@ import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.lambda.runtime.events.SNSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.ScheduledEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -206,7 +206,7 @@ class TracingRequestWrapperStandardEventsTest {
   private TracingRequestWrapper buildWrapper(Class<?> targetClass) {
     WrappedLambda wrappedLambda = new WrappedLambda(targetClass, "handleRequest");
 
-    return new TracingRequestWrapper(sdk, wrappedLambda, TracingRequestWrapper::map);
+    return new TracingRequestWrapper(sdk, wrappedLambda);
   }
 
   @ParameterizedTest
@@ -218,11 +218,11 @@ class TracingRequestWrapperStandardEventsTest {
         S3EventRequestHandler.class,
         SnsEventRequestHandler.class
       })
-  void handleScheduledEvent(Class<?> targetClass) throws JsonProcessingException {
+  void handleScheduledEvent(Class<?> targetClass) throws IOException {
     wrapper = buildWrapper(targetClass);
     Object parsedScheduledEvent =
         OBJECT_MAPPER.readValue(EVENTS_JSON.get(targetClass), Object.class);
-    assertEquals(SUCCESS, wrapper.doHandleRequest(parsedScheduledEvent, context));
+    assertEquals(SUCCESS, wrapper.handleRequest(parsedScheduledEvent, context));
   }
 
   public static class ScheduledEventRequestHandler

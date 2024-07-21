@@ -67,28 +67,45 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   @Override
   public void handleRequest(InputStream input, OutputStream output, Context context)
       throws IOException {
-
     ApiGatewayProxyRequest proxyRequest = ApiGatewayProxyRequest.forStream(input);
-    AwsLambdaRequest request =
-        AwsLambdaRequest.create(context, proxyRequest, proxyRequest.getHeaders());
+    AwsLambdaRequest request = createRequest(input, context, proxyRequest);
     io.opentelemetry.context.Context parentContext = instrumenter.extract(request);
 
     if (!instrumenter.shouldStart(parentContext, request)) {
-      doHandleRequest(proxyRequest.freshStream(), output, context);
+      doHandleRequest(proxyRequest.freshStream(), output, context, request);
       return;
     }
 
     io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, request);
+    Throwable error = null;
     try (Scope ignored = otelContext.makeCurrent()) {
       doHandleRequest(
           proxyRequest.freshStream(),
           new OutputStreamWrapper(output, otelContext, request, openTelemetrySdk),
-          context);
+          context,
+          request);
     } catch (Throwable t) {
-      instrumenter.end(otelContext, request, null, t);
-      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      error = t;
       throw t;
+    } finally {
+      // TODO @serkan-ozal
+      // Span ended on output stream close too.
+      // Just to be sure that span is ended in any case (output stream is not closed),
+      // is it OK to end span in any case here?
+      instrumenter.end(otelContext, request, null, error);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
+  }
+
+  protected AwsLambdaRequest createRequest(
+      InputStream input, Context context, ApiGatewayProxyRequest proxyRequest) throws IOException {
+    return AwsLambdaRequest.create(context, proxyRequest, proxyRequest.getHeaders());
+  }
+
+  protected void doHandleRequest(
+      InputStream input, OutputStream output, Context context, AwsLambdaRequest request)
+      throws IOException {
+    doHandleRequest(input, output, context);
   }
 
   protected abstract void doHandleRequest(InputStream input, OutputStream output, Context context)
