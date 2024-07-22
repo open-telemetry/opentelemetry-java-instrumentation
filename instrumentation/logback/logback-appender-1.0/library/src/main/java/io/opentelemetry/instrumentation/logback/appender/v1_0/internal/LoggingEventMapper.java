@@ -200,10 +200,11 @@ public final class LoggingEventMapper {
   }
 
   void captureArguments(AttributesBuilder attributes, String message, Object[] arguments) {
-    attributes.put("src_msg_", message);
+    String bodyKey = "log.body.original";
+    attributes.put(bodyKey, message);
     for (int idx = 0; idx < arguments.length; idx++) {
       Object argument = arguments[idx];
-      attributes.put("log_arg_" + idx, String.valueOf(argument));
+      propagateAttribute(attributes, String.format("%s.param.%d", bodyKey, idx), argument);
     }
   }
 
@@ -247,21 +248,26 @@ public final class LoggingEventMapper {
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
         Object value = keyValuePair.value;
-        if (keyValuePair.value != null) {
-          // preserve type for boolean and numeric values, everything else is converted to String
-          if (value instanceof Boolean) {
-            attributes.put(keyValuePair.key, (Boolean) keyValuePair.value);
-          } else if (value instanceof Byte
-              || value instanceof Integer
-              || value instanceof Long
-              || value instanceof Short) {
-            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).longValue());
-          } else if (value instanceof Double || value instanceof Float) {
-            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).doubleValue());
-          } else {
-            attributes.put(getAttributeKey(keyValuePair.key), keyValuePair.value.toString());
-          }
-        }
+        propagateAttribute(attributes, keyValuePair.key, value);
+      }
+    }
+  }
+
+  @NoMuzzle
+  private static void propagateAttribute(AttributesBuilder attributes, String key, Object value) {
+    if (value != null) {
+      // preserve type for boolean and numeric values, everything else is converted to String
+      if (value instanceof Boolean) {
+        attributes.put(key, (Boolean) value);
+      } else if (value instanceof Byte
+          || value instanceof Integer
+          || value instanceof Long
+          || value instanceof Short) {
+        attributes.put(key, ((Number) value).longValue());
+      } else if (value instanceof Double || value instanceof Float) {
+        attributes.put(key, ((Number) value).doubleValue());
+      } else {
+        attributes.put(getAttributeKey(key), value.toString());
       }
     }
   }
