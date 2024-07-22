@@ -38,8 +38,7 @@ import org.objectweb.asm.tree.ClassNode;
 // invokedynamic advices
 public class AdviceSignatureEraser {
 
-  /** Matches all type reference (Lmy/type;) except for the ones starting with "java/" */
-  private static final Pattern TYPE_REFERENCE_PATTERN = Pattern.compile("L(?>java/|[^;]+);");
+  private static final Pattern TYPE_REFERENCE_PATTERN = Pattern.compile("L[^;]+;");
 
   public static final String ORIGNINAL_DESCRIPTOR_ANNOTATION_TYPE =
       "L" + OriginalDescriptor.class.getName().replace('.', '/') + ";";
@@ -81,7 +80,18 @@ public class AdviceSignatureEraser {
 
   private static String eraseTypes(String descriptor) {
     Matcher matcher = TYPE_REFERENCE_PATTERN.matcher(descriptor);
-    return matcher.replaceAll("Ljava/lang/Object;");
+    StringBuffer result = new StringBuffer();
+    while (matcher.find()) {
+      String reference = matcher.group();
+      if (reference.startsWith("Ljava/")) {
+        // do not erase java.* references
+        matcher.appendReplacement(result, reference);
+      } else {
+        matcher.appendReplacement(result, "Ljava/lang/Object;");
+      }
+    }
+    matcher.appendTail(result);
+    return result.toString();
   }
 
   private static Set<String> listAdviceMethods(ClassNode classNode) {
