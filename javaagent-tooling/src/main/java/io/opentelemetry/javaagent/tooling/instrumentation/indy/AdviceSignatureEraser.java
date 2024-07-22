@@ -38,7 +38,10 @@ import org.objectweb.asm.tree.ClassNode;
 // invokedynamic advices
 public class AdviceSignatureEraser {
 
-  private static final Pattern TYPE_REFERENCE_PATTERN = Pattern.compile("L[^;]+;");
+  /**
+   * Matches all type reference (Lmy/type;) except for the ones starting with "java/"
+   */
+  private static final Pattern TYPE_REFERENCE_PATTERN = Pattern.compile("L(?>java/|[^;]+);");
   public static final String ORIGNINAL_DESCRIPTOR_ANNOTATION_TYPE =
       "L" + OriginalDescriptor.class.getName().replace('.', '/') + ";";
 
