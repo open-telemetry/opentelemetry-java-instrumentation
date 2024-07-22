@@ -31,6 +31,7 @@ public abstract class InstrumentationConfig {
 
   private static final Logger logger = Logger.getLogger(InstrumentationConfig.class.getName());
 
+  @SuppressWarnings("ClassInitializationDeadlock")
   private static final InstrumentationConfig DEFAULT = new EmptyInstrumentationConfig();
 
   // lazy initialized, so that javaagent can set it
