@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
@@ -12,7 +14,6 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import java.util.Arrays;
 
 final class RpcMetricsAdvice {
 
@@ -28,7 +29,7 @@ final class RpcMetricsAdvice {
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
-            Arrays.asList(
+            asList(
                 RpcCommonAttributesExtractor.RPC_SYSTEM,
                 RpcCommonAttributesExtractor.RPC_SERVICE,
                 RpcCommonAttributesExtractor.RPC_METHOD,
@@ -47,7 +48,7 @@ final class RpcMetricsAdvice {
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
-            Arrays.asList(
+            asList(
                 RpcCommonAttributesExtractor.RPC_SYSTEM,
                 RpcCommonAttributesExtractor.RPC_SERVICE,
                 RpcCommonAttributesExtractor.RPC_METHOD,
@@ -66,7 +67,7 @@ final class RpcMetricsAdvice {
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
     ((ExtendedLongHistogramBuilder) builder)
         .setAttributesAdvice(
-            Arrays.asList(
+            asList(
                 RpcCommonAttributesExtractor.RPC_SYSTEM,
                 RpcCommonAttributesExtractor.RPC_SERVICE,
                 RpcCommonAttributesExtractor.RPC_METHOD,
@@ -85,7 +86,7 @@ final class RpcMetricsAdvice {
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
     ((ExtendedLongHistogramBuilder) builder)
         .setAttributesAdvice(
-            Arrays.asList(
+            asList(
                 RpcCommonAttributesExtractor.RPC_SYSTEM,
                 RpcCommonAttributesExtractor.RPC_SERVICE,
                 RpcCommonAttributesExtractor.RPC_METHOD,
