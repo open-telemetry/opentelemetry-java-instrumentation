@@ -133,7 +133,12 @@ public class IndyBootstrap {
         case BOOTSTRAP_KIND_ADVICE:
           // See the getAdviceBootstrapArguments method for the argument definitions
           return bootstrapAdvice(
-              lookup, adviceMethodName, adviceMethodType, (String) args[1], (String) args[2], (String) args[3]);
+              lookup,
+              adviceMethodName,
+              adviceMethodType,
+              (String) args[1],
+              (String) args[2],
+              (String) args[3]);
         case BOOTSTRAP_KIND_PROXY:
           // See getProxyFactory for the argument definitions
           return bootstrapProxyMethod(
@@ -180,7 +185,8 @@ public class IndyBootstrap {
       // Advices are not inlined. They are loaded as normal classes by the
       // InstrumentationModuleClassloader and invoked via a method call from the instrumented method
       Class<?> adviceClass = instrumentationClassloader.loadClass(adviceClassName);
-      MethodType actualAdviceMethodType = MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassloader);
+      MethodType actualAdviceMethodType =
+          MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassloader);
 
       MethodHandle methodHandle =
           instrumentationClassloader

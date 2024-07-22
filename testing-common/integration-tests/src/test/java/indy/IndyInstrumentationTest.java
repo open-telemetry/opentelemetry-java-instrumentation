@@ -59,6 +59,7 @@ public class IndyInstrumentationTest {
   private Class<?> getHelperClass(boolean local) {
     return null;
   }
+
   private Object instrumentWithErasedTypes() {
     return "replace_me";
   }

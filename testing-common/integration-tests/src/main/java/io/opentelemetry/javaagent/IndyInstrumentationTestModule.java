@@ -187,23 +187,22 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
       }
     }
 
-
     @SuppressWarnings({"unused", "ThrowSpecificExceptions"})
     public static class SignatureErasureAdvice {
-  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-  public static LocalHelper onMethodEnter() {
-    return new LocalHelper();
-  }
+      @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+      public static LocalHelper onMethodEnter() {
+        return new LocalHelper();
+      }
 
-  @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
-  @Advice.OnMethodExit(
-      suppress = Throwable.class,
-      onThrowable = Throwable.class,
-      inline = false)
-  public static LocalHelper onMethodExit(@Advice.Enter LocalHelper enterVal) {
-    return enterVal;
-  }
-}
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
+      @Advice.OnMethodExit(
+          suppress = Throwable.class,
+          onThrowable = Throwable.class,
+          inline = false)
+      public static LocalHelper onMethodExit(@Advice.Enter LocalHelper enterVal) {
+        return enterVal;
+      }
+    }
   }
 
   public static class GlobalHelper {}
