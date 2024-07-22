@@ -21,7 +21,6 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import io.opentelemetry.semconv.NetworkAttributes
 import kotlinx.coroutines.*
-import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import java.net.URI
 import java.util.function.Consumer
