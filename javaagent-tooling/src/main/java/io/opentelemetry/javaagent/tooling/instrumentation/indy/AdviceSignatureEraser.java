@@ -40,12 +40,9 @@ public class AdviceSignatureEraser {
     ClassNode classNode = new ClassNode();
     cr.accept(classNode, 0);
 
-    // skip the class if there aren't any methods with advice annotations or these annotations have
-    // set inline = false
     Set<String> methodsToTransform = listAdviceMethods(classNode);
     if (methodsToTransform.isEmpty()) {
-      classNode.accept(cw);
-      return cw.toByteArray();
+      return bytes;
     }
 
     ClassVisitor cv =
