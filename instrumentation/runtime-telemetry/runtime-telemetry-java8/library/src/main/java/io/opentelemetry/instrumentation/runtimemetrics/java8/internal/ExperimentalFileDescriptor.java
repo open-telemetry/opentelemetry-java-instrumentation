@@ -67,6 +67,5 @@ public class ExperimentalFileDescriptor {
     return observables;
   }
 
-  private ExperimentalFileDescriptor() {
-  }
+  private ExperimentalFileDescriptor() {}
 }
