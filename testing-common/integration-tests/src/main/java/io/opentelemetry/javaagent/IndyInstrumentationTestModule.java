@@ -21,7 +21,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -93,7 +92,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignFieldViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToFields(@ToField(value = "privateField"))
+      @Advice.AssignReturned.ToFields(@ToField(value = "privateField", typing = DYNAMIC))
       public static String onEnter(@Advice.Argument(0) String toAssign) {
         return toAssign;
       }
@@ -113,7 +112,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignArgumentViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToArguments(@ToArgument(0))
+      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = DYNAMIC))
       public static String onEnter(@Advice.Argument(1) String toAssign) {
         return toAssign;
       }
@@ -133,7 +132,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignReturnViaReturnAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
       public static String onExit(@Advice.Argument(0) String toAssign) {
         return toAssign;
       }
@@ -153,7 +152,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class GetHelperClassAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
       public static Class<?> onExit(@Advice.Argument(0) boolean localHelper) {
         if (localHelper) {
           return LocalHelper.class;
@@ -196,7 +195,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     return new LocalHelper();
   }
 
-  @Advice.AssignReturned.ToReturned
+  @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
   @Advice.OnMethodExit(
       suppress = Throwable.class,
       onThrowable = Throwable.class,
