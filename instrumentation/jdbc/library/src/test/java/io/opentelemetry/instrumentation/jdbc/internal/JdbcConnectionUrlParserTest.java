@@ -638,6 +638,63 @@ class JdbcConnectionUrlParserTest {
               .setDb("sapdb")
               .build(),
 
+          // https://www.ibm.com/support/pages/how-configure-informix-jdbc-connection-string-connect-group
+          arg("jdbc:informix-sqli://infxhost:99/infxdb:INFORMIXSERVER=infxsn;user=infxuser;password=PW")
+              .setSystem("informix-sqli")
+              .setUser("infxuser")
+              .setShortUrl("informix-sqli://infxhost:99")
+              .setHost("infxhost")
+              .setPort(99)
+              .setName("infxdb")
+              .build(),
+          arg("jdbc:informix-sqli://localhost:9088/stores_demo:INFORMIXSERVER=informix")
+              .setSystem("informix-sqli")
+              .setShortUrl("informix-sqli://localhost:9088")
+              .setHost("localhost")
+              .setPort(9088)
+              .setName("stores_demo")
+              .build(),
+          arg("jdbc:informix-sqli://infxhost:99")
+              .setSystem("informix-sqli")
+              .setShortUrl("informix-sqli://infxhost:99")
+              .setHost("infxhost")
+              .setPort(99)
+              .build(),
+          arg("jdbc:informix-sqli://infxhost/")
+              .setSystem("informix-sqli")
+              .setShortUrl("informix-sqli://infxhost:9088")
+              .setHost("infxhost")
+              .setPort(9088)
+              .build(),
+          arg("jdbc:informix-sqli:")
+              .setSystem("informix-sqli")
+              .setShortUrl("informix-sqli:")
+              .setPort(9088)
+              .build(),
+
+          // https://www.ibm.com/docs/en/informix-servers/12.10?topic=method-format-database-urls
+          arg("jdbc:informix-direct://infxdb:999;user=infxuser;password=PW")
+              .setSystem("informix-direct")
+              .setShortUrl("informix-direct:")
+              .setUser("infxuser")
+              .setName("infxdb")
+              .build(),
+          arg("jdbc:informix-direct://infxdb;user=infxuser;password=PW")
+              .setSystem("informix-direct")
+              .setShortUrl("informix-direct:")
+              .setUser("infxuser")
+              .setName("infxdb")
+              .build(),
+          arg("jdbc:informix-direct://infxdb")
+              .setSystem("informix-direct")
+              .setShortUrl("informix-direct:")
+              .setName("infxdb")
+              .build(),
+          arg("jdbc:informix-direct:")
+              .setSystem("informix-direct")
+              .setShortUrl("informix-direct:")
+              .build(),
+
           // http://www.h2database.com/html/features.html#database_url
           arg("jdbc:h2:mem:").setShortUrl("h2:mem:").setSystem("h2").setSubtype("mem").build(),
           arg("jdbc:h2:mem:")

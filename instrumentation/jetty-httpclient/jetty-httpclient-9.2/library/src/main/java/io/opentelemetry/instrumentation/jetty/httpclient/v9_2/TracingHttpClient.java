@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.Je
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClient9TracingInterceptor;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientTracingListener;
 import java.util.List;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpClientTransport;
@@ -23,7 +23,6 @@ class TracingHttpClient extends HttpClient {
   private final Instrumenter<Request, Response> instrumenter;
 
   TracingHttpClient(Instrumenter<Request, Response> instrumenter) {
-    super();
     this.instrumenter = instrumenter;
   }
 
@@ -60,10 +59,12 @@ class TracingHttpClient extends HttpClient {
   @Override
   protected void send(HttpRequest request, List<Response.ResponseListener> listeners) {
     Context parentContext = Context.current();
-    JettyHttpClient9TracingInterceptor requestInterceptor =
-        new JettyHttpClient9TracingInterceptor(parentContext, this.instrumenter);
-    requestInterceptor.attachToRequest(request);
-    List<Response.ResponseListener> wrapped = wrapResponseListeners(parentContext, listeners);
-    super.send(request, wrapped);
+    Context context =
+        JettyClientTracingListener.handleRequest(parentContext, request, instrumenter);
+    // wrap listeners only when a span was started (context is not null)
+    if (context != null) {
+      listeners = wrapResponseListeners(parentContext, listeners);
+    }
+    super.send(request, listeners);
   }
 }

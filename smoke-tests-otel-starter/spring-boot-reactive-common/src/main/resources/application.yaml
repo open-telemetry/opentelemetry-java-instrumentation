@@ -3,6 +3,11 @@ otel:
     common:
       db-statement-sanitizer:
         enabled: false
+    http:
+      client:
+        emit-experimental-telemetry: true
+      server:
+        emit-experimental-telemetry: true
 
 spring:
   r2dbc:

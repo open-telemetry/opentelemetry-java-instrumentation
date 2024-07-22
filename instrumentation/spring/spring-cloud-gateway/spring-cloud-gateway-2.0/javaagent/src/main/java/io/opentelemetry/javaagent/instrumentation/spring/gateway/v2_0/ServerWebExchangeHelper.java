@@ -11,7 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.regex.Pattern;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.web.server.ServerWebExchange;
@@ -38,7 +38,7 @@ public final class ServerWebExchangeHelper {
 
   static {
     CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getBoolean(
                 "otel.instrumentation.spring-cloud-gateway.experimental-span-attributes", false);
   }

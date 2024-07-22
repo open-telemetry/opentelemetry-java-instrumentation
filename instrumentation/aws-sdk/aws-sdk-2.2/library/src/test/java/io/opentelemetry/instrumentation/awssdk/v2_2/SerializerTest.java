@@ -13,14 +13,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
 
-public class SerializerTest {
+class SerializerTest {
 
   @Test
-  public void shouldSerializeSimpleString() {
+  void shouldSerializeSimpleString() {
     // given
     // when
     String serialized = new Serializer().serialize("simpleString");
@@ -29,7 +29,7 @@ public class SerializerTest {
   }
 
   @Test
-  public void shouldSerializeSdkPojo() {
+  void shouldSerializeSdkPojo() {
     // given
     SdkPojo sdkPojo =
         ProvisionedThroughput.builder().readCapacityUnits(1L).writeCapacityUnits(2L).build();
@@ -40,7 +40,7 @@ public class SerializerTest {
   }
 
   @Test
-  public void shouldSerializeCollection() {
+  void shouldSerializeCollection() {
     // given
     List<String> collection = Arrays.asList("one", "two", "three");
     // when
@@ -50,7 +50,7 @@ public class SerializerTest {
   }
 
   @Test
-  public void shouldSerializeEmptyCollectionAsNull() {
+  void shouldSerializeEmptyCollectionAsNull() {
     // given
     List<String> collection = Collections.emptyList();
     // when
@@ -60,7 +60,7 @@ public class SerializerTest {
   }
 
   @Test
-  public void shouldSerializeMapAsKeyCollection() {
+  void shouldSerializeMapAsKeyCollection() {
     // given
     Map<String, Object> map = new HashMap<>();
     map.put("uno", 1L);

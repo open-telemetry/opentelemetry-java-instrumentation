@@ -14,13 +14,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
 
+  private boolean propagateOperationListenersToOnEnd;
+
   public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
     return new ServletInstrumenterBuilder<>();
   }
@@ -39,6 +42,12 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
       ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer) {
     contextCustomizers.add(contextCustomizer);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> propagateOperationListenersToOnEnd() {
+    propagateOperationListenersToOnEnd = true;
     return this;
   }
 
@@ -61,15 +70,15 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .setErrorCauseExtractor(errorCauseExtractor)
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addAttributesExtractor(additionalAttributesExtractor)
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 HttpServerRoute.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build());
     if (ServletRequestParametersExtractor.enabled()) {
       AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
@@ -80,10 +89,13 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);
     }
-    if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+    if (AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
+    }
+    if (propagateOperationListenersToOnEnd) {
+      InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
     }
     return builder.buildServerInstrumenter(new ServletRequestGetter<>(accessor));
   }
@@ -94,7 +106,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         httpAttributesGetter = new ServletHttpAttributesGetter<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
         HttpSpanNameExtractor.builder(httpAttributesGetter)
-            .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+            .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
             .build();
 
     return build(instrumentationName, accessor, spanNameExtractor, httpAttributesGetter);

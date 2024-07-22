@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.CREATE_DATABASE_STATEMENT_NEW;
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbConstants.DELETE_DATABASE_STATEMENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,16 +106,13 @@ class InfluxDbClientTest {
                     span.hasName("CREATE DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions(
-                                String.format(CREATE_DATABASE_STATEMENT_NEW, dbName),
-                                "CREATE DATABASE",
-                                dbName))),
+                            attributeAssertions(null, "CREATE DATABASE", dbName))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("write " + dbName)
+                    span.hasName("WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions("write", "write", dbName))),
+                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", dbName))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -131,10 +126,7 @@ class InfluxDbClientTest {
                     span.hasName("DROP DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions(
-                                String.format(DELETE_DATABASE_STATEMENT, dbName),
-                                "DROP DATABASE",
-                                dbName))));
+                            attributeAssertions(null, "DROP DATABASE", dbName))));
   }
 
   @Test
@@ -279,10 +271,10 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("write " + databaseName)
+                    span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("write", "write", databaseName))));
+                            attributeAssertions(null, "WRITE", databaseName))));
   }
 
   @Test
@@ -297,10 +289,10 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("write " + databaseName)
+                    span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("write", "write", databaseName))));
+                            attributeAssertions(null, "WRITE", databaseName))));
   }
 
   @Test
@@ -316,19 +308,24 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("write")
+                    span.hasName("WRITE")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions("write", "write", null))));
+                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", null))));
   }
 
   private static List<AttributeAssertion> attributeAssertions(
       String statement, String operation, String databaseName) {
-    return asList(
-        equalTo(DbIncubatingAttributes.DB_SYSTEM, "influxdb"),
-        equalTo(DbIncubatingAttributes.DB_NAME, databaseName),
-        equalTo(ServerAttributes.SERVER_ADDRESS, host),
-        equalTo(ServerAttributes.SERVER_PORT, port),
-        equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
-        equalTo(DbIncubatingAttributes.DB_OPERATION, operation));
+    List<AttributeAssertion> result = new ArrayList<>();
+    result.addAll(
+        asList(
+            equalTo(DbIncubatingAttributes.DB_SYSTEM, "influxdb"),
+            equalTo(DbIncubatingAttributes.DB_NAME, databaseName),
+            equalTo(ServerAttributes.SERVER_ADDRESS, host),
+            equalTo(ServerAttributes.SERVER_PORT, port),
+            equalTo(DbIncubatingAttributes.DB_OPERATION, operation)));
+    if (statement != null) {
+      result.add(equalTo(DbIncubatingAttributes.DB_STATEMENT, statement));
+    }
+    return result;
   }
 }

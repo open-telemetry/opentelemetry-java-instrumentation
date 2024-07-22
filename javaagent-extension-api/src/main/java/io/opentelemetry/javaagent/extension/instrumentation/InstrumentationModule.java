@@ -49,6 +49,10 @@ public abstract class InstrumentationModule implements Ordered {
    * InstrumentationModule} must have a default constructor (for SPI), so they have to pass the
    * instrumentation names to the super class constructor.
    *
+   * <p>When enabling or disabling the instrumentation module configuration property that
+   * corresponds to the main instrumentation name is considered first, after that additional
+   * instrumentation names are considered in the order they are listed here.
+   *
    * <p>The instrumentation names should follow several rules:
    *
    * <ul>
