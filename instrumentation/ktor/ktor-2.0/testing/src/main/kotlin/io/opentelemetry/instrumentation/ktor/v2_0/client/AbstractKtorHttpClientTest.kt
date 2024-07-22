@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import io.opentelemetry.semconv.NetworkAttributes
 import kotlinx.coroutines.*
@@ -85,13 +85,13 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
     val uri = resolveAddress(path)
     val responseCode = doRequest(method, uri)
 
-    Assertions.assertThat(responseCode).isEqualTo(200)
+    assertThat(responseCode).isEqualTo(200)
 
     testing.waitAndAssertTraces(
       Consumer { trace: TraceAssert ->
         val span = trace.getSpan(0)
-        OpenTelemetryAssertions.assertThat(span).hasKind(SpanKind.CLIENT)
-        Assertions.assertThat(span.endEpochNanos - span.startEpochNanos >= 1000000)
+        assertThat(span).hasKind(SpanKind.CLIENT)
+        assertThat(span.endEpochNanos - span.startEpochNanos >= 1_000_000_000)
           .describedAs("Span duration should be at least 1000ms")
           .isTrue()
       }
