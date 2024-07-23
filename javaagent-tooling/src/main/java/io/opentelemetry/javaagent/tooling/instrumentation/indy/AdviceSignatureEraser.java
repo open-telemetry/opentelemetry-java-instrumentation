@@ -36,7 +36,7 @@ import org.objectweb.asm.tree.ClassNode;
  */
 // TODO: replace this workaround when buddy natively supports altering the MethodType for
 // invokedynamic advices
-public class AdviceSignatureEraser {
+class AdviceSignatureEraser {
 
   private static final Pattern TYPE_REFERENCE_PATTERN = Pattern.compile("L[^;]+;");
 
