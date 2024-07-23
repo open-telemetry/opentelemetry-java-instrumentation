@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent;
 
-import static net.bytebuddy.implementation.bytecode.assign.Assigner.Typing.DYNAMIC;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -102,7 +101,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignFieldViaArrayAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToFields(@ToField(value = "privateField", index = 1, typing = DYNAMIC))
+      @Advice.AssignReturned.ToFields(@ToField(value = "privateField", index = 1))
       public static Object[] onEnter(@Advice.Argument(0) String toAssign) {
         return new Object[] {"ignoreme", toAssign};
       }
@@ -122,7 +121,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignArgumentViaArrayAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, index = 1, typing = DYNAMIC))
+      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
       public static Object[] onEnter(@Advice.Argument(1) String toAssign) {
         return new Object[] {"ignoreme", toAssign};
       }
@@ -142,7 +141,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignReturnViaArrayAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned(index = 1, typing = DYNAMIC)
+      @Advice.AssignReturned.ToReturned(index = 1)
       public static Object[] onExit(@Advice.Argument(0) String toAssign) {
         return new Object[] {"ignoreme", toAssign};
       }
