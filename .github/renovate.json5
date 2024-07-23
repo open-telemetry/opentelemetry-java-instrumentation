@@ -12,6 +12,13 @@
   "separateMinorPatch": true,
   "packageRules": [
     {
+      // this is to reduce the number of renovate PRs by consolidating them into a weekly batch
+      "matchManagers": ["github-actions"],
+      "extends": ["schedule:weekly"],
+      "groupName": "github actions",
+      "separateMinorPatch": false // overrides separateMinorPatch specified above
+    },
+    {
       "matchPackageNames": [
         "io.opentelemetry.contrib:opentelemetry-aws-resources",
         "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator",
