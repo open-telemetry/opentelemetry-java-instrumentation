@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
@@ -31,6 +32,9 @@ import java.util.logging.Logger;
 public final class MessagingConsumerMetrics implements OperationListener {
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
+      AttributeKey.longKey("messaging.batch.message_count");
   private static final ContextKey<MessagingConsumerMetrics.State> MESSAGING_CONSUMER_METRICS_STATE =
       ContextKey.named("messaging-consumer-metrics-state");
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
@@ -42,15 +46,17 @@ public final class MessagingConsumerMetrics implements OperationListener {
     DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("messaging.receive.duration")
-            .setDescription("Measures the duration of receive operation")
+            .setDescription("Measures the duration of receive operation.")
             .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
             .setUnit("s");
     MessagingMetricsAdvice.applyReceiveDurationAdvice(durationBuilder);
     receiveDurationHistogram = durationBuilder.build();
 
-    LongCounterBuilder longCounterBuilder = meter.counterBuilder("messaging.receive.messages")
-        .setDescription("Measures the number of received messages")
-        .setUnit("{message}");
+    LongCounterBuilder longCounterBuilder =
+        meter
+            .counterBuilder("messaging.receive.messages")
+            .setDescription("Measures the number of received messages.")
+            .setUnit("{message}");
     MessagingMetricsAdvice.applyReceiveMessagesAdvice(longCounterBuilder);
     receiveMessageCount = longCounterBuilder.build();
   }
@@ -83,14 +89,14 @@ public final class MessagingConsumerMetrics implements OperationListener {
         (endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
 
     Long receiveMessagesCount = getReceiveMessagesCount(state.startAttributes(), endAttributes);
-    if (receiveMessagesCount != null && receiveMessagesCount > 0) {
+    if (receiveMessagesCount != null) {
       receiveMessageCount.add(receiveMessagesCount, attributes, context);
     }
   }
 
-  private static Long getReceiveMessagesCount(Attributes... attributesList){
+  private static Long getReceiveMessagesCount(Attributes... attributesList) {
     for (Attributes attributes : attributesList) {
-      Long value = attributes.get(MessagingAttributesExtractor.MESSAGING_BATCH_MESSAGE_COUNT);
+      Long value = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
       if (value != null) {
         return value;
       }
