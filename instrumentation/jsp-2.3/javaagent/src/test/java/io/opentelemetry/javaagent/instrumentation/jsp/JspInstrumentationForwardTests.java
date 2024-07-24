@@ -107,6 +107,7 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
       String jspForwardDestClassName,
       String jspForwardDestClassPrefix) {
     AggregatedHttpResponse res = client.get(forwardFromFileName).aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -149,8 +150,6 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .withParent(trace.getSpan(2))
                             .withRoute(forwardDestFileName)
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   static class NonErroneousGetForwardArgs implements ArgumentsProvider {
@@ -179,6 +178,7 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
   @Test
   void testNonErroneousGetForwardToPlainHtml() {
     AggregatedHttpResponse res = client.get("/forwards/forwardToHtml.jsp").aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -206,14 +206,13 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .withParent(trace.getSpan(0))
                             .withRoute("/forwards/forwardToHtml.jsp")
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   @Test
   void testNonErroneousGetForwardedToJspWithMultipleIncludes() {
     AggregatedHttpResponse res =
         client.get("/forwards/forwardToIncludeMulti.jsp").aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -291,13 +290,12 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .withRequestUrlOverride("/includes/includeMulti.jsp")
                             .withForwardOrigin("/forwards/forwardToIncludeMulti.jsp")
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   @Test
   void testNonErroneousGetForwardToAnotherForward() {
     AggregatedHttpResponse res = client.get("/forwards/forwardToJspForward.jsp").aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -355,14 +353,13 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .withParent(trace.getSpan(4))
                             .withRoute("/common/loop.jsp")
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   @Test
   void testForwardToJspWithCompileErrorShouldNotProduceSecondRenderSpan() {
     AggregatedHttpResponse res =
         client.get("/forwards/forwardToCompileError.jsp").aggregate().join();
+    assertThat(res.status().code()).isEqualTo(500);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -402,15 +399,15 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .withClassName("compileError_jsp")
                             .withExceptionClass(JasperException.class)
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(500);
   }
 
   @Test
   void testForwardToNonExistentJspShouldBe404() {
+    String route = "/" + getContextPath() + "/forwards/forwardToNonExistent.jsp";
+
     AggregatedHttpResponse res =
         client.get("/forwards/forwardToNonExistent.jsp").aggregate().join();
-    String route = "/" + getContextPath() + "/forwards/forwardToNonExistent.jsp";
+    assertThat(res.status().code()).isEqualTo(404);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -453,7 +450,5 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .withRoute("/forwards/forwardToNonExistent.jsp")
                             .build()),
                 span -> span.hasName("ResponseFacade.sendError").hasParent(trace.getSpan(2))));
-
-    assertThat(res.status().code()).isEqualTo(404);
   }
 }

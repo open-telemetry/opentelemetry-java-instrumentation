@@ -107,6 +107,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   void testNonErroneousGet(
       String testName, String jspFileName, String jspClassName, String jspClassNamePrefix) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -134,8 +135,6 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .withParent(trace.getSpan(0))
                             .withRoute(jspFileName)
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   static class NonErroneousArgs implements ArgumentsProvider {
@@ -151,8 +150,10 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   @Test
   void testNonErroneousGetWithQueryString() {
     String queryString = "HELLO";
-    AggregatedHttpResponse res = client.get("/getQuery.jsp?" + queryString).aggregate().join();
     String route = "/" + getContextPath() + "/getQuery.jsp";
+
+    AggregatedHttpResponse res = client.get("/getQuery.jsp?" + queryString).aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -194,8 +195,6 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .withParent(trace.getSpan(0))
                             .withRoute("/getQuery.jsp")
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   @Test
@@ -206,6 +205,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
             .build();
 
     AggregatedHttpResponse res = client.execute(headers, "name=world").aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -233,8 +233,6 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .withParent(trace.getSpan(0))
                             .withRoute("/post.jsp")
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   @ParameterizedTest(name = "GET jsp with {0}")
@@ -246,6 +244,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
       Class<?> exceptionClass,
       boolean errorMessageOptional) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
+    assertThat(res.status().code()).isEqualTo(500);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -276,8 +275,6 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .withRoute(jspFileName)
                             .withErrorMessageOptional(errorMessageOptional)
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(500);
   }
 
   static class ErroneousRuntimeErrorsArgs implements ArgumentsProvider {
@@ -304,6 +301,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   @Test
   void testNonErroneousIncludePlainHtmlGet() {
     AggregatedHttpResponse res = client.get("/includes/includeHtml.jsp").aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -331,13 +329,12 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .withParent(trace.getSpan(0))
                             .withRoute("/includes/includeHtml.jsp")
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   @Test
   void testNonErroneousMultiGet() {
     AggregatedHttpResponse res = client.get("/includes/includeMulti.jsp").aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -397,8 +394,6 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .withRoute("/common/javaLoopH2.jsp")
                             .withRequestUrlOverride("/includes/includeMulti.jsp")
                             .build())));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 
   @ParameterizedTest
@@ -406,6 +401,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   void testCompileErrorShouldNotProduceRenderTracesAndSpans(
       String jspFileName, String jspClassName, String jspClassNamePrefix) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
+    assertThat(res.status().code()).isEqualTo(500);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -444,8 +440,6 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             equalTo(
                                 stringKey("jsp.compiler"),
                                 "org.apache.jasper.compiler.JDTCompiler"))));
-
-    assertThat(res.status().code()).isEqualTo(500);
   }
 
   static class CompileErrorsArgs implements ArgumentsProvider {
@@ -462,7 +456,9 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   @ValueSource(strings = {"/common/hello.html"})
   void testDirectStaticFileReference(String staticFile) {
     String route = "/" + getContextPath() + "/*";
+
     AggregatedHttpResponse res = client.get(staticFile).aggregate().join();
+    assertThat(res.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -488,7 +484,5 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             satisfies(
                                 NetworkAttributes.NETWORK_PEER_PORT,
                                 val -> val.isInstanceOf(Long.class)))));
-
-    assertThat(res.status().code()).isEqualTo(200);
   }
 }
