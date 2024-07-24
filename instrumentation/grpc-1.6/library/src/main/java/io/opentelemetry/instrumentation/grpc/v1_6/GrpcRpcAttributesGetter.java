@@ -44,23 +44,13 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
   }
 
   @Override
-  public int getClientRequestSize(GrpcRequest request) {
-    return request.getClientRequestSize();
+  public Long getRequestSize(GrpcRequest request) {
+    return request.getRequestSize();
   }
 
   @Override
-  public int getClientResponseSize(GrpcRequest request) {
-    return request.getClientResponseSize();
-  }
-
-  @Override
-  public int getServerRequestSize(GrpcRequest request) {
-    return request.getServerRequestSize();
-  }
-
-  @Override
-  public int getServerResponseSize(GrpcRequest request) {
-    return request.getServerResponseSize();
+  public Long getResponseSize(GrpcRequest request) {
+    return request.getResponseSize();
   }
 
   List<String> metadataValue(GrpcRequest request, String key) {

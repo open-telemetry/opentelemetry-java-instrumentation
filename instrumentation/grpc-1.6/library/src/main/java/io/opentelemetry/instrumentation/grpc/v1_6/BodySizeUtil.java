@@ -9,12 +9,12 @@ import com.google.protobuf.MessageLite;
 
 final class BodySizeUtil {
 
-  static <T> int getBodySize(T message) {
+  static <T> Long getBodySize(T message) {
     if (message instanceof MessageLite) {
-      return ((MessageLite) message).getSerializedSize();
+      return (long) ((MessageLite) message).getSerializedSize();
     } else {
       // Message is not a protobuf message
-      return 0;
+      return null;
     }
   }
 
