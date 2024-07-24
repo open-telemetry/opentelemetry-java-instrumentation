@@ -83,7 +83,7 @@ class HttpClientExperimentalMetricsTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.request.size")
+                    .hasName("http.client.request.body.size")
                     .hasUnit("By")
                     .hasDescription("Size of HTTP client request bodies.")
                     .hasHistogramSatisfying(
@@ -109,7 +109,7 @@ class HttpClientExperimentalMetricsTest {
                                                     .hasSpanId("090a0b0c0d0e0f00")))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.response.size")
+                    .hasName("http.client.response.body.size")
                     .hasUnit("By")
                     .hasDescription("Size of HTTP client response bodies.")
                     .hasHistogramSatisfying(
@@ -140,13 +140,13 @@ class HttpClientExperimentalMetricsTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.request.size")
+                    .hasName("http.client.request.body.size")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(point -> point.hasSum(200 /* bytes */))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.client.response.size")
+                    .hasName("http.client.response.body.size")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(point -> point.hasSum(400 /* bytes */))));

@@ -31,4 +31,10 @@ public class ContextPropagationOperator34InstrumentationModule extends Instrumen
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextPropagationOperator34Instrumentation());
   }
+
+  @Override
+  public boolean isIndyModule() {
+    // Requires Otel-API bride
+    return false;
+  }
 }

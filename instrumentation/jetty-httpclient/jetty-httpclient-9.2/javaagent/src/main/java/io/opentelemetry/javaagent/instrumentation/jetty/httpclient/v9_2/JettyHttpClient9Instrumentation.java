@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClient9TracingInterceptor;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientTracingListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -50,19 +50,13 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, httpRequest)) {
+      context =
+          JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
+      if (context == null) {
         return;
       }
 
-      // First step is to attach the tracer to the Jetty request. Request listeners are wrapped here
-      JettyHttpClient9TracingInterceptor requestInterceptor =
-          new JettyHttpClient9TracingInterceptor(parentContext, instrumenter());
-      requestInterceptor.attachToRequest(httpRequest);
-
-      // Second step is to wrap all the important result callback
       listeners = wrapResponseListeners(parentContext, listeners);
-
-      context = requestInterceptor.getContext();
       scope = context.makeCurrent();
     }
 

@@ -9,12 +9,12 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtelResourceProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.PropagationProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.properties.SpringConfigProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.DistroVersionResourceProvider;
-import io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.DistroVersionResourceProvider;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.internal.ComponentLoader;
@@ -60,7 +60,7 @@ public class OpenTelemetryAutoConfiguration {
   @Configuration
   @Conditional(SdkEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
-  public static class OpenTelemetrySdkConfig {
+  static class OpenTelemetrySdkConfig {
 
     @Bean
     @ConfigurationPropertiesBinding
@@ -131,7 +131,7 @@ public class OpenTelemetryAutoConfiguration {
   @Configuration
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
-  public static class DisabledOpenTelemetrySdkConfig {
+  static class DisabledOpenTelemetrySdkConfig {
 
     @Bean
     public OpenTelemetry openTelemetry() {
@@ -147,7 +147,7 @@ public class OpenTelemetryAutoConfiguration {
   @Configuration
   @ConditionalOnBean(OpenTelemetry.class)
   @ConditionalOnMissingBean({ConfigProperties.class})
-  public static class FallbackConfigProperties {
+  static class FallbackConfigProperties {
     @Bean
     public ConfigProperties otelProperties() {
       return DefaultConfigProperties.create(Collections.emptyMap());
@@ -159,7 +159,7 @@ public class OpenTelemetryAutoConfiguration {
    * <a
    * href="https://github.com/open-telemetry/opentelemetry-java/blob/4519a7e90243e5b75b3a46a14c872de88b95a9a1/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/AutoConfiguredOpenTelemetrySdkBuilder.java#L405-L408">here</a>
    */
-  public static class OpenTelemetrySdkComponentLoader implements ComponentLoader {
+  static class OpenTelemetrySdkComponentLoader implements ComponentLoader {
     private final ApplicationContext applicationContext;
 
     private final SpiHelper spiHelper =

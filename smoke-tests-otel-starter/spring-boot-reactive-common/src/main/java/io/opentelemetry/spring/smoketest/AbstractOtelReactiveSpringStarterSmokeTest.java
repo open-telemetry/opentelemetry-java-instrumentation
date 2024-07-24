@@ -8,14 +8,12 @@ package io.opentelemetry.spring.smoketest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootTest(
@@ -26,7 +24,9 @@ import org.springframework.web.reactive.function.client.WebClient;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  @LocalServerPort int serverPort;
+  // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
+  @Value("${local.server.port}")
+  int serverPort;
 
   @Autowired WebClient.Builder webClientBuilder;
   private WebClient webClient;
@@ -50,17 +50,8 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
             trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE testdb.player")),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasName("GET")
-                        .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/webflux")),
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasName("GET /webflux")
-                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-                        .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/webflux"),
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/webflux"),
+                span -> HttpSpanDataAssert.create(span).assertServerGetRequest("/webflux"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .satisfies(

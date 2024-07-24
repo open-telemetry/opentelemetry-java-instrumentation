@@ -46,26 +46,32 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private static final String SQL_CALL = "CALL";
+  // sanitizer is also used to extract operation and table name, so we have it always enable here
+  private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
   private final AttributeKey<String> dbTableAttribute;
-  private final SqlStatementSanitizer sanitizer;
+  private final boolean statementSanitizationEnabled;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST> getter,
       AttributeKey<String> dbTableAttribute,
-      SqlStatementSanitizer sanitizer) {
+      boolean statementSanitizationEnabled) {
     super(getter);
     this.dbTableAttribute = dbTableAttribute;
-    this.sanitizer = sanitizer;
+    this.statementSanitizationEnabled = statementSanitizationEnabled;
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawStatement(request));
+    String rawStatement = getter.getRawStatement(request);
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawStatement);
     String operation = sanitizedStatement.getOperation();
-    internalSet(attributes, DB_STATEMENT, sanitizedStatement.getFullStatement());
+    internalSet(
+        attributes,
+        DB_STATEMENT,
+        statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
     internalSet(attributes, DB_OPERATION, operation);
     if (!SQL_CALL.equals(operation)) {
       internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());

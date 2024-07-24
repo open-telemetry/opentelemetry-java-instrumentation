@@ -33,7 +33,7 @@ class CrashEarlyJdk8Test extends Specification {
   def "test crash on early jdk8"() {
     setup:
     GenericContainer target =
-      new GenericContainer<>(DockerImageName.parse("azul/zulu-openjdk:8u31"))
+      new GenericContainer<>(DockerImageName.parse("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-zulu-openjdk-8u31:20240709.9848833570"))
         .withStartupTimeout(Duration.ofMinutes(5))
         .withLogConsumer(new Slf4jLogConsumer(logger))
         .withCopyFileToContainer(

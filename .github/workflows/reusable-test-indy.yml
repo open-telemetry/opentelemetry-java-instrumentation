@@ -19,7 +19,6 @@ permissions:
 jobs:
   test-indy:
     name: testIndy${{ matrix.test-partition }}
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'test indy') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -30,7 +29,7 @@ jobs:
           - 3
       fail-fast: false
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -47,7 +46,7 @@ jobs:
 
       # vaadin 14 tests fail with node 18
       - name: Set up Node
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with:
           node-version: 16
 
@@ -59,7 +58,7 @@ jobs:
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@db19848a5fa7950289d3668fb053140cf3028d43 # v3.3.2
+        uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
           # gradle enterprise is used for the build cache
