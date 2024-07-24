@@ -82,6 +82,31 @@ class ClickHouseClientTest {
   }
 
   @Test
+  void testConnectionStringWithoutDatabaseSpecifiedStillGeneratesSpans()
+      throws ClickHouseException {
+    ClickHouseNode server = ClickHouseNode.of("http://" + host + ":" + port + "?compress=0");
+    ClickHouseClient client = ClickHouseClient.builder().build();
+
+    ClickHouseResponse response =
+        client
+            .read(server)
+            .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+            .query("select * from " + tableName)
+            .executeAndWait();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions("select * from " + tableName, "SELECT"))));
+  }
+
+  @Test
   void testExecuteAndWaitWithStringQuery() throws ClickHouseException {
     testing.runWithSpan(
         "parent",
