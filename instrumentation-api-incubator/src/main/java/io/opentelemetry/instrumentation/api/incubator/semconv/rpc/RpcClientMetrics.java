@@ -100,13 +100,13 @@ public final class RpcClientMetrics implements OperationListener {
 
     Long rpcClientRequestBodySize =
         RpcMessageBodySizeUtil.getRpcClientRequestBodySize(endAttributes, state.startAttributes());
-    if (rpcClientRequestBodySize != null && rpcClientRequestBodySize > 0) {
+    if (rpcClientRequestBodySize != null) {
       clientRequestSize.record(rpcClientRequestBodySize, attributes, context);
     }
 
     Long rpcClientResponseBodySize =
         RpcMessageBodySizeUtil.getRpcClientResponseBodySize(endAttributes, state.startAttributes());
-    if (rpcClientResponseBodySize != null && rpcClientResponseBodySize > 0) {
+    if (rpcClientResponseBodySize != null) {
       clientResponseSize.record(rpcClientResponseBodySize, attributes, context);
     }
   }

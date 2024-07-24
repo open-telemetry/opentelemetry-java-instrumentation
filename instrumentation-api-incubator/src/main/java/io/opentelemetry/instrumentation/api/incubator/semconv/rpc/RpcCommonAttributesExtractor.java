@@ -49,23 +49,24 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    int clientRequestSize = getter.getClientRequestSize(request);
-    if (clientRequestSize > 0) {
-      internalSet(attributes, RPC_CLIENT_REQUEST_BODY_SIZE, (long) clientRequestSize);
-    }
-    int clientResponseSize = getter.getClientResponseSize(request);
-    if (clientResponseSize > 0) {
-      internalSet(attributes, RPC_CLIENT_RESPONSE_BODY_SIZE, (long) clientResponseSize);
-    }
-
-    int serverRequestSize = getter.getServerRequestSize(request);
-    if (serverRequestSize > 0) {
-      internalSet(attributes, RPC_SERVER_REQUEST_BODY_SIZE, (long) serverRequestSize);
+    Long requestSize = getter.getRequestSize(request);
+    Long responseSize = getter.getResponseSize(request);
+    if (this instanceof RpcClientAttributesExtractor) {
+      if (requestSize != null) {
+        internalSet(attributes, RPC_CLIENT_REQUEST_BODY_SIZE, requestSize);
+      }
+      if (responseSize != null) {
+        internalSet(attributes, RPC_CLIENT_RESPONSE_BODY_SIZE, responseSize);
+      }
     }
 
-    int serverResponseSize = getter.getServerResponseSize(request);
-    if (serverResponseSize > 0) {
-      internalSet(attributes, RPC_SERVER_RESPONSE_BODY_SIZE, (long) serverResponseSize);
+    if (this instanceof RpcServerAttributesExtractor) {
+      if (requestSize != null) {
+        internalSet(attributes, RPC_SERVER_REQUEST_BODY_SIZE, requestSize);
+      }
+      if (responseSize != null) {
+        internalSet(attributes, RPC_SERVER_RESPONSE_BODY_SIZE, responseSize);
+      }
     }
   }
 }

@@ -20,11 +20,8 @@ public final class GrpcRequest {
   private volatile int logicalPort = -1;
   @Nullable private volatile SocketAddress peerSocketAddress;
 
-  private int clientRequestSize;
-  private int clientResponseSize;
-
-  private int serverRequestSize;
-  private int serverResponseSize;
+  private Long requestSize;
+  private Long responseSize;
 
   GrpcRequest(
       MethodDescriptor<?, ?> method,
@@ -85,35 +82,19 @@ public final class GrpcRequest {
     this.peerSocketAddress = peerSocketAddress;
   }
 
-  public int getClientRequestSize() {
-    return clientRequestSize;
+  public Long getRequestSize() {
+    return requestSize;
   }
 
-  void setClientRequestSize(int clientRequestSize) {
-    this.clientRequestSize = clientRequestSize;
+  public void setRequestSize(Long requestSize) {
+    this.requestSize = requestSize;
   }
 
-  public int getClientResponseSize() {
-    return clientResponseSize;
+  public Long getResponseSize() {
+    return responseSize;
   }
 
-  void setClientResponseSize(int clientResponseSize) {
-    this.clientResponseSize = clientResponseSize;
-  }
-
-  public int getServerRequestSize() {
-    return serverRequestSize;
-  }
-
-  public void setServerRequestSize(int serverRequestSize) {
-    this.serverRequestSize = serverRequestSize;
-  }
-
-  public int getServerResponseSize() {
-    return serverResponseSize;
-  }
-
-  public void setServerResponseSize(int serverResponseSize) {
-    this.serverResponseSize = serverResponseSize;
+  public void setResponseSize(Long responseSize) {
+    this.responseSize = responseSize;
   }
 }

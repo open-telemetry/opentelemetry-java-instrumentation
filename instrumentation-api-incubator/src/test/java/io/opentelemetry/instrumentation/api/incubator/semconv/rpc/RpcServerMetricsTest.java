@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -108,7 +107,7 @@ class RpcServerMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00")))),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("rpc.server.response.size")
                     .hasUnit("By")
                     .hasDescription("Measures the size of RPC response messages (uncompressed).")
@@ -135,7 +134,7 @@ class RpcServerMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00")))),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("rpc.server.request.size")
                     .hasUnit("By")
                     .hasDescription("Measures the size of RPC request messages (uncompressed).")

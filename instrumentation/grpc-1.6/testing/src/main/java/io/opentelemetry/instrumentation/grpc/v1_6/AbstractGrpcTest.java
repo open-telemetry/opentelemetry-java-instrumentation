@@ -1220,6 +1220,7 @@ public abstract class AbstractGrpcTest {
                                         (long) Status.Code.CANCELLED.value()),
                                     equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                     equalTo(RPC_CLIENT_REQUEST_BODY_SIZE, requestSerializedSize),
+                                    equalTo(RPC_CLIENT_RESPONSE_BODY_SIZE, 0),
                                     equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
@@ -1253,6 +1254,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 equalTo(RPC_SERVER_RESPONSE_BODY_SIZE, requestSerializedSize),
+                                equalTo(RPC_SERVER_REQUEST_BODY_SIZE, 0),
                                 satisfies(
                                     NetworkAttributes.NETWORK_PEER_PORT,
                                     val -> assertThat(val).isNotNull()))

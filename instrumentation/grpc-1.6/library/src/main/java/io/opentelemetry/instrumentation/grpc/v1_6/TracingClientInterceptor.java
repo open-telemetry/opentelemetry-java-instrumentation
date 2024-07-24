@@ -109,7 +109,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(REQUEST message) {
-      request.setClientRequestSize(BodySizeUtil.getBodySize(message));
+      request.setRequestSize(BodySizeUtil.getBodySize(message));
       try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
@@ -142,7 +142,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
       @Override
       public void onMessage(RESPONSE message) {
-        request.setClientResponseSize(BodySizeUtil.getBodySize(message));
+        request.setResponseSize(BodySizeUtil.getBodySize(message));
         Span span = Span.fromContext(context);
         Attributes attributes =
             Attributes.of(
