@@ -189,14 +189,13 @@ public final class ArmeriaTelemetryBuilder {
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
-  @SuppressWarnings({"rawtypes", "unchecked"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setServerSpanNameExtractor(
       Function<
-              SpanNameExtractor<RequestContext>,
-              ? extends SpanNameExtractor<? super RequestContext>>
+              SpanNameExtractor<? super ServiceRequestContext>,
+              ? extends SpanNameExtractor<? super ServiceRequestContext>>
           serverSpanNameExtractor) {
-    serverBuilder.setSpanNameExtractor((Function) serverSpanNameExtractor);
+    serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
   }
 

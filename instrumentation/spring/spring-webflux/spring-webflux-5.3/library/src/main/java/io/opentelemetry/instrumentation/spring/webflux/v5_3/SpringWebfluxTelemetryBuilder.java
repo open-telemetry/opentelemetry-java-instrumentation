@@ -179,7 +179,7 @@ public final class SpringWebfluxTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setServerSpanNameExtractor(
       Function<
-              SpanNameExtractor<ServerWebExchange>,
+              SpanNameExtractor<? super ServerWebExchange>,
               ? extends SpanNameExtractor<? super ServerWebExchange>>
           serverSpanNameExtractor) {
     serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
