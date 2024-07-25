@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
+import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.junit.jupiter.api.Test;
@@ -561,5 +562,49 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic2, msgId2.toString(), false))));
+  }
+
+  @Test
+  void testConsumePartitionedTopicUsingBatchReceive() throws Exception {
+    String topic = "persistent://public/default/testConsumePartitionedTopicUsingBatchReceive";
+    admin.topics().createPartitionedTopic(topic, 4);
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+
+    String msg = "test";
+    for (int i = 0; i < 10; i++) {
+      producer.send(msg);
+    }
+
+    Messages<String> receivedMsg = consumer.batchReceive();
+    consumer.acknowledge(receivedMsg);
+
+    assertThat(testing.metrics())
+        .satisfiesOnlyOnce(
+            metric ->
+                OpenTelemetryAssertions.assertThat(metric)
+                    .hasName("messaging.receive.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Measures the number of received messages.")
+                    .hasLongSumSatisfying(
+                        sum -> {
+                          sum.hasPointsSatisfying(
+                              point -> {
+                                point
+                                    .hasValue(receivedMsg.size())
+                                    .hasAttributesSatisfying(
+                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(SERVER_PORT, brokerPort),
+                                        equalTo(SERVER_ADDRESS, brokerHost));
+                              });
+                        }));
   }
 }
