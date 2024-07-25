@@ -161,7 +161,6 @@ public final class ArmeriaTelemetryBuilder {
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
     clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
-    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -174,7 +173,6 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpServerMetrics);
     serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
