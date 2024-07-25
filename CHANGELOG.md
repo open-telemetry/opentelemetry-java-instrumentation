@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 1.33.5 (2024-07-25)
 
 ### 📈 Enhancements
 
