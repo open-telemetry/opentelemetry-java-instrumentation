@@ -24,9 +24,11 @@ import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
@@ -202,10 +204,9 @@ public final class LoggingEventMapper {
   void captureArguments(AttributesBuilder attributes, String message, Object[] arguments) {
     String bodyKey = "log.body.template";
     attributes.put(bodyKey, message);
-    for (int idx = 0; idx < arguments.length; idx++) {
-      Object argument = arguments[idx];
-      propagateAttribute(attributes, String.format("log.body.parameters.%d", idx), argument);
-    }
+    attributes.put(
+        AttributeKey.stringArrayKey("log.body.parameters"),
+        Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {

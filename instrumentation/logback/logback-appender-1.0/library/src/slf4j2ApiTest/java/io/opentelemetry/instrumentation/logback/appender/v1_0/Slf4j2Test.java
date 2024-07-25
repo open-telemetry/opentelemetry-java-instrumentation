@@ -133,13 +133,20 @@ public class Slf4j2Test {
     assertThat(logData.getBody().asString())
         .isEqualTo(
             "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807");
-    assertThat(logData.getAttributes().size()).isEqualTo(9);
+    assertThat(logData.getAttributes().size()).isEqualTo(6);
+    assertThat(logData.getAttributes())
+        .hasEntrySatisfying(
+            AttributeKey.stringArrayKey("log.body.parameters"),
+            value ->
+                assertThat(value)
+                    .isEqualTo(
+                        Arrays.asList(
+                            "'world'",
+                            String.valueOf(Math.PI),
+                            String.valueOf(true),
+                            String.valueOf(Long.MAX_VALUE))));
     assertThat(logData)
         .hasAttributesSatisfying(
-            equalTo(AttributeKey.stringKey("log.body.parameters.0"), "'world'"),
-            equalTo(AttributeKey.doubleKey("log.body.parameters.1"), Math.PI),
-            equalTo(AttributeKey.booleanKey("log.body.parameters.2"), true),
-            equalTo(AttributeKey.longKey("log.body.parameters.3"), Long.MAX_VALUE),
             equalTo(
                 AttributeKey.stringKey("log.body.template"),
                 "log message {} and {}, bool {}, long {}"));
