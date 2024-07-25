@@ -11,8 +11,6 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,23 +21,17 @@ public class ArmeriaInstrumenterBuilderFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.armeria-1.3";
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   public static DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
       getServerBuilder(OpenTelemetry openTelemetry) {
-    return new DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            (HttpServerAttributesGetter) ArmeriaHttpServerAttributesGetter.INSTANCE)
+    return new DefaultHttpServerInstrumenterBuilder<>(
+            INSTRUMENTATION_NAME, openTelemetry, ArmeriaHttpServerAttributesGetter.INSTANCE)
         .setHeaderGetter(RequestContextGetter.INSTANCE);
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   public static DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
       getClientBuilder(OpenTelemetry openTelemetry) {
-    return new DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            (HttpClientAttributesGetter) ArmeriaHttpClientAttributesGetter.INSTANCE)
+    return new DefaultHttpClientInstrumenterBuilder<>(
+            INSTRUMENTATION_NAME, openTelemetry, ArmeriaHttpClientAttributesGetter.INSTANCE)
         .setHeaderSetter(ClientRequestContextSetter.INSTANCE);
   }
 }
