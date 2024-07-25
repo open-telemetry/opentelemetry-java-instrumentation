@@ -22,8 +22,8 @@ public class ExperimentalFileDescriptor {
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
     return registerObservers(
         openTelemetry,
-        FileDescriptorMethods.openFileDescriptorCount(),
-        FileDescriptorMethods.maxFileDescriptorCount());
+        OperatingSystemMethods.openFileDescriptorCount(),
+        OperatingSystemMethods.maxFileDescriptorCount());
   }
 
   // Visible for testing
@@ -37,9 +37,9 @@ public class ExperimentalFileDescriptor {
     if (openFileDescriptorCount != null) {
       observables.add(
           meter
-              .gaugeBuilder("os.file.descriptor.open")
-              .setDescription("number of open file descriptors")
-              .setUnit("{file}")
+              .upDownCounterBuilder("process.open_file_descriptor.count")
+              .setDescription("Number of file descriptors in use by the process.")
+              .setUnit("{count}")
               .buildWithCallback(
                   observableMeasurement -> {
                     Long openCount = openFileDescriptorCount.get();
@@ -52,9 +52,9 @@ public class ExperimentalFileDescriptor {
     if (maxFileDescriptorCount != null) {
       observables.add(
           meter
-              .gaugeBuilder("os.file.descriptor.max")
-              .setDescription("maximum number of file descriptors")
-              .setUnit("{file}")
+              .upDownCounterBuilder("process.open_file_descriptor.limit")
+              .setDescription("Measure of max file descriptors.")
+              .setUnit("{count}")
               .buildWithCallback(
                   observableMeasurement -> {
                     Long maxCount = maxFileDescriptorCount.get();
