@@ -28,6 +28,7 @@ class JmxMetricInsightInstallerTest {
       new HashSet<>(
           Arrays.asList(
               "activemq.yaml",
+              "camel.yaml",
               "hadoop.yaml",
               "jetty.yaml",
               "kafka-broker.yaml",
