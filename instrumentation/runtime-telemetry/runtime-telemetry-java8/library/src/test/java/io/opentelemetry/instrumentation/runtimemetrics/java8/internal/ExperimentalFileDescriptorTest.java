@@ -28,27 +28,27 @@ class ExperimentalFileDescriptorTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "os.file.descriptor.open",
+        "process.open_file_descriptor.count",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("number of open file descriptors")
-                        .hasUnit("{file}")
-                        .hasDoubleGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(10L)))));
+                        .hasDescription("Number of file descriptors in use by the process.")
+                        .hasUnit("{count}")
+                        .hasLongSumSatisfying(
+                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(10L)))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "os.file.descriptor.max",
+        "process.open_file_descriptor.limit",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("maximum number of file descriptors")
-                        .hasUnit("{file}")
-                        .hasDoubleGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(10000L)))));
+                        .hasDescription("Measure of max file descriptors.")
+                        .hasUnit("{count}")
+                        .hasLongSumSatisfying(
+                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(10000L)))));
   }
 }
