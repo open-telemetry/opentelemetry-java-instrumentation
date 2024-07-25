@@ -9,7 +9,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.40.0"
-val otelContribVersion = "1.36.0-alpha"
+val otelContribVersion = "1.37.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -34,13 +34,13 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.3",
-  "org.testcontainers:testcontainers-bom:1.19.8",
+  "org.testcontainers:testcontainers-bom:1.20.0",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.28.0"
+val errorProneVersion = "2.29.2"
 val byteBuddyVersion = "1.14.18"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
@@ -102,6 +102,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
+  "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.3.2-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.26.3",

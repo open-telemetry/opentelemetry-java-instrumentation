@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## Version 2.6.0 (2024-07-16)
+## Version 2.6.0 (2024-07-17)
 
 The Spring Boot Starter (`opentelemetry-spring-boot-starter`) is now stable.
 
