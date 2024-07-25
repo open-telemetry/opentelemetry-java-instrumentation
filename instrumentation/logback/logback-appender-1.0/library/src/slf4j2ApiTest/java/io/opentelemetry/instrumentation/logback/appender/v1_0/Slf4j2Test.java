@@ -136,12 +136,12 @@ public class Slf4j2Test {
     assertThat(logData.getAttributes().size()).isEqualTo(9);
     assertThat(logData)
         .hasAttributesSatisfying(
-            equalTo(AttributeKey.stringKey("log.body.original.param.0"), "'world'"),
-            equalTo(AttributeKey.doubleKey("log.body.original.param.1"), Math.PI),
-            equalTo(AttributeKey.booleanKey("log.body.original.param.2"), true),
-            equalTo(AttributeKey.longKey("log.body.original.param.3"), Long.MAX_VALUE),
+            equalTo(AttributeKey.stringKey("log.body.parameters.0"), "'world'"),
+            equalTo(AttributeKey.doubleKey("log.body.parameters.1"), Math.PI),
+            equalTo(AttributeKey.booleanKey("log.body.parameters.2"), true),
+            equalTo(AttributeKey.longKey("log.body.parameters.3"), Long.MAX_VALUE),
             equalTo(
-                AttributeKey.stringKey("log.body.original"),
+                AttributeKey.stringKey("log.body.template"),
                 "log message {} and {}, bool {}, long {}"));
   }
 }

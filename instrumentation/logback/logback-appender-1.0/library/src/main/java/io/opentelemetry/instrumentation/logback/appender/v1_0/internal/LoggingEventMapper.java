@@ -200,11 +200,11 @@ public final class LoggingEventMapper {
   }
 
   void captureArguments(AttributesBuilder attributes, String message, Object[] arguments) {
-    String bodyKey = "log.body.original";
+    String bodyKey = "log.body.template";
     attributes.put(bodyKey, message);
     for (int idx = 0; idx < arguments.length; idx++) {
       Object argument = arguments[idx];
-      propagateAttribute(attributes, String.format("%s.param.%d", bodyKey, idx), argument);
+      propagateAttribute(attributes, String.format("log.body.parameters.%d", idx), argument);
     }
   }
 
