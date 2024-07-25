@@ -79,6 +79,18 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Adds an extra server-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items. The {@link AttributesExtractor} will be executed after all default
+   * extractors.
+   */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder addServerAttributeExtractor(
+      AttributesExtractor<? super ServiceRequestContext, ? super RequestLog> attributesExtractor) {
+    serverBuilder.addAttributesExtractor(attributesExtractor);
+    return this;
+  }
+
   /** Sets the {@code peer.service} attribute for http client spans. */
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setPeerService(String peerService) {
