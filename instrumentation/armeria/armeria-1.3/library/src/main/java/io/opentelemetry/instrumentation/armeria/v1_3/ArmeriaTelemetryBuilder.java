@@ -178,14 +178,13 @@ public final class ArmeriaTelemetryBuilder {
   }
 
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
-  @SuppressWarnings({"rawtypes", "unchecked"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setClientSpanNameExtractor(
       Function<
-              SpanNameExtractor<RequestContext>,
-              ? extends SpanNameExtractor<? super RequestContext>>
+              SpanNameExtractor<? super ClientRequestContext>,
+              ? extends SpanNameExtractor<? super ClientRequestContext>>
           clientSpanNameExtractor) {
-    clientBuilder.setSpanNameExtractor((Function) clientSpanNameExtractor);
+    clientBuilder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
   }
 

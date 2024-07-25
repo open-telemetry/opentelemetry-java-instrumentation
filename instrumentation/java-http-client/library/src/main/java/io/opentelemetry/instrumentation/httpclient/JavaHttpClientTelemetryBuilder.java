@@ -95,7 +95,7 @@ public final class JavaHttpClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
+      Function<SpanNameExtractor<? super HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
