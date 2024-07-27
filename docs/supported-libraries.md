@@ -225,6 +225,9 @@ For this reason, the following instrumentations are disabled by default:
 - `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
 - `dropwizard-metrics` which might create a very low quality metrics data, because of lack of label/attribute support
   in the Dropwizard metrics API.
+- `mybatis`
+- `spring-boot-actuator-autoconfigure`
+- `spring-batch`
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 `-Dotel.instrumentation.jdbc-datasource.enabled=true`
