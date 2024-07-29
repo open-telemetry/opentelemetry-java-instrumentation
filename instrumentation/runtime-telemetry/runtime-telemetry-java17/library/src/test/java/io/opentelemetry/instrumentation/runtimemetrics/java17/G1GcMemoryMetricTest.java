@@ -16,6 +16,8 @@ import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Co
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY_AFTER;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_COMMITTED;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY_AFTER;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.MILLISECONDS;
@@ -42,7 +44,7 @@ class G1GcMemoryMetricTest {
     System.gc();
     // Test to make sure there's metric data for both eden and survivor spaces.
     // TODO: once G1 old gen usage added to jdk.G1HeapSummary (in JDK 21), test for it here too.
-    // TODO: needs JFR support for process.runtime.jvm.memory.limit.
+    // TODO: needs JFR support for jvm.memory.limit.
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
@@ -52,7 +54,7 @@ class G1GcMemoryMetricTest {
                 .satisfies(G1GcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
-                .hasName("process.runtime.jvm.memory.committed")
+                .hasName(METRIC_NAME_COMMITTED)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_COMMITTED)
                 // TODO: need JFR support for the other G1 pools
@@ -85,7 +87,7 @@ class G1GcMemoryMetricTest {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.gc.duration")
+                .hasName(METRIC_NAME_GC_DURATION)
                 .hasUnit(MILLISECONDS)
                 .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
                 .satisfies(

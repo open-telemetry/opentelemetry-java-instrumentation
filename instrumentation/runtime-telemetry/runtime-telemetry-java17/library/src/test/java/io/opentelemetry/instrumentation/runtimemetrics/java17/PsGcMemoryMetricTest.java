@@ -18,8 +18,11 @@ import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Co
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY_AFTER;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY_LIMIT;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_COMMITTED;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY_AFTER;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY_LIMIT;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,13 +54,13 @@ class PsGcMemoryMetricTest {
                 .satisfies(PsGcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
-                .hasName("process.runtime.jvm.memory.committed")
+                .hasName(METRIC_NAME_COMMITTED)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_COMMITTED)
                 .satisfies(PsGcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
-                .hasName("process.runtime.jvm.memory.limit")
+                .hasName(METRIC_NAME_MEMORY_LIMIT)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_MEMORY_LIMIT)
                 .satisfies(PsGcMemoryMetricTest::hasGcAttributes),
@@ -89,7 +92,7 @@ class PsGcMemoryMetricTest {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.gc.duration")
+                .hasName(METRIC_NAME_GC_DURATION)
                 .hasUnit(MILLISECONDS)
                 .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
                 .satisfies(

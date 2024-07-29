@@ -43,7 +43,7 @@ class BufferMetricTest {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.buffer.count")
+                .hasName("jvm.buffer.count")
                 .hasDescription("Number of buffers in the pool")
                 .hasUnit(UNIT_BUFFERS)
                 .hasLongSumSatisfying(
@@ -57,7 +57,7 @@ class BufferMetricTest {
                                     }))),
         metric ->
             metric
-                .hasName("process.runtime.jvm.buffer.limit")
+                .hasName("jvm.buffer.memory.limit")
                 .hasDescription("Measure of total memory capacity of buffers")
                 .hasUnit(BYTES)
                 .hasLongSumSatisfying(
@@ -71,7 +71,7 @@ class BufferMetricTest {
                                     }))),
         metric ->
             metric
-                .hasName("process.runtime.jvm.buffer.usage")
+                .hasName("jvm.buffer.memory.usage")
                 .hasDescription("Measure of memory used by buffers")
                 .hasUnit(BYTES)
                 .hasLongSumSatisfying(

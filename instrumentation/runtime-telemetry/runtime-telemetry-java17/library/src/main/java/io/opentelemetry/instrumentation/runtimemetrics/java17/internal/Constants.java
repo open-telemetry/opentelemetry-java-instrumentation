@@ -39,22 +39,21 @@ public final class Constants {
   public static final String METRIC_DESCRIPTION_NETWORK_BYTES = "Network read/write bytes";
   public static final String METRIC_NAME_NETWORK_DURATION = "process.runtime.jvm.network.time";
   public static final String METRIC_DESCRIPTION_NETWORK_DURATION = "Network read/write duration";
-  public static final String METRIC_NAME_COMMITTED = "process.runtime.jvm.memory.committed";
+  public static final String METRIC_NAME_COMMITTED = "jvm.memory.committed";
   public static final String METRIC_DESCRIPTION_COMMITTED = "Measure of memory committed";
-  public static final String METRIC_NAME_MEMORY = "process.runtime.jvm.memory.usage";
+  public static final String METRIC_NAME_MEMORY = "jvm.memory.used";
   public static final String METRIC_DESCRIPTION_MEMORY = "Measure of memory used";
-  public static final String METRIC_NAME_MEMORY_AFTER =
-      "process.runtime.jvm.memory.usage_after_last_gc";
+  public static final String METRIC_NAME_MEMORY_AFTER = "jvm.memory.used_after_last_gc";
   public static final String METRIC_DESCRIPTION_MEMORY_AFTER =
       "Measure of memory used, as measured after the most recent garbage collection event on this pool";
   public static final String METRIC_NAME_MEMORY_ALLOCATION =
       "process.runtime.jvm.memory.allocation";
   public static final String METRIC_DESCRIPTION_MEMORY_ALLOCATION = "Allocation";
-  public static final String METRIC_NAME_MEMORY_INIT = "process.runtime.jvm.memory.init";
+  public static final String METRIC_NAME_MEMORY_INIT = "jvm.memory.init";
   public static final String METRIC_DESCRIPTION_MEMORY_INIT = "Measure of initial memory requested";
-  public static final String METRIC_NAME_MEMORY_LIMIT = "process.runtime.jvm.memory.limit";
+  public static final String METRIC_NAME_MEMORY_LIMIT = "jvm.memory.limit";
   public static final String METRIC_DESCRIPTION_MEMORY_LIMIT = "Measure of max obtainable memory";
-  public static final String METRIC_NAME_GC_DURATION = "process.runtime.jvm.gc.duration";
+  public static final String METRIC_NAME_GC_DURATION = "jvm.gc.duration";
   public static final String METRIC_DESCRIPTION_GC_DURATION =
       "Duration of JVM garbage collection actions";
 

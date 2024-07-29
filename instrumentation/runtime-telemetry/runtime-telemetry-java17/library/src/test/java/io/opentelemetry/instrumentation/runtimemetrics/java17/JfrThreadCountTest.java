@@ -47,7 +47,7 @@ class JfrThreadCountTest {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.threads.count")
+                .hasName("jvm.thread.count")
                 .hasUnit(UNIT_THREADS)
                 .satisfies(
                     data ->

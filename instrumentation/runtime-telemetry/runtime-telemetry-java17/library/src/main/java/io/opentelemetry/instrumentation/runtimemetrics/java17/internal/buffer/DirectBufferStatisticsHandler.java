@@ -21,9 +21,9 @@ import jdk.jfr.consumer.RecordedEvent;
  * any time.
  */
 public final class DirectBufferStatisticsHandler implements RecordedEventHandler {
-  private static final String METRIC_NAME_USAGE = "process.runtime.jvm.buffer.usage";
-  private static final String METRIC_NAME_LIMIT = "process.runtime.jvm.buffer.limit";
-  private static final String METRIC_NAME_COUNT = "process.runtime.jvm.buffer.count";
+  private static final String METRIC_NAME_USAGE = "jvm.buffer.memory.usage";
+  private static final String METRIC_NAME_LIMIT = "jvm.buffer.memory.limit";
+  private static final String METRIC_NAME_COUNT = "jvm.buffer.count";
   private static final String METRIC_DESCRIPTION_USAGE = "Measure of memory used by buffers";
   private static final String METRIC_DESCRIPTION_LIMIT =
       "Measure of total memory capacity of buffers";
