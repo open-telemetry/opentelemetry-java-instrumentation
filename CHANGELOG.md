@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Version 1.33.5 (2024-07-25)
+
+### 📈 Enhancements
+
+- Backport: Update the OpenTelemetry SDK version to 1.40.0
+  ([#11879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11879))
+
 ## Version 2.6.0 (2024-07-17)
 
 The Spring Boot Starter (`opentelemetry-spring-boot-starter`) is now stable.
