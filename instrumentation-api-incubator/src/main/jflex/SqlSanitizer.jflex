@@ -323,6 +323,12 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
+  private class Commit extends Operation {
+  }
+
+  private class Rollback extends Operation {
+  }
+
   private class Create extends DdlOperation {
   }
 
@@ -457,6 +463,20 @@ WHITESPACE           = [ \t\r\n]+
             } else {
               extractionDone = operation.handleIdentifier();
             }
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "COMMIT" {
+          if (!insideComment) {
+            setOperation(new Commit());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "ROLLBACK" {
+          if (!insideComment) {
+            setOperation(new Rollback());
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

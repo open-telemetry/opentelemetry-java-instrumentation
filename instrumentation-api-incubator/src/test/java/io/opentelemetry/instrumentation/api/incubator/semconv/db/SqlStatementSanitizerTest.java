@@ -71,6 +71,17 @@ public class SqlStatementSanitizerTest {
     assertThat(result.getMainIdentifier()).isEqualTo(expected.getMainIdentifier());
   }
 
+  @ParameterizedTest
+  @ArgumentsSource(TransactionArgs.class)
+  void checkTransactionOperationStatementsAreOk(
+      String actual, Function<String, SqlStatementInfo> expectFunc) {
+    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(actual);
+    SqlStatementInfo expected = expectFunc.apply(actual);
+    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
+    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
+    assertThat(result.getMainIdentifier()).isEqualTo(expected.getMainIdentifier());
+  }
+
   @Test
   void lotsOfTicksDontCauseStackOverflowOrLongRuntimes() {
     String s = "'";
@@ -400,6 +411,23 @@ public class SqlStatementSanitizerTest {
               expect("CREATE VIEW", null)),
           Arguments.of(
               "CREATE PROCEDURE p AS SELECT * FROM table GO", expect("CREATE PROCEDURE", null)));
+    }
+  }
+
+  static class TransactionArgs implements ArgumentsProvider {
+    static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
+      return sql -> SqlStatementInfo.create(sql, operation, identifier);
+    }
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(
+          Arguments.of("COMMIT", expect("COMMIT", null)),
+          Arguments.of("commit", expect("COMMIT", null)),
+          Arguments.of("/*COMMIT*/", expect(null, null)),
+          Arguments.of("ROLLBACK", expect("ROLLBACK", null)),
+          Arguments.of("rollback", expect("ROLLBACK", null)),
+          Arguments.of("/*ROLLBACK*/", expect(null, null)));
     }
   }
 }
