@@ -17,14 +17,26 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
+        // scala 2.11
         "akka.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation$$anonfun$$tilde$1",
+        // scala 2.12 and later
         "akka.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("apply", "$anonfun$$tilde$1"), this.getClass().getName() + "$ApplyAdvice");
+        namedOneOf(
+            // scala 2.11
+            "apply",
+            // scala 2.12 and later
+            "$anonfun$$tilde$1"),
+        this.getClass().getName() + "$ApplyAdvice");
+
+    // This advice seems to be only needed when defining routes with java dsl. Since java dsl tests
+    // use scala 2.12 we are going to skip instrumenting this for scala 2.11.
+    transformer.applyAdviceToMethod(
+        namedOneOf("$anonfun$$tilde$2"), this.getClass().getName() + "$Apply2Advice");
   }
 
   @SuppressWarnings("unused")
@@ -41,6 +53,15 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit() {
       AkkaRouteHolder.restore();
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class Apply2Advice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      AkkaRouteHolder.reset();
     }
   }
 }
