@@ -9,11 +9,22 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.testing.internal.armeria.client.WebClient
-import io.opentelemetry.testing.internal.armeria.common.{AggregatedHttpRequest, HttpMethod}
+import io.opentelemetry.testing.internal.armeria.common.{
+  AggregatedHttpRequest,
+  HttpMethod
+}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.server.Route
-import org.apache.pekko.http.scaladsl.server.Directives.{IntNumber, complete, concat, path, pathEndOrSingleSlash, pathPrefix, pathSingleSlash}
+import org.apache.pekko.http.scaladsl.server.Directives.{
+  IntNumber,
+  complete,
+  concat,
+  path,
+  pathEndOrSingleSlash,
+  pathPrefix,
+  pathSingleSlash
+}
 import org.apache.pekko.stream.ActorMaterializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension

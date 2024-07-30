@@ -16,8 +16,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named(
-        "org.apache.pekko.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");
+    return named("org.apache.pekko.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");
   }
 
   @Override

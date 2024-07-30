@@ -16,8 +16,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class PathConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named(
-        "org.apache.pekko.http.scaladsl.server.PathMatcher");
+    return named("org.apache.pekko.http.scaladsl.server.PathMatcher");
   }
 
   @Override
