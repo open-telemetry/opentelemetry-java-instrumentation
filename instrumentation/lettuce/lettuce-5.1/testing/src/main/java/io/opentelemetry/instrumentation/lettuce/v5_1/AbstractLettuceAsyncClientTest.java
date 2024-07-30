@@ -103,8 +103,13 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
     assertThat(connection1).isNotNull();
-    // Lettuce tracing does not trace connect
-    assertThat(getInstrumentationExtension().spans()).isEmpty();
+    if (Boolean.getBoolean("testLatestDeps")) {
+      // ignore CLIENT SETINFO traces
+      getInstrumentationExtension().waitForTraces(2);
+    } else {
+      // Lettuce tracing does not trace connect
+      assertThat(getInstrumentationExtension().spans()).isEmpty();
+    }
   }
 
   @Test

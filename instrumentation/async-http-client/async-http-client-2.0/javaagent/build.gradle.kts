@@ -18,14 +18,26 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 }
 
-otelJava {
-  // AHC uses Unsafe and so does not run on later java version
-  maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  }
+} else {
+  otelJava {
+    // AHC uses Unsafe and so does not run on later java version
+    maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", latestDepTest)
 }
 
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an
 // internal file.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!latestDepTest) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {
