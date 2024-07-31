@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.ApiGatewayProxyRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenter;
@@ -81,17 +82,13 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     try (Scope ignored = otelContext.makeCurrent()) {
       doHandleRequest(
           proxyRequest.freshStream(),
-          new OutputStreamWrapper(output, otelContext, request, openTelemetrySdk),
+          new OutputStreamWrapper(output, otelContext),
           context,
           request);
     } catch (Throwable t) {
       error = t;
       throw t;
     } finally {
-      // TODO @serkan-ozal
-      // Span ended on output stream close too.
-      // Just to be sure that span is ended in any case (output stream is not closed),
-      // is it OK to end span in any case here?
       instrumenter.end(otelContext, request, null, error);
       LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
@@ -111,22 +108,15 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   protected abstract void doHandleRequest(InputStream input, OutputStream output, Context context)
       throws IOException;
 
-  private class OutputStreamWrapper extends OutputStream {
+  private static class OutputStreamWrapper extends OutputStream {
 
     private final OutputStream delegate;
     private final io.opentelemetry.context.Context otelContext;
-    private final AwsLambdaRequest request;
-    private final OpenTelemetrySdk openTelemetrySdk;
 
     private OutputStreamWrapper(
-        OutputStream delegate,
-        io.opentelemetry.context.Context otelContext,
-        AwsLambdaRequest request,
-        OpenTelemetrySdk openTelemetrySdk) {
+        OutputStream delegate, io.opentelemetry.context.Context otelContext) {
       this.delegate = delegate;
       this.otelContext = otelContext;
-      this.request = request;
-      this.openTelemetrySdk = openTelemetrySdk;
     }
 
     @Override
@@ -152,8 +142,8 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     @Override
     public void close() throws IOException {
       delegate.close();
-      instrumenter.end(otelContext, request, null, null);
-      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      Span span = Span.fromContext(otelContext);
+      span.addEvent("Output stream closed");
     }
   }
 }
