@@ -30,6 +30,12 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(CassandraRequest request) {
+    return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
+  }
+
   @Override
   @Nullable
   public String getConnectionString(CassandraRequest request) {

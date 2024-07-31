@@ -28,6 +28,12 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return couchbaseRequest.bucket();
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(CouchbaseRequestInfo couchbaseRequest) {
+    return couchbaseRequest.bucket();
+  }
+
   @Override
   @Nullable
   public String getConnectionString(CouchbaseRequestInfo couchbaseRequest) {
