@@ -47,8 +47,8 @@ class RpcServerMetricsTest {
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
-            .put(RpcCommonAttributesExtractor.RPC_SERVER_REQUEST_BODY_SIZE, 10)
-            .put(RpcCommonAttributesExtractor.RPC_SERVER_RESPONSE_BODY_SIZE, 20)
+            .put(RpcCommonAttributesExtractor.RPC_REQUEST_BODY_SIZE, 10)
+            .put(RpcCommonAttributesExtractor.RPC_RESPONSE_BODY_SIZE, 20)
             .build();
 
     Attributes responseAttributes2 =

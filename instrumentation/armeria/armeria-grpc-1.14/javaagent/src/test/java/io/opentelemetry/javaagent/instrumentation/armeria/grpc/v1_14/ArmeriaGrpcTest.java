@@ -30,14 +30,10 @@ class ArmeriaGrpcTest {
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final AttributeKey<Long> RPC_CLIENT_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.client.request.body.size");
-  private static final AttributeKey<Long> RPC_CLIENT_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.client.response.body.size");
-  private static final AttributeKey<Long> RPC_SERVER_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.server.request.body.size");
-  private static final AttributeKey<Long> RPC_SERVER_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.server.response.body.size");
+  private static final AttributeKey<Long> RPC_REQUEST_BODY_SIZE =
+      AttributeKey.longKey("rpc.request.body.size");
+  private static final AttributeKey<Long> RPC_RESPONSE_BODY_SIZE =
+      AttributeKey.longKey("rpc.response.body.size");
 
   @RegisterExtension
   static final ServerExtension server =
@@ -92,8 +88,8 @@ class ArmeriaGrpcTest {
                                 (long) Status.Code.OK.value()),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(ServerAttributes.SERVER_PORT, (long) server.httpPort()),
-                            equalTo(RPC_CLIENT_RESPONSE_BODY_SIZE, responseSerializedSize),
-                            equalTo(RPC_CLIENT_REQUEST_BODY_SIZE, requestSerializedSize))
+                            equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
+                            equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -121,8 +117,8 @@ class ArmeriaGrpcTest {
                                 (long) Status.Code.OK.value()),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(ServerAttributes.SERVER_PORT, server.httpPort()),
-                            equalTo(RPC_SERVER_REQUEST_BODY_SIZE, responseSerializedSize),
-                            equalTo(RPC_SERVER_RESPONSE_BODY_SIZE, requestSerializedSize))
+                            equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
+                            equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
