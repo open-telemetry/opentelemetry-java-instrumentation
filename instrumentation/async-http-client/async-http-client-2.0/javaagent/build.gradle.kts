@@ -19,12 +19,11 @@ dependencies {
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
+val testJavaVersion =
+  gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+    ?: JavaVersion.current()
 
-if (latestDepTest) {
-  otelJava {
-    minJavaVersionSupported.set(JavaVersion.VERSION_11)
-  }
-} else {
+if (!latestDepTest) {
   otelJava {
     // AHC uses Unsafe and so does not run on later java version
     maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
@@ -33,6 +32,13 @@ if (latestDepTest) {
 
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", latestDepTest)
+  // async-http-client 3.0 requires java 11
+  // We are not using minJavaVersionSupported for latestDepTest because that way the instrumentation
+  // gets compiled with java 11 when running latestDepTest. This causes play-mvc-2.4 latest dep tests
+  // to fail because they require java 8 and instrumentation compiled with java 11 won't apply.
+  if (latestDepTest && testJavaVersion.isJava8) {
+    enabled = false
+  }
 }
 
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an
