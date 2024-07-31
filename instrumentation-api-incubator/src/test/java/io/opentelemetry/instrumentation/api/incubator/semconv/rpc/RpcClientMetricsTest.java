@@ -46,8 +46,8 @@ class RpcClientMetricsTest {
             .put(ServerAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
-            .put(RpcCommonAttributesExtractor.RPC_CLIENT_REQUEST_BODY_SIZE, 10)
-            .put(RpcCommonAttributesExtractor.RPC_CLIENT_RESPONSE_BODY_SIZE, 20)
+            .put(RpcCommonAttributesExtractor.RPC_REQUEST_BODY_SIZE, 10)
+            .put(RpcCommonAttributesExtractor.RPC_RESPONSE_BODY_SIZE, 20)
             .build();
 
     Attributes responseAttributes2 =

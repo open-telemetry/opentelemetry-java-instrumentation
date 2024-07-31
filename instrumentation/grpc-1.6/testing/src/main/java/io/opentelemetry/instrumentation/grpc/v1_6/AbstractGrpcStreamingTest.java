@@ -53,14 +53,10 @@ import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
 public abstract class AbstractGrpcStreamingTest {
 
-  private static final AttributeKey<Long> RPC_CLIENT_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.client.request.body.size");
-  private static final AttributeKey<Long> RPC_CLIENT_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.client.response.body.size");
-  private static final AttributeKey<Long> RPC_SERVER_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.server.request.body.size");
-  private static final AttributeKey<Long> RPC_SERVER_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.server.response.body.size");
+  private static final AttributeKey<Long> RPC_REQUEST_BODY_SIZE =
+      AttributeKey.longKey("rpc.request.body.size");
+  private static final AttributeKey<Long> RPC_RESPONSE_BODY_SIZE =
+      AttributeKey.longKey("rpc.response.body.size");
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -242,8 +238,8 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
-                                    equalTo(RPC_CLIENT_RESPONSE_BODY_SIZE, requestSerializedSize),
-                                    equalTo(RPC_CLIENT_REQUEST_BODY_SIZE, requestSerializedSize),
+                                    equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
+                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
@@ -261,8 +257,8 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_SERVER_REQUEST_BODY_SIZE, requestSerializedSize),
-                                equalTo(RPC_SERVER_RESPONSE_BODY_SIZE, requestSerializedSize),
+                                equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .satisfies(
                                 spanData ->

@@ -20,14 +20,10 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
   static final AttributeKey<String> RPC_SERVICE = AttributeKey.stringKey("rpc.service");
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
-  static final AttributeKey<Long> RPC_CLIENT_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.client.request.body.size");
-  static final AttributeKey<Long> RPC_CLIENT_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.client.response.body.size");
-  static final AttributeKey<Long> RPC_SERVER_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.server.request.body.size");
-  static final AttributeKey<Long> RPC_SERVER_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.server.response.body.size");
+  static final AttributeKey<Long> RPC_REQUEST_BODY_SIZE =
+      AttributeKey.longKey("rpc.request.body.size");
+  static final AttributeKey<Long> RPC_RESPONSE_BODY_SIZE =
+      AttributeKey.longKey("rpc.response.body.size");
 
   private final RpcAttributesGetter<REQUEST> getter;
 
@@ -53,19 +49,19 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     Long responseSize = getter.getResponseSize(request);
     if (this instanceof RpcClientAttributesExtractor) {
       if (requestSize != null) {
-        internalSet(attributes, RPC_CLIENT_REQUEST_BODY_SIZE, requestSize);
+        internalSet(attributes, RPC_REQUEST_BODY_SIZE, requestSize);
       }
       if (responseSize != null) {
-        internalSet(attributes, RPC_CLIENT_RESPONSE_BODY_SIZE, responseSize);
+        internalSet(attributes, RPC_RESPONSE_BODY_SIZE, responseSize);
       }
     }
 
     if (this instanceof RpcServerAttributesExtractor) {
       if (requestSize != null) {
-        internalSet(attributes, RPC_SERVER_REQUEST_BODY_SIZE, requestSize);
+        internalSet(attributes, RPC_REQUEST_BODY_SIZE, requestSize);
       }
       if (responseSize != null) {
-        internalSet(attributes, RPC_SERVER_RESPONSE_BODY_SIZE, responseSize);
+        internalSet(attributes, RPC_RESPONSE_BODY_SIZE, responseSize);
       }
     }
   }
