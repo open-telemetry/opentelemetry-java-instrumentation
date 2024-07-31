@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.RedisClient
-import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceSyncClientAuthTest
+
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 
 class LettuceSyncClientAuthTest extends AbstractLettuceSyncClientAuthTest implements AgentTestTrait {
