@@ -9,9 +9,11 @@ import static org.junit.jupiter.api.Named.named;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -100,8 +102,7 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT,
-                                  "USE " + parameter.keyspace))),
+                                  getAttributeKey(DbIncubatingAttributes.DB_STATEMENT), "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -115,12 +116,11 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(DbIncubatingAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_NAME), parameter.keyspace),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(
-                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                                  getAttributeKey(DbIncubatingAttributes.DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_OPERATION), parameter.operation),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE), parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -130,17 +130,15 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(
-                                  DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table))));
+                                  getAttributeKey(DbIncubatingAttributes.DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_OPERATION), parameter.operation),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE), parameter.table))));
     }
 
     session.close();
@@ -178,7 +176,7 @@ public class CassandraClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT,
+                                  getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
                                   "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -188,17 +186,16 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
-                              equalTo(DbIncubatingAttributes.DB_NAME, parameter.keyspace),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_NAME), parameter.keyspace),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                                  getAttributeKey(DbIncubatingAttributes.DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_OPERATION), parameter.operation),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE), parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -213,16 +210,15 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"),
                               equalTo(
-                                  DbIncubatingAttributes.DB_STATEMENT, parameter.expectedStatement),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
-                              equalTo(DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
+                                  getAttributeKey(DbIncubatingAttributes.DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_OPERATION), parameter.operation),
+                              equalTo(getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE), parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -230,6 +226,10 @@ public class CassandraClientTest {
     }
 
     session.close();
+  }
+
+  protected static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
+    return SemconvStabilityUtil.getAttributeKey(oldKey);
   }
 
   private static Stream<Arguments> provideSyncParameters() {
