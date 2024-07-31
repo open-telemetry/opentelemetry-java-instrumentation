@@ -10,8 +10,8 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 
 public final class AwsSdkSingletons {
@@ -28,7 +28,7 @@ public final class AwsSdkSingletons {
 
   private static boolean hasAgentConfiguration() {
     try {
-      Class.forName("io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig");
+      Class.forName("io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig");
       return true;
     } catch (ClassNotFoundException e) {
       return false;
@@ -69,7 +69,7 @@ public final class AwsSdkSingletons {
 
   private static boolean getBoolean(String name, boolean defaultValue) {
     if (HAS_INSTRUMENTATION_CONFIG) {
-      return InstrumentationConfig.get().getBoolean(name, defaultValue);
+      return AgentInstrumentationConfig.get().getBoolean(name, defaultValue);
     } else {
       return ConfigPropertiesUtil.getBoolean(name, defaultValue);
     }

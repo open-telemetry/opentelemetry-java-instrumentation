@@ -22,7 +22,16 @@ public class InstrumentationPropertyEnabled implements Condition {
         metadata.getAnnotationAttributes(ConditionalOnEnabledInstrumentation.class.getName());
 
     String name = String.format("otel.instrumentation.%s.enabled", attributes.get("module"));
+    Boolean explicit = context.getEnvironment().getProperty(name, Boolean.class);
+    if (explicit != null) {
+      return explicit;
+    }
     boolean defaultValue = (boolean) attributes.get("enabledByDefault");
-    return context.getEnvironment().getProperty(name, Boolean.class, defaultValue);
+    if (!defaultValue) {
+      return false;
+    }
+    return context
+        .getEnvironment()
+        .getProperty("otel.instrumentation.common.default-enabled", Boolean.class, true);
   }
 }

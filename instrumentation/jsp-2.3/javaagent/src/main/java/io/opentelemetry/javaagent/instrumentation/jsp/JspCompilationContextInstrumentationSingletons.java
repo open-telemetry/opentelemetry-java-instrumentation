@@ -11,14 +11,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import javax.annotation.Nullable;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Compiler;
 
 public class JspCompilationContextInstrumentationSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.jsp.experimental-span-attributes", false);
 
   private static final Instrumenter<JspCompilationContext, Void> INSTRUMENTER;

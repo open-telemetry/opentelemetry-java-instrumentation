@@ -12,10 +12,18 @@
   "separateMinorPatch": true,
   "packageRules": [
     {
+      // this is to reduce the number of renovate PRs by consolidating them into a weekly batch
+      "matchManagers": ["github-actions"],
+      "extends": ["schedule:weekly"],
+      "groupName": "github actions",
+      "separateMinorPatch": false // overrides separateMinorPatch specified above
+    },
+    {
       "matchPackageNames": [
         "io.opentelemetry.contrib:opentelemetry-aws-resources",
         "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator",
         "io.opentelemetry.contrib:opentelemetry-gcp-resources",
+        "io.opentelemetry.contrib:opentelemetry-baggage-processor",
         "io.opentelemetry.proto:opentelemetry-proto",
         "io.opentelemetry.semconv:opentelemetry-semconv"
       ],
@@ -104,6 +112,8 @@
     },
     {
       // intentionally using Spring Boot 2 in this smoke tests
+      // new versions of Spring Boot 3 are tested with
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/dc4330e0a3060bd7d8c4090ad0b8fc4727e68113/settings.gradle.kts#L43-L45
       "matchFileNames": [
         "smoke-tests/images/spring-boot/build.gradle.kts",
         "smoke-tests-otel-starter/spring-boot-2/build.gradle.kts",
@@ -116,7 +126,7 @@
         "org.slf4j:slf4j-api",
         "org.springframework.boot",
         "org.springframework.boot:spring-boot-dependencies"],
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": ["major", "minor"],
       "enabled": false,
     },
     {

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
@@ -16,7 +16,7 @@ public enum VertxRedisClientAttributesGetter
   INSTANCE;
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
   public String getSystem(VertxRedisClientRequest request) {

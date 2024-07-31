@@ -11,8 +11,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import javax.annotation.Nullable;
@@ -21,7 +21,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
 
@@ -44,7 +44,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> responseContext,
       @Nullable Throwable error) {
-    if (CommonConfig.get().getEnduserConfig().isIdEnabled()) {
+    if (AgentCommonConfig.get().getEnduserConfig().isIdEnabled()) {
       Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
       if (principal != null) {
         String name = principal.getName();

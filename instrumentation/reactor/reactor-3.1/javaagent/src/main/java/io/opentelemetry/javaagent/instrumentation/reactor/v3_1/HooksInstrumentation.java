@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +41,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
     public static void postStaticInitializer() {
       ContextPropagationOperator.builder()
           .setCaptureExperimentalSpanAttributes(
-              InstrumentationConfig.get()
+              AgentInstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.reactor.experimental-span-attributes", false))
           .build()
           .registerOnEachOperator();

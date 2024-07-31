@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -136,7 +136,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
-    if (!CommonConfig.get().getEnduserConfig().isIdEnabled()) {
+    if (!AgentCommonConfig.get().getEnduserConfig().isIdEnabled()) {
       return;
     }
 

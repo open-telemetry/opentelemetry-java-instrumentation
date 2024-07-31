@@ -8,7 +8,6 @@ package io.opentelemetry.containers;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
 import io.opentelemetry.util.NamingConventions;
-import java.nio.file.Path;
 import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ public class K6Container {
   }
 
   public GenericContainer<?> build() {
-    Path k6OutputFile = namingConventions.container.k6Results(agent);
+    String k6OutputFile = namingConventions.container.k6Results(agent);
     return new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
         .withNetwork(network)
         .withNetworkAliases("k6")
@@ -52,7 +51,7 @@ public class K6Container {
             "--rps",
             String.valueOf(config.getMaxRequestRate()),
             "--summary-export",
-            k6OutputFile.toString(),
+            k6OutputFile,
             "/app/basic.js")
         .withStartupCheckStrategy(
             new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(15)));

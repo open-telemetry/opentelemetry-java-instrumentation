@@ -71,17 +71,23 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   @Override
   public void success(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
-    end(records, null);
-    if (decorated != null) {
-      decorated.success(records, consumer);
+    try {
+      if (decorated != null) {
+        decorated.success(records, consumer);
+      }
+    } finally {
+      end(records, null);
     }
   }
 
   @Override
   public void failure(ConsumerRecords<K, V> records, Exception exception, Consumer<K, V> consumer) {
-    end(records, exception);
-    if (decorated != null) {
-      decorated.failure(records, exception, consumer);
+    try {
+      if (decorated != null) {
+        decorated.failure(records, exception, consumer);
+      }
+    } finally {
+      end(records, exception);
     }
   }
 

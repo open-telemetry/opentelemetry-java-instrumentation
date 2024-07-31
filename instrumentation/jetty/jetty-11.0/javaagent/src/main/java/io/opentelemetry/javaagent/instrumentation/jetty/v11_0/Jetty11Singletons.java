@@ -24,6 +24,7 @@ public final class Jetty11Singletons {
           ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .addContextCustomizer(
                   (context, request, attributes) -> new AppServerBridge.Builder().init(context))
+              .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet5Accessor.INSTANCE);
 
   private static final JettyHelper<HttpServletRequest, HttpServletResponse> HELPER =

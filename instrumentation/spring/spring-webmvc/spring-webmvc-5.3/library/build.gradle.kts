@@ -2,8 +2,7 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-val versions: Map<String, String> by project
-val springBootVersion = versions["org.springframework.boot"]
+val springBootVersion = "2.6.15"
 
 dependencies {
   compileOnly("org.springframework:spring-webmvc:5.3.0")

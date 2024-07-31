@@ -67,5 +67,11 @@ public final class InstrumenterUtil {
         builder, setter, spanKindExtractor);
   }
 
+  public static <REQUEST, RESPONSE> void propagateOperationListenersToOnEnd(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+    // instrumenterBuilderAccess is guaranteed to be non-null here
+    instrumenterBuilderAccess.propagateOperationListenersToOnEnd(builder);
+  }
+
   private InstrumenterUtil() {}
 }

@@ -10,7 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyServerInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public final class NettyServerSingletons {
 
@@ -20,12 +20,12 @@ public final class NettyServerSingletons {
           "io.opentelemetry.netty-4.0",
           builder ->
               builder
-                  .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-                  .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry());
+                  .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+                  .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
+                  .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods()),
+          builder -> builder.setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods()),
+          builder -> builder.setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods()),
+          AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry());
 
   public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
     return INSTRUMENTER;

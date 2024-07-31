@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0;
 
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class SpringWebfluxConfig {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.spring-webflux.experimental-span-attributes", false);
 
   public static boolean captureExperimentalSpanAttributes() {

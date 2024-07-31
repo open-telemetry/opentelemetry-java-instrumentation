@@ -13,7 +13,7 @@ import io.ktor.server.application.ApplicationPluginKt;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.ktor.v2_0.server.KtorServerTracing;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import kotlin.Unit;
@@ -50,9 +50,9 @@ public class ServerInstrumentation implements TypeInstrumentation {
     public Unit invoke(KtorServerTracing.Configuration configuration) {
       OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
       configuration.setOpenTelemetry(openTelemetry);
-      configuration.capturedRequestHeaders(CommonConfig.get().getServerRequestHeaders());
-      configuration.capturedResponseHeaders(CommonConfig.get().getServerResponseHeaders());
-      configuration.knownMethods(CommonConfig.get().getKnownHttpRequestMethods());
+      configuration.capturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders());
+      configuration.capturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders());
+      configuration.knownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods());
 
       return kotlin.Unit.INSTANCE;
     }

@@ -2,7 +2,7 @@ import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version "2.7.18"
+  id("org.springframework.boot") version "2.6.15"
 }
 
 description = "smoke-tests-otel-starter-spring-boot-reactive-common"

@@ -4,9 +4,8 @@ This lists out some of the features specific to java agents that OpenTelemetry A
 provides.
 
 - Bundled exporters
-  - [OTLP](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md)
-  - Jaeger gRPC
-  - Logging
+  - [OTLP](https://opentelemetry.io/docs/specs/otlp/)
+  - Console
   - Zipkin
 - Bundled propagators
   - [W3C TraceContext / Baggage](https://www.w3.org/TR/trace-context/)

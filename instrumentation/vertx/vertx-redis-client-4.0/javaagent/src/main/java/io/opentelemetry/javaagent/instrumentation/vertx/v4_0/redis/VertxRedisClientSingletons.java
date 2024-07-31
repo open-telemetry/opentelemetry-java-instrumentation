@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
@@ -52,7 +52,7 @@ public final class VertxRedisClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     VertxRedisClientNetAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceResolver()));
+                    AgentCommonConfig.get().getPeerServiceResolver()));
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

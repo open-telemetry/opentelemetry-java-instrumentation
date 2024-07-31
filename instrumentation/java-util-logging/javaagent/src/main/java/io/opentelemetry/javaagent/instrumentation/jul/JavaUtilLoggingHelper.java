@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
@@ -27,7 +27,7 @@ public final class JavaUtilLoggingHelper {
   private static final Formatter FORMATTER = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes", false);
 
   public static void capture(Logger logger, LogRecord logRecord) {

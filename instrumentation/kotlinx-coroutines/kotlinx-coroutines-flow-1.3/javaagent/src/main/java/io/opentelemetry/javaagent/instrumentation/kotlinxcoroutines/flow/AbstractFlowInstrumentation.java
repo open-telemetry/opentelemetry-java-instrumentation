@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.flow;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -17,8 +19,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AbstractFlowInstrumentation implements TypeInstrumentation {
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("kotlinx.coroutines.flow.Flow");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf("kotlinx.coroutines.flow.AbstractFlow", "kotlinx.coroutines.flow.SafeFlow");
+    return implementsInterface(named("kotlinx.coroutines.flow.Flow"));
   }
 
   @Override

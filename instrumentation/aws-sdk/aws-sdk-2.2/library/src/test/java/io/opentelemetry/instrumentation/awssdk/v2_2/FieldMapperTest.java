@@ -16,7 +16,7 @@ import io.opentelemetry.api.trace.Span;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.ConsumedCapacity;
@@ -25,11 +25,10 @@ import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
 import software.amazon.awssdk.services.dynamodb.model.UpdateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
-public class FieldMapperTest {
+class FieldMapperTest {
 
   @Test
-  public void shouldMapNestedField() {
-
+  void shouldMapNestedField() {
     // given
     AwsSdkRequest awsSdkRequest = UpdateTable;
     MethodHandleFactory methodHandleFactory = new MethodHandleFactory();
@@ -56,8 +55,7 @@ public class FieldMapperTest {
   }
 
   @Test
-  public void shouldMapRequestFieldsOnly() {
-
+  void shouldMapRequestFieldsOnly() {
     // given
     AwsSdkRequest awsSdkRequest = BatchWriteItem;
     MethodHandleFactory methodHandleFactory = new MethodHandleFactory();
@@ -76,8 +74,7 @@ public class FieldMapperTest {
   }
 
   @Test
-  public void shouldMapResponseFieldsOnly() {
-
+  void shouldMapResponseFieldsOnly() {
     // given
     AwsSdkRequest awsSdkRequest = BatchWriteItem;
     MethodHandleFactory methodHandleFactory = new MethodHandleFactory();

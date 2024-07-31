@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public final class NettyServerSingletons {
 
@@ -15,12 +15,12 @@ public final class NettyServerSingletons {
     SERVER_TELEMETRY =
         NettyServerTelemetry.builder(GlobalOpenTelemetry.get())
             .setEmitExperimentalHttpServerEvents(
-                CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
+                AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
             .setEmitExperimentalHttpServerMetrics(
-                CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
-            .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-            .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-            .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
+                AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry())
+            .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
+            .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+            .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
             .build();
   }
 

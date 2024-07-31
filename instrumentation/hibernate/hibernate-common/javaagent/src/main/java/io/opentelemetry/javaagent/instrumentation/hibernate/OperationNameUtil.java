@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 
 public final class OperationNameUtil {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static String getOperationNameForQuery(String query) {
     // set operation to default value that is used when sql sanitizer fails to extract

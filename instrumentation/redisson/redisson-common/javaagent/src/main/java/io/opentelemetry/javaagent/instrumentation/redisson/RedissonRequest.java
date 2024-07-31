@@ -11,7 +11,7 @@ import static java.util.Collections.singletonList;
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -29,7 +29,7 @@ import org.redisson.client.protocol.CommandsData;
 public abstract class RedissonRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);

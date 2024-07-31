@@ -24,7 +24,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -63,7 +63,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) Map<String, String> contextData) {
 
-      if (contextData != null && contextData.containsKey(CommonConfig.get().getTraceIdKey())) {
+      if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.
         return;
       }

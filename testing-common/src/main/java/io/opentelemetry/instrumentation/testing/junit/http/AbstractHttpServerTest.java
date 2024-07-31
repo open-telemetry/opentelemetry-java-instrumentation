@@ -353,12 +353,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS, SUCCESS.status));
         });
 
-    String metricsInstrumentationName = options.metricsInstrumentationName.get();
-    if (metricsInstrumentationName == null) {
-      metricsInstrumentationName = instrumentationName.get();
-    }
     testing.waitAndAssertMetrics(
-        metricsInstrumentationName,
+        instrumentationName.get(),
         "http.server.request.duration",
         metrics ->
             metrics.anySatisfy(

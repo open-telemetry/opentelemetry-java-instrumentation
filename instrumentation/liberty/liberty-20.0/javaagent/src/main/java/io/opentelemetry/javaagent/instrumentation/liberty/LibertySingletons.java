@@ -24,6 +24,7 @@ public final class LibertySingletons {
               .addContextCustomizer(
                   (context, request, attributes) ->
                       new AppServerBridge.Builder().recordException().init(context))
+              .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
   private static final LibertyHelper<HttpServletRequest, HttpServletResponse> HELPER =

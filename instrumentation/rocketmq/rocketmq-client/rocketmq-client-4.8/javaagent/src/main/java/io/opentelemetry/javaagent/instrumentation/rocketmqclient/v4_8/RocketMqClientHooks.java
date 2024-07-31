@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqTelemetry;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
@@ -19,7 +19,7 @@ public final class RocketMqClientHooks {
       RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
-              InstrumentationConfig.get()
+              AgentInstrumentationConfig.get()
                   .getBoolean(
                       "otel.instrumentation.rocketmq-client.experimental-span-attributes", false))
           .build();

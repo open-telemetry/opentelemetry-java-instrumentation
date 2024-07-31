@@ -11,15 +11,15 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
   private static final boolean PRODUCER_PROPAGATION_ENABLED =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.kafka.producer-propagation.enabled", true);
 
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> PRODUCER_INSTRUMENTER;
@@ -31,7 +31,7 @@ public final class KafkaSingletons {
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
             .setCaptureExperimentalSpanAttributes(
-                InstrumentationConfig.get()
+                AgentInstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
             .setMessagingReceiveInstrumentationEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());

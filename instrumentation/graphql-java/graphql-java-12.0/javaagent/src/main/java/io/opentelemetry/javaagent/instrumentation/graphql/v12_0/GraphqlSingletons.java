@@ -9,12 +9,12 @@ import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class GraphqlSingletons {
 
   private static final boolean QUERY_SANITIZATION_ENABLED =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
 
   private static final GraphQLTelemetry TELEMETRY =

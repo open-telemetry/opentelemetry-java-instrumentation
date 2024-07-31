@@ -10,12 +10,13 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimen
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletErrorCauseExtractor;
@@ -35,19 +36,19 @@ public final class TomcatInstrumenterFactory {
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
                 HttpSpanNameExtractor.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(
                 HttpServerRoute.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addContextCustomizer(
                 (context, request, attributes) ->
@@ -56,11 +57,12 @@ public final class TomcatInstrumenterFactory {
                         .recordException()
                         .init(context))
             .addOperationMetrics(HttpServerMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+    if (AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
+    InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
     return builder.buildServerInstrumenter(TomcatRequestGetter.INSTANCE);
   }
 }

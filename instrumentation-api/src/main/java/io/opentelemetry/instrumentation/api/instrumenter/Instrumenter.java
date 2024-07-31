@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -40,6 +41,9 @@ import javax.annotation.Nullable;
  * the Instrumenter API</a> page.
  */
 public class Instrumenter<REQUEST, RESPONSE> {
+
+  private static final ContextKey<OperationListener[]> START_OPERATION_LISTENERS =
+      ContextKey.named("instrumenter-start-operation-listeners");
 
   /**
    * Returns a new {@link InstrumenterBuilder}.
@@ -74,6 +78,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final ContextCustomizer<? super REQUEST>[] contextCustomizers;
   private final OperationListener[] operationListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
+  private final boolean propagateOperationListenersToOnEnd;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
@@ -89,6 +94,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.contextCustomizers = builder.contextCustomizers.toArray(new ContextCustomizer[0]);
     this.operationListeners = builder.buildOperationListeners().toArray(new OperationListener[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
+    this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
   }
@@ -198,6 +204,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
         context = operationListeners[i].onStart(context, attributes, startNanos);
       }
     }
+    if (propagateOperationListenersToOnEnd || context.get(START_OPERATION_LISTENERS) != null) {
+      // when start and end are not called on the same instrumenter we need to use the operation
+      // listeners that were used during start in end to correctly handle metrics like
+      // http.server.active_requests that is recorded both in start and end
+      //
+      // need to also add when there is already START_OPERATION_LISTENERS, otherwise this
+      // instrumenter will call its parent's operation listeners in doEnd
+      context = context.with(START_OPERATION_LISTENERS, operationListeners);
+    }
 
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
@@ -228,6 +243,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     span.setAllAttributes(attributes);
 
+    OperationListener[] operationListeners = context.get(START_OPERATION_LISTENERS);
+    if (operationListeners == null) {
+      operationListeners = this.operationListeners;
+    }
     if (operationListeners.length != 0) {
       long endNanos = getNanos(endTime);
       for (int i = operationListeners.length - 1; i >= 0; i--) {

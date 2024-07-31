@@ -30,7 +30,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -45,7 +45,8 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
-  private static final Set<String> knownMethods = CommonConfig.get().getKnownHttpRequestMethods();
+  private static final Set<String> knownMethods =
+      AgentCommonConfig.get().getKnownHttpRequestMethods();
 
   protected String getProtocol() {
     return "http";

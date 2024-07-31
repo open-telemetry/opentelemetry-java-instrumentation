@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class JaxrsConfig {
 
   public static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes", false);
 
   private JaxrsConfig() {}

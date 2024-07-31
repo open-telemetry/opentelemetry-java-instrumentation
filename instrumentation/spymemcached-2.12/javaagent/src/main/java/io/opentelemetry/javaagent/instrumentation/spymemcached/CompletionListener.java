@@ -9,14 +9,14 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.Spymemcach
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 public abstract class CompletionListener<T> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.spymemcached.experimental-span-attributes", false);
 
   private static final String DB_COMMAND_CANCELLED = "spymemcached.command.cancelled";

@@ -12,11 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ElasticsearchRest7InstrumentationModule extends InstrumentationModule {
+public class ElasticsearchRest7InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public ElasticsearchRest7InstrumentationModule() {
     super("elasticsearch-rest", "elasticsearch-rest-7.0", "elasticsearch");
   }
@@ -33,9 +35,8 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public boolean isIndyModule() {
-    // shares a virtual field with elasticsearch-api-client
-    return false;
+  public String getModuleGroup() {
+    return "elasticsearch";
   }
 
   @Override

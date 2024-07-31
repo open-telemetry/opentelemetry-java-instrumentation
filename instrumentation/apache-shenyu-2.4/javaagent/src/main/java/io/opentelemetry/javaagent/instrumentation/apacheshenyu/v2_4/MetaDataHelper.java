@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import org.apache.shenyu.common.dto.MetaData;
 
 public final class MetaDataHelper {
@@ -58,7 +58,7 @@ public final class MetaDataHelper {
 
   static {
     CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getBoolean("otel.instrumentation.apache-shenyu.experimental-span-attributes", false);
   }
 

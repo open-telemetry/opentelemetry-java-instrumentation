@@ -9,8 +9,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchRestInstrumenterFactory;
 import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchRestRequest;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.Collections;
 import java.util.function.Function;
 import org.elasticsearch.client.Response;
@@ -18,7 +18,7 @@ import org.elasticsearch.client.Response;
 public final class ElasticsearchRestJavaagentInstrumenterFactory {
 
   private static final boolean CAPTURE_SEARCH_QUERY =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.elasticsearch.capture-search-query", false);
 
   private ElasticsearchRestJavaagentInstrumenterFactory() {}
@@ -30,7 +30,7 @@ public final class ElasticsearchRestJavaagentInstrumenterFactory {
         instrumentationName,
         Collections.emptyList(),
         Function.identity(),
-        CommonConfig.get().getKnownHttpRequestMethods(),
+        AgentCommonConfig.get().getKnownHttpRequestMethods(),
         CAPTURE_SEARCH_QUERY);
   }
 }

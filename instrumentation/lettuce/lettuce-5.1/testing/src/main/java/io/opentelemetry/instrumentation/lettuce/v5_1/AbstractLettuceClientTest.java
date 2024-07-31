@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -22,13 +21,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 abstract class AbstractLettuceClientTest {
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
-  @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  public InstrumentationExtension getInstrumentationExtension() {
-    return testing;
-  }
-
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final int DB_INDEX = 0;
@@ -40,18 +32,15 @@ abstract class AbstractLettuceClientTest {
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   protected static RedisClient redisClient;
-
   protected static StatefulRedisConnection<String, String> connection;
+  protected static String host;
+  protected static String ip;
+  protected static int port;
+  protected static String embeddedDbUri;
 
   protected abstract RedisClient createClient(String uri);
 
-  protected static String host;
-
-  protected static String ip;
-
-  protected static int port;
-
-  protected static String embeddedDbUri;
+  protected abstract InstrumentationExtension getInstrumentationExtension();
 
   protected ContainerConnection newContainerConnection() {
     GenericContainer<?> server =

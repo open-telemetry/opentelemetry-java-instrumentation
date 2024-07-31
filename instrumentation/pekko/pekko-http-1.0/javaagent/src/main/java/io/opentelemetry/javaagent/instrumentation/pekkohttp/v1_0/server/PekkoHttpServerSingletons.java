@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.PekkoHttpUtil;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
@@ -34,16 +34,16 @@ public final class PekkoHttpServerSingletons {
             .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
             .addAttributesExtractor(
                 HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
+                    .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build())
             .addOperationMetrics(HttpServerMetrics.get())
             .addContextCustomizer(
                 HttpServerRoute.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
+                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
                     .build());
-    if (CommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+    if (AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());

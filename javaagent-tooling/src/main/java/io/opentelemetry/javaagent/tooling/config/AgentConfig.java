@@ -11,20 +11,14 @@ public final class AgentConfig {
 
   public static boolean isInstrumentationEnabled(
       ConfigProperties config, Iterable<String> instrumentationNames, boolean defaultEnabled) {
-    // If default is enabled, we want to enable individually,
-    // if default is disabled, we want to disable individually.
-    boolean anyEnabled = defaultEnabled;
     for (String name : instrumentationNames) {
       String propertyName = "otel.instrumentation." + name + ".enabled";
-      boolean enabled = config.getBoolean(propertyName, defaultEnabled);
-
-      if (defaultEnabled) {
-        anyEnabled &= enabled;
-      } else {
-        anyEnabled |= enabled;
+      Boolean enabled = config.getBoolean(propertyName);
+      if (enabled != null) {
+        return enabled;
       }
     }
-    return anyEnabled;
+    return defaultEnabled;
   }
 
   public static boolean isDebugModeEnabled(ConfigProperties config) {

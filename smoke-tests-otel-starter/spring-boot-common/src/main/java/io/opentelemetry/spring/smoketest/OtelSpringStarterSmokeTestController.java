@@ -20,15 +20,19 @@ public class OtelSpringStarterSmokeTestController {
   public static final String TEST_HISTOGRAM = "histogram-test-otel-spring-starter";
   public static final String METER_SCOPE_NAME = "scope";
   private final LongHistogram histogram;
+  private final SpringComponent component;
 
-  public OtelSpringStarterSmokeTestController(OpenTelemetry openTelemetry) {
+  public OtelSpringStarterSmokeTestController(
+      OpenTelemetry openTelemetry, SpringComponent springComponent) {
     Meter meter = openTelemetry.getMeter(METER_SCOPE_NAME);
     histogram = meter.histogramBuilder(TEST_HISTOGRAM).ofLongs().build();
+    this.component = springComponent;
   }
 
   @GetMapping(PING)
   public String ping() {
     histogram.record(10);
+    component.withSpanMethod("from-controller");
     return "pong";
   }
 }
