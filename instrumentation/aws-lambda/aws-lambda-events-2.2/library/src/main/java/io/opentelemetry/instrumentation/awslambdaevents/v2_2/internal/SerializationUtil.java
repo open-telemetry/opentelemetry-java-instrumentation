@@ -22,6 +22,8 @@ import java.nio.charset.StandardCharsets;
  */
 public final class SerializationUtil {
 
+  private static final int DEFAULT_BUFFER_SIZE = 1024;
+
   private static final ClassValue<PojoSerializer<?>> serializerCache =
       new ClassValue<PojoSerializer<?>>() {
         @Override
@@ -73,7 +75,7 @@ public final class SerializationUtil {
       return null;
     }
     PojoSerializer<T> serializer = getSerializer((Class<T>) obj.getClass());
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     serializer.toJson(obj, outputStream);
     return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
   }
@@ -82,7 +84,7 @@ public final class SerializationUtil {
     if (obj == null) {
       return new byte[] {};
     }
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    ByteArrayOutputStream os = new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     SerializationUtil.toJson(os, obj);
     return os.toByteArray();
   }
