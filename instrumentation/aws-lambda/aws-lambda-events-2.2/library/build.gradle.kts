@@ -18,6 +18,11 @@ dependencies {
   // in public API.
   library("com.amazonaws:aws-lambda-java-events:2.2.1")
 
+  // By default, "aws-lambda-java-serialization" library is enabled in the classpath
+  // at the AWS Lambda environment except "java8" runtime which is deprecated.
+  // But it is available at "java8.al2" runtime, so it is still can be used
+  // by Java 8 based Lambda functions.
+  // So that is the reason that why we add it as compile only dependency.
   compileOnly("com.amazonaws:aws-lambda-java-serialization:1.1.5")
 
   // We need Jackson for wrappers to reproduce the serialization does when Lambda invokes a RequestHandler with event
