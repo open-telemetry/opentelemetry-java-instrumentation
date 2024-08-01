@@ -11,11 +11,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class HibernateInstrumentationModule extends InstrumentationModule {
+public class HibernateInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public HibernateInstrumentationModule() {
     super("hibernate", "hibernate-6.0");
@@ -29,10 +31,8 @@ public class HibernateInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // shares classes with hibernate-procedure-call-4.3, these classes should be in the same class
-    // loader
-    return false;
+  public String getModuleGroup() {
+    return "hibernate";
   }
 
   @Override
