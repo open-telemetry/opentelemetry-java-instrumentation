@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.incuba
 
 import application.io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics.BaseApplicationMeter137;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics.ApplicationDoubleGaugeBuilder138;
 
 class ApplicationMeter138Incubator extends BaseApplicationMeter137 {
 
@@ -19,6 +20,10 @@ class ApplicationMeter138Incubator extends BaseApplicationMeter137 {
 
   @Override
   public DoubleGaugeBuilder gaugeBuilder(String name) {
-    return new ApplicationDoubleGaugeBuilder138Incubator(agentMeter.gaugeBuilder(name));
+    io.opentelemetry.api.metrics.DoubleGaugeBuilder builder = agentMeter.gaugeBuilder(name);
+    if (builder instanceof io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder) {
+      return new ApplicationDoubleGaugeBuilder138Incubator(builder);
+    }
+    return new ApplicationDoubleGaugeBuilder138(builder);
   }
 }

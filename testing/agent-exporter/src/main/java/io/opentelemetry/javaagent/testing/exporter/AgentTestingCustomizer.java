@@ -35,14 +35,28 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
     autoConfigurationCustomizer.addTracerProviderCustomizer(
-        (tracerProvider, config) -> tracerProvider.addSpanProcessor(spanProcessor));
+        (tracerProvider, config) -> {
+          if (config.getBoolean("testing.exporter.enabled", true)) {
+            return tracerProvider.addSpanProcessor(spanProcessor);
+          }
+          return tracerProvider;
+        });
 
     autoConfigurationCustomizer.addMeterProviderCustomizer(
-        (meterProvider, config) -> meterProvider.registerMetricReader(metricReader));
+        (meterProvider, config) -> {
+          if (config.getBoolean("testing.exporter.enabled", true)) {
+            return meterProvider.registerMetricReader(metricReader);
+          }
+          return meterProvider;
+        });
 
     autoConfigurationCustomizer.addLoggerProviderCustomizer(
-        (logProvider, config) ->
-            logProvider.addLogRecordProcessor(
-                SimpleLogRecordProcessor.create(AgentTestingExporterFactory.logExporter)));
+        (logProvider, config) -> {
+          if (config.getBoolean("testing.exporter.enabled", true)) {
+            return logProvider.addLogRecordProcessor(
+                SimpleLogRecordProcessor.create(AgentTestingExporterFactory.logExporter));
+          }
+          return logProvider;
+        });
   }
 }
