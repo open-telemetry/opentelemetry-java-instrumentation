@@ -84,13 +84,15 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
       transformer.applyAdviceToMethod(named("exceptionPlease"), prefix + "$ThrowExceptionAdvice");
       transformer.applyAdviceToMethod(
           named("noExceptionPlease"), prefix + "$SuppressExceptionAdvice");
+      transformer.applyAdviceToMethod(
+          named("instrumentWithErasedTypes"), prefix + "$SignatureErasureAdvice");
     }
 
     @SuppressWarnings({"unused"})
     public static class AssignFieldViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToFields(@ToField(value = "privateField"))
+      @Advice.AssignReturned.ToFields(@ToField(value = "privateField", typing = DYNAMIC))
       public static String onEnter(@Advice.Argument(0) String toAssign) {
         return toAssign;
       }
@@ -110,7 +112,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignArgumentViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToArguments(@ToArgument(0))
+      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = DYNAMIC))
       public static String onEnter(@Advice.Argument(1) String toAssign) {
         return toAssign;
       }
@@ -130,7 +132,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignReturnViaReturnAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
       public static String onExit(@Advice.Argument(0) String toAssign) {
         return toAssign;
       }
@@ -150,7 +152,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class GetHelperClassAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
       public static Class<?> onExit(@Advice.Argument(0) boolean localHelper) {
         if (localHelper) {
           return LocalHelper.class;
@@ -175,13 +177,30 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
         throw new RuntimeException("This exception should be suppressed");
       }
 
-      @Advice.AssignReturned.ToReturned
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
       @Advice.OnMethodExit(
           suppress = Throwable.class,
           onThrowable = Throwable.class,
           inline = false)
       public static void onMethodExit(@Advice.Thrown Throwable throwable) {
         throw new RuntimeException("This exception should be suppressed");
+      }
+    }
+
+    @SuppressWarnings({"unused", "ThrowSpecificExceptions"})
+    public static class SignatureErasureAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+      public static LocalHelper onMethodEnter() {
+        return new LocalHelper();
+      }
+
+      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
+      @Advice.OnMethodExit(
+          suppress = Throwable.class,
+          onThrowable = Throwable.class,
+          inline = false)
+      public static LocalHelper onMethodExit(@Advice.Enter LocalHelper enterVal) {
+        return enterVal;
       }
     }
   }
