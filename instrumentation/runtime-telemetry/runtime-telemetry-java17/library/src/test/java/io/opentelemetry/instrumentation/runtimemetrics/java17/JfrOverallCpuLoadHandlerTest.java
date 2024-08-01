@@ -31,7 +31,8 @@ class JfrOverallCpuLoadHandlerTest {
             metric
                 .hasName("jvm.system.cpu.utilization")
                 .hasUnit(UNIT_UTILIZATION)
-                .hasDescription("Recent CPU utilization for the whole system as reported by the JVM.")
+                .hasDescription(
+                    "Recent CPU utilization for the whole system as reported by the JVM.")
                 .hasDoubleGaugeSatisfying(gauge -> {}));
   }
 }

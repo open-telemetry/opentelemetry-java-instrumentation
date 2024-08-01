@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_ACTION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_G1_EDEN_SPACE;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_G1_SURVIVOR_SPACE;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_ACTION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_NAME;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.END_OF_MAJOR_GC;

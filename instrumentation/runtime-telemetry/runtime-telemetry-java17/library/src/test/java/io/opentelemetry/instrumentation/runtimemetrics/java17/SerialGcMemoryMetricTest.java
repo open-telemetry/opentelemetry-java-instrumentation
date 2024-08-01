@@ -35,7 +35,8 @@ class SerialGcMemoryMetricTest {
     // TODO: Need a reliable way to test old and young gen GC in isolation.
     // Generate some JFR events
     System.gc();
-    Attributes minorGcAttributes = Attributes.of(ATTR_GC_NAME, "Copy", ATTR_GC_ACTION, END_OF_MINOR_GC);
+    Attributes minorGcAttributes =
+        Attributes.of(ATTR_GC_NAME, "Copy", ATTR_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
         Attributes.of(ATTR_GC_NAME, "MarkSweepCompact", ATTR_GC_ACTION, END_OF_MAJOR_GC);
     jfrExtension.waitAndAssertMetrics(

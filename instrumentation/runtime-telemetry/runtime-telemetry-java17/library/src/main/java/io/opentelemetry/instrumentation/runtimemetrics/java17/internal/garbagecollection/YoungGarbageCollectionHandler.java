@@ -36,7 +36,8 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
     // Set the attribute's GC based on which GC is being used.
     // G1 young collection is already handled by G1GarbageCollectionHandler.
     attributes =
-        Attributes.of(Constants.ATTR_GC_NAME, gc, Constants.ATTR_GC_ACTION, Constants.END_OF_MINOR_GC);
+        Attributes.of(
+            Constants.ATTR_GC_NAME, gc, Constants.ATTR_GC_ACTION, Constants.END_OF_MINOR_GC);
   }
 
   @Override

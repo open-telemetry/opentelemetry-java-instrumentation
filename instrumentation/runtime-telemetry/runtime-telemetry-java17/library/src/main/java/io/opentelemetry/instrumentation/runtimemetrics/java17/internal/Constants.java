@@ -49,7 +49,8 @@ public final class Constants {
       "process.runtime.jvm.memory.allocation";
   public static final String METRIC_DESCRIPTION_MEMORY_ALLOCATION = "Allocation";
   public static final String METRIC_NAME_MEMORY_INIT = "jvm.memory.init";
-  public static final String METRIC_DESCRIPTION_MEMORY_INIT = "Measure of initial memory requested.";
+  public static final String METRIC_DESCRIPTION_MEMORY_INIT =
+      "Measure of initial memory requested.";
   public static final String METRIC_NAME_MEMORY_LIMIT = "jvm.memory.limit";
   public static final String METRIC_DESCRIPTION_MEMORY_LIMIT = "Measure of max obtainable memory.";
   public static final String METRIC_NAME_GC_DURATION = "jvm.gc.duration";
@@ -59,11 +60,14 @@ public final class Constants {
   public static final AttributeKey<String> ATTR_THREAD_NAME = AttributeKey.stringKey("thread.name");
   public static final AttributeKey<String> ATTR_ARENA_NAME = AttributeKey.stringKey("arena");
   public static final AttributeKey<String> ATTR_NETWORK_MODE = AttributeKey.stringKey("mode");
-  public static final AttributeKey<String> ATTR_MEMORY_TYPE = AttributeKey.stringKey("jvm.memory.type");
-  public static final AttributeKey<String> ATTR_MEMORY_POOL = AttributeKey.stringKey("jvm.memory.pool.name");
+  public static final AttributeKey<String> ATTR_MEMORY_TYPE =
+      AttributeKey.stringKey("jvm.memory.type");
+  public static final AttributeKey<String> ATTR_MEMORY_POOL =
+      AttributeKey.stringKey("jvm.memory.pool.name");
   public static final AttributeKey<String> ATTR_GC_NAME = AttributeKey.stringKey("jvm.gc.name");
   public static final AttributeKey<String> ATTR_GC_ACTION = AttributeKey.stringKey("jvm.gc.action");
-  public static final AttributeKey<Boolean> ATTR_DAEMON = AttributeKey.booleanKey("jvm.thread.daemon");
+  public static final AttributeKey<Boolean> ATTR_DAEMON =
+      AttributeKey.booleanKey("jvm.thread.daemon");
   public static final Attributes ATTR_PS_EDEN_SPACE =
       Attributes.of(ATTR_MEMORY_TYPE, HEAP, ATTR_MEMORY_POOL, "PS Eden Space");
   public static final Attributes ATTR_PS_SURVIVOR_SPACE =

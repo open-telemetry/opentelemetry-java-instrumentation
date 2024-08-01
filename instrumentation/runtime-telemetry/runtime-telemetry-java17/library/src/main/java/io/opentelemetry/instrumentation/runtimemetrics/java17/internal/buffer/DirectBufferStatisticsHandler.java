@@ -34,7 +34,8 @@ public final class DirectBufferStatisticsHandler implements RecordedEventHandler
   private static final String MEMORY_USED = "memoryUsed";
 
   private static final String EVENT_NAME = "jdk.DirectBufferStatistics";
-  public static final AttributeKey<String> ATTR_BUFFER_POOL = AttributeKey.stringKey("jvm.buffer.pool.name");
+  public static final AttributeKey<String> ATTR_BUFFER_POOL =
+      AttributeKey.stringKey("jvm.buffer.pool.name");
   private static final Attributes ATTR = Attributes.of(ATTR_BUFFER_POOL, "direct");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
