@@ -101,9 +101,11 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       if (result != null) {
         dump(name, result);
         InstrumentationModuleClassLoader.bytecodeOverride.put(name.replace('/', '.'), result);
-        return result;
+      } else {
+        result = bytes;
       }
-      return bytes;
+      result = AdviceSignatureEraser.transform(result);
+      return result;
     }
   }
 
