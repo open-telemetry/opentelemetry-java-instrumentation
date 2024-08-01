@@ -46,8 +46,7 @@ public class BaseApplicationMeter137 extends ApplicationMeter115 {
   @Override
   public DoubleHistogramBuilder histogramBuilder(String name) {
     io.opentelemetry.api.metrics.DoubleHistogramBuilder builder = agentMeter.histogramBuilder(name);
-    if (builder
-        instanceof io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder) {
+    if (builder instanceof io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder) {
       return new ApplicationDoubleHistogramBuilder137(builder);
     }
     return new ApplicationDoubleHistogramBuilder(builder);
