@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_ACTION;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_ACTION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_G1_EDEN_SPACE;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_G1_SURVIVOR_SPACE;
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_NAME;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.END_OF_MAJOR_GC;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.END_OF_MINOR_GC;
@@ -81,9 +81,9 @@ class G1GcMemoryMetricTest {
     // TODO: Need a reliable way to test old and young gen GC in isolation.
     System.gc();
     Attributes minorGcAttributes =
-        Attributes.of(ATTR_GC, "G1 Young Generation", ATTR_ACTION, END_OF_MINOR_GC);
+        Attributes.of(ATTR_GC_NAME, "G1 Young Generation", ATTR_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
-        Attributes.of(ATTR_GC, "G1 Old Generation", ATTR_ACTION, END_OF_MAJOR_GC);
+        Attributes.of(ATTR_GC_NAME, "G1 Old Generation", ATTR_GC_ACTION, END_OF_MAJOR_GC);
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric

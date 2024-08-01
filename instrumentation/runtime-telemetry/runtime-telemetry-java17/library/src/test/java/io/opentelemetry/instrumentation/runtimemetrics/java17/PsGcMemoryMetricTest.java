@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_ACTION;
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_ACTION;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_NAME;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_PS_EDEN_SPACE;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_PS_OLD_GEN;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_PS_SURVIVOR_SPACE;
@@ -86,9 +86,9 @@ class PsGcMemoryMetricTest {
     System.gc();
 
     Attributes minorGcAttributes =
-        Attributes.of(ATTR_GC, "PS Scavenge", ATTR_ACTION, END_OF_MINOR_GC);
+        Attributes.of(ATTR_GC_NAME, "PS Scavenge", ATTR_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
-        Attributes.of(ATTR_GC, "PS MarkSweep", ATTR_ACTION, END_OF_MAJOR_GC);
+        Attributes.of(ATTR_GC_NAME, "PS MarkSweep", ATTR_GC_ACTION, END_OF_MAJOR_GC);
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric

@@ -23,9 +23,9 @@ public final class G1GarbageCollectionHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.G1GarbageCollection";
   private static final Attributes ATTR =
       Attributes.of(
-          Constants.ATTR_GC,
+          Constants.ATTR_GC_NAME,
           "G1 Young Generation",
-          Constants.ATTR_ACTION,
+          Constants.ATTR_GC_ACTION,
           Constants.END_OF_MINOR_GC);
   private final LongHistogram histogram;
 

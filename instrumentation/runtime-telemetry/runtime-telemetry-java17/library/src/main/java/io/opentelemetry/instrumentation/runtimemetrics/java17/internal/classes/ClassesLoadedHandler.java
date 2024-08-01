@@ -35,11 +35,11 @@ public final class ClassesLoadedHandler implements RecordedEventHandler {
   private static final String METRIC_NAME_CURRENT = "jvm.class.count";
 
   private static final String EVENT_NAME = "jdk.ClassLoadingStatistics";
-  private static final String METRIC_DESCRIPTION_CURRENT = "Number of classes currently loaded";
+  private static final String METRIC_DESCRIPTION_CURRENT = "Number of classes currently loaded.";
   private static final String METRIC_DESCRIPTION_LOADED =
-      "Number of classes loaded since JVM start";
+      "Number of classes loaded since JVM start.";
   private static final String METRIC_DESCRIPTION_UNLOADED =
-      "Number of classes unloaded since JVM start";
+      "Number of classes unloaded since JVM start.";
 
   private final List<AutoCloseable> observables = new ArrayList<>();
 

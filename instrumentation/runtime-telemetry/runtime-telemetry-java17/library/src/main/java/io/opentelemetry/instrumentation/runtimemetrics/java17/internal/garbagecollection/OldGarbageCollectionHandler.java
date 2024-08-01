@@ -35,7 +35,7 @@ public final class OldGarbageCollectionHandler implements RecordedEventHandler {
             .build();
     // Set the attribute's GC based on which GC is being used.
     attributes =
-        Attributes.of(Constants.ATTR_GC, gc, Constants.ATTR_ACTION, Constants.END_OF_MAJOR_GC);
+        Attributes.of(Constants.ATTR_GC_NAME, gc, Constants.ATTR_GC_ACTION, Constants.END_OF_MAJOR_GC);
   }
 
   @Override

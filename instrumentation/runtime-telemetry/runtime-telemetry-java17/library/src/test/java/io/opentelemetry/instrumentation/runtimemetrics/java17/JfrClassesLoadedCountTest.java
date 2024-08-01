@@ -26,7 +26,7 @@ class JfrClassesLoadedCountTest {
         metric ->
             metric
                 .hasName("jvm.class.loaded")
-                .hasDescription("Number of classes loaded since JVM start")
+                .hasDescription("Number of classes loaded since JVM start.")
                 .hasUnit(UNIT_CLASSES)
                 .hasLongSumSatisfying(
                     sum ->
@@ -39,7 +39,7 @@ class JfrClassesLoadedCountTest {
         metric ->
             metric
                 .hasName("jvm.class.count")
-                .hasDescription("Number of classes currently loaded")
+                .hasDescription("Number of classes currently loaded.")
                 .hasUnit(UNIT_CLASSES)
                 .hasLongSumSatisfying(
                     sum ->
@@ -52,7 +52,7 @@ class JfrClassesLoadedCountTest {
         metric ->
             metric
                 .hasName("jvm.class.unloaded")
-                .hasDescription("Number of classes unloaded since JVM start")
+                .hasDescription("Number of classes unloaded since JVM start.")
                 .hasUnit(UNIT_CLASSES)
                 .hasLongSumSatisfying(
                     sum ->
