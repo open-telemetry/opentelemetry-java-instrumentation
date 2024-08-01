@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -24,7 +22,13 @@ import java.util.Map;
  */
 public final class SerializationUtil {
 
-  private static final Map<Class<?>, PojoSerializer<?>> serializerCache = new HashMap<>();
+  private static final ClassValue<PojoSerializer<?>> serializerCache =
+      new ClassValue<PojoSerializer<?>>() {
+        @Override
+        protected PojoSerializer<?> computeValue(Class<?> type) {
+          return createSerializer(type);
+        }
+      };
 
   private static <T> PojoSerializer<T> createSerializer(Class<T> clazz) {
     try {
@@ -42,16 +46,7 @@ public final class SerializationUtil {
 
   @SuppressWarnings("unchecked")
   public static <T> PojoSerializer<T> getSerializer(Class<T> clazz) {
-    try {
-      PojoSerializer<T> serializer = (PojoSerializer<T>) serializerCache.get(clazz);
-      if (serializer == null) {
-        serializer = createSerializer(clazz);
-        serializerCache.put(clazz, serializer);
-      }
-      return serializer;
-    } catch (NoClassDefFoundError e) {
-      return null;
-    }
+    return (PojoSerializer<T>) serializerCache.get(clazz);
   }
 
   public static <T> T fromJson(String json, Class<T> clazz) {
