@@ -11,10 +11,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
-enum KafkaConsumerAttributesGetter
-    implements MessagingAttributesGetter<KafkaProcessRequest, RecordMetadata> {
+enum KafkaConsumerAttributesGetter implements MessagingAttributesGetter<KafkaProcessRequest, Void> {
   INSTANCE;
 
   @Override
@@ -64,7 +62,7 @@ enum KafkaConsumerAttributesGetter
 
   @Override
   @Nullable
-  public String getMessageId(KafkaProcessRequest request, @Nullable RecordMetadata unused) {
+  public String getMessageId(KafkaProcessRequest request, @Nullable Void unused) {
     return null;
   }
 
@@ -76,14 +74,8 @@ enum KafkaConsumerAttributesGetter
 
   @Nullable
   @Override
-  public Long getBatchMessageCount(KafkaProcessRequest request, @Nullable RecordMetadata unused) {
+  public Long getBatchMessageCount(KafkaProcessRequest request, @Nullable Void unused) {
     return null;
-  }
-
-  @Override
-  public String getDestinationPartitionId(
-      KafkaProcessRequest kafkaProcessRequest, @Nullable RecordMetadata recordMetadata) {
-    return String.valueOf(recordMetadata.partition());
   }
 
   @Override

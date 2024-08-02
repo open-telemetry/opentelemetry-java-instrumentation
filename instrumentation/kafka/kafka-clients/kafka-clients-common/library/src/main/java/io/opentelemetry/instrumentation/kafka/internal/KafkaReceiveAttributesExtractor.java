@@ -10,9 +10,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
-enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, RecordMetadata> {
+enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, Void> {
   INSTANCE;
 
   // copied from MessagingIncubatingAttributes
@@ -34,6 +33,6 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
       AttributesBuilder attributes,
       Context context,
       KafkaReceiveRequest request,
-      @Nullable RecordMetadata unused,
+      @Nullable Void unused,
       @Nullable Throwable error) {}
 }

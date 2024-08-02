@@ -12,11 +12,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 
-enum KafkaReceiveAttributesGetter
-    implements MessagingAttributesGetter<KafkaReceiveRequest, RecordMetadata> {
+enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaReceiveRequest, Void> {
   INSTANCE;
 
   @Override
@@ -71,7 +69,7 @@ enum KafkaReceiveAttributesGetter
 
   @Override
   @Nullable
-  public String getMessageId(KafkaReceiveRequest request, @Nullable RecordMetadata unused) {
+  public String getMessageId(KafkaReceiveRequest request, @Nullable Void unused) {
     return null;
   }
 
@@ -82,14 +80,8 @@ enum KafkaReceiveAttributesGetter
   }
 
   @Override
-  public Long getBatchMessageCount(KafkaReceiveRequest request, @Nullable RecordMetadata unused) {
+  public Long getBatchMessageCount(KafkaReceiveRequest request, @Nullable Void unused) {
     return (long) request.getRecords().count();
-  }
-
-  @Override
-  public String getDestinationPartitionId(
-      KafkaReceiveRequest kafkaReceiveRequest, @Nullable RecordMetadata recordMetadata) {
-    return String.valueOf(recordMetadata.partition());
   }
 
   @Override

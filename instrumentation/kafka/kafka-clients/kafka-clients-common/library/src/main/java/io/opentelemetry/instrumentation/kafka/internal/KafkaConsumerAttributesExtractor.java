@@ -12,12 +12,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
 final class KafkaConsumerAttributesExtractor
-    implements AttributesExtractor<KafkaProcessRequest, RecordMetadata> {
+    implements AttributesExtractor<KafkaProcessRequest, Void> {
 
   // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
+      AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
       AttributeKey.stringKey("messaging.kafka.consumer.group");
   private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
@@ -33,6 +34,7 @@ final class KafkaConsumerAttributesExtractor
 
     ConsumerRecord<?, ?> record = request.getRecord();
 
+    attributes.put(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(record.partition()));
     attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
 
     Object key = record.key();
@@ -60,6 +62,6 @@ final class KafkaConsumerAttributesExtractor
       AttributesBuilder attributes,
       Context context,
       KafkaProcessRequest request,
-      @Nullable RecordMetadata unused,
+      @Nullable Void unused,
       @Nullable Throwable error) {}
 }

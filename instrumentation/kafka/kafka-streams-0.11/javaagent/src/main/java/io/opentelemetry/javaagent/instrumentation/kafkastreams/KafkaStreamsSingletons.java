@@ -11,12 +11,13 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaStreamsSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-streams-0.11";
 
-  private static final Instrumenter<KafkaProcessRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<KafkaProcessRequest, RecordMetadata> INSTRUMENTER =
       new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
@@ -26,7 +27,7 @@ public final class KafkaStreamsSingletons {
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .createConsumerProcessInstrumenter();
 
-  public static Instrumenter<KafkaProcessRequest, Void> instrumenter() {
+  public static Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter() {
     return INSTRUMENTER;
   }
 
