@@ -12,14 +12,13 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class VertxKafkaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-kafka-client-3.6";
 
-  private static final Instrumenter<KafkaReceiveRequest, RecordMetadata> BATCH_PROCESS_INSTRUMENTER;
-  private static final Instrumenter<KafkaProcessRequest, RecordMetadata> PROCESS_INSTRUMENTER;
+  private static final Instrumenter<KafkaReceiveRequest, Void> BATCH_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<KafkaProcessRequest, Void> PROCESS_INSTRUMENTER;
 
   static {
     KafkaInstrumenterFactory factory =
@@ -34,11 +33,11 @@ public final class VertxKafkaSingletons {
     PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
   }
 
-  public static Instrumenter<KafkaReceiveRequest, RecordMetadata> batchProcessInstrumenter() {
+  public static Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter() {
     return BATCH_PROCESS_INSTRUMENTER;
   }
 
-  public static Instrumenter<KafkaProcessRequest, RecordMetadata> processInstrumenter() {
+  public static Instrumenter<KafkaProcessRequest, Void> processInstrumenter() {
     return PROCESS_INSTRUMENTER;
   }
 
