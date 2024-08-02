@@ -57,15 +57,15 @@ public final class KafkaTelemetry {
 
   private final OpenTelemetry openTelemetry;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
-  private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
-  private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, RecordMetadata> consumerReceiveInstrumenter;
+  private final Instrumenter<KafkaProcessRequest, RecordMetadata> consumerProcessInstrumenter;
   private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
-      Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
-      Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<KafkaReceiveRequest, RecordMetadata> consumerReceiveInstrumenter,
+      Instrumenter<KafkaProcessRequest, RecordMetadata> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;

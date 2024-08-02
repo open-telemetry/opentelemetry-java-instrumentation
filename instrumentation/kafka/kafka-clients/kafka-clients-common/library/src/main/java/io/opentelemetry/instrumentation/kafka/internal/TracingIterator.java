@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -20,7 +21,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
 
   private final Iterator<ConsumerRecord<K, V>> delegateIterator;
-  private final Instrumenter<KafkaProcessRequest, Void> instrumenter;
+  private final Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter;
   private final BooleanSupplier wrappingEnabled;
   private final Context parentContext;
   private final KafkaConsumerContext consumerContext;
@@ -35,7 +36,7 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
 
   private TracingIterator(
       Iterator<ConsumerRecord<K, V>> delegateIterator,
-      Instrumenter<KafkaProcessRequest, Void> instrumenter,
+      Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
     this.delegateIterator = delegateIterator;
@@ -50,7 +51,7 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
 
   public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(
       Iterator<ConsumerRecord<K, V>> delegateIterator,
-      Instrumenter<KafkaProcessRequest, Void> instrumenter,
+      Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
     if (wrappingEnabled.getAsBoolean()) {
