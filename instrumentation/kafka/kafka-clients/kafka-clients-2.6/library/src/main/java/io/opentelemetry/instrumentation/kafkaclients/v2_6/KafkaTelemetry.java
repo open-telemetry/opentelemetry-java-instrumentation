@@ -57,15 +57,15 @@ public final class KafkaTelemetry {
 
   private final OpenTelemetry openTelemetry;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
-  private final Instrumenter<KafkaReceiveRequest, RecordMetadata> consumerReceiveInstrumenter;
-  private final Instrumenter<KafkaProcessRequest, RecordMetadata> consumerProcessInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
+  private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
   private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
-      Instrumenter<KafkaReceiveRequest, RecordMetadata> consumerReceiveInstrumenter,
-      Instrumenter<KafkaProcessRequest, RecordMetadata> consumerProcessInstrumenter,
+      Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
+      Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;
@@ -106,7 +106,7 @@ public final class KafkaTelemetry {
                 ProducerRecord<K, V> record = (ProducerRecord<K, V>) args[0];
                 Callback callback =
                     method.getParameterCount() >= 2
-                            && method.getParameterTypes()[1] == Callback.class
+                        && method.getParameterTypes()[1] == Callback.class
                         ? (Callback) args[1]
                         : null;
                 return buildAndInjectSpan(record, producer, callback, producer::send);

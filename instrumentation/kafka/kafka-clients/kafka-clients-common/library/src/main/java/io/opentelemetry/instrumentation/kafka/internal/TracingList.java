@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.function.BooleanSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -22,7 +21,7 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
 
   private TracingList(
       List<ConsumerRecord<K, V>> delegate,
-      Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
     super(delegate, instrumenter, wrappingEnabled, consumerContext);
@@ -31,7 +30,7 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
 
   public static <K, V> List<ConsumerRecord<K, V>> wrap(
       List<ConsumerRecord<K, V>> delegate,
-      Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
     if (wrappingEnabled.getAsBoolean()) {

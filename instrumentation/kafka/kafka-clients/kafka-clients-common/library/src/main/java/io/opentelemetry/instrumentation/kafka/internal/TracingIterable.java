@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,14 +16,14 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
   private final Iterable<ConsumerRecord<K, V>> delegate;
-  private final Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter;
+  private final Instrumenter<KafkaProcessRequest, Void> instrumenter;
   private final BooleanSupplier wrappingEnabled;
   private final KafkaConsumerContext consumerContext;
   private boolean firstIterator = true;
 
   protected TracingIterable(
       Iterable<ConsumerRecord<K, V>> delegate,
-      Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
     this.delegate = delegate;
@@ -35,7 +34,7 @@ public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
 
   public static <K, V> Iterable<ConsumerRecord<K, V>> wrap(
       Iterable<ConsumerRecord<K, V>> delegate,
-      Instrumenter<KafkaProcessRequest, RecordMetadata> instrumenter,
+      Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
     if (wrappingEnabled.getAsBoolean()) {
