@@ -12,7 +12,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
-enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceiveRequest, RecordMetadata> {
+enum KafkaReceiveAttributesExtractor
+    implements AttributesExtractor<KafkaReceiveRequest, RecordMetadata> {
   INSTANCE;
 
   // copied from MessagingIncubatingAttributes
