@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
@@ -30,12 +31,12 @@ public final class SpringKafkaTelemetry {
     return new SpringKafkaTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
-  private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
+  private final Instrumenter<KafkaProcessRequest, RecordMetadata> processInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, RecordMetadata> batchProcessInstrumenter;
 
   SpringKafkaTelemetry(
-      Instrumenter<KafkaProcessRequest, Void> processInstrumenter,
-      Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter) {
+      Instrumenter<KafkaProcessRequest, RecordMetadata> processInstrumenter,
+      Instrumenter<KafkaReceiveRequest, RecordMetadata> batchProcessInstrumenter) {
     this.processInstrumenter = processInstrumenter;
     this.batchProcessInstrumenter = batchProcessInstrumenter;
   }

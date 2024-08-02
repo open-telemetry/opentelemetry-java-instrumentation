@@ -12,9 +12,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 final class KafkaConsumerAttributesExtractor
-    implements AttributesExtractor<KafkaProcessRequest, Void> {
+    implements AttributesExtractor<KafkaProcessRequest, RecordMetadata> {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
@@ -59,6 +60,6 @@ final class KafkaConsumerAttributesExtractor
       AttributesBuilder attributes,
       Context context,
       KafkaProcessRequest request,
-      @Nullable Void unused,
+      @Nullable RecordMetadata unused,
       @Nullable Throwable error) {}
 }

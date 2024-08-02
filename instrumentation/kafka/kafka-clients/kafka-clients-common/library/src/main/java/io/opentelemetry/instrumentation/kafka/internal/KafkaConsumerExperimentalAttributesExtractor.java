@@ -13,10 +13,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.record.TimestampType;
 
 final class KafkaConsumerExperimentalAttributesExtractor
-    implements AttributesExtractor<KafkaProcessRequest, Void> {
+    implements AttributesExtractor<KafkaProcessRequest, RecordMetadata> {
 
   private static final AttributeKey<Long> KAFKA_RECORD_QUEUE_TIME_MS =
       longKey("kafka.record.queue_time_ms");
@@ -41,6 +42,6 @@ final class KafkaConsumerExperimentalAttributesExtractor
       AttributesBuilder attributes,
       Context context,
       KafkaProcessRequest request,
-      @Nullable Void unused,
+      @Nullable RecordMetadata unused,
       @Nullable Throwable error) {}
 }
