@@ -86,6 +86,12 @@ enum KafkaProducerAttributesGetter
   }
 
   @Override
+  public String getDestinationPartitionId(
+      KafkaProducerRequest kafkaProducerRequest, @Nullable RecordMetadata recordMetadata) {
+    return String.valueOf(recordMetadata.partition());
+  }
+
+  @Override
   public List<String> getMessageHeader(KafkaProducerRequest request, String name) {
     return StreamSupport.stream(request.getRecord().headers().headers(name).spliterator(), false)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))

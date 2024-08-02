@@ -53,6 +53,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
 
+  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
+      AttributeKey.stringKey("messaging.destination.partition.id");
+
   static final String TEMP_DESTINATION_NAME = "(temporary)";
 
   /**
@@ -122,6 +125,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     internalSet(
         attributes, MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
+    internalSet(
+        attributes,
+        MESSAGING_DESTINATION_PARTITION_ID,
+        getter.getDestinationPartitionId(request, response));
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);

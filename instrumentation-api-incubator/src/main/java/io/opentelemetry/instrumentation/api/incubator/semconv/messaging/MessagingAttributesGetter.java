@@ -62,6 +62,10 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   Long getBatchMessageCount(REQUEST request, @Nullable RESPONSE response);
 
+  default String getDestinationPartitionId(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
   /**
    * Extracts all values of header named {@code name} from the request, or an empty list if there
    * were none.

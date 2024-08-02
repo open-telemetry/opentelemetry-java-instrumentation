@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -44,6 +45,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.common.naming.TopicName;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -359,6 +361,9 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_OPERATION, "publish"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
+                equalTo(
+                    MESSAGING_DESTINATION_PARTITION_ID,
+                    String.valueOf(TopicName.getPartitionIndex(destination))),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGE_TYPE, "normal")));
 
@@ -392,6 +397,9 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_OPERATION, "receive"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
+                equalTo(
+                    MESSAGING_DESTINATION_PARTITION_ID,
+                    String.valueOf(TopicName.getPartitionIndex(destination))),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
@@ -414,6 +422,9 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_OPERATION, "process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
+                equalTo(
+                    MESSAGING_DESTINATION_PARTITION_ID,
+                    String.valueOf(TopicName.getPartitionIndex(destination))),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(

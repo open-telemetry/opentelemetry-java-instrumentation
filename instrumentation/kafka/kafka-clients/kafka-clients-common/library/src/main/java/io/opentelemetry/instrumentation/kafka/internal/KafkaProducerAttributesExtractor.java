@@ -16,8 +16,6 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 final class KafkaProducerAttributesExtractor
     implements AttributesExtractor<KafkaProducerRequest, RecordMetadata> {
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
-      AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
       AttributeKey.stringKey("messaging.kafka.message.key");
   private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
@@ -53,8 +51,6 @@ final class KafkaProducerAttributesExtractor
       @Nullable Throwable error) {
 
     if (recordMetadata != null) {
-      attributes.put(
-          MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(recordMetadata.partition()));
       attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
     }
   }

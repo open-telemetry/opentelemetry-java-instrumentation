@@ -17,8 +17,6 @@ final class KafkaConsumerAttributesExtractor
     implements AttributesExtractor<KafkaProcessRequest, Void> {
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
-      AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
       AttributeKey.stringKey("messaging.kafka.consumer.group");
   private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
@@ -34,7 +32,6 @@ final class KafkaConsumerAttributesExtractor
 
     ConsumerRecord<?, ?> record = request.getRecord();
 
-    attributes.put(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(record.partition()));
     attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, record.offset());
 
     Object key = record.key();
