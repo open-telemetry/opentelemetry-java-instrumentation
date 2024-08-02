@@ -25,9 +25,9 @@ public final class KafkaTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<KafkaProducerRequest, RecordMetadata>>
       producerAttributesExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<KafkaProcessRequest, Void>>
+  private final List<AttributesExtractor<KafkaProcessRequest, RecordMetadata>>
       consumerProcessAttributesExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<KafkaReceiveRequest, Void>>
+  private final List<AttributesExtractor<KafkaReceiveRequest, RecordMetadata>>
       consumerReceiveAttributesExtractors = new ArrayList<>();
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
@@ -49,20 +49,20 @@ public final class KafkaTelemetryBuilder {
   @Deprecated
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerAttributesExtractors(
-      AttributesExtractor<KafkaProcessRequest, Void> extractor) {
+      AttributesExtractor<KafkaProcessRequest, RecordMetadata> extractor) {
     return addConsumerProcessAttributesExtractors(extractor);
   }
 
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerProcessAttributesExtractors(
-      AttributesExtractor<KafkaProcessRequest, Void> extractor) {
+      AttributesExtractor<KafkaProcessRequest, RecordMetadata> extractor) {
     consumerProcessAttributesExtractors.add(extractor);
     return this;
   }
 
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerReceiveAttributesExtractors(
-      AttributesExtractor<KafkaReceiveRequest, Void> extractor) {
+      AttributesExtractor<KafkaReceiveRequest, RecordMetadata> extractor) {
     consumerReceiveAttributesExtractors.add(extractor);
     return this;
   }

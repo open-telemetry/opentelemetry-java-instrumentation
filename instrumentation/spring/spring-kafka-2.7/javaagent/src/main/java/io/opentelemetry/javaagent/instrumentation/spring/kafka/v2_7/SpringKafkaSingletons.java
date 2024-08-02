@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.SpringKafkaErrorCauseExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class SpringKafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-kafka-2.7";
@@ -26,7 +27,7 @@ public final class SpringKafkaSingletons {
           .setMessagingReceiveInstrumentationEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .build();
-  private static final Instrumenter<KafkaReceiveRequest, Void> BATCH_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<KafkaReceiveRequest, RecordMetadata> BATCH_PROCESS_INSTRUMENTER;
 
   static {
     KafkaInstrumenterFactory factory =
@@ -45,7 +46,7 @@ public final class SpringKafkaSingletons {
     return TELEMETRY;
   }
 
-  public static Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter() {
+  public static Instrumenter<KafkaReceiveRequest, RecordMetadata> batchProcessInstrumenter() {
     return BATCH_PROCESS_INSTRUMENTER;
   }
 
