@@ -23,10 +23,8 @@ public final class KafkaSingletons {
           .getBoolean("otel.instrumentation.kafka.producer-propagation.enabled", true);
 
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<KafkaReceiveRequest, RecordMetadata>
-      CONSUMER_RECEIVE_INSTRUMENTER;
-  private static final Instrumenter<KafkaProcessRequest, RecordMetadata>
-      CONSUMER_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<KafkaReceiveRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER;
+  private static final Instrumenter<KafkaProcessRequest, Void> CONSUMER_PROCESS_INSTRUMENTER;
 
   static {
     KafkaInstrumenterFactory instrumenterFactory =
@@ -50,11 +48,11 @@ public final class KafkaSingletons {
     return PRODUCER_INSTRUMENTER;
   }
 
-  public static Instrumenter<KafkaReceiveRequest, RecordMetadata> consumerReceiveInstrumenter() {
+  public static Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter() {
     return CONSUMER_RECEIVE_INSTRUMENTER;
   }
 
-  public static Instrumenter<KafkaProcessRequest, RecordMetadata> consumerProcessInstrumenter() {
+  public static Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
   }
 
