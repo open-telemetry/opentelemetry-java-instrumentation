@@ -106,7 +106,7 @@ public final class KafkaTelemetry {
                 ProducerRecord<K, V> record = (ProducerRecord<K, V>) args[0];
                 Callback callback =
                     method.getParameterCount() >= 2
-                        && method.getParameterTypes()[1] == Callback.class
+                            && method.getParameterTypes()[1] == Callback.class
                         ? (Callback) args[1]
                         : null;
                 return buildAndInjectSpan(record, producer, callback, producer::send);
