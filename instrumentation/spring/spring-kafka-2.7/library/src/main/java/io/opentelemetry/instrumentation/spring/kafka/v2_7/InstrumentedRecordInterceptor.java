@@ -16,7 +16,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.kafka.listener.RecordInterceptor;
 
 final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, V> {
@@ -24,11 +23,11 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   private static final VirtualField<ConsumerRecord<?, ?>, State<KafkaProcessRequest>> stateField =
       VirtualField.find(ConsumerRecord.class, State.class);
 
-  private final Instrumenter<KafkaProcessRequest, RecordMetadata> processInstrumenter;
+  private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
 
   InstrumentedRecordInterceptor(
-      Instrumenter<KafkaProcessRequest, RecordMetadata> processInstrumenter,
+      Instrumenter<KafkaProcessRequest, Void> processInstrumenter,
       @Nullable RecordInterceptor<K, V> decorated) {
     this.processInstrumenter = processInstrumenter;
     this.decorated = decorated;

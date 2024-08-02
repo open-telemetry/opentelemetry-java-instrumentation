@@ -17,7 +17,6 @@ import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.kafka.listener.BatchInterceptor;
 
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
@@ -27,11 +26,11 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   private static final ThreadLocal<WeakReference<ConsumerRecords<?, ?>>> lastProcessed =
       new ThreadLocal<>();
 
-  private final Instrumenter<KafkaReceiveRequest, RecordMetadata> batchProcessInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
 
   InstrumentedBatchInterceptor(
-      Instrumenter<KafkaReceiveRequest, RecordMetadata> batchProcessInstrumenter,
+      Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter,
       @Nullable BatchInterceptor<K, V> decorated) {
     this.batchProcessInstrumenter = batchProcessInstrumenter;
     this.decorated = decorated;
