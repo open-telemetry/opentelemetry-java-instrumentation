@@ -89,7 +89,11 @@ enum KafkaReceiveAttributesGetter
   @Override
   public String getDestinationPartitionId(
       KafkaReceiveRequest kafkaReceiveRequest, @Nullable RecordMetadata recordMetadata) {
-    return String.valueOf(recordMetadata.partition());
+    if (recordMetadata != null) {
+      return String.valueOf(recordMetadata.partition());
+    } else {
+      return null;
+    }
   }
 
   @Override

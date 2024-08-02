@@ -83,7 +83,11 @@ enum KafkaConsumerAttributesGetter
   @Override
   public String getDestinationPartitionId(
       KafkaProcessRequest kafkaProcessRequest, @Nullable RecordMetadata recordMetadata) {
-    return String.valueOf(recordMetadata.partition());
+    if (recordMetadata != null) {
+      return String.valueOf(recordMetadata.partition());
+    } else {
+      return null;
+    }
   }
 
   @Override
