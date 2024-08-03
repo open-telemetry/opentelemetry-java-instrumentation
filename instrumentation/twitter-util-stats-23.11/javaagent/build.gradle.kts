@@ -30,8 +30,6 @@ val scalified = fun(pack: String): String {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:executors:bootstrap"))
-
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 

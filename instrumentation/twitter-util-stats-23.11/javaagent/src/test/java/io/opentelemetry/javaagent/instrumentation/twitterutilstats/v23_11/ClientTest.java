@@ -9,12 +9,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpCl
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
+import com.google.common.collect.ImmutableMap;
 import com.twitter.finagle.Http;
 import com.twitter.finagle.ListeningServer;
 import com.twitter.finagle.Service;
 import com.twitter.finagle.http.Method;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Response;
+import com.twitter.finagle.netty4.HashedWheelTimer$;
 import com.twitter.finagle.service.RetryBudget;
 import com.twitter.finagle.stats.Counter;
 import com.twitter.finagle.stats.CustomUnit;
@@ -26,9 +28,10 @@ import com.twitter.util.Future;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.DoublePointAssert;
+import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
-import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableMap;
 import java.net.URI;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,6 +41,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import scala.jdk.CollectionConverters;
 
 class ClientTest {
   private static final Logger logger = Logger.getLogger(ClientTest.class.getName());
@@ -206,6 +210,86 @@ class ClientTest {
                               assertThat(metric)
                                   .hasDoubleGaugeSatisfying(
                                       sum -> sum.hasPointsSatisfying(collect))));
+            });
+
+    // stop this otherwise some metrics will keep emitting
+    HashedWheelTimer$.MODULE$.stop();
+
+    TestStatsReceiver.getInstance()
+        .getStats()
+        .asMap()
+        .forEach(
+            (name, stats) -> {
+              List<Consumer<HistogramPointAssert>> collect =
+                  stats.stream()
+                      .filter(
+                          stat -> {
+                            if (!stat.isInitialized()) {
+                              logger.info("uninitialized: " + name);
+                              // skip uninitialized bc they won't have
+                              // default values assigned in otel
+                              return false;
+                            }
+                            if (!stat.getCounterpart().isEmitted()) {
+                              logger.info("skipped: " + name);
+                              return false;
+                            }
+                            logger.info(name + ": " + stat.getStat());
+                            return true;
+                          })
+                      .map(
+                          stat -> {
+                            List<Double> collected =
+                                CollectionConverters.SeqHasAsJava(stat.getStat().apply())
+                                    .asJava()
+                                    .stream()
+                                    .mapToDouble(x -> (float) x)
+                                    .boxed()
+                                    .collect(Collectors.toList());
+                            System.out.println(
+                                "stat: "
+                                    + stat.getStat()
+                                    + " -> "
+                                    + stat.getStat().apply()
+                                    + " { count="
+                                    + collected.size()
+                                    + ", sum="
+                                    + collected.stream().reduce(0d, Double::sum)
+                                    + ", min="
+                                    + collected.stream().min(Comparator.naturalOrder()).orElse(0d)
+                                    + ", max="
+                                    + collected.stream().max(Comparator.naturalOrder()).orElse(0d)
+                                    + " }");
+                            return (Consumer<HistogramPointAssert>)
+                                points ->
+                                    points
+                                        .hasMin(
+                                            collected.stream()
+                                                .min(Comparator.naturalOrder())
+                                                .orElse(0d))
+                                        .hasMax(
+                                            collected.stream()
+                                                .max(Comparator.naturalOrder())
+                                                .orElse(0d));
+                          })
+                      .collect(Collectors.toList());
+
+              if (collect.isEmpty()) {
+                logger.info("unset; skipping all assertions: " + name);
+                return;
+              }
+
+              // NOTE: choosing to be very lax with the histogram assertions as twitter-util-stats
+              // only supports Summary types
+              testing.waitAndAssertMetrics(
+                  "twitter-util-stats",
+                  name,
+                  metrics ->
+                      metrics.anySatisfy(
+                          metric ->
+                              assertThat(metric)
+                                  .hasHistogramSatisfying(
+                                      histo -> histo.hasPointsSatisfying(collect))));
             });
   }
 }

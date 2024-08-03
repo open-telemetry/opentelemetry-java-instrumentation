@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.twitterutilstats.v23_11;
 
 import com.google.common.collect.ImmutableSetMultimap;
@@ -42,7 +47,7 @@ public class TestStatsReceiver implements StatsReceiverProxy {
           return counters.entrySet().stream()
               .collect(
                   ImmutableSetMultimap.toImmutableSetMultimap(
-                      k -> OtelStatsReceiver.nameConversion(k.getKey()), Map.Entry::getValue));
+                      k -> Helpers.nameConversion(k.getKey()), Map.Entry::getValue));
         }
 
         @Override
@@ -50,7 +55,7 @@ public class TestStatsReceiver implements StatsReceiverProxy {
           return stats.entrySet().stream()
               .collect(
                   ImmutableSetMultimap.toImmutableSetMultimap(
-                      k -> OtelStatsReceiver.nameConversion(k.getKey()), Map.Entry::getValue));
+                      k -> Helpers.nameConversion(k.getKey()), Map.Entry::getValue));
         }
 
         @Override
@@ -58,7 +63,7 @@ public class TestStatsReceiver implements StatsReceiverProxy {
           return gauges.entrySet().stream()
               .collect(
                   ImmutableSetMultimap.toImmutableSetMultimap(
-                      k -> OtelStatsReceiver.nameConversion(k.getKey()), Map.Entry::getValue));
+                      k -> Helpers.nameConversion(k.getKey()), Map.Entry::getValue));
         }
 
         @Override
