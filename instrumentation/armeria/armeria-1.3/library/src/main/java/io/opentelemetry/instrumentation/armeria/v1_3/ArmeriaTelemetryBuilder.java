@@ -44,8 +44,7 @@ public final class ArmeriaTelemetryBuilder {
   }
 
   /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
+   * Sets the status extractor for both client and server spans.
    *
    * @deprecated Use {@link #setClientStatusExtractor(Function)} or {@link
    *     #setServerStatusExtractor(Function)} instead.
@@ -62,24 +61,26 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
+  /** Sets the status extractor for client spans. */
   @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
-      setClientStatusExtractor(
-          Function<
-                  SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>,
-                  ? extends SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>>
-              statusExtractor) {
-    return clientBuilder.setStatusExtractor(statusExtractor);
+  public ArmeriaTelemetryBuilder setClientStatusExtractor(
+      Function<
+              SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>,
+              ? extends SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>>
+          statusExtractor) {
+    clientBuilder.setStatusExtractor(statusExtractor);
+    return this;
   }
 
+  /** Sets the status extractor for server spans. */
   @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
-      setServerStatusExtractor(
-          Function<
-                  SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>,
-                  ? extends SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>>
-              statusExtractor) {
-    return serverBuilder.setStatusExtractor(statusExtractor);
+  public ArmeriaTelemetryBuilder setServerStatusExtractor(
+      Function<
+              SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>,
+              ? extends SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>>
+          statusExtractor) {
+    serverBuilder.setStatusExtractor(statusExtractor);
+    return this;
   }
 
   /**
