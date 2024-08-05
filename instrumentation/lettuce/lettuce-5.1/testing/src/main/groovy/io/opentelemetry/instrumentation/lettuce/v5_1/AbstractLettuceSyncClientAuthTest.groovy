@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisCommandExecutionException
-import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
@@ -77,7 +76,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
               "$SemanticAttributes.DB_SYSTEM" "redis"
               "$SemanticAttributes.DB_STATEMENT" "CLIENT SETINFO lib-name Lettuce"
             }
-            errorEvent(RedisCommandExecutionException.class, "NOAUTH Authentication required.")
+            errorEvent(RedisCommandExecutionException, "NOAUTH Authentication required.")
           }
         }
         trace(1, 1) {
@@ -92,7 +91,7 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
               "$SemanticAttributes.DB_SYSTEM" "redis"
               "$SemanticAttributes.DB_STATEMENT" { it.startsWith("CLIENT SETINFO lib-ver") }
             }
-            errorEvent(RedisCommandExecutionException.class, "NOAUTH Authentication required.")
+            errorEvent(RedisCommandExecutionException, "NOAUTH Authentication required.")
           }
         }
       }
