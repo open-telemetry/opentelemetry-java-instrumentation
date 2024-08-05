@@ -70,10 +70,7 @@ enum ArmeriaHttpServerAttributesGetter
   @Override
   @Nullable
   public String getHttpRoute(ServiceRequestContext ctx) {
-    if (ctx instanceof ServiceRequestContext) {
-      return ctx.config().route().patternString();
-    }
-    return null;
+    return ctx.config().route().patternString();
   }
 
   @Override

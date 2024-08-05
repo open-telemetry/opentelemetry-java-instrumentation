@@ -49,6 +49,7 @@ public final class ArmeriaTelemetryBuilder {
    * @deprecated Use {@link #setClientStatusExtractor(Function)} or {@link
    *     #setServerStatusExtractor(Function)} instead.
    */
+  @Deprecated
   @SuppressWarnings({"unchecked", "rawtypes"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setStatusExtractor(
@@ -90,6 +91,7 @@ public final class ArmeriaTelemetryBuilder {
    * @deprecated Use {@link #addClientAttributeExtractor(AttributesExtractor)} or {@link
    *     #addServerAttributeExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
