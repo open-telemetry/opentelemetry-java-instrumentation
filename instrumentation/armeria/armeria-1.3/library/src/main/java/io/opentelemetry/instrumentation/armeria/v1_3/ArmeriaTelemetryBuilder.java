@@ -43,6 +43,13 @@ public final class ArmeriaTelemetryBuilder {
     serverBuilder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
   }
 
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items.
+   *
+   * @deprecated Use {@link #setClientStatusExtractor(Function)} or {@link
+   *     #setServerStatusExtractor(Function)} instead.
+   */
   @SuppressWarnings({"unchecked", "rawtypes"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setStatusExtractor(
@@ -55,9 +62,32 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
+      setClientStatusExtractor(
+          Function<
+                  SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>,
+                  ? extends SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>>
+              statusExtractor) {
+    return clientBuilder.setStatusExtractor(statusExtractor);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
+      setServerStatusExtractor(
+          Function<
+                  SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>,
+                  ? extends SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>>
+              statusExtractor) {
+    return serverBuilder.setStatusExtractor(statusExtractor);
+  }
+
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   *
+   * @deprecated Use {@link #addClientAttributeExtractor(AttributesExtractor)} or {@link
+   *     #addServerAttributeExtractor(AttributesExtractor)} instead.
    */
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
