@@ -36,6 +36,8 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
     autoConfigurationCustomizer.addTracerProviderCustomizer(
         (tracerProvider, config) -> {
+          // span processor is responsible for exporting spans, not adding it disables exporting of
+          // the spans
           if (config.getBoolean("testing.exporter.enabled", true)) {
             return tracerProvider.addSpanProcessor(spanProcessor);
           }
@@ -44,6 +46,8 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
 
     autoConfigurationCustomizer.addMeterProviderCustomizer(
         (meterProvider, config) -> {
+          // metric reader is responsible for exporting metrics, not adding it disables exporting of
+          // the metrics
           if (config.getBoolean("testing.exporter.enabled", true)) {
             return meterProvider.registerMetricReader(metricReader);
           }
@@ -52,6 +56,8 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
 
     autoConfigurationCustomizer.addLoggerProviderCustomizer(
         (logProvider, config) -> {
+          // log record processor is responsible for exporting logs, not adding it disables
+          // exporting of the logs
           if (config.getBoolean("testing.exporter.enabled", true)) {
             return logProvider.addLogRecordProcessor(
                 SimpleLogRecordProcessor.create(AgentTestingExporterFactory.logExporter));
