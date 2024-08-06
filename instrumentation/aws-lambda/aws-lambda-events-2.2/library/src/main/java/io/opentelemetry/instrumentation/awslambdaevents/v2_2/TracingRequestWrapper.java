@@ -71,7 +71,7 @@ public class TracingRequestWrapper extends TracingRequestStreamWrapper {
 
   @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
   // Used for testing
-  <I, O> O handleRequest(I input, Context context) throws IOException {
+  <INPUT, OUTPUT> OUTPUT handleRequest(INPUT input, Context context) throws IOException {
     byte[] inputJsonData = SerializationUtil.toJsonData(input);
     ByteArrayInputStream inputStream = new ByteArrayInputStream(inputJsonData);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -79,7 +79,7 @@ public class TracingRequestWrapper extends TracingRequestStreamWrapper {
     super.handleRequest(inputStream, outputStream, context);
 
     byte[] outputJsonData = outputStream.toByteArray();
-    return (O)
+    return (OUTPUT)
         SerializationUtil.fromJson(
             new ByteArrayInputStream(outputJsonData),
             wrappedLambda.getRequestTargetMethod().getReturnType());
