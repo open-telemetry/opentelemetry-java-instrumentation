@@ -1,7 +1,7 @@
 
 # javaagent
 ## Dependency License Report
-_2024-07-19 10:32:38 CEST_
+
 ## Apache License, Version 2.0
 
 **1** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
