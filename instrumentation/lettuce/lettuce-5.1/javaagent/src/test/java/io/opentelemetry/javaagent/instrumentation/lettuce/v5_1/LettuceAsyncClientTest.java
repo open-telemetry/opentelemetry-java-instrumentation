@@ -24,4 +24,9 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   protected RedisClient createClient(String uri) {
     return RedisClient.create(uri);
   }
+
+  @Override
+  protected boolean connectHasSpans() {
+    return Boolean.getBoolean("testLatestDeps");
+  }
 }
