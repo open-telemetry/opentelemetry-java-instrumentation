@@ -20,6 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.annotation.AnnotationDescription;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.utility.JavaConstant;
 
 /**
@@ -131,7 +133,12 @@ public class IndyBootstrap {
         case BOOTSTRAP_KIND_ADVICE:
           // See the getAdviceBootstrapArguments method for the argument definitions
           return bootstrapAdvice(
-              lookup, adviceMethodName, adviceMethodType, (String) args[1], (String) args[2]);
+              lookup,
+              adviceMethodName,
+              adviceMethodType,
+              (String) args[1],
+              (String) args[2],
+              (String) args[3]);
         case BOOTSTRAP_KIND_PROXY:
           // See getProxyFactory for the argument definitions
           return bootstrapProxyMethod(
@@ -153,8 +160,9 @@ public class IndyBootstrap {
   private static ConstantCallSite bootstrapAdvice(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
-      MethodType adviceMethodType,
+      MethodType invokedynamicMethodType,
       String moduleClassName,
+      String adviceMethodDescriptor,
       String adviceClassName)
       throws NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
     CallDepth callDepth = CallDepth.forClass(IndyBootstrap.class);
@@ -177,10 +185,14 @@ public class IndyBootstrap {
       // Advices are not inlined. They are loaded as normal classes by the
       // InstrumentationModuleClassloader and invoked via a method call from the instrumented method
       Class<?> adviceClass = instrumentationClassloader.loadClass(adviceClassName);
+      MethodType actualAdviceMethodType =
+          MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassloader);
+
       MethodHandle methodHandle =
           instrumentationClassloader
               .getLookup()
-              .findStatic(adviceClass, adviceMethodName, adviceMethodType);
+              .findStatic(adviceClass, adviceMethodName, actualAdviceMethodType)
+              .asType(invokedynamicMethodType);
       return new ConstantCallSite(methodHandle);
     } finally {
       callDepth.decrementAndGet();
@@ -195,7 +207,17 @@ public class IndyBootstrap {
             Arrays.asList(
                 JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_ADVICE),
                 JavaConstant.Simple.ofLoaded(moduleName),
+                JavaConstant.Simple.ofLoaded(getOriginalSignature(adviceMethod)),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
+  }
+
+  private static String getOriginalSignature(MethodDescription.InDefinedShape adviceMethod) {
+    for (AnnotationDescription an : adviceMethod.getDeclaredAnnotations()) {
+      if (OriginalDescriptor.class.getName().equals(an.getAnnotationType().getName())) {
+        return (String) an.getValue("value").resolve();
+      }
+    }
+    throw new IllegalStateException("OriginalSignature annotation is not present!");
   }
 
   private static ConstantCallSite bootstrapProxyMethod(

@@ -60,6 +60,10 @@ public class IndyInstrumentationTest {
     return null;
   }
 
+  private Object instrumentWithErasedTypes() {
+    return "replace_me";
+  }
+
   @AfterEach
   public void reset() {
     privateField = null;
@@ -110,6 +114,12 @@ public class IndyInstrumentationTest {
   @Test
   void testThrowExceptionIntoUserCode() {
     assertThatThrownBy(this::exceptionPlease).isInstanceOf(RuntimeException.class);
+  }
+
+  @Test
+  void testAdviceSignatureReferenceInternalHelper() {
+    Object result = instrumentWithErasedTypes();
+    assertThat(result.getClass().getName()).contains("LocalHelper");
   }
 
   @Test

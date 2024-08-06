@@ -92,7 +92,7 @@ jobs:
           then
             echo "Licenses are up-to-date."
           else
-            echo "Licenses are not up-to-date, please run './gradlew generateLicenseReport' locally and commit."
+            echo "Licenses are not up-to-date, please run './gradlew generateLicenseReport --no-build-cache' locally and commit."
             echo
             echo "$(git diff --cached --stat licenses)"
             echo
@@ -171,7 +171,7 @@ jobs:
           fi
 
       - name: Upload agent jar
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: opentelemetry-javaagent.jar
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
@@ -182,7 +182,7 @@ jobs:
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
 
-      - uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+      - uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM.zip
@@ -291,7 +291,7 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
@@ -299,7 +299,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
@@ -368,7 +368,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           # we expect crash dumps either in root director or in smoke-tests
