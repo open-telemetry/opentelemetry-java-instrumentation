@@ -222,7 +222,7 @@ public class SerializationUtilTest {
         .isEqualTo("Hello, this is a test.");
   }
 
-  private static void assertSQSEvent(SQSEvent event) {
+  private static void assertSqsEvent(SQSEvent event) {
     assertThat(event).isNotNull();
     assertThat(event.getRecords()).isNotNull();
     assertThat(event.getRecords().size()).isEqualTo(2);
@@ -248,7 +248,7 @@ public class SerializationUtilTest {
     assertThat(record.getS3().getObject().getKey()).isEqualTo("b21b84d653bb07b05b1e6b33684dc11b");
   }
 
-  private static void assertSNSEvent(SNSEvent event) {
+  private static void assertSnsEvent(SNSEvent event) {
     assertThat(event).isNotNull();
     assertThat(event.getRecords()).isNotNull();
     assertThat(event.getRecords().size()).isEqualTo(1);
@@ -266,7 +266,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  void scheduledEventDeserializedFromStringJSON() {
+  void scheduledEventDeserializedFromStringJson() {
     String eventBody = events.get(ScheduledEvent.class);
     ScheduledEvent event = SerializationUtil.fromJson(eventBody, ScheduledEvent.class);
 
@@ -274,7 +274,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  void scheduledEventDeserializedFromInputStreamJSON() {
+  void scheduledEventDeserializedFromInputStreamJson() {
     String eventBody = events.get(ScheduledEvent.class);
     ScheduledEvent event =
         SerializationUtil.fromJson(
@@ -285,7 +285,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  void kinesisEventDeserializedFromStringJSON() {
+  void kinesisEventDeserializedFromStringJson() {
     String eventBody = events.get(KinesisEvent.class);
     KinesisEvent event = SerializationUtil.fromJson(eventBody, KinesisEvent.class);
 
@@ -293,7 +293,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  void kinesisEventDeserializedFromInputStreamJSON() {
+  void kinesisEventDeserializedFromInputStreamJson() {
     String eventBody = events.get(KinesisEvent.class);
     KinesisEvent event =
         SerializationUtil.fromJson(
@@ -304,25 +304,25 @@ public class SerializationUtilTest {
   }
 
   @Test
-  void sqsEventDeserializedFromStringJSON() {
+  void sqsEventDeserializedFromStringJson() {
     String eventBody = events.get(SQSEvent.class);
     SQSEvent event = SerializationUtil.fromJson(eventBody, SQSEvent.class);
 
-    assertSQSEvent(event);
+    assertSqsEvent(event);
   }
 
   @Test
-  void sqsEventDeserializedFromInputStreamJSON() {
+  void sqsEventDeserializedFromInputStreamJson() {
     String eventBody = events.get(SQSEvent.class);
     SQSEvent event =
         SerializationUtil.fromJson(
             new ByteArrayInputStream(eventBody.getBytes(StandardCharsets.UTF_8)), SQSEvent.class);
 
-    assertSQSEvent(event);
+    assertSqsEvent(event);
   }
 
   @Test
-  void s3EventDeserializedFromStringJSON() {
+  void s3EventDeserializedFromStringJson() {
     String eventBody = events.get(S3Event.class);
     S3Event event = SerializationUtil.fromJson(eventBody, S3Event.class);
 
@@ -330,7 +330,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  void s3EventDeserializedFromInputStreamJSON() {
+  void s3EventDeserializedFromInputStreamJson() {
     String eventBody = events.get(S3Event.class);
     S3Event event =
         SerializationUtil.fromJson(
@@ -340,20 +340,20 @@ public class SerializationUtilTest {
   }
 
   @Test
-  void snsEventDeserializedFromStringJSON() {
+  void snsEventDeserializedFromStringJson() {
     String eventBody = events.get(SNSEvent.class);
     SNSEvent event = SerializationUtil.fromJson(eventBody, SNSEvent.class);
 
-    assertSNSEvent(event);
+    assertSnsEvent(event);
   }
 
   @Test
-  void snsEventDeserializedFromInputStreamJSON() {
+  void snsEventDeserializedFromInputStreamJson() {
     String eventBody = events.get(SNSEvent.class);
     SNSEvent event =
         SerializationUtil.fromJson(
             new ByteArrayInputStream(eventBody.getBytes(StandardCharsets.UTF_8)), SNSEvent.class);
 
-    assertSNSEvent(event);
+    assertSnsEvent(event);
   }
 }
