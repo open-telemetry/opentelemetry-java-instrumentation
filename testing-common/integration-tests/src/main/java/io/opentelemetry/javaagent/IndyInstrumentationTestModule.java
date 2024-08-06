@@ -91,7 +91,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignFieldViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToFields(@ToField(value = "privateField", typing = DYNAMIC))
+      @Advice.AssignReturned.ToFields(@ToField(value = "privateField"))
       public static String onEnter(@Advice.Argument(0) String toAssign) {
         return toAssign;
       }
@@ -111,7 +111,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignArgumentViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = DYNAMIC))
+      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0))
       public static String onEnter(@Advice.Argument(1) String toAssign) {
         return toAssign;
       }
@@ -131,7 +131,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignReturnViaReturnAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
+      @Advice.AssignReturned.ToReturned
       public static String onExit(@Advice.Argument(0) String toAssign) {
         return toAssign;
       }
@@ -151,7 +151,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class GetHelperClassAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
+      @Advice.AssignReturned.ToReturned
       public static Class<?> onExit(@Advice.Argument(0) boolean localHelper) {
         if (localHelper) {
           return LocalHelper.class;
@@ -176,7 +176,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
         throw new RuntimeException("This exception should be suppressed");
       }
 
-      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
+      @Advice.AssignReturned.ToReturned
       @Advice.OnMethodExit(
           suppress = Throwable.class,
           onThrowable = Throwable.class,
@@ -193,7 +193,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
         return new LocalHelper();
       }
 
-      @Advice.AssignReturned.ToReturned(typing = DYNAMIC)
+      @Advice.AssignReturned.ToReturned
       @Advice.OnMethodExit(
           suppress = Throwable.class,
           onThrowable = Throwable.class,
