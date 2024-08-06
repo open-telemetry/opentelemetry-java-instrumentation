@@ -34,9 +34,9 @@ public final class Constants {
   public static final String END_OF_MINOR_GC = "end of minor GC";
   public static final String END_OF_MAJOR_GC = "end of major GC";
 
-  public static final String METRIC_NAME_NETWORK_BYTES = "process.runtime.jvm.network.io";
+  public static final String METRIC_NAME_NETWORK_BYTES = "jvm.network.io";
   public static final String METRIC_DESCRIPTION_NETWORK_BYTES = "Network read/write bytes.";
-  public static final String METRIC_NAME_NETWORK_DURATION = "process.runtime.jvm.network.time";
+  public static final String METRIC_NAME_NETWORK_DURATION = "jvm.network.time";
   public static final String METRIC_DESCRIPTION_NETWORK_DURATION = "Network read/write duration.";
   public static final String METRIC_NAME_COMMITTED = "jvm.memory.committed";
   public static final String METRIC_DESCRIPTION_COMMITTED = "Measure of memory committed.";
@@ -45,9 +45,9 @@ public final class Constants {
   public static final String METRIC_NAME_MEMORY_AFTER = "jvm.memory.used_after_last_gc";
   public static final String METRIC_DESCRIPTION_MEMORY_AFTER =
       "Measure of memory used, as measured after the most recent garbage collection event on this pool.";
-  public static final String METRIC_NAME_MEMORY_ALLOCATION =
-      "process.runtime.jvm.memory.allocation";
-  public static final String METRIC_DESCRIPTION_MEMORY_ALLOCATION = "Allocation";
+  public static final String METRIC_NAME_MEMORY_ALLOCATION = "jvm.memory.allocation";
+  public static final String METRIC_DESCRIPTION_MEMORY_ALLOCATION =
+      "Measure of memory allocations.";
   public static final String METRIC_NAME_MEMORY_INIT = "jvm.memory.init";
   public static final String METRIC_DESCRIPTION_MEMORY_INIT =
       "Measure of initial memory requested.";
