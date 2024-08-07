@@ -98,6 +98,10 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
     return true
   }
 
+  boolean connectHasSpans() {
+    false
+  }
+
   def <T> T runWithCallbackSpan(String spanName, Closure callback) {
     if (testCallback()) {
       return runWithSpan(spanName, callback)
@@ -117,6 +121,10 @@ abstract class AbstractLettuceAsyncClientTest extends InstrumentationSpecificati
 
     then:
     connection != null
+    if (connectHasSpans()) {
+      // ignore CLIENT SETINFO traces
+      ignoreTracesAndClear(2)
+    }
     // Lettuce tracing does not trace connect
     assertTraces(0) {}
 
