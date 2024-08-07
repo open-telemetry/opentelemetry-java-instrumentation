@@ -229,6 +229,7 @@ class AdviceTransformer {
     return result;
   }
 
+  static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED =
       Type.getType(Advice.AssignReturned.ToReturned.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS =
@@ -260,7 +261,7 @@ class AdviceTransformer {
     return hasAnnotation(source, ADVICE_ON_METHOD_ENTER);
   }
 
-  private static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
+  static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
 
   private static boolean isExitAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_EXIT);
@@ -279,7 +280,7 @@ class AdviceTransformer {
     return null;
   }
 
-  private static boolean hasAnnotation(MethodNode source, Type type) {
+  static boolean hasAnnotation(MethodNode source, Type type) {
     return getAnnotationNode(source, type) != null;
   }
 

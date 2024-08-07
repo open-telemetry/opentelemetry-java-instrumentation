@@ -9,8 +9,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.kafka.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -19,7 +19,7 @@ public final class KafkaMetricsUtil {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
   private static final boolean METRICS_ENABLED =
       DeprecatedConfigProperties.getBoolean(
-          InstrumentationConfig.get(),
+          AgentInstrumentationConfig.get(),
           "otel.instrumentation.kafka.metric-reporter.enabled",
           "otel.instrumentation.kafka-clients-metrics.enabled",
           true);

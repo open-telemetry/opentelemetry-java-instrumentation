@@ -59,12 +59,12 @@ dependencies {
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.github.johnrengelman:shadow:8.1.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.17.5")
-  implementation("org.owasp:dependency-check-gradle:9.2.0")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.17.6")
+  implementation("org.owasp:dependency-check-gradle:10.0.3")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.17")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.18")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.0.1")
@@ -74,5 +74,5 @@ dependencies {
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testImplementation("org.assertj:assertj-core:3.26.0")
+  testImplementation("org.assertj:assertj-core:3.26.3")
 }

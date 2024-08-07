@@ -15,7 +15,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
@@ -55,9 +55,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) String value) {
-      if (CommonConfig.get().getTraceIdKey().equals(key)
-          || CommonConfig.get().getSpanIdKey().equals(key)
-          || CommonConfig.get().getTraceFlagsKey().equals(key)) {
+      if (AgentCommonConfig.get().getTraceIdKey().equals(key)
+          || AgentCommonConfig.get().getSpanIdKey().equals(key)
+          || AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -72,13 +72,13 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        if (CommonConfig.get().getTraceIdKey().equals(key)) {
+        if (AgentCommonConfig.get().getTraceIdKey().equals(key)) {
           value = spanContext.getTraceId();
         }
-        if (CommonConfig.get().getSpanIdKey().equals(key)) {
+        if (AgentCommonConfig.get().getSpanIdKey().equals(key)) {
           value = spanContext.getSpanId();
         }
-        if (CommonConfig.get().getTraceFlagsKey().equals(key)) {
+        if (AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
           value = spanContext.getTraceFlags().asHex();
         }
       }
@@ -93,9 +93,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Return(readOnly = false) Map<String, String> value) {
 
-      if (value.containsKey(CommonConfig.get().getTraceIdKey())
-          && value.containsKey(CommonConfig.get().getSpanIdKey())
-          && value.containsKey(CommonConfig.get().getTraceFlagsKey())) {
+      if (value.containsKey(AgentCommonConfig.get().getTraceIdKey())
+          && value.containsKey(AgentCommonConfig.get().getSpanIdKey())
+          && value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
         return;
       }
 
@@ -109,16 +109,16 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!value.containsKey(CommonConfig.get().getTraceIdKey())) {
-        value.put(CommonConfig.get().getTraceIdKey(), spanContext.getTraceId());
+      if (!value.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
+        value.put(AgentCommonConfig.get().getTraceIdKey(), spanContext.getTraceId());
       }
 
-      if (!value.containsKey(CommonConfig.get().getSpanIdKey())) {
-        value.put(CommonConfig.get().getSpanIdKey(), spanContext.getSpanId());
+      if (!value.containsKey(AgentCommonConfig.get().getSpanIdKey())) {
+        value.put(AgentCommonConfig.get().getSpanIdKey(), spanContext.getSpanId());
       }
 
-      if (!value.containsKey(CommonConfig.get().getTraceFlagsKey())) {
-        value.put(CommonConfig.get().getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
+      if (!value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
+        value.put(AgentCommonConfig.get().getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
       }
     }
   }

@@ -25,7 +25,8 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // does not match tomcat 10.0+
-    return hasClassesNamed("javax.servlet.http.HttpServletRequest");
+    return hasClassesNamed(
+        "javax.servlet.http.HttpServletRequest", "org.apache.catalina.loader.Constants");
   }
 
   @Override
