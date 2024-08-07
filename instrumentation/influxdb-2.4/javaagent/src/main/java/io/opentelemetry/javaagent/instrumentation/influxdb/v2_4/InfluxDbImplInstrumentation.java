@@ -124,7 +124,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbModifyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object onEnter(
+    public static InfluxDbScope onEnter(
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) Object arg0,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
