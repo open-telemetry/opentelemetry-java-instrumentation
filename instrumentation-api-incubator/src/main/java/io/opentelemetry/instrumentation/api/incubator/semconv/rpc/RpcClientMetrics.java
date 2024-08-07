@@ -74,7 +74,7 @@ public final class RpcClientMetrics implements OperationListener {
     }
     clientDurationHistogram.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_MS,
-        state.startAttributes().toBuilder().putAll(endAttributes).build(),
+            endAttributes,
         context);
   }
 

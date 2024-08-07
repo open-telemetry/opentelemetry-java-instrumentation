@@ -29,9 +29,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, RPC_SYSTEM, getter.getSystem(request));
-    internalSet(attributes, RPC_SERVICE, getter.getService(request));
-    internalSet(attributes, RPC_METHOD, getter.getMethod(request));
+
   }
 
   @Override
@@ -42,5 +40,8 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     // No response attributes
+    internalSet(attributes, RPC_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, RPC_SERVICE, getter.getService(request));
+    internalSet(attributes, RPC_METHOD, getter.getMethod(request));
   }
 }
