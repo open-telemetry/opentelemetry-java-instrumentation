@@ -11,11 +11,13 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ContextPropagationOperator34InstrumentationModule extends InstrumentationModule {
+public class ContextPropagationOperator34InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public ContextPropagationOperator34InstrumentationModule() {
     super("reactor", "reactor-3.4", "reactor-context-propagation-operator");
@@ -33,8 +35,8 @@ public class ContextPropagationOperator34InstrumentationModule extends Instrumen
   }
 
   @Override
-  public boolean isIndyModule() {
-    // Requires Otel-API bride
-    return false;
+  public String getModuleGroup() {
+    // This module uses the api context bridge helpers, therefore must be in the same classloader
+    return "opentelemetry-api-bridge";
   }
 }

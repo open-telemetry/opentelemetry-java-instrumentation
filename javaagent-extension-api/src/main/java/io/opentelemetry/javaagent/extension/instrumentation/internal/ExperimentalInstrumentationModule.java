@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -47,5 +48,17 @@ public interface ExperimentalInstrumentationModule {
    */
   default String getModuleGroup() {
     return getClass().getName();
+  }
+
+  /**
+   * Some instrumentations need to invoke classes which are present both in the agent classloader
+   * and the instrumented application classloader. By default, the classloader of the
+   * instrumentation would link those against the class provided by the agent. This setting allows
+   * to hide packages, so that matching classes are instead used from the application classloader.
+   *
+   * @return the list of packages (without trailing dots)
+   */
+  default List<String> agentPackagesToHide() {
+    return Collections.emptyList();
   }
 }
