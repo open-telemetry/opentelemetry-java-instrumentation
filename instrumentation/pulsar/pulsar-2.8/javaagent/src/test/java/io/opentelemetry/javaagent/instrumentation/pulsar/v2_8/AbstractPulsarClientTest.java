@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.Consumer;
@@ -141,12 +140,10 @@ abstract class AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    AtomicInteger batchSize = new AtomicInteger();
     testing.runWithSpan(
         "receive-parent",
         () -> {
           Messages<String> receivedMsg = consumer.batchReceive();
-          batchSize.set(receivedMsg.size());
           consumer.acknowledge(receivedMsg);
         });
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
@@ -220,7 +217,7 @@ abstract class AbstractPulsarClientTest {
                           sum.hasPointsSatisfying(
                               point -> {
                                 point
-                                    .hasValue(batchSize.get())
+                                    .hasValue(1)
                                     .hasAttributesSatisfying(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
@@ -248,7 +245,6 @@ abstract class AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    AtomicInteger batchSize = new AtomicInteger();
     CompletableFuture<Messages<String>> result =
         testing.runWithSpan(
             "receive-parent",
@@ -258,7 +254,6 @@ abstract class AbstractPulsarClientTest {
                     .whenComplete(
                         (messages, throwable) -> {
                           if (messages != null) {
-                            batchSize.set(messages.size());
                             testing.runWithSpan(
                                 "callback", () -> acknowledgeMessages(consumer, messages));
                           }
@@ -340,7 +335,7 @@ abstract class AbstractPulsarClientTest {
                           sum.hasPointsSatisfying(
                               point -> {
                                 point
-                                    .hasValue(batchSize.get())
+                                    .hasValue(1)
                                     .hasAttributesSatisfying(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
@@ -361,9 +356,6 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_OPERATION, "publish"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                equalTo(
-                    MESSAGING_DESTINATION_PARTITION_ID,
-                    String.valueOf(TopicName.getPartitionIndex(destination))),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGE_TYPE, "normal")));
 
@@ -372,6 +364,10 @@ abstract class AbstractPulsarClientTest {
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.test_message_header"),
               Collections.singletonList("test")));
+    }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
+    if (partitionIndex != -1) {
+      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
   }
@@ -397,9 +393,6 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_OPERATION, "receive"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                equalTo(
-                    MESSAGING_DESTINATION_PARTITION_ID,
-                    String.valueOf(TopicName.getPartitionIndex(destination))),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
@@ -409,6 +402,10 @@ abstract class AbstractPulsarClientTest {
     }
     if (isBatch) {
       assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
+    }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
+    if (partitionIndex != -1) {
+      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
   }
@@ -422,15 +419,16 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_OPERATION, "process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                equalTo(
-                    MESSAGING_DESTINATION_PARTITION_ID,
-                    String.valueOf(TopicName.getPartitionIndex(destination))),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.test_message_header"),
               Collections.singletonList("test")));
+    }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
+    if (partitionIndex != -1) {
+      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
   }

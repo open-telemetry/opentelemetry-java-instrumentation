@@ -82,9 +82,14 @@ enum PulsarBatchMessagingAttributesGetter
     return (long) request.getMessages().size();
   }
 
+  @Nullable
   @Override
-  public String getDestinationPartitionId(PulsarBatchRequest request, @Nullable Void unused) {
-    return String.valueOf(TopicName.getPartitionIndex(request.getDestination()));
+  public String getDestinationPartitionId(PulsarBatchRequest request) {
+    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
+    if (partitionIndex == -1) {
+      return null;
+    }
+    return String.valueOf(partitionIndex);
   }
 
   @Override

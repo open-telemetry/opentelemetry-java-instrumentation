@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.p
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
+import org.apache.pulsar.common.naming.TopicName;
 
 public final class PulsarBatchRequest extends BasePulsarRequest {
   private final Messages<?> messages;
@@ -33,7 +34,7 @@ public final class PulsarBatchRequest extends BasePulsarRequest {
         // this is a partitioned topic
         // persistent://public/default/test-partition-0 persistent://public/default/test-partition-1
         // return persistent://public/default/test
-        return topicName.substring(0, topicName.lastIndexOf("-partition-"));
+        return TopicName.get(topicName).getPartitionedTopicName();
       }
     }
     return topicName;

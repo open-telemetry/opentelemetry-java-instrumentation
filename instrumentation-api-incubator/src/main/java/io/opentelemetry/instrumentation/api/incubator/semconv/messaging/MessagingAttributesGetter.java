@@ -62,7 +62,8 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   Long getBatchMessageCount(REQUEST request, @Nullable RESPONSE response);
 
-  default String getDestinationPartitionId(REQUEST request, @Nullable RESPONSE response) {
+  @Nullable
+  default String getDestinationPartitionId(REQUEST request) {
     return null;
   }
 
