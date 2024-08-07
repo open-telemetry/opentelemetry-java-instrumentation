@@ -255,8 +255,6 @@ class AdviceTransformer {
     return false;
   }
 
-  private static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
-
   private static boolean isEnterAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_ENTER);
   }
