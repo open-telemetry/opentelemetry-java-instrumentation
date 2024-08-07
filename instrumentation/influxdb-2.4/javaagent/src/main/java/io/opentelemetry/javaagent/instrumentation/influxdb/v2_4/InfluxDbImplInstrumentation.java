@@ -114,9 +114,9 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Object extraObject = enterArgs[enterArgs.length - 1];
-
-      InfluxDbScope.end(extraObject, instrumenter(), throwable);
+      if (enterArgs != null && enterArgs.length >= 2 && enterArgs[1] instanceof InfluxDbScope) {
+        ((InfluxDbScope) enterArgs[1]).end(throwable);
+      }
     }
   }
 
@@ -167,12 +167,15 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Thrown Throwable throwable, @Advice.Enter Object scope) {
+    public static void onExit(
+        @Advice.Thrown Throwable throwable, @Advice.Enter InfluxDbScope scope) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-      InfluxDbScope.end(scope, instrumenter(), throwable);
+      if (scope != null) {
+        scope.end(throwable);
+      }
     }
   }
 }

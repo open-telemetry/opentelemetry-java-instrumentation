@@ -9,6 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.instrumenter;
+
 /** Container used to carry state between enter and exit advices */
 public class InfluxDbScope {
   private final InfluxDbRequest influxDbRequest;
@@ -29,19 +31,13 @@ public class InfluxDbScope {
     return new InfluxDbScope(influxDbRequest, context, context.makeCurrent());
   }
 
-  public static void end(
-      Object scope, Instrumenter<InfluxDbRequest, Void> instrumenter, Throwable throwable) {
-    if (!(scope instanceof InfluxDbScope)) {
-      return;
-    }
-    InfluxDbScope influxDbScope = (InfluxDbScope) scope;
-
-    if (influxDbScope.scope == null) {
+  public void end(Throwable throwable) {
+    if (scope == null) {
       return;
     }
 
-    influxDbScope.scope.close();
+    scope.close();
 
-    instrumenter.end(influxDbScope.context, influxDbScope.influxDbRequest, null, throwable);
+    instrumenter().end(context, influxDbRequest, null, throwable);
   }
 }
