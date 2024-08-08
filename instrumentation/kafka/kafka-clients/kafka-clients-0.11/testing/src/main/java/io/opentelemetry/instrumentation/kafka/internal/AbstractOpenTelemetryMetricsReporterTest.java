@@ -98,9 +98,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
   @AfterAll
   static void afterAll() {
-    kafka.stop();
     producer.close();
     consumer.close();
+    kafka.stop();
   }
 
   @AfterEach
