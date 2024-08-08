@@ -5,9 +5,8 @@ import java.time.format.DateTimeFormatter
 
 plugins {
   id("otel.java-conventions")
-
   id("com.bmuschko.docker-remote-api")
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
   id("com.google.cloud.tools.jib")
 }
 
