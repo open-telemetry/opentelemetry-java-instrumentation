@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -21,9 +23,15 @@ public final class CassandraSingletons {
   // could use RESPONSE "ResultSet" here, but using RESPONSE "ExecutionInfo" in cassandra-4.0
   // instrumentation (see comment over there for why), so also using here for consistency
   private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
+  private static final AttributeKey<String> DB_COLLECTION_NAME = AttributeKey.stringKey("db.collection.name");
 
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
+
+    AttributeKey<String> tableAttribute = DbIncubatingAttributes.DB_CASSANDRA_TABLE;
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      tableAttribute = DB_COLLECTION_NAME;
+    }
 
     INSTRUMENTER =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
@@ -32,7 +40,7 @@ public final class CassandraSingletons {
                 DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
-                    .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
+                    .setTableAttribute(tableAttribute)
                     .setStatementSanitizationEnabled(
                         AgentCommonConfig.get().isStatementSanitizationEnabled())
                     .build())

@@ -16,6 +16,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
@@ -34,6 +35,12 @@ class DbClientAttributesExtractorTest {
     @Override
     public String getName(Map<String, String> map) {
       return map.get("db.name");
+    }
+
+    @Nullable
+    @Override
+    public String getNamespace(Map<String, String> map) {
+      return map.get("db.namespace");
     }
 
     @Override

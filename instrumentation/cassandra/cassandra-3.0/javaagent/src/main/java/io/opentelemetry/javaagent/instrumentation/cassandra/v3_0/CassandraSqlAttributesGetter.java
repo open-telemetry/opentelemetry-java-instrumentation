@@ -28,6 +28,12 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return request.getSession().getLoggedKeyspace();
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(CassandraRequest request) {
+    return request.getSession().getLoggedKeyspace();
+  }
+
   @Override
   @Nullable
   public String getConnectionString(CassandraRequest request) {
