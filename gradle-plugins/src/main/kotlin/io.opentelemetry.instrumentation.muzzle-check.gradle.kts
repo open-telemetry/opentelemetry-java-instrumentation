@@ -28,8 +28,7 @@ import java.util.stream.StreamSupport
 
 plugins {
   `java-library`
-
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 // Select a random set of versions to test

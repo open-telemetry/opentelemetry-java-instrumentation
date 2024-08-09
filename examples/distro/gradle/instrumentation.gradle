@@ -1,5 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 apply plugin: 'io.opentelemetry.instrumentation.muzzle-generation'
 apply plugin: 'io.opentelemetry.instrumentation.muzzle-check'
 
