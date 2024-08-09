@@ -23,7 +23,8 @@ public final class CassandraSingletons {
   // could use RESPONSE "ResultSet" here, but using RESPONSE "ExecutionInfo" in cassandra-4.0
   // instrumentation (see comment over there for why), so also using here for consistency
   private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
-  private static final AttributeKey<String> DB_COLLECTION_NAME = AttributeKey.stringKey("db.collection.name");
+  private static final AttributeKey<String> DB_COLLECTION_NAME =
+      AttributeKey.stringKey("db.collection.name");
 
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();

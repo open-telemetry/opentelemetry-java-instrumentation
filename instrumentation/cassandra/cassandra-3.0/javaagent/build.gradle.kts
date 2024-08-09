@@ -48,9 +48,9 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
-   withType<Test>().configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    }
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
 
   check {
     dependsOn(testStableSemconv)
