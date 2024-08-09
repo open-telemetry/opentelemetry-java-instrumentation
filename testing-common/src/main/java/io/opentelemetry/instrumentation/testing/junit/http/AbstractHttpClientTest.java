@@ -1048,7 +1048,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
 
-  private int doRequest(String method, URI uri) throws Exception {
+  protected int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
   }
 
