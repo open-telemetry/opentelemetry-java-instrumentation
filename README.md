@@ -64,7 +64,7 @@ Download
 the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar).
 
 This package includes the instrumentation agent as well as
-instrumentations for all supported libraries and all available data exporters.
+instrumentation for all supported libraries and all available data exporters.
 The package provides a completely automatic, out-of-the-box experience.
 
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.
