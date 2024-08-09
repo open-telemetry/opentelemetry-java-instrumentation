@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -90,8 +89,7 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
           InfluxDbRequest.create(
               httpUrl.host(), httpUrl.port(), query.getDatabase(), null, query.getCommand());
 
-      Instrumenter<InfluxDbRequest, Void> instrumenter = instrumenter();
-      if (!instrumenter.shouldStart(parentContext, influxDbRequest)) {
+      if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return null;
       }
 
@@ -101,22 +99,18 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         newArguments[i] = InfluxDbObjetWrapper.wrap(arguments[i], parentContext);
       }
 
-      return new Object[] {
-        newArguments, InfluxDbScope.start(instrumenter, parentContext, influxDbRequest)
-      };
+      return new Object[] {newArguments, InfluxDbScope.start(parentContext, influxDbRequest)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter Object[] enterArgs) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth.decrementAndGet() > 0 || enterArgs == null) {
         return;
       }
 
-      if (enterArgs != null && enterArgs.length >= 2 && enterArgs[1] instanceof InfluxDbScope) {
-        ((InfluxDbScope) enterArgs[1]).end(throwable);
-      }
+      ((InfluxDbScope) enterArgs[1]).end(throwable);
     }
   }
 
@@ -158,24 +152,22 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
       InfluxDbRequest influxDbRequest =
           InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operation, null);
 
-      Instrumenter<InfluxDbRequest, Void> instrumenter = instrumenter();
-      if (!instrumenter.shouldStart(parentContext, influxDbRequest)) {
+      if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return null;
       }
 
-      return InfluxDbScope.start(instrumenter, parentContext, influxDbRequest);
+      return InfluxDbScope.start(parentContext, influxDbRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable, @Advice.Enter InfluxDbScope scope) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
-      if (scope != null) {
-        scope.end(throwable);
-      }
+
+      scope.end(throwable);
     }
   }
 }

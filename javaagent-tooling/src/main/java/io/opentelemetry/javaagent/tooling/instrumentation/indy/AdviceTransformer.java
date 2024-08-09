@@ -82,7 +82,7 @@ class AdviceTransformer {
                   applyAdviceDelegation(
                       context, this, classVisitor, exceptions.toArray(new String[0]));
                 } else {
-                  fullyInstrument(context, this, classVisitor);
+                  instrument(context, this, classVisitor);
                 }
               }
             };
@@ -585,9 +585,8 @@ class AdviceTransformer {
     return ga;
   }
 
-  private static void fullyInstrument(
+  private static void instrument(
       TransformationContext context, MethodNode methodNode, ClassVisitor classVisitor) {
-
     String originalDescriptor = methodNode.desc;
     String[] exceptionsArray = methodNode.exceptions.toArray(new String[0]);
 
@@ -651,13 +650,10 @@ class AdviceTransformer {
         adviceLocals = getLocals(methodNode);
       }
 
-      // this is the only transformation that does not change the return type of the advice
-      // method,
-      // thus it is also the only transformation that can be applied on top of the other
-      // transforms
+      // this is the only transformation that does not change the return type of the advice method,
+      // thus it is also the only transformation that can be applied on top of the other transforms
       if ((!adviceLocals.isEmpty() || enterArgument != null) && isExitAdvice) {
-        // Set type of arguments annotated with @Advice.Local to Object. These arguments are
-        // likely
+        // Set type of arguments annotated with @Advice.Local to Object. These arguments are likely
         // to be helper classes which currently breaks because the invokedynamic call in advised
         // class needs access to the parameter types of the advice method.
         Type[] newArgumentTypes = Type.getArgumentTypes(methodNode.desc);
