@@ -26,6 +26,7 @@ public final class AgentInitializer {
   @Nullable private static ClassLoader agentClassLoader = null;
   @Nullable private static AgentStarter agentStarter = null;
   private static boolean isSecurityManagerSupportEnabled = false;
+  private static boolean agentStarted = false;
 
   public static void initialize(Instrumentation inst, File javaagentFile, boolean fromPremain)
       throws Exception {
@@ -51,6 +52,7 @@ public final class AgentInitializer {
             agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
             if (!fromPremain || !delayAgentStart()) {
               agentStarter.start();
+              agentStarted = true;
             }
             return null;
           }
@@ -149,9 +151,15 @@ public final class AgentInitializer {
           @Override
           public Void run() {
             agentStarter.start();
+            agentStarted = true;
             return null;
           }
         });
+  }
+
+  @SuppressWarnings("unused")
+  public static boolean isAgentStarted() {
+    return agentStarted;
   }
 
   public static ClassLoader getExtensionsClassLoader() {
