@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -23,7 +24,6 @@ public final class CassandraSingletons {
 
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
-
     INSTRUMENTER =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(),
@@ -31,7 +31,9 @@ public final class CassandraSingletons {
                 DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
-                    .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
+                    .setTableAttribute(
+                        SemconvStability.getAttributeKey(
+                            DbIncubatingAttributes.DB_CASSANDRA_TABLE.getKey()))
                     .setStatementSanitizationEnabled(
                         AgentCommonConfig.get().isStatementSanitizationEnabled())
                     .build())

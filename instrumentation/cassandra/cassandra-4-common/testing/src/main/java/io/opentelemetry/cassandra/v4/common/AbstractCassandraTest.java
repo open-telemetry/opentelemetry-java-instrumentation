@@ -31,6 +31,7 @@ import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -110,9 +111,15 @@ public abstract class AbstractCassandraTest {
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
-                                equalTo(DB_NAME, parameter.keyspace),
-                                equalTo(DB_STATEMENT, parameter.expectedStatement),
-                                equalTo(DB_OPERATION, parameter.operation),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_NAME),
+                                    parameter.keyspace),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
+                                    parameter.expectedStatement),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
+                                    parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
                                 satisfies(
@@ -123,7 +130,9 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
                                 equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_CASSANDRA_TABLE, parameter.table))));
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_CASSANDRA_TABLE),
+                                    parameter.table))));
 
     session.close();
   }
@@ -164,9 +173,15 @@ public abstract class AbstractCassandraTest {
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
-                                equalTo(DB_NAME, parameter.keyspace),
-                                equalTo(DB_STATEMENT, parameter.expectedStatement),
-                                equalTo(DB_OPERATION, parameter.operation),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_NAME),
+                                    parameter.keyspace),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
+                                    parameter.expectedStatement),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
+                                    parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
                                 satisfies(
@@ -177,7 +192,9 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
                                 equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_CASSANDRA_TABLE, parameter.table)),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_CASSANDRA_TABLE),
+                                    parameter.table)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
