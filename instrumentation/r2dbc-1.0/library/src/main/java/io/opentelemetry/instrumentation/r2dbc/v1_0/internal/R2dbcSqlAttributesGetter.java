@@ -32,6 +32,12 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
     return request.getName();
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(DbExecution request) {
+    return request.getName();
+  }
+
   @Override
   @Nullable
   public String getConnectionString(DbExecution request) {
