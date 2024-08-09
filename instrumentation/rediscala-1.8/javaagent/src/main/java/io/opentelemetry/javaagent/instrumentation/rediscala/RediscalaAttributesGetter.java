@@ -30,6 +30,12 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(RedisCommand<?, ?> redisCommand) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getConnectionString(RedisCommand<?, ?> redisCommand) {

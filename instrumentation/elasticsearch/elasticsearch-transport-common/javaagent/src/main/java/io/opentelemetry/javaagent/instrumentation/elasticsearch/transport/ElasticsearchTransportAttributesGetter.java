@@ -29,6 +29,12 @@ final class ElasticsearchTransportAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(ElasticTransportRequest s) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getConnectionString(ElasticTransportRequest s) {

@@ -29,6 +29,12 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(OpenSearchRestRequest openSearchRestRequest) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getConnectionString(OpenSearchRestRequest request) {

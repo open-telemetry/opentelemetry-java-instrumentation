@@ -45,6 +45,12 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
 
   @Nullable
   @Override
+  public String getNamespace(InfluxDbRequest request) {
+    return getName(request);
+  }
+
+  @Nullable
+  @Override
   public String getConnectionString(InfluxDbRequest influxDbRequest) {
     return null;
   }

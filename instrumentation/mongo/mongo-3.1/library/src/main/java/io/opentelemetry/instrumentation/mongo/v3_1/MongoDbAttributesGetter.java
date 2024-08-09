@@ -66,6 +66,12 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return event.getDatabaseName();
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(CommandStartedEvent event) {
+    return event.getDatabaseName();
+  }
+
   @Override
   @Nullable
   public String getConnectionString(CommandStartedEvent event) {

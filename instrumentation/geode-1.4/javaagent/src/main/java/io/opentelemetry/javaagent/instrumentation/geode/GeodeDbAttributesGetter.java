@@ -32,6 +32,12 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return request.getRegion().getName();
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(GeodeRequest request) {
+    return request.getRegion().getName();
+  }
+
   @Override
   @Nullable
   public String getConnectionString(GeodeRequest request) {

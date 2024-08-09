@@ -32,6 +32,12 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(JedisRequest request) {
+    return null;
+  }
+
   @Override
   public String getConnectionString(JedisRequest request) {
     return null;

@@ -53,6 +53,12 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(ElasticsearchRestRequest request) {
+    return null;
+  }
+
   @Override
   @Nullable
   public String getConnectionString(ElasticsearchRestRequest request) {
