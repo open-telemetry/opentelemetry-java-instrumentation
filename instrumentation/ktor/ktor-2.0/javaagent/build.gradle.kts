@@ -10,6 +10,7 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("ktor-server-core")
     versions.set("[2.0.0,)")
+    assertInverse.set(true)
   }
 }
 
