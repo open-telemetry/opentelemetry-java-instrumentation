@@ -54,7 +54,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
   @Nullable private TextMapGetter<REQUEST> headerGetter;
-  private Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
+  private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
   private final HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
@@ -162,7 +162,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
-      Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
+      Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
           spanNameExtractorTransformer) {
     this.spanNameExtractorTransformer = spanNameExtractorTransformer;
     return this;
