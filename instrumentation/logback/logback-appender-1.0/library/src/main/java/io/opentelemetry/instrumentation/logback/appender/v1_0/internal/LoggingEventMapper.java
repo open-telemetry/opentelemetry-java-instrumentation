@@ -54,6 +54,10 @@ public final class LoggingEventMapper {
 
   private static final AttributeKey<List<String>> LOG_MARKER =
       AttributeKey.stringArrayKey("logback.marker");
+  private static final AttributeKey<String> LOG_BODY_TEMPLATE =
+      AttributeKey.stringKey("log.body.template");
+  private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
+      AttributeKey.stringArrayKey("log.body.parameters");
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -202,10 +206,9 @@ public final class LoggingEventMapper {
   }
 
   void captureArguments(AttributesBuilder attributes, String message, Object[] arguments) {
-    String bodyKey = "log.body.template";
-    attributes.put(bodyKey, message);
+    attributes.put(LOG_BODY_TEMPLATE, message);
     attributes.put(
-        AttributeKey.stringArrayKey("log.body.parameters"),
+        LOG_BODY_PARAMETERS,
         Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
   }
 
@@ -249,26 +252,22 @@ public final class LoggingEventMapper {
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
         Object value = keyValuePair.value;
-        propagateAttribute(attributes, keyValuePair.key, value);
-      }
-    }
-  }
-
-  @NoMuzzle
-  private static void propagateAttribute(AttributesBuilder attributes, String key, Object value) {
-    if (value != null) {
-      // preserve type for boolean and numeric values, everything else is converted to String
-      if (value instanceof Boolean) {
-        attributes.put(key, (Boolean) value);
-      } else if (value instanceof Byte
-          || value instanceof Integer
-          || value instanceof Long
-          || value instanceof Short) {
-        attributes.put(key, ((Number) value).longValue());
-      } else if (value instanceof Double || value instanceof Float) {
-        attributes.put(key, ((Number) value).doubleValue());
-      } else {
-        attributes.put(getAttributeKey(key), value.toString());
+        if (value != null) {
+          String key = keyValuePair.key;
+          // preserve type for boolean and numeric values, everything else is converted to String
+          if (value instanceof Boolean) {
+            attributes.put(key, (Boolean) value);
+          } else if (value instanceof Byte
+              || value instanceof Integer
+              || value instanceof Long
+              || value instanceof Short) {
+            attributes.put(key, ((Number) value).longValue());
+          } else if (value instanceof Double || value instanceof Float) {
+            attributes.put(key, ((Number) value).doubleValue());
+          } else {
+            attributes.put(getAttributeKey(key), value.toString());
+          }
+        }
       }
     }
   }
