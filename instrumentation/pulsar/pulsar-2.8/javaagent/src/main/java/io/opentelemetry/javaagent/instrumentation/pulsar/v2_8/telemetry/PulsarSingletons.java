@@ -13,6 +13,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -76,6 +77,7 @@ public final class PulsarSingletons {
                 MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+            .addOperationMetrics(MessagingConsumerMetrics.get())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
@@ -101,6 +103,7 @@ public final class PulsarSingletons {
         .addAttributesExtractor(
             ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR))
+        .addOperationMetrics(MessagingConsumerMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -189,7 +192,7 @@ public final class PulsarSingletons {
       Timer timer,
       Consumer<?> consumer,
       Throwable throwable) {
-    if (messages == null) {
+    if (messages == null || messages.size() == 0) {
       return null;
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);

@@ -36,6 +36,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.booleanKey("messaging.destination.anonymous");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
       AttributeKey.stringKey("messaging.destination.name");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
+      AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
       AttributeKey.stringKey("messaging.destination.template");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
@@ -122,6 +124,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     internalSet(
         attributes, MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
+    internalSet(
+        attributes, MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);

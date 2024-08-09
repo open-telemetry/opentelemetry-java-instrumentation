@@ -50,7 +50,7 @@ class MessagingProducerMetricsTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "1:1:0:0")
-            .put(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2)
+            .put(MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID, "1")
             .build();
 
     Context parent =
@@ -90,6 +90,10 @@ class MessagingProducerMetricsTest {
                                             equalTo(
                                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                                 "pulsar"),
+                                            equalTo(
+                                                MessagingIncubatingAttributes
+                                                    .MESSAGING_DESTINATION_PARTITION_ID,
+                                                "1"),
                                             equalTo(
                                                 MessagingIncubatingAttributes
                                                     .MESSAGING_DESTINATION_NAME,

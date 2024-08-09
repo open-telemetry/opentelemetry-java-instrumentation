@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.common.naming.TopicName;
 
 enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<PulsarRequest, Void> {
   INSTANCE;
@@ -81,6 +82,16 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
   @Override
   public Long getBatchMessageCount(PulsarRequest request, @Nullable Void unused) {
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String getDestinationPartitionId(PulsarRequest request) {
+    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
+    if (partitionIndex == -1) {
+      return null;
+    }
+    return String.valueOf(partitionIndex);
   }
 
   @Override
