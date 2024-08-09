@@ -112,4 +112,43 @@ public class Slf4j2Test {
             AttributeKey.stringArrayKey("logback.marker"),
             value -> assertThat(value).isEqualTo(Arrays.asList(markerName1, markerName2)));
   }
+
+  @Test
+  void arguments() {
+    logger
+        .atInfo()
+        .setMessage("log message {} and {}, bool {}, long {}")
+        .addArgument("'world'")
+        .addArgument(Math.PI)
+        .addArgument(true)
+        .addArgument(Long.MAX_VALUE)
+        .log();
+
+    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
+    assertThat(logDataList).hasSize(1);
+    LogRecordData logData = logDataList.get(0);
+
+    assertThat(logData.getResource()).isEqualTo(resource);
+    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
+    assertThat(logData.getBody().asString())
+        .isEqualTo(
+            "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807");
+    assertThat(logData.getAttributes().size()).isEqualTo(6);
+    assertThat(logData.getAttributes())
+        .hasEntrySatisfying(
+            AttributeKey.stringArrayKey("log.body.parameters"),
+            value ->
+                assertThat(value)
+                    .isEqualTo(
+                        Arrays.asList(
+                            "'world'",
+                            String.valueOf(Math.PI),
+                            String.valueOf(true),
+                            String.valueOf(Long.MAX_VALUE))));
+    assertThat(logData)
+        .hasAttributesSatisfying(
+            equalTo(
+                AttributeKey.stringKey("log.body.template"),
+                "log message {} and {}, bool {}, long {}"));
+  }
 }

@@ -14,6 +14,7 @@
     <captureCodeAttributes>true</captureCodeAttributes>
     <captureMarkerAttribute>true</captureMarkerAttribute>
     <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
+    <captureArguments>true</captureArguments>
     <captureMdcAttributes>*</captureMdcAttributes>
   </appender>
 

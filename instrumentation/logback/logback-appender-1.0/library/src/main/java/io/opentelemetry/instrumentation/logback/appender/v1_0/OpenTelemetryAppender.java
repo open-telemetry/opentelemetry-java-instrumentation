@@ -33,6 +33,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
+  private boolean captureArguments = true;
   private List<String> captureMdcAttributes = emptyList();
 
   private volatile OpenTelemetry openTelemetry;
@@ -79,6 +80,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureArguments(captureArguments)
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
@@ -162,6 +164,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureLoggerContext(boolean captureLoggerContext) {
     this.captureLoggerContext = captureLoggerContext;
+  }
+
+  /**
+   * Sets whether the arguments should be set to logs.
+   *
+   * @param captureArguments To enable or disable capturing logger arguments
+   */
+  public void setCaptureArguments(boolean captureArguments) {
+    this.captureArguments = captureArguments;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */
