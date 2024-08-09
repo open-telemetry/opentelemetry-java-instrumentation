@@ -50,7 +50,7 @@ class JfrCpuLockTest {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.cpu.longlock")
+                .hasName("jvm.cpu.longlock")
                 .hasUnit(MILLISECONDS)
                 .hasHistogramSatisfying(histogram -> {}));
   }

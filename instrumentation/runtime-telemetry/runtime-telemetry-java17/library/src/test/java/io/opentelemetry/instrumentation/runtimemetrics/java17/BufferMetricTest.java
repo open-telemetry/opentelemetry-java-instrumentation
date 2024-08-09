@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_POOL;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.UNIT_BUFFERS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -39,12 +39,13 @@ class BufferMetricTest {
     ByteBuffer buffer = ByteBuffer.allocateDirect(10000);
     buffer.put("test".getBytes(StandardCharsets.UTF_8));
 
-    Attributes directBuffer = Attributes.of(ATTR_POOL, "direct");
+    AttributeKey<String> attrBufferPool = AttributeKey.stringKey("jvm.buffer.pool.name");
+    Attributes directBuffer = Attributes.of(attrBufferPool, "direct");
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.buffer.count")
-                .hasDescription("Number of buffers in the pool")
+                .hasName("jvm.buffer.count")
+                .hasDescription("Number of buffers in the pool.")
                 .hasUnit(UNIT_BUFFERS)
                 .hasLongSumSatisfying(
                     sum ->
@@ -57,8 +58,8 @@ class BufferMetricTest {
                                     }))),
         metric ->
             metric
-                .hasName("process.runtime.jvm.buffer.limit")
-                .hasDescription("Measure of total memory capacity of buffers")
+                .hasName("jvm.buffer.memory.limit")
+                .hasDescription("Measure of total memory capacity of buffers.")
                 .hasUnit(BYTES)
                 .hasLongSumSatisfying(
                     sum ->
@@ -71,8 +72,8 @@ class BufferMetricTest {
                                     }))),
         metric ->
             metric
-                .hasName("process.runtime.jvm.buffer.usage")
-                .hasDescription("Measure of memory used by buffers")
+                .hasName("jvm.buffer.memory.usage")
+                .hasDescription("Measure of memory used by buffers.")
                 .hasUnit(BYTES)
                 .hasLongSumSatisfying(
                     sum ->

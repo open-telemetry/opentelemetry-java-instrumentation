@@ -33,8 +33,8 @@ class JfrRuntimeMetricsTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java17",
-        metric -> metric.hasName("process.runtime.jvm.cpu.longlock"),
-        metric -> metric.hasName("process.runtime.jvm.cpu.limit"),
-        metric -> metric.hasName("process.runtime.jvm.cpu.context_switch"));
+        metric -> metric.hasName("jvm.cpu.longlock"),
+        metric -> metric.hasName("jvm.cpu.limit"),
+        metric -> metric.hasName("jvm.cpu.context_switch"));
   }
 }

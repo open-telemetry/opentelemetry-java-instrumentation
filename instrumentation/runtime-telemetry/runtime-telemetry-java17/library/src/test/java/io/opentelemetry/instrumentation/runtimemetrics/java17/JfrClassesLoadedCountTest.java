@@ -25,8 +25,8 @@ class JfrClassesLoadedCountTest {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.classes.loaded")
-                .hasDescription("Number of classes loaded since JVM start")
+                .hasName("jvm.class.loaded")
+                .hasDescription("Number of classes loaded since JVM start.")
                 .hasUnit(UNIT_CLASSES)
                 .hasLongSumSatisfying(
                     sum ->
@@ -38,8 +38,8 @@ class JfrClassesLoadedCountTest {
                                             .isGreaterThanOrEqualTo(0)))),
         metric ->
             metric
-                .hasName("process.runtime.jvm.classes.current_loaded")
-                .hasDescription("Number of classes currently loaded")
+                .hasName("jvm.class.count")
+                .hasDescription("Number of classes currently loaded.")
                 .hasUnit(UNIT_CLASSES)
                 .hasLongSumSatisfying(
                     sum ->
@@ -51,8 +51,8 @@ class JfrClassesLoadedCountTest {
                                             .isGreaterThanOrEqualTo(0)))),
         metric ->
             metric
-                .hasName("process.runtime.jvm.classes.unloaded")
-                .hasDescription("Number of classes unloaded since JVM start")
+                .hasName("jvm.class.unloaded")
+                .hasDescription("Number of classes unloaded since JVM start.")
                 .hasUnit(UNIT_CLASSES)
                 .hasLongSumSatisfying(
                     sum ->
