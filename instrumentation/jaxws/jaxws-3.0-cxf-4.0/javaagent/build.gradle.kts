@@ -40,9 +40,16 @@ dependencies {
   latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http:4.+")
 }
 
+// cxf 4 requires java 17
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
