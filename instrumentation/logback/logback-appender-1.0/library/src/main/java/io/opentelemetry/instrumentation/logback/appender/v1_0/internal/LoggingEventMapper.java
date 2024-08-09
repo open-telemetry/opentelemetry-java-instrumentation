@@ -45,6 +45,7 @@ public final class LoggingEventMapper {
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
 
+  private static final boolean supportsInstant = supportsInstant();
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
@@ -106,8 +107,12 @@ public final class LoggingEventMapper {
     }
 
     // time
-    long timestamp = loggingEvent.getTimeStamp();
-    builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+    if (supportsInstant && hasInstant(loggingEvent)) {
+      setTimestampFromInstant(builder, loggingEvent);
+    } else {
+      long timestamp = loggingEvent.getTimeStamp();
+      builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+    }
 
     // level
     Level level = loggingEvent.getLevel();
@@ -172,6 +177,28 @@ public final class LoggingEventMapper {
 
     // span context
     builder.setContext(Context.current());
+  }
+
+  // getInstant is available since Logback 1.3
+  private static boolean supportsInstant() {
+    try {
+      ILoggingEvent.class.getMethod("getInstant");
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @NoMuzzle
+  private static boolean hasInstant(ILoggingEvent loggingEvent) {
+    return loggingEvent.getInstant() != null;
+  }
+
+  @NoMuzzle
+  private static void setTimestampFromInstant(
+      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    builder.setTimestamp(loggingEvent.getInstant());
   }
 
   // visible for testing
