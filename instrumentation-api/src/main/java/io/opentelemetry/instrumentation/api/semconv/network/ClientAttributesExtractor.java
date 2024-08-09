@@ -45,7 +45,6 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalExtractor.onStart(attributes, request);
   }
 
   @Override
@@ -54,5 +53,7 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    internalExtractor.onEnd(attributes, request);
+  }
 }
