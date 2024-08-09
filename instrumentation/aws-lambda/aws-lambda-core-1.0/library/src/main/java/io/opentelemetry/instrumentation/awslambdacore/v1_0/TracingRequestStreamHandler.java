@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.ApiGatewayProxyRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenter;
@@ -67,49 +68,55 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
   @Override
   public void handleRequest(InputStream input, OutputStream output, Context context)
       throws IOException {
-
     ApiGatewayProxyRequest proxyRequest = ApiGatewayProxyRequest.forStream(input);
-    AwsLambdaRequest request =
-        AwsLambdaRequest.create(context, proxyRequest, proxyRequest.getHeaders());
+    AwsLambdaRequest request = createRequest(input, context, proxyRequest);
     io.opentelemetry.context.Context parentContext = instrumenter.extract(request);
 
     if (!instrumenter.shouldStart(parentContext, request)) {
-      doHandleRequest(proxyRequest.freshStream(), output, context);
+      doHandleRequest(proxyRequest.freshStream(), output, context, request);
       return;
     }
 
     io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, request);
+    Throwable error = null;
     try (Scope ignored = otelContext.makeCurrent()) {
       doHandleRequest(
           proxyRequest.freshStream(),
-          new OutputStreamWrapper(output, otelContext, request, openTelemetrySdk),
-          context);
+          new OutputStreamWrapper(output, otelContext),
+          context,
+          request);
     } catch (Throwable t) {
-      instrumenter.end(otelContext, request, null, t);
-      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      error = t;
       throw t;
+    } finally {
+      instrumenter.end(otelContext, request, null, error);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
+  }
+
+  protected AwsLambdaRequest createRequest(
+      InputStream input, Context context, ApiGatewayProxyRequest proxyRequest) throws IOException {
+    return AwsLambdaRequest.create(context, proxyRequest, proxyRequest.getHeaders());
+  }
+
+  protected void doHandleRequest(
+      InputStream input, OutputStream output, Context context, AwsLambdaRequest request)
+      throws IOException {
+    doHandleRequest(input, output, context);
   }
 
   protected abstract void doHandleRequest(InputStream input, OutputStream output, Context context)
       throws IOException;
 
-  private class OutputStreamWrapper extends OutputStream {
+  private static class OutputStreamWrapper extends OutputStream {
 
     private final OutputStream delegate;
     private final io.opentelemetry.context.Context otelContext;
-    private final AwsLambdaRequest request;
-    private final OpenTelemetrySdk openTelemetrySdk;
 
     private OutputStreamWrapper(
-        OutputStream delegate,
-        io.opentelemetry.context.Context otelContext,
-        AwsLambdaRequest request,
-        OpenTelemetrySdk openTelemetrySdk) {
+        OutputStream delegate, io.opentelemetry.context.Context otelContext) {
       this.delegate = delegate;
       this.otelContext = otelContext;
-      this.request = request;
-      this.openTelemetrySdk = openTelemetrySdk;
     }
 
     @Override
@@ -135,8 +142,8 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
     @Override
     public void close() throws IOException {
       delegate.close();
-      instrumenter.end(otelContext, request, null, null);
-      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      Span span = Span.fromContext(otelContext);
+      span.addEvent("Output stream closed");
     }
   }
 }
