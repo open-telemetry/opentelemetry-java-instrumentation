@@ -6,12 +6,11 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.internal.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
@@ -89,21 +88,20 @@ final class SpanSuppressors {
   }
 
   static class ByContextKey implements SpanSuppressor {
+    private static final boolean canSuppress = canSuppress();
     private final SpanSuppressor delegate;
-    private final Method shouldSuppressInstrumentation;
 
     ByContextKey(SpanSuppressor delegate) {
       this.delegate = delegate;
-      Method shouldSuppressInstrumentation;
+    }
+
+    private static boolean canSuppress() {
       try {
-        Class<?> instrumentationUtil =
-            Class.forName("io.opentelemetry.exporter.internal.InstrumentationUtil");
-        shouldSuppressInstrumentation =
-            instrumentationUtil.getDeclaredMethod("shouldSuppressInstrumentation", Context.class);
-      } catch (ClassNotFoundException | NoSuchMethodException e) {
-        shouldSuppressInstrumentation = null;
+        Class.forName("io.opentelemetry.api.internal.InstrumentationUtil");
+        return true;
+      } catch (ClassNotFoundException exception) {
+        return false;
       }
-      this.shouldSuppressInstrumentation = shouldSuppressInstrumentation;
     }
 
     @Override
@@ -119,16 +117,12 @@ final class SpanSuppressors {
       return delegate.shouldSuppress(parentContext, spanKind);
     }
 
-    private boolean suppressByContextKey(Context context) {
-      if (shouldSuppressInstrumentation == null) {
+    private static boolean suppressByContextKey(Context context) {
+      if (!canSuppress) {
         return false;
       }
 
-      try {
-        return (boolean) shouldSuppressInstrumentation.invoke(null, context);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        return false;
-      }
+      return InstrumentationUtil.shouldSuppressInstrumentation(context);
     }
   }
 }
