@@ -44,7 +44,7 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
   static URI address
 
   def setupServer() {
-    withRetryOnAddressAlreadyInUse({
+    HttpServerTestTrait.withRetryOnAddressAlreadyInUse({
       setupSpecUnderRetry()
     })
   }
@@ -60,7 +60,7 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
     return new URI("http://localhost:$port" + getContextPath() + "/")
   }
 
-  abstract SERVER startServer(int port)
+  abstract SERVER startServer(int port) throws Exception
 
   def cleanupServer() {
     if (server == null) {
@@ -72,7 +72,7 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
     println getClass().name + " http server stopped at: http://localhost:$port/"
   }
 
-  abstract void stopServer(SERVER server)
+  abstract void stopServer(SERVER server) throws Exception
 
   String getContextPath() {
     return ""

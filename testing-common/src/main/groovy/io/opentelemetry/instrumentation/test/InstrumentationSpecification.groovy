@@ -35,24 +35,24 @@ abstract class InstrumentationSpecification extends Specification {
   @Rule
   public Timeout testTimeout = new Timeout(10, TimeUnit.MINUTES)
 
-  def setupSpec() {
+  void setupSpec() throws Exception {
     testRunner().beforeTestClass()
   }
 
   /**
    * Clears all data exported during a test.
    */
-  def setup() {
+  void setup() {
     assert !Span.current().getSpanContext().isValid(): "Span is active before test has started: " + Span.current()
     testRunner().clearAllExportedData()
   }
 
-  def cleanup() {
+  void cleanup() {
     ContextStorage storage = ContextStorage.get()
     ContextStorageCloser.close(storage)
   }
 
-  def cleanupSpec() {
+  void cleanupSpec() {
     testRunner().afterTestClass()
   }
 
