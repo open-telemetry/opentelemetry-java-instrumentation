@@ -100,6 +100,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       internalSet(
           attributes, MESSAGING_DESTINATION_TEMPLATE, getter.getDestinationTemplate(request));
     }
+    internalSet(
+        attributes, MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
     boolean isAnonymousDestination = getter.isAnonymousDestination(request);
     if (isAnonymousDestination) {
       internalSet(attributes, MESSAGING_DESTINATION_ANONYMOUS, true);
@@ -124,8 +126,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     internalSet(
         attributes, MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
-    internalSet(
-        attributes, MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);
