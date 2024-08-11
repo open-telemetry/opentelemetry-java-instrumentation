@@ -45,7 +45,7 @@ val byteBuddyVersion = "1.14.18"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.15"
+val slf4jVersion = "2.0.16"
 val semConvVersion = "1.25.0-alpha"
 
 val CORE_DEPENDENCIES = listOf(
