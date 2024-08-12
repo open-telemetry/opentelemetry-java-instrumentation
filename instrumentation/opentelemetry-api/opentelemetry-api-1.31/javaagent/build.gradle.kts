@@ -16,9 +16,33 @@ dependencies {
 }
 
 configurations.configureEach {
-  if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
+  if (name == "testRuntimeClasspath" || name == "testCompileClasspath" || name.startsWith("noopTest")) {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.31.0")
     }
+  }
+}
+
+testing {
+  suites {
+    val noopTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-extension-incubator:1.31.0-alpha")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dtesting.exporter.enabled=false")
+          }
+        }
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

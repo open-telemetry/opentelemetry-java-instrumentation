@@ -125,6 +125,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("org.openjdk.nashorn.internal.runtime.ScriptLoader")
         .ignoreClassLoader("org.codehaus.janino.ByteArrayClassLoader")
         .ignoreClassLoader("org.eclipse.persistence.internal.jaxb.JaxbClassLoader")
+        .ignoreClassLoader("com.alibaba.fastjson.util.ASMClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName())
         .ignoreClassLoader(InstrumentationModuleClassLoader.class.getName());

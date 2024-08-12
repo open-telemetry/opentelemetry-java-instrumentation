@@ -1,11 +1,10 @@
 plugins {
-  id("com.github.johnrengelman.shadow")
-
+  id("com.gradleup.shadow")
   id("otel.java-conventions")
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.29.2")
+  implementation("com.linecorp.armeria:armeria-junit5:1.29.4")
 }
 
 tasks {
