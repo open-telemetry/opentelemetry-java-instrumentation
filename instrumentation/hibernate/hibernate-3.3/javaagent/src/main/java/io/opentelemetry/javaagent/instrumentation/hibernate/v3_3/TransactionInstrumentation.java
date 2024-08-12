@@ -21,7 +21,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,11 +49,11 @@ public class TransactionInstrumentation implements TypeInstrumentation {
   public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object startCommit(@Advice.This Transaction transaction) {
+    public static HibernateOperationScope startCommit(@Advice.This Transaction transaction) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return HibernateOperationScope.wrapCallDepth(callDepth);
       }
 
       VirtualField<Transaction, SessionInfo> transactionVirtualField =
@@ -65,7 +64,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
       HibernateOperation hibernateOperation =
           new HibernateOperation("Transaction.commit", sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return callDepth;
+        return HibernateOperationScope.wrapCallDepth(callDepth);
       }
 
       return HibernateOperationScope.startNew(
@@ -74,7 +73,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable Object enterScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope enterScope) {
 
       HibernateOperationScope.end(enterScope, instrumenter(), throwable);
     }

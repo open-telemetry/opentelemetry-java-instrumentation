@@ -48,12 +48,12 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
   public static class ProcedureCallMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object startMethod(
+    public static HibernateOperationScope startMethod(
         @Advice.This ProcedureCall call, @Advice.Origin("#m") String name) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return HibernateOperationScope.wrapCallDepth(callDepth);
       }
 
       VirtualField<ProcedureCall, SessionInfo> criteriaVirtualField =
@@ -64,7 +64,7 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
       HibernateOperation hibernateOperation =
           new HibernateOperation("ProcedureCall." + name, call.getProcedureName(), sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return callDepth;
+        return HibernateOperationScope.wrapCallDepth(callDepth);
       }
 
       return HibernateOperationScope.startNew(
@@ -73,7 +73,7 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope enterScope) {
 
       HibernateOperationScope.end(enterScope, instrumenter(), throwable);
     }

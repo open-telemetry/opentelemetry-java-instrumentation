@@ -32,8 +32,8 @@ public class HibernateOperationScope {
    * @param hibernateOperation hibernate operation
    * @param parentContext parent context
    * @param instrumenter instrumenter
-   * @return operation scope, to be ended with {@link #end(Object, Instrumenter, Throwable)} on exit
-   *     advice
+   * @return operation scope, to be ended with {@link #end(HibernateOperationScope, Instrumenter,
+   *     Throwable)} on exit advice
    */
   public static HibernateOperationScope startNew(
       CallDepth callDepth,
@@ -47,29 +47,43 @@ public class HibernateOperationScope {
   }
 
   /**
+   * Builds hibernate operation scope from an existing call depth for cases where only the call
+   * depth is needed
+   *
+   * @param callDepth call depth
+   * @return hibernate operation scope wrapping the provided call depth.
+   */
+  public static HibernateOperationScope wrapCallDepth(CallDepth callDepth) {
+    return new HibernateOperationScope(callDepth, null, null, null);
+  }
+
+  /**
    * Ends operation scope
    *
-   * @param o {@link HibernateOperationScope} or {@link CallDepth} from enter advice
+   * @param hibernateOperationScope hibernate operation scope
    * @param instrumenter instrumenter
    * @param throwable thrown exception
    */
   public static void end(
-      Object o, Instrumenter<HibernateOperation, Void> instrumenter, Throwable throwable) {
-    if (o instanceof CallDepth) {
-      ((CallDepth) o).decrementAndGet();
+      HibernateOperationScope hibernateOperationScope,
+      Instrumenter<HibernateOperation, Void> instrumenter,
+      Throwable throwable) {
+
+    if (hibernateOperationScope.context == null) {
+      // call depth only
+      hibernateOperationScope.callDepth.decrementAndGet();
       return;
     }
 
-    if (!(o instanceof HibernateOperationScope)) {
-      throw new IllegalArgumentException("unexpected argument");
-    }
-
-    HibernateOperationScope state = (HibernateOperationScope) o;
-    int depth = state.callDepth.decrementAndGet();
+    int depth = hibernateOperationScope.callDepth.decrementAndGet();
     if (depth != 0) {
       throw new IllegalStateException("unexpected call depth " + depth);
     }
-    state.scope.close();
-    instrumenter.end(state.context, state.hibernateOperation, null, throwable);
+    hibernateOperationScope.scope.close();
+    instrumenter.end(
+        hibernateOperationScope.context,
+        hibernateOperationScope.hibernateOperation,
+        null,
+        throwable);
   }
 }

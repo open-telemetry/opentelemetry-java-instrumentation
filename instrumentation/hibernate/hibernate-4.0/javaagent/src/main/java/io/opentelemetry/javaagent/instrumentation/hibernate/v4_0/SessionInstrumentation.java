@@ -96,7 +96,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object startMethod(
+    public static HibernateOperationScope startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
         @Advice.Origin("#d") String descriptor,
@@ -105,7 +105,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return HibernateOperationScope.wrapCallDepth(callDepth);
       }
 
       VirtualField<SharedSessionContract, SessionInfo> virtualField =
@@ -118,7 +118,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
       HibernateOperation hibernateOperation =
           new HibernateOperation(getSessionMethodOperationName(name), entityName, sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return callDepth;
+        return HibernateOperationScope.wrapCallDepth(callDepth);
       }
 
       return HibernateOperationScope.startNew(
@@ -127,7 +127,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterState) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope enterState) {
 
       HibernateOperationScope.end(enterState, instrumenter(), throwable);
     }
