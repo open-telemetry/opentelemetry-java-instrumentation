@@ -44,7 +44,7 @@ trait HttpServerTestTrait<SERVER> implements RetryOnAddressAlreadyInUseTrait {
   static URI address
 
   def setupServer() {
-    HttpServerTestTrait.withRetryOnAddressAlreadyInUse({
+    withRetryOnAddressAlreadyInUse({
       setupSpecUnderRetry()
     })
   }
