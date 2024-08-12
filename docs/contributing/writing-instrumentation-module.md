@@ -467,8 +467,7 @@ When using non-inlined advices, reading the argument values is still done with `
 annotated parameters, however modifying the values is done through the advice method return value
 and `@Advice.AssignReturned.ToArguments` annotation:
 
-The advice method return value must be `Object` unless it's a type that is provided by the JDK.
-Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
+For return type, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
 value to the appropriate type.
 
 ```java
@@ -491,8 +490,7 @@ When using non-inlined advices, reading the original return value is still done 
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToReturned`.
 
-The advice method return value must be `Object` unless it's a type that is provided by the JDK.
-Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
+For return type, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
 value to the appropriate type.
 
 ```java
@@ -512,8 +510,7 @@ When using non-inlined advices, reading the original field value is still done w
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToFields` annotation.
 
-The advice method return value must be `Object` unless it's a type that is provided by the JDK.
-Also, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
+For return type, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
 value to the appropriate type.
 
 ```java
