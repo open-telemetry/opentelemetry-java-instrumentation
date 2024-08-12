@@ -10,6 +10,10 @@ tasks {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
   api("jakarta.xml.ws:jakarta.xml.ws-api:3.0.0")
   api("jakarta.jws:jakarta.jws-api:3.0.0")

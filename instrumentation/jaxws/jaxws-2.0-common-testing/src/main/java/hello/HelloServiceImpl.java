@@ -5,7 +5,7 @@
 
 package hello;
 
-import jakarta.jws.WebService;
+import javax.jws.WebService;
 
 @WebService(
     serviceName = "HelloService",

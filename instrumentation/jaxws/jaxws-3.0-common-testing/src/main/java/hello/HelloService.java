@@ -11,7 +11,7 @@ import jakarta.jws.WebService;
 import jakarta.xml.ws.RequestWrapper;
 
 @WebService(targetNamespace = "http://opentelemetry.io/test/hello-web-service")
-interface HelloService {
+public interface HelloService {
 
   @RequestWrapper(localName = "helloRequest")
   @WebResult(name = "message")

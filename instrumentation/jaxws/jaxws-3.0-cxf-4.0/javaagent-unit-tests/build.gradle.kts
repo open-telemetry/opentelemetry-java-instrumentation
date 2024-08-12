@@ -2,6 +2,11 @@ plugins {
   id("otel.java-conventions")
 }
 
+// cxf 4 requires java 17
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
   compileOnly("org.apache.cxf:cxf-rt-frontend-jaxws:4.0.0")
