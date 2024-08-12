@@ -20,5 +20,4 @@ interface HelloService {
   @RequestWrapper(localName = "hello2Request")
   @WebResult(name = "message")
   String hello2(@WebParam(name = "name") String name) throws Exception;
-
 }

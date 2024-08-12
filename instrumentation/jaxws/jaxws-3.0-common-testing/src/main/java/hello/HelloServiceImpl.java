@@ -7,7 +7,10 @@ package hello;
 
 import jakarta.jws.WebService;
 
-@WebService(serviceName = "HelloService", endpointInterface = "hello.HelloService", targetNamespace = "http://opentelemetry.io/test/hello-web-service")
+@WebService(
+    serviceName = "HelloService",
+    endpointInterface = "hello.HelloService",
+    targetNamespace = "http://opentelemetry.io/test/hello-web-service")
 class HelloServiceImpl extends BaseHelloService implements HelloService {
 
   @Override
