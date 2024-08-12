@@ -12,6 +12,7 @@ dependencies {
   implementation("org.apache.commons:commons-dbcp2")
   implementation("org.springframework.kafka:spring-kafka")
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+  implementation("org.springframework.boot:spring-boot-starter-aop")
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))

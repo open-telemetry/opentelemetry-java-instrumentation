@@ -66,6 +66,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
+  boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
   InstrumenterBuilder(
@@ -370,6 +371,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         .collect(Collectors.toSet());
   }
 
+  private void propagateOperationListenersToOnEnd() {
+    propagateOperationListenersToOnEnd = true;
+  }
+
   private interface InstrumenterConstructor<RQ, RS> {
     Instrumenter<RQ, RS> create(InstrumenterBuilder<RQ, RS> builder);
 
@@ -405,6 +410,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               TextMapSetter<RQ> setter,
               SpanKindExtractor<RQ> spanKindExtractor) {
             return builder.buildDownstreamInstrumenter(setter, spanKindExtractor);
+          }
+
+          @Override
+          public <RQ, RS> void propagateOperationListenersToOnEnd(
+              InstrumenterBuilder<RQ, RS> builder) {
+            builder.propagateOperationListenersToOnEnd();
           }
         });
   }

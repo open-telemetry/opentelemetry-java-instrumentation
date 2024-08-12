@@ -15,7 +15,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
@@ -39,7 +39,7 @@ public final class LogEventMapper {
   private static final int TRACE_INT = 5000;
 
   private static final boolean captureExperimentalAttributes =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
 
   private final Map<String, AttributeKey<String>> captureMdcAttributes;
@@ -49,7 +49,7 @@ public final class LogEventMapper {
 
   private LogEventMapper() {
     List<String> captureMdcAttributes =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getList(
                 "otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes",
                 emptyList());

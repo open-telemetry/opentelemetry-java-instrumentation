@@ -19,7 +19,6 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public final class HttpServerTestOptions {
@@ -42,7 +41,6 @@ public final class HttpServerTestOptions {
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
   Throwable expectedException = new Exception(EXCEPTION.body);
-  Supplier<String> metricsInstrumentationName = () -> null;
   // we're calling /success in the test, and most servers respond with 200 anyway
   int responseCodeOnNonStandardHttpMethod = ServerEndpoint.SUCCESS.status;
 
@@ -105,13 +103,6 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setExpectedException(Throwable expectedException) {
     this.expectedException = expectedException;
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public HttpServerTestOptions setMetricsInstrumentationName(
-      Supplier<String> metricsInstrumentationName) {
-    this.metricsInstrumentationName = metricsInstrumentationName;
     return this;
   }
 

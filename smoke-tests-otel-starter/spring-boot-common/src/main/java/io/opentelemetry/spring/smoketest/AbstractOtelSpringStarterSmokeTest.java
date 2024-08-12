@@ -152,8 +152,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
                 serverSpan ->
-                    serverSpan
-                        .hasKind(SpanKind.SERVER)
+                    HttpSpanDataAssert.create(serverSpan)
+                        .assertServerGetRequest("/ping")
                         .hasResourceSatisfying(
                             r ->
                                 r.hasAttribute(
@@ -172,7 +172,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
                             satisfies(
                                 ServerAttributes.SERVER_PORT,
-                                integerAssert -> integerAssert.isNotZero()))));
+                                integerAssert -> integerAssert.isNotZero())),
+                span -> withSpanAssert(span)));
 
     // Metric
     testing.waitAndAssertMetrics(
@@ -183,15 +184,19 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    LogRecordData firstLog = exportedLogRecords.get(0);
-    assertThat(firstLog.getBody().asString())
-        .as("Should instrument logs")
-        .startsWith("Starting ")
-        .contains(this.getClass().getSimpleName());
-    assertThat(firstLog.getAttributes().asMap())
-        .as("Should capture code attributes")
-        .containsEntry(
-            CodeIncubatingAttributes.CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger");
+    if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
+      // log records differ in native image mode due to different startup timing
+      LogRecordData firstLog = exportedLogRecords.get(0);
+      assertThat(firstLog.getBody().asString())
+          .as("Should instrument logs")
+          .startsWith("Starting ")
+          .contains(this.getClass().getSimpleName());
+      assertThat(firstLog.getAttributes().asMap())
+          .as("Should capture code attributes")
+          .containsEntry(
+              CodeIncubatingAttributes.CODE_NAMESPACE,
+              "org.springframework.boot.StartupInfoLogger");
+    }
   }
 
   @Test
@@ -227,14 +232,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                nestedClientSpan ->
-                    nestedClientSpan
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            a -> assertThat(a.get(UrlAttributes.URL_FULL)).endsWith("/ping")),
-                nestedServerSpan ->
-                    nestedServerSpan
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping")));
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+                span ->
+                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                span -> withSpanAssert(span)));
   }
 }

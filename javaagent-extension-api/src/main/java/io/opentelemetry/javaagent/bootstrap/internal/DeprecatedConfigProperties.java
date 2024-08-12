@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.util.List;
 import java.util.logging.Logger;
 

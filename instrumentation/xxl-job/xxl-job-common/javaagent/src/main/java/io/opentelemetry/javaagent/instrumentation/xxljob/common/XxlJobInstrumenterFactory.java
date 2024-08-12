@@ -12,12 +12,12 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class XxlJobInstrumenterFactory {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.xxl-job.experimental-span-attributes", false);
 
   public static Instrumenter<XxlJobProcessRequest, Void> create(String instrumentationName) {
