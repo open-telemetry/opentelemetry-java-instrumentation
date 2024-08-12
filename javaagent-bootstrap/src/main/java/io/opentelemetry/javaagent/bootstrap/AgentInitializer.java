@@ -26,7 +26,7 @@ public final class AgentInitializer {
   @Nullable private static ClassLoader agentClassLoader = null;
   @Nullable private static AgentStarter agentStarter = null;
   private static boolean isSecurityManagerSupportEnabled = false;
-  private static boolean agentStarted = false;
+  private static volatile boolean agentStarted = false;
 
   public static void initialize(Instrumentation inst, File javaagentFile, boolean fromPremain)
       throws Exception {
@@ -157,9 +157,19 @@ public final class AgentInitializer {
         });
   }
 
+  /**
+   * Check whether agent has started or not along with VM.
+   *
+   * <p>This method is used by
+   * io.opentelemetry.javaagent.tooling.AgentStarterImpl#InetAddressClassFileTransformer internally
+   * to check whether agent has started.
+   *
+   * @param vmStarted flag about whether VM has started or not.
+   * @return {@code true} if agent has started or not along with VM, {@code false} otherwise.
+   */
   @SuppressWarnings("unused")
-  public static boolean isAgentStarted() {
-    return agentStarted;
+  public static boolean isAgentStarted(boolean vmStarted) {
+    return vmStarted && agentStarted;
   }
 
   public static ClassLoader getExtensionsClassLoader() {

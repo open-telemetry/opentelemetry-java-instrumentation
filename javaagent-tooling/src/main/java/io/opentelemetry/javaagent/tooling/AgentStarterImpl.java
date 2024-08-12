@@ -20,7 +20,6 @@ import java.util.ServiceLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -125,20 +124,6 @@ public class AgentStarterImpl implements AgentStarter {
   private void instrumentInetAddress() {
     InetAddressClassFileTransformer transformer = new InetAddressClassFileTransformer();
     instrumentation.addTransformer(transformer, true);
-
-    try {
-      Class<?> clazz = Class.forName("java.net.InetAddress", false, null);
-      if (transformer.transformed) {
-        // InetAddress was loaded and got transformed
-        return;
-      }
-      // InetAddress was already loaded before we set up transformer
-      instrumentation.retransformClasses(clazz);
-    } catch (ClassNotFoundException | UnmodifiableClassException ignore) {
-      // ignore
-    } finally {
-      instrumentation.removeTransformer(transformer);
-    }
   }
 
   @SuppressWarnings("SystemOut")
@@ -209,56 +194,6 @@ public class AgentStarterImpl implements AgentStarter {
 
   private static class InetAddressClassFileTransformer implements ClassFileTransformer {
     boolean hookInserted = false;
-    boolean transformed = false;
-    boolean wrapperMethodCreated = false;
-
-    private static void createWrapperMethod(ClassWriter cw) {
-      /*
-       private static boolean isAgentAndVmBooted();
-       Code:
-          0: invokestatic  #X                 // Method io/opentelemetry/javaagent/bootstrap/AgentInitializer/isAgentStarted:()Z
-          3: ifeq          16
-          6: invokestatic  #Y                 // Method jdk/internal/misc/VM.isBooted:()Z
-          9: ifeq          16
-         12: iconst_1
-         13: goto          17
-         16: iconst_0
-         17: ireturn
-      */
-
-      String descriptor = Type.getMethodDescriptor(Type.BOOLEAN_TYPE);
-      Label elseLabel = new Label();
-      Label endLabel = new Label();
-
-      MethodVisitor mv =
-          cw.visitMethod(
-              Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC,
-              "isAgentAndVmBooted",
-              descriptor,
-              null,
-              null);
-      mv.visitCode();
-
-      mv.visitMethodInsn(
-          Opcodes.INVOKESTATIC,
-          Type.getInternalName(AgentInitializer.class),
-          "isAgentStarted",
-          descriptor,
-          false);
-      mv.visitJumpInsn(Opcodes.IFEQ, elseLabel);
-      mv.visitMethodInsn(
-          Opcodes.INVOKESTATIC, "jdk/internal/misc/VM", "isBooted", descriptor, false);
-      mv.visitJumpInsn(Opcodes.IFEQ, elseLabel);
-      mv.visitInsn(Opcodes.ICONST_1);
-      mv.visitJumpInsn(Opcodes.GOTO, endLabel);
-      mv.visitLabel(elseLabel);
-      mv.visitInsn(Opcodes.ICONST_0);
-      mv.visitLabel(endLabel);
-      mv.visitInsn(Opcodes.IRETURN);
-
-      mv.visitMaxs(0, 0);
-      mv.visitEnd();
-    }
 
     @Override
     public byte[] transform(
@@ -270,17 +205,15 @@ public class AgentStarterImpl implements AgentStarter {
       if (!"java/net/InetAddress".equals(className)) {
         return null;
       }
-      transformed = true;
       ClassReader cr = new ClassReader(classfileBuffer);
-      ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+      ClassWriter cw = new ClassWriter(cr, 0);
       ClassVisitor cv =
           new ClassVisitor(AsmApi.VERSION, cw) {
             @Override
             public MethodVisitor visitMethod(
                 int access, String name, String descriptor, String signature, String[] exceptions) {
               MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-              // We don't want to patch "jdk.internal.misc.VM.isBooted" call in our wrapper
-              if ("isAgentAndVmBooted".equals(name)) {
+              if (!"resolver".equals(name)) {
                 return mv;
               }
               return new MethodVisitor(api, mv) {
@@ -291,23 +224,17 @@ public class AgentStarterImpl implements AgentStarter {
                     String methodName,
                     String descriptor,
                     boolean isInterface) {
+                  super.visitMethodInsn(
+                      opcode, ownerClassName, methodName, descriptor, isInterface);
                   if ("jdk/internal/misc/VM".equals(ownerClassName)
                       && "isBooted".equals(methodName)) {
-                    // Create wrapper method only once
-                    if (!wrapperMethodCreated) {
-                      createWrapperMethod(cw);
-                      wrapperMethodCreated = true;
-                    }
                     super.visitMethodInsn(
                         Opcodes.INVOKESTATIC,
-                        "java/net/InetAddress",
-                        "isAgentAndVmBooted",
-                        "()Z",
-                        isInterface);
+                        Type.getInternalName(AgentInitializer.class),
+                        "isAgentStarted",
+                        "(Z)Z",
+                        false);
                     hookInserted = true;
-                  } else {
-                    super.visitMethodInsn(
-                        opcode, ownerClassName, methodName, descriptor, isInterface);
                   }
                 }
               };
