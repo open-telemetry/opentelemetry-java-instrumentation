@@ -18,13 +18,13 @@ public abstract class InfluxDbRequest {
       SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static InfluxDbRequest create(
-      String host, Integer port, String dbName, String operation, String sql) {
+      String host, int port, String dbName, String operation, String sql) {
     return new AutoValue_InfluxDbRequest(host, port, dbName, operation, sanitizer.sanitize(sql));
   }
 
   public abstract String getHost();
 
-  public abstract Integer getPort();
+  public abstract int getPort();
 
   public abstract String getDbName();
 
