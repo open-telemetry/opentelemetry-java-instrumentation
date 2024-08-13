@@ -88,20 +88,10 @@ final class SpanSuppressors {
   }
 
   static class ByContextKey implements SpanSuppressor {
-    private static final boolean canSuppress = canSuppress();
     private final SpanSuppressor delegate;
 
     ByContextKey(SpanSuppressor delegate) {
       this.delegate = delegate;
-    }
-
-    private static boolean canSuppress() {
-      try {
-        Class.forName("io.opentelemetry.api.internal.InstrumentationUtil");
-        return true;
-      } catch (ClassNotFoundException exception) {
-        return false;
-      }
     }
 
     @Override
@@ -111,18 +101,10 @@ final class SpanSuppressors {
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
-      if (suppressByContextKey(parentContext)) {
+      if (InstrumentationUtil.shouldSuppressInstrumentation(parentContext)) {
         return true;
       }
       return delegate.shouldSuppress(parentContext, spanKind);
-    }
-
-    private static boolean suppressByContextKey(Context context) {
-      if (!canSuppress) {
-        return false;
-      }
-
-      return InstrumentationUtil.shouldSuppressInstrumentation(context);
     }
   }
 }
