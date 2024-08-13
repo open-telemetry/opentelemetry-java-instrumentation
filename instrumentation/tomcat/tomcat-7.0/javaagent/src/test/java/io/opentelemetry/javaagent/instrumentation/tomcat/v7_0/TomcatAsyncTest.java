@@ -108,10 +108,6 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     options.setExpectedException(new ServletException(EXCEPTION.getBody()));
 
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND || endpoint == REDIRECT);
-
-    // with async requests the span is started in one instrumentation (server instrumentation)
-    // but ended from another (servlet instrumentation)
-    options.setMetricsInstrumentationName(() -> "io.opentelemetry.servlet-3.0");
   }
 
   @Override

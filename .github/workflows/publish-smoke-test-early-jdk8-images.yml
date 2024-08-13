@@ -1,0 +1,49 @@
+name: Publish early jdk8 images for smoke tests
+
+on:
+  push:
+    paths:
+      - "smoke-tests/images/early-jdk8/**"
+      - ".github/workflows/pr-smoke-test-early-jdk8-images.yml"
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Login to GitHub package registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set tag
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+      - name: Build Docker image
+        run: ./gradlew :smoke-tests:images:early-jdk8:dockerPush -PextraTag=${{ env.TAG }}
+
+  workflow-notification:
+    needs:
+      - publish
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.publish.result == 'success' }}

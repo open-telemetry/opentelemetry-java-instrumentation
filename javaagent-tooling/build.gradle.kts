@@ -13,6 +13,7 @@ dependencies {
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
+  implementation(project(":instrumentation-api-incubator"))
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
   implementation(project(":sdk-autoconfigure-support"))
@@ -42,6 +43,7 @@ dependencies {
 
   implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
 
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
