@@ -20,6 +20,14 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 
+/**
+ * This factory is designed to wrap around {@link Advice.PostProcessor.Factory} and ensures that
+ * {@link net.bytebuddy.implementation.bytecode.assign.Assigner.Typing#DYNAMIC} is used everywhere.
+ *
+ * <p>This helps by avoiding errors where the instrumented bytecode is suddenly unloadable due to
+ * incompatible assignments and preventing cluttering advice code annotations with the explicit
+ * typing.
+ */
 public class ForceDynamicallyTypedAssignReturnedFactory implements Advice.PostProcessor.Factory {
 
   private static final String TO_ARGUMENTS_TYPENAME =
