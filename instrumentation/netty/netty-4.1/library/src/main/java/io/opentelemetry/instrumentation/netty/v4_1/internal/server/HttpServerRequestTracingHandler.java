@@ -63,7 +63,9 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     } catch (Throwable throwable) {
       // make sure to remove the server context on end() call
       ServerContext serverContext = serverContexts.pollLast();
-      instrumenter.end(serverContext.context(), serverContext.request(), null, throwable);
+      if (serverContext != null) {
+        instrumenter.end(serverContext.context(), serverContext.request(), null, throwable);
+      }
       throw throwable;
     }
   }
