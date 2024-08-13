@@ -45,7 +45,7 @@ public abstract class AbstractComplexPropagationTest {
   }
 
   @BeforeEach
-  void setupSpec() {
+  void setUp() {
     List<Class<?>> contextClasses = new ArrayList<>();
     contextClasses.add(ExternalQueueConfig.class);
     if (additionalContextClass != null) {
@@ -59,12 +59,12 @@ public abstract class AbstractComplexPropagationTest {
   }
 
   @AfterEach
-  void cleanupSpec() {
+  void tearDown() {
     applicationContext.close();
   }
 
   @Test
-  void shouldPropagateContextThroughAComplexFlow() {
+  void should_propagate_context_through_acomplex_flow() {
     SubscribableChannel sendChannel =
         applicationContext.getBean("sendChannel", SubscribableChannel.class);
     SubscribableChannel receiveChannel =
@@ -80,15 +80,11 @@ public abstract class AbstractComplexPropagationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("application.sendChannel process");
-                  span.hasKind(SpanKind.CONSUMER);
-                },
-                span -> {
-                  span.hasName("application.receiveChannel process");
-                  span.hasParent(trace.getSpan(0));
-                  span.hasKind(SpanKind.CONSUMER);
-                },
+                span -> span.hasName("application.sendChannel process").hasKind(SpanKind.CONSUMER),
+                span ->
+                    span.hasName("application.receiveChannel process")
+                        .hasParent(trace.getSpan(0))
+                        .hasKind(SpanKind.CONSUMER),
                 span -> span.hasName("handler").hasParent(trace.getSpan(1))));
 
     receiveChannel.unsubscribe(messageHandler);

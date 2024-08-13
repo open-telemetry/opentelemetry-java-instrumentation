@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
@@ -26,13 +28,29 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 public abstract class AbstractRabbitProducerConsumerTest {
 
-  static GenericContainer rabbitMqContainer;
-  static ConfigurableApplicationContext producerContext;
-  static ConfigurableApplicationContext consumerContext;
+  private GenericContainer<?> rabbitMqContainer;
+  protected ConfigurableApplicationContext producerContext;
+  private ConfigurableApplicationContext consumerContext;
 
-  public void startRabbit(Class<?> additionalContext) {
+  private final Class<?> additionalContextClass;
+
+  public AbstractRabbitProducerConsumerTest(Class<?> additionalContextClass) {
+    this.additionalContextClass = additionalContextClass;
+  }
+
+  @BeforeEach
+  public void setUp() {
+    startRabbit(additionalContextClass);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    stopRabbit();
+  }
+
+  private void startRabbit(Class<?> additionalContext) {
     rabbitMqContainer =
-        new GenericContainer("rabbitmq:latest")
+        new GenericContainer<>("rabbitmq:latest")
             .withExposedPorts(5672)
             .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2));
@@ -64,7 +82,7 @@ public abstract class AbstractRabbitProducerConsumerTest {
     consumerContext = consumerApp.run();
   }
 
-  private Class<?>[] getContextClasses(Class<?> mainContext, Class<?> additionalContext) {
+  private static Class<?>[] getContextClasses(Class<?> mainContext, Class<?> additionalContext) {
     List<Class<?>> contextClasses = new ArrayList<>();
     contextClasses.add(mainContext);
     if (additionalContext != null) {
@@ -73,7 +91,7 @@ public abstract class AbstractRabbitProducerConsumerTest {
     return contextClasses.toArray(new Class<?>[0]);
   }
 
-  public void stopRabbit() {
+  private void stopRabbit() {
     rabbitMqContainer.stop();
     producerContext.close();
     consumerContext.close();
@@ -87,13 +105,12 @@ public abstract class AbstractRabbitProducerConsumerTest {
 
     @Bean
     Runnable producer() {
-      return () -> {
-        runWithSpan(
-            "producer",
-            () -> {
-              source.output().send(MessageBuilder.withPayload("test").build());
-            });
-      };
+      return () ->
+          runWithSpan(
+              "producer",
+              () -> {
+                source.output().send(MessageBuilder.withPayload("test").build());
+              });
     }
 
     @SpringBootConfiguration

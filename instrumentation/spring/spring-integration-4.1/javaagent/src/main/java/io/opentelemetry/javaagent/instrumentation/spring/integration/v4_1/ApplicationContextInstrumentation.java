@@ -22,7 +22,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 
-public class ApplicationContextInstrumentation implements TypeInstrumentation {
+class ApplicationContextInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.springframework.context.support.AbstractApplicationContext");

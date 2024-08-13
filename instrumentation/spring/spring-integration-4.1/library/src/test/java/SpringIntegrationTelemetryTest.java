@@ -7,7 +7,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class SpringIntegrationTelemetryTest extends AbstractSpringIntegrationTracingTest {
+class SpringIntegrationTelemetryTest extends AbstractSpringIntegrationTracingTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 

@@ -48,7 +48,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @BeforeEach
-  public void setupSpec() {
+  public void setUp() {
     List<Class<?>> contextClasses = new ArrayList<>();
     contextClasses.add(MessageChannelsConfig.class);
     if (additionalContextClass != null) {
@@ -62,7 +62,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @AfterEach
-  public void cleanupSpec() {
+  public void tearDown() {
     applicationContext.close();
   }
 
@@ -73,7 +73,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         "executorChannel,executorChannel process"
       },
       delimiter = ',')
-  public void shouldPropagateContext(String channelName, String interceptorSpanName) {
+  public void should_propagate_context(String channelName, String interceptorSpanName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
 
@@ -88,20 +88,16 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(interceptorSpanName);
-                  span.hasKind(SpanKind.CONSUMER);
+                  span.hasName(interceptorSpanName).hasKind(SpanKind.CONSUMER);
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
-                span -> {
-                  span.hasName("handler");
-                  span.hasParentSpanId(trace.getSpan(0).getSpanId());
-                }));
+                span -> span.hasName("handler").hasParentSpanId(trace.getSpan(0).getSpanId())));
 
     channel.unsubscribe(messageHandler);
   }
 
   @Test
-  public void shouldNotAddInterceptorTwice() {
+  void should_not_add_interceptor_twice() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel1", SubscribableChannel.class);
 
@@ -116,20 +112,16 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName("application.directChannel2 process");
-                  span.hasKind(SpanKind.CONSUMER);
+                  span.hasName("application.directChannel2 process").hasKind(SpanKind.CONSUMER);
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
-                span -> {
-                  span.hasName("handler");
-                  span.hasParentSpanId(trace.getSpan(0).getSpanId());
-                }));
+                span -> span.hasName("handler").hasParentSpanId(trace.getSpan(0).getSpanId())));
 
     channel.unsubscribe(messageHandler);
   }
 
   @Test
-  public void shouldNotCreateASpanWhenThereIsAlreadyASpanInTheContext() {
+  void should_not_create_aspan_when_there_is_already_aspan_in_the_context() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
 
@@ -142,24 +134,19 @@ abstract class AbstractSpringIntegrationTracingTest {
           channel.send(MessageBuilder.withPayload("test").build());
         });
 
-    Message<?> capturedMessage = messageHandler.join();
+    messageHandler.join();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("parent");
-                },
-                span -> {
-                  span.hasName("handler");
-                  span.hasParentSpanId(trace.getSpan(0).getSpanId());
-                }));
+                span -> span.hasName("parent"),
+                span -> span.hasName("handler").hasParentSpanId(trace.getSpan(0).getSpanId())));
 
     channel.unsubscribe(messageHandler);
   }
 
   @Test
-  public void shouldHandleMultipleMessageChannelsInAChain() {
+  void should_handle_multiple_message_channels_in_achain() {
     SubscribableChannel channel1 =
         applicationContext.getBean("linkedChannel1", SubscribableChannel.class);
     SubscribableChannel channel2 =
@@ -176,20 +163,16 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName("application.linkedChannel1 process");
-                  span.hasKind(SpanKind.CONSUMER);
+                  span.hasName("application.linkedChannel1 process").hasKind(SpanKind.CONSUMER);
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
-                span -> {
-                  span.hasName("handler");
-                  span.hasParentSpanId(trace.getSpan(0).getSpanId());
-                }));
+                span -> span.hasName("handler").hasParentSpanId(trace.getSpan(0).getSpanId())));
 
     channel2.unsubscribe(messageHandler);
   }
 
   @Test
-  public void captureMessageHeader() {
+  void capture_message_header() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
 
@@ -205,14 +188,10 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName("application.directChannel process");
-                  span.hasKind(SpanKind.CONSUMER);
+                  span.hasName("application.directChannel process").hasKind(SpanKind.CONSUMER);
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
-                span -> {
-                  span.hasName("handler");
-                  span.hasParentSpanId(trace.getSpan(0).getSpanId());
-                }));
+                span -> span.hasName("handler").hasParentSpanId(trace.getSpan(0).getSpanId())));
 
     channel.unsubscribe(messageHandler);
   }

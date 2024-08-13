@@ -7,7 +7,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class SpringCloudStreamProducerTest extends AbstractSpringCloudStreamProducerTest {
+class SpringCloudStreamProducerTest extends AbstractSpringCloudStreamProducerTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
