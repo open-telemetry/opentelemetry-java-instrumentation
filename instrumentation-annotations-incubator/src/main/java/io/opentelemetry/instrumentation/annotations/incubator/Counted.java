@@ -70,7 +70,7 @@ public @interface Counted {
    *
    * <p>By default, the instrument will not record an attribute with the return value.
    *
-   * <p>Warning: be careful to fill it because it might cause an explosion of the cardinality on
+   * <p>Warning: be careful using this because it might cause an explosion of the cardinality on
    * your metric
    */
   String returnValueAttribute() default "";
