@@ -38,8 +38,11 @@ public class ForceDynamicallyTypedAssignReturnedFactory implements Advice.PostPr
   private static final EnumerationDescription DYNAMIC_TYPING =
       new EnumerationDescription.ForLoadedEnumeration(Assigner.Typing.DYNAMIC);
 
-  private final Advice.PostProcessor.Factory delegate =
-      new Advice.AssignReturned.Factory().withSuppressed(Throwable.class);
+  private final Advice.PostProcessor.Factory delegate;
+
+  public ForceDynamicallyTypedAssignReturnedFactory(Advice.PostProcessor.Factory delegate) {
+    this.delegate = delegate;
+  }
 
   @Override
   public Advice.PostProcessor make(MethodDescription.InDefinedShape adviceMethod, boolean exit) {
