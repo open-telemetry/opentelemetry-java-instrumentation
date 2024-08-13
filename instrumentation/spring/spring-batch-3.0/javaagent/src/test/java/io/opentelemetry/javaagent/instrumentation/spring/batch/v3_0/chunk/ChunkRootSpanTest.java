@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class ChunkRootSpanTest {
+abstract class ChunkRootSpanTest {
 
   private final JobRunner jobRunner;
 
@@ -34,7 +34,7 @@ public abstract class ChunkRootSpanTest {
   }
 
   @Test
-  public void shouldCreateSeparateTracesForEachChunk() {
+  void should_create_separate_traces_for_each_chunk() {
     jobRunner.runJob("itemsAndTaskletJob");
     AtomicReference<SpanData> itemStepSpan = new AtomicReference<>();
     AtomicReference<SpanData> taskletStepSpan = new AtomicReference<>();
@@ -45,7 +45,7 @@ public abstract class ChunkRootSpanTest {
                 span ->
                     span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(itemStepSpan.get()));
+                        .hasLinks(LinkData.create(itemStepSpan.get().getSpanContext())));
     testing.waitAndAssertTraces(
         trace -> {
           itemStepSpan.set(trace.getSpan(1));

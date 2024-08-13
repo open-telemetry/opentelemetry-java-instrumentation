@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JobRunner;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.lang.reflect.Field;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,7 @@ import org.springframework.batch.core.step.tasklet.TaskletStep;
 import org.springframework.batch.repeat.policy.SimpleCompletionPolicy;
 import org.springframework.batch.repeat.support.TaskExecutorRepeatTemplate;
 
-public abstract class ItemLevelSpanTest {
+abstract class ItemLevelSpanTest {
   private final JobRunner runner;
 
   @RegisterExtension
@@ -34,7 +35,7 @@ public abstract class ItemLevelSpanTest {
   }
 
   @Test
-  public void should_trace_item_read__process_and_write_calls() {
+  void should_trace_item_read__process_and_write_calls() {
     runner.runJob("itemsAndTaskletJob");
 
     testing.waitAndAssertTraces(
@@ -147,7 +148,7 @@ public abstract class ItemLevelSpanTest {
   }
 
   @Test
-  public void should_trace_all_item_operations_on_a_parallel_items_job() {
+  void should_trace_all_item_operations_on_a_parallel_items_job() {
     runner.runJob("parallelItemsJob");
 
     testing.waitAndAssertTraces(
@@ -304,9 +305,10 @@ public abstract class ItemLevelSpanTest {
       // explicitly set the number of chunks we expect from this test to ensure we always get
       // the same number of spans
       try {
+        Field field = taskletStep.getClass().getDeclaredField("stepOperations");
+        field.setAccessible(true);
         TaskExecutorRepeatTemplate stepOperations =
-            (TaskExecutorRepeatTemplate)
-                taskletStep.getClass().getDeclaredField("stepOperations").get(taskletStep);
+            (TaskExecutorRepeatTemplate) field.get(taskletStep);
         stepOperations.setCompletionPolicy(new SimpleCompletionPolicy(3));
       } catch (Exception e) {
         throw new IllegalStateException(e);
