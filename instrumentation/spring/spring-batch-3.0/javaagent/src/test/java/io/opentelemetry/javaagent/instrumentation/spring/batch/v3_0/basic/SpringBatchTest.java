@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.batch.core.JobParameter;
 
-public abstract class SpringBatchTest {
+abstract class SpringBatchTest {
 
   private final JobRunner runner;
 
@@ -36,7 +36,7 @@ public abstract class SpringBatchTest {
   }
 
   @Test
-  public void should_trace_tasklet_job_step() {
+  void should_trace_tasklet_job_step() {
     runner.runJob("taskletJob");
 
     testing.waitAndAssertTraces(
@@ -57,7 +57,7 @@ public abstract class SpringBatchTest {
   }
 
   @Test
-  public void should_handle_exception_in_tasklet_job_step() {
+  void should_handle_exception_in_tasklet_job_step() {
     runner.runJob("taskletJob", Collections.singletonMap("fail", new JobParameter(1L)));
 
     testing.waitAndAssertTraces(
@@ -81,7 +81,7 @@ public abstract class SpringBatchTest {
   }
 
   @Test
-  public void should_trace_chunked_items_job() {
+  void should_trace_chunked_items_job() {
     runner.runJob("itemsAndTaskletJob");
 
     testing.waitAndAssertTraces(
@@ -115,7 +115,7 @@ public abstract class SpringBatchTest {
   }
 
   @Test
-  public void should_trace_flow_job() {
+  void should_trace_flow_job() {
     runner.runJob("flowJob");
 
     testing.waitAndAssertTraces(
@@ -144,7 +144,7 @@ public abstract class SpringBatchTest {
   }
 
   @Test
-  public void should_trace_split_flow_job() {
+  void should_trace_split_flow_job() {
     runner.runJob("splitJob");
 
     testing.waitAndAssertTraces(
@@ -185,7 +185,7 @@ public abstract class SpringBatchTest {
   }
 
   @Test
-  public void should_trace_job_with_decision() {
+  void should_trace_job_with_decision() {
     runner.runJob("decisionJob");
 
     testing.waitAndAssertTraces(
@@ -214,7 +214,7 @@ public abstract class SpringBatchTest {
   }
 
   @Test
-  public void should_trace_partitioned_job() {
+  void should_trace_partitioned_job() {
     runner.runJob("partitionedJob");
 
     testing.waitAndAssertTraces(

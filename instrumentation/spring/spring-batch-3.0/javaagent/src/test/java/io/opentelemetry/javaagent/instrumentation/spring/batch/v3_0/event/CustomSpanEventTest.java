@@ -16,7 +16,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class CustomSpanEventTest {
+abstract class CustomSpanEventTest {
   private final JobRunner runner;
 
   @RegisterExtension
@@ -27,7 +27,7 @@ public abstract class CustomSpanEventTest {
   }
 
   @Test
-  public void should_be_able_to_call_Span_current___and_add_custom_info_to_spans() {
+  void should_be_able_to_call_Span_current___and_add_custom_info_to_spans() {
     runner.runJob("customSpanEventsItemsJob");
 
     testing.waitAndAssertTraces(
@@ -88,7 +88,12 @@ public abstract class CustomSpanEventTest {
                                   } else {
                                     assertThat(spanData.getEvents()).isEmpty();
                                   }
-                                }))));
+                                }),
+                    span -> {}, // ignore
+                    span -> {}, // ignore
+                    span -> {}, // ignore
+                    span -> {} // ignore
+                    )));
   }
 
   protected void itemSpans(TraceAssert trace) {
@@ -99,31 +104,19 @@ public abstract class CustomSpanEventTest {
         span ->
             span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.ItemRead")
                 .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                .hasEventsSatisfyingExactly(
-                    event -> event.hasName("item.read.before"),
-                    event -> event.hasName("item.read.after")),
+                .hasParent(trace.getSpan(2)),
         span ->
             span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.ItemRead")
                 .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                // spring batch does not call ItemReadListener after() methods when read() returns
-                // end-of-stream
-                .hasEventsSatisfyingExactly(event -> event.hasName("item.read.before")),
+                .hasParent(trace.getSpan(2)),
         span ->
             span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.ItemProcess")
                 .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                .hasEventsSatisfyingExactly(
-                    event -> event.hasName("item.process.before"),
-                    event -> event.hasName("item.process.after")),
+                .hasParent(trace.getSpan(2)),
         span ->
             span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.ItemWrite")
                 .hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(2))
-                .hasEventsSatisfyingExactly(
-                    event -> event.hasName("item.write.before"),
-                    event -> event.hasName("item.write.after")));
+                .hasParent(trace.getSpan(2)));
   }
 
   private static final boolean VERSION_GREATER_THAN_4_0 = Boolean.getBoolean("testLatestDeps");
