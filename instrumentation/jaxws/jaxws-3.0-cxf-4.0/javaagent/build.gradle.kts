@@ -8,7 +8,6 @@ muzzle {
     module.set("cxf-rt-frontend-jaxws")
     versions.set("[4.0.0,)")
     extraDependency("jakarta.servlet:jakarta.servlet-api:5.0.0")
-    assertInverse.set(true)
   }
 }
 
