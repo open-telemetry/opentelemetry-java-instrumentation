@@ -57,10 +57,10 @@ dependencies {
   implementation("com.diffplug.spotless:spotless-plugin-gradle:6.25.0")
   implementation("com.google.guava:guava:33.2.1-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
-  implementation("com.github.johnrengelman:shadow:8.1.1")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.0")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.17.5")
-  implementation("org.owasp:dependency-check-gradle:10.0.2")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.17.6")
+  implementation("org.owasp:dependency-check-gradle:10.0.3")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
   // When updating, also update dependencyManagement/build.gradle.kts

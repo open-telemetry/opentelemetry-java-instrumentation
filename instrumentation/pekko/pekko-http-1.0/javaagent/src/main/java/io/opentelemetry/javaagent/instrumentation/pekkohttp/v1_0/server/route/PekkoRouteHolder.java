@@ -19,7 +19,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
 
   private String route = "";
-  private boolean newSegment;
+  private boolean newSegment = true;
   private boolean endMatched;
   private final Deque<String> stack = new ArrayDeque<>();
 
@@ -58,6 +58,14 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     PekkoRouteHolder holder = Context.current().get(KEY);
     if (holder != null) {
       holder.stack.push(holder.route);
+      holder.newSegment = true;
+    }
+  }
+
+  public static void reset() {
+    PekkoRouteHolder holder = Context.current().get(KEY);
+    if (holder != null) {
+      holder.route = holder.stack.peek();
       holder.newSegment = true;
     }
   }
