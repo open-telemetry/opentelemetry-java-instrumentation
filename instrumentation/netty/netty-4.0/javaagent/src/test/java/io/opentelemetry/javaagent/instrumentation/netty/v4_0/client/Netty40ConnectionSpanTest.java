@@ -56,13 +56,13 @@ class Netty40ConnectionSpanTest {
   private static final Bootstrap bootstrap = buildBootstrap();
 
   @BeforeAll
-  static void setUp() {
+  static void setupSpec() {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
   }
 
   @AfterAll
-  static void tearDown() throws InterruptedException, ExecutionException, TimeoutException {
+  static void cleanupSpec() throws InterruptedException, ExecutionException, TimeoutException {
     eventLoopGroup.shutdownGracefully();
     server.stop().get(10, TimeUnit.SECONDS);
   }

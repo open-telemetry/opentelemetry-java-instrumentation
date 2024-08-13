@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
@@ -50,8 +49,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
 
   private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
 
-  @AfterEach
-  void tearDown() {
+  void cleanupSpec() {
     if (eventLoopGroup != null) {
       eventLoopGroup.shutdownGracefully();
     }
