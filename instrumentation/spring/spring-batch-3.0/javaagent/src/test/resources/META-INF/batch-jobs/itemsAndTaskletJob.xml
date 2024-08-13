@@ -2,13 +2,13 @@
 <job id="itemsAndTaskletJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <step id="itemStep">
     <chunk item-count="5">
-      <reader ref="jsr.TestItemReader"/>
-      <processor ref="jsr.TestItemProcessor"/>
-      <writer ref="jsr.TestItemWriter"/>
+      <reader ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestItemReader"/>
+      <processor ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestItemProcessor"/>
+      <writer ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestItemWriter"/>
     </chunk>
     <next on="*" to="taskletStep"/>
   </step>
   <step id="taskletStep">
-    <batchlet ref="jsr.TestBatchlet"/>
+    <batchlet ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestBatchlet"/>
   </step>
 </job>

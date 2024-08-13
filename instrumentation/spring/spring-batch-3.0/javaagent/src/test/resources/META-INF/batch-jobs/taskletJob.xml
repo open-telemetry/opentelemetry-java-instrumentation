@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <job id="taskletJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
   <step id="step">
-    <batchlet ref="jsr.TestBatchlet">
+    <batchlet ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestBatchlet">
       <properties>
         <property name="fail" value="#{jobParameters['fail']}"/>
       </properties>

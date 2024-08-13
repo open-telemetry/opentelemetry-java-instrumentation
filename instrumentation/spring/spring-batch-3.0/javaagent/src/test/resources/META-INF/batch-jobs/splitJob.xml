@@ -3,12 +3,12 @@
   <split id="split">
     <flow id="splitFlow1">
       <step id="splitFlowStep1">
-        <batchlet ref="jsr.TestBatchlet"/>
+        <batchlet ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestBatchlet"/>
       </step>
     </flow>
     <flow id="splitFlow2">
       <step id="splitFlowStep2">
-        <batchlet ref="jsr.TestBatchlet"/>
+        <batchlet ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestBatchlet"/>
       </step>
     </flow>
   </split>
