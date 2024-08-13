@@ -156,6 +156,24 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 OpenTelemetryAssertions.assertThat(metric)
+                    .hasName("messaging.receive.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Measures the number of received messages.")
+                    .hasLongSumSatisfying(
+                        sum -> {
+                          sum.hasPointsSatisfying(
+                              point -> {
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfying(
+                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(SERVER_PORT, brokerPort),
+                                        equalTo(SERVER_ADDRESS, brokerHost));
+                              });
+                        }),
+            metric ->
+                OpenTelemetryAssertions.assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -252,6 +270,24 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 OpenTelemetryAssertions.assertThat(metric)
+                    .hasName("messaging.receive.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Measures the number of received messages.")
+                    .hasLongSumSatisfying(
+                        sum -> {
+                          sum.hasPointsSatisfying(
+                              point -> {
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfying(
+                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(SERVER_PORT, brokerPort),
+                                        equalTo(SERVER_ADDRESS, brokerHost));
+                              });
+                        }),
+            metric ->
+                OpenTelemetryAssertions.assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -333,6 +369,24 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
+            metric ->
+                OpenTelemetryAssertions.assertThat(metric)
+                    .hasName("messaging.receive.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Measures the number of received messages.")
+                    .hasLongSumSatisfying(
+                        sum -> {
+                          sum.hasPointsSatisfying(
+                              point -> {
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfying(
+                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                        equalTo(SERVER_PORT, brokerPort),
+                                        equalTo(SERVER_ADDRESS, brokerHost));
+                              });
+                        }),
             metric ->
                 OpenTelemetryAssertions.assertThat(metric)
                     .hasName("messaging.publish.duration")
@@ -595,15 +649,26 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     .hasDescription("Measures the number of received messages.")
                     .hasLongSumSatisfying(
                         sum -> {
-                          sum.hasPointsSatisfying(
-                              point -> {
-                                point
-                                    .hasValue(receivedMsg.size())
-                                    .hasAttributesSatisfying(
-                                        equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                        equalTo(SERVER_PORT, brokerPort),
-                                        equalTo(SERVER_ADDRESS, brokerHost));
+                          sum.satisfies(
+                              pointData -> {
+                                pointData
+                                    .getPoints()
+                                    .forEach(
+                                        p -> {
+                                          assertThat(p.getValue()).isPositive();
+                                          if (p.getValue() == receivedMsg.size()) {
+                                            assertThat(
+                                                    p.getAttributes()
+                                                        .get(MESSAGING_DESTINATION_NAME))
+                                                .isEqualTo(topic);
+                                            assertThat(p.getAttributes().get(MESSAGING_SYSTEM))
+                                                .isEqualTo("pulsar");
+                                            assertThat(p.getAttributes().get(SERVER_PORT))
+                                                .isEqualTo(brokerPort);
+                                            assertThat(p.getAttributes().get(SERVER_ADDRESS))
+                                                .isEqualTo(brokerHost);
+                                          }
+                                        });
                               });
                         }));
   }

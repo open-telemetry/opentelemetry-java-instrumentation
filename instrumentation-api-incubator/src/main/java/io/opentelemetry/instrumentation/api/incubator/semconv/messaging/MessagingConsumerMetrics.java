@@ -88,20 +88,18 @@ public final class MessagingConsumerMetrics implements OperationListener {
     receiveDurationHistogram.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
 
-    Long receiveMessagesCount = getReceiveMessagesCount(state.startAttributes(), endAttributes);
-    if (receiveMessagesCount != null) {
-      receiveMessageCount.add(receiveMessagesCount, attributes, context);
-    }
+    long receiveMessagesCount = getReceiveMessagesCount(state.startAttributes(), endAttributes);
+    receiveMessageCount.add(receiveMessagesCount, attributes, context);
   }
 
-  private static Long getReceiveMessagesCount(Attributes... attributesList) {
+  private static long getReceiveMessagesCount(Attributes... attributesList) {
     for (Attributes attributes : attributesList) {
       Long value = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
       if (value != null) {
         return value;
       }
     }
-    return null;
+    return 1;
   }
 
   @AutoValue
