@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
+import java.io.IOException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,12 +55,9 @@ public class AwsLambdaWrapperTest {
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
           "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaWrapperTest$TestRequestHandlerString::handleRequest")
-  void handlerTraced() {
+  void handlerTraced() throws IOException {
     TracingRequestWrapper wrapper =
-        new TracingRequestWrapper(
-            testing.getOpenTelemetrySdk(),
-            WrappedLambda.fromConfiguration(),
-            TracingRequestWrapper::map);
+        new TracingRequestWrapper(testing.getOpenTelemetrySdk(), WrappedLambda.fromConfiguration());
     Object result = wrapper.handleRequest("hello", context);
 
     assertThat(result).isEqualTo("world");
@@ -84,10 +82,7 @@ public class AwsLambdaWrapperTest {
           "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaWrapperTest$TestRequestHandlerString::handleRequest")
   void handlerTracedWithException() {
     TracingRequestWrapper wrapper =
-        new TracingRequestWrapper(
-            testing.getOpenTelemetrySdk(),
-            WrappedLambda.fromConfiguration(),
-            TracingRequestWrapper::map);
+        new TracingRequestWrapper(testing.getOpenTelemetrySdk(), WrappedLambda.fromConfiguration());
     Throwable thrown = catchThrowable(() -> wrapper.handleRequest("goodbye", context));
 
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
@@ -112,12 +107,9 @@ public class AwsLambdaWrapperTest {
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
           "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaWrapperTest$TestRequestHandlerInteger::handleRequest")
-  void handlerTraced_integer() {
+  void handlerTraced_integer() throws IOException {
     TracingRequestWrapper wrapper =
-        new TracingRequestWrapper(
-            testing.getOpenTelemetrySdk(),
-            WrappedLambda.fromConfiguration(),
-            TracingRequestWrapper::map);
+        new TracingRequestWrapper(testing.getOpenTelemetrySdk(), WrappedLambda.fromConfiguration());
     Object result = wrapper.handleRequest(1, context);
 
     assertThat(result).isEqualTo("world");
@@ -140,12 +132,9 @@ public class AwsLambdaWrapperTest {
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
           "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaWrapperTest$TestRequestHandlerCustomType::handleRequest")
-  void handlerTraced_custom() {
+  void handlerTraced_custom() throws IOException {
     TracingRequestWrapper wrapper =
-        new TracingRequestWrapper(
-            testing.getOpenTelemetrySdk(),
-            WrappedLambda.fromConfiguration(),
-            TracingRequestWrapper::map);
+        new TracingRequestWrapper(testing.getOpenTelemetrySdk(), WrappedLambda.fromConfiguration());
     CustomType ct = new CustomType();
     ct.key = "hello there";
     ct.value = "General Kenobi";
@@ -188,9 +177,28 @@ public class AwsLambdaWrapperTest {
     }
   }
 
+  @SuppressWarnings("UnusedMethod")
   private static class CustomType {
     String key;
     String value;
+
+    // Need getter/setter of all the attributes for serialization/deserialization
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
   }
 
   public static final class TestRequestHandlerCustomType
