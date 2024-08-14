@@ -14,11 +14,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class TestServlet2 {
+
+  private TestServlet2() {}
+
   public static class Sync extends HttpServlet {
     @Override
-    protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
       req.getRequestDispatcher(null);
-      final ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
+      ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
       HttpServerTest.controller(
           endpoint,
           () -> {
@@ -44,6 +47,8 @@ public class TestServlet2 {
                 INDEXED_CHILD.collectSpanAttributes(req::getParameter);
                 resp.setStatus(endpoint.getStatus());
                 resp.getWriter().print(endpoint.getBody());
+                break;
+              default:
                 break;
             }
             return null;

@@ -164,6 +164,7 @@ public class HttpServletResponseTest {
                                         val -> val.isInstanceOf(String.class))))));
   }
 
+  /** Tests deprecated methods */
   @SuppressWarnings("deprecation")
   public static class TestResponse implements HttpServletResponse {
     @Override
