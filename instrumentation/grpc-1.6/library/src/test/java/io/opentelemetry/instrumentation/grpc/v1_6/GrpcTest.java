@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import example.GreeterGrpc;
 import example.Helloworld;
