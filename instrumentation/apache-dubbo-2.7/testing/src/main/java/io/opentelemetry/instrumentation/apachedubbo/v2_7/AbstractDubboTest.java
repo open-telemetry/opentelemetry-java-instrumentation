@@ -134,7 +134,6 @@ abstract class AbstractDubboTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -212,7 +211,6 @@ abstract class AbstractDubboTest {
                         span.hasName("org.apache.dubbo.rpc.service.GenericService/$invokeAsync")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,

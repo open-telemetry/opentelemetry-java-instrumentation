@@ -119,7 +119,7 @@ abstract class AbstractDubboTraceChainTest {
   @Test
   @DisplayName("test that context is propagated correctly in chained dubbo calls")
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public void testDubboChain() {
+  void testDubboChain() {
     int port = PortUtils.findOpenPorts(2);
     int middlePort = port + 1;
 
@@ -287,7 +287,7 @@ abstract class AbstractDubboTraceChainTest {
   @Test
   @DisplayName("test ignore injvm calls")
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public void testDubboChainInJvm() {
+  void testDubboChainInJvm() {
     int port = PortUtils.findOpenPorts(2);
     int middlePort = port + 1;
 
