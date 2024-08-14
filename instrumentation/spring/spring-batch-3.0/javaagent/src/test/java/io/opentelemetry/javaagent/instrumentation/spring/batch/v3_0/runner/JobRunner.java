@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner;
 
-import java.util.Collections;
+import static java.util.Collections.emptyMap;
+
 import java.util.Map;
 import org.springframework.batch.core.JobParameter;
 
@@ -13,6 +14,6 @@ public interface JobRunner {
   void runJob(String jobName, Map<String, JobParameter> params);
 
   default void runJob(String jobName) {
-    runJob(jobName, Collections.emptyMap());
+    runJob(jobName, emptyMap());
   }
 }

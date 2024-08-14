@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JavaxBatchConfigRunner;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -22,7 +21,7 @@ public class JsrConfigItemLevelSpanTest extends ItemLevelSpanTest {
   @Test
   @Override
   public void should_trace_item_read__process_and_write_calls() {
-    runner.runJob("itemsAndTaskletJob", Collections.emptyMap());
+    runner.runJob("itemsAndTaskletJob");
 
     testing.waitAndAssertTraces(
         trace -> {

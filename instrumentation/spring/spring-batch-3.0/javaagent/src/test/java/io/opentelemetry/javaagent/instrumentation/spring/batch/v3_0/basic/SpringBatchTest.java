@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.basic;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -18,7 +19,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ExceptionAttributes;
-import java.util.Collections;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,7 +58,7 @@ abstract class SpringBatchTest {
 
   @Test
   void should_handle_exception_in_tasklet_job_step() {
-    runner.runJob("taskletJob", Collections.singletonMap("fail", new JobParameter(1L)));
+    runner.runJob("taskletJob", singletonMap("fail", new JobParameter(1L)));
 
     testing.waitAndAssertTraces(
         trace ->

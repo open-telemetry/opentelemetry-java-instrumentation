@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.event;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JobRunner;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -53,12 +53,12 @@ abstract class CustomSpanEventTest {
                                   // span when using spring-batch versions [3, 4)
                                   // that bug was fixed in 4.0
                                   if (VERSION_GREATER_THAN_4_0) {
-                                    OpenTelemetryAssertions.assertThat(spanData)
+                                    assertThat(spanData)
                                         .hasEventsSatisfyingExactly(
                                             event -> event.hasName("step.before"),
                                             event -> event.hasName("step.after"));
                                   } else {
-                                    OpenTelemetryAssertions.assertThat(spanData)
+                                    assertThat(spanData)
                                         .hasEventsSatisfyingExactly(
                                             event -> event.hasName("step.before"),
                                             event -> event.hasName("chunk.before"),
@@ -81,12 +81,12 @@ abstract class CustomSpanEventTest {
                                   // span when using spring-batch versions [3, 4)
                                   // that bug was fixed in 4.0
                                   if (VERSION_GREATER_THAN_4_0) {
-                                    OpenTelemetryAssertions.assertThat(spanData)
+                                    assertThat(spanData)
                                         .hasEventsSatisfyingExactly(
                                             event -> event.hasName("chunk.before"),
                                             event -> event.hasName("chunk.after"));
                                   } else {
-                                    assertThat(spanData.getEvents()).isEmpty();
+                                    Assertions.assertThat(spanData.getEvents()).isEmpty();
                                   }
                                 }),
                     span -> {}, // ignore
