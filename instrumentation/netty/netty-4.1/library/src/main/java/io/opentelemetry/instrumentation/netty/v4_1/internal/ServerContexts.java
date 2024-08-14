@@ -26,13 +26,27 @@ public final class ServerContexts {
 
   private ServerContexts() {}
 
-  public ServerContext peekFirst() {
-    return serverContexts.peekFirst();
+  public static ServerContexts get(Channel channel) {
+    return channel.attr(AttributeKeys.SERVER_CONTEXTS).get();
+  }
+
+  public static ServerContexts getOrCreate(Channel channel) {
+    Attribute<ServerContexts> attribute = channel.attr(AttributeKeys.SERVER_CONTEXTS);
+    ServerContexts result = attribute.get();
+    if (result == null) {
+      result = new ServerContexts();
+      attribute.set(result);
+    }
+    return result;
   }
 
   public static ServerContext peekFirst(Channel channel) {
     ServerContexts serverContexts = get(channel);
     return serverContexts != null ? serverContexts.peekFirst() : null;
+  }
+
+  public ServerContext peekFirst() {
+    return serverContexts.peekFirst();
   }
 
   public ServerContext peekLast() {
@@ -61,19 +75,5 @@ public final class ServerContexts {
       serverContexts.clear();
     }
     serverContexts.addLast(context);
-  }
-
-  public static ServerContexts get(Channel channel) {
-    return channel.attr(AttributeKeys.SERVER_CONTEXTS).get();
-  }
-
-  public static ServerContexts getOrCreate(Channel channel) {
-    Attribute<ServerContexts> attribute = channel.attr(AttributeKeys.SERVER_CONTEXTS);
-    ServerContexts result = attribute.get();
-    if (result == null) {
-      result = new ServerContexts();
-      attribute.set(result);
-    }
-    return result;
   }
 }
