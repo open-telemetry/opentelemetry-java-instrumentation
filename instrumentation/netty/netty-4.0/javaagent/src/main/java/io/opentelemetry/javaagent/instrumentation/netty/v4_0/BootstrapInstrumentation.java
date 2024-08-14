@@ -39,7 +39,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
     @Advice.OnMethodEnter
-    public static Object startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
+    public static NettyScope startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       NettyConnectionRequest request = NettyConnectionRequest.connect(remoteAddress);
@@ -54,7 +54,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
     public static void endConnect(
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(4) ChannelPromise channelPromise,
-        @Advice.Enter Object enterScope) {
+        @Advice.Enter NettyScope enterScope) {
 
       NettyScope.end(enterScope, connectionInstrumenter(), channelPromise, throwable);
     }

@@ -52,7 +52,7 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static Object trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
+    public static CallDepth trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -72,12 +72,8 @@ public class NettyChannelPipelineInstrumentation
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) String handlerName,
         @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Enter Object enterCallDepth) {
+        @Advice.Enter CallDepth callDepth) {
 
-      if (!(enterCallDepth instanceof CallDepth)) {
-        return;
-      }
-      CallDepth callDepth = (CallDepth) enterCallDepth;
       if (callDepth.decrementAndGet() > 0) {
         return;
       }

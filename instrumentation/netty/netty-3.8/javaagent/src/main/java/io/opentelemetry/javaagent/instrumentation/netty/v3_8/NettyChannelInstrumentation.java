@@ -56,7 +56,7 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object onEnter(
+    public static NettyScope onEnter(
         @Advice.This Channel channel, @Advice.Argument(0) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -82,12 +82,11 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Return ChannelFuture channelFuture,
         @Advice.Thrown Throwable error,
-        @Advice.Enter Object enterScope) {
+        @Advice.Enter NettyScope nettyScope) {
 
-      if (!(enterScope instanceof NettyScope)) {
+      if (nettyScope == null) {
         return;
       }
-      NettyScope nettyScope = (NettyScope) enterScope;
 
       if (error != null) {
         if (connectionInstrumenter()

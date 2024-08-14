@@ -54,7 +54,7 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static Object trackCallDepth() {
+    public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(ChannelPipeline.class);
       callDepth.getAndIncrement();
       return callDepth;
@@ -64,12 +64,8 @@ public class NettyChannelPipelineInstrumentation
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Enter Object enterCallDepth) {
+        @Advice.Enter CallDepth callDepth) {
 
-      if (!(enterCallDepth instanceof CallDepth)) {
-        return;
-      }
-      CallDepth callDepth = (CallDepth) enterCallDepth;
       if (callDepth.decrementAndGet() > 0) {
         return;
       }

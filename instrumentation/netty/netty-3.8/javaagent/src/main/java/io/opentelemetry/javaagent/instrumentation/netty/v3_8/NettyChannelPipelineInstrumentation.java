@@ -51,7 +51,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   public static class ChannelPipelineAdd2ArgsAdvice {
 
     @Advice.OnMethodEnter
-    public static Object checkDepth(
+    public static CallDepth checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
@@ -68,12 +68,8 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) ChannelHandler handler,
-        @Advice.Enter Object enterCallDepth) {
+        @Advice.Enter CallDepth callDepth) {
 
-      if (!(enterCallDepth instanceof CallDepth)) {
-        return;
-      }
-      CallDepth callDepth = (CallDepth) enterCallDepth;
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -86,7 +82,7 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   public static class ChannelPipelineAdd3ArgsAdvice {
 
     @Advice.OnMethodEnter
-    public static Object checkDepth(
+    public static CallDepth checkDepth(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
@@ -103,11 +99,8 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Enter Object enterCallDepth) {
-      if (!(enterCallDepth instanceof CallDepth)) {
-        return;
-      }
-      CallDepth callDepth = (CallDepth) enterCallDepth;
+        @Advice.Enter CallDepth callDepth) {
+
       if (callDepth.decrementAndGet() > 0) {
         return;
       }

@@ -34,14 +34,14 @@ public class NettyScope {
   }
 
   public static void end(
-      Object scope,
+      NettyScope nettyScope,
       NettyConnectionInstrumenter instrumenter,
       ChannelPromise channelPromise,
       Throwable throwable) {
-    if (!(scope instanceof NettyScope)) {
+
+    if (nettyScope == null) {
       return;
     }
-    NettyScope nettyScope = (NettyScope) scope;
 
     nettyScope.scope.close();
 
