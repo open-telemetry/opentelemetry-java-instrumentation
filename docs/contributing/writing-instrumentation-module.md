@@ -383,7 +383,7 @@ Using indy instrumentation has these advantages:
 
 - allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques
 - provides clean isolation of instrumentation advice from the application and other instrumentations
-- allows advice classes to contain non-static fields and methods - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
+- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
 
 ### Indy modules and transition
 
@@ -466,12 +466,12 @@ When using non-inlined advices, reading the argument values is still done with `
 annotated parameters, however modifying the values is done through the advice method return value
 and `@Advice.AssignReturned.ToArguments` annotation:
 
-For return type, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
+Note that independent of the static return type of the advice method, all assignments done `@Advice.AssignReturned` will use explicit casts to the type of target field or variable. We explicitly override the `typing` parameter in those annotations in our agent.
 value to the appropriate type.
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
-@Advice.AssignReturned.ToArguments(@ToArgument(value = 1, typing = Assigner.Typing.DYNAMIC))
+@Advice.AssignReturned.ToArguments(@ToArgument(1))
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "hello";
 }
@@ -494,7 +494,7 @@ value to the appropriate type.
 
 ```java
 @Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
-@Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
+@Advice.AssignReturned.ToReturned
 public static Object onExit(@Advice.Return Object returnValue) {
   return "hello";
 }
@@ -514,7 +514,7 @@ value to the appropriate type.
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
-@Advice.AssignReturned.ToFields(@ToField(value = "fieldName", typing = Assigner.Typing.DYNAMIC))
+@Advice.AssignReturned.ToFields(@ToField("fieldName"))
 public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
   return "newFieldValue";
 }
