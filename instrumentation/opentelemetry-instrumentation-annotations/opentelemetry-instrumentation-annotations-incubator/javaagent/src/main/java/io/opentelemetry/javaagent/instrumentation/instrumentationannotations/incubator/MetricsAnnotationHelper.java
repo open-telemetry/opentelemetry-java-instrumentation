@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator;
 
 import application.io.opentelemetry.instrumentation.annotations.incubator.MetricAttribute;
+import application.io.opentelemetry.instrumentation.annotations.incubator.MetricAttributeForReturnValue;
 import application.io.opentelemetry.instrumentation.annotations.incubator.StaticMetricAttribute;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -65,11 +66,13 @@ public abstract class MetricsAnnotationHelper {
     private final BiConsumer<AttributesBuilder, Object> bindReturn;
     private final Attributes staticAttributes;
 
-    MetricAttributeHelper(Method method, String returnValueAttribute) {
+    MetricAttributeHelper(Method method) {
       bindParameters = MethodBinder.bindParameters(method, PARAMETER_ATTRIBUTE_NAMES_EXTRACTOR);
+      MetricAttributeForReturnValue returnValueAttribute =
+          method.getAnnotation(MetricAttributeForReturnValue.class);
       bindReturn =
-          !returnValueAttribute.isEmpty()
-              ? MethodBinder.bindReturnValue(method, returnValueAttribute)
+          returnValueAttribute != null
+              ? MethodBinder.bindReturnValue(method, returnValueAttribute.value())
               : null;
 
       AttributesBuilder attributesBuilder = Attributes.builder();

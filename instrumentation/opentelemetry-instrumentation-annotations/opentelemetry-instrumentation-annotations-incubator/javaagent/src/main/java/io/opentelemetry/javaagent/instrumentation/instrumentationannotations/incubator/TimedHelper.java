@@ -96,9 +96,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
               .setDescription(timedAnnotation.description())
               .setUnit(timeUnitToString(unit))
               .build();
-
-      String returnValueAttribute = timedAnnotation.returnValueAttribute();
-      attributeHelper = new MetricAttributeHelper(method, returnValueAttribute);
+      attributeHelper = new MetricAttributeHelper(method);
     }
 
     void record(Object returnValue, Object[] arguments, Throwable throwable, long startNanoTime) {

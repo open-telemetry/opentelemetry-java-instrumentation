@@ -11,8 +11,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation marks that a parameter of a method or constructor annotated with {@link Timed} or
- * {@link Counted} should be added as an attribute to the instrument.
+ * This annotation allows for adding method return value as attribute to the metrics recorded using
+ * {@link Timed} and {@link Counted} annotations.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
  * that the attribute should be created.
@@ -24,16 +24,15 @@ import java.lang.annotation.Target;
  * <p>Warning: be careful using this because it might cause an explosion of the cardinality on your
  * metric.
  */
-@Target(ElementType.PARAMETER)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MetricAttribute {
+public @interface MetricAttributeForReturnValue {
 
   /**
-   * Optional name of the attribute.
+   * Attribute name for the return value.
    *
-   * <p>If not specified and the code is compiled using the `{@code -parameters}` argument to
-   * `javac`, the parameter name will be used instead. If the parameter name is not available, e.g.,
-   * because the code was not compiled with that flag, the attribute will be ignored.
+   * <p>The name of the attribute for the return value of the method call. {@link Object#toString()}
+   * may be called on the return value to convert it to a String.
    */
-  String value() default "";
+  String value();
 }

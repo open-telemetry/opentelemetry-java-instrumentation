@@ -59,9 +59,7 @@ public final class CountedHelper extends MetricsAnnotationHelper {
               .setDescription(countedAnnotation.description())
               .setUnit(countedAnnotation.unit())
               .build();
-
-      String returnValueAttribute = countedAnnotation.returnValueAttribute();
-      attributeHelper = new MetricAttributeHelper(method, returnValueAttribute);
+      attributeHelper = new MetricAttributeHelper(method);
     }
 
     void record(Object returnValue, Object[] arguments, Throwable throwable) {

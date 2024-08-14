@@ -57,17 +57,4 @@ public @interface Timed {
    * <p>Default is seconds.
    */
   TimeUnit unit() default TimeUnit.SECONDS;
-
-  /**
-   * Attribute name for the return value.
-   *
-   * <p>The name of the attribute for the return value of the method call. {@link Object#toString()}
-   * may be called on the return value to convert it to a String.
-   *
-   * <p>By default, the instrument will not record an attribute with the return value.
-   *
-   * <p>Warning: be careful using this because it might cause an explosion of the cardinality on
-   * your metric
-   */
-  String returnValueAttribute() default "";
 }

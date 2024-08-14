@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed;
 
+import io.opentelemetry.instrumentation.annotations.incubator.MetricAttributeForReturnValue;
 import io.opentelemetry.instrumentation.annotations.incubator.StaticMetricAttribute;
 import io.opentelemetry.instrumentation.annotations.incubator.Timed;
 import java.util.concurrent.CompletableFuture;
@@ -39,12 +40,14 @@ public class TimedExample {
     throw new IllegalStateException("test");
   }
 
-  @Timed(value = "example.with.return.duration", returnValueAttribute = "returnValue")
+  @Timed(value = "example.with.return.duration")
+  @MetricAttributeForReturnValue("returnValue")
   public ReturnObject exampleWithReturnValueAttribute() {
     return new ReturnObject();
   }
 
-  @Timed(value = "example.completable.future.duration", returnValueAttribute = "returnValue")
+  @Timed(value = "example.completable.future.duration")
+  @MetricAttributeForReturnValue("returnValue")
   public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
     return future;
   }
