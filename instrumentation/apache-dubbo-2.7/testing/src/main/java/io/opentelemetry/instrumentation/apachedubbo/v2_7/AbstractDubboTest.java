@@ -20,7 +20,10 @@ import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ProtocolConfig;
@@ -53,9 +56,18 @@ abstract class AbstractDubboTest {
   }
 
   @AfterEach
+  @SuppressWarnings("CatchingUnchecked")
   public void afterEach() {
-    if (bootstrap != null) bootstrap.destroy();
-    if (consumerBootstrap != null) consumerBootstrap.destroy();
+    List<DubboBootstrap> dubboBootstraps = Arrays.asList(bootstrap, consumerBootstrap);
+    for (DubboBootstrap bootstrap : dubboBootstraps) {
+      try {
+        if (bootstrap != null) {
+          bootstrap.destroy();
+        }
+      } catch (Exception e) {
+        // ignore
+      }
+    }
   }
 
   ReferenceConfig<HelloService> configureClient(int port) {
@@ -78,7 +90,7 @@ abstract class AbstractDubboTest {
 
   @Test
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void testApacheDubboBase() throws Exception {
+  void testApacheDubboBase() {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
     // provider boostrap
@@ -157,7 +169,7 @@ abstract class AbstractDubboTest {
 
   @Test
   @SuppressWarnings({"rawtypes", "unchecked"})
-  void testApacheDubboTest() throws Exception {
+  void testApacheDubboTest() throws ExecutionException, InterruptedException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
 

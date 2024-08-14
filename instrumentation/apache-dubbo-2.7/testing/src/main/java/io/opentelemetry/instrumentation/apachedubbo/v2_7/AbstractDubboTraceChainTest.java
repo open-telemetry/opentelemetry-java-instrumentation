@@ -42,7 +42,6 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractDubboTraceChainTest {
 
-  private final ProtocolConfig protocolConfig = new ProtocolConfig();
   private DubboBootstrap bootstrap;
   private DubboBootstrap consumerBootstrap;
   private DubboBootstrap middleBootstrap;
@@ -57,6 +56,7 @@ abstract class AbstractDubboTraceChainTest {
   abstract InstrumentationExtension testing();
 
   @AfterEach
+  @SuppressWarnings("CatchingUnchecked")
   public void afterEach() {
     List<DubboBootstrap> dubboBootstraps =
         Arrays.asList(bootstrap, consumerBootstrap, middleBootstrap);
