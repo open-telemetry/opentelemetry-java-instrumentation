@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -16,15 +16,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class PathConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf(
-        "org.apache.pekko.http.scaladsl.server.PathMatcher$$anonfun$$tilde$1",
-        "org.apache.pekko.http.scaladsl.server.PathMatcher");
+    return named("org.apache.pekko.http.scaladsl.server.PathMatcher");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("apply", "$anonfun$append$1"), this.getClass().getName() + "$ApplyAdvice");
+        named("$anonfun$append$1"), this.getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

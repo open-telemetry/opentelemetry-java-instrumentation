@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -70,67 +69,48 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbQueryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Query query,
-        @Advice.AllArguments(readOnly = false, typing = Assigner.Typing.DYNAMIC) Object[] arguments,
-        @Advice.FieldValue(value = "retrofit") Retrofit retrofit,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(InfluxDBImpl.class);
+    @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
+    public static Object[] onEnter(
+        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return null;
       }
 
+      Query query = arguments[0] instanceof Query ? (Query) arguments[0] : null;
       if (query == null) {
-        return;
+        return null;
       }
       Context parentContext = currentContext();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      influxDbRequest =
+      InfluxDbRequest influxDbRequest =
           InfluxDbRequest.create(
               httpUrl.host(), httpUrl.port(), query.getDatabase(), null, query.getCommand());
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
-        return;
+        return null;
       }
 
       // wrap callbacks so they'd run in the context of the parent span
       Object[] newArguments = new Object[arguments.length];
-      boolean hasChangedArgument = false;
       for (int i = 0; i < arguments.length; i++) {
         newArguments[i] = InfluxDbObjetWrapper.wrap(arguments[i], parentContext);
-        hasChangedArgument |= newArguments[i] != arguments[i];
-      }
-      if (hasChangedArgument) {
-        arguments = newArguments;
       }
 
-      context = instrumenter().start(parentContext, influxDbRequest);
-      scope = context.makeCurrent();
+      return new Object[] {newArguments, InfluxDbScope.start(parentContext, influxDbRequest)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (callDepth.decrementAndGet() > 0) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter Object[] enterArgs) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.decrementAndGet() > 0 || enterArgs == null) {
         return;
       }
 
-      if (scope == null) {
-        return;
-      }
-
-      scope.close();
-
-      instrumenter().end(context, influxDbRequest, null, throwable);
+      ((InfluxDbScope) enterArgs[1]).end(throwable);
     }
   }
 
@@ -138,21 +118,17 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbModifyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    public static InfluxDbScope onEnter(
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) Object arg0,
-        @Advice.FieldValue(value = "retrofit") Retrofit retrofit,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(InfluxDBImpl.class);
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return null;
       }
 
       if (arg0 == null) {
-        return;
+        return null;
       }
 
       Context parentContext = currentContext();
@@ -173,35 +149,25 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
         operation = "WRITE";
       }
 
-      influxDbRequest =
+      InfluxDbRequest influxDbRequest =
           InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operation, null);
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
-        return;
+        return null;
       }
 
-      context = instrumenter().start(parentContext, influxDbRequest);
-      scope = context.makeCurrent();
+      return InfluxDbScope.start(parentContext, influxDbRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") InfluxDbRequest influxDbRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (callDepth.decrementAndGet() > 0) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter InfluxDbScope scope) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      instrumenter().end(context, influxDbRequest, null, throwable);
+      scope.end(throwable);
     }
   }
 }

@@ -21,7 +21,7 @@ configurations.configureEach {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.38.0")
     }
-    if (name.startsWith("incubatorTest")) {
+    if (name.startsWith("incubatorTest") || name.startsWith("noopTest")) {
       resolutionStrategy {
         force("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
       }
@@ -34,6 +34,22 @@ testing {
     val incubatorTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
+      }
+    }
+  }
+
+  suites {
+    val noopTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dtesting.exporter.enabled=false")
+          }
+        }
       }
     }
   }

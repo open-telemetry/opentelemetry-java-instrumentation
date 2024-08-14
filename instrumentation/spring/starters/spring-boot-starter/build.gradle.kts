@@ -1,6 +1,7 @@
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
+  id("otel.japicmp-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
@@ -11,7 +12,6 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter:$springBootVersion")
   compileOnly("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   api(project(":instrumentation:spring:spring-boot-autoconfigure"))
-  api(project(":instrumentation:spring:spring-boot-autoconfigure-3"))
   api(project(":instrumentation-annotations"))
   implementation(project(":instrumentation:resources:library"))
   implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
@@ -23,4 +23,5 @@ dependencies {
 
   implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
 }

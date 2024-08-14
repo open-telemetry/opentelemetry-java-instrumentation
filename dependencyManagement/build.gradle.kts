@@ -8,8 +8,8 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.40.0"
-val otelContribVersion = "1.36.0-alpha"
+val otelSdkVersion = "1.41.0"
+val otelContribVersion = "1.37.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -34,18 +34,18 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.10.3",
-  "org.testcontainers:testcontainers-bom:1.19.8",
+  "org.testcontainers:testcontainers-bom:1.20.1",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.28.0"
+val errorProneVersion = "2.30.0"
 val byteBuddyVersion = "1.14.18"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.13"
+val slf4jVersion = "2.0.16"
 val semConvVersion = "1.25.0-alpha"
 
 val CORE_DEPENDENCIES = listOf(
@@ -87,10 +87,10 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.11.0",
+  "com.uber.nullaway:nullaway:0.11.1",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.8.0",
-  "commons-codec:commons-codec:1.17.0",
+  "commons-codec:commons-codec:1.17.1",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
@@ -102,10 +102,11 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
+  "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.3.2-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.26.0",
-  "org.awaitility:awaitility:4.2.1",
+  "org.assertj:assertj-core:3.26.3",
+  "org.awaitility:awaitility:4.2.2",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",

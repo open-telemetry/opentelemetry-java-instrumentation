@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent;
 
-import static net.bytebuddy.implementation.bytecode.assign.Assigner.Typing.DYNAMIC;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -84,6 +83,8 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
       transformer.applyAdviceToMethod(named("exceptionPlease"), prefix + "$ThrowExceptionAdvice");
       transformer.applyAdviceToMethod(
           named("noExceptionPlease"), prefix + "$SuppressExceptionAdvice");
+      transformer.applyAdviceToMethod(
+          named("instrumentWithErasedTypes"), prefix + "$SignatureErasureAdvice");
     }
 
     @SuppressWarnings({"unused"})
@@ -100,7 +101,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignFieldViaArrayAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToFields(@ToField(value = "privateField", index = 1, typing = DYNAMIC))
+      @Advice.AssignReturned.ToFields(@ToField(value = "privateField", index = 1))
       public static Object[] onEnter(@Advice.Argument(0) String toAssign) {
         return new Object[] {"ignoreme", toAssign};
       }
@@ -110,7 +111,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignArgumentViaReturnAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToArguments(@ToArgument(0))
+      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0))
       public static String onEnter(@Advice.Argument(1) String toAssign) {
         return toAssign;
       }
@@ -120,7 +121,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignArgumentViaArrayAdvice {
 
       @Advice.OnMethodEnter(inline = false)
-      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, index = 1, typing = DYNAMIC))
+      @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
       public static Object[] onEnter(@Advice.Argument(1) String toAssign) {
         return new Object[] {"ignoreme", toAssign};
       }
@@ -140,7 +141,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     public static class AssignReturnViaArrayAdvice {
 
       @Advice.OnMethodExit(inline = false)
-      @Advice.AssignReturned.ToReturned(index = 1, typing = DYNAMIC)
+      @Advice.AssignReturned.ToReturned(index = 1)
       public static Object[] onExit(@Advice.Argument(0) String toAssign) {
         return new Object[] {"ignoreme", toAssign};
       }
@@ -182,6 +183,23 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
           inline = false)
       public static void onMethodExit(@Advice.Thrown Throwable throwable) {
         throw new RuntimeException("This exception should be suppressed");
+      }
+    }
+
+    @SuppressWarnings({"unused", "ThrowSpecificExceptions"})
+    public static class SignatureErasureAdvice {
+      @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+      public static LocalHelper onMethodEnter() {
+        return new LocalHelper();
+      }
+
+      @Advice.AssignReturned.ToReturned
+      @Advice.OnMethodExit(
+          suppress = Throwable.class,
+          onThrowable = Throwable.class,
+          inline = false)
+      public static LocalHelper onMethodExit(@Advice.Enter LocalHelper enterVal) {
+        return enterVal;
       }
     }
   }

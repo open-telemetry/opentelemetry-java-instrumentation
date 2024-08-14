@@ -16,13 +16,13 @@ public abstract class ClickHouseDbRequest {
   private static final SqlStatementSanitizer sanitizer =
       SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
-  public static ClickHouseDbRequest create(String host, Integer port, String dbName, String sql) {
+  public static ClickHouseDbRequest create(String host, int port, String dbName, String sql) {
     return new AutoValue_ClickHouseDbRequest(host, port, dbName, sanitizer.sanitize(sql));
   }
 
   public abstract String getHost();
 
-  public abstract Integer getPort();
+  public abstract int getPort();
 
   public abstract String getDbName();
 
