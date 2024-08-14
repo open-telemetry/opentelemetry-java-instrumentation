@@ -379,7 +379,7 @@ application classloader and the agent classloader.
 The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
 invokedynamic bytecode instructions.
 
-Making the instrumentation indy
+Using indy instrumentation has these advantages:
 
 - allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques
 - provides clean isolation of instrumentation advice from the application and other instrumentations
@@ -391,11 +391,10 @@ Making an instrumentation "indy" compatible (or native "indy") is not as straigh
 However, ByteBuddy provides a set of tools and APIs that are mentioned below to make the process as smooth as possible.
 
 Due to the changes needed on most of the instrumentation modules the migration can't be achieved in a single step,
-we thus have to use intermediate steps.
+we thus have to implement it in two steps:
 
-Instrumentation modules that are "indy native" must have:
-- `InstrumentationModule#isIndyModule` implementation return `true`
-- advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit` with `inlined = false` explicitly set.
+- `InstrumentationModule#isIndyModule` implementation return `true` (and changes needed to make it indy compatible)
+- set `inlined = false` on advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit`
 
 The `otel.javaagent.experimental.indy` (default `false`) configuration option allows to opt-in for
 using "indy". When set to `true`, the `io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer`
