@@ -489,9 +489,6 @@ When using non-inlined advices, reading the original return value is still done 
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToReturned`.
 
-For return type, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
-value to the appropriate type.
-
 ```java
 @Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToReturned
@@ -508,9 +505,6 @@ on advice method parameters allows modifying the `fieldName` field of the instru
 When using non-inlined advices, reading the original field value is still done with the `@Advice.FieldValue`
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToFields` annotation.
-
-For return type, the `typing = Assigner.Typing.DYNAMIC` is needed to instruct ByteBuddy to properly cast the
-value to the appropriate type.
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
