@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -32,14 +33,16 @@ abstract class AbstractJaxWsTest extends AgentInstrumentationSpecification imple
   @Shared
   protected WebServiceTemplate webServiceTemplate = new WebServiceTemplate(marshaller)
 
-  def setupSpec() {
+  @Override
+  void setupSpec() {
     setupServer()
 
     marshaller.setPackagesToScan(ClassUtils.getPackageName(HelloRequest))
     marshaller.afterPropertiesSet()
   }
 
-  def cleanupSpec() {
+  @Override
+  void cleanupSpec() {
     cleanupServer()
   }
 

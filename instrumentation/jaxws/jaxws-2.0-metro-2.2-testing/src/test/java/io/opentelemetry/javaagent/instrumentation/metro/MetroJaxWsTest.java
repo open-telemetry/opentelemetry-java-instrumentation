@@ -5,4 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.metro;
 
+import io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.AbstractJaxWsTest;
+
 class MetroJaxWsTest extends AbstractJaxWsTest {}
