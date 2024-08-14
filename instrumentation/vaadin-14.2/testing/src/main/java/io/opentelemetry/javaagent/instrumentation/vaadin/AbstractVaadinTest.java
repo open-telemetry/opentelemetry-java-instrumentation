@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.vaadin.flow.server.Version;
@@ -14,7 +14,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +26,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -151,24 +151,24 @@ public abstract class AbstractVaadinTest
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
-              assertThat(traces.get(0))
+              Assertions.assertThat(traces.get(0))
                   .satisfies(
                       spans -> {
-                        OpenTelemetryAssertions.assertThat(spans.get(0))
+                        assertThat(spans.get(0))
                             .hasName("POST " + getContextPath() + "/main")
                             .hasNoParent()
                             .hasKind(SpanKind.SERVER);
-                        OpenTelemetryAssertions.assertThat(spans.get(1))
+                        assertThat(spans.get(1))
                             .hasName("SpringVaadinServletService.handleRequest")
                             .hasParent(spans.get(0))
                             .hasKind(SpanKind.INTERNAL);
                         // we don't assert all the handler spans as these vary between
                         // vaadin versions
-                        OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 2))
+                        assertThat(spans.get(spans.size() - 2))
                             .hasName("UidlRequestHandler.handleRequest")
                             .hasParent(spans.get(1))
                             .hasKind(SpanKind.INTERNAL);
-                        OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 1))
+                        assertThat(spans.get(spans.size() - 1))
                             .hasName("EventRpcHandler.handle/click")
                             .hasParent(spans.get(spans.size() - 2))
                             .hasKind(SpanKind.INTERNAL);
@@ -185,7 +185,7 @@ public abstract class AbstractVaadinTest
     driver.get(address.resolve("main").toString());
 
     // wait for page to load
-    assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
+    Assertions.assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
     assertFirstRequest();
 
     testing.clearData();
@@ -194,7 +194,8 @@ public abstract class AbstractVaadinTest
     driver.findElement(By.id("main.button")).click();
 
     // wait for page to load
-    assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
+    Assertions.assertThat(driver.findElement(By.id("other.label")).getText())
+        .isEqualTo("Other view");
     assertButtonClick();
 
     driver.close();

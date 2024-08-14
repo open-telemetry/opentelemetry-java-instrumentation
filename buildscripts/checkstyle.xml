@@ -50,6 +50,10 @@
   -->
 
   <module name="TreeWalker">
+    <module name="RegexpSinglelineJava">
+      <!-- Please statically import methods -->
+      <property name="format" value="(?&lt;!import static java\.util\.)Collections\.singletonMap"/>
+    </module>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

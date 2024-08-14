@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.DoubleGauge;
@@ -40,8 +40,8 @@ import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.api.metrics.ObservableLongGauge;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -71,7 +71,7 @@ class MeterTest {
   @Test
   void longCounter() {
     LongCounterBuilder builder = meter.counterBuilder("test").setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedLongCounterBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedLongCounterBuilder.class);
     ExtendedLongCounterBuilder extendedBuilder = (ExtendedLongCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -86,7 +86,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -108,7 +108,7 @@ class MeterTest {
   void doubleCounter() {
     DoubleCounterBuilder builder =
         meter.counterBuilder("test").ofDoubles().setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedDoubleCounterBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleCounterBuilder.class);
     ExtendedDoubleCounterBuilder extendedBuilder = (ExtendedDoubleCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -123,7 +123,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -145,7 +145,7 @@ class MeterTest {
   void longUpDownCounter() {
     LongUpDownCounterBuilder builder =
         meter.upDownCounterBuilder("test").setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedLongUpDownCounterBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedLongUpDownCounterBuilder.class);
     ExtendedLongUpDownCounterBuilder extendedBuilder = (ExtendedLongUpDownCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -160,7 +160,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -182,7 +182,7 @@ class MeterTest {
   void doubleUpDownCounter() {
     DoubleUpDownCounterBuilder builder =
         meter.upDownCounterBuilder("test").ofDoubles().setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedDoubleUpDownCounterBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleUpDownCounterBuilder.class);
     ExtendedDoubleUpDownCounterBuilder extendedBuilder =
         (ExtendedDoubleUpDownCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
@@ -198,7 +198,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -221,7 +221,7 @@ class MeterTest {
     LongHistogramBuilder builder =
         meter.histogramBuilder("test").ofLongs().setDescription("d").setUnit("u");
     builder.setExplicitBucketBoundariesAdvice(singletonList(10L));
-    assertThat(builder).isInstanceOf(ExtendedLongHistogramBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedLongHistogramBuilder.class);
     ExtendedLongHistogramBuilder extendedBuilder = (ExtendedLongHistogramBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -236,7 +236,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -259,7 +259,7 @@ class MeterTest {
     DoubleHistogramBuilder builder =
         meter.histogramBuilder("test").setDescription("d").setUnit("u");
     builder.setExplicitBucketBoundariesAdvice(singletonList(10.0));
-    assertThat(builder).isInstanceOf(ExtendedDoubleHistogramBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleHistogramBuilder.class);
     ExtendedDoubleHistogramBuilder extendedBuilder = (ExtendedDoubleHistogramBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -274,7 +274,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -296,7 +296,7 @@ class MeterTest {
   void longGauge() throws InterruptedException {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
     ExtendedLongGaugeBuilder extendedBuilder = (ExtendedLongGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -311,7 +311,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -341,7 +341,7 @@ class MeterTest {
   void syncLongGauge() throws InterruptedException {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
     ExtendedLongGaugeBuilder extendedBuilder = (ExtendedLongGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -355,7 +355,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -383,7 +383,7 @@ class MeterTest {
   @Test
   void doubleGauge() throws InterruptedException {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -398,7 +398,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -427,7 +427,7 @@ class MeterTest {
   @Test
   void syncDoubleGauge() throws InterruptedException {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -441,7 +441,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(

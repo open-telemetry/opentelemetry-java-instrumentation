@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +21,6 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -396,7 +396,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(ServerAttributes.SERVER_ADDRESS, host),
                                   equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
                                   equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                  OpenTelemetryAssertions.satisfies(
+                                  satisfies(
                                       DbIncubatingAttributes.DB_STATEMENT,
                                       stringAssert ->
                                           stringAssert.startsWith("CLIENT SETINFO lib-ver")))),

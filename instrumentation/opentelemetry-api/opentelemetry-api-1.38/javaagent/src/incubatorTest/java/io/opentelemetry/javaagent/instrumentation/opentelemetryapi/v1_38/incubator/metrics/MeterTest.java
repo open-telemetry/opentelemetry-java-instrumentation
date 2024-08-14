@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.incubator.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleGaugeBuilder;
@@ -20,8 +20,8 @@ import io.opentelemetry.api.metrics.LongGaugeBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -52,7 +52,7 @@ class MeterTest {
   void syncLongGauge() throws InterruptedException {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
     ExtendedLongGaugeBuilder extendedBuilder = (ExtendedLongGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -66,7 +66,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -94,7 +94,7 @@ class MeterTest {
   @Test
   void syncDoubleGauge() throws InterruptedException {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
-    assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -108,7 +108,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(

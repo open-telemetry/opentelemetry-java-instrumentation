@@ -21,6 +21,7 @@ import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
@@ -445,7 +446,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   final void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertClientSpan(OpenTelemetryAssertions.assertThat(spanData), uri, method, responseCode, null)
+    def assertion = junitTest.assertClientSpan(assertThat(spanData), uri, method, responseCode, null)
     if (parentSpan == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {
@@ -456,7 +457,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   final void serverSpan(TraceAssert trace, int index, Object parentSpan = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData))
+    def assertion = junitTest.assertServerSpan(assertThat(spanData))
     if (parentSpan == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {

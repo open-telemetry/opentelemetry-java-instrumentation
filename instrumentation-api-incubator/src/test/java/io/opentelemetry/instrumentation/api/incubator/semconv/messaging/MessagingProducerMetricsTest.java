@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -16,11 +16,11 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.concurrent.TimeUnit;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class MessagingProducerMetricsTest {
@@ -65,18 +65,18 @@ class MessagingProducerMetricsTest {
 
     Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
 
-    assertThat(metricReader.collectAllMetrics()).isEmpty();
+    Assertions.assertThat(metricReader.collectAllMetrics()).isEmpty();
 
     Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
 
-    assertThat(metricReader.collectAllMetrics()).isEmpty();
+    Assertions.assertThat(metricReader.collectAllMetrics()).isEmpty();
 
     listener.onEnd(context1, responseAttributes, nanos(250));
 
-    assertThat(metricReader.collectAllMetrics())
+    Assertions.assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -109,10 +109,10 @@ class MessagingProducerMetricsTest {
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
-    assertThat(metricReader.collectAllMetrics())
+    Assertions.assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasHistogramSatisfying(
                         histogram ->

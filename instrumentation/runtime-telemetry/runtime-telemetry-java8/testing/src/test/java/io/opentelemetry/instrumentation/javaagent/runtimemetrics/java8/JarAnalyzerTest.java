@@ -41,6 +41,7 @@ class JarAnalyzerTest {
 
   @ParameterizedTest
   @MethodSource("processUrlArguments")
+  @SuppressWarnings("checkstyle:RegexpSinglelineJava")
   void processUrl_EmitsEvents(URL archiveUrl, Consumer<AttributesAssert> attributesConsumer) {
     EventLogger eventLogger = mock(EventLogger.class);
     EventBuilder builder = mock(EventBuilder.class);
