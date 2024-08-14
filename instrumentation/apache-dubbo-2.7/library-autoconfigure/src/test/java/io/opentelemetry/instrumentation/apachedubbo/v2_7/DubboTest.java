@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DubboTest extends AbstractDubboTest {
+class DubboTest extends AbstractDubboTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
