@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -43,10 +45,7 @@ public class Asserter {
   }
 
   private void accept(Consumer<SpanDataAssert> consumer, int i) {
-    consumer.accept(
-        sortedSpans != null
-            ? sortedSpans.get(i)
-            : OpenTelemetryAssertions.assertThat(traceAssert.getSpan(i)));
+    consumer.accept(sortedSpans != null ? sortedSpans.get(i) : assertThat(traceAssert.getSpan(i)));
   }
 
   public List<SpanData> getAll() {
