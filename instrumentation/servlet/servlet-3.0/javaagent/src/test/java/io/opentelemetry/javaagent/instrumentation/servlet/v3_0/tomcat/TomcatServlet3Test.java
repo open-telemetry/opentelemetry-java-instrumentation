@@ -36,7 +36,6 @@ import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.tomcat.JarScanFilter;
 import org.apache.tomcat.JarScanType;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -77,7 +76,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
-    if (DefaultGroovyMethods.isCase(NOT_FOUND, endpoint)) {
+    if (NOT_FOUND.equals(endpoint)) {
       span.satisfies(s -> assertThat(s.getName()).matches("\\.sendError$"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(parentSpan);
@@ -123,11 +122,9 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     //    setupAuthentication(tomcatServer, servletContext)
     setupServlets(servletContext);
 
-    (DefaultGroovyMethods.asType(tomcatServer.getHost(), StandardHost.class))
+    ((StandardHost) tomcatServer.getHost())
         .setErrorReportValveClass(ErrorHandlerValve.class.getName());
-    (DefaultGroovyMethods.asType(tomcatServer.getHost(), StandardHost.class))
-        .getPipeline()
-        .addValve(accessLogValue);
+    tomcatServer.getHost().getPipeline().addValve(accessLogValue);
 
     tomcatServer.start();
 

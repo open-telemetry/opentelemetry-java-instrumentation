@@ -9,7 +9,6 @@ import java.io.IOException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ErrorReportValve;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 public class ErrorHandlerValve extends ErrorReportValve {
   @Override
@@ -19,12 +18,7 @@ public class ErrorHandlerValve extends ErrorReportValve {
     }
 
     try {
-      response
-          .getWriter()
-          .print(
-              DefaultGroovyMethods.asBoolean(t)
-                  ? t.getCause().getMessage()
-                  : response.getMessage());
+      response.getWriter().print(t != null ? t.getCause().getMessage() : response.getMessage());
     } catch (IOException e) {
       e.printStackTrace();
     }

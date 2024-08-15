@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
 

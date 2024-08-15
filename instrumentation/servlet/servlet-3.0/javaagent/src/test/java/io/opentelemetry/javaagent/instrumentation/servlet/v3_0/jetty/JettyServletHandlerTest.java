@@ -24,7 +24,6 @@ import java.util.Set;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
@@ -77,7 +76,7 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
               HttpServletRequest request, Writer writer, int code, String message)
               throws IOException {
             Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception");
-            writer.write(DefaultGroovyMethods.asBoolean(th) ? th.getMessage() : message);
+            writer.write(th != null ? th.getMessage() : message);
           }
         });
     server.start();

@@ -30,7 +30,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import javax.servlet.Servlet;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -109,7 +108,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
       return endpoint.getPath();
     }
 
-    if (DefaultGroovyMethods.isCase(NOT_FOUND, endpoint)) {
+    if (NOT_FOUND.equals(endpoint)) {
       return getContextPath() + "/*";
     } else {
       return super.expectedHttpRoute(endpoint, method);
@@ -123,14 +122,15 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
-    if (DefaultGroovyMethods.isCase(REDIRECT, endpoint)) {
-      return span.satisfies(s -> assertThat(s.getName()).matches("\\.sendRedirect$"))
-          .hasKind(SpanKind.INTERNAL)
-          .hasParent(parentSpan);
-    } else if (DefaultGroovyMethods.isCase(ERROR, endpoint)) {
-      return span.satisfies(s -> assertThat(s.getName()).matches("\\.sendError$"))
-          .hasKind(SpanKind.INTERNAL)
-          .hasParent(parentSpan);
+    switch (endpoint.name()) {
+      case "REDIRECT":
+        return span.satisfies(s -> assertThat(s.getName()).matches("\\.sendRedirect$"))
+            .hasKind(SpanKind.INTERNAL)
+            .hasParent(parentSpan);
+      case "ERROR":
+        return span.satisfies(s -> assertThat(s.getName()).matches("\\.sendError$"))
+            .hasKind(SpanKind.INTERNAL)
+            .hasParent(parentSpan);
     }
     return super.assertResponseSpan(span, parentSpan, method, endpoint);
   }
@@ -176,7 +176,6 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
 
   @Test
   void snippet_injection_with_PrintWriter() {
-    setup:
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     AggregatedHttpRequest request = request(HTML_PRINT_WRITER, "GET");
     AggregatedHttpResponse response = client.execute(request).aggregate().join();

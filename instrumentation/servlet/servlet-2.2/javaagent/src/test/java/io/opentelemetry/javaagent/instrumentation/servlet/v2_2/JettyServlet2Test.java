@@ -10,8 +10,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
@@ -31,7 +29,6 @@ import java.io.Writer;
 import java.util.HashSet;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
@@ -61,7 +58,7 @@ public class JettyServlet2Test extends AbstractHttpServerTest<Server> {
               HttpServletRequest request, Writer writer, int code, String message)
               throws IOException {
             Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception");
-            writer.write(DefaultGroovyMethods.asBoolean(th) ? th.getMessage() : message);
+            writer.write(th != null ? th.getMessage() : message);
           }
         });
 
@@ -108,12 +105,13 @@ public class JettyServlet2Test extends AbstractHttpServerTest<Server> {
       return "HTTP " + getContextPath() + endpoint.getPath();
     }
 
-    if (DefaultGroovyMethods.isCase(NOT_FOUND, endpoint)) {
-      return method;
-    } else if (DefaultGroovyMethods.isCase(PATH_PARAM, endpoint)) {
-      return method + " " + getContextPath() + "/path/:id/param";
-    } else {
-      return method + " " + getContextPath() + endpoint.getPath();
+    switch (endpoint.name()) {
+      case "NOT_FOUND":
+        return method;
+      case "PATH_PARAM":
+        return "HTTP " + getContextPath() + "/path/:id/param";
+      default:
+        return "HTTP " + getContextPath() + endpoint.getPath();
     }
   }
 

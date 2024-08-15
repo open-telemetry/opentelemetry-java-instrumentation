@@ -150,6 +150,8 @@ public class HttpServletResponseTest {
                         .hasException(ex)));
   }
 
+  /** Tests deprecated methods */
+  @SuppressWarnings("deprecation")
   public static class TestResponse implements HttpServletResponse {
     @Override
     public void addCookie(Cookie cookie) {}

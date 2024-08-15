@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 
-import groovy.lang.Reference;
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
@@ -277,16 +276,15 @@ public class TestServlet3 {
   public static class DispatchAsync extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
-      Reference<String> target =
-          new Reference<String>(req.getServletPath().replace("/dispatch", ""));
+      String target = req.getServletPath().replace("/dispatch", "");
       if (req.getQueryString() != null) {
-        target.set(target.get() + "?" + req.getQueryString());
+        target += "?" + req.getQueryString();
       }
 
       AsyncContext context = req.startAsync();
       context.start(
           () -> {
-            context.dispatch(target.get());
+            context.dispatch(target);
           });
     }
   }
