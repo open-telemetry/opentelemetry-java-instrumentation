@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.P
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -31,7 +30,7 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("sendComplete")).and(takesArgument(0, named("java.lang.Exception"))),
+        isMethod().and(named("sendComplete")),
         SendCallbackInstrumentation.class.getName() + "$SendCallbackSendCompleteAdvice");
   }
 
@@ -56,14 +55,14 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Argument(0) Exception e,
+        @Advice.Argument(0) Throwable t,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("otelRequest") PulsarRequest request) {
       if (otelScope != null && otelContext != null && request != null) {
         // Close the Scope and end the span.
         otelScope.close();
-        producerInstrumenter().end(otelContext, request, null, e);
+        producerInstrumenter().end(otelContext, request, null, t);
       }
     }
   }
