@@ -90,6 +90,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     return true;
   }
 
+  protected boolean connectHasSpans() {
+    return false;
+  }
+
   @Test
   void testConnectUsingGetOnConnectionFuture() throws Exception {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
@@ -103,8 +107,13 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
     assertThat(connection1).isNotNull();
-    // Lettuce tracing does not trace connect
-    assertThat(getInstrumentationExtension().spans()).isEmpty();
+    if (connectHasSpans()) {
+      // ignore CLIENT SETINFO traces
+      getInstrumentationExtension().waitForTraces(2);
+    } else {
+      // Lettuce tracing does not trace connect
+      assertThat(getInstrumentationExtension().spans()).isEmpty();
+    }
   }
 
   @Test
