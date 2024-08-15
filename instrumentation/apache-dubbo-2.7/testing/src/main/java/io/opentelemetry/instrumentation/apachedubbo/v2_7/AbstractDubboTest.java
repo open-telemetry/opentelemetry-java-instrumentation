@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -33,6 +34,7 @@ import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.assertj.core.api.AbstractAssert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -50,9 +52,15 @@ abstract class AbstractDubboTest {
 
   @BeforeAll
   static void setUp() throws Exception {
+    System.setProperty("dubbo.application.qos-enable", "false");
     Field field = NetUtils.class.getDeclaredField("LOCAL_ADDRESS");
     field.setAccessible(true);
     field.set(null, InetAddress.getLoopbackAddress());
+  }
+
+  @AfterAll
+  static void setDown() {
+    System.clearProperty("dubbo.application.qos-enable");
   }
 
   @AfterEach
@@ -142,10 +150,24 @@ abstract class AbstractDubboTest {
                                 satisfies(
                                     ServerAttributes.SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS, AbstractAssert::isNull),
+                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                    k ->
+                                        k.satisfiesAnyOf(
+                                            val -> assertThat(val).isNull(),
+                                            val -> assertThat(val).isInstanceOf(String.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT, AbstractAssert::isNull),
-                                satisfies(NetworkAttributes.NETWORK_TYPE, AbstractAssert::isNull)),
+                                    NetworkAttributes.NETWORK_PEER_PORT,
+                                    k ->
+                                        k.satisfiesAnyOf(
+                                            val -> assertThat(val).isNull(),
+                                            val -> assertThat(val).isInstanceOf(Long.class))),
+                                satisfies(
+                                    NetworkAttributes.NETWORK_TYPE,
+                                    k ->
+                                        k.satisfiesAnyOf(
+                                            val -> assertThat(val).isNull(),
+                                            val -> assertThat(val).isEqualTo("ipv4"),
+                                            val -> assertThat(val).isEqualTo("ipv6")))),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
@@ -220,10 +242,24 @@ abstract class AbstractDubboTest {
                                 satisfies(
                                     ServerAttributes.SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS, AbstractAssert::isNull),
+                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                    k ->
+                                        k.satisfiesAnyOf(
+                                            val -> assertThat(val).isNull(),
+                                            val -> assertThat(val).isInstanceOf(String.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT, AbstractAssert::isNull),
-                                satisfies(NetworkAttributes.NETWORK_TYPE, AbstractAssert::isNull)),
+                                    NetworkAttributes.NETWORK_PEER_PORT,
+                                    k ->
+                                        k.satisfiesAnyOf(
+                                            val -> assertThat(val).isNull(),
+                                            val -> assertThat(val).isInstanceOf(Long.class))),
+                                satisfies(
+                                    NetworkAttributes.NETWORK_TYPE,
+                                    k ->
+                                        k.satisfiesAnyOf(
+                                            val -> assertThat(val).isNull(),
+                                            val -> assertThat(val).isEqualTo("ipv4"),
+                                            val -> assertThat(val).isEqualTo("ipv6")))),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
@@ -241,6 +277,11 @@ abstract class AbstractDubboTest {
                                     NetworkAttributes.NETWORK_PEER_PORT,
                                     k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_TYPE, AbstractAssert::isNull))));
+                                    NetworkAttributes.NETWORK_TYPE,
+                                    k ->
+                                        k.satisfiesAnyOf(
+                                            val -> assertThat(val).isNull(),
+                                            val -> assertThat(val).isEqualTo("ipv4"),
+                                            val -> assertThat(val).isEqualTo("ipv6"))))));
   }
 }

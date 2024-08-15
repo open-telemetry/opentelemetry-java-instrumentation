@@ -33,6 +33,7 @@ import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.rpc.service.GenericService;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -48,9 +49,15 @@ abstract class AbstractDubboTraceChainTest {
 
   @BeforeAll
   static void setUp() throws Exception {
+    System.setProperty("dubbo.application.qos-enable", "false");
     Field field = NetUtils.class.getDeclaredField("LOCAL_ADDRESS");
     field.setAccessible(true);
     field.set(null, InetAddress.getLoopbackAddress());
+  }
+
+  @AfterAll
+  static void setDown() {
+    System.clearProperty("dubbo.application.qos-enable");
   }
 
   abstract InstrumentationExtension testing();
@@ -310,7 +317,7 @@ abstract class AbstractDubboTraceChainTest {
     middleBootstrap = DubboTestUtil.newDubboBootstrap();
     middleBootstrap
         .application(new ApplicationConfig("dubbo-demo-middle"))
-        .reference(clientReference)
+        //        .reference(clientReference)
         .service(configureMiddleServer(clientReference))
         .protocol(middleProtocolConfig)
         .start();
