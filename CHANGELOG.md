@@ -18,7 +18,7 @@
   ([#11974](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11974))
 - Save ILoggingEvent.getArgumentArray() arguments from Logback
   ([#11865](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11865))
-- Update Java 17 based metrics to stable semconv for
+- Update Java 17-based metrics to stable semconv
   ([#11914](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11914))
 
 ### 🛠️ Bug fixes
