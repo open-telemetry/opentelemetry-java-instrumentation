@@ -19,7 +19,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServle
 import javax.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class JettyServlet3TestDispatchImmediateTest extends JettyDispatchTest {
+public class JettyServlet3DispatchImmediateTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Async.class;

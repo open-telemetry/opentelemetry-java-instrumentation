@@ -13,6 +13,6 @@ public abstract class JettyDispatchTest extends JettyServlet3Test {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setContextPath(getContextPath() + "/dispatch/");
+    options.setContextPath(getContextPath() + "/dispatch");
   }
 }

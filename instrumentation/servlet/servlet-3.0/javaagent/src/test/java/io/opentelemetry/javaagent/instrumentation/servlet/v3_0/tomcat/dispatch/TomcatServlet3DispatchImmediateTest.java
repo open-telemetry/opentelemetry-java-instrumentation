@@ -16,15 +16,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.RequestDispatcherServlet;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
 
-public class TomcatServlet3TestForwardTest extends TomcatDispatchTest {
+public class TomcatServlet3DispatchImmediateTest extends TomcatDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
-    return TestServlet3.Sync.class; // dispatch to sync servlet
+    return TestServlet3.Sync.class;
   }
 
   @Override
@@ -37,27 +36,25 @@ public class TomcatServlet3TestForwardTest extends TomcatDispatchTest {
   protected void setupServlets(Context context) {
     super.setupServlets(context);
 
-    addServlet(context, "/dispatch" + SUCCESS.getPath(), RequestDispatcherServlet.Forward.class);
+    addServlet(context, "/dispatch" + SUCCESS.getPath(), TestServlet3.DispatchImmediate.class);
+    addServlet(context, "/dispatch" + QUERY_PARAM.getPath(), TestServlet3.DispatchImmediate.class);
+    addServlet(context, "/dispatch" + ERROR.getPath(), TestServlet3.DispatchImmediate.class);
+    addServlet(context, "/dispatch" + EXCEPTION.getPath(), TestServlet3.DispatchImmediate.class);
+    addServlet(context, "/dispatch" + REDIRECT.getPath(), TestServlet3.DispatchImmediate.class);
     addServlet(
-        context, "/dispatch" + QUERY_PARAM.getPath(), RequestDispatcherServlet.Forward.class);
-    addServlet(context, "/dispatch" + REDIRECT.getPath(), RequestDispatcherServlet.Forward.class);
-    addServlet(context, "/dispatch" + ERROR.getPath(), RequestDispatcherServlet.Forward.class);
-    addServlet(context, "/dispatch" + EXCEPTION.getPath(), RequestDispatcherServlet.Forward.class);
+        context, "/dispatch" + AUTH_REQUIRED.getPath(), TestServlet3.DispatchImmediate.class);
     addServlet(
-        context, "/dispatch" + AUTH_REQUIRED.getPath(), RequestDispatcherServlet.Forward.class);
+        context, "/dispatch" + CAPTURE_HEADERS.getPath(), TestServlet3.DispatchImmediate.class);
     addServlet(
-        context, "/dispatch" + CAPTURE_HEADERS.getPath(), RequestDispatcherServlet.Forward.class);
+        context, "/dispatch" + CAPTURE_PARAMETERS.getPath(), TestServlet3.DispatchImmediate.class);
     addServlet(
-        context,
-        "/dispatch" + CAPTURE_PARAMETERS.getPath(),
-        RequestDispatcherServlet.Forward.class);
+        context, "/dispatch" + INDEXED_CHILD.getPath(), TestServlet3.DispatchImmediate.class);
     addServlet(
-        context, "/dispatch" + INDEXED_CHILD.getPath(), RequestDispatcherServlet.Forward.class);
-    addServlet(
-        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), RequestDispatcherServlet.Forward.class);
+        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), TestServlet3.DispatchImmediate.class);
     addServlet(
         context,
         "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
-        RequestDispatcherServlet.Forward.class);
+        TestServlet3.DispatchImmediate.class);
+    addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive.class);
   }
 }

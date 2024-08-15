@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.dispatch;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.jetty.dispatch;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -17,18 +17,28 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
 import javax.servlet.Servlet;
-import org.apache.catalina.Context;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class TomcatServlet3TestDispatchAsyncTest extends TomcatDispatchTest {
+public class JettyServlet3DispatchAsyncTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Async.class;
   }
 
   @Override
-  protected void setupServlets(Context context) {
-    super.setupServlets(context);
+  public boolean isAsyncTest() {
+    return true;
+  }
 
+  @Override
+  protected void setupServlets(ServletContextHandler context) {
+    super.setupServlets(context);
+    addServlet(
+        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), TestServlet3.DispatchAsync.class);
+    addServlet(
+        context,
+        "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
+        TestServlet3.DispatchAsync.class);
     addServlet(context, "/dispatch" + SUCCESS.getPath(), TestServlet3.DispatchAsync.class);
     addServlet(context, "/dispatch" + QUERY_PARAM.getPath(), TestServlet3.DispatchAsync.class);
     addServlet(context, "/dispatch" + ERROR.getPath(), TestServlet3.DispatchAsync.class);
@@ -39,12 +49,6 @@ public class TomcatServlet3TestDispatchAsyncTest extends TomcatDispatchTest {
     addServlet(
         context, "/dispatch" + CAPTURE_PARAMETERS.getPath(), TestServlet3.DispatchAsync.class);
     addServlet(context, "/dispatch" + INDEXED_CHILD.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(
-        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(
-        context,
-        "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
-        TestServlet3.DispatchAsync.class);
     addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive.class);
   }
 

@@ -77,7 +77,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
     if (NOT_FOUND.equals(endpoint)) {
-      span.satisfies(s -> assertThat(s.getName()).matches("\\.sendError$"))
+      span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(parentSpan);
     }
@@ -221,7 +221,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     if (errorEndpointUsesSendError()) {
       spans
           .get(2)
-          .satisfies(s -> assertThat(s.getName()).matches("\\.sendError$"))
+          .satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(spanData.get(1));
     }

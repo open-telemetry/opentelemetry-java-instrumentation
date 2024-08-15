@@ -58,7 +58,7 @@ public abstract class JettyServlet3Test
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
     if (IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
-      span.satisfies(it -> assertThat(it.getName()).matches("\\.sendError$"))
+      span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(parentSpan);
     }

@@ -7,14 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
 
 import javax.servlet.Servlet;
 
-public class TomcatServlet3TestAsyncTest extends TomcatServlet3Test {
+public class TomcatServlet3FakeAsyncTest extends TomcatServlet3Test {
   @Override
   public Class<? extends Servlet> servlet() {
-    return TestServlet3.Async.class;
-  }
-
-  @Override
-  public boolean errorEndpointUsesSendError() {
-    return false;
+    return TestServlet3.FakeAsync.class;
   }
 }

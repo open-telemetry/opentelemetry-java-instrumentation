@@ -124,17 +124,17 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
     switch (endpoint.name()) {
       case "REDIRECT":
-        return span.satisfies(s -> assertThat(s.getName()).matches("\\.sendRedirect$"))
+        return span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendRedirect"))
             .hasKind(SpanKind.INTERNAL)
             .hasParent(parentSpan);
       case "ERROR":
-        return span.satisfies(s -> assertThat(s.getName()).matches("\\.sendError$"))
+        return span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
             .hasKind(SpanKind.INTERNAL)
             .hasParent(parentSpan);
       default:
         break;
     }
-    return super.assertResponseSpan(span, parentSpan, method, endpoint);
+    return span;
   }
 
   @Test
@@ -206,7 +206,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET " + (expectedRoute != null ? expectedRoute : ""))
+                    span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
                 span ->

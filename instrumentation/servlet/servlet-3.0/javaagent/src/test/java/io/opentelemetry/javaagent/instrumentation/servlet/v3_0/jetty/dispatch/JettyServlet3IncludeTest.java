@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServle
 import javax.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class JettyServlet3TestIncludeTest extends JettyDispatchTest {
+public class JettyServlet3IncludeTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Sync.class; // dispatch to sync servlet

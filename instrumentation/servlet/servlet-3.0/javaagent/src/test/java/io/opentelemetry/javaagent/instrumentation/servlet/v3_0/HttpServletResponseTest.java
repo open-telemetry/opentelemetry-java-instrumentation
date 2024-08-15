@@ -107,12 +107,11 @@ public class HttpServletResponseTest {
 
   @Test
   void test_send_with_exception() throws ServletException, IOException {
-    RuntimeException ex = new RuntimeException("some error");
     TestResponse response =
         new TestResponse() {
           @Override
           public void sendRedirect(String s) {
-            throw ex;
+            throw new RuntimeException("some error");
           }
         };
     HttpServlet servlet = new HttpServlet() {};
@@ -131,7 +130,8 @@ public class HttpServletResponseTest {
                         throw new RuntimeException(e);
                       }
                     }))
-        .hasRootCause(ex);
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("some error");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -141,13 +141,13 @@ public class HttpServletResponseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(ex),
+                        .hasException(new RuntimeException("some error")),
                 span ->
                     span.hasName("HttpServletResponseTest$2.sendRedirect")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(ex)));
+                        .hasException(new RuntimeException("some error"))));
   }
 
   /** Tests deprecated methods */
