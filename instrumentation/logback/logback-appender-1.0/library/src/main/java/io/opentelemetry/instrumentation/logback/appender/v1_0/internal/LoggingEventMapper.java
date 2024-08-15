@@ -24,9 +24,11 @@ import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
@@ -53,6 +55,10 @@ public final class LoggingEventMapper {
 
   private static final AttributeKey<List<String>> LOG_MARKER =
       AttributeKey.stringArrayKey("logback.marker");
+  private static final AttributeKey<String> LOG_BODY_TEMPLATE =
+      AttributeKey.stringKey("log.body.template");
+  private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
+      AttributeKey.stringArrayKey("log.body.parameters");
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -61,6 +67,7 @@ public final class LoggingEventMapper {
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
+  private final boolean captureArguments;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
@@ -69,6 +76,7 @@ public final class LoggingEventMapper {
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
+    this.captureArguments = builder.captureArguments;
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
   }
@@ -173,6 +181,12 @@ public final class LoggingEventMapper {
       captureLoggerContext(attributes, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
+    if (captureArguments
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
+      captureArguments(attributes, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+    }
+
     builder.setAllAttributes(attributes.build());
 
     // span context
@@ -218,6 +232,13 @@ public final class LoggingEventMapper {
     }
   }
 
+  void captureArguments(AttributesBuilder attributes, String message, Object[] arguments) {
+    attributes.put(LOG_BODY_TEMPLATE, message);
+    attributes.put(
+        LOG_BODY_PARAMETERS,
+        Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
+  }
+
   public static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
@@ -258,19 +279,20 @@ public final class LoggingEventMapper {
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
         Object value = keyValuePair.value;
-        if (keyValuePair.value != null) {
+        if (value != null) {
+          String key = keyValuePair.key;
           // preserve type for boolean and numeric values, everything else is converted to String
           if (value instanceof Boolean) {
-            attributes.put(keyValuePair.key, (Boolean) keyValuePair.value);
+            attributes.put(key, (Boolean) value);
           } else if (value instanceof Byte
               || value instanceof Integer
               || value instanceof Long
               || value instanceof Short) {
-            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).longValue());
+            attributes.put(key, ((Number) value).longValue());
           } else if (value instanceof Double || value instanceof Float) {
-            attributes.put(keyValuePair.key, ((Number) keyValuePair.value).doubleValue());
+            attributes.put(key, ((Number) value).doubleValue());
           } else {
-            attributes.put(getAttributeKey(keyValuePair.key), keyValuePair.value.toString());
+            attributes.put(getAttributeKey(key), value.toString());
           }
         }
       }
@@ -358,6 +380,7 @@ public final class LoggingEventMapper {
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
+    private boolean captureArguments;
 
     Builder() {}
 
@@ -394,6 +417,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureLoggerContext(boolean captureLoggerContext) {
       this.captureLoggerContext = captureLoggerContext;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureArguments(boolean captureArguments) {
+      this.captureArguments = captureArguments;
       return this;
     }
 
