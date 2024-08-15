@@ -6,6 +6,7 @@
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test
 import io.opentelemetry.semconv.HttpAttributes
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
@@ -65,7 +66,7 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   }
 
   @Override
-  void addServlet(ServletHandler servletHandler, String path, Class<Servlet> servlet) {
+  void addServlet(ServletHandler servletHandler, String path, Class<? extends Servlet> servlet) {
     servletHandler.addServletWithMapping(servlet, path)
   }
 
@@ -81,7 +82,7 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
   }
 
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.Sync
   }
 

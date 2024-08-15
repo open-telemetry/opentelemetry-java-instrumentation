@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test
 
 import javax.servlet.RequestDispatcher
 import javax.servlet.ServletException

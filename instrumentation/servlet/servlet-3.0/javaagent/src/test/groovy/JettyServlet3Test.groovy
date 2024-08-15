@@ -5,6 +5,7 @@
 
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -96,7 +97,7 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
   }
 
   @Override
-  void addServlet(ServletContextHandler servletContext, String path, Class<Servlet> servlet) {
+  void addServlet(ServletContextHandler servletContext, String path, Class<? extends Servlet> servlet) {
     servletContext.addServlet(servlet, path)
   }
 
@@ -128,7 +129,7 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletCon
 class JettyServlet3TestSync extends JettyServlet3Test {
 
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.Sync
   }
 }
@@ -136,7 +137,7 @@ class JettyServlet3TestSync extends JettyServlet3Test {
 class JettyServlet3TestAsync extends JettyServlet3Test {
 
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.Async
   }
 
@@ -154,14 +155,14 @@ class JettyServlet3TestAsync extends JettyServlet3Test {
 class JettyServlet3TestFakeAsync extends JettyServlet3Test {
 
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.FakeAsync
   }
 }
 
 class JettyServlet3TestForward extends JettyDispatchTest {
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.Sync // dispatch to sync servlet
   }
 
@@ -185,7 +186,7 @@ class JettyServlet3TestForward extends JettyDispatchTest {
 
 class JettyServlet3TestInclude extends JettyDispatchTest {
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.Sync // dispatch to sync servlet
   }
 
@@ -224,7 +225,7 @@ class JettyServlet3TestInclude extends JettyDispatchTest {
 
 class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.Sync
   }
 
@@ -253,7 +254,7 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
 
 class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
   @Override
-  Class<Servlet> servlet() {
+  Class<? extends Servlet> servlet() {
     TestServlet3.Async
   }
 

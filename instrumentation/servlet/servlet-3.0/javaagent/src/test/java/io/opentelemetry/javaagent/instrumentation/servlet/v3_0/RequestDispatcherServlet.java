@@ -3,6 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
+
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -13,9 +20,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class RequestDispatcherServlet {
-  /* There's something about the getRequestDispatcher call that breaks horribly when these classes
-   * are written in groovy.
-   */
 
   @WebServlet(asyncSupported = true)
   public static class Forward extends HttpServlet {
