@@ -6,12 +6,14 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1
 
 import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisCommandExecutionException
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
 import org.testcontainers.containers.GenericContainer
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.api.trace.StatusCode.ERROR
 
 abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecification {
   public static final int DB_INDEX = 0
@@ -60,8 +62,40 @@ abstract class AbstractLettuceSyncClientAuthTest extends InstrumentationSpecific
 
     expect:
     res == "OK"
-    assertTraces(1) {
-      trace(0, 1) {
+    assertTraces(Boolean.getBoolean("testLatestDeps") ? 3 : 1) {
+      if (Boolean.getBoolean("testLatestDeps")) {
+        trace(0, 1) {
+          span(0) {
+            name "CLIENT"
+            kind CLIENT
+            status ERROR
+            attributes {
+              "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+              "$SemanticAttributes.DB_SYSTEM" "redis"
+              "$SemanticAttributes.DB_STATEMENT" "CLIENT SETINFO lib-name Lettuce"
+            }
+            errorEvent(RedisCommandExecutionException, "NOAUTH Authentication required.")
+          }
+        }
+        trace(1, 1) {
+          span(0) {
+            name "CLIENT"
+            kind CLIENT
+            status ERROR
+            attributes {
+              "$SemanticAttributes.NET_SOCK_PEER_ADDR" "127.0.0.1"
+              "$SemanticAttributes.NET_SOCK_PEER_NAME" expectedHostAttributeValue
+              "$SemanticAttributes.NET_SOCK_PEER_PORT" port
+              "$SemanticAttributes.DB_SYSTEM" "redis"
+              "$SemanticAttributes.DB_STATEMENT" { it.startsWith("CLIENT SETINFO lib-ver") }
+            }
+            errorEvent(RedisCommandExecutionException, "NOAUTH Authentication required.")
+          }
+        }
+      }
+      trace(Boolean.getBoolean("testLatestDeps") ? 2 : 0, 1) {
         span(0) {
           name "AUTH"
           kind CLIENT
