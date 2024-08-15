@@ -76,9 +76,11 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
     super.configure(options);
     options.setTestCaptureRequestParameters(true);
     options.setHasResponseCustomizer(e -> true);
-    options.setHasResponseSpan(
-        endpoint ->
-            endpoint.equals(REDIRECT) || (endpoint.equals(ERROR) && errorEndpointUsesSendError()));
+    options.setHasResponseSpan(this::hasResponseSpan);
+  }
+
+  protected boolean hasResponseSpan(ServerEndpoint endpoint) {
+    return endpoint.equals(REDIRECT) || (endpoint.equals(ERROR) && errorEndpointUsesSendError());
   }
 
   public abstract Class<? extends Servlet> servlet();

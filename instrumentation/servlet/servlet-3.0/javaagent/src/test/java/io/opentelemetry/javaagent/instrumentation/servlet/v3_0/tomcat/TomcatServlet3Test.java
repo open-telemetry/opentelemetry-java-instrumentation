@@ -66,7 +66,6 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setExpectedException(new ServletException(EXCEPTION.getBody()));
-    options.setHasResponseSpan(e -> e.equals(NOT_FOUND));
     options.setContextPath("/tomcat-context");
     options.setTestError(testError());
   }
@@ -84,6 +83,11 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
           .hasParent(parentSpan);
     }
     return super.assertResponseSpan(span, parentSpan, method, endpoint);
+  }
+
+  @Override
+  protected boolean hasResponseSpan(ServerEndpoint endpoint) {
+    return endpoint == NOT_FOUND || super.hasResponseSpan(endpoint);
   }
 
   @Override
