@@ -10,6 +10,7 @@ otelJava {
 
 dependencies {
   implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:2.16.7.Final"))
+  implementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
   implementation("io.quarkus:quarkus-resteasy-reactive")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
