@@ -12,6 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.NetworkAttributes;
 import java.io.IOException;
 import java.net.URI;
@@ -180,7 +181,16 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+              span ->
+                  span.hasName("GET")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttribute(
+                          OpenTelemetryAssertions.satisfies(
+                              NetworkAttributes.NETWORK_PEER_ADDRESS,
+                              val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")))
+                      .hasAttribute(
+                          NetworkAttributes.NETWORK_PEER_PORT, (long) serverAddress().getPort()),
               span ->
                   span.hasName("test-http-server")
                       .hasKind(SpanKind.SERVER)

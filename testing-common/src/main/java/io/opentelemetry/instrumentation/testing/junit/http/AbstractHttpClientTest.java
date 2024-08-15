@@ -30,6 +30,7 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -85,6 +86,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     HttpClientTestOptions.Builder builder = HttpClientTestOptions.builder();
     configure(builder);
     options = builder.build();
+  }
+
+  protected InetSocketAddress serverAddress() {
+    return server.httpSocketAddress();
   }
 
   /**
@@ -999,7 +1004,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 // TODO: Move to test knob rather than always treating as optional
                 if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
                   assertThat(attrs)
-                      .containsEntry(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1");
+                      .hasEntrySatisfying(
+                          NetworkAttributes.NETWORK_PEER_ADDRESS,
+                          addr -> assertThat(addr).isIn("127.0.0.1", "0:0:0:0:0:0:0:1"));
                 }
                 if (attrs.get(NetworkAttributes.NETWORK_PEER_PORT) != null) {
                   assertThat(attrs)
