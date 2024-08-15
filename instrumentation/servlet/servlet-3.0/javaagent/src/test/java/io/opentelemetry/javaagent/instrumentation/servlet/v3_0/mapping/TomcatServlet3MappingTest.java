@@ -67,6 +67,7 @@ public class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomca
     }
   }
 
+  @SuppressWarnings("ClassNewInstance")
   @Override
   public void addServlet(Context context, String path, Class<? extends Servlet> servlet) {
     String name = UUID.randomUUID().toString();

@@ -131,6 +131,8 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
         return span.satisfies(s -> assertThat(s.getName()).matches("\\.sendError$"))
             .hasKind(SpanKind.INTERNAL)
             .hasParent(parentSpan);
+      default:
+        break;
     }
     return super.assertResponseSpan(span, parentSpan, method, endpoint);
   }

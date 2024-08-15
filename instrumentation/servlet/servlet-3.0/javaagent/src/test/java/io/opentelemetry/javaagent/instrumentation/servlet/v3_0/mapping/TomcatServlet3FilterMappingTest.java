@@ -21,6 +21,7 @@ import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 public abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3MappingTest {
+  @SuppressWarnings("ClassNewInstance")
   public void addFilter(Context servletContext, String path, Class<? extends Filter> filter) {
     String name = UUID.randomUUID().toString();
     FilterDef filterDef = new FilterDef();
@@ -37,6 +38,7 @@ public abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3Mapp
     servletContext.addFilterMap(filterMap);
   }
 
+  @SuppressWarnings("ClassNewInstance")
   public void addFilterWithServletName(
       Context servletContext, String servletName, Class<? extends Filter> filter) {
     String name = UUID.randomUUID().toString();
@@ -112,6 +114,7 @@ public abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3Mapp
   }
 
   public static class DefaultServlet extends HttpServlet {
+    @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       throw new IllegalStateException(
           "Servlet should not have been called, filter should have handled the request.");

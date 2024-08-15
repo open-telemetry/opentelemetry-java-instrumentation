@@ -22,6 +22,7 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
     super(true);
   }
 
+  @Override
   public void log(Request request, Response response, long time) {
     if (request.getParameter("access-log") == null) {
       return;

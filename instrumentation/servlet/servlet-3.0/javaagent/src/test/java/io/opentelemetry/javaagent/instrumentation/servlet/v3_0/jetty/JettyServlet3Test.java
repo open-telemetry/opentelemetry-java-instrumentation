@@ -77,6 +77,7 @@ public abstract class JettyServlet3Test
     ServletContextHandler servletContext = new ServletContextHandler(null, getContextPath());
     servletContext.setErrorHandler(
         new ErrorHandler() {
+          @Override
           protected void handleErrorPage(
               HttpServletRequest request, Writer writer, int code, String message)
               throws IOException {

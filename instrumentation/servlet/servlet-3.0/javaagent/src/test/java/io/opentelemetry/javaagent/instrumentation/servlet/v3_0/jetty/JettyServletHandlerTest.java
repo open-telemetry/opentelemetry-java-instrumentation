@@ -72,6 +72,7 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
     setupServlets(handler);
     server.addBean(
         new ErrorHandler() {
+          @Override
           protected void handleErrorPage(
               HttpServletRequest request, Writer writer, int code, String message)
               throws IOException {

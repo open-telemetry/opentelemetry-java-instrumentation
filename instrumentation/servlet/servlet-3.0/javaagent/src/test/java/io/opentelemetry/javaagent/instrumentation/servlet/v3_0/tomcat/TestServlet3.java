@@ -21,16 +21,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class TestServlet3 {
+
+  private TestServlet3() {}
+
   @WebServlet
   public static class Sync extends HttpServlet {
     @Override
-    protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
       String servletPath = (String) req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
       if (servletPath == null) {
         servletPath = req.getServletPath();
       }
 
-      final ServerEndpoint endpoint = ServerEndpoint.forPath(servletPath);
+      ServerEndpoint endpoint = ServerEndpoint.forPath(servletPath);
       HttpServerTest.controller(
           endpoint,
           () -> {
@@ -95,10 +98,10 @@ public class TestServlet3 {
   @WebServlet(asyncSupported = true)
   public static class Async extends HttpServlet {
     @Override
-    protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
-      final ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
-      final CountDownLatch latch = new CountDownLatch(1);
-      final AsyncContext context = req.startAsync();
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
+      CountDownLatch latch = new CountDownLatch(1);
+      AsyncContext context = req.startAsync();
       if (endpoint.equals(EXCEPTION)) {
         context.setTimeout(5000);
       }
@@ -190,7 +193,7 @@ public class TestServlet3 {
   @WebServlet(asyncSupported = true)
   public static class FakeAsync extends HttpServlet {
     @Override
-    protected void service(final HttpServletRequest req, final HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
       AsyncContext context = req.startAsync();
       try {
         ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
@@ -250,6 +253,8 @@ public class TestServlet3 {
                   resp.setStatus(endpoint.getStatus());
                   resp.getOutputStream().print(endpoint.getBody());
                   break;
+                default:
+                  break;
               }
               return null;
             });
@@ -276,14 +281,13 @@ public class TestServlet3 {
   public static class DispatchAsync extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
-      String target = req.getServletPath().replace("/dispatch", "");
-      if (req.getQueryString() != null) {
-        target += "?" + req.getQueryString();
-      }
-
       AsyncContext context = req.startAsync();
       context.start(
           () -> {
+            String target = req.getServletPath().replace("/dispatch", "");
+            if (req.getQueryString() != null) {
+              target += "?" + req.getQueryString();
+            }
             context.dispatch(target);
           });
     }
