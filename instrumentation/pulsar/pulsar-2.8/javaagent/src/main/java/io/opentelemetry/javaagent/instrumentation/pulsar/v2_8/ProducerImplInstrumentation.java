@@ -78,7 +78,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
       }
 
       Context context = producerInstrumenter().start(parent, request);
-      // Inject the context/request into the message. This will be extracted and used when the
+      // Inject the context/request into the SendCallback. This will be extracted and used when the
       // message is sent and the callback is invoked. see `SendCallbackInstrumentation`.
       VirtualFieldStore.inject(callback, context, request);
     }

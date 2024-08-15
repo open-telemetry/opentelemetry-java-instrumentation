@@ -21,8 +21,8 @@ public class VirtualFieldStore {
       VirtualField.find(Producer.class, ProducerData.class);
   private static final VirtualField<Consumer<?>, String> CONSUMER_FIELD =
       VirtualField.find(Consumer.class, String.class);
-  private static final VirtualField<SendCallback, Object[]> CALLBACK_FIELD =
-      VirtualField.find(SendCallback.class, Object[].class);
+  private static final VirtualField<SendCallback, SendCallBackData> CALLBACK_FIELD =
+      VirtualField.find(SendCallback.class, SendCallBackData.class);
 
   private VirtualFieldStore() {}
 
@@ -46,7 +46,7 @@ public class VirtualFieldStore {
 
   public static void inject(SendCallback instance, Context context, PulsarRequest request) {
     if (instance != null) {
-      CALLBACK_FIELD.set(instance, new Object[] {context, request});
+      CALLBACK_FIELD.set(instance, SendCallBackData.create(context, request));
     }
   }
 
@@ -70,7 +70,7 @@ public class VirtualFieldStore {
     return CONSUMER_FIELD.get(instance);
   }
 
-  public static Object[] extract(SendCallback instance) {
+  public static SendCallBackData extract(SendCallback instance) {
     if (instance != null) {
       return CALLBACK_FIELD.get(instance);
     }

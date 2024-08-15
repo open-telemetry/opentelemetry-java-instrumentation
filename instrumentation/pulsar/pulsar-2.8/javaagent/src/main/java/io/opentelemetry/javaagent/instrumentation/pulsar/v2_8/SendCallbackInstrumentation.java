@@ -45,14 +45,11 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("otelRequest") PulsarRequest request) {
       // Extract the Context and PulsarRequest from the SendCallback instance.
-      Object[] objects = VirtualFieldStore.extract(callback);
-      if (objects != null
-          && objects.length == 2
-          && objects[0] instanceof Context
-          && objects[1] instanceof PulsarRequest) {
+      SendCallBackData callBackData = VirtualFieldStore.extract(callback);
+      if (callBackData != null && callBackData.request != null && callBackData.context != null) {
         // If the extraction was successful, store the Context and PulsarRequest in local variables.
-        otelContext = (Context) objects[0];
-        request = (PulsarRequest) objects[1];
+        otelContext = callBackData.context;
+        request = callBackData.request;
         otelScope = otelContext.makeCurrent();
       }
     }
