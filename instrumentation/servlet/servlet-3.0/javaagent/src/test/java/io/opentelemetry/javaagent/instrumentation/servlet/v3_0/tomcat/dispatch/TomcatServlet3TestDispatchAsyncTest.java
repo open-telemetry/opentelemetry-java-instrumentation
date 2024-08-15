@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.dispatch;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.dispatch;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -18,7 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
 
-public class TomcatServlet3TestDispatchAsync extends TomcatDispatchTest {
+public class TomcatServlet3TestDispatchAsyncTest extends TomcatDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Async.class;

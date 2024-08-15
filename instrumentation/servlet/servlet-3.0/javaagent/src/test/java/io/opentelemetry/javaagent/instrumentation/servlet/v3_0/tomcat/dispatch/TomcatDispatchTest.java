@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.dispatch;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.dispatch;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TomcatServlet3Test;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TomcatServlet3Test;
 
 public abstract class TomcatDispatchTest extends TomcatServlet3Test {
 
