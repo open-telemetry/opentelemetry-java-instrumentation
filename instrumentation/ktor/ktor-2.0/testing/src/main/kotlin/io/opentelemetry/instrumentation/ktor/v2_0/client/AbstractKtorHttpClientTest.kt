@@ -10,15 +10,20 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
+import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import io.opentelemetry.semconv.NetworkAttributes
 import kotlinx.coroutines.*
+import org.junit.jupiter.api.Test
 import java.net.URI
+import java.util.function.Consumer
 
 abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
 
@@ -70,5 +75,25 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
         KtorHttpClientSingleConnection(host, port) { installTracing() }
       }
     }
+  }
+
+  @Test
+  fun checkSpanEndsAfterBodyReceived() {
+    val method = "GET"
+    val path = "/long-request"
+    val uri = resolveAddress(path)
+    val responseCode = doRequest(method, uri)
+
+    assertThat(responseCode).isEqualTo(200)
+
+    testing.waitAndAssertTraces(
+      Consumer { trace: TraceAssert ->
+        val span = trace.getSpan(0)
+        assertThat(span).hasKind(SpanKind.CLIENT)
+        assertThat(span.endEpochNanos - span.startEpochNanos >= 1_000_000_000)
+          .describedAs("Span duration should be at least 1000ms")
+          .isTrue()
+      }
+    )
   }
 }
