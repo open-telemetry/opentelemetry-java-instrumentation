@@ -16,7 +16,7 @@ public class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder;
 
-  protected ApplicationDoubleGaugeBuilder(
+  public ApplicationDoubleGaugeBuilder(
       io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }

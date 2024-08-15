@@ -147,7 +147,7 @@ class HttpServerExperimentalMetricsTest {
                                                     .hasSpanId(spanContext1.getSpanId())))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.request.size")
+                    .hasName("http.server.request.body.size")
                     .hasUnit("By")
                     .hasDescription("Size of HTTP server request bodies.")
                     .hasHistogramSatisfying(
@@ -172,7 +172,7 @@ class HttpServerExperimentalMetricsTest {
                                                     .hasSpanId(spanContext1.getSpanId())))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.response.size")
+                    .hasName("http.server.response.body.size")
                     .hasUnit("By")
                     .hasDescription("Size of HTTP server response bodies.")
                     .hasHistogramSatisfying(
@@ -216,7 +216,7 @@ class HttpServerExperimentalMetricsTest {
                                                     .hasSpanId(spanContext2.getSpanId())))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.request.size")
+                    .hasName("http.server.request.body.size")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -230,7 +230,7 @@ class HttpServerExperimentalMetricsTest {
                                                     .hasSpanId(spanContext2.getSpanId())))),
             metric ->
                 assertThat(metric)
-                    .hasName("http.server.response.size")
+                    .hasName("http.server.response.body.size")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(

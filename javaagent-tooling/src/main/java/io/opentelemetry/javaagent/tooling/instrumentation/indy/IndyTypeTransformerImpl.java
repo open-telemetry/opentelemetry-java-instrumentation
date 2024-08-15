@@ -30,7 +30,9 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
     this.instrumentationModule = module;
     this.adviceMapping =
         Advice.withCustomMapping()
-            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class))
+            .with(
+                new ForceDynamicallyTypedAssignReturnedFactory(
+                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
                 IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
@@ -101,9 +103,11 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       if (result != null) {
         dump(name, result);
         InstrumentationModuleClassLoader.bytecodeOverride.put(name.replace('/', '.'), result);
-        return result;
+      } else {
+        result = bytes;
       }
-      return bytes;
+      result = AdviceSignatureEraser.transform(result);
+      return result;
     }
   }
 

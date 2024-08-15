@@ -7,37 +7,24 @@ package io.opentelemetry.instrumentation.httpclient;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class JavaHttpClientTelemetryBuilder {
 
-  private final OpenTelemetry openTelemetry;
-
-  private final List<AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>>>
-      additionalExtractors = new ArrayList<>();
-  private Consumer<HttpClientAttributesExtractorBuilder<HttpRequest, HttpResponse<?>>>
-      extractorConfigurer = builder -> {};
-  private Consumer<HttpSpanNameExtractorBuilder<HttpRequest>> spanNameExtractorConfigurer =
-      builder -> {};
-  private Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
-      spanNameExtractorTransformer = Function.identity();
-  private boolean emitExperimentalHttpClientMetrics = false;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+    builder = JavaHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
 
   /**
@@ -47,31 +34,29 @@ public final class JavaHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
-    additionalExtractors.add(attributesExtractor);
+    builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
   /**
-   * Configures the HTTP client request headers that will be captured as span attributes.
+   * Configures the HTTP request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setCapturedRequestHeaders(requestHeaders));
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
   /**
-   * Configures the HTTP client response headers that will be captured as span attributes.
+   * Configures the HTTP response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setCapturedResponseHeaders(responseHeaders));
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -90,10 +75,7 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    spanNameExtractorConfigurer =
-        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -106,30 +88,23 @@ public final class JavaHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
+      Function<
+              SpanNameExtractor<? super HttpRequest>,
+              ? extends SpanNameExtractor<? super HttpRequest>>
           spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
   public JavaHttpClientTelemetry build() {
-    Instrumenter<HttpRequest, HttpResponse<?>> instrumenter =
-        JavaHttpClientInstrumenterFactory.createInstrumenter(
-            openTelemetry,
-            extractorConfigurer,
-            spanNameExtractorConfigurer,
-            spanNameExtractorTransformer,
-            additionalExtractors,
-            emitExperimentalHttpClientMetrics);
-
     return new JavaHttpClientTelemetry(
-        instrumenter, new HttpHeadersSetter(openTelemetry.getPropagators()));
+        builder.build(), new HttpHeadersSetter(builder.getOpenTelemetry().getPropagators()));
   }
 }
