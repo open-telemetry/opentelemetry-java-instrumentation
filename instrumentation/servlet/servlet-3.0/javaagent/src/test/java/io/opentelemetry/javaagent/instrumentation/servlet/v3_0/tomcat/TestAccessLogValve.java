@@ -17,7 +17,7 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 
-public class TestAccessLogValve extends ValveBase implements AccessLog {
+class TestAccessLogValve extends ValveBase implements AccessLog {
   public TestAccessLogValve() {
     super(true);
   }

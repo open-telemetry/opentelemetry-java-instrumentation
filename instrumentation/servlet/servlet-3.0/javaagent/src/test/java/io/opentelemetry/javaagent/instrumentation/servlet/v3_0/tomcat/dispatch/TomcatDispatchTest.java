@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TomcatServlet3Test;
 
-public abstract class TomcatDispatchTest extends TomcatServlet3Test {
+abstract class TomcatDispatchTest extends TomcatServlet3Test {
 
   public TomcatDispatchTest(InstrumentationExtension testing) {
     super(testing);

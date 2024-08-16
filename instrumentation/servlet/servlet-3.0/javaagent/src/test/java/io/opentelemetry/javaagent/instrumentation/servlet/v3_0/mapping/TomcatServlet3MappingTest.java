@@ -15,7 +15,7 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
 
-public class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Context> {
+class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Context> {
   @Override
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();

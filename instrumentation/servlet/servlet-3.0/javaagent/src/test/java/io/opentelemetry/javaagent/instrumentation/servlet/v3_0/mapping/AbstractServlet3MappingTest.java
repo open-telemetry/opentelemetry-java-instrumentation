@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-public abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
+abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
     extends AbstractHttpServerUsingTest<SERVER> {
 
   @RegisterExtension
@@ -58,7 +58,7 @@ public abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
     ".suffix, /*.suffix, true",
     "suffix, /*, false",
   })
-  public void test_path__path(String path, String route, boolean success) {
+  void test_path__path(String path, String route, boolean success) {
 
     AggregatedHttpResponse response =
         client.get(address.resolve(path).toString()).aggregate().join();

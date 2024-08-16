@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.mapping;
 
 import org.apache.catalina.Context;
 
-public class TomcatServlet3FilterUrlPatternMappingTest extends TomcatServlet3FilterMappingTest {
+class TomcatServlet3FilterUrlPatternMappingTest extends TomcatServlet3FilterMappingTest {
   @Override
   protected void setupServlets(Context context) {
     addFilter(context, "/*", FirstFilter.class);

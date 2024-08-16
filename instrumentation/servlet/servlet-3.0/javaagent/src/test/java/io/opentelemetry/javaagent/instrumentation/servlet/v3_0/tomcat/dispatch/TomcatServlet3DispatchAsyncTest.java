@@ -22,7 +22,7 @@ import javax.servlet.Servlet;
 import org.apache.catalina.Context;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class TomcatServlet3DispatchAsyncTest extends TomcatDispatchTest {
+class TomcatServlet3DispatchAsyncTest extends TomcatDispatchTest {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =

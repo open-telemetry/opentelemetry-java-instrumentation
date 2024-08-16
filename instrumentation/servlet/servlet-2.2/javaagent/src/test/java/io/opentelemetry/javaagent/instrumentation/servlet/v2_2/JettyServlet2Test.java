@@ -36,11 +36,10 @@ import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyServlet2Test extends AbstractHttpServerTest<Server> {
+class JettyServlet2Test extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static final String CONTEXT = "ctx";
 
@@ -61,10 +60,6 @@ public class JettyServlet2Test extends AbstractHttpServerTest<Server> {
             writer.write(th != null ? th.getMessage() : message);
           }
         });
-
-    // FIXME: Add tests for security/authentication.
-    //    ConstraintSecurityHandler security = setupAuthentication(jettyServer)
-    //    servletContext.setSecurityHandler(security)
 
     servletContext.addServlet(TestServlet2.Sync.class, SUCCESS.getPath());
     servletContext.addServlet(TestServlet2.Sync.class, QUERY_PARAM.getPath());

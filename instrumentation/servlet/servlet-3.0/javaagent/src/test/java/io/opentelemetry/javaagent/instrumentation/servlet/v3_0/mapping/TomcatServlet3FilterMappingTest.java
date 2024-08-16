@@ -20,7 +20,7 @@ import org.apache.catalina.Context;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 
-public abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3MappingTest {
+abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3MappingTest {
   @SuppressWarnings("ClassNewInstance")
   public void addFilter(Context servletContext, String path, Class<? extends Filter> filter) {
     String name = UUID.randomUUID().toString();

@@ -12,7 +12,7 @@ import org.apache.catalina.valves.ErrorReportValve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ErrorHandlerValve extends ErrorReportValve {
+class ErrorHandlerValve extends ErrorReportValve {
 
   private static final Logger logger = LoggerFactory.getLogger(ErrorHandlerValve.class);
 

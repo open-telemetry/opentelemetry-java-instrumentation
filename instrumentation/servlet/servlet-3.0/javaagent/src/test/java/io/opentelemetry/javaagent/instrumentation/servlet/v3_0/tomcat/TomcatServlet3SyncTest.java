@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import javax.servlet.Servlet;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class TomcatServlet3SyncTest extends TomcatServlet3Test {
+class TomcatServlet3SyncTest extends TomcatServlet3Test {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =

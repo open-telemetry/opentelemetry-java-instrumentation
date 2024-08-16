@@ -13,8 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class JettyServlet3MappingTest
-    extends AbstractServlet3MappingTest<Server, ServletContextHandler> {
+class JettyServlet3MappingTest extends AbstractServlet3MappingTest<Server, ServletContextHandler> {
 
   @Override
   protected Server setupServer() {
