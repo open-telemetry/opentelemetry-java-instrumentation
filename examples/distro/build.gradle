@@ -34,7 +34,7 @@ subprojects {
       opentelemetryJavaagentAlpha: "1.33.5-alpha",
 
       autoservice                : "1.1.1",
-      junit                      : "5.10.3"
+      junit                      : "5.11.0"
     ]
 
     deps = [

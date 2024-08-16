@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
+
 import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractQueryProtocolModelTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;

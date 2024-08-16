@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.data;
+
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
@@ -32,23 +34,23 @@ public abstract class AbstractSpringJpaTest<
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  abstract ENTITY newCustomer(String firstName, String lastName);
+  protected abstract ENTITY newCustomer(String firstName, String lastName);
 
-  abstract Long id(ENTITY customer);
+  protected abstract Long id(ENTITY customer);
 
-  abstract void setFirstName(ENTITY customer, String firstName);
+  protected abstract void setFirstName(ENTITY customer, String firstName);
 
-  abstract Class<REPOSITORY> repositoryClass();
+  protected abstract Class<REPOSITORY> repositoryClass();
 
-  abstract REPOSITORY repository();
+  protected abstract REPOSITORY repository();
 
-  abstract List<ENTITY> findByLastName(REPOSITORY repository, String lastName);
+  protected abstract List<ENTITY> findByLastName(REPOSITORY repository, String lastName);
 
-  abstract List<ENTITY> findSpecialCustomers(REPOSITORY repository);
+  protected abstract List<ENTITY> findSpecialCustomers(REPOSITORY repository);
 
-  abstract Optional<ENTITY> findOneByLastName(REPOSITORY repository, String lastName);
+  protected abstract Optional<ENTITY> findOneByLastName(REPOSITORY repository, String lastName);
 
-  void clearData() {
+  protected void clearData() {
     testing.clearData();
   }
 
