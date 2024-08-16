@@ -114,9 +114,7 @@ class SpringIntegrationAndRabbitTest extends AbstractRabbitProducerConsumerTest 
                                 l -> l.isInstanceOf(Long.class)),
                             satisfies(
                                 NetworkAttributes.NETWORK_TYPE, s -> s.isIn("ipv4", "ipv6", null)),
-                            satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                s -> s.isEqualTo("rabbitmq")),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq"),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 s -> s.isEqualTo("testTopic")),
