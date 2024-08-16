@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
@@ -60,7 +61,11 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
           ERROR.getStatus(),
           ERROR.getBody(),
           false);
-  private static final TestAccessLogValve accessLogValue = new TestAccessLogValve();
+  private final TestAccessLogValve accessLogValue = new TestAccessLogValve();
+
+  public TomcatServlet3Test(InstrumentationExtension testing) {
+    super(testing);
+  }
 
   @Override
   protected void configure(HttpServerTestOptions options) {

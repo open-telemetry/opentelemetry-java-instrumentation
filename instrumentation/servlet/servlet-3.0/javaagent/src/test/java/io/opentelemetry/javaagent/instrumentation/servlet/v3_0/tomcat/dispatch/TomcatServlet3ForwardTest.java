@@ -15,13 +15,25 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.RequestDispatcherServlet;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class TomcatServlet3ForwardTest extends TomcatDispatchTest {
+
+  @RegisterExtension
+  protected static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
+
+  public TomcatServlet3ForwardTest() {
+    super(testing);
+  }
+
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Sync.class; // dispatch to sync servlet

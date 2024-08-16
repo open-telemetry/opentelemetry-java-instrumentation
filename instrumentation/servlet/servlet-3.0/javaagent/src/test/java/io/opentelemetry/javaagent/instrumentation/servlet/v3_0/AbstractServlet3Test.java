@@ -21,7 +21,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
@@ -31,9 +30,14 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import javax.servlet.Servlet;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
+
+  protected final InstrumentationExtension testing;
+
+  public AbstractServlet3Test(InstrumentationExtension testing) {
+    this.testing = testing;
+  }
 
   public static final ServerEndpoint HTML_PRINT_WRITER =
       new ServerEndpoint(
@@ -65,10 +69,6 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
               + "<p>test works</p>\n"
               + "</body>\n"
               + "</html>");
-
-  @RegisterExtension
-  protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected void configure(HttpServerTestOptions options) {

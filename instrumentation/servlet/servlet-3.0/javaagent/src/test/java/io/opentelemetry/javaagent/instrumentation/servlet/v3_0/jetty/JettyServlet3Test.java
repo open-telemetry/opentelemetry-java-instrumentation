@@ -10,6 +10,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
@@ -25,9 +27,18 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class JettyServlet3Test
     extends AbstractServlet3Test<Server, ServletContextHandler> {
+
+  @RegisterExtension
+  protected static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
+
+  public JettyServlet3Test() {
+    super(testing);
+  }
 
   static final boolean IS_BEFORE_94 = isBefore94();
 
