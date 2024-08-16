@@ -10,11 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Deque;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,8 +38,7 @@ public class ContextHandlerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter(@Advice.Argument(0) Channel channel) {
       // set context to the first unprocessed request
-      Deque<ServerContext> serverContextx = channel.attr(AttributeKeys.SERVER_CONTEXT).get();
-      ServerContext serverContext = serverContextx != null ? serverContextx.peekFirst() : null;
+      ServerContext serverContext = ServerContexts.peekFirst(channel);
       if (serverContext != null) {
         return serverContext.context().makeCurrent();
       }
