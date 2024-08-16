@@ -9,9 +9,13 @@ import java.io.IOException;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ErrorReportValve;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ErrorHandlerValve extends ErrorReportValve {
-  @SuppressWarnings("CatchAndPrintStackTrace")
+
+  private static final Logger logger = LoggerFactory.getLogger(ErrorHandlerValve.class);
+
   @Override
   protected void report(Request request, Response response, Throwable t) {
     if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.isError()) {
@@ -21,7 +25,7 @@ public class ErrorHandlerValve extends ErrorReportValve {
     try {
       response.getWriter().print(t != null ? t.getCause().getMessage() : response.getMessage());
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("Failed to write error response", e);
     }
   }
 }

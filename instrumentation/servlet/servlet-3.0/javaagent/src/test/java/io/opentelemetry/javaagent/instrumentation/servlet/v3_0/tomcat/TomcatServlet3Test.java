@@ -42,9 +42,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import spock.lang.Unroll;
 
-@Unroll
 public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
   private static final ServerEndpoint ACCESS_LOG_SUCCESS =
