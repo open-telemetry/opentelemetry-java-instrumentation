@@ -110,10 +110,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     Context servletContext =
         tomcatServer.addWebapp(getContextPath(), applicationDir.getAbsolutePath());
     // Speed up startup by disabling jar scanning:
-    servletContext
-        .getJarScanner()
-        .setJarScanFilter(
-            (jarScanType, jarName) -> false);
+    servletContext.getJarScanner().setJarScanFilter((jarScanType, jarName) -> false);
 
     //    setupAuthentication(tomcatServer, servletContext)
     setupServlets(servletContext);
@@ -129,7 +126,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
 
   @BeforeEach
   void setUp() {
-  accessLogValue.getLoggedIds().clear();
+    accessLogValue.getLoggedIds().clear();
     testing.clearData();
   }
 
@@ -158,7 +155,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   @ParameterizedTest
   @CsvSource({"1", "4"})
   void access_log_has_ids_for__count_requests(int count) {
-               setUp();
+    setUp();
     AggregatedHttpRequest request = request(ACCESS_LOG_SUCCESS, "GET");
 
     IntStream.range(0, count)
@@ -178,13 +175,13 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
 
-    Consumer<TraceAssert> check = trace ->
-                    trace.hasSpansSatisfyingExactly(
-                        span ->
-                            assertServerSpan(
-                                span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
-                        span -> assertControllerSpan(span, null));
-    testing.waitAndAssertTraces(IntStream.range(0, count).mapToObj(i -> check).collect(Collectors.toList()));
+    Consumer<TraceAssert> check =
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertServerSpan(span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
+                span -> assertControllerSpan(span, null));
+    testing.waitAndAssertTraces(
+        IntStream.range(0, count).mapToObj(i -> check).collect(Collectors.toList()));
 
     List<List<SpanData>> traces = TelemetryDataUtil.groupTraces(testing.spans());
 

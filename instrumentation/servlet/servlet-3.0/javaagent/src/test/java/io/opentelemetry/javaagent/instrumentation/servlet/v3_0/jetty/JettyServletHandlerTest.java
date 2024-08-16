@@ -65,14 +65,13 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
     return super.assertResponseSpan(span, parentSpan, method, endpoint);
   }
 
-
   @Override
   public String expectedServerSpanName(
       ServerEndpoint endpoint, String method, @Nullable String route) {
     if (method.equals(HttpConstants._OTHER)) {
       return "HTTP";
     }
-return super.expectedServerSpanName(endpoint, method, route);
+    return super.expectedServerSpanName(endpoint, method, route);
   }
 
   @Override
