@@ -21,8 +21,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 abstract class AbstractLettuceClientTest {
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
-  public abstract InstrumentationExtension getInstrumentationExtension();
-
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final int DB_INDEX = 0;
@@ -34,14 +32,15 @@ abstract class AbstractLettuceClientTest {
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
   protected static RedisClient redisClient;
-
   protected static StatefulRedisConnection<String, String> connection;
+  protected static String host;
+  protected static String ip;
+  protected static int port;
+  protected static String embeddedDbUri;
 
   protected abstract RedisClient createClient(String uri);
 
-  protected static String host;
-  protected static int port;
-  protected static String embeddedDbUri;
+  protected abstract InstrumentationExtension getInstrumentationExtension();
 
   protected ContainerConnection newContainerConnection() {
     GenericContainer<?> server =
