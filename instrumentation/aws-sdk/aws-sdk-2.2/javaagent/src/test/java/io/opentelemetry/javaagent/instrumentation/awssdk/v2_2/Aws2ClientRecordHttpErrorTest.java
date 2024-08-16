@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractAws2ClientRecordHttpErrorTest;

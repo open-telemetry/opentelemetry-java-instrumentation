@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import io.opentelemetry.javaagent.instrumentation.spring.data.AbstractSpringJpaTest;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -13,27 +14,27 @@ import spring.jpa.JpaPersistenceConfig;
 public class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustomerRepository> {
 
   @Override
-  JpaCustomer newCustomer(String firstName, String lastName) {
+  protected JpaCustomer newCustomer(String firstName, String lastName) {
     return new JpaCustomer(firstName, lastName);
   }
 
   @Override
-  Long id(JpaCustomer customer) {
+  protected Long id(JpaCustomer customer) {
     return customer.getId();
   }
 
   @Override
-  void setFirstName(JpaCustomer customer, String firstName) {
+  protected void setFirstName(JpaCustomer customer, String firstName) {
     customer.setFirstName(firstName);
   }
 
   @Override
-  Class<JpaCustomerRepository> repositoryClass() {
+  protected Class<JpaCustomerRepository> repositoryClass() {
     return JpaCustomerRepository.class;
   }
 
   @Override
-  JpaCustomerRepository repository() {
+  protected JpaCustomerRepository repository() {
     AnnotationConfigApplicationContext context =
         new AnnotationConfigApplicationContext(JpaPersistenceConfig.class);
     JpaCustomerRepository repo = context.getBean(JpaCustomerRepository.class);
@@ -45,17 +46,18 @@ public class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustome
   }
 
   @Override
-  List<JpaCustomer> findByLastName(JpaCustomerRepository repository, String lastName) {
+  protected List<JpaCustomer> findByLastName(JpaCustomerRepository repository, String lastName) {
     return repository.findByLastName(lastName);
   }
 
   @Override
-  List<JpaCustomer> findSpecialCustomers(JpaCustomerRepository repository) {
+  protected List<JpaCustomer> findSpecialCustomers(JpaCustomerRepository repository) {
     return repository.findSpecialCustomers();
   }
 
   @Override
-  Optional<JpaCustomer> findOneByLastName(JpaCustomerRepository repository, String lastName) {
+  protected Optional<JpaCustomer> findOneByLastName(
+      JpaCustomerRepository repository, String lastName) {
     return repository.findOneByLastName(lastName);
   }
 }
