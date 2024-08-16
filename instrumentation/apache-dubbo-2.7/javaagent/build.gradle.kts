@@ -10,6 +10,8 @@ muzzle {
     assertInverse.set(true)
   }
 }
+// The testing module use `class DubboBootstrap` which is since 2.7.5, the ut will fail for 2.7.0
+// so we only test it on (2.7.5,)
 val apacheDubboVersion = "2.7.5"
 
 dependencies {
