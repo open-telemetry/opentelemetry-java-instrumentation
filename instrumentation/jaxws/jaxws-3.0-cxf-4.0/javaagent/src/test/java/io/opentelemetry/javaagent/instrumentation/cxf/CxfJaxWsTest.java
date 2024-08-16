@@ -5,4 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
+import io.opentelemetry.javaagent.instrumentation.jaxws.v3_0.AbstractJaxWsTest;
+
 class CxfJaxWsTest extends AbstractJaxWsTest {}
