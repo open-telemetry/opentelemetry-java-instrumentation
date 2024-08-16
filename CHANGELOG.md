@@ -20,6 +20,8 @@
   ([#11865](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11865))
 - Update Java 17-based metrics to stable semconv
   ([#11914](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11914))
+- Add Pulsar Consumer metrics
+  ([#11891](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11891))
 
 ### 🛠️ Bug fixes
 
@@ -33,6 +35,8 @@
   ([#11975](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11975))
 - Fix ending span in Ktor plugin
   ([#11726](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11726))
+- Fix netty memory leak
+  ([#12003](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12003))
 
 ## Version 1.33.5 (2024-07-25)
 
