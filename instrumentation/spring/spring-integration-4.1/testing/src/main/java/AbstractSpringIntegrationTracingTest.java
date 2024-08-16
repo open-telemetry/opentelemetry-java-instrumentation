@@ -30,9 +30,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
-import spock.lang.Unroll;
 
-@Unroll
 abstract class AbstractSpringIntegrationTracingTest {
 
   protected final InstrumentationExtension testing;
