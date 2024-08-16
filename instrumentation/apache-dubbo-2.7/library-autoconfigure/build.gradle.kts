@@ -1,16 +1,17 @@
 plugins {
   id("otel.library-instrumentation")
 }
+val apacheDubboVersion = "2.7.5"
 
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  library("org.apache.dubbo:dubbo:2.7.0")
+  library("org.apache.dubbo:dubbo:$apacheDubboVersion")
 
   testImplementation(project(":instrumentation:apache-dubbo-2.7:testing"))
 
-  testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
+  testLibrary("org.apache.dubbo:dubbo-config-api:$apacheDubboVersion")
 }
 
 tasks.withType<Test>().configureEach {

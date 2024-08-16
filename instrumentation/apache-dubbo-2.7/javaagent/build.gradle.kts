@@ -10,13 +10,15 @@ muzzle {
     assertInverse.set(true)
   }
 }
+val apacheDubboVersion = "2.7.5"
 
 dependencies {
   implementation(project(":instrumentation:apache-dubbo-2.7:library-autoconfigure"))
 
-  library("org.apache.dubbo:dubbo:2.7.5")
+  library("org.apache.dubbo:dubbo:$apacheDubboVersion")
 
   testImplementation(project(":instrumentation:apache-dubbo-2.7:testing"))
+  testLibrary("org.apache.dubbo:dubbo-config-api:$apacheDubboVersion")
 }
 
 tasks.withType<Test>().configureEach {
