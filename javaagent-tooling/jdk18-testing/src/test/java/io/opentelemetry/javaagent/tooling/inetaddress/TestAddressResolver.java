@@ -16,6 +16,7 @@ public class TestAddressResolver implements InetAddressResolver {
 
   @SuppressWarnings("StaticAssignmentInConstructor")
   public TestAddressResolver() {
+    new Exception().printStackTrace();
     TestAddressResolver.instantiated = true;
   }
 

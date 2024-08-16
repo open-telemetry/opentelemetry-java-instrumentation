@@ -14,6 +14,8 @@ public class InetAddressResolverTest {
 
   @Test
   void agentStartShouldNotTriggerLoadingCustomInetAddressResolvers() throws Exception {
+    // This system property is set in TestResourceProvider
+    assertThat(System.getProperty("test.resource.provider.called")).isEqualTo("true");
     // Agent start should not trigger loading (and instantiating) custom InetAddress resolvers
     assertThat(TestAddressResolver.isInstantiated()).isFalse();
 

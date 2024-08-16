@@ -68,7 +68,7 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
-    init();
+    installTransformers();
 
     EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.create();
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), earlyConfig);
@@ -117,11 +117,10 @@ public class AgentStarterImpl implements AgentStarter {
     }
   }
 
-  private void init() {
-    instrumentInetAddress();
-  }
-
-  private void instrumentInetAddress() {
+  private void installTransformers() {
+    // prevents loading InetAddressResolverProvider SPI before agent has started
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7130
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10921
     InetAddressClassFileTransformer transformer = new InetAddressClassFileTransformer();
     instrumentation.addTransformer(transformer, true);
   }
@@ -226,6 +225,7 @@ public class AgentStarterImpl implements AgentStarter {
                     boolean isInterface) {
                   super.visitMethodInsn(
                       opcode, ownerClassName, methodName, descriptor, isInterface);
+                  // rewrite Vm.isBooted() to AgentInitializer.isAgentStarted(Vm.isBooted())
                   if ("jdk/internal/misc/VM".equals(ownerClassName)
                       && "isBooted".equals(methodName)) {
                     super.visitMethodInsn(
