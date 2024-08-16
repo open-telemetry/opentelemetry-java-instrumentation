@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.7.0 (2024-08-16)
+
 ### 📈 Enhancements
 
 - Add span baggage processor
