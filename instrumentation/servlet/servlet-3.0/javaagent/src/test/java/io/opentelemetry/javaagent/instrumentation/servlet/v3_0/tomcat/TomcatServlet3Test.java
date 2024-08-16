@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -26,6 +27,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.servlet.Servlet;
@@ -34,9 +36,8 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.tomcat.JarScanFilter;
-import org.apache.tomcat.JarScanType;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -112,12 +113,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     servletContext
         .getJarScanner()
         .setJarScanFilter(
-            new JarScanFilter() {
-              @Override
-              public boolean check(JarScanType jarScanType, String jarName) {
-                return false;
-              }
-            });
+            (jarScanType, jarName) -> false);
 
     //    setupAuthentication(tomcatServer, servletContext)
     setupServlets(servletContext);
@@ -131,8 +127,10 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     return tomcatServer;
   }
 
-  public void setup() {
-    accessLogValue.getLoggedIds().clear();
+  @BeforeEach
+  void setUp() {
+  accessLogValue.getLoggedIds().clear();
+    testing.clearData();
   }
 
   @Override
@@ -160,6 +158,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   @ParameterizedTest
   @CsvSource({"1", "4"})
   void access_log_has_ids_for__count_requests(int count) {
+               setUp();
     AggregatedHttpRequest request = request(ACCESS_LOG_SUCCESS, "GET");
 
     IntStream.range(0, count)
@@ -179,21 +178,20 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
 
-    IntStream.range(0, count)
-        .forEach(
-            i -> {
-              testing.waitAndAssertTraces(
-                  trace ->
-                      trace.hasSpansSatisfyingExactly(
-                          span ->
-                              assertServerSpan(
-                                  span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
-                          span -> assertControllerSpan(span, null)));
+    Consumer<TraceAssert> check = trace ->
+                    trace.hasSpansSatisfyingExactly(
+                        span ->
+                            assertServerSpan(
+                                span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
+                        span -> assertControllerSpan(span, null));
+    testing.waitAndAssertTraces(IntStream.range(0, count).mapToObj(i -> check).collect(Collectors.toList()));
 
-              List<List<SpanData>> traces = TelemetryDataUtil.groupTraces(testing.spans());
-              assertThat(loggedTraces).contains(traces.get(i).get(0).getTraceId());
-              assertThat(loggedSpans).contains(traces.get(i).get(0).getSpanId());
-            });
+    List<List<SpanData>> traces = TelemetryDataUtil.groupTraces(testing.spans());
+
+    for (int i = 0; i < count; i++) {
+      assertThat(loggedTraces).contains(traces.get(i).get(0).getTraceId());
+      assertThat(loggedSpans).contains(traces.get(i).get(0).getSpanId());
+    }
   }
 
   @Test

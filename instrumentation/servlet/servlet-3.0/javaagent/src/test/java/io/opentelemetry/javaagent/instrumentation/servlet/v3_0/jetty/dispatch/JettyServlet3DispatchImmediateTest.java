@@ -31,6 +31,11 @@ public class JettyServlet3DispatchImmediateTest extends JettyDispatchTest {
   }
 
   @Override
+  public boolean errorEndpointUsesSendError() {
+    return false;
+  }
+
+  @Override
   protected void setupServlets(ServletContextHandler context) {
     super.setupServlets(context);
     addServlet(

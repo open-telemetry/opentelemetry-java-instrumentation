@@ -19,7 +19,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -31,7 +30,6 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import javax.servlet.Servlet;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
 
@@ -105,7 +103,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (method.equals(HttpConstants._OTHER)) {
-      return endpoint.getPath();
+      return getContextPath() + endpoint.getPath();
     }
 
     if (NOT_FOUND.equals(endpoint)) {
@@ -167,7 +165,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET " + (expectedRoute != null ? expectedRoute : ""))
+                    span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
                 span ->

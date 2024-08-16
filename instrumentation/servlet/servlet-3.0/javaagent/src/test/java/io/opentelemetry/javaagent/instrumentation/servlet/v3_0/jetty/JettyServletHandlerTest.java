@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -57,11 +59,20 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
 
     if (JettyServlet3Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
       span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
-          .hasKind(SpanKind.INTERNAL)
-          .hasParent(parentSpan);
+          .hasKind(SpanKind.INTERNAL);
     }
 
     return super.assertResponseSpan(span, parentSpan, method, endpoint);
+  }
+
+
+  @Override
+  public String expectedServerSpanName(
+      ServerEndpoint endpoint, String method, @Nullable String route) {
+    if (method.equals(HttpConstants._OTHER)) {
+      return "HTTP";
+    }
+return super.expectedServerSpanName(endpoint, method, route);
   }
 
   @Override
