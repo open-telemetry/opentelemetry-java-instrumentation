@@ -151,7 +151,6 @@ public class HttpServletResponseTest {
   }
 
   /** Tests deprecated methods */
-  @SuppressWarnings("deprecation")
   public static class TestResponse implements HttpServletResponse {
     @Override
     public void addCookie(Cookie cookie) {}
@@ -171,11 +170,15 @@ public class HttpServletResponseTest {
       return null;
     }
 
+    // test deprecated methods
+    @SuppressWarnings("deprecation")
     @Override
     public String encodeUrl(String s) {
       return null;
     }
 
+    // test deprecated methods
+    @SuppressWarnings("deprecation")
     @Override
     public String encodeRedirectUrl(String s) {
       return null;
@@ -211,6 +214,8 @@ public class HttpServletResponseTest {
     @Override
     public void setStatus(int i) {}
 
+    // test deprecated methods
+    @SuppressWarnings("deprecation")
     @Override
     public void setStatus(int i, String s) {}
 
@@ -224,11 +229,13 @@ public class HttpServletResponseTest {
       return null;
     }
 
+    @SuppressWarnings("ReturnsNullCollection")
     @Override
     public Collection<String> getHeaders(String s) {
       return null;
     }
 
+    @SuppressWarnings("ReturnsNullCollection")
     @Override
     public Collection<String> getHeaderNames() {
       return null;

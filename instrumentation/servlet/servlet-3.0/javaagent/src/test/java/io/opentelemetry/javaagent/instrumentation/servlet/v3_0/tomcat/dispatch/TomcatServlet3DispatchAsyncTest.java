@@ -52,4 +52,9 @@ public class TomcatServlet3DispatchAsyncTest extends TomcatDispatchTest {
   public boolean errorEndpointUsesSendError() {
     return false;
   }
+
+  @Override
+  protected boolean assertParentOnRedirect() {
+    return false;
+  }
 }

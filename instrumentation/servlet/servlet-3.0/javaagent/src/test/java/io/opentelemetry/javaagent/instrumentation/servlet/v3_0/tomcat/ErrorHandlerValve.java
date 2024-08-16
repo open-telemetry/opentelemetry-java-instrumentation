@@ -11,6 +11,7 @@ import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ErrorReportValve;
 
 public class ErrorHandlerValve extends ErrorReportValve {
+  @SuppressWarnings("CatchAndPrintStackTrace")
   @Override
   protected void report(Request request, Response response, Throwable t) {
     if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.isError()) {

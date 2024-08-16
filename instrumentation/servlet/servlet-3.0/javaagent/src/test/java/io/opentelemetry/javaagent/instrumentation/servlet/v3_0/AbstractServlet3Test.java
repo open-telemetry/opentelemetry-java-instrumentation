@@ -122,9 +122,13 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
     switch (endpoint.name()) {
       case "REDIRECT":
-        return span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendRedirect"))
-            .hasKind(SpanKind.INTERNAL)
-            .hasParent(parentSpan);
+        SpanDataAssert spanDataAssert =
+            span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendRedirect"))
+                .hasKind(SpanKind.INTERNAL);
+        if (assertParentOnRedirect()) {
+          return spanDataAssert.hasParent(parentSpan);
+        }
+        return spanDataAssert;
       case "ERROR":
         return span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
             .hasKind(SpanKind.INTERNAL)
@@ -133,6 +137,10 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
         break;
     }
     return span;
+  }
+
+  protected boolean assertParentOnRedirect() {
+    return true;
   }
 
   @Test

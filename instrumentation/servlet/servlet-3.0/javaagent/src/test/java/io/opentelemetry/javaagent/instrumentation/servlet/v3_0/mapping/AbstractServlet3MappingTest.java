@@ -62,7 +62,7 @@ public abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
   @Unroll
   public void test_path__path(String path, String route, boolean success) {
 
-    final AggregatedHttpResponse response =
+    AggregatedHttpResponse response =
         client.get(address.resolve(path).toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(success ? 200 : 404);
