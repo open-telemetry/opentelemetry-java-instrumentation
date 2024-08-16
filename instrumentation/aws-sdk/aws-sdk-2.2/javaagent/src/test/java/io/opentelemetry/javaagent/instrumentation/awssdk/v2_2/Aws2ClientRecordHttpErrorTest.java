@@ -2,19 +2,20 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
-import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractQueryProtocolModelTest;
+import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractAws2ClientRecordHttpErrorTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
-class QueryProtocolModelTest extends AbstractQueryProtocolModelTest {
+public class Aws2ClientRecordHttpErrorTest extends AbstractAws2ClientRecordHttpErrorTest {
   @RegisterExtension
   private final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
-  protected ClientOverrideConfiguration.Builder createClientOverrideConfigurationBuilder() {
+  public ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder();
   }
 
