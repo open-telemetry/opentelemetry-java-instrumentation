@@ -317,7 +317,6 @@ abstract class AbstractDubboTraceChainTest {
     middleBootstrap = DubboTestUtil.newDubboBootstrap();
     middleBootstrap
         .application(new ApplicationConfig("dubbo-demo-middle"))
-        //        .reference(clientReference)
         .service(configureMiddleServer(clientReference))
         .protocol(middleProtocolConfig)
         .start();
