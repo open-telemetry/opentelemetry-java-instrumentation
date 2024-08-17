@@ -12,8 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JsrConfigCustomSpanEventTest extends CustomSpanEventTest {
 
-  @RegisterExtension 
-  static final JavaxBatchConfigRunner runner = new JavaxBatchConfigRunner();
+  @RegisterExtension static final JavaxBatchConfigRunner runner = new JavaxBatchConfigRunner();
 
   public JsrConfigCustomSpanEventTest() {
     super(runner);
