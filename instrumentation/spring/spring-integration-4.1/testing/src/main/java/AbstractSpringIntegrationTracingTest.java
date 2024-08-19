@@ -61,7 +61,9 @@ abstract class AbstractSpringIntegrationTracingTest {
 
   @AfterEach
   public void tearDown() {
-    applicationContext.close();
+    if (applicationContext != null) {
+        applicationContext.close();
+    }
   }
 
   @ParameterizedTest
