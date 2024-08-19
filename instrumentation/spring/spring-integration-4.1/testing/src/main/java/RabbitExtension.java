@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -35,9 +36,11 @@ public class RabbitExtension implements  BeforeEachCallback,
   protected ConfigurableApplicationContext producerContext;
   private ConfigurableApplicationContext consumerContext;
 
+  private final InstrumentationExtension testing;
   private final Class<?> additionalContextClass;
 
-  public RabbitExtension(Class<?> additionalContextClass) {
+  public RabbitExtension(InstrumentationExtension testing, Class<?> additionalContextClass) {
+    this.testing = testing;
     this.additionalContextClass = additionalContextClass;
   }
 
@@ -78,6 +81,8 @@ public class RabbitExtension implements  BeforeEachCallback,
     consumerProperties.put("spring.cloud.stream.bindings.input.destination", "testTopic");
     consumerApp.setDefaultProperties(consumerProperties);
     consumerContext = consumerApp.run();
+
+    testing.clearData();
   }
 
   @Override

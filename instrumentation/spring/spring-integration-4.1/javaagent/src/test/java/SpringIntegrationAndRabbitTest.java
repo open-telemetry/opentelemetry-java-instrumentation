@@ -18,14 +18,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SpringIntegrationAndRabbitTest {
 
-  @RegisterExtension
-  RabbitExtension rabbit;
+  @RegisterExtension RabbitExtension rabbit;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   SpringIntegrationAndRabbitTest() {
-    rabbit = new RabbitExtension(null);
+    rabbit = new RabbitExtension(testing, null);
   }
 
   @Test
@@ -33,23 +32,11 @@ class SpringIntegrationAndRabbitTest {
     runWithSpan("parent", () -> rabbit.getBean("producer", Runnable.class).run());
 
     testing.waitAndAssertTraces(
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
-        trace -> {}, // ignore
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasTotalAttributeCount(0),
-                span -> span.hasName("producer").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("producer").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0),
                 span -> span.hasName("exchange.declare"),
                 span ->
                     span.hasName("exchange.declare")
@@ -154,7 +141,8 @@ class SpringIntegrationAndRabbitTest {
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 l -> l.isInstanceOf(Long.class))),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
+                span ->
+                    span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->

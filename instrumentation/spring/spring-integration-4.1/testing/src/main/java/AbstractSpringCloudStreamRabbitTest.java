@@ -19,7 +19,7 @@ public abstract class AbstractSpringCloudStreamRabbitTest
   public AbstractSpringCloudStreamRabbitTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
-    rabbit = new RabbitExtension(additionalContextClass);
+    rabbit = new RabbitExtension(testing, additionalContextClass);
   }
 
   @Test
