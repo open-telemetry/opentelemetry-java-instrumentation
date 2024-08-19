@@ -26,7 +26,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
@@ -65,7 +64,7 @@ public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
     @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object result,
+        @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelRequest") XxlJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
