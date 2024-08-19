@@ -28,8 +28,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class RabbitExtension implements  BeforeEachCallback,
-    AfterEachCallback {
+public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
 
   private GenericContainer<?> rabbitMqContainer;
   protected ConfigurableApplicationContext producerContext;

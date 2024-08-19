@@ -8,11 +8,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractSpringCloudStreamRabbitTest
-    {
+public abstract class AbstractSpringCloudStreamRabbitTest {
 
-  @RegisterExtension
-  RabbitExtension rabbit;
+  @RegisterExtension RabbitExtension rabbit;
 
   protected final InstrumentationExtension testing;
 
@@ -29,14 +27,14 @@ public abstract class AbstractSpringCloudStreamRabbitTest
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer")
-                    .hasKind(SpanKind.INTERNAL),
-                span -> span
-                    .hasName("testConsumer.input process")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(0)),
-                span -> span.hasName("consumer")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(1))));
+                span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("testConsumer.input process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("consumer")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))));
   }
 }

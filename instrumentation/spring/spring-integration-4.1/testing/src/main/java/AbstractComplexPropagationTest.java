@@ -61,7 +61,7 @@ public abstract class AbstractComplexPropagationTest {
   @AfterEach
   void tearDown() {
     if (applicationContext != null) {
-        applicationContext.close();
+      applicationContext.close();
     }
   }
 
