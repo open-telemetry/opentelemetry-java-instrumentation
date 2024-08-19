@@ -33,7 +33,6 @@ import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
@@ -142,7 +141,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelMethod") Method method,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
+        @Advice.Return(readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
       if (scope == null) {
         return;
@@ -163,7 +162,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Origin Method originMethod,
         @Advice.Local("otelMethod") Method method,
-        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
+        @Advice.AllArguments Object[] args,
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -189,7 +188,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") MethodRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
+        @Advice.Return(readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
       if (scope == null) {
         return;

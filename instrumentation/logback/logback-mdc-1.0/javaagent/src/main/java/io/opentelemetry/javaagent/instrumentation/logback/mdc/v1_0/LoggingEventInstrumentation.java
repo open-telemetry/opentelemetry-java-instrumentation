@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class LoggingEventInstrumentation implements TypeInstrumentation {
@@ -61,7 +60,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ILoggingEvent event,
-        @Advice.Return(typing = Typing.DYNAMIC, readOnly = false) Map<String, String> contextData) {
+        @Advice.Return(readOnly = false) Map<String, String> contextData) {
 
       if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.

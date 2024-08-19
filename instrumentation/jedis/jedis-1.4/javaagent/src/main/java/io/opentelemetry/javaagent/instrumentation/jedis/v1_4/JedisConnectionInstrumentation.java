@@ -22,7 +22,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
@@ -66,7 +65,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command,
+        @Advice.Argument(0) Protocol.Command command,
         @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -101,7 +100,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(value = 0, typing = Assigner.Typing.DYNAMIC) Protocol.Command command,
+        @Advice.Argument(0) Protocol.Command command,
         @Advice.Argument(1) byte[][] args,
         @Advice.Local("otelJedisRequest") JedisRequest request,
         @Advice.Local("otelContext") Context context,

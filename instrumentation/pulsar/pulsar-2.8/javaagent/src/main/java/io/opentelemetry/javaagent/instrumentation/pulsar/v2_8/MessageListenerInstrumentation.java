@@ -18,7 +18,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -47,8 +46,7 @@ public class MessageListenerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void after(
         @Advice.This ConsumerConfigurationData<?> data,
-        @Advice.Return(readOnly = false, typing = Assigner.Typing.DYNAMIC)
-            MessageListener<?> listener) {
+        @Advice.Return(readOnly = false) MessageListener<?> listener) {
       if (listener == null) {
         return;
       }
