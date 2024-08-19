@@ -124,8 +124,7 @@
       ],
       "matchPackageNames": [
         "org.slf4j:slf4j-api",
-        "org.springframework.boot",
-        "org.springframework.boot:org.springframework.boot.gradle.plugin",
+        "org.springframework.boot:org.springframework.boot.gradle.plugin", // this is for plugin id "org.springframework.boot"
         "org.springframework.boot:spring-boot-dependencies"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false,
