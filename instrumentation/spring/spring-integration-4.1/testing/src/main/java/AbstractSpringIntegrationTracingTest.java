@@ -138,7 +138,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("handler").hasParentSpanId(trace.getSpan(0).getSpanId())));
+                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     channel.unsubscribe(messageHandler);
   }
