@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,9 +25,15 @@ class SqlClientAttributesExtractorTest {
   static final class TestAttributesGetter
       implements SqlClientAttributesGetter<Map<String, String>> {
 
+    @Deprecated
     @Override
     public String getRawStatement(Map<String, String> map) {
       return map.get("db.statement");
+    }
+
+    @Override
+    public String getDbQueryText(Map<String, String> map) {
+      return map.get("db.query.text");
     }
 
     @Override
@@ -40,6 +46,8 @@ class SqlClientAttributesExtractorTest {
       return map.get("db.user");
     }
 
+    @Deprecated
+    @Nullable
     @Override
     public String getName(Map<String, String> map) {
       return map.get("db.name");
@@ -64,9 +72,12 @@ class SqlClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
     request.put("db.user", "username");
-    request.put("db.name", "potatoes");
+    request.put(
+        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME).getKey(), "potatoes");
     request.put("db.connection_string", "mydb:///potatoes");
-    request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
+    request.put(
+        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT).getKey(),
+        "SELECT * FROM potato WHERE id=12345");
 
     Context context = Context.root();
 
@@ -85,11 +96,17 @@ class SqlClientAttributesExtractorTest {
         .containsOnly(
             entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
             entry(DbIncubatingAttributes.DB_USER, "username"),
-            entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+            entry(SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME), "potatoes"),
             entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-            entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"));
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                "SELECT * FROM potato WHERE id=?"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                "SELECT"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_SQL_TABLE),
+                "potato"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
@@ -112,8 +129,12 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                "SELECT *"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                "SELECT"));
   }
 
   @Test
@@ -126,7 +147,8 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
-            .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
+            .setTableAttribute(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE))
             .build();
 
     // when
@@ -136,9 +158,15 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-            entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                "SELECT * FROM table"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                "SELECT"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE),
+                "table"));
   }
 
   @Test

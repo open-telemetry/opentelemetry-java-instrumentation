@@ -43,6 +43,12 @@ public abstract class DbRequest {
 
   public abstract DbInfo getDbInfo();
 
+  /**
+   * @deprecated Use {@link #getDbQueryText()} instead.
+   */
+  @Deprecated
   @Nullable
   public abstract String getStatement();
+
+  public abstract String getDbQueryText();
 }

@@ -20,8 +20,8 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>db.sql.table</code> attribute. The raw SQL statements returned by the {@link
- * SqlClientAttributesGetter#getRawStatement(Object)} method are sanitized before use, all statement
- * parameters are removed.
+ * SqlClientAttributesGetter#getDbQueryText(Object)} (Object)} method are sanitized before use, all
+ * statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
@@ -69,21 +69,21 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    String rawStatement = getter.getRawStatement(request);
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawStatement);
+    String dbQueryText = getter.getDbQueryText(request);
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(dbQueryText);
     String operation = sanitizedStatement.getOperation();
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(
           attributes,
           DB_QUERY_TEXT,
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : dbQueryText);
       internalSet(attributes, DB_OPERATION_NAME, operation);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(
           attributes,
           DB_STATEMENT,
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : dbQueryText);
       internalSet(attributes, DB_OPERATION, operation);
     }
     if (!SQL_CALL.equals(operation)) {

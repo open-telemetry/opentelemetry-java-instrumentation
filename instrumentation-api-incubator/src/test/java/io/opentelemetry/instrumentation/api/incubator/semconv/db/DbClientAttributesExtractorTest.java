@@ -32,6 +32,7 @@ class DbClientAttributesExtractorTest {
       return map.get("db.user");
     }
 
+    @Deprecated
     @Override
     public String getName(Map<String, String> map) {
       return map.get("db.name");

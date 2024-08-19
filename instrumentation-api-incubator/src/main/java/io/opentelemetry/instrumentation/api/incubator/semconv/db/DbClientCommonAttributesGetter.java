@@ -16,6 +16,10 @@ public interface DbClientCommonAttributesGetter<REQUEST> {
   @Nullable
   String getUser(REQUEST request);
 
+  /**
+   * @deprecated Use {@link #getNamespace(Object)} instead.
+   */
+  @Deprecated
   @Nullable
   String getName(REQUEST request);
 

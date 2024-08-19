@@ -52,4 +52,9 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   public String getRawStatement(DbRequest request) {
     return request.getStatement();
   }
+
+  @Override
+  public String getDbQueryText(DbRequest dbRequest) {
+    return dbRequest.getDbQueryText();
+  }
 }

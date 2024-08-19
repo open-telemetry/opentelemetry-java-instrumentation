@@ -29,6 +29,12 @@ public enum VertxSqlClientAttributesGetter
     return request.getDatabase();
   }
 
+  @Nullable
+  @Override
+  public String getNamespace(VertxSqlClientRequest vertxSqlClientRequest) {
+    return "";
+  }
+
   @Override
   @Nullable
   public String getConnectionString(VertxSqlClientRequest request) {
@@ -39,5 +45,10 @@ public enum VertxSqlClientAttributesGetter
   @Nullable
   public String getRawStatement(VertxSqlClientRequest request) {
     return request.getStatement();
+  }
+
+  @Override
+  public String getDbQueryText(VertxSqlClientRequest request) {
+    return request.getDbQueryText();
   }
 }

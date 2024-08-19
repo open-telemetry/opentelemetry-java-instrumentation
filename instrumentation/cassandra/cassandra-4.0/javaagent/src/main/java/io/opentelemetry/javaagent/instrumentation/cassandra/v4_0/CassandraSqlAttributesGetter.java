@@ -46,4 +46,9 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   public String getRawStatement(CassandraRequest request) {
     return request.getStatement();
   }
+
+  @Override
+  public String getDbQueryText(CassandraRequest request) {
+    return request.getDbQueryText();
+  }
 }

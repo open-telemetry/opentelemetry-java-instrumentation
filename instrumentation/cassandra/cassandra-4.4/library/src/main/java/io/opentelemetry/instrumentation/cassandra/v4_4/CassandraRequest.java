@@ -17,5 +17,11 @@ public abstract class CassandraRequest {
 
   public abstract Session getSession();
 
+  /**
+   * @deprecated Use {@link #getDbQueryText()} ()} instead.
+   */
+  @Deprecated
   public abstract String getStatement();
+
+  public abstract String getDbQueryText();
 }
