@@ -6,27 +6,37 @@
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractSpringCloudStreamRabbitTest
-    extends AbstractRabbitProducerConsumerTest {
+    {
+
+  @RegisterExtension
+  RabbitExtension rabbit;
 
   protected final InstrumentationExtension testing;
 
   public AbstractSpringCloudStreamRabbitTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
-    super(additionalContextClass);
     this.testing = testing;
+    rabbit = new RabbitExtension(additionalContextClass);
   }
 
   @Test
   void should_propagate_context_through_rabbit_mq() {
-    producerContext.getBean("producer", Runnable.class).run();
+    rabbit.getBean("producer", Runnable.class).run();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
-                span -> span.hasName("testConsumer.input process").hasKind(SpanKind.CONSUMER).hasParent(trace.getSpan(0)),
-                span -> span.hasName("consumer").hasKind(SpanKind.INTERNAL)).hasParent(trace.getSpan(1)));
+                span -> span.hasName("producer")
+                    .hasKind(SpanKind.INTERNAL),
+                span -> span
+                    .hasName("testConsumer.input process")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(0)),
+                span -> span.hasName("consumer")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(1))));
   }
 }

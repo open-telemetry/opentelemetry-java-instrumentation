@@ -8,9 +8,12 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractSpringCloudStreamProducerTest
-    extends AbstractRabbitProducerConsumerTest {
+public abstract class AbstractSpringCloudStreamProducerTest {
+
+  @RegisterExtension
+  RabbitExtension rabbit;
 
   protected final InstrumentationExtension testing;
 
@@ -19,22 +22,25 @@ public abstract class AbstractSpringCloudStreamProducerTest
 
   public AbstractSpringCloudStreamProducerTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
-    super(additionalContextClass);
     this.testing = testing;
+    rabbit = new RabbitExtension(additionalContextClass);
   }
 
   @Test
   void has_producer_span() {
     assumeTrue(HAS_PRODUCER_SPAN);
 
-    producerContext.getBean("producer", Runnable.class).run();
+    rabbit.getBean("producer", Runnable.class).run();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
-                span -> span.hasName("testProducer.output publish").hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
-                span -> span.hasName("testConsumer.input process").hasKind(SpanKind.CONSUMER).hasParent(trace.getSpan(1)),
-                span -> span.hasName("consumer").hasKind(SpanKind.INTERNAL)).hasParent(trace.getSpan(2)));
+                span -> span.hasName("testProducer.output publish").hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(0)),
+                span -> span.hasName("testConsumer.input process").hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(1)),
+                span -> span.hasName("consumer").hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(2))));
   }
 }

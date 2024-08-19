@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
@@ -26,7 +28,8 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public abstract class AbstractRabbitProducerConsumerTest {
+public class RabbitExtension implements  BeforeEachCallback,
+    AfterEachCallback {
 
   private GenericContainer<?> rabbitMqContainer;
   protected ConfigurableApplicationContext producerContext;
@@ -34,21 +37,16 @@ public abstract class AbstractRabbitProducerConsumerTest {
 
   private final Class<?> additionalContextClass;
 
-  public AbstractRabbitProducerConsumerTest(Class<?> additionalContextClass) {
+  public RabbitExtension(Class<?> additionalContextClass) {
     this.additionalContextClass = additionalContextClass;
   }
 
-  @BeforeEach
-  public void setUp() {
-    startRabbit(additionalContextClass);
+  public <T> T getBean(String s, Class<T> aClass) throws BeansException {
+    return producerContext.getBean(s, aClass);
   }
 
-  @AfterEach
-  public void tearDown() {
-    stopRabbit();
-  }
-
-  private void startRabbit(Class<?> additionalContext) {
+  @Override
+  public void beforeEach(ExtensionContext context) {
     rabbitMqContainer =
         new GenericContainer<>("rabbitmq:latest")
             .withExposedPorts(5672)
@@ -57,7 +55,7 @@ public abstract class AbstractRabbitProducerConsumerTest {
     rabbitMqContainer.start();
 
     SpringApplication producerApp =
-        new SpringApplication(getContextClasses(ProducerConfig.class, additionalContext));
+        new SpringApplication(getContextClasses(ProducerConfig.class, additionalContextClass));
     Map<String, Object> producerProperties = new HashMap<>();
     producerProperties.put("spring.application.name", "testProducer");
     producerProperties.put("spring.jmx.enabled", false);
@@ -70,7 +68,7 @@ public abstract class AbstractRabbitProducerConsumerTest {
 
     SpringApplication consumerApp =
         new SpringApplication(
-            getContextClasses(ProducerConfig.ConsumerConfig.class, additionalContext));
+            getContextClasses(ProducerConfig.ConsumerConfig.class, additionalContextClass));
     Map<String, Object> consumerProperties = new HashMap<>();
     consumerProperties.put("spring.application.name", "testConsumer");
     consumerProperties.put("spring.jmx.enabled", false);
@@ -82,6 +80,13 @@ public abstract class AbstractRabbitProducerConsumerTest {
     consumerContext = consumerApp.run();
   }
 
+  @Override
+  public void afterEach(ExtensionContext context) {
+    rabbitMqContainer.stop();
+    producerContext.close();
+    consumerContext.close();
+  }
+
   private static Class<?>[] getContextClasses(Class<?> mainContext, Class<?> additionalContext) {
     List<Class<?>> contextClasses = new ArrayList<>();
     contextClasses.add(mainContext);
@@ -89,12 +94,6 @@ public abstract class AbstractRabbitProducerConsumerTest {
       contextClasses.add(additionalContext);
     }
     return contextClasses.toArray(new Class<?>[0]);
-  }
-
-  private void stopRabbit() {
-    rabbitMqContainer.stop();
-    producerContext.close();
-    consumerContext.close();
   }
 
   @SpringBootConfiguration

@@ -16,18 +16,21 @@ import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class SpringIntegrationAndRabbitTest extends AbstractRabbitProducerConsumerTest {
+class SpringIntegrationAndRabbitTest {
+
+  @RegisterExtension
+  RabbitExtension rabbit;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   SpringIntegrationAndRabbitTest() {
-    super(null);
+    rabbit = new RabbitExtension(null);
   }
 
   @Test
   void should_cooperate_with_existing_RabbitMq_instrumentation() {
-    runWithSpan("parent", () -> producerContext.getBean("producer", Runnable.class).run());
+    runWithSpan("parent", () -> rabbit.getBean("producer", Runnable.class).run());
 
     testing.waitAndAssertTraces(
         trace -> {}, // ignore
@@ -45,8 +48,8 @@ class SpringIntegrationAndRabbitTest extends AbstractRabbitProducerConsumerTest 
         trace -> {}, // ignore
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("producer").hasParent(trace.getSpan(0)),
+                span -> span.hasName("parent").hasTotalAttributeCount(0),
+                span -> span.hasName("producer").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0),
                 span -> span.hasName("exchange.declare"),
                 span ->
                     span.hasName("exchange.declare")
@@ -151,7 +154,7 @@ class SpringIntegrationAndRabbitTest extends AbstractRabbitProducerConsumerTest 
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 l -> l.isInstanceOf(Long.class))),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(8))),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
