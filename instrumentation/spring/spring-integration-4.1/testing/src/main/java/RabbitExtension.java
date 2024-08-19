@@ -5,16 +5,15 @@
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
@@ -44,8 +43,8 @@ public class RabbitExtension implements  BeforeEachCallback,
     this.additionalContextClass = additionalContextClass;
   }
 
-  public <T> T getBean(String s, Class<T> aClass) throws BeansException {
-    return producerContext.getBean(s, aClass);
+  public <T> T getBean(String name, Class<T> requiredType) {
+    return producerContext.getBean(name, requiredType);
   }
 
   @Override
