@@ -13,18 +13,16 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
-import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
-import java.util.Deque;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import javax.annotation.Nullable;
 
 /**
@@ -51,12 +49,8 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
   @Override
   public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise prm) throws Exception {
-    Attribute<Deque<ServerContext>> serverContextAttr =
-        ctx.channel().attr(AttributeKeys.SERVER_CONTEXT);
-
-    Deque<ServerContext> serverContexts = serverContextAttr.get();
+    ServerContexts serverContexts = ServerContexts.get(ctx.channel());
     ServerContext serverContext = serverContexts != null ? serverContexts.peekFirst() : null;
-
     if (serverContext == null) {
       super.write(ctx, msg, prm);
       return;
@@ -86,7 +80,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
         } else {
           // Headers and body all sent together, we have the response information in the msg.
           beforeCommitHandler.handle(serverContext.context(), (HttpResponse) msg);
-          serverContexts.removeFirst();
+          serverContexts.pollFirst();
           writePromise.addListener(
               future ->
                   end(
@@ -102,7 +96,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
           // Body sent after headers. We stored the response information in the context when
           // encountering HttpResponse (which was not FullHttpResponse since it's not
           // LastHttpContent).
-          serverContexts.removeFirst();
+          serverContexts.pollFirst();
           HttpResponse response = ctx.channel().attr(HTTP_SERVER_RESPONSE).getAndSet(null);
           writePromise.addListener(
               future ->
@@ -130,7 +124,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     try (Scope ignored = serverContext.context().makeCurrent()) {
       super.write(ctx, msg, writePromise);
     } catch (Throwable throwable) {
-      serverContexts.removeFirst();
+      serverContexts.pollFirst();
       end(serverContext.context(), serverContext.request(), null, throwable);
       throw throwable;
     }
