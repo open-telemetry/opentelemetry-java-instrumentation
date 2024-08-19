@@ -36,6 +36,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.booleanKey("messaging.destination.anonymous");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
       AttributeKey.stringKey("messaging.destination.name");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
+      AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
       AttributeKey.stringKey("messaging.destination.template");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
@@ -98,6 +100,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       internalSet(
           attributes, MESSAGING_DESTINATION_TEMPLATE, getter.getDestinationTemplate(request));
     }
+    internalSet(
+        attributes, MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
     boolean isAnonymousDestination = getter.isAnonymousDestination(request);
     if (isAnonymousDestination) {
       internalSet(attributes, MESSAGING_DESTINATION_ANONYMOUS, true);
