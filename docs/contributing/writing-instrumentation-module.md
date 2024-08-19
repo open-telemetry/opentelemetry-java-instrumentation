@@ -435,7 +435,7 @@ module classloader.
 
 This allows for example to access package-private methods that would not be accessible otherwise.
 
-### advice local variables
+### Advice local variables
 
 With inlined advices, declaring an advice method argument with `@Advice.Local` allows defining
 a variable that is local to the advice execution for communication between the enter and exit advices.
