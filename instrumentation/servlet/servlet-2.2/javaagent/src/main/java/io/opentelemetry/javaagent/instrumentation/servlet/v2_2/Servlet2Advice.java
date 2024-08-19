@@ -20,7 +20,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 @SuppressWarnings("unused")
 public class Servlet2Advice {
@@ -28,7 +27,7 @@ public class Servlet2Advice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
       @Advice.Argument(0) ServletRequest request,
-      @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) ServletResponse response,
+      @Advice.Argument(1) ServletResponse response,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
       @Advice.Local("otelRequest") ServletRequestContext<HttpServletRequest> requestContext,
       @Advice.Local("otelContext") Context context,

@@ -11,7 +11,6 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 @SuppressWarnings("unused")
 public class AsyncStartAdvice {
@@ -25,8 +24,7 @@ public class AsyncStartAdvice {
 
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void startAsyncExit(
-      @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request,
-      @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      @Advice.This HttpServletRequest request, @Advice.Local("otelCallDepth") CallDepth callDepth) {
 
     if (callDepth.decrementAndGet() != 0) {
       // This is not the outermost invocation, ignore.
