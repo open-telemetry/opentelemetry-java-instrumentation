@@ -24,7 +24,6 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public abstract class AbstractNettyChannelPipelineInstrumentation implements TypeInstrumentation {
@@ -156,7 +155,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class RemoveLastAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
+    @Advice.AssignReturned.ToReturned
     public static Object removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler returnHandler) {
       VirtualField<ChannelHandler, ChannelHandler> virtualField =

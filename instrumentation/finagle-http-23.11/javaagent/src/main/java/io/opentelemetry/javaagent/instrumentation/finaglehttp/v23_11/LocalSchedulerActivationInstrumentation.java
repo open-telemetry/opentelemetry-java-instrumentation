@@ -16,7 +16,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
@@ -37,7 +36,7 @@ public class LocalSchedulerActivationInstrumentation implements TypeInstrumentat
   public static class WrapRunnableAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Object wrap(@Advice.Argument(value = 0) Runnable task) {
       if (task == null) {
         return null;

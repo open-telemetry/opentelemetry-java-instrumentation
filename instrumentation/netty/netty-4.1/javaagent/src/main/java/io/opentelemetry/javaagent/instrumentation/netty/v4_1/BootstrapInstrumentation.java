@@ -25,7 +25,6 @@ import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class BootstrapInstrumentation implements TypeInstrumentation {
@@ -67,7 +66,7 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
   public static class SetResolverAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Object onEnter(@Advice.Argument(value = 0) AddressResolverGroup<?> resolver) {
       return InstrumentedAddressResolverGroup.wrap(connectionInstrumenter(), resolver);
     }

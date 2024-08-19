@@ -21,7 +21,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class NettyFutureInstrumentation implements TypeInstrumentation {
@@ -60,7 +59,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class AddListenerAdvice {
 
     @Advice.OnMethodEnter
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Object wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
 
@@ -77,7 +76,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     @Advice.AssignReturned.AsScalar
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Object[] wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
@@ -100,7 +99,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class RemoveListenerAdvice {
 
     @Advice.OnMethodEnter
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Object wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
       return FutureListenerWrappers.getWrapper(listener);
@@ -112,7 +111,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     @Advice.AssignReturned.AsScalar
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Object[] wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 

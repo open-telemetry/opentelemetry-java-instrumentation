@@ -14,7 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 
@@ -36,7 +35,7 @@ public class PromiseMonitoredInstrumentation implements TypeInstrumentation {
   public static class WrapFunctionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 1, typing = Assigner.Typing.DYNAMIC))
+    @Advice.AssignReturned.ToArguments(@ToArgument(1))
     public static Object wrap(@Advice.Argument(value = 1) Function1<?, ?> function1) {
       if (function1 == null) {
         return null;

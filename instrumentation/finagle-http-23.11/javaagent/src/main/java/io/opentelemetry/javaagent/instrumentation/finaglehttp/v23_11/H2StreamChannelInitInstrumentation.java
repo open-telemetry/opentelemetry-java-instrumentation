@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
@@ -43,7 +42,7 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   public static class InitServerAdvice {
 
     @Advice.OnMethodExit
-    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
+    @Advice.AssignReturned.ToReturned
     public static Object handleExit(@Advice.Return ChannelInitializer<Channel> initializer) {
       return Helpers.wrapServer(initializer);
     }
@@ -53,7 +52,7 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   public static class InitClientAdvice {
 
     @Advice.OnMethodExit
-    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
+    @Advice.AssignReturned.ToReturned
     public static Object handleExit(@Advice.Return ChannelInitializer<Channel> initializer) {
       return Helpers.wrapClient(initializer);
     }
