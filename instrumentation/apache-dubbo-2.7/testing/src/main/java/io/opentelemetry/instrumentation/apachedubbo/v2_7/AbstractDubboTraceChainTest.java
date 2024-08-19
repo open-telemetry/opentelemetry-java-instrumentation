@@ -343,7 +343,7 @@ abstract class AbstractDubboTraceChainTest {
             "parent",
             () -> genericService.$invoke("hello", new String[] {String.class.getName()}, o));
 
-    assertEquals("hello", response);
+    assertThat(response).isEqualTo("hello");
     testing()
         .waitAndAssertTraces(
             trace ->
