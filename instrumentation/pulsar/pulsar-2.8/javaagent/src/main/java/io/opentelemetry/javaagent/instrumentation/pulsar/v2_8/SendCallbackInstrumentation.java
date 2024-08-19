@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -21,6 +22,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.impl.SendCallback;
 
 public class SendCallbackInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.apache.pulsar.client.impl.SendCallback");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,8 +50,8 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("otelRequest") PulsarRequest request) {
       // Extract the Context and PulsarRequest from the SendCallback instance.
-      SendCallBackData callBackData = VirtualFieldStore.extract(callback);
-      if (callBackData != null && callBackData.request != null && callBackData.context != null) {
+      SendCallbackData callBackData = VirtualFieldStore.extract(callback);
+      if (callBackData != null) {
         // If the extraction was successful, store the Context and PulsarRequest in local variables.
         otelContext = callBackData.context;
         request = callBackData.request;
@@ -59,7 +65,7 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("otelRequest") PulsarRequest request) {
-      if (otelScope != null && otelContext != null && request != null) {
+      if (otelScope != null) {
         // Close the Scope and end the span.
         otelScope.close();
         producerInstrumenter().end(otelContext, request, null, t);
