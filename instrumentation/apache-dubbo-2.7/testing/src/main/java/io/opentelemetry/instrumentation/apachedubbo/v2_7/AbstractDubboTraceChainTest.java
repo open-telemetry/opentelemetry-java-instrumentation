@@ -272,6 +272,7 @@ abstract class AbstractDubboTraceChainTest {
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfying(
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
                                 equalTo(
