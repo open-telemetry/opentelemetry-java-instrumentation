@@ -100,7 +100,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClient5TelemetryBuilder setSpanNameExtractor(
       Function<
-              SpanNameExtractor<ApacheHttpClient5Request>,
+              SpanNameExtractor<? super ApacheHttpClient5Request>,
               ? extends SpanNameExtractor<? super ApacheHttpClient5Request>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);

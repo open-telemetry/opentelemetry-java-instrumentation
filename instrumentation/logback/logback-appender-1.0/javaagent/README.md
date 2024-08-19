@@ -7,6 +7,7 @@
 | `otel.instrumentation.logback-appender.experimental.capture-marker-attribute`          | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                          |
 | `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes` | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                  |
 | `otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes` | Boolean | `false` | Enable the capture of Logback logger context properties as attributes.                                                                        |
+| `otel.instrumentation.logback-appender.experimental.capture-arguments`                 | Boolean | `false` | Enable the capture of Logback logger arguments.                                                                                               |
 | `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes`            | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                  |
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes
