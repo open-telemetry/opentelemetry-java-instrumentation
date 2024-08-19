@@ -104,9 +104,9 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
       case "NOT_FOUND":
         return method;
       case "PATH_PARAM":
-        return "HTTP " + getContextPath() + "/path/:id/param";
+        return method + " " + getContextPath() + "/path/:id/param";
       default:
-        return "HTTP " + getContextPath() + endpoint.getPath();
+        return method + " " + getContextPath() + endpoint.getPath();
     }
   }
 
