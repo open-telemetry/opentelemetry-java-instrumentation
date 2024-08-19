@@ -34,7 +34,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
@@ -125,7 +124,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return(readOnly = false, typing = Typing.DYNAMIC) Object returnValue,
+        @Advice.Return(readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelHandlerData") Jaxrs2HandlerData handlerData,

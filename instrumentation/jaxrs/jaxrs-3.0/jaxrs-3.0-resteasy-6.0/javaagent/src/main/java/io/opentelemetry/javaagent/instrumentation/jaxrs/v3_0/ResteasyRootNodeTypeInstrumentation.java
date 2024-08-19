@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.resteasy.core.ResourceLocatorInvoker;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
@@ -46,8 +45,7 @@ public class ResteasyRootNodeTypeInstrumentation implements TypeInstrumentation 
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInvoker(
-        @Advice.Argument(0) String path,
-        @Advice.Argument(value = 1, typing = Assigner.Typing.DYNAMIC) Object invoker) {
+        @Advice.Argument(0) String path, @Advice.Argument(1) Object invoker) {
       String normalizedPath = JaxrsPathUtil.normalizePath(path);
       if (invoker instanceof ResourceLocatorInvoker) {
         ResourceLocatorInvoker resourceLocatorInvoker = (ResourceLocatorInvoker) invoker;
