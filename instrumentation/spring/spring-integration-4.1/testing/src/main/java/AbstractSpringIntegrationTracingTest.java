@@ -189,7 +189,7 @@ abstract class AbstractSpringIntegrationTracingTest {
                   span.hasName("application.directChannel process").hasKind(SpanKind.CONSUMER);
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
-                span -> span.hasName("handler").hasParentSpanId(trace.getSpan(0).getSpanId())));
+                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     channel.unsubscribe(messageHandler);
   }
