@@ -22,6 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
@@ -69,7 +70,9 @@ public class AddingSpanAttributesInstrumentation implements TypeInstrumentation 
   public static class AddingSpanAttributesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Origin Method method, @Advice.AllArguments Object[] args) {
+    public static void onEnter(
+        @Advice.Origin Method method,
+        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
       Span otelSpan = Java8BytecodeBridge.currentSpan();
       if (otelSpan.isRecording() && otelSpan.getSpanContext().isValid()) {
         otelSpan.setAllAttributes(attributes().extract(method, args));

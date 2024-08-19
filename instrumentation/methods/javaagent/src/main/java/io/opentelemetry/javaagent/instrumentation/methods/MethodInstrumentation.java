@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class MethodInstrumentation implements TypeInstrumentation {
@@ -76,7 +77,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelMethod") ClassAndMethod classAndMethod,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
-        @Advice.Return(readOnly = false) Object returnValue,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
       scope.close();
 
