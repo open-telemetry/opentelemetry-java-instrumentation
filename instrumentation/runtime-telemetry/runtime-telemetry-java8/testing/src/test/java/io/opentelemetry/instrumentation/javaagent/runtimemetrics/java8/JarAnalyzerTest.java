@@ -51,8 +51,7 @@ class JarAnalyzerTest {
     ArgumentCaptor<Attributes> attributesArgumentCaptor = ArgumentCaptor.forClass(Attributes.class);
     verify(builder).setAttributes(attributesArgumentCaptor.capture());
 
-    attributesConsumer.accept(
-        assertThat(attributesArgumentCaptor.getValue()));
+    attributesConsumer.accept(assertThat(attributesArgumentCaptor.getValue()));
   }
 
   private static Stream<Arguments> processUrlArguments() {

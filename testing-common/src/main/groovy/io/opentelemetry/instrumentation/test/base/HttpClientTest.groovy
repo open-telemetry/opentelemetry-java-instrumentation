@@ -21,7 +21,7 @@ import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
