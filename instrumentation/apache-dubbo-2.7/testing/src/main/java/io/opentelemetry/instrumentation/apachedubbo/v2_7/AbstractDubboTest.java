@@ -223,7 +223,7 @@ abstract class AbstractDubboTest {
             "parent",
             () -> genericService.$invokeAsync("hello", new String[] {String.class.getName()}, o));
 
-    assertEquals("hello", response.get());
+    assertThat(response.get()).isEqualTo("hello");
 
     testing()
         .waitAndAssertTraces(
