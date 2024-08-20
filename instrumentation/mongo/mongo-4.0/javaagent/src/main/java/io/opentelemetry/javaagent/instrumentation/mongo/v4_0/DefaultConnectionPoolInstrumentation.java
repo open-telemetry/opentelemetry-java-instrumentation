@@ -29,7 +29,15 @@ public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation
         named("getAsync")
             .and(takesArgument(0, named("com.mongodb.internal.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackAdvice");
+
+    // instrumentation needed since 4.10.x
+    transformer.applyAdviceToMethod(
+        named("getAsync")
+            .and(takesArgument(0, named("com.mongodb.internal.connection.OperationContext")))
+            .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
+        this.getClass().getName() + "$OperationContextWithSingleResultCallbackAdvice");
   }
+
 
   @SuppressWarnings("unused")
   public static class SingleResultCallbackAdvice {
@@ -37,6 +45,15 @@ public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapCallback(
         @Advice.Argument(value = 0, readOnly = false) SingleResultCallback<Object> callback) {
+      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class OperationContextWithSingleResultCallbackAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapCallback(
+        @Advice.Argument(value = 1, readOnly = false) SingleResultCallback<Object> callback) {
       callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }
