@@ -31,6 +31,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(RedisCommand<?, ?, ?> request) {

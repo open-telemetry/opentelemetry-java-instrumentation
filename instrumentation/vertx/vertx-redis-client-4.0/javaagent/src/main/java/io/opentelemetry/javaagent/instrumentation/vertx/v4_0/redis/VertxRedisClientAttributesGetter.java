@@ -29,10 +29,17 @@ public enum VertxRedisClientAttributesGetter
     return request.getUser();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(VertxRedisClientRequest request) {
-    return null;
+    return String.valueOf(request.getDatabaseIndex());
+  }
+
+  @Nullable
+  @Override
+  public String getNamespace(VertxRedisClientRequest request) {
+    return String.valueOf(request.getDatabaseIndex());
   }
 
   @Override

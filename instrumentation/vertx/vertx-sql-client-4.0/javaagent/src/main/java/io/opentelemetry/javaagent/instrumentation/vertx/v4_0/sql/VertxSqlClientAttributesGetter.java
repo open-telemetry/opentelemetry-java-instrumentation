@@ -23,6 +23,7 @@ public enum VertxSqlClientAttributesGetter
     return request.getUser();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(VertxSqlClientRequest request) {
@@ -31,8 +32,8 @@ public enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getNamespace(VertxSqlClientRequest vertxSqlClientRequest) {
-    return "";
+  public String getNamespace(VertxSqlClientRequest request) {
+    return request.getDatabase();
   }
 
   @Override
@@ -41,6 +42,7 @@ public enum VertxSqlClientAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getRawStatement(VertxSqlClientRequest request) {

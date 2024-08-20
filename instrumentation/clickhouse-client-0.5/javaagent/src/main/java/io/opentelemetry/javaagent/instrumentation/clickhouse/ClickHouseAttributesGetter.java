@@ -40,6 +40,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return null;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getName(ClickHouseDbRequest request) {

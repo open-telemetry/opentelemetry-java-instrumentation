@@ -23,6 +23,7 @@ final class ElasticsearchTransportAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(ElasticTransportRequest s) {

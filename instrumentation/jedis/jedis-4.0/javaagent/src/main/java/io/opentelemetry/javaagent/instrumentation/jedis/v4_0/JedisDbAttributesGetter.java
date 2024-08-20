@@ -22,6 +22,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return null;
   }
 
+  @Deprecated
   @Override
   public String getName(JedisRequest request) {
     return null;

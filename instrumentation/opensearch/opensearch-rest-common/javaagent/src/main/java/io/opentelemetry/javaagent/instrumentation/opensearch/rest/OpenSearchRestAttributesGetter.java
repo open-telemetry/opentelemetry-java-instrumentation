@@ -23,6 +23,7 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(OpenSearchRestRequest request) {

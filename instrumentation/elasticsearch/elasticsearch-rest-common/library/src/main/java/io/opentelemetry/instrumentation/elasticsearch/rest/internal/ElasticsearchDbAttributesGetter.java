@@ -47,6 +47,7 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(ElasticsearchRestRequest request) {

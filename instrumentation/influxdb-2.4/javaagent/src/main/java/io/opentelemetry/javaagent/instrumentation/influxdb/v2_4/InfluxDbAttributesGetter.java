@@ -36,6 +36,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     return null;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getName(InfluxDbRequest request) {
@@ -46,7 +47,8 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getNamespace(InfluxDbRequest request) {
-    return getName(request);
+    String dbName = request.getDbName();
+    return "".equals(dbName) ? null : dbName;
   }
 
   @Nullable

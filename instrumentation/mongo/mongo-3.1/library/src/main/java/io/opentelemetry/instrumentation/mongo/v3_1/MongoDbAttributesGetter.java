@@ -60,6 +60,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(CommandStartedEvent event) {

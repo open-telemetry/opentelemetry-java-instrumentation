@@ -21,6 +21,7 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(SpymemcachedRequest spymemcachedRequest) {

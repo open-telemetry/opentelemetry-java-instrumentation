@@ -26,6 +26,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
     return request.getUser();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(DbExecution request) {
@@ -44,6 +45,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
     return request.getConnectionString();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getRawStatement(DbExecution request) {

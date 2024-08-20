@@ -22,6 +22,7 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(CouchbaseRequestInfo couchbaseRequest) {

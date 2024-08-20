@@ -37,18 +37,11 @@ public abstract class DbRequest {
     return create(extractDbInfo(connection), dbStatementString);
   }
 
-  public static DbRequest create(DbInfo dbInfo, String statement) {
-    return new AutoValue_DbRequest(dbInfo, statement);
+  public static DbRequest create(DbInfo dbInfo, String dbQueryText) {
+    return new AutoValue_DbRequest(dbInfo, dbQueryText);
   }
 
   public abstract DbInfo getDbInfo();
-
-  /**
-   * @deprecated Use {@link #getDbQueryText()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public abstract String getStatement();
 
   public abstract String getDbQueryText();
 }

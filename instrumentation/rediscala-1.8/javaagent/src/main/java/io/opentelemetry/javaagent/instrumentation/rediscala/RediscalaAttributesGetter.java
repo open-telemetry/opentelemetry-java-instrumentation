@@ -24,6 +24,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(RedisCommand<?, ?> redisCommand) {
@@ -42,6 +43,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getStatement(RedisCommand<?, ?> redisCommand) {

@@ -27,6 +27,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return null;
   }
 
+  @Deprecated
   @Override
   public String getName(GeodeRequest request) {
     return request.getRegion().getName();

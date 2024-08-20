@@ -22,6 +22,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return null;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getName(RedissonRequest request) {

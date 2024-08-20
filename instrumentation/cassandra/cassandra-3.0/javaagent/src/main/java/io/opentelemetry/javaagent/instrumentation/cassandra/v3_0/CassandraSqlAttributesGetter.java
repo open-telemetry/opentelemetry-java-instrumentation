@@ -22,6 +22,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getName(CassandraRequest request) {
@@ -40,6 +41,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getRawStatement(CassandraRequest request) {
