@@ -34,6 +34,7 @@ abstract class DbClientCommonAttributesExtractor<
     this.getter = getter;
   }
 
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
