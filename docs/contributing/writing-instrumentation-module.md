@@ -417,7 +417,7 @@ by refactoring them with the limitations described below.
 Once everything is "indy compatible", we can evaluate changing the default value of `otel.javaagent.experimental.indy`
 to `true` and make it non-experimental.
 
-### shared classes and common classloader
+### Shared classes and common classloader
 
 By default, all the advices of an instrumentation module will be loaded into isolated classloaders,
 one per instrumentation module. Some instrumentations require to use a common classloader in order
@@ -426,7 +426,7 @@ to preserve the semantics of `static` fields and to share classes.
 In order to load multiple `InstrumentationModule` implementations in the same classloader, you need to
 override the `ExperimentalInstrumentationModule#getModuleGroup` to return an identical value.
 
-### classes injected in application classloader
+### Classes injected in application classloader
 
 Injecting classes in the application classloader is possible by implementing the
 `ExperimentalInstrumentationModule#injectedClassNames` method. All the class names listed by the
@@ -457,7 +457,7 @@ public static void onExit(@Advice.Argument(1) Object request,
 }
 ```
 
-### modifying method arguments
+### Modifying method arguments
 
 With inlined advices, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
 allows modifying instrumented method arguments.
@@ -480,7 +480,7 @@ public static Object onEnter(@Advice.Argument(1) Object request) {
 It is possible to modify multiple arguments at once by using an array, see usages of
 `@Advice.AssignReturned.ToArguments` for detailed examples.
 
-### modifying method return value
+### Modifying method return value
 
 With inlined advices, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
 allows modifying instrumented method return value on exit advice.
@@ -497,7 +497,7 @@ public static Object onExit(@Advice.Return Object returnValue) {
 }
 ```
 
-### writing to internal class fields
+### Writing to internal class fields
 
 With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
 on advice method parameters allows modifying the `fieldName` field of the instrumented class.
