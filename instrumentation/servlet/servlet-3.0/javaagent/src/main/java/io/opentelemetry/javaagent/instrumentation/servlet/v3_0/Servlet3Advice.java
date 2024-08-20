@@ -23,13 +23,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 @SuppressWarnings("unused")
 public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static void onEnter(
-      @Advice.This Object servletOrFilter,
+      @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
       @Advice.Argument(value = 0, readOnly = false) ServletRequest request,
       @Advice.Argument(value = 1, readOnly = false) ServletResponse response,
       @Advice.Local("otelCallDepth") CallDepth callDepth,
