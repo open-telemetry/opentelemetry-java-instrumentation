@@ -38,7 +38,6 @@ public class DefaultConnectionPoolInstrumentation implements TypeInstrumentation
         this.getClass().getName() + "$OperationContextWithSingleResultCallbackAdvice");
   }
 
-
   @SuppressWarnings("unused")
   public static class SingleResultCallbackAdvice {
 
