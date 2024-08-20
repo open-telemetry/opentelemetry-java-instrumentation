@@ -37,7 +37,7 @@ public class LocalSchedulerActivationInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    public static Object wrap(@Advice.Argument(value = 0) Runnable task) {
+    public static Runnable wrap(@Advice.Argument(value = 0) Runnable task) {
       if (task == null) {
         return null;
       }

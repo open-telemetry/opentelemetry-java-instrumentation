@@ -67,7 +67,8 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    public static Object onEnter(@Advice.Argument(value = 0) AddressResolverGroup<?> resolver) {
+    public static AddressResolverGroup<?> onEnter(
+        @Advice.Argument(value = 0) AddressResolverGroup<?> resolver) {
       return InstrumentedAddressResolverGroup.wrap(connectionInstrumenter(), resolver);
     }
   }

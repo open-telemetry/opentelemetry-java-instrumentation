@@ -60,7 +60,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    public static Object wrapListener(
+    public static GenericFutureListener<? extends Future<?>> wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
 
       GenericFutureListener<? extends Future<?>> listener = listenerArg;
@@ -100,7 +100,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    public static Object wrapListener(
+    public static GenericFutureListener<? extends Future<?>> wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
       return FutureListenerWrappers.getWrapper(listener);
     }

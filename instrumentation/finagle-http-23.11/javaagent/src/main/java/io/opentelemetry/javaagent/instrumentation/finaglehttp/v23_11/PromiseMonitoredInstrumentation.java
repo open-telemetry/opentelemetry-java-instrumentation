@@ -36,7 +36,7 @@ public class PromiseMonitoredInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    public static Object wrap(@Advice.Argument(value = 1) Function1<?, ?> function1) {
+    public static Function1<?, ?> wrap(@Advice.Argument(value = 1) Function1<?, ?> function1) {
       if (function1 == null) {
         return null;
       }

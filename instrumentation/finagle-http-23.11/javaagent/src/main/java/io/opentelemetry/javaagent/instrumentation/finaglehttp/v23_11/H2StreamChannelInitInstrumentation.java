@@ -43,7 +43,8 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     @Advice.AssignReturned.ToReturned
-    public static Object handleExit(@Advice.Return ChannelInitializer<Channel> initializer) {
+    public static ChannelInitializer<Channel> handleExit(
+        @Advice.Return ChannelInitializer<Channel> initializer) {
       return Helpers.wrapServer(initializer);
     }
   }
@@ -53,7 +54,8 @@ public class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     @Advice.AssignReturned.ToReturned
-    public static Object handleExit(@Advice.Return ChannelInitializer<Channel> initializer) {
+    public static ChannelInitializer<Channel> handleExit(
+        @Advice.Return ChannelInitializer<Channel> initializer) {
       return Helpers.wrapClient(initializer);
     }
   }
