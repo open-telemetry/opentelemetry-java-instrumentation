@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
+                                                                             * Copyright The OpenTelemetry Authors
+                                                                             * SPDX-License-Identifier: Apache-2.0
+                                                                             */
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -97,7 +102,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @Test
-  void should_not_add_interceptor_twice() {
+  void shouldNotAddInterceptorTwice() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel1", SubscribableChannel.class);
 
@@ -121,7 +126,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @Test
-  void should_not_create_aspan_when_there_is_already_aspan_in_the_context() {
+  void shouldNotCreateAspanWhenThereIsAlreadyAspanInTheContext() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
 
@@ -146,7 +151,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @Test
-  void should_handle_multiple_message_channels_in_achain() {
+  void shouldHandleMultipleMessageChannelsInAchain() {
     SubscribableChannel channel1 =
         applicationContext.getBean("linkedChannel1", SubscribableChannel.class);
     SubscribableChannel channel2 =
@@ -172,7 +177,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @Test
-  void capture_message_header() {
+  void captureMessageHeader() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
 

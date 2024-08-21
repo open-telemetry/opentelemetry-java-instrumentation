@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
+                                                                             * Copyright The OpenTelemetry Authors
+                                                                             * SPDX-License-Identifier: Apache-2.0
+                                                                             */
+
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -26,7 +31,7 @@ public abstract class AbstractSpringCloudStreamProducerTest {
   }
 
   @Test
-  void has_producer_span() {
+  void hasProducerSpan() {
     assumeTrue(HAS_PRODUCER_SPAN);
 
     rabbit.getBean("producer", Runnable.class).run();

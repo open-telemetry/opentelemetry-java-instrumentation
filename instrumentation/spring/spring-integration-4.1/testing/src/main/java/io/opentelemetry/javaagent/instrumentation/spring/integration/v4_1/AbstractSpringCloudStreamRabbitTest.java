@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
+                                                                             * Copyright The OpenTelemetry Authors
+                                                                             * SPDX-License-Identifier: Apache-2.0
+                                                                             */
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -21,7 +26,7 @@ public abstract class AbstractSpringCloudStreamRabbitTest {
   }
 
   @Test
-  void should_propagate_context_through_rabbit_mq() {
+  void shouldPropagateContextThroughRabbitMq() {
     rabbit.getBean("producer", Runnable.class).run();
 
     testing.waitAndAssertTraces(

@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
+                                                                             * Copyright The OpenTelemetry Authors
+                                                                             * SPDX-License-Identifier: Apache-2.0
+                                                                             */
+
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -28,7 +33,7 @@ class SpringIntegrationAndRabbitTest {
   }
 
   @Test
-  void should_cooperate_with_existing_RabbitMq_instrumentation() {
+  void shouldCooperateWithExistingRabbitMqInstrumentation() {
     runWithSpan("parent", () -> rabbit.getBean("producer", Runnable.class).run());
 
     testing.waitAndAssertTraces(

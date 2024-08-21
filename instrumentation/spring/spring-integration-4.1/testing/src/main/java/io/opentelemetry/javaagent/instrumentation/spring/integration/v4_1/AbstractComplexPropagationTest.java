@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
+                                                                             * Copyright The OpenTelemetry Authors
+                                                                             * SPDX-License-Identifier: Apache-2.0
+                                                                             */
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
@@ -66,7 +71,7 @@ public abstract class AbstractComplexPropagationTest {
   }
 
   @Test
-  void should_propagate_context_through_acomplex_flow() {
+  void shouldPropagateContextThroughAcomplexFlow() {
     SubscribableChannel sendChannel =
         applicationContext.getBean("sendChannel", SubscribableChannel.class);
     SubscribableChannel receiveChannel =

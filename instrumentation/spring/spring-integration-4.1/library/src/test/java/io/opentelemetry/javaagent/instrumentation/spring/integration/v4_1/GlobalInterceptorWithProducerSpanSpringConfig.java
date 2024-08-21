@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import static java.util.Collections.singletonList;
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
+                                                                             * Copyright The OpenTelemetry Authors
+                                                                             * SPDX-License-Identifier: Apache-2.0
+                                                                             */
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.spring.integration.v4_1.SpringIntegrationTelemetry;
@@ -13,13 +16,13 @@ import org.springframework.integration.config.GlobalChannelInterceptor;
 import org.springframework.messaging.support.ChannelInterceptor;
 
 @Configuration
-class GlobalInterceptorSpringConfig {
+class GlobalInterceptorWithProducerSpanSpringConfig {
 
   @GlobalChannelInterceptor
   @Bean
   ChannelInterceptor otelInterceptor() {
     return SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedHeaders(singletonList("test-message-header"))
+        .setProducerSpanEnabled(true)
         .build()
         .newChannelInterceptor();
   }
