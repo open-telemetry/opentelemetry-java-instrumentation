@@ -33,13 +33,13 @@ public enum VertxRedisClientAttributesGetter
   @Override
   @Nullable
   public String getName(VertxRedisClientRequest request) {
-    return String.valueOf(request.getDatabaseIndex());
+    return null;
   }
 
   @Nullable
   @Override
   public String getNamespace(VertxRedisClientRequest request) {
-    return String.valueOf(request.getDatabaseIndex());
+    return null;
   }
 
   @Override
