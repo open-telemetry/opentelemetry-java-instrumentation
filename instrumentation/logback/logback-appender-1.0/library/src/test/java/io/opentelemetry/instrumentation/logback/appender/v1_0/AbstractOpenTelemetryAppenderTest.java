@@ -113,6 +113,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
+    Instant now = Instant.now();
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     LogRecordData logData = logDataList.get(0);
@@ -121,7 +122,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
     assertThat(logData.getBody().asString()).isEqualTo("log message 1");
     assertThat(logData.getTimestampEpochNanos())
         .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
-        .isLessThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+        .isLessThanOrEqualTo(TimeUnit.SECONDS.toNanos(now.getEpochSecond()) + now.getNano());
     assertThat(logData.getSeverity()).isEqualTo(Severity.INFO);
     assertThat(logData.getSeverityText()).isEqualTo("INFO");
     assertThat(logData.getAttributes().size())

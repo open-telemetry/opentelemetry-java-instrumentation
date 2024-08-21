@@ -112,7 +112,7 @@ public final class JettyClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+      Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;

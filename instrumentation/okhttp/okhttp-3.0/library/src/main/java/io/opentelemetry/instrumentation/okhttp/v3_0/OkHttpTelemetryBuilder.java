@@ -95,7 +95,7 @@ public final class OkHttpTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<Request>, ? extends SpanNameExtractor<? super Request>>
+      Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;

@@ -33,11 +33,17 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
   private static final String WHEN = "when";
   private static final String SIZE = "size";
   private static final Attributes ATTR_MEMORY_EDEN =
-      Attributes.of(Constants.ATTR_TYPE, Constants.HEAP, Constants.ATTR_POOL, "PS Eden Space");
+      Attributes.of(
+          Constants.ATTR_MEMORY_TYPE, Constants.HEAP, Constants.ATTR_MEMORY_POOL, "PS Eden Space");
   private static final Attributes ATTR_MEMORY_SURVIVOR =
-      Attributes.of(Constants.ATTR_TYPE, Constants.HEAP, Constants.ATTR_POOL, "PS Survivor Space");
+      Attributes.of(
+          Constants.ATTR_MEMORY_TYPE,
+          Constants.HEAP,
+          Constants.ATTR_MEMORY_POOL,
+          "PS Survivor Space");
   private static final Attributes ATTR_MEMORY_OLD =
-      Attributes.of(Constants.ATTR_TYPE, Constants.HEAP, Constants.ATTR_POOL, "PS Old Gen");
+      Attributes.of(
+          Constants.ATTR_MEMORY_TYPE, Constants.HEAP, Constants.ATTR_MEMORY_POOL, "PS Old Gen");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
 
