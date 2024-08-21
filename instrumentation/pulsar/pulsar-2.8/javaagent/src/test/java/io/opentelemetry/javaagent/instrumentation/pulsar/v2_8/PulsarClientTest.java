@@ -7,15 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
@@ -138,7 +137,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.receive.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of receive operation.")
@@ -155,7 +154,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.receive.messages")
                     .hasUnit("{message}")
                     .hasDescription("Measures the number of received messages.")
@@ -173,7 +172,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               });
                         }),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -252,7 +251,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.receive.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of receive operation.")
@@ -269,7 +268,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.receive.messages")
                     .hasUnit("{message}")
                     .hasDescription("Measures the number of received messages.")
@@ -287,7 +286,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               });
                         }),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -353,7 +352,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.receive.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of receive operation.")
@@ -370,7 +369,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.receive.messages")
                     .hasUnit("{message}")
                     .hasDescription("Measures the number of received messages.")
@@ -388,7 +387,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                               });
                         }),
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -643,7 +642,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     assertThat(testing.metrics())
         .satisfiesOnlyOnce(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.receive.messages")
                     .hasUnit("{message}")
                     .hasDescription("Measures the number of received messages.")

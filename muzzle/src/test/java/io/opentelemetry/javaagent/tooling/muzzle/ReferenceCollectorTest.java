@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
 
 import external.instrumentation.ExternalHelper;
@@ -31,7 +32,6 @@ import muzzle.TestClasses.LdcAdvice;
 import muzzle.TestClasses.MethodBodyAdvice;
 import muzzle.TestClasses.Nested;
 import muzzle.other.OtherTestClasses;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -369,7 +369,7 @@ class ReferenceCollectorTest {
       @SuppressWarnings("unused") String desc, String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
-    Assertions.assertThatExceptionOfType(MuzzleCompilationException.class)
+    assertThatExceptionOfType(MuzzleCompilationException.class)
         .isThrownBy(
             () -> {
               collector.collectReferencesFromAdvice(adviceClassName);

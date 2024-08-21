@@ -6,11 +6,10 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.util.List;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
@@ -45,7 +44,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
-    OpenTelemetryAssertions.assertThat(logDataList.get(0))
+    assertThat(logDataList.get(0))
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasBody("log message 1");
@@ -69,7 +68,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
-    OpenTelemetryAssertions.assertThat(logDataList.get(0))
+    assertThat(logDataList.get(0))
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasAttributesSatisfyingExactly(
@@ -94,7 +93,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
-    OpenTelemetryAssertions.assertThat(logDataList.get(0))
+    assertThat(logDataList.get(0))
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasBody("a message")
