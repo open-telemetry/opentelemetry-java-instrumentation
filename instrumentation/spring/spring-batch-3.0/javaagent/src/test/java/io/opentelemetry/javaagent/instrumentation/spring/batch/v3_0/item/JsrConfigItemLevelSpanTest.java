@@ -20,7 +20,7 @@ public class JsrConfigItemLevelSpanTest extends ItemLevelSpanTest {
 
   @Test
   @Override
-  public void should_trace_item_read__process_and_write_calls() {
+  public void shouldTraceItemReadProcessAndWriteCalls() {
     runner.runJob("itemsAndTaskletJob");
 
     testing.waitAndAssertTraces(
@@ -161,7 +161,7 @@ public class JsrConfigItemLevelSpanTest extends ItemLevelSpanTest {
   }
 
   @Override
-  void should_trace_all_item_operations_on_a_parallel_items_job() {
+  void shouldTraceAllItemOperationsOnAParallelItemsJob() {
     // does not work - not sure why
   }
 }

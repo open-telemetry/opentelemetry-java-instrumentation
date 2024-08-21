@@ -35,7 +35,7 @@ abstract class ItemLevelSpanTest {
   }
 
   @Test
-  void should_trace_item_read__process_and_write_calls() {
+  void shouldTraceItemReadProcessAndWriteCalls() {
     runner.runJob("itemsAndTaskletJob");
 
     testing.waitAndAssertTraces(
@@ -148,7 +148,7 @@ abstract class ItemLevelSpanTest {
   }
 
   @Test
-  void should_trace_all_item_operations_on_a_parallel_items_job() {
+  void shouldTraceAllItemOperationsOnAParallelItemsJob() {
     runner.runJob("parallelItemsJob");
 
     testing.waitAndAssertTraces(
