@@ -30,7 +30,6 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -86,10 +85,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     HttpClientTestOptions.Builder builder = HttpClientTestOptions.builder();
     configure(builder);
     options = builder.build();
-  }
-
-  protected InetSocketAddress serverAddress() {
-    return server.httpSocketAddress();
   }
 
   /**
