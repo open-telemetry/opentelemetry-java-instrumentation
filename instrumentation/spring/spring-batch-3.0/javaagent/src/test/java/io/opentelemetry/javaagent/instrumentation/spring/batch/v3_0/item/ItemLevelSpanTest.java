@@ -148,7 +148,7 @@ abstract class ItemLevelSpanTest {
   }
 
   @Test
-  void shouldTraceAllItemOperationsOnAParallelItemsJob() {
+  void shouldTraceAllItemOperationsOnAparallelItemsJob() {
     runner.runJob("parallelItemsJob");
 
     testing.waitAndAssertTraces(
