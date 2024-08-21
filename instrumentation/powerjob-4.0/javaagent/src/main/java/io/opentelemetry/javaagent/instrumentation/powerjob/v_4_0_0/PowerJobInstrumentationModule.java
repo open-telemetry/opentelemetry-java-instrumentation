@@ -20,6 +20,6 @@ public class PowerJobInstrumentationModule extends InstrumentationModule{
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new SimpleProcessorInstrumentation());
+    return asList(new BasicProcessorInstrumentation());
   }
 }

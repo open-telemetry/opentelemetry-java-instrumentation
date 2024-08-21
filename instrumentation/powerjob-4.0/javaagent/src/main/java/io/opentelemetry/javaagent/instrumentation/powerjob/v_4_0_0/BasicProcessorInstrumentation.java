@@ -18,7 +18,7 @@ import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
 
-public class SimpleProcessorInstrumentation implements TypeInstrumentation {
+public class BasicProcessorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("tech.powerjob.worker.core.processor.sdk.BasicProcessor"));
@@ -28,7 +28,7 @@ public class SimpleProcessorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("process").and(isPublic()).and(takesArguments(1)),
-        SimpleProcessorInstrumentation.class.getName() + "$ProcessAdvice");
+        BasicProcessorInstrumentation.class.getName() + "$ProcessAdvice");
   }
 
   public static class ProcessAdvice {
@@ -43,7 +43,7 @@ public class SimpleProcessorInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       Long jobId = taskContext.getJobId();
-      request = PowerJobProcessRequest.createRequest(jobId, handler.getClass(), "process");
+      request = PowerJobProcessRequest.createRequest(jobId, handler, "process");
       request.setInstanceParams(taskContext.getInstanceParams());
       request.setJobParams(taskContext.getJobParams());
       context = helper().startSpan(parentContext, request);
