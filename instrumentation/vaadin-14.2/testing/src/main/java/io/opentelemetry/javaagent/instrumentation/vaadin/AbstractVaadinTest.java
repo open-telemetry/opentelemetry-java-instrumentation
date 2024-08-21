@@ -26,7 +26,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -151,7 +150,7 @@ public abstract class AbstractVaadinTest
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
-              Assertions.assertThat(traces.get(0))
+              assertThat(traces.get(0))
                   .satisfies(
                       spans -> {
                         assertThat(spans.get(0))
@@ -185,7 +184,7 @@ public abstract class AbstractVaadinTest
     driver.get(address.resolve("main").toString());
 
     // wait for page to load
-    Assertions.assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
+    assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
     assertFirstRequest();
 
     testing.clearData();
@@ -194,7 +193,7 @@ public abstract class AbstractVaadinTest
     driver.findElement(By.id("main.button")).click();
 
     // wait for page to load
-    Assertions.assertThat(driver.findElement(By.id("other.label")).getText())
+    assertThat(driver.findElement(By.id("other.label")).getText())
         .isEqualTo("Other view");
     assertButtonClick();
 

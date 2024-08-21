@@ -11,7 +11,6 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
-import org.assertj.core.api.Assertions;
 
 public class AbstractVaadin14Test extends AbstractVaadinTest {
   @Override
@@ -20,7 +19,7 @@ public class AbstractVaadin14Test extends AbstractVaadinTest {
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
-              Assertions.assertThat(traces.get(0))
+              assertThat(traces.get(0))
                   .satisfies(
                       spans -> {
                         assertThat(spans.get(0))

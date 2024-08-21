@@ -28,7 +28,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionTimeoutException;
 
@@ -164,7 +163,7 @@ public abstract class InstrumentationTestRunner {
         .untilAsserted(
             () ->
                 assertion.accept(
-                    Assertions.assertThat(getExportedMetrics())
+                    assertThat(getExportedMetrics())
                         .filteredOn(
                             data ->
                                 data.getInstrumentationScopeInfo()
@@ -180,9 +179,9 @@ public abstract class InstrumentationTestRunner {
         .untilAsserted(
             () -> {
               Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
-              Assertions.assertThat(metrics).isNotEmpty();
+              assertThat(metrics).isNotEmpty();
               for (Consumer<MetricAssert> assertion : assertions) {
-                Assertions.assertThat(metrics)
+                assertThat(metrics)
                     .anySatisfy(metric -> assertion.accept(assertThat(metric)));
               }
             });

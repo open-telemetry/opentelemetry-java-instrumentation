@@ -52,9 +52,11 @@
   <module name="TreeWalker">
     <module name="RegexpSinglelineJava">
       <!-- Please statically import methods -->
-      <property name="format" value="(?&lt;!io\.opentelemetry\.sdk\.testing\.assertj\.)OpenTelemetryAssertions.assertThat"/>
+      <property name="format" value="(?&lt;!import static io.opentelemetry.sdk.testing.assertj.)OpenTelemetryAssertions.assertThat"/>
+    </module>
+    <module name="RegexpSinglelineJava">
       <!-- just use OpenTelemetryAssertions you need both OpenTelemetryAssertions and Assertions -->
-      <property name="format" value="(?&lt;!org\.assertj\.core\.api\.)Assertions.assertThat"/>
+      <property name="format" value="(?&lt;!import static org.assertj.core.api.|OpenTelemetry)Assertions.assertThat)Assertions.assertThat"/>
     </module>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
