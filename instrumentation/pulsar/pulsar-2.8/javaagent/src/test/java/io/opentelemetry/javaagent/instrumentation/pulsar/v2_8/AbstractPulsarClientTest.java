@@ -45,7 +45,6 @@ import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.common.naming.TopicName;
 import org.assertj.core.api.AbstractLongAssert;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -171,7 +170,7 @@ abstract class AbstractPulsarClientTest {
                         .hasAttributesSatisfyingExactly(
                             batchReceiveAttributes(topic, null, false))));
 
-    Assertions.assertThat(testing.metrics())
+    assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
@@ -257,7 +256,7 @@ abstract class AbstractPulsarClientTest {
                           }
                         }));
 
-    Assertions.assertThat(result.get(1, TimeUnit.MINUTES).size()).isEqualTo(1);
+    assertThat(result.get(1, TimeUnit.MINUTES).size()).isEqualTo(1);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(

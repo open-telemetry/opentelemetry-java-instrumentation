@@ -181,8 +181,7 @@ public abstract class InstrumentationTestRunner {
               Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
               assertThat(metrics).isNotEmpty();
               for (Consumer<MetricAssert> assertion : assertions) {
-                assertThat(metrics)
-                    .anySatisfy(metric -> assertion.accept(assertThat(metric)));
+                assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
               }
             });
   }

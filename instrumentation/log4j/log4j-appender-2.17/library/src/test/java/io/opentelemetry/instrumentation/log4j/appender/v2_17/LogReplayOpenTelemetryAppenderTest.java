@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import java.util.List;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +43,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(openTelemetry);
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    Assertions.assertThat(logDataList).hasSize(1);
+    assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
@@ -68,7 +67,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(openTelemetry);
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    Assertions.assertThat(logDataList).hasSize(1);
+    assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
@@ -93,7 +92,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(openTelemetry);
 
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    Assertions.assertThat(logDataList).hasSize(1);
+    assertThat(logDataList).hasSize(1);
     assertThat(logDataList.get(0))
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)

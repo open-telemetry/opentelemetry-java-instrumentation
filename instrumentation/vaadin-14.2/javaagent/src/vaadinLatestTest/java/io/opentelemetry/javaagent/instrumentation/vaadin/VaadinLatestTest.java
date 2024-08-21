@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
-import org.assertj.core.api.Assertions;
 
 public class VaadinLatestTest extends AbstractVaadinTest {
 
@@ -25,14 +24,14 @@ public class VaadinLatestTest extends AbstractVaadinTest {
               TracesAssert.assertThat(traces)
                   .satisfies(
                       trace -> {
-                        Assertions.assertThat(trace.get(0))
+                        assertThat(trace.get(0))
                             .satisfies(
                                 spans ->
                                     assertThat(spans.get(0))
                                         .hasName("GET IndexHtmlRequestHandler.handleRequest")
                                         .hasNoParent()
                                         .hasKind(SpanKind.SERVER));
-                        Assertions.assertThat(trace)
+                        assertThat(trace)
                             .anySatisfy(
                                 spans -> {
                                   assertThat(spans.get(0))

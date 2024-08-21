@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;

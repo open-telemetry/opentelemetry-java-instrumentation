@@ -15,7 +15,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import org.assertj.core.api.Assertions;
 
 public class Vaadin16Test extends AbstractVaadinTest {
 
@@ -37,14 +36,14 @@ public class Vaadin16Test extends AbstractVaadinTest {
               TracesAssert.assertThat(traces)
                   .satisfies(
                       trace -> {
-                        Assertions.assertThat(trace.get(0))
+                        assertThat(trace.get(0))
                             .satisfies(
                                 spans ->
                                     assertThat(spans.get(0))
                                         .hasName("GET IndexHtmlRequestHandler.handleRequest")
                                         .hasNoParent()
                                         .hasKind(SpanKind.SERVER));
-                        Assertions.assertThat(trace)
+                        assertThat(trace)
                             .anySatisfy(
                                 spans -> {
                                   assertThat(spans.get(0))

@@ -193,8 +193,7 @@ public abstract class AbstractVaadinTest
     driver.findElement(By.id("main.button")).click();
 
     // wait for page to load
-    assertThat(driver.findElement(By.id("other.label")).getText())
-        .isEqualTo("Other view");
+    assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
     assertButtonClick();
 
     driver.close();

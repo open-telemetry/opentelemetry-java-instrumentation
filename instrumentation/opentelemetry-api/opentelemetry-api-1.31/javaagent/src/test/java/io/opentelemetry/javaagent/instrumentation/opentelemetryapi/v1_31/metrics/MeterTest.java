@@ -41,7 +41,6 @@ import io.opentelemetry.extension.incubator.metrics.LongGauge;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -71,7 +70,7 @@ class MeterTest {
   @Test
   void longCounter() {
     LongCounterBuilder builder = meter.counterBuilder("test").setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedLongCounterBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedLongCounterBuilder.class);
     ExtendedLongCounterBuilder extendedBuilder = (ExtendedLongCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -108,7 +107,7 @@ class MeterTest {
   void doubleCounter() {
     DoubleCounterBuilder builder =
         meter.counterBuilder("test").ofDoubles().setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleCounterBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedDoubleCounterBuilder.class);
     ExtendedDoubleCounterBuilder extendedBuilder = (ExtendedDoubleCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -145,7 +144,7 @@ class MeterTest {
   void longUpDownCounter() {
     LongUpDownCounterBuilder builder =
         meter.upDownCounterBuilder("test").setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedLongUpDownCounterBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedLongUpDownCounterBuilder.class);
     ExtendedLongUpDownCounterBuilder extendedBuilder = (ExtendedLongUpDownCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -182,7 +181,7 @@ class MeterTest {
   void doubleUpDownCounter() {
     DoubleUpDownCounterBuilder builder =
         meter.upDownCounterBuilder("test").ofDoubles().setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleUpDownCounterBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedDoubleUpDownCounterBuilder.class);
     ExtendedDoubleUpDownCounterBuilder extendedBuilder =
         (ExtendedDoubleUpDownCounterBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
@@ -220,7 +219,7 @@ class MeterTest {
   void longHistogram() {
     LongHistogramBuilder builder =
         meter.histogramBuilder("test").ofLongs().setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedLongHistogramBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedLongHistogramBuilder.class);
     ExtendedLongHistogramBuilder extendedBuilder = (ExtendedLongHistogramBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
     extendedBuilder.setExplicitBucketBoundariesAdvice(singletonList(10L));
@@ -258,7 +257,7 @@ class MeterTest {
   void doubleHistogram() {
     DoubleHistogramBuilder builder =
         meter.histogramBuilder("test").setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleHistogramBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedDoubleHistogramBuilder.class);
     ExtendedDoubleHistogramBuilder extendedBuilder = (ExtendedDoubleHistogramBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
     extendedBuilder.setExplicitBucketBoundariesAdvice(singletonList(10.0));
@@ -296,7 +295,7 @@ class MeterTest {
   void longGauge() throws InterruptedException {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
     ExtendedLongGaugeBuilder extendedBuilder = (ExtendedLongGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -341,7 +340,7 @@ class MeterTest {
   void syncLongGauge() throws InterruptedException {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
     ExtendedLongGaugeBuilder extendedBuilder = (ExtendedLongGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -383,7 +382,7 @@ class MeterTest {
   @Test
   void doubleGauge() throws InterruptedException {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -427,7 +426,7 @@ class MeterTest {
   @Test
   void syncDoubleGauge() throws InterruptedException {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 

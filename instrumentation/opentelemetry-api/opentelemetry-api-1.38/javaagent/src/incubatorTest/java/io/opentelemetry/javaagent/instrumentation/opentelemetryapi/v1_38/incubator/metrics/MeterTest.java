@@ -21,7 +21,6 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -52,7 +51,7 @@ class MeterTest {
   void syncLongGauge() throws InterruptedException {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
     ExtendedLongGaugeBuilder extendedBuilder = (ExtendedLongGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
@@ -94,7 +93,7 @@ class MeterTest {
   @Test
   void syncDoubleGauge() throws InterruptedException {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
-    Assertions.assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
