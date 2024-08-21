@@ -8,8 +8,9 @@ muzzle {
     module.set("cxf-rt-frontend-jaxws")
     // all earlier versions in maven central also pass muzzle check,
     // but 3.0.0 is already 8 years old and testing earlier versions adds complexity
-    versions.set("[3.0.0,4)")
+    versions.set("[3.0.0,)")
     extraDependency("javax.servlet:javax.servlet-api:3.0.1")
+    extraDependency("jakarta.servlet:jakarta.servlet-api:5.0.0")
   }
 }
 
@@ -18,6 +19,8 @@ dependencies {
 
   library("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
+  compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
+  compileOnly(project(":muzzle"))
 
   testLibrary("org.apache.cxf:cxf-rt-transports-http:3.0.0")
 
