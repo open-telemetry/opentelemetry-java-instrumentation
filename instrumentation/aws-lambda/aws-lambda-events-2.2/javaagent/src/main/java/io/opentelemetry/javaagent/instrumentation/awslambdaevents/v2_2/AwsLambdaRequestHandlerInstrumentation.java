@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
@@ -52,7 +53,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Object arg,
+        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context,
         @Advice.Local("otelInput") AwsLambdaRequest input,
         @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,
@@ -85,7 +86,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Argument(0) Object arg,
+        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelInput") AwsLambdaRequest input,
         @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,

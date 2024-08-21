@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.BatchPoints;
@@ -68,9 +69,9 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbQueryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Advice.AssignReturned.ToAllArguments(index = 0)
+    @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
     public static Object[] onEnter(
-        @Advice.AllArguments Object[] arguments,
+        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.getAndIncrement() > 0) {
