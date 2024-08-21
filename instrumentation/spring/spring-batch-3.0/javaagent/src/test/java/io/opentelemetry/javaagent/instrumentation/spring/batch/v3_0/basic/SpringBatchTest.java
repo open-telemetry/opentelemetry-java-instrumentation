@@ -36,7 +36,7 @@ abstract class SpringBatchTest {
   }
 
   @Test
-  void should_trace_tasklet_job_step() {
+  void shouldTraceTaskletJobStep() {
     runner.runJob("taskletJob");
 
     testing.waitAndAssertTraces(
@@ -57,7 +57,7 @@ abstract class SpringBatchTest {
   }
 
   @Test
-  void should_handle_exception_in_tasklet_job_step() {
+  void shouldHandleExceptionInTaskletJobStep() {
     runner.runJob("taskletJob", singletonMap("fail", new JobParameter(1L)));
 
     testing.waitAndAssertTraces(
@@ -81,7 +81,7 @@ abstract class SpringBatchTest {
   }
 
   @Test
-  void should_trace_chunked_items_job() {
+  void shouldTraceChunkedItemsJob() {
     runner.runJob("itemsAndTaskletJob");
 
     testing.waitAndAssertTraces(
@@ -115,7 +115,7 @@ abstract class SpringBatchTest {
   }
 
   @Test
-  void should_trace_flow_job() {
+  void shouldTraceFlowJob() {
     runner.runJob("flowJob");
 
     testing.waitAndAssertTraces(
@@ -144,7 +144,7 @@ abstract class SpringBatchTest {
   }
 
   @Test
-  void should_trace_split_flow_job() {
+  void shouldTraceSplitFlowJob() {
     runner.runJob("splitJob");
 
     testing.waitAndAssertTraces(
@@ -185,7 +185,7 @@ abstract class SpringBatchTest {
   }
 
   @Test
-  void should_trace_job_with_decision() {
+  void shouldTraceJobWithDecision() {
     runner.runJob("decisionJob");
 
     testing.waitAndAssertTraces(
@@ -214,7 +214,7 @@ abstract class SpringBatchTest {
   }
 
   @Test
-  void should_trace_partitioned_job() {
+  void shouldTracePartitionedJob() {
     runner.runJob("partitionedJob");
 
     testing.waitAndAssertTraces(

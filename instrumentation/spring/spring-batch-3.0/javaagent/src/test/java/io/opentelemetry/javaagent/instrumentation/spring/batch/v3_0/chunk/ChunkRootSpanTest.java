@@ -34,7 +34,7 @@ abstract class ChunkRootSpanTest {
   }
 
   @Test
-  void should_create_separate_traces_for_each_chunk() {
+  void shouldCreateSeparateTracesForEachChunk() {
     jobRunner.runJob("itemsAndTaskletJob");
     AtomicReference<SpanData> itemStepSpan = new AtomicReference<>();
     AtomicReference<SpanData> taskletStepSpan = new AtomicReference<>();

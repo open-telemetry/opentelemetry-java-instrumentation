@@ -27,7 +27,7 @@ abstract class CustomSpanEventTest {
   }
 
   @Test
-  void should_be_able_to_call_Span_current___and_add_custom_info_to_spans() {
+  void shouldBeAbleToCallSpanCurrentAndAddCustomInfoToSpans() {
     runner.runJob("customSpanEventsItemsJob");
 
     testing.waitAndAssertTraces(
