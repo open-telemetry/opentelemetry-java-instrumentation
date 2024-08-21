@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,10 +68,15 @@ class DbClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
     request.put("db.user", "username");
-    request.put("db.name", "potatoes");
+    request.put(
+        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME).getKey(), "potatoes");
     request.put("db.connection_string", "mydb:///potatoes");
-    request.put("db.statement", "SELECT * FROM potato");
-    request.put("db.operation", "SELECT");
+    request.put(
+        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT).getKey(),
+        "SELECT * FROM potato");
+    request.put(
+        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION).getKey(),
+        "SELECT");
 
     Context context = Context.root();
 
@@ -89,10 +95,14 @@ class DbClientAttributesExtractorTest {
         .containsOnly(
             entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
             entry(DbIncubatingAttributes.DB_USER, "username"),
-            entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+            entry(SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME), "potatoes"),
             entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
-            entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                "SELECT * FROM potato"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                "SELECT"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
