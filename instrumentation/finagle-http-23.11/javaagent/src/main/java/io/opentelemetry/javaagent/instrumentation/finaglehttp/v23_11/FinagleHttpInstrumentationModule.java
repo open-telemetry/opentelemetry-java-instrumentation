@@ -36,6 +36,7 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> injectedClassNames() {
+    // these are injected so that they can access package-private members
     return Arrays.asList(
         "com.twitter.finagle.ChannelTransportHelpers",
         "io.netty.channel.OpenTelemetryChannelInitializerDelegate");

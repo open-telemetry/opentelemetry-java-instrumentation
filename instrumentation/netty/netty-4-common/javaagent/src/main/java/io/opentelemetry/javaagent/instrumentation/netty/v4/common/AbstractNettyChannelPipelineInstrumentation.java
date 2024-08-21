@@ -189,6 +189,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
     public static String addAfterHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String nameArg) {
+      // using an intermediate variable is required to keep the advice work with "inlined" and
+      // "indy" this is probably a minor side-effect of using @Advice.AssignReturned.ToArguments
+      // with and inlined advice.
       String name = nameArg;
       ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
