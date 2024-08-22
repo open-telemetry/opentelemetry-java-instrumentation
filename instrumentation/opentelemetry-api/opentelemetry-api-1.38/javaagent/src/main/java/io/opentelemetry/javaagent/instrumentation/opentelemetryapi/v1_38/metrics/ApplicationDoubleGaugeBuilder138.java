@@ -17,7 +17,7 @@ public class ApplicationDoubleGaugeBuilder138 extends ApplicationDoubleGaugeBuil
 
   private final io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder;
 
-  protected ApplicationDoubleGaugeBuilder138(
+  public ApplicationDoubleGaugeBuilder138(
       io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;

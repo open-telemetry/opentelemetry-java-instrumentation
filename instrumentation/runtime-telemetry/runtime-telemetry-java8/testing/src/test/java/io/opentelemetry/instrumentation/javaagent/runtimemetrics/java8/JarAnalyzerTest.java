@@ -12,7 +12,7 @@ import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.Ja
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_PATH;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_TYPE;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_VERSION;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -25,7 +25,6 @@ import io.opentelemetry.api.incubator.events.EventBuilder;
 import io.opentelemetry.api.incubator.events.EventLogger;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,8 +51,7 @@ class JarAnalyzerTest {
     ArgumentCaptor<Attributes> attributesArgumentCaptor = ArgumentCaptor.forClass(Attributes.class);
     verify(builder).setAttributes(attributesArgumentCaptor.capture());
 
-    attributesConsumer.accept(
-        OpenTelemetryAssertions.assertThat(attributesArgumentCaptor.getValue()));
+    attributesConsumer.accept(assertThat(attributesArgumentCaptor.getValue()));
   }
 
   private static Stream<Arguments> processUrlArguments() {
