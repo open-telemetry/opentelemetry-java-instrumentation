@@ -75,6 +75,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddListenersAdvice {
 
+    // here the AsScalar allows to assign the value of the returned array to the argument value,
+    // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
+    // exception assignments that bytebuddy has to do after the advice is invoked.
     @Advice.OnMethodEnter
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
@@ -110,6 +113,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RemoveListenersAdvice {
 
+    // here the AsScalar allows to assign the value of the returned array to the argument value,
+    // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
+    // exception assignments that bytebuddy has to do after the advice is invoked.
     @Advice.OnMethodEnter
     @Advice.AssignReturned.AsScalar
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
