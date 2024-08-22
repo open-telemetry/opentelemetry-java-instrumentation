@@ -49,11 +49,11 @@ public class TransactionInstrumentation implements TypeInstrumentation {
   public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static HibernateOperationScope startCommit(@Advice.This Transaction transaction) {
+    public static Object startCommit(@Advice.This Transaction transaction) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return HibernateOperationScope.wrapCallDepth(callDepth);
+        return callDepth;
       }
 
       VirtualField<Transaction, SessionInfo> transactionVirtualField =
@@ -64,7 +64,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
       HibernateOperation hibernateOperation =
           new HibernateOperation("Transaction.commit", sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return HibernateOperationScope.wrapCallDepth(callDepth);
+        return callDepth;
       }
 
       return HibernateOperationScope.startNew(
@@ -73,7 +73,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
-        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope enterScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterScope) {
 
       HibernateOperationScope.end(enterScope, instrumenter(), throwable);
     }

@@ -50,12 +50,12 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
   public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static HibernateOperationScope startMethod(
+    public static Object startMethod(
         @Advice.This Criteria criteria, @Advice.Origin("#m") String name) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return HibernateOperationScope.wrapCallDepth(callDepth);
+        return callDepth;
       }
 
       String entityName = null;
@@ -71,7 +71,7 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
       HibernateOperation hibernateOperation =
           new HibernateOperation("Criteria." + name, entityName, sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return HibernateOperationScope.wrapCallDepth(callDepth);
+        return callDepth;
       }
 
       return HibernateOperationScope.startNew(
@@ -80,7 +80,7 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope enterScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterScope) {
 
       HibernateOperationScope.end(enterScope, instrumenter(), throwable);
     }

@@ -50,11 +50,11 @@ public class QueryInstrumentation implements TypeInstrumentation {
   public static class QueryMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static HibernateOperationScope startMethod(@Advice.This Query query) {
+    public static Object startMethod(@Advice.This Query query) {
 
       CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
       if (callDepth.getAndIncrement() > 0) {
-        return HibernateOperationScope.wrapCallDepth(callDepth);
+        return callDepth;
       }
 
       VirtualField<Query, SessionInfo> queryVirtualField =
@@ -65,7 +65,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
       HibernateOperation hibernateOperation =
           new HibernateOperation(getOperationNameForQuery(query.getQueryString()), sessionInfo);
       if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return HibernateOperationScope.wrapCallDepth(callDepth);
+        return callDepth;
       }
 
       return HibernateOperationScope.startNew(
@@ -74,7 +74,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope enterScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterScope) {
 
       HibernateOperationScope.end(enterScope, instrumenter(), throwable);
     }

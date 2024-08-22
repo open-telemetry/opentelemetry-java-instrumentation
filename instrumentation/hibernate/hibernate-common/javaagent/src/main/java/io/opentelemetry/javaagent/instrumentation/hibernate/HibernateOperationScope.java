@@ -32,8 +32,8 @@ public class HibernateOperationScope {
    * @param hibernateOperation hibernate operation
    * @param parentContext parent context
    * @param instrumenter instrumenter
-   * @return operation scope, to be ended with {@link #end(HibernateOperationScope, Instrumenter,
-   *     Throwable)} on exit advice
+   * @return operation scope, to be ended with {@link #end(Object, Instrumenter, Throwable)} on exit
+   *     advice
    */
   public static HibernateOperationScope startNew(
       CallDepth callDepth,
@@ -47,33 +47,31 @@ public class HibernateOperationScope {
   }
 
   /**
-   * Builds hibernate operation scope from an existing call depth for cases where only the call
-   * depth is needed
+   * Ends operation scope. First parameter is passed as an object in order to minimize allocation by
+   * avoinding to wrap call depth.
    *
-   * @param callDepth call depth
-   * @return hibernate operation scope wrapping the provided call depth.
-   */
-  public static HibernateOperationScope wrapCallDepth(CallDepth callDepth) {
-    return new HibernateOperationScope(callDepth, null, null, null);
-  }
-
-  /**
-   * Ends operation scope
-   *
-   * @param hibernateOperationScope hibernate operation scope
+   * @param hibernateOperationScopeOrCallDepth hibernate operation scope or call depth
    * @param instrumenter instrumenter
    * @param throwable thrown exception
    */
   public static void end(
-      HibernateOperationScope hibernateOperationScope,
+      Object hibernateOperationScopeOrCallDepth,
       Instrumenter<HibernateOperation, Void> instrumenter,
       Throwable throwable) {
 
-    if (hibernateOperationScope.context == null) {
-      // call depth only
-      hibernateOperationScope.callDepth.decrementAndGet();
+    if (hibernateOperationScopeOrCallDepth instanceof CallDepth) {
+      CallDepth callDepth = (CallDepth) hibernateOperationScopeOrCallDepth;
+      callDepth.decrementAndGet();
       return;
     }
+
+    if (!(hibernateOperationScopeOrCallDepth instanceof HibernateOperationScope)) {
+      throw new IllegalArgumentException(
+          "unexpected hibernate operation scope or call depth: "
+              + hibernateOperationScopeOrCallDepth.getClass());
+    }
+    HibernateOperationScope hibernateOperationScope =
+        (HibernateOperationScope) hibernateOperationScopeOrCallDepth;
 
     int depth = hibernateOperationScope.callDepth.decrementAndGet();
     if (depth != 0) {
