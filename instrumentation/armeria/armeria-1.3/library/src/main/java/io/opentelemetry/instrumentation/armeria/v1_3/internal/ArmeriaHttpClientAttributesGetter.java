@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
-import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpStatus;
+import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -17,7 +17,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 enum ArmeriaHttpClientAttributesGetter
-    implements HttpClientAttributesGetter<ClientRequestContext, RequestLog> {
+    implements HttpClientAttributesGetter<RequestContext, RequestLog> {
   INSTANCE;
 
   private static final ClassValue<Method> authorityMethodCache =
@@ -34,12 +34,12 @@ enum ArmeriaHttpClientAttributesGetter
       };
 
   @Override
-  public String getHttpRequestMethod(ClientRequestContext ctx) {
+  public String getHttpRequestMethod(RequestContext ctx) {
     return ctx.method().name();
   }
 
   @Override
-  public String getUrlFull(ClientRequestContext ctx) {
+  public String getUrlFull(RequestContext ctx) {
     HttpRequest request = request(ctx);
     StringBuilder uri = new StringBuilder();
     String scheme = request.scheme();
@@ -61,14 +61,14 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
-  public List<String> getHttpRequestHeader(ClientRequestContext ctx, String name) {
+  public List<String> getHttpRequestHeader(RequestContext ctx, String name) {
     return request(ctx).headers().getAll(name);
   }
 
   @Override
   @Nullable
   public Integer getHttpResponseStatusCode(
-      ClientRequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
+      RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
       return status.code();
@@ -78,18 +78,17 @@ enum ArmeriaHttpClientAttributesGetter
 
   @Override
   public List<String> getHttpResponseHeader(
-      ClientRequestContext ctx, RequestLog requestLog, String name) {
+      RequestContext ctx, RequestLog requestLog, String name) {
     return requestLog.responseHeaders().getAll(name);
   }
 
   @Override
-  public String getNetworkProtocolName(ClientRequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getNetworkProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
     return "http";
   }
 
   @Override
-  public String getNetworkProtocolVersion(
-      ClientRequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getNetworkProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol =
         requestLog != null ? requestLog.sessionProtocol() : ctx.sessionProtocol();
     return protocol.isMultiplex() ? "2" : "1.1";
@@ -97,7 +96,7 @@ enum ArmeriaHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(ClientRequestContext ctx) {
+  public String getServerAddress(RequestContext ctx) {
     String authority = authority(ctx);
     if (authority == null) {
       return null;
@@ -108,7 +107,7 @@ enum ArmeriaHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public Integer getServerPort(ClientRequestContext ctx) {
+  public Integer getServerPort(RequestContext ctx) {
     String authority = authority(ctx);
     if (authority == null) {
       return null;
@@ -127,12 +126,12 @@ enum ArmeriaHttpClientAttributesGetter
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      ClientRequestContext ctx, @Nullable RequestLog requestLog) {
+      RequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
   }
 
   @Nullable
-  private static String authority(ClientRequestContext ctx) {
+  private static String authority(RequestContext ctx) {
     // newer armeria versions expose authority through DefaultClientRequestContext#authority
     // we are using this method as it provides default values based on endpoint
     // in older versions armeria wraps the request, and we can get the same default values through
@@ -150,7 +149,7 @@ enum ArmeriaHttpClientAttributesGetter
     return request.authority();
   }
 
-  private static HttpRequest request(ClientRequestContext ctx) {
+  private static HttpRequest request(RequestContext ctx) {
     HttpRequest request = ctx.request();
     if (request == null) {
       throw new IllegalStateException(
