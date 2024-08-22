@@ -19,11 +19,11 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -55,6 +55,7 @@ public abstract class JettyServlet3Test
     options.setTestNotFound(false);
     options.setExpectedException(new ServletException(EXCEPTION.getBody()));
     options.setContextPath("/jetty-context");
+    options.setVerifyServerSpanEndTime(!isAsyncTest());
   }
 
   @Override
@@ -97,11 +98,7 @@ public abstract class JettyServlet3Test
 
   @Override
   protected Server setupServer() throws Exception {
-    Server jettyServer = new Server(port);
-
-    for (Connector connector : jettyServer.getConnectors()) {
-      connector.setHost("localhost");
-    }
+    Server jettyServer = new Server(new InetSocketAddress("localhost", port));
 
     ServletContextHandler servletContext = new ServletContextHandler(null, getContextPath());
     servletContext.setErrorHandler(

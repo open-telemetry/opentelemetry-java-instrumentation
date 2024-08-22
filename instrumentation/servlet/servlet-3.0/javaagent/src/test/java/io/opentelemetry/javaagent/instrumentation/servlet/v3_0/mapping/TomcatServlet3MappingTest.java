@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
@@ -38,12 +37,8 @@ class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Cont
       applicationDir.deleteOnExit();
     }
 
-    Context servletContext;
-    try {
-      servletContext = tomcatServer.addWebapp(getContextPath(), applicationDir.getAbsolutePath());
-    } catch (ServletException e) {
-      throw new RuntimeException(e);
-    }
+    Context servletContext =
+        tomcatServer.addWebapp(getContextPath(), applicationDir.getAbsolutePath());
     // Speed up startup by disabling jar scanning:
     servletContext.getJarScanner().setJarScanFilter((jarScanType, jarName) -> false);
 
