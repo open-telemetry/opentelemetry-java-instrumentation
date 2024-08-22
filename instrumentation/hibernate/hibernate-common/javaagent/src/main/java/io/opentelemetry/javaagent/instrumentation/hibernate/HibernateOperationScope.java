@@ -12,76 +12,77 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 
 public class HibernateOperationScope {
 
-  private final CallDepth callDepth;
   private final HibernateOperation hibernateOperation;
   private final Context context;
   private final Scope scope;
+  private final Instrumenter<HibernateOperation, Void> instrumenter;
 
   private HibernateOperationScope(
-      CallDepth callDepth, HibernateOperation hibernateOperation, Context context, Scope scope) {
-    this.callDepth = callDepth;
+      HibernateOperation hibernateOperation,
+      Context context,
+      Scope scope,
+      Instrumenter<HibernateOperation, Void> instrumenter) {
     this.hibernateOperation = hibernateOperation;
     this.context = context;
     this.scope = scope;
+    this.instrumenter = instrumenter;
   }
 
   /**
    * Starts operation scope
    *
-   * @param callDepth call depth
    * @param hibernateOperation hibernate operation
    * @param parentContext parent context
    * @param instrumenter instrumenter
-   * @return operation scope, to be ended with {@link #end(Object, Instrumenter, Throwable)} on exit
-   *     advice
+   * @return operation scope, to be ended with {@link #end(HibernateOperationScope, Throwable)} on
+   *     exit advice. Might return {@literal null} when operation should not be captured.
    */
-  public static HibernateOperationScope startNew(
-      CallDepth callDepth,
+  public static HibernateOperationScope start(
       HibernateOperation hibernateOperation,
       Context parentContext,
       Instrumenter<HibernateOperation, Void> instrumenter) {
 
+    if (!instrumenter.shouldStart(parentContext, hibernateOperation)) {
+      return null;
+    }
+
     Context context = instrumenter.start(parentContext, hibernateOperation);
+
     return new HibernateOperationScope(
-        callDepth, hibernateOperation, context, context.makeCurrent());
+        hibernateOperation, context, context.makeCurrent(), instrumenter);
   }
 
   /**
-   * Ends operation scope. First parameter is passed as an object in order to minimize allocation by
-   * avoinding to wrap call depth.
+   * Performs call depth increase and returns {@literal true} when depth is > 0, which indicates a
+   * nested hibernate operation is in progress. Must be called in the enter advice with an
+   * unconditional corresponding call to {@link #end(HibernateOperationScope, Throwable)} to
+   * decrement call depth.
+   */
+  public static boolean enterDepthSkipCheck() {
+    CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
+    return callDepth.getAndIncrement() > 0;
+  }
+
+  /**
+   * Ends operation scope.
    *
-   * @param hibernateOperationScopeOrCallDepth hibernate operation scope or call depth
-   * @param instrumenter instrumenter
+   * @param scope hibernate operation scope or {@literal null} when there is none
    * @param throwable thrown exception
    */
-  public static void end(
-      Object hibernateOperationScopeOrCallDepth,
-      Instrumenter<HibernateOperation, Void> instrumenter,
-      Throwable throwable) {
+  public static void end(HibernateOperationScope scope, Throwable throwable) {
 
-    if (hibernateOperationScopeOrCallDepth instanceof CallDepth) {
-      CallDepth callDepth = (CallDepth) hibernateOperationScopeOrCallDepth;
-      callDepth.decrementAndGet();
+    CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
+    if (callDepth.decrementAndGet() > 0) {
       return;
     }
 
-    if (!(hibernateOperationScopeOrCallDepth instanceof HibernateOperationScope)) {
-      throw new IllegalArgumentException(
-          "unexpected hibernate operation scope or call depth: "
-              + hibernateOperationScopeOrCallDepth.getClass());
+    if (scope != null) {
+      scope.end(throwable);
     }
-    HibernateOperationScope hibernateOperationScope =
-        (HibernateOperationScope) hibernateOperationScopeOrCallDepth;
+  }
 
-    int depth = hibernateOperationScope.callDepth.decrementAndGet();
-    if (depth != 0) {
-      throw new IllegalStateException("unexpected call depth " + depth);
-    }
-    hibernateOperationScope.scope.close();
-    instrumenter.end(
-        hibernateOperationScope.context,
-        hibernateOperationScope.hibernateOperation,
-        null,
-        throwable);
+  private void end(Throwable throwable) {
+    scope.close();
+    instrumenter.end(context, hibernateOperation, null, throwable);
   }
 }

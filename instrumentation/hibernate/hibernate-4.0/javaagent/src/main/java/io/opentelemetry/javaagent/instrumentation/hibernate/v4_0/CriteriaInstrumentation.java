@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -50,12 +49,11 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
   public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object startMethod(
+    public static HibernateOperationScope startMethod(
         @Advice.This Criteria criteria, @Advice.Origin("#m") String name) {
 
-      CallDepth callDepth = CallDepth.forClass(HibernateOperation.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+      if (HibernateOperationScope.enterDepthSkipCheck()) {
+        return null;
       }
 
       String entityName = null;
@@ -70,19 +68,15 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
           new HibernateOperation("Criteria." + name, entityName, sessionInfo);
-      if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return callDepth;
-      }
 
-      return HibernateOperationScope.startNew(
-          callDepth, hibernateOperation, parentContext, instrumenter());
+      return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter Object enterScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
 
-      HibernateOperationScope.end(enterScope, instrumenter(), throwable);
+      HibernateOperationScope.end(scope, throwable);
     }
   }
 }
