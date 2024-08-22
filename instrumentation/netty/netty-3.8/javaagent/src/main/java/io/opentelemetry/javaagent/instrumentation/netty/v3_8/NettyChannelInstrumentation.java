@@ -56,55 +56,54 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
   public static class ChannelConnectAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Channel channel,
-        @Advice.Argument(0) SocketAddress remoteAddress,
-        @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelTimer") Timer timer) {
+    public static NettyScope onEnter(
+        @Advice.This Channel channel, @Advice.Argument(0) SocketAddress remoteAddress) {
 
-      parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Java8BytecodeBridge.currentContext();
       Span span = Java8BytecodeBridge.spanFromContext(parentContext);
       if (!span.getSpanContext().isValid()) {
-        return;
+        return null;
       }
 
       VirtualField<Channel, NettyConnectionContext> virtualField =
           VirtualField.find(Channel.class, NettyConnectionContext.class);
       if (virtualField.get(channel) != null) {
-        return;
+        return null;
       }
       virtualField.set(channel, new NettyConnectionContext(parentContext));
 
-      request = NettyConnectionRequest.connect(remoteAddress);
-      timer = Timer.start();
+      NettyConnectionRequest request = NettyConnectionRequest.connect(remoteAddress);
+      Timer timer = Timer.start();
+
+      return new NettyScope(parentContext, request, timer);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Return ChannelFuture channelFuture,
         @Advice.Thrown Throwable error,
-        @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelTimer") Timer timer) {
+        @Advice.Enter NettyScope nettyScope) {
 
-      if (request == null) {
+      if (nettyScope == null) {
         return;
       }
 
       if (error != null) {
-        if (connectionInstrumenter().shouldStart(parentContext, request)) {
+        if (connectionInstrumenter()
+            .shouldStart(nettyScope.getParentContext(), nettyScope.getRequest())) {
           InstrumenterUtil.startAndEnd(
               connectionInstrumenter(),
-              parentContext,
-              request,
+              nettyScope.getParentContext(),
+              nettyScope.getRequest(),
               null,
               error,
-              timer.startTime(),
-              timer.now());
+              nettyScope.getTimer().startTime(),
+              nettyScope.getTimer().now());
         }
       } else {
-        channelFuture.addListener(new ConnectionListener(parentContext, request, timer));
+        channelFuture.addListener(
+            new ConnectionListener(
+                nettyScope.getParentContext(), nettyScope.getRequest(), nettyScope.getTimer()));
       }
     }
   }
