@@ -90,9 +90,15 @@ public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
 
   @Override
   public void afterEach(ExtensionContext context) {
-    rabbitMqContainer.stop();
-    producerContext.close();
-    consumerContext.close();
+    if (rabbitMqContainer != null) {
+      rabbitMqContainer.stop();
+    }
+    if (producerContext != null) {
+      producerContext.close();
+    }
+    if (consumerContext != null) {
+      consumerContext.close();
+    }
   }
 
   private static Class<?>[] getContextClasses(Class<?> mainContext, Class<?> additionalContext) {
