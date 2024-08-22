@@ -30,8 +30,8 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
 
-  latestDepTestLibrary("org.eclipse.jetty:jetty-server:11.+") // see servlet-5.0 module
-  latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:11.+") // see servlet-5.0 module
+  latestDepTestLibrary("org.eclipse.jetty:jetty-server:10.+") // see servlet-5.0 module
+  latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:10.+") // see servlet-5.0 module
 
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+") // see servlet-5.0 module
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
@@ -43,5 +43,13 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }

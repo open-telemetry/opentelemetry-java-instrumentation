@@ -17,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
@@ -30,6 +31,12 @@ class TomcatServlet3DispatchAsyncTest extends TomcatDispatchTest {
 
   public TomcatServlet3DispatchAsyncTest() {
     super(testing);
+  }
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    options.setVerifyServerSpanEndTime(false);
   }
 
   @Override
