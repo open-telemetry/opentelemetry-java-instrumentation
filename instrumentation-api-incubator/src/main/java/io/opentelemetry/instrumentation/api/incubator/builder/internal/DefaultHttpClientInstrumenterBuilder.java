@@ -222,6 +222,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return openTelemetry;
   }
 
+  public String getInstrumentationName() {
+    return instrumentationName;
+  }
+
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
