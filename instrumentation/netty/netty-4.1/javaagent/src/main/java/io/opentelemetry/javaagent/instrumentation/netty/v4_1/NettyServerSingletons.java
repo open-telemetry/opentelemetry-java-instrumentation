@@ -18,6 +18,10 @@ public final class NettyServerSingletons {
     NettyServerInstrumenterBuilderUtil.getBuilderExtractor()
         .apply(builder)
         .configure(AgentCommonConfig.get());
+    if (AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+      // this logic is only used in agent
+      builder.setEmitExperimentalHttpServerEvents(true);
+    }
     SERVER_TELEMETRY = builder.build();
   }
 
