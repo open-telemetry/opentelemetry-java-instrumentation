@@ -42,8 +42,8 @@ public final class PowerJobProcessRequest {
     this.jobId = jobId;
   }
 
-  public static PowerJobProcessRequest createRequest(Long jobId, BasicProcessor handler,
-      String methodName) {
+  public static PowerJobProcessRequest createRequest(
+      Long jobId, BasicProcessor handler, String methodName) {
     PowerJobProcessRequest request = new PowerJobProcessRequest(jobId);
     request.methodName = methodName;
     request.declaringClass = handler.getClass();

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
@@ -63,6 +68,5 @@ public class BasicProcessorInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       helper().stopSpan(result, request, throwable, scope, context);
     }
-
   }
 }

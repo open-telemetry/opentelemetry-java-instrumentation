@@ -30,10 +30,8 @@ public final class PowerJobHelper {
     return new PowerJobHelper(instrumenter, failedStatusPredicate);
   }
 
-
   public Context startSpan(Context parentContext, PowerJobProcessRequest request) {
     if (!instrumenter.shouldStart(parentContext, request)) {
-      System.out.println("======> SimpleProcessorInstrumentation startSpan return null");
       return null;
     }
     return instrumenter.start(parentContext, request);
@@ -53,10 +51,5 @@ public final class PowerJobHelper {
     }
     scope.close();
     instrumenter.end(context, request, null, throwable);
-  }
-
-  public void stopSpan(
-      PowerJobProcessRequest request, Throwable throwable, Scope scope, Context context) {
-    stopSpan(null, request, throwable, scope, context);
   }
 }

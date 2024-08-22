@@ -22,7 +22,8 @@ public final class PowerJobInstrumenterFactory {
 
   public static Instrumenter<PowerJobProcessRequest, Void> create(String instrumentationName) {
     PowerJobCodeAttributesGetter codeAttributesGetter = new PowerJobCodeAttributesGetter();
-    PowerJobSpanNameExtractor spanNameExtractor = new PowerJobSpanNameExtractor(codeAttributesGetter);
+    PowerJobSpanNameExtractor spanNameExtractor =
+        new PowerJobSpanNameExtractor(codeAttributesGetter);
 
     InstrumenterBuilder<PowerJobProcessRequest, Void> builder =
         Instrumenter.<PowerJobProcessRequest, Void>builder(

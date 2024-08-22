@@ -18,7 +18,6 @@ class PowerJobSpanNameExtractor implements SpanNameExtractor<PowerJobProcessRequ
 
   @Override
   public String extract(PowerJobProcessRequest request) {
-    // TODO: 2024/8/6 script call
     return codeSpanNameExtractor.extract(request);
   }
 }

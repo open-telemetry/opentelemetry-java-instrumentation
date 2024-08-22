@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 class PowerJobExperimentalAttributeExtractor
     implements AttributesExtractor<PowerJobProcessRequest, Void> {
 
-
   private static final AttributeKey<Long> POWERJOB_JOB_ID =
       AttributeKey.longKey("scheduling.powerjob.job.id");
   private static final AttributeKey<String> POWERJOB_JOB_PARAM =
@@ -29,10 +28,10 @@ class PowerJobExperimentalAttributeExtractor
       AttributesBuilder attributes,
       Context parentContext,
       PowerJobProcessRequest powerJobProcessRequest) {
-      attributes.put(POWERJOB_JOB_ID, powerJobProcessRequest.getJobId());
-      attributes.put(POWERJOB_JOB_PARAM, powerJobProcessRequest.getJobParams());
-      attributes.put(POWERJOB_JOB_INSTANCE_PARAM, powerJobProcessRequest.getInstanceParams());
-      attributes.put(POWERJOB_JOB_INSTANCE_TRPE, powerJobProcessRequest.getJobType());
+    attributes.put(POWERJOB_JOB_ID, powerJobProcessRequest.getJobId());
+    attributes.put(POWERJOB_JOB_PARAM, powerJobProcessRequest.getJobParams());
+    attributes.put(POWERJOB_JOB_INSTANCE_PARAM, powerJobProcessRequest.getInstanceParams());
+    attributes.put(POWERJOB_JOB_INSTANCE_TRPE, powerJobProcessRequest.getJobType());
   }
 
   @Override

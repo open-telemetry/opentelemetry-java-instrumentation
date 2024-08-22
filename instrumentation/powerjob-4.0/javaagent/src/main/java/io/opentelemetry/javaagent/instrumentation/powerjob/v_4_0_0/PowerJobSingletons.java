@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public final class PowerJobSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.powerjob-4.0.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.powerjob-4.0";
   private static final Instrumenter<PowerJobProcessRequest, Void> INSTRUMENTER =
       PowerJobInstrumenterFactory.create(INSTRUMENTATION_NAME);
   private static final PowerJobHelper HELPER =
@@ -24,7 +24,6 @@ public final class PowerJobSingletons {
   public static PowerJobHelper helper() {
     return HELPER;
   }
-
 
   private PowerJobSingletons() {}
 }
