@@ -38,12 +38,18 @@ public final class ArmeriaTelemetryBuilder {
         ArmeriaTelemetryBuilder::getServerBuilder);
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   ArmeriaTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder = ArmeriaInstrumenterBuilderFactory.getClientBuilder(openTelemetry);
     serverBuilder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
   }
 
+  /**
+   * Sets the status extractor for both client and server spans.
+   *
+   * @deprecated Use {@link #setClientStatusExtractor(Function)} or {@link
+   *     #setServerStatusExtractor(Function)} instead.
+   */
+  @Deprecated
   @SuppressWarnings({"unchecked", "rawtypes"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setStatusExtractor(
@@ -56,10 +62,36 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
+  /** Sets the status extractor for client spans. */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder setClientStatusExtractor(
+      Function<
+              SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>,
+              ? extends SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>>
+          statusExtractor) {
+    clientBuilder.setStatusExtractor(statusExtractor);
+    return this;
+  }
+
+  /** Sets the status extractor for server spans. */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder setServerStatusExtractor(
+      Function<
+              SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>,
+              ? extends SpanStatusExtractor<? super ServiceRequestContext, ? super RequestLog>>
+          statusExtractor) {
+    serverBuilder.setStatusExtractor(statusExtractor);
+    return this;
+  }
+
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   *
+   * @deprecated Use {@link #addClientAttributeExtractor(AttributesExtractor)} or {@link
+   *     #addServerAttributeExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
@@ -77,6 +109,18 @@ public final class ArmeriaTelemetryBuilder {
   public ArmeriaTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
     clientBuilder.addAttributeExtractor(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an extra server-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items. The {@link AttributesExtractor} will be executed after all default
+   * extractors.
+   */
+  @CanIgnoreReturnValue
+  public ArmeriaTelemetryBuilder addServerAttributeExtractor(
+      AttributesExtractor<? super ServiceRequestContext, ? super RequestLog> attributesExtractor) {
+    serverBuilder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -162,7 +206,6 @@ public final class ArmeriaTelemetryBuilder {
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
     clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
-    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -175,32 +218,29 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpServerMetrics);
     serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
-  @SuppressWarnings({"rawtypes", "unchecked"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setClientSpanNameExtractor(
       Function<
-              SpanNameExtractor<RequestContext>,
-              ? extends SpanNameExtractor<? super RequestContext>>
+              SpanNameExtractor<? super ClientRequestContext>,
+              ? extends SpanNameExtractor<? super ClientRequestContext>>
           clientSpanNameExtractor) {
-    clientBuilder.setSpanNameExtractor((Function) clientSpanNameExtractor);
+    clientBuilder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
-  @SuppressWarnings({"rawtypes", "unchecked"})
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setServerSpanNameExtractor(
       Function<
-              SpanNameExtractor<RequestContext>,
-              ? extends SpanNameExtractor<? super RequestContext>>
+              SpanNameExtractor<? super ServiceRequestContext>,
+              ? extends SpanNameExtractor<? super ServiceRequestContext>>
           serverSpanNameExtractor) {
-    serverBuilder.setSpanNameExtractor((Function) serverSpanNameExtractor);
+    serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
   }
 
