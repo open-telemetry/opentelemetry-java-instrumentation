@@ -3,14 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
-                                                                             * Copyright The OpenTelemetry Authors
-                                                                             * SPDX-License-Identifier: Apache-2.0
-                                                                             */
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,11 +35,9 @@ public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
   protected ConfigurableApplicationContext producerContext;
   private ConfigurableApplicationContext consumerContext;
 
-  private final InstrumentationExtension testing;
   private final Class<?> additionalContextClass;
 
-  public RabbitExtension(InstrumentationExtension testing, Class<?> additionalContextClass) {
-    this.testing = testing;
+  public RabbitExtension(Class<?> additionalContextClass) {
     this.additionalContextClass = additionalContextClass;
   }
 
@@ -84,8 +78,6 @@ public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
     consumerProperties.put("spring.cloud.stream.bindings.input.destination", "testTopic");
     consumerApp.setDefaultProperties(consumerProperties);
     consumerContext = consumerApp.run();
-
-    testing.clearData();
   }
 
   @Override

@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
-                                                                             * Copyright The OpenTelemetry Authors
-                                                                             * SPDX-License-Identifier: Apache-2.0
-                                                                             */
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -78,7 +75,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         "executorChannel,executorChannel process"
       },
       delimiter = ',')
-  public void should_propagate_context(String channelName, String interceptorSpanName) {
+  public void shouldPropagateContext(String channelName, String interceptorSpanName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
 

@@ -3,10 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1; /*
-                                                                             * Copyright The OpenTelemetry Authors
-                                                                             * SPDX-License-Identifier: Apache-2.0
-                                                                             */
+package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -27,7 +24,7 @@ public abstract class AbstractSpringCloudStreamProducerTest {
   public AbstractSpringCloudStreamProducerTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
-    rabbit = new RabbitExtension(testing, additionalContextClass);
+    rabbit = new RabbitExtension(additionalContextClass);
   }
 
   @Test
