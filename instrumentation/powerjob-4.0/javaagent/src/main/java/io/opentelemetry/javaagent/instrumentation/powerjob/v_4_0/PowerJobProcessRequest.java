@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0;
+package io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.BASIC_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.BROADCAST_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.DYNAMIC_DATASOURCE_SQL_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.FILE_CLEANUP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.HTTP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.MAP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.MAP_REDUCE_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.PYTHON_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.SHELL_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0_0.PowerJobConstants.SPRING_DATASOURCE_SQL_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.BASIC_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.BROADCAST_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.DYNAMIC_DATASOURCE_SQL_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.FILE_CLEANUP_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.HTTP_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.MAP_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.MAP_REDUCE_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.PYTHON_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.SHELL_PROCESSOR;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0.PowerJobConstants.SPRING_DATASOURCE_SQL_PROCESSOR;
 
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
 import tech.powerjob.official.processors.impl.HttpProcessor;
