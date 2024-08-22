@@ -466,9 +466,6 @@ When using non-inlined advices, reading the argument values is still done with `
 annotated parameters, however modifying the values is done through the advice method return value
 and `@Advice.AssignReturned.ToArguments` annotation:
 
-Note that independent of the static return type of the advice method, all assignments done `@Advice.AssignReturned` will use explicit casts to the type of target field or variable. We explicitly override the `typing` parameter in those annotations in our agent.
-value to the appropriate type.
-
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
 @Advice.AssignReturned.ToArguments(@ToArgument(1))
