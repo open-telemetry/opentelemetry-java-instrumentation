@@ -74,15 +74,11 @@ class SpringIntegrationAndRabbitTest {
                                 l -> l.isInstanceOf(Long.class)),
                             satisfies(
                                 NetworkAttributes.NETWORK_TYPE, s -> s.isIn("ipv4", "ipv6", null)),
-                            satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                s -> s.isEqualTo("rabbitmq")),
-                            satisfies(
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq"),
+                            equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                s -> s.isEqualTo("testTopic")),
-                            satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_OPERATION,
-                                s -> s.isEqualTo("publish")),
+                                "testTopic"),
+                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 l -> l.isInstanceOf(Long.class)),
