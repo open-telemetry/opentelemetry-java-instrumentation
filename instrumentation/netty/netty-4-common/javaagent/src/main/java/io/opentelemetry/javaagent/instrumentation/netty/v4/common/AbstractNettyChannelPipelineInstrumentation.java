@@ -160,6 +160,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler returnHandler) {
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      // TODO remove this extra variable when migrating to "indy only" instrumentation.
       ChannelHandler handler = returnHandler;
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {

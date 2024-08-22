@@ -63,6 +63,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     public static GenericFutureListener<? extends Future<?>> wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
 
+      // TODO remove this extra variable when migrating to "indy only" instrumentation.
       GenericFutureListener<? extends Future<?>> listener = listenerArg;
       if (FutureListenerWrappers.shouldWrap(listener)) {
         listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
