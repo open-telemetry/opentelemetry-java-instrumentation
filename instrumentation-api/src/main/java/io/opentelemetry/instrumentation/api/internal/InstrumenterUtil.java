@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -67,6 +68,7 @@ public final class InstrumenterUtil {
         builder, setter, spanKindExtractor);
   }
 
+  @CanIgnoreReturnValue
   public static <REQUEST, RESPONSE>
       InstrumenterBuilder<REQUEST, RESPONSE> propagateOperationListenersToOnEnd(
           InstrumenterBuilder<REQUEST, RESPONSE> builder) {
