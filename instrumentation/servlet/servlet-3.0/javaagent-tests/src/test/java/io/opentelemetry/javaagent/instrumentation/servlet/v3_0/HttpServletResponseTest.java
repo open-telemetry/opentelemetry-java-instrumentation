@@ -54,7 +54,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void test_send_no_parent() throws IOException {
+  void testSendNoParent() throws IOException {
     response.sendError(0);
     response.sendError(0, "");
     response.sendRedirect("");
@@ -63,7 +63,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void test_send_with_parent() throws IOException {
+  void testSendWithParent() throws IOException {
     runWithSpan(
         "parent",
         () -> {
@@ -106,7 +106,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void test_send_with_exception() throws ServletException, IOException {
+  void testSendWithException() throws ServletException, IOException {
     TestResponse response =
         new TestResponse() {
           @Override

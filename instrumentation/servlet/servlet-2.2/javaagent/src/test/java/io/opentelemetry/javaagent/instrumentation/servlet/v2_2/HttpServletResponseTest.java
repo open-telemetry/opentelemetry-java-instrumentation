@@ -55,7 +55,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void test_send_no_parent() {
+  void testSendNoParent() {
     response.sendError(0);
     response.sendError(0, "");
     response.sendRedirect("");
@@ -64,7 +64,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void test_send_with_parent() {
+  void testSendWithParent() {
     runWithSpan(
         "parent",
         () -> {
@@ -107,7 +107,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void test_send_with_exception() throws ServletException, IOException {
+  void testSendWithException() throws ServletException, IOException {
     RuntimeException ex = new RuntimeException("some error");
     TestResponse response =
         new TestResponse() {

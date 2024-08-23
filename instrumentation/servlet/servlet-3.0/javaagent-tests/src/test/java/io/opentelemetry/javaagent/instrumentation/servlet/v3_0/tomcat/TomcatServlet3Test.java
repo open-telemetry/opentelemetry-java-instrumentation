@@ -195,7 +195,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   }
 
   @Test
-  void access_log_has_ids_for_error_request() {
+  void accessLogHasIdsForErrorRequest() {
     Assumptions.assumeTrue(testError());
 
     AggregatedHttpRequest request = request(ACCESS_LOG_ERROR, "GET");
