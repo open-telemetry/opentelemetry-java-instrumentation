@@ -16,9 +16,7 @@ muzzle {
 }
 
 dependencies {
-  api(project(":instrumentation:servlet:servlet-common:javaagent"))
-  api(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
-  bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
+  testImplementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 
@@ -43,5 +41,13 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }
