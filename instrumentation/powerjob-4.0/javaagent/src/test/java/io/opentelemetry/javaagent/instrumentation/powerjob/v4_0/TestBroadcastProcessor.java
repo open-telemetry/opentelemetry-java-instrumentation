@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0;
+package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
 import java.util.List;
 import tech.powerjob.worker.core.processor.ProcessResult;

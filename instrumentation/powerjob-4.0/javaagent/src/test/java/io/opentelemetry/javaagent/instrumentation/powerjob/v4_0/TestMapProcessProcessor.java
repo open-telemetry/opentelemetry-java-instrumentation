@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.powerjob.v_4_0;
+package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
 import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
-import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
+import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 
-public class TestBasicFailProcessor implements BasicProcessor {
+public class TestMapProcessProcessor implements MapProcessor {
 
   @Override
   public ProcessResult process(TaskContext context) {
-    return new ProcessResult(false, "fail");
+    return new ProcessResult(true, "processSuccess");
   }
 }
