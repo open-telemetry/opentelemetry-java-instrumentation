@@ -1,19 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
 }
-muzzle {
-  pass {
-    group.set("javax.servlet")
-    module.set("javax.servlet-api")
-    versions.set("[3.0,)")
-    assertInverse.set(true)
-  }
-  fail {
-    group.set("javax.servlet")
-    module.set("servlet-api")
-    versions.set("(,)")
-  }
-}
 
 dependencies {
   testImplementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
