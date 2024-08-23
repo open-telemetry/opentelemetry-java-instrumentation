@@ -8,6 +8,7 @@ muzzle {
     module.set("powerjob-worker")
     versions.set("[4.0.0,)")
     assertInverse.set(true)
+    extraDependency("tech.powerjob:powerjob-official-processors:1.1.0")
   }
 }
 
