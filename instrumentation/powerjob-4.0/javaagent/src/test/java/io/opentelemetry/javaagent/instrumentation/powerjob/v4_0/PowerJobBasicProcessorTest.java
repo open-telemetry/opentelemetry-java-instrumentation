@@ -42,7 +42,7 @@ import tech.powerjob.official.processors.impl.sql.SpringDatasourceSqlProcessor;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.WorkflowContext;
 import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
-import tech.powerjob.worker.log.impl.OmsLocalLogger;
+import tech.powerjob.worker.log.OmsLogger;
 
 class PowerJobBasicProcessorTest {
   @RegisterExtension
@@ -170,7 +170,7 @@ class PowerJobBasicProcessorTest {
     String jobParam = "ls";
     TaskContext taskContext = genTaskContext(jobId, jobParam);
     taskContext.setWorkflowContext(new WorkflowContext(jobId, ""));
-    taskContext.setOmsLogger(new OmsLocalLogger());
+    taskContext.setOmsLogger(new TestOmsLogger());
     BasicProcessor shellProcessor = new ShellProcessor();
     shellProcessor.process(taskContext);
     testing.waitAndAssertTraces(
@@ -193,7 +193,7 @@ class PowerJobBasicProcessorTest {
     String jobParam = "1+1";
     TaskContext taskContext = genTaskContext(jobId, jobParam);
     taskContext.setWorkflowContext(new WorkflowContext(jobId, ""));
-    taskContext.setOmsLogger(new OmsLocalLogger());
+    taskContext.setOmsLogger(new TestOmsLogger());
     BasicProcessor pythonProcessor = new PythonProcessor();
     pythonProcessor.process(taskContext);
     testing.waitAndAssertTraces(
@@ -217,7 +217,7 @@ class PowerJobBasicProcessorTest {
     String jobParam = "{\"method\":\"GET\"}";
     TaskContext taskContext = genTaskContext(jobId, jobParam);
     taskContext.setWorkflowContext(new WorkflowContext(jobId, ""));
-    taskContext.setOmsLogger(new OmsLocalLogger());
+    taskContext.setOmsLogger(new TestOmsLogger());
     BasicProcessor httpProcessor = new HttpProcessor();
     httpProcessor.process(taskContext);
     testing.waitAndAssertTraces(
@@ -246,7 +246,7 @@ class PowerJobBasicProcessorTest {
     array.add(params);
     String jobParam = array.toJSONString();
     TaskContext taskContext = genTaskContext(jobId, jobParam);
-    taskContext.setOmsLogger(new OmsLocalLogger());
+    taskContext.setOmsLogger(new TestOmsLogger());
     BasicProcessor fileCleanupProcessor = new FileCleanupProcessor();
     fileCleanupProcessor.process(taskContext);
     testing.waitAndAssertTraces(
@@ -274,7 +274,7 @@ class PowerJobBasicProcessorTest {
     String jobParam = "{\"dirPath\":\"/abc\"}";
     TaskContext taskContext = genTaskContext(jobId, jobParam);
     taskContext.setWorkflowContext(new WorkflowContext(jobId, ""));
-    taskContext.setOmsLogger(new OmsLocalLogger());
+    taskContext.setOmsLogger(new TestOmsLogger());
     BasicProcessor springDatasourceSqlProcessor = new SpringDatasourceSqlProcessor(dataSource);
     springDatasourceSqlProcessor.process(taskContext);
     testing.waitAndAssertTraces(
@@ -303,7 +303,7 @@ class PowerJobBasicProcessorTest {
     String jobParam = "{\"dirPath\":\"/abc\"}";
     TaskContext taskContext = genTaskContext(jobId, jobParam);
     taskContext.setWorkflowContext(new WorkflowContext(jobId, ""));
-    taskContext.setOmsLogger(new OmsLocalLogger());
+    taskContext.setOmsLogger(new TestOmsLogger());
     BasicProcessor dynamicDatasourceSqlProcessor = new DynamicDatasourceSqlProcessor();
     dynamicDatasourceSqlProcessor.process(taskContext);
     testing.waitAndAssertTraces(
@@ -347,5 +347,20 @@ class PowerJobBasicProcessorTest {
           equalTo(AttributeKey.stringKey("scheduling.powerjob.job.param"), jobParam));
     }
     return attributeAssertions;
+  }
+
+  private static class TestOmsLogger implements OmsLogger {
+
+    @Override
+    public void debug(String s, Object... objects) {}
+
+    @Override
+    public void info(String s, Object... objects) {}
+
+    @Override
+    public void warn(String s, Object... objects) {}
+
+    @Override
+    public void error(String s, Object... objects) {}
   }
 }

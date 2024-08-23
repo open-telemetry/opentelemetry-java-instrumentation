@@ -11,7 +11,7 @@ import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.TaskResult;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 
-public class TestMapReduceProcessProcessor implements MapReduceProcessor {
+class TestMapReduceProcessProcessor implements MapReduceProcessor {
 
   @Override
   public ProcessResult process(TaskContext context) {

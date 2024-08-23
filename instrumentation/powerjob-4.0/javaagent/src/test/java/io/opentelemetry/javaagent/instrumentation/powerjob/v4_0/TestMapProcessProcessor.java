@@ -9,7 +9,7 @@ import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 
-public class TestMapProcessProcessor implements MapProcessor {
+class TestMapProcessProcessor implements MapProcessor {
 
   @Override
   public ProcessResult process(TaskContext context) {

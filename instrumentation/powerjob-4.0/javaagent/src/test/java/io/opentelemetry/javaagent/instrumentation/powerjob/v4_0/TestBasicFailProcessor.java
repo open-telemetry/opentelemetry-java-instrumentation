@@ -9,7 +9,7 @@ import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
 
-public class TestBasicFailProcessor implements BasicProcessor {
+class TestBasicFailProcessor implements BasicProcessor {
 
   @Override
   public ProcessResult process(TaskContext context) {
