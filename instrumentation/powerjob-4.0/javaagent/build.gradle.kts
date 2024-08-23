@@ -15,6 +15,8 @@ muzzle {
 dependencies {
   library("tech.powerjob:powerjob-worker:4.0.0")
   library("tech.powerjob:powerjob-official-processors:1.1.0")
+
+  testImplementation("tech.powerjob:powerjob-worker:4.0.0")
 }
 
 tasks.withType<Test>().configureEach {
