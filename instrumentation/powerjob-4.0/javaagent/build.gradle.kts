@@ -17,6 +17,8 @@ dependencies {
   library("tech.powerjob:powerjob-official-processors:1.1.0")
 
   testImplementation("tech.powerjob:powerjob-worker:4.0.0")
+  testImplementation("org.springframework:spring-context:5.2.4.RELEASE")
+  latestDepTestLibrary("org.springframework:spring-context:5.+")
 }
 
 tasks.withType<Test>().configureEach {
