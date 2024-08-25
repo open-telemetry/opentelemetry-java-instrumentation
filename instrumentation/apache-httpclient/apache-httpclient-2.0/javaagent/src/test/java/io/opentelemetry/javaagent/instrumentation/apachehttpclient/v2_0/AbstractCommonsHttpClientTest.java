@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v2_0;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -36,9 +38,9 @@ abstract class AbstractCommonsHttpClientTest extends AbstractHttpClientTest<Http
   private static final HttpClient clientWithReadTimeout = new HttpClient(connectionManager);
 
   @BeforeAll
-  void setUp() {
-    client.setConnectionTimeout((int) connectTimeout().toMillis());
-    clientWithReadTimeout.setTimeout((int) readTimeout().toMillis());
+  static void setUp() {
+    client.setConnectionTimeout((int) CONNECTION_TIMEOUT.toMillis());
+    clientWithReadTimeout.setTimeout((int) READ_TIMEOUT.toMillis());
   }
 
   HttpClient getClient(URI uri) {
