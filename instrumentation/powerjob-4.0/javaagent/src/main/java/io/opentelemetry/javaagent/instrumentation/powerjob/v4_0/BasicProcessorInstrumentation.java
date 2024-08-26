@@ -47,8 +47,7 @@ public class BasicProcessorInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      Long jobId = taskContext.getJobId();
-      request = PowerJobProcessRequest.createRequest(jobId, handler, "process");
+      request = PowerJobProcessRequest.createRequest(taskContext.getJobId(), handler, "process");
       request.setInstanceParams(taskContext.getInstanceParams());
       request.setJobParams(taskContext.getJobParams());
       context = helper().startSpan(parentContext, request);
