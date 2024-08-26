@@ -16,10 +16,6 @@ class TomcatServlet3FakeAsyncTest extends TomcatServlet3Test {
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public TomcatServlet3FakeAsyncTest() {
-    super(testing);
-  }
-
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.FakeAsync.class;

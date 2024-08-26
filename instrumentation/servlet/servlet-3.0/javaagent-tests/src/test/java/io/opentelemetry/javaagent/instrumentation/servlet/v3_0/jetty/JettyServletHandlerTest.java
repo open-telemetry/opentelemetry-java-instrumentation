@@ -39,10 +39,6 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public JettyServletHandlerTest() {
-    super(testing);
-  }
-
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);

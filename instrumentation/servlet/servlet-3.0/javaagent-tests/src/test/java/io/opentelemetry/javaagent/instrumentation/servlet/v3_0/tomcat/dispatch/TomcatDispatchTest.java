@@ -5,15 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.dispatch;
 
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TomcatServlet3Test;
 
 abstract class TomcatDispatchTest extends TomcatServlet3Test {
-
-  public TomcatDispatchTest(InstrumentationExtension testing) {
-    super(testing);
-  }
 
   @Override
   protected void configure(HttpServerTestOptions options) {

@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
@@ -60,10 +59,6 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
           ERROR.getBody(),
           false);
   private final TestAccessLogValve accessLogValue = new TestAccessLogValve();
-
-  public TomcatServlet3Test(InstrumentationExtension testing) {
-    super(testing);
-  }
 
   @Override
   protected void configure(HttpServerTestOptions options) {
@@ -130,7 +125,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   @BeforeEach
   void setUp() {
     accessLogValue.getLoggedIds().clear();
-    testing.clearData();
+    testing().clearAllExportedData();
   }
 
   @Override
@@ -183,10 +178,11 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
             trace.hasSpansSatisfyingExactly(
                 span -> assertServerSpan(span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
                 span -> assertControllerSpan(span, null));
-    testing.waitAndAssertTraces(
-        IntStream.range(0, count).mapToObj(i -> check).collect(Collectors.toList()));
+    testing()
+        .waitAndAssertTraces(
+            IntStream.range(0, count).mapToObj(i -> check).collect(Collectors.toList()));
 
-    List<List<SpanData>> traces = TelemetryDataUtil.groupTraces(testing.spans());
+    List<List<SpanData>> traces = TelemetryDataUtil.groupTraces(testing().getExportedSpans());
 
     for (int i = 0; i < count; i++) {
       assertThat(loggedTraces).contains(traces.get(i).get(0).getTraceId());
@@ -209,7 +205,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
       spanCount++;
     }
 
-    List<SpanData> spanData = TelemetryDataUtil.groupTraces(testing.spans()).get(0);
+    List<SpanData> spanData = TelemetryDataUtil.groupTraces(testing().getExportedSpans()).get(0);
     List<SpanDataAssert> spans =
         spanData.stream().map(OpenTelemetryAssertions::assertThat).collect(Collectors.toList());
     assertThat(spans).hasSize(spanCount);

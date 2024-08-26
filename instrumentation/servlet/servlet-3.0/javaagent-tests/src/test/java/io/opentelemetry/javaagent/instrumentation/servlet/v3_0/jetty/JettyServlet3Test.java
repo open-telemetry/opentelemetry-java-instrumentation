@@ -36,10 +36,6 @@ public abstract class JettyServlet3Test
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public JettyServlet3Test() {
-    super(testing);
-  }
-
   static final boolean IS_BEFORE_94 = isBefore94();
 
   public static boolean isBefore94() {

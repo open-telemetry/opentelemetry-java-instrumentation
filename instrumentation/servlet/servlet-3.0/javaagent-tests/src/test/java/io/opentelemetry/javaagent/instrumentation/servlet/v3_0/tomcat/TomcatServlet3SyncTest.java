@@ -16,10 +16,6 @@ class TomcatServlet3SyncTest extends TomcatServlet3Test {
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public TomcatServlet3SyncTest() {
-    super(testing);
-  }
-
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Sync.class;

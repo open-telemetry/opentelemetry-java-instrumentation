@@ -19,7 +19,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -32,12 +31,6 @@ import javax.servlet.Servlet;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
-
-  protected final InstrumentationExtension testing;
-
-  public AbstractServlet3Test(InstrumentationExtension testing) {
-    this.testing = testing;
-  }
 
   public static final ServerEndpoint HTML_PRINT_WRITER =
       new ServerEndpoint(
@@ -171,17 +164,18 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
     ExperimentalSnippetHolder.setSnippet("");
 
     String expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM, "GET");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("controller")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent(),
+                    span ->
+                        span.hasName("controller")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -210,16 +204,17 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
     ExperimentalSnippetHolder.setSnippet("");
 
     String expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("controller")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent(),
+                    span ->
+                        span.hasName("controller")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 }

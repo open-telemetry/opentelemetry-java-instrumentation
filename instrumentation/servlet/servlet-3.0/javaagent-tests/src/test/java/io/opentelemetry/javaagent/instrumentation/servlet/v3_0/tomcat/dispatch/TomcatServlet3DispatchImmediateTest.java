@@ -29,10 +29,6 @@ class TomcatServlet3DispatchImmediateTest extends TomcatDispatchTest {
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public TomcatServlet3DispatchImmediateTest() {
-    super(testing);
-  }
-
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Sync.class;

@@ -16,10 +16,6 @@ class TomcatServlet3AsyncTest extends TomcatServlet3Test {
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public TomcatServlet3AsyncTest() {
-    super(testing);
-  }
-
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Async.class;

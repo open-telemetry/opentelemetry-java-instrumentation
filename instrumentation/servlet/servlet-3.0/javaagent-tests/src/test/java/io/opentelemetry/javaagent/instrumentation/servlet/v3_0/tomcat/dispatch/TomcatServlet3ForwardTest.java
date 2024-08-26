@@ -30,10 +30,6 @@ class TomcatServlet3ForwardTest extends TomcatDispatchTest {
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public TomcatServlet3ForwardTest() {
-    super(testing);
-  }
-
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Sync.class; // dispatch to sync servlet

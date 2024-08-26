@@ -29,10 +29,6 @@ class TomcatServlet3DispatchAsyncTest extends TomcatDispatchTest {
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
-  public TomcatServlet3DispatchAsyncTest() {
-    super(testing);
-  }
-
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
