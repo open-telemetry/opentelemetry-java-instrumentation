@@ -22,7 +22,6 @@ import org.apache.commons.httpclient.methods.OptionsMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.TraceMethod;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractCommonsHttpClientTest extends AbstractHttpClientTest<HttpMethod> {
@@ -32,15 +31,16 @@ abstract class AbstractCommonsHttpClientTest extends AbstractHttpClientTest<Http
 
   private static final HttpConnectionManager connectionManager =
       new MultiThreadedHttpConnectionManager();
+  private static final HttpClient client = buildClient(false);
+  private static final HttpClient clientWithReadTimeout = buildClient(true);
 
-  private static final HttpClient client = new HttpClient(connectionManager);
-
-  private static final HttpClient clientWithReadTimeout = new HttpClient(connectionManager);
-
-  @BeforeAll
-  static void setUp() {
+  static HttpClient buildClient(boolean readTimeout) {
+    HttpClient client = new HttpClient(connectionManager);
     client.setConnectionTimeout((int) CONNECTION_TIMEOUT.toMillis());
-    clientWithReadTimeout.setTimeout((int) READ_TIMEOUT.toMillis());
+    if (readTimeout) {
+      client.setTimeout((int) READ_TIMEOUT.toMillis());
+    }
+    return client;
   }
 
   HttpClient getClient(URI uri) {
