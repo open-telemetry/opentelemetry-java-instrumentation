@@ -58,7 +58,7 @@ abstract class AbstractDubboTest {
   }
 
   @AfterAll
-  static void setDown() {
+  static void tearDown() {
     System.clearProperty("dubbo.application.qos-enable");
   }
 
