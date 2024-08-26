@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.Map;
 import org.apache.commons.httpclient.HttpMethod;
 
-public class CommonsHttpClientTest extends AbstractCommonsHttpClientTest {
+class CommonsHttpClientTest extends AbstractCommonsHttpClientTest {
 
   @Override
   public int sendRequest(HttpMethod request, String method, URI uri, Map<String, String> headers)
