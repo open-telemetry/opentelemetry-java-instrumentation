@@ -109,7 +109,10 @@ jobs:
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
         with:
           # Don't use publishToSonatype since we don't want to publish the marker artifact
-          arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
+          # Skip publishing plugin, it was already done with the previous release attempt. We need to run
+          # the steps that follow to complete the release.
+          # arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
+          arguments: build publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
           build-root-directory: gradle-plugins
 
       - name: Generate release notes
