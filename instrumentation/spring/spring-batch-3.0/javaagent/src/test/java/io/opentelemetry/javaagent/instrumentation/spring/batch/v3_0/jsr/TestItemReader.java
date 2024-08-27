@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.batch.api.chunk.ItemReader;
 
-public class TestItemReader implements ItemReader {
+class TestItemReader implements ItemReader {
   @Override
   public void open(Serializable serializable) {
     itemsIt = items.iterator();

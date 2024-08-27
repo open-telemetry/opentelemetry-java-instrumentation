@@ -9,7 +9,7 @@ import javax.batch.api.BatchProperty;
 import javax.batch.api.Batchlet;
 import javax.inject.Inject;
 
-public class TestBatchlet implements Batchlet {
+class TestBatchlet implements Batchlet {
   @Override
   public String process() {
     if (fail != null && Integer.valueOf(fail) == 1) {

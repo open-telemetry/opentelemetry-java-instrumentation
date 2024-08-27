@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import java.util.List;
 import javax.batch.api.chunk.listener.ItemWriteListener;
 
-public class CustomEventItemWriteListener implements ItemWriteListener {
+class CustomEventItemWriteListener implements ItemWriteListener {
   @Override
   public void beforeWrite(List<Object> list) {
     Span.current().addEvent("item.write.before");

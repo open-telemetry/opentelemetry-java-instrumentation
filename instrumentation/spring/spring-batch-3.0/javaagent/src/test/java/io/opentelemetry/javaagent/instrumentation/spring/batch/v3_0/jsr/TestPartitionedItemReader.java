@@ -10,7 +10,7 @@ import javax.batch.api.BatchProperty;
 import javax.batch.api.chunk.ItemReader;
 import javax.inject.Inject;
 
-public class TestPartitionedItemReader implements ItemReader {
+class TestPartitionedItemReader implements ItemReader {
   @Override
   public void open(Serializable checkpoint) {
     start = Integer.parseInt(startStr);

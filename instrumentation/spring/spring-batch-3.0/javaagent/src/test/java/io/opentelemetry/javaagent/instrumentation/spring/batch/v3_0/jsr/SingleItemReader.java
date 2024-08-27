@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.batch.api.chunk.ItemReader;
 
-public class SingleItemReader implements ItemReader {
+class SingleItemReader implements ItemReader {
   @Override
   public void open(Serializable serializable) {}
 

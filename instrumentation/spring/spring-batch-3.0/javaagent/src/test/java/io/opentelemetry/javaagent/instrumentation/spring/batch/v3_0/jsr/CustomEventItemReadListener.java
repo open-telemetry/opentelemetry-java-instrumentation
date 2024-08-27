@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr;
 import io.opentelemetry.api.trace.Span;
 import javax.batch.api.chunk.listener.ItemReadListener;
 
-public class CustomEventItemReadListener implements ItemReadListener {
+class CustomEventItemReadListener implements ItemReadListener {
   @Override
   public void beforeRead() {
     Span.current().addEvent("item.read.before");

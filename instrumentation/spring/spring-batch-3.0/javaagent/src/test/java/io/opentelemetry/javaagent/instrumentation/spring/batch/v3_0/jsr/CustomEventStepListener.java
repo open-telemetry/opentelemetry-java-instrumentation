@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr;
 import io.opentelemetry.api.trace.Span;
 import javax.batch.api.listener.StepListener;
 
-public class CustomEventStepListener implements StepListener {
+class CustomEventStepListener implements StepListener {
   @Override
   public void beforeStep() {
     Span.current().addEvent("step.before");

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr;
 import javax.batch.api.Decider;
 import javax.batch.runtime.StepExecution;
 
-public class TestDecider implements Decider {
+class TestDecider implements Decider {
   @Override
   public String decide(StepExecution[] stepExecutions) {
     return "LEFT";

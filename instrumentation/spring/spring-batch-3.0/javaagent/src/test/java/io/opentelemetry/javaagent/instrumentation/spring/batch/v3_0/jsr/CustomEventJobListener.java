@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr;
 import io.opentelemetry.api.trace.Span;
 import javax.batch.api.listener.JobListener;
 
-public class CustomEventJobListener implements JobListener {
+class CustomEventJobListener implements JobListener {
   @Override
   public void beforeJob() {
     Span.current().addEvent("job.before");

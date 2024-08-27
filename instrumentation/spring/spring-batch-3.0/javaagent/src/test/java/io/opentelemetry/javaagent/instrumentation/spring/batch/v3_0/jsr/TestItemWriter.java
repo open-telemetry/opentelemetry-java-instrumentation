@@ -11,7 +11,7 @@ import java.util.List;
 import javax.batch.api.chunk.ItemWriter;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
-public class TestItemWriter implements ItemWriter {
+class TestItemWriter implements ItemWriter {
   @Override
   public void open(Serializable checkpoint) {}
 
