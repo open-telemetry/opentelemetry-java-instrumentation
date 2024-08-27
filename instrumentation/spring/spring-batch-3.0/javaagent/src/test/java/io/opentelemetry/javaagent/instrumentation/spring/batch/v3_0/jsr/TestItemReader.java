@@ -13,6 +13,11 @@ import java.util.stream.IntStream;
 import javax.batch.api.chunk.ItemReader;
 
 class TestItemReader implements ItemReader {
+
+  private final List<String> items =
+      IntStream.range(0, 13).mapToObj(String::valueOf).collect(Collectors.toList());
+  private Iterator<String> itemsIt;
+
   @Override
   public void open(Serializable serializable) {
     itemsIt = items.iterator();
@@ -36,8 +41,4 @@ class TestItemReader implements ItemReader {
   public Serializable checkpointInfo() {
     return null;
   }
-
-  private final List<String> items =
-      IntStream.range(0, 13).mapToObj(String::valueOf).collect(Collectors.toList());
-  private Iterator<String> itemsIt;
 }

@@ -12,6 +12,8 @@ import javax.batch.api.chunk.ItemWriter;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 class TestItemWriter implements ItemWriter {
+  private final List<Integer> items = new ArrayList<>();
+
   @Override
   public void open(Serializable checkpoint) {}
 
@@ -29,6 +31,4 @@ class TestItemWriter implements ItemWriter {
   public Serializable checkpointInfo() {
     return null;
   }
-
-  private final List<Integer> items = new ArrayList<>();
 }

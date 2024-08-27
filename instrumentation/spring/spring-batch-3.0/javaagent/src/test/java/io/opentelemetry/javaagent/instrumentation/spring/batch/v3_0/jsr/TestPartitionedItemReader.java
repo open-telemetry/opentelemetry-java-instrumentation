@@ -11,6 +11,18 @@ import javax.batch.api.chunk.ItemReader;
 import javax.inject.Inject;
 
 class TestPartitionedItemReader implements ItemReader {
+
+  @Inject
+  @BatchProperty(name = "start")
+  private String startStr;
+
+  @Inject
+  @BatchProperty(name = "end")
+  private String endStr;
+
+  private int start;
+  private int end;
+
   @Override
   public void open(Serializable checkpoint) {
     start = Integer.parseInt(startStr);
@@ -65,15 +77,4 @@ class TestPartitionedItemReader implements ItemReader {
   public void setEnd(int end) {
     this.end = end;
   }
-
-  @Inject
-  @BatchProperty(name = "start")
-  private String startStr;
-
-  @Inject
-  @BatchProperty(name = "end")
-  private String endStr;
-
-  private int start;
-  private int end;
 }
