@@ -145,18 +145,21 @@ class Netty41ClientSslTest {
                 .hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("parent")
+                            .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasAttributesSatisfyingExactly(attributeAssertion)),
                     span ->
                         span.hasName("RESOLVE")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
                                 equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
                     span ->
                         span.hasName("CONNECT")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
@@ -167,6 +170,7 @@ class Netty41ClientSslTest {
                     span ->
                         span.hasName("SSL handshake")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -228,16 +232,18 @@ class Netty41ClientSslTest {
             trace
                 .hasSize(6)
                 .hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent"),
+                    span -> span.hasName("parent").hasNoParent(),
                     span ->
                         span.hasName("RESOLVE")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
                                 equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
                     span ->
                         span.hasName("CONNECT")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
@@ -248,6 +254,7 @@ class Netty41ClientSslTest {
                     span ->
                         span.hasName("SSL handshake")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                 equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
