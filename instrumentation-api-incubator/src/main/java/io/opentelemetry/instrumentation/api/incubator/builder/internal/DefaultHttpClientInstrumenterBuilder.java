@@ -223,9 +223,9 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return openTelemetry.getPropagators();
   }
 
-  public <BUILDER_REQUEST, BUILDER_RESPONSE>
-      InstrumenterBuilder<BUILDER_REQUEST, BUILDER_RESPONSE> instrumenterBuilder(
-          SpanNameExtractor<? super BUILDER_REQUEST> spanNameExtractor) {
+  public <BUILDERREQUEST, BUILDERRESPONSE>
+      InstrumenterBuilder<BUILDERREQUEST, BUILDERRESPONSE> instrumenterBuilder(
+          SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
     return Instrumenter.builder(openTelemetry, instrumentationName, spanNameExtractor);
   }
 
