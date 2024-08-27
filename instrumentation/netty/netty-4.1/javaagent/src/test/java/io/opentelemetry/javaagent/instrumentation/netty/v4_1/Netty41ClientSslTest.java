@@ -191,8 +191,7 @@ class Netty41ClientSslTest {
                                     v ->
                                         v.satisfiesAnyOf(
                                             k -> assertThat(k).isNull(),
-                                            k -> assertThat(k).isEqualTo(uri.getHost()))
-                                ),
+                                            k -> assertThat(k).isEqualTo(uri.getHost()))),
                                 satisfies(
                                     ServerAttributes.SERVER_PORT,
                                     v ->
