@@ -75,7 +75,7 @@ abstract class SpringBatchTest {
                     span.hasName("BatchJob taskletJob.step.Tasklet")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))
-                        .hasStatus(StatusData.error()).hasStatus(StatusData.error())
+                        .hasStatus(StatusData.error())
                         .hasTotalAttributeCount(0)
                         .hasException(new IllegalStateException("fail"))));
   }
