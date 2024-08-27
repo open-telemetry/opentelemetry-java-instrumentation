@@ -284,7 +284,7 @@ abstract class SpringBatchTest {
   // should be moved to SpanDataAssert
   private static void verifyException(SpanDataAssert span, Throwable exception) {
     span.hasStatus(StatusData.error())
-      .hasTotalAttributeCount(0)
+        .hasTotalAttributeCount(0)
         .hasEventsSatisfying(
             events ->
                 assertThat(events.get(0))
