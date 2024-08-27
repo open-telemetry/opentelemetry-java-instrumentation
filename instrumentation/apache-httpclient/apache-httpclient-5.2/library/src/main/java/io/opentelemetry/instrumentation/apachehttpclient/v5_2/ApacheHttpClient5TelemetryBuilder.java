@@ -112,7 +112,6 @@ public final class ApacheHttpClient5TelemetryBuilder {
    * ApacheHttpClient5TelemetryBuilder}.
    */
   public ApacheHttpClient5Telemetry build() {
-    return new ApacheHttpClient5Telemetry(
-        builder.build(), builder.getOpenTelemetry().getPropagators());
+    return new ApacheHttpClient5Telemetry(builder.build(), builder.getPropagators());
   }
 }

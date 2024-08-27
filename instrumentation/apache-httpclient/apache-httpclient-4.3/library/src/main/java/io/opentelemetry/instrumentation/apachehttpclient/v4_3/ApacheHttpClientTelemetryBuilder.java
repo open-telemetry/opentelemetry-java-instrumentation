@@ -110,7 +110,6 @@ public final class ApacheHttpClientTelemetryBuilder {
    * ApacheHttpClientTelemetryBuilder}.
    */
   public ApacheHttpClientTelemetry build() {
-    return new ApacheHttpClientTelemetry(
-        builder.build(), builder.getOpenTelemetry().getPropagators());
+    return new ApacheHttpClientTelemetry(builder.build(), builder.getPropagators());
   }
 }

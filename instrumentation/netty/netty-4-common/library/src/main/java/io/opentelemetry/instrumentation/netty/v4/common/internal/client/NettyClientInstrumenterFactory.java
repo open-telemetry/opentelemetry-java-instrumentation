@@ -50,10 +50,7 @@ public final class NettyClientInstrumenterFactory {
     NettyConnectHttpAttributesGetter getter = NettyConnectHttpAttributesGetter.INSTANCE;
 
     InstrumenterBuilder<NettyConnectionRequest, Channel> builder =
-        Instrumenter.builder(
-            this.builder.getOpenTelemetry(),
-            this.builder.getInstrumentationName(),
-            NettyConnectionRequest::spanName);
+        this.builder.instrumenterBuilder(NettyConnectionRequest::spanName);
 
     if (connectionTelemetryFullyEnabled) {
       // when the connection telemetry is fully enabled, CONNECT spans are created for every
@@ -87,10 +84,8 @@ public final class NettyClientInstrumenterFactory {
         sslTelemetryState == NettyConnectionInstrumentationFlag.ENABLED;
     NettySslNetAttributesGetter netAttributesGetter = new NettySslNetAttributesGetter();
     Instrumenter<NettySslRequest, Void> instrumenter =
-        Instrumenter.<NettySslRequest, Void>builder(
-                builder.getOpenTelemetry(),
-                builder.getInstrumentationName(),
-                NettySslRequest::spanName)
+        builder
+            .<NettySslRequest, Void>instrumenterBuilder(NettySslRequest::spanName)
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .buildInstrumenter(
                 sslTelemetryFullyEnabled

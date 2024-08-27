@@ -105,6 +105,6 @@ public final class JavaHttpClientTelemetryBuilder {
 
   public JavaHttpClientTelemetry build() {
     return new JavaHttpClientTelemetry(
-        builder.build(), new HttpHeadersSetter(builder.getOpenTelemetry().getPropagators()));
+        builder.build(), new HttpHeadersSetter(builder.getPropagators()));
   }
 }

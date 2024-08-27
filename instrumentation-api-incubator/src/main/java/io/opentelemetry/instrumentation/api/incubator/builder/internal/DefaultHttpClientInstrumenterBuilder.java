@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
@@ -218,12 +219,13 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public OpenTelemetry getOpenTelemetry() {
-    return openTelemetry;
+  public ContextPropagators getPropagators() {
+    return openTelemetry.getPropagators();
   }
 
-  public String getInstrumentationName() {
-    return instrumentationName;
+  public <BUILDER_REQUEST, BUILDER_RESPONSE> InstrumenterBuilder<BUILDER_REQUEST, BUILDER_RESPONSE> instrumenterBuilder(
+      SpanNameExtractor<? super BUILDER_REQUEST> spanNameExtractor) {
+    return Instrumenter.builder(openTelemetry, instrumentationName, spanNameExtractor);
   }
 
   @CanIgnoreReturnValue

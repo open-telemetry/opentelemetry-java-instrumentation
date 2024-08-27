@@ -194,9 +194,7 @@ public final class SpringWebfluxTelemetryBuilder {
    */
   public SpringWebfluxTelemetry build() {
     return new SpringWebfluxTelemetry(
-        clientBuilder.build(),
-        serverBuilder.build(),
-        clientBuilder.getOpenTelemetry().getPropagators());
+        clientBuilder.build(), serverBuilder.build(), clientBuilder.getPropagators());
   }
 
   private DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse> getClientBuilder() {
