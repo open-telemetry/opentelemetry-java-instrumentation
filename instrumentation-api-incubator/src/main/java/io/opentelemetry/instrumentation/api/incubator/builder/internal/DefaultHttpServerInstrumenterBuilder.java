@@ -177,15 +177,6 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> build() {
-    InstrumenterBuilder<REQUEST, RESPONSE> builder = builder();
-
-    if (headerGetter != null) {
-      return builder.buildServerInstrumenter(headerGetter);
-    }
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
-  }
-
-  public InstrumenterBuilder<REQUEST, RESPONSE> builder() {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -205,7 +196,10 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     }
     builderCustomizer.accept(builder);
 
-    return builder;
+    if (headerGetter != null) {
+      return builder.buildServerInstrumenter(headerGetter);
+    }
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   @CanIgnoreReturnValue
