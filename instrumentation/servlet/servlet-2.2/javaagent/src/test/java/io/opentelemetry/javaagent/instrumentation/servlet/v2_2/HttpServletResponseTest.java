@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -17,7 +16,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -133,35 +131,13 @@ class HttpServletResponseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event.hasAttributesSatisfyingExactly(
-                                    equalTo(
-                                        ExceptionAttributes.EXCEPTION_TYPE,
-                                        "java.lang.RuntimeException"),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_MESSAGE,
-                                        message -> message.startsWith("some error")),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                        val -> val.isInstanceOf(String.class)))),
+                        .hasException(ex),
                 span ->
                     span.hasName("HttpServletResponseTest$2.sendRedirect")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event.hasAttributesSatisfyingExactly(
-                                    equalTo(
-                                        ExceptionAttributes.EXCEPTION_TYPE,
-                                        "java.lang.RuntimeException"),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_MESSAGE,
-                                        message -> message.startsWith("some error")),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                        val -> val.isInstanceOf(String.class))))));
+                        .hasException(ex)));
   }
 
   /** Tests deprecated methods */
