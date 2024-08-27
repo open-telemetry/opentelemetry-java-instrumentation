@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.basic;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -18,7 +16,6 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JobRu
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -75,12 +72,12 @@ abstract class SpringBatchTest {
                         .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    verifyException(
-                        span.hasName("BatchJob taskletJob.step.Tasklet")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1))
-                            .hasStatus(StatusData.error()),
-                        new IllegalStateException("fail"))));
+                    span.hasName("BatchJob taskletJob.step.Tasklet")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasStatus(StatusData.error()).hasStatus(StatusData.error())
+                        .hasTotalAttributeCount(0)
+                        .hasException(new IllegalStateException("fail"))));
   }
 
   @Test
@@ -234,7 +231,6 @@ abstract class SpringBatchTest {
 
     testing.waitAndAssertTraces(
         trace -> {
-          int index = 2;
           trace.hasSpansSatisfyingExactly(
               span ->
                   span.hasName("BatchJob partitionedJob")
@@ -255,8 +251,8 @@ abstract class SpringBatchTest {
                                       "BatchJob partitionedJob.partitionWorkerStep:partition[01]"))
                       .hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(1)),
-              span -> partitionChunk(trace, span, index),
-              span -> partitionChunk(trace, span, index),
+              span -> partitionChunk(trace, span, 2),
+              span -> partitionChunk(trace, span, 2),
               span ->
                   span.satisfies(
                           spanData ->
@@ -279,21 +275,5 @@ abstract class SpringBatchTest {
 
   protected boolean hasPartitionManagerStep() {
     return true;
-  }
-
-  // should be moved to SpanDataAssert
-  private static void verifyException(SpanDataAssert span, Throwable exception) {
-    span.hasStatus(StatusData.error())
-        .hasTotalAttributeCount(0)
-        .hasEventsSatisfying(
-            events ->
-                assertThat(events.get(0))
-                    .hasName("exception")
-                    .hasAttributesSatisfying(
-                        equalTo(ExceptionAttributes.EXCEPTION_TYPE, exception.getClass().getName()),
-                        equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, exception.getMessage()),
-                        satisfies(
-                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                            val -> val.isInstanceOf(String.class))));
   }
 }
