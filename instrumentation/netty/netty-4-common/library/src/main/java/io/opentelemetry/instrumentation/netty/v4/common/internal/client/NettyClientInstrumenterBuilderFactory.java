@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class NettyClientInstrumenterBuilderFactory {
+public final class NettyClientInstrumenterBuilderFactory {
   private NettyClientInstrumenterBuilderFactory() {}
 
   public static DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> create(
