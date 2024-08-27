@@ -29,6 +29,7 @@ class ChannelFutureTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2705
   @DisplayName("should clean up wrapped listeners")
   @Test
+  @SuppressWarnings({"rawtypes", "unchecked"})
   void testCleanUpWrappedListeners() throws InterruptedException {
     // given
     EmbeddedChannel channel = new EmbeddedChannel();
@@ -50,6 +51,7 @@ class ChannelFutureTest {
     assertThat(counter.get()).isEqualTo(0);
   }
 
+  @SuppressWarnings({"rawtypes"})
   private static GenericFutureListener newListener(AtomicInteger counter) {
     return new GenericFutureListener() {
       @Override
@@ -59,6 +61,7 @@ class ChannelFutureTest {
     };
   }
 
+  @SuppressWarnings({"rawtypes"})
   private static GenericFutureListener newProgressiveListener(AtomicInteger counter) {
     return new GenericProgressiveFutureListener() {
       @Override
