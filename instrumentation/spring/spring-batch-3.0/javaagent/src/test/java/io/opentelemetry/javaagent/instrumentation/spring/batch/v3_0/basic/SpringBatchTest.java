@@ -49,10 +49,12 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob taskletJob.step")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("BatchJob taskletJob.step.Tasklet")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(1))));
   }
 
@@ -70,6 +72,7 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob taskletJob.step")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     verifyException(
@@ -90,6 +93,7 @@ abstract class SpringBatchTest {
               span ->
                   span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
                       .hasKind(SpanKind.INTERNAL)
+                      .hasTotalAttributeCount(0)
                       .hasParent(trace.getSpan(1));
           trace.hasSpansSatisfyingExactly(
               span ->
@@ -99,6 +103,7 @@ abstract class SpringBatchTest {
               span ->
                   span.hasName("BatchJob itemsAndTaskletJob.itemStep")
                       .hasKind(SpanKind.INTERNAL)
+                      .hasTotalAttributeCount(0)
                       .hasParent(trace.getSpan(0)),
               chunk,
               chunk,
@@ -106,10 +111,12 @@ abstract class SpringBatchTest {
               span ->
                   span.hasName("BatchJob itemsAndTaskletJob.taskletStep")
                       .hasKind(SpanKind.INTERNAL)
+                      .hasTotalAttributeCount(0)
                       .hasParent(trace.getSpan(0)),
               span ->
                   span.hasName("BatchJob itemsAndTaskletJob.taskletStep.Tasklet")
                       .hasKind(SpanKind.INTERNAL)
+                      .hasTotalAttributeCount(0)
                       .hasParent(trace.getSpan(5)));
         });
   }
@@ -128,18 +135,22 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob flowJob.flowStep1")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("BatchJob flowJob.flowStep1.Tasklet")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(1)),
                 span ->
                     span.hasName("BatchJob flowJob.flowStep2")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("BatchJob flowJob.flowStep2.Tasklet")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(3))));
   }
 
@@ -167,6 +178,7 @@ abstract class SpringBatchTest {
                                 assertThat(spanData.getName())
                                     .matches("BatchJob splitJob.splitFlowStep[12].Tasklet"))
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(1)),
                 span ->
                     span.satisfies(
@@ -174,6 +186,7 @@ abstract class SpringBatchTest {
                                 assertThat(spanData.getName())
                                     .matches("BatchJob splitJob.splitFlowStep[12]"))
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.satisfies(
@@ -181,6 +194,7 @@ abstract class SpringBatchTest {
                                 assertThat(spanData.getName())
                                     .matches("BatchJob splitJob.splitFlowStep[12].Tasklet"))
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(3))));
   }
 
@@ -198,6 +212,7 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob decisionJob.decisionStepStart")
                         .hasKind(SpanKind.INTERNAL)
+                        .hasTotalAttributeCount(0)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("BatchJob decisionJob.decisionStepStart.Tasklet")
@@ -269,6 +284,7 @@ abstract class SpringBatchTest {
   // should be moved to SpanDataAssert
   private static void verifyException(SpanDataAssert span, Throwable exception) {
     span.hasStatus(StatusData.error())
+      .hasTotalAttributeCount(0)
         .hasEventsSatisfying(
             events ->
                 assertThat(events.get(0))
