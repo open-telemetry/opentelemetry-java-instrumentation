@@ -26,7 +26,8 @@ public final class NettyServerTelemetryBuilder {
   private boolean emitExperimentalHttpServerEvents = false;
 
   static {
-    NettyServerInstrumenterBuilderUtil.setBuilderExtractor(NettyServerTelemetryBuilder::getBuilder);
+    NettyServerInstrumenterBuilderUtil.setBuilderExtractor(
+        nettyServerTelemetryBuilder -> nettyServerTelemetryBuilder.builder);
   }
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -111,9 +112,5 @@ public final class NettyServerTelemetryBuilder {
         emitExperimentalHttpServerEvents
             ? ProtocolEventHandler.Enabled.INSTANCE
             : ProtocolEventHandler.Noop.INSTANCE);
-  }
-
-  private DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> getBuilder() {
-    return builder;
   }
 }
