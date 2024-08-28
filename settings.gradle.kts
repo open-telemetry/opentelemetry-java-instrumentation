@@ -560,6 +560,7 @@ include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-commo
 include(":instrumentation:spring:spring-core-2.0:javaagent")
 include(":instrumentation:spring:spring-data:spring-data-1.8:javaagent")
 include(":instrumentation:spring:spring-data:spring-data-3.0:testing")
+include(":instrumentation:spring:spring-data:spring-data-3.0:kotlin-testing")
 include(":instrumentation:spring:spring-data:spring-data-common:testing")
 include(":instrumentation:spring:spring-integration-4.1:javaagent")
 include(":instrumentation:spring:spring-integration-4.1:library")
