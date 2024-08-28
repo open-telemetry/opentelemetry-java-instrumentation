@@ -119,7 +119,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -137,7 +142,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -169,7 +179,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -212,7 +227,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -225,7 +245,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -242,7 +267,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -270,7 +300,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("RPUSH")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -301,7 +336,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("EVAL")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -319,7 +359,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("HGET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -342,22 +387,22 @@ public abstract class AbstractRedissonClientTest {
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SADD")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_STATEMENT),
-                                "SADD set1 ?"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_OPERATION),
-                                "SADD"))));
+                span -> {
+                  span.hasName("SADD")
+                      .hasKind(CLIENT)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              NetworkAttributes.NETWORK_TYPE,
+                              SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                      == null
+                                  ? null
+                                  : "ipv4"),
+                          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                          equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
+                          equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                          equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
+                          equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"));
+                }));
   }
 
   @Test
@@ -380,7 +425,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("ZADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -412,7 +462,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("INCR")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -444,7 +499,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("EVAL")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -463,7 +523,12 @@ public abstract class AbstractRedissonClientTest {
                     span.hasName("EVAL")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
+                                        == null
+                                    ? null
+                                    : "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -472,7 +537,8 @@ public abstract class AbstractRedissonClientTest {
                                     DbIncubatingAttributes.DB_OPERATION),
                                 "EVAL"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     if (lockHas3Traces()) {
       traceAsserts.add(
@@ -482,7 +548,13 @@ public abstract class AbstractRedissonClientTest {
                       span.hasName("DEL")
                           .hasKind(CLIENT)
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                              equalTo(
+                                  NetworkAttributes.NETWORK_TYPE,
+                                  SemconvStabilityUtil.getAttributeKey(
+                                              NetworkAttributes.NETWORK_TYPE)
+                                          == null
+                                      ? null
+                                      : "ipv4"),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
