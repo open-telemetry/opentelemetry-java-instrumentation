@@ -5,10 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner;
 
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
 
 import java.util.Map;
 import java.util.Properties;
