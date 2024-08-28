@@ -12,13 +12,12 @@ import java.time.Duration;
  * any time.
  */
 public final class DurationUtil {
-  private static final double NANOS_PER_MILLI = 1e6;
+  private static final double NANOS_PER_SECOND = 1e9;
 
-  /** Returns the duration as milliseconds, with fractional part included. */
-  @SuppressWarnings("TimeUnitMismatch")
-  public static double toMillis(Duration duration) {
+  /** Returns the duration as seconds, with fractional part included. */
+  public static double toSeconds(Duration duration) {
     double epochSecs = (double) duration.getSeconds();
-    return epochSecs * 1000 + duration.getNano() / NANOS_PER_MILLI;
+    return epochSecs + duration.getNano() / NANOS_PER_SECOND;
   }
 
   private DurationUtil() {}
