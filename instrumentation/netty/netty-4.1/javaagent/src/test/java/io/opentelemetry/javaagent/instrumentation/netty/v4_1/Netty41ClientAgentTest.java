@@ -95,12 +95,10 @@ class Netty41ClientAgentTest {
     // the complex sequence of events
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(3)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
-                    span -> span.hasParent(trace.getSpan(0)).hasKind(SpanKind.CLIENT),
-                    span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
+                span -> span.hasParent(trace.getSpan(0)).hasKind(SpanKind.CLIENT),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
 
     // now run a second request through the same channel
     testing.runWithSpan(
@@ -111,19 +109,15 @@ class Netty41ClientAgentTest {
         });
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(3)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
-                    span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                    span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))),
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))),
         trace ->
-            trace
-                .hasSize(3)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasNoParent().hasName("parent2").hasKind(SpanKind.INTERNAL),
-                    span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                    span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("parent2").hasKind(SpanKind.INTERNAL),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
 
     group.shutdownGracefully();
   }
@@ -230,13 +224,11 @@ class Netty41ClientAgentTest {
     assertThat(responseCode).isEqualTo(200);
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(4)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasNoParent().hasName("parent").hasKind(SpanKind.INTERNAL),
-                    span -> span.hasParent(trace.getSpan(0)).hasName("tracedMethod"),
-                    span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
-                    span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(2))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("parent").hasKind(SpanKind.INTERNAL),
+                span -> span.hasParent(trace.getSpan(0)).hasName("tracedMethod"),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(2))));
   }
 
   class TracedClass {

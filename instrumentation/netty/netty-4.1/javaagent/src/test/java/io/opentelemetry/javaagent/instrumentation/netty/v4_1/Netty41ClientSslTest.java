@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.bootstrap.Bootstrap;
@@ -37,7 +38,6 @@ import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -131,7 +131,7 @@ class Netty41ClientSslTest {
     }
 
     List<AttributeAssertion> attributeAssertion =
-        Arrays.asList(
+        asList(
             equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, thrownException.getCause().getMessage()),
             satisfies(ExceptionAttributes.EXCEPTION_STACKTRACE, v -> v.isNotNull()),
             equalTo(
@@ -140,70 +140,66 @@ class Netty41ClientSslTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(4)
-                .hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("parent")
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasAttributesSatisfyingExactly(attributeAssertion)),
-                    span ->
-                        span.hasName("RESOLVE")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
-                    span ->
-                        span.hasName("CONNECT")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
-                    span ->
-                        span.hasName("SSL handshake")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event.hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            v ->
-                                                v.isEqualTo(
-                                                    SSLHandshakeException.class
-                                                        .getCanonicalName())),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            v -> v.isInstanceOf(String.class)),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            v -> v.isNotNull())))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                satisfies(
-                                    ServerAttributes.SERVER_ADDRESS,
-                                    v ->
-                                        v.satisfiesAnyOf(
-                                            k -> assertThat(k).isNull(),
-                                            k -> assertThat(k).isEqualTo(uri.getHost()))),
-                                satisfies(
-                                    ServerAttributes.SERVER_PORT,
-                                    v ->
-                                        v.satisfiesAnyOf(
-                                            k -> assertThat(k).isNull(),
-                                            k -> assertThat(k).isEqualTo(uri.getPort()))),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event -> event.hasAttributesSatisfyingExactly(attributeAssertion)),
+                span ->
+                    span.hasName("RESOLVE")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
+                span ->
+                    span.hasName("CONNECT")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
+                span ->
+                    span.hasName("SSL handshake")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event.hasAttributesSatisfyingExactly(
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_TYPE,
+                                        v ->
+                                            v.isEqualTo(
+                                                SSLHandshakeException.class.getCanonicalName())),
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                        v -> v.isInstanceOf(String.class)),
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_MESSAGE, v -> v.isNotNull())))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            satisfies(
+                                ServerAttributes.SERVER_ADDRESS,
+                                v ->
+                                    v.satisfiesAnyOf(
+                                        k -> assertThat(k).isNull(),
+                                        k -> assertThat(k).isEqualTo(uri.getHost()))),
+                            satisfies(
+                                ServerAttributes.SERVER_PORT,
+                                v ->
+                                    v.satisfiesAnyOf(
+                                        k -> assertThat(k).isNull(),
+                                        k -> assertThat(k).isEqualTo(uri.getPort()))),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"))));
   }
 
   @Test
@@ -229,38 +225,36 @@ class Netty41ClientSslTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(6)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span ->
-                        span.hasName("RESOLVE")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
-                    span ->
-                        span.hasName("CONNECT")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
-                    span ->
-                        span.hasName("SSL handshake")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
-                    span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
-                    span -> span.hasName("test-http-server").hasKind(SpanKind.SERVER)));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("RESOLVE")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
+                span ->
+                    span.hasName("CONNECT")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
+                span ->
+                    span.hasName("SSL handshake")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
+                span -> span.hasName("test-http-server").hasKind(SpanKind.SERVER)));
   }
 }

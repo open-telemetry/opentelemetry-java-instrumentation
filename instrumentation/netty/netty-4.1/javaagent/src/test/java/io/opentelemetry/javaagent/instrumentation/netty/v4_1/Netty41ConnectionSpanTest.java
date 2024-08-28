@@ -114,34 +114,31 @@ class Netty41ConnectionSpanTest {
     assertThat(responseCode).isEqualTo(200);
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(5)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("RESOLVE")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
-                    span ->
-                        span.hasName("CONNECT")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
-                    span ->
-                        span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("test-http-server")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(3))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("RESOLVE")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
+                span ->
+                    span.hasName("CONNECT")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(3))));
   }
 
   @Test
@@ -159,79 +156,77 @@ class Netty41ConnectionSpanTest {
     Throwable finalThrownException = thrownException;
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(3)
-                .hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("parent")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event.hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            v ->
-                                                v.isEqualTo(
-                                                    finalThrownException
-                                                        .getClass()
-                                                        .getCanonicalName())),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            v -> v.isInstanceOf(String.class)),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            v -> v.isEqualTo(finalThrownException.getMessage())))),
-                    span ->
-                        span.hasName("RESOLVE")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
-                    span ->
-                        span.hasName("CONNECT")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event.hasAttributesSatisfyingExactly(
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            v ->
-                                                v.isEqualTo(
-                                                    finalThrownException
-                                                        .getClass()
-                                                        .getCanonicalName())),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            v -> v.isInstanceOf(String.class)),
-                                        satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            v -> v.isEqualTo(finalThrownException.getMessage()))))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isNull())),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                                equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo(uri.getPort()),
-                                            v -> assertThat(v).isNull())),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            v -> assertThat(v).isEqualTo("127.0.0.1"),
-                                            v -> assertThat(v).isNull())))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event.hasAttributesSatisfyingExactly(
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_TYPE,
+                                        v ->
+                                            v.isEqualTo(
+                                                finalThrownException
+                                                    .getClass()
+                                                    .getCanonicalName())),
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                        v -> v.isInstanceOf(String.class)),
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_MESSAGE,
+                                        v -> v.isEqualTo(finalThrownException.getMessage())))),
+                span ->
+                    span.hasName("RESOLVE")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
+                span ->
+                    span.hasName("CONNECT")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event.hasAttributesSatisfyingExactly(
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_TYPE,
+                                        v ->
+                                            v.isEqualTo(
+                                                finalThrownException
+                                                    .getClass()
+                                                    .getCanonicalName())),
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                        v -> v.isInstanceOf(String.class)),
+                                    satisfies(
+                                        ExceptionAttributes.EXCEPTION_MESSAGE,
+                                        v -> v.isEqualTo(finalThrownException.getMessage()))))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_TYPE,
+                                k ->
+                                    k.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo("ipv4"),
+                                        v -> assertThat(v).isNull())),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                k ->
+                                    k.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo(uri.getPort()),
+                                        v -> assertThat(v).isNull())),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                k ->
+                                    k.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo("127.0.0.1"),
+                                        v -> assertThat(v).isNull())))));
   }
 }
