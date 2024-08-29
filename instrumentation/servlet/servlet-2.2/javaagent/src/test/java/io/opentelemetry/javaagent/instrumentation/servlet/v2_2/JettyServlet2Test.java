@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
@@ -100,13 +102,12 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
       return "HTTP " + getContextPath() + endpoint.getPath();
     }
 
-    switch (endpoint.name()) {
-      case "NOT_FOUND":
-        return method;
-      case "PATH_PARAM":
-        return method + " " + getContextPath() + "/path/:id/param";
-      default:
-        return method + " " + getContextPath() + endpoint.getPath();
+    if (NOT_FOUND.equals(endpoint)) {
+      return method;
+    } else if (PATH_PARAM.equals(endpoint)) {
+      return method + " " + getContextPath() + "/path/:id/param";
+    } else {
+      return method + " " + getContextPath() + endpoint.getPath();
     }
   }
 
