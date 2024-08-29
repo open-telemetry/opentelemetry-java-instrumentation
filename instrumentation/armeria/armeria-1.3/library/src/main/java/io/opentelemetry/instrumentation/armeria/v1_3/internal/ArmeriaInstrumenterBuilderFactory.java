@@ -24,8 +24,10 @@ public class ArmeriaInstrumenterBuilderFactory {
   public static DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
       getServerBuilder(OpenTelemetry openTelemetry) {
     return new DefaultHttpServerInstrumenterBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, ArmeriaHttpServerAttributesGetter.INSTANCE)
-        .setHeaderGetter(RequestContextGetter.INSTANCE);
+        INSTRUMENTATION_NAME,
+        openTelemetry,
+        ArmeriaHttpServerAttributesGetter.INSTANCE,
+        RequestContextGetter.INSTANCE);
   }
 
   public static DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>

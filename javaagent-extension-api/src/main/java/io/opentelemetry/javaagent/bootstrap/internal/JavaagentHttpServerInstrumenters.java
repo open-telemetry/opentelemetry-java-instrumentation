@@ -28,8 +28,7 @@ public final class JavaagentHttpServerInstrumenters {
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     return create(
         new DefaultHttpServerInstrumenterBuilder<>(
-                instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter)
-            .setHeaderGetter(headerGetter),
+            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, headerGetter),
         instrumenterBuilderConsumer);
   }
 

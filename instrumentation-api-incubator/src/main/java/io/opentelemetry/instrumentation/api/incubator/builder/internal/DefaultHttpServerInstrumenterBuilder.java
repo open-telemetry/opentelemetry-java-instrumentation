@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -53,7 +52,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       httpAttributesExtractorBuilder;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
-  @Nullable private TextMapGetter<REQUEST> headerGetter;
+  private final TextMapGetter<REQUEST> headerGetter;
   private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
@@ -64,13 +63,15 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   public DefaultHttpServerInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
-      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      TextMapGetter<REQUEST> headerGetter) {
     this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
     httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpServerRouteBuilder = HttpServerRoute.builder(attributesGetter);
     this.attributesGetter = attributesGetter;
+    this.headerGetter = headerGetter;
   }
 
   /**
@@ -137,13 +138,6 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     httpServerRouteBuilder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setHeaderGetter(
-      @Nullable TextMapGetter<REQUEST> headerGetter) {
-    this.headerGetter = headerGetter;
     return this;
   }
 

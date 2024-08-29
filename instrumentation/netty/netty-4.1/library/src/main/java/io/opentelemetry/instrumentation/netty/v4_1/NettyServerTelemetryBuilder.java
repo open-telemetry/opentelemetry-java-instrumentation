@@ -33,8 +33,10 @@ public final class NettyServerTelemetryBuilder {
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         new DefaultHttpServerInstrumenterBuilder<>(
-                "io.opentelemetry.netty-4.1", openTelemetry, new NettyHttpServerAttributesGetter())
-            .setHeaderGetter(HttpRequestHeadersGetter.INSTANCE);
+            "io.opentelemetry.netty-4.1",
+            openTelemetry,
+            new NettyHttpServerAttributesGetter(),
+            HttpRequestHeadersGetter.INSTANCE);
   }
 
   /**

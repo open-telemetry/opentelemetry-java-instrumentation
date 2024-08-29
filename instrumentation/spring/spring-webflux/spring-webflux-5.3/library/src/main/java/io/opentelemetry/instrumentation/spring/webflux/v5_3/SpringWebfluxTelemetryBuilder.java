@@ -43,8 +43,10 @@ public final class SpringWebfluxTelemetryBuilder {
             INSTRUMENTATION_NAME, openTelemetry, WebClientHttpAttributesGetter.INSTANCE);
     serverBuilder =
         new DefaultHttpServerInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, WebfluxServerHttpAttributesGetter.INSTANCE)
-            .setHeaderGetter(WebfluxTextMapGetter.INSTANCE);
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            WebfluxServerHttpAttributesGetter.INSTANCE,
+            WebfluxTextMapGetter.INSTANCE);
   }
 
   /**
