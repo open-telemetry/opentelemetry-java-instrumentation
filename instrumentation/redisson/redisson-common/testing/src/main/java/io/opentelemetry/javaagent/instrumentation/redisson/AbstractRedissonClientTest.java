@@ -400,8 +400,14 @@ public abstract class AbstractRedissonClientTest {
                           equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                           equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                           equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                          equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
-                          equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"));
+                          equalTo(
+                              SemconvStabilityUtil.getAttributeKey(
+                                  DbIncubatingAttributes.DB_STATEMENT),
+                              "SADD set1 ?"),
+                          equalTo(
+                              SemconvStabilityUtil.getAttributeKey(
+                                  DbIncubatingAttributes.DB_OPERATION),
+                              "SADD"));
                 }));
   }
 
