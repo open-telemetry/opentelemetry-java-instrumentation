@@ -296,13 +296,9 @@ public class TestServlet3 {
   @WebServlet(asyncSupported = true)
   public static class DispatchRecursive extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       if (req.getServletPath().equals("/recursive")) {
-        try {
-          resp.getWriter().print("Hello Recursive");
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+        resp.getWriter().print("Hello Recursive");
       }
 
       int depth = Integer.parseInt(req.getParameter("depth"));

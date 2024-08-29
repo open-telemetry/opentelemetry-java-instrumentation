@@ -27,7 +27,7 @@ public class JettyServlet3ForwardTest extends JettyDispatchTest {
   }
 
   @Override
-  protected void setupServlets(ServletContextHandler context) {
+  protected void setupServlets(ServletContextHandler context) throws Exception {
     super.setupServlets(context);
 
     addServlet(context, "/dispatch" + SUCCESS.getPath(), RequestDispatcherServlet.Forward.class);

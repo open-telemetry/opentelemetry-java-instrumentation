@@ -119,17 +119,7 @@ class HttpServletResponseTest {
     servlet.service(request, response);
     testing.clearData();
 
-    assertThatCode(
-            () ->
-                runWithSpan(
-                    "parent",
-                    () -> {
-                      try {
-                        response.sendRedirect("");
-                      } catch (IOException e) {
-                        throw new RuntimeException(e);
-                      }
-                    }))
+    assertThatCode(() -> runWithSpan("parent", () -> response.sendRedirect("")))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("some error");
 

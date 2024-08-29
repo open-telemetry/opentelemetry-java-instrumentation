@@ -41,9 +41,10 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
     cleanupServer();
   }
 
-  public abstract void addServlet(CONTEXT context, String path, Class<? extends Servlet> servlet);
+  public abstract void addServlet(CONTEXT context, String path, Class<? extends Servlet> servlet)
+      throws Exception;
 
-  protected void setupServlets(CONTEXT context) {
+  protected void setupServlets(CONTEXT context) throws Exception {
     addServlet(context, "/prefix/*", TestServlet.class);
     addServlet(context, "*.suffix", TestServlet.class);
   }
@@ -58,7 +59,7 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
     ".suffix, /*.suffix, true",
     "suffix, /*, false",
   })
-  void test_path__path(String path, String route, boolean success) {
+  void testPath(String path, String route, boolean success) {
 
     AggregatedHttpResponse response =
         client.get(address.resolve(path).toString()).aggregate().join();

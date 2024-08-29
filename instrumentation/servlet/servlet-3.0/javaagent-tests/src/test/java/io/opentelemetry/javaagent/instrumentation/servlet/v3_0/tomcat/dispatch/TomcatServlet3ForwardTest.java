@@ -42,7 +42,7 @@ class TomcatServlet3ForwardTest extends TomcatDispatchTest {
   }
 
   @Override
-  protected void setupServlets(Context context) {
+  protected void setupServlets(Context context) throws Exception {
     super.setupServlets(context);
 
     addServlet(context, "/dispatch" + SUCCESS.getPath(), RequestDispatcherServlet.Forward.class);

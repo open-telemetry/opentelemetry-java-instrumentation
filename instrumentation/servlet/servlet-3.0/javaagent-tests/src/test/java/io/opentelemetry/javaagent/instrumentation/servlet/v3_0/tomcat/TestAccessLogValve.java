@@ -18,6 +18,13 @@ import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 
 class TestAccessLogValve extends ValveBase implements AccessLog {
+
+  public final List<Map.Entry<String, String>> getLoggedIds() {
+    return loggedIds;
+  }
+
+  private final List<Map.Entry<String, String>> loggedIds = new ArrayList<>();
+
   public TestAccessLogValve() {
     super(true);
   }
@@ -71,10 +78,4 @@ class TestAccessLogValve extends ValveBase implements AccessLog {
   public void invoke(Request request, Response response) throws IOException, ServletException {
     getNext().invoke(request, response);
   }
-
-  public final List<Map.Entry<String, String>> getLoggedIds() {
-    return loggedIds;
-  }
-
-  private final List<Map.Entry<String, String>> loggedIds = new ArrayList<>();
 }

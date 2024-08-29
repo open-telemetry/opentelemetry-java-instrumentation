@@ -35,7 +35,7 @@ public class JettyServlet3IncludeTest extends JettyDispatchTest {
   }
 
   @Override
-  protected void setupServlets(ServletContextHandler context) {
+  protected void setupServlets(ServletContextHandler context) throws Exception {
     super.setupServlets(context);
 
     addServlet(context, "/dispatch" + SUCCESS.getPath(), RequestDispatcherServlet.Include.class);

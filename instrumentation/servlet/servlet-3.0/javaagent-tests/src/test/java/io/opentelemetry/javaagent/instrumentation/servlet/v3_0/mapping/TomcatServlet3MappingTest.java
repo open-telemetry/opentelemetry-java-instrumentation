@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.mapping;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
 import javax.servlet.Servlet;
@@ -19,12 +18,7 @@ class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Cont
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();
 
-    File baseDir;
-    try {
-      baseDir = Files.createTempDirectory("tomcat").toFile();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    File baseDir = Files.createTempDirectory("tomcat").toFile();
     baseDir.deleteOnExit();
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
 
@@ -44,33 +38,21 @@ class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Cont
 
     setupServlets(servletContext);
 
-    try {
-      tomcatServer.start();
-    } catch (LifecycleException e) {
-      throw new RuntimeException(e);
-    }
+    tomcatServer.start();
     return tomcatServer;
   }
 
   @Override
-  public void stopServer(Tomcat server) {
-    try {
-      server.stop();
-      server.destroy();
-    } catch (LifecycleException e) {
-      throw new RuntimeException(e);
-    }
+  public void stopServer(Tomcat server) throws LifecycleException {
+    server.stop();
+    server.destroy();
   }
 
-  @SuppressWarnings("ClassNewInstance")
   @Override
-  public void addServlet(Context context, String path, Class<? extends Servlet> servlet) {
+  public void addServlet(Context context, String path, Class<? extends Servlet> servlet)
+      throws Exception {
     String name = UUID.randomUUID().toString();
-    try {
-      Tomcat.addServlet(context, name, servlet.newInstance());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    Tomcat.addServlet(context, name, servlet.getConstructor().newInstance());
     context.addServletMappingDecoded(path, name);
   }
 

@@ -77,9 +77,10 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
 
   public abstract Class<? extends Servlet> servlet();
 
-  public abstract void addServlet(CONTEXT context, String path, Class<? extends Servlet> servlet);
+  public abstract void addServlet(CONTEXT context, String path, Class<? extends Servlet> servlet)
+      throws Exception;
 
-  protected void setupServlets(CONTEXT context) {
+  protected void setupServlets(CONTEXT context) throws Exception {
     Class<? extends Servlet> servlet = servlet();
 
     addServlet(context, SUCCESS.getPath(), servlet);

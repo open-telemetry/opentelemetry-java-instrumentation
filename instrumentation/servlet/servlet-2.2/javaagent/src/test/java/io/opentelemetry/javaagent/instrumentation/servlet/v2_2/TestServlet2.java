@@ -33,7 +33,7 @@ public class TestServlet2 {
             resp.setContentType("text/plain");
             if (SUCCESS.equals(endpoint)) {
               resp.setStatus(endpoint.getStatus());
-                      resp.getWriter().print(endpoint.getBody());
+              resp.getWriter().print(endpoint.getBody());
             } else if (QUERY_PARAM.equals(endpoint)) {
               resp.setStatus(endpoint.getStatus());
               resp.getWriter().print(req.getQueryString());

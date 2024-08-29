@@ -16,31 +16,23 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 class JettyServlet3MappingTest extends AbstractServlet3MappingTest<Server, ServletContextHandler> {
 
   @Override
-  protected Server setupServer() {
+  protected Server setupServer() throws Exception {
     Server server = new Server(port);
     ServletContextHandler handler = new ServletContextHandler(null, getContextPath());
     setupServlets(handler);
     server.setHandler(handler);
-    try {
-      server.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    server.start();
     return server;
   }
 
   @Override
-  public void stopServer(Server server) {
-    try {
-      server.stop();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  public void stopServer(Server server) throws Exception {
+    server.stop();
     server.destroy();
   }
 
   @Override
-  protected void setupServlets(ServletContextHandler handler) {
+  protected void setupServlets(ServletContextHandler handler) throws Exception {
     super.setupServlets(handler);
 
     addServlet(handler, "/", DefaultServlet.class);

@@ -36,7 +36,7 @@ public class JettyServlet3DispatchImmediateTest extends JettyDispatchTest {
   }
 
   @Override
-  protected void setupServlets(ServletContextHandler context) {
+  protected void setupServlets(ServletContextHandler context) throws Exception {
     super.setupServlets(context);
     addServlet(
         context, "/dispatch" + HTML_PRINT_WRITER.getPath(), TestServlet3.DispatchImmediate.class);

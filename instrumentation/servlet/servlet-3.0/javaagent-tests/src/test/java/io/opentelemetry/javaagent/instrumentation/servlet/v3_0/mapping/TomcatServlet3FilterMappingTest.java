@@ -21,15 +21,11 @@ import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3MappingTest {
-  @SuppressWarnings("ClassNewInstance")
-  public void addFilter(Context servletContext, String path, Class<? extends Filter> filter) {
+  public void addFilter(Context servletContext, String path, Class<? extends Filter> filter)
+      throws Exception {
     String name = UUID.randomUUID().toString();
     FilterDef filterDef = new FilterDef();
-    try {
-      filterDef.setFilter(filter.newInstance());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    filterDef.setFilter(filter.getConstructor().newInstance());
     filterDef.setFilterName(name);
     servletContext.addFilterDef(filterDef);
     FilterMap filterMap = new FilterMap();
@@ -38,16 +34,11 @@ abstract class TomcatServlet3FilterMappingTest extends TomcatServlet3MappingTest
     servletContext.addFilterMap(filterMap);
   }
 
-  @SuppressWarnings("ClassNewInstance")
   public void addFilterWithServletName(
-      Context servletContext, String servletName, Class<? extends Filter> filter) {
+      Context servletContext, String servletName, Class<? extends Filter> filter) throws Exception {
     String name = UUID.randomUUID().toString();
     FilterDef filterDef = new FilterDef();
-    try {
-      filterDef.setFilter(filter.newInstance());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    filterDef.setFilter(filter.getConstructor().newInstance());
     filterDef.setFilterName(name);
     servletContext.addFilterDef(filterDef);
     FilterMap filterMap = new FilterMap();

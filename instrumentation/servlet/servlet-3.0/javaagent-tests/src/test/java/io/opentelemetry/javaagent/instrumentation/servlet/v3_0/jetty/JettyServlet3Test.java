@@ -123,7 +123,8 @@ public abstract class JettyServlet3Test
 
   @Override
   public void addServlet(
-      ServletContextHandler servletContext, String path, Class<? extends Servlet> servlet) {
+      ServletContextHandler servletContext, String path, Class<? extends Servlet> servlet)
+      throws Exception {
     servletContext.addServlet(servlet, path);
   }
 }

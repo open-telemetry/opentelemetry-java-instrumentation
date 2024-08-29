@@ -41,7 +41,7 @@ class TomcatServlet3DispatchAsyncTest extends TomcatDispatchTest {
   }
 
   @Override
-  protected void setupServlets(Context context) {
+  protected void setupServlets(Context context) throws Exception {
     super.setupServlets(context);
 
     addServlet(context, "/dispatch" + SUCCESS.getPath(), TestServlet3.DispatchAsync.class);

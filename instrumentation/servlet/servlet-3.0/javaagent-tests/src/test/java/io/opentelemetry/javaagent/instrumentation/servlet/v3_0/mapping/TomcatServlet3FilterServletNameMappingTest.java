@@ -10,7 +10,7 @@ import org.apache.catalina.startup.Tomcat;
 
 class TomcatServlet3FilterServletNameMappingTest extends TomcatServlet3FilterMappingTest {
   @Override
-  protected void setupServlets(Context context) {
+  protected void setupServlets(Context context) throws Exception {
     Tomcat.addServlet(context, "prefix-servlet", new DefaultServlet());
     context.addServletMappingDecoded("/prefix/*", "prefix-servlet");
     Tomcat.addServlet(context, "suffix-servlet", new DefaultServlet());

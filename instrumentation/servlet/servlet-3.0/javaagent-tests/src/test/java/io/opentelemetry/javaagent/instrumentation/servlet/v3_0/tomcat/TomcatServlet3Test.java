@@ -110,7 +110,6 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     // Speed up startup by disabling jar scanning:
     servletContext.getJarScanner().setJarScanFilter((jarScanType, jarName) -> false);
 
-    //    setupAuthentication(tomcatServer, servletContext)
     setupServlets(servletContext);
 
     ((StandardHost) tomcatServer.getHost())
@@ -129,24 +128,16 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   }
 
   @Override
-  public void stopServer(Tomcat server) {
-    try {
-      server.stop();
-      server.destroy();
-    } catch (LifecycleException e) {
-      throw new RuntimeException(e);
-    }
+  public void stopServer(Tomcat server) throws LifecycleException {
+    server.stop();
+    server.destroy();
   }
 
-  @SuppressWarnings("ClassNewInstance")
   @Override
-  public void addServlet(Context servletContext, String path, Class<? extends Servlet> servlet) {
+  public void addServlet(Context servletContext, String path, Class<? extends Servlet> servlet)
+      throws Exception {
     String name = UUID.randomUUID().toString();
-    try {
-      Tomcat.addServlet(servletContext, name, servlet.newInstance());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    Tomcat.addServlet(servletContext, name, servlet.getConstructor().newInstance());
     servletContext.addServletMappingDecoded(path, name);
   }
 

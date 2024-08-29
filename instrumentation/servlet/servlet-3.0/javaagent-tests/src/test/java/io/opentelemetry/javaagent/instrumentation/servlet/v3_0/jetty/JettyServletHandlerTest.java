@@ -103,7 +103,8 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
 
   @Override
   public void addServlet(
-      ServletHandler servletHandler, String path, Class<? extends Servlet> servlet) {
+      ServletHandler servletHandler, String path, Class<? extends Servlet> servlet)
+      throws Exception {
     servletHandler.addServletWithMapping(servlet, path);
   }
 
