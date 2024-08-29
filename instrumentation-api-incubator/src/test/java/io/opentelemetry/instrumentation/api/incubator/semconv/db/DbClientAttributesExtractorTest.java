@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
@@ -57,6 +58,9 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getOperation(Map<String, String> map) {
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        return map.get("db.operation.name");
+      }
       return map.get("db.operation");
     }
   }

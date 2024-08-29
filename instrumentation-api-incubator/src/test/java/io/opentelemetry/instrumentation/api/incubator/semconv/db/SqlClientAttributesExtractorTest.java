@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
@@ -72,12 +73,14 @@ class SqlClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
     request.put("db.user", "username");
-    request.put(
-        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME).getKey(), "potatoes");
     request.put("db.connection_string", "mydb:///potatoes");
-    request.put(
-        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT).getKey(),
-        "SELECT * FROM potato WHERE id=12345");
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      request.put("db.name", "potatoes");
+      request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
+    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+      request.put("db.namespace", "potatoes");
+      request.put("db.query.text", "SELECT * FROM potato WHERE id=12345");
+    }
 
     Context context = Context.root();
 
