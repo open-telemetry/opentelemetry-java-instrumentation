@@ -13,7 +13,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.api.trace.StatusCode.ERROR;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -30,18 +30,16 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(AgentInstrumentationExtension.class)
-public class TracerTest {
+class TracerTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   @DisplayName("capture span, kind, attributes, and status")
-  public void captureSpanKindAttributesAndStatus() {
+  void captureSpanKindAttributesAndStatus() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").setSpanKind(PRODUCER).startSpan();
@@ -70,7 +68,7 @@ public class TracerTest {
 
   @Test
   @DisplayName("capture span with implicit parent using Tracer.withSpan()")
-  public void captureSpanWithImplicitParentUsingTracerWithSpan() {
+  void captureSpanWithImplicitParentUsingTracerWithSpan() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
@@ -86,17 +84,14 @@ public class TracerTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span0 -> span0.hasName("parent").hasNoParent().hasAttributesSatisfyingExactly(),
-                span1 ->
-                    span1
-                        .hasName("test")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly()));
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName("capture span with implicit parent using makeCurrent")
-  public void captureSpanWithImplicitParentUsingMakeCurrent() {
+  void captureSpanWithImplicitParentUsingMakeCurrent() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
@@ -112,14 +107,15 @@ public class TracerTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span0 -> span0.hasName("parent").hasNoParent(),
-                span1 -> span1.hasName("test").hasParent(trace.getSpan(0))));
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName(
       "capture span with implicit parent using TracingContextUtils.withSpan and makeCurrent")
-  public void captureSpanWithImplicitParentUsingTracingContextUtilsWithSpanAndMakeCurrent() {
+  void captureSpanWithImplicitParentUsingTracingContextUtilsWithSpanAndMakeCurrent() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
@@ -136,13 +132,14 @@ public class TracerTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span0 -> span0.hasName("parent").hasNoParent(),
-                span1 -> span1.hasName("test").hasParent(trace.getSpan(0))));
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName("capture span with explicit parent")
-  public void captureSpanWithExplicitParent() {
+  void captureSpanWithExplicitParent() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
@@ -155,13 +152,14 @@ public class TracerTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span0 -> span0.hasName("parent").hasNoParent(),
-                span1 -> span1.hasName("test").hasParent(trace.getSpan(0))));
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName("capture span with explicit no parent")
-  public void captureSpanWithExplicitNoParent() {
+  void captureSpanWithExplicitNoParent() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
@@ -174,13 +172,17 @@ public class TracerTest {
     // Then
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "test"),
-        trace0 -> trace0.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasNoParent()),
-        trace1 -> trace1.hasSpansSatisfyingExactly(span -> span.hasName("test").hasNoParent()));
+        trace0 ->
+            trace0.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0)),
+        trace1 ->
+            trace1.hasSpansSatisfyingExactly(
+                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName("capture name update")
-  public void captureNameUpdate() {
+  void captureNameUpdate() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -189,12 +191,14 @@ public class TracerTest {
 
     // Then
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test2").hasNoParent()));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName("capture exception()")
-  public void captureException() {
+  void captureException() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -211,6 +215,7 @@ public class TracerTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("test")
+                        .hasTotalAttributeCount(0)
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -226,7 +231,7 @@ public class TracerTest {
 
   @Test
   @DisplayName("capture exception with Attributes()")
-  public void captureExceptionWithAttributes() {
+  void captureExceptionWithAttributes() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -243,6 +248,7 @@ public class TracerTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("test")
+                        .hasTotalAttributeCount(0)
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -259,7 +265,7 @@ public class TracerTest {
 
   @Test
   @DisplayName("capture name update using TracingContextUtils.getCurrentSpan()")
-  public void captureNameUpdateUsingTracingContextUtilsGetCurrentSpan() {
+  void captureNameUpdateUsingTracingContextUtilsGetCurrentSpan() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -270,12 +276,14 @@ public class TracerTest {
 
     // Then
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test2").hasNoParent()));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName("capture name update using TracingContextUtils.Span.fromContext(Context.current())")
-  public void captureNameUpdateUsingTracingContextUtilsSpanFromContextCurrent() {
+  void captureNameUpdateUsingTracingContextUtilsSpanFromContextCurrent() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -286,12 +294,14 @@ public class TracerTest {
 
     // Then
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test2").hasNoParent()));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test
   @DisplayName("add wrapped span to context")
-  public void addWrappedSpanToContext() {
+  void addWrappedSpanToContext() {
     // When
     // Lazy way to get a span context
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
@@ -302,13 +312,14 @@ public class TracerTest {
     Context context = Context.current().with(span);
 
     // Then
-    assertEquals(
-        span.getSpanContext().getSpanId(), Span.fromContext(context).getSpanContext().getSpanId());
+    assertThat(Span.fromContext(context).getSpanContext().getSpanId())
+        .isEqualTo(span.getSpanContext().getSpanId());
   }
 
+  // this test uses opentelemetry-api-1.4 instrumentation
   @Test
   @DisplayName("test tracer builder")
-  public void testTracerBuilder() {
+  void testTracerBuilder() {
     // When
     Tracer tracer =
         GlobalOpenTelemetry.get().tracerBuilder("test").setInstrumentationVersion("1.2.3").build();
@@ -323,6 +334,7 @@ public class TracerTest {
                     span.hasName("test")
                         .hasKind(PRODUCER)
                         .hasNoParent()
+                        .hasTotalAttributeCount(0)
                         .hasInstrumentationScopeInfo(
                             InstrumentationScopeInfo.builder("test").setVersion("1.2.3").build())));
   }

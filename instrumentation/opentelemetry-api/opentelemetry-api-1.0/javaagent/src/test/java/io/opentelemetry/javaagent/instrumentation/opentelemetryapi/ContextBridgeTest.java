@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
@@ -25,11 +25,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(AgentInstrumentationExtension.class)
-public class ContextBridgeTest {
+class ContextBridgeTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -38,7 +36,7 @@ public class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's context")
-  public void agentPropagatesApplicationsContext() throws Exception {
+  void agentPropagatesApplicationsContext() throws Exception {
     // When
     Context context = Context.current().with(ANIMAL, "cat");
     AtomicReference<String> captured = new AtomicReference<>();
@@ -49,18 +47,21 @@ public class ContextBridgeTest {
     }
 
     // Then
-    assertEquals("cat", captured.get());
+    assertThat(captured.get()).isEqualTo("cat");
   }
 
   @Test
   @DisplayName("application propagates agent's context")
-  public void applicationPropagatesAgentsContext() {
+  void applicationPropagatesAgentsContext() {
     // Given
     Runnable runnable =
         new Runnable() {
           @WithSpan("test")
           @Override
           public void run() {
+            // using @WithSpan above to make the agent generate a context
+            // and then using manual propagation below to verify that context can be propagated by
+            // user
             Context context = Context.current();
             try (Scope ignored = Context.root().makeCurrent()) {
               Span.current().setAttribute("dog", "no");
@@ -90,7 +91,7 @@ public class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's span")
-  public void agentPropagatesApplicationsSpan() throws Exception {
+  void agentPropagatesApplicationsSpan() throws Exception {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
@@ -116,13 +117,15 @@ public class ContextBridgeTest {
 
   @Test
   @DisplayName("application propagates agent's span")
-  public void applicationPropagatesAgentsSpan() {
+  void applicationPropagatesAgentsSpan() {
     // Given
     Runnable runnable =
         new Runnable() {
           @WithSpan("test")
           @Override
           public void run() {
+            // using @WithSpan above to make the agent generate a span
+            // and then using manual propagation below to verify that span can be propagated by user
             Span span = Span.current();
             try (Scope ignored = Context.root().makeCurrent()) {
               Span.current().setAttribute("dog", "no");
@@ -153,7 +156,7 @@ public class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's baggage")
-  public void agentPropagatesApplicationsBaggage() throws Exception {
+  void agentPropagatesApplicationsBaggage() throws Exception {
     // When
     Baggage testBaggage = Baggage.builder().put("cat", "yes").build();
     AtomicReference<Baggage> ref = new AtomicReference<>();
@@ -170,15 +173,15 @@ public class ContextBridgeTest {
 
     // Then
     latch.await();
-    assertEquals(1, ref.get().size());
-    assertEquals("yes", ref.get().getEntryValue("cat"));
+    assertThat(ref.get().size()).isEqualTo(1);
+    assertThat(ref.get().getEntryValue("cat")).isEqualTo("yes");
   }
 
   @Test
   @DisplayName("test empty current context is root context")
-  public void testEmptyCurrentContextIsRootContext() {
+  void testEmptyCurrentContextIsRootContext() {
     // Expect
-    assertEquals(Context.root(), Context.current());
+    assertThat(Context.current()).isEqualTo(Context.root());
   }
 
   // TODO (trask)

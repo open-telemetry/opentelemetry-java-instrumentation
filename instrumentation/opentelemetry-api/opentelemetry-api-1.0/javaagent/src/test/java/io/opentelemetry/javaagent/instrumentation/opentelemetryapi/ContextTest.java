@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -20,21 +18,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(AgentInstrumentationExtension.class)
-public class ContextTest {
+class ContextTest {
 
   @Test
   @DisplayName("Span.current() should return invalid")
-  public void spanCurrentShouldReturnInvalid() {
+  void spanCurrentShouldReturnInvalid() {
     // When
     Span span = Span.current();
-
     // Then
-    assertFalse(span.getSpanContext().isValid());
+    assertThat(span.getSpanContext().isValid()).isFalse();
   }
 
   @Test
   @DisplayName("Span.current() should return span")
-  public void spanCurrentShouldReturnSpan() {
+  void spanCurrentShouldReturnSpan() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -42,23 +39,23 @@ public class ContextTest {
       Span span = Span.current();
 
       // Then
-      assertEquals(testSpan, span);
+      assertThat(span).isEqualTo(testSpan);
     }
   }
 
   @Test
   @DisplayName("Span.fromContext should return invalid")
-  public void spanFromContextShouldReturnInvalid() {
+  void spanFromContextShouldReturnInvalid() {
     // When
     Span span = Span.fromContext(Context.current());
 
     // Then
-    assertFalse(span.getSpanContext().isValid());
+    assertThat(span.getSpanContext().isValid()).isFalse();
   }
 
   @Test
   @DisplayName("getSpan should return span")
-  public void getSpanShouldReturnSpan() {
+  void getSpanShouldReturnSpan() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -66,23 +63,23 @@ public class ContextTest {
       Span span = Span.fromContext(Context.current());
 
       // Then
-      assertEquals(testSpan, span);
+      assertThat(span).isEqualTo(testSpan);
     }
   }
 
   @Test
   @DisplayName("Span.fromContextOrNull should return null")
-  public void spanFromContextOrNullShouldReturnNull() {
+  void spanFromContextOrNullShouldReturnNull() {
     // When
     Span span = Span.fromContextOrNull(Context.current());
 
     // Then
-    assertNull(span);
+    assertThat(span).isNull();
   }
 
   @Test
   @DisplayName("Span.fromContextOrNull should return span")
-  public void spanFromContextOrNullShouldReturnSpan() {
+  void spanFromContextOrNullShouldReturnSpan() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
@@ -90,7 +87,7 @@ public class ContextTest {
       Span span = Span.fromContextOrNull(Context.current());
 
       // Then
-      assertEquals(testSpan, span);
+      assertThat(span).isEqualTo(testSpan);
     }
   }
 }
