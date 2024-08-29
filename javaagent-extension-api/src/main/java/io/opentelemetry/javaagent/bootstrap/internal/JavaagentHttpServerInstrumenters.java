@@ -24,18 +24,6 @@ public final class JavaagentHttpServerInstrumenters {
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       String instrumentationName,
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
-      TextMapGetter<REQUEST> headerGetter) {
-    return create(instrumentationName, httpAttributesGetter, headerGetter, customizer -> {});
-  }
-
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
-      DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    return create(builder, customizer -> {});
-  }
-
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
-      String instrumentationName,
-      HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       TextMapGetter<REQUEST> headerGetter,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     return create(
@@ -45,7 +33,7 @@ public final class JavaagentHttpServerInstrumenters {
         instrumenterBuilderConsumer);
   }
 
-  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
+  private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
     return builder
