@@ -55,4 +55,8 @@ public class SemconvStabilityUtil {
     }
     return oldKey;
   }
+
+  public boolean isStable() {
+    return SemconvStability.emitStableDatabaseSemconv();
+  }
 }
