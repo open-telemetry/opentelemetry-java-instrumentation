@@ -94,12 +94,10 @@ class JdbcInstrumentationTest {
     cpDatasources = new HashMap<>();
 
     prepareConnectionPoolDatasources();
-    System.out.println("before all");
   }
 
   @AfterAll
   public void tearDown() {
-    System.out.println("after all");
     cpDatasources
         .values()
         .forEach(
@@ -121,14 +119,14 @@ class JdbcInstrumentationTest {
     List<String> connectionPoolNames = asList("tomcat", "hikari", "c3p0");
     connectionPoolNames.forEach(
         cpName -> {
-          Map<String, DataSource> dbDSMapping = new HashMap<>();
+          Map<String, DataSource> dbDsMapping = new HashMap<>();
           jdbcUrls.forEach(
-              (dbType, jdbcUrl) -> dbDSMapping.put(dbType, createDS(cpName, dbType, jdbcUrl)));
-          cpDatasources.put(cpName, dbDSMapping);
+              (dbType, jdbcUrl) -> dbDsMapping.put(dbType, createDs(cpName, dbType, jdbcUrl)));
+          cpDatasources.put(cpName, dbDsMapping);
         });
   }
 
-  DataSource createTomcatDS(String dbType, String jdbcUrl) {
+  DataSource createTomcatDs(String dbType, String jdbcUrl) {
     org.apache.tomcat.jdbc.pool.DataSource ds = new org.apache.tomcat.jdbc.pool.DataSource();
     String jdbcUrlToSet = Objects.equals(dbType, "derby") ? jdbcUrl + ";create=true" : jdbcUrl;
     ds.setUrl(jdbcUrlToSet);
@@ -143,7 +141,7 @@ class JdbcInstrumentationTest {
     return ds;
   }
 
-  DataSource createHikariDS(String dbType, String jdbcUrl) {
+  DataSource createHikariDs(String dbType, String jdbcUrl) {
     HikariConfig config = new HikariConfig();
     String jdbcUrlToSet = Objects.equals(dbType, "derby") ? jdbcUrl + ";create=true" : jdbcUrl;
     config.setJdbcUrl(jdbcUrlToSet);
@@ -160,7 +158,7 @@ class JdbcInstrumentationTest {
     return new HikariDataSource(config);
   }
 
-  DataSource createC3P0DS(String dbType, String jdbcUrl) {
+  DataSource createC3P0Ds(String dbType, String jdbcUrl) {
     ComboPooledDataSource ds = new ComboPooledDataSource();
     try {
       ds.setDriverClass(jdbcDriverClassNames.get(dbType));
@@ -178,16 +176,16 @@ class JdbcInstrumentationTest {
     return ds;
   }
 
-  DataSource createDS(String connectionPoolName, String dbType, String jdbcUrl) {
+  DataSource createDs(String connectionPoolName, String dbType, String jdbcUrl) {
     DataSource ds = null;
     if (Objects.equals(connectionPoolName, "tomcat")) {
-      ds = createTomcatDS(dbType, jdbcUrl);
+      ds = createTomcatDs(dbType, jdbcUrl);
     }
     if (Objects.equals(connectionPoolName, "hikari")) {
-      ds = createHikariDS(dbType, jdbcUrl);
+      ds = createHikariDs(dbType, jdbcUrl);
     }
     if (Objects.equals(connectionPoolName, "c3p0")) {
-      ds = createC3P0DS(dbType, jdbcUrl);
+      ds = createC3P0Ds(dbType, jdbcUrl);
     }
     return ds;
   }
