@@ -11,7 +11,7 @@ import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Co
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.END_OF_MINOR_GC;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_GC_DURATION;
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.MILLISECONDS;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -43,7 +43,7 @@ class SerialGcMemoryMetricTest {
         metric ->
             metric
                 .hasName(METRIC_NAME_GC_DURATION)
-                .hasUnit(MILLISECONDS)
+                .hasUnit(SECONDS)
                 .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
                 .satisfies(
                     data ->
