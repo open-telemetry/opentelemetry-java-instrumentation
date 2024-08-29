@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JobRunner;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -73,7 +72,6 @@ abstract class CustomSpanEventTest {
                             .hasParent(trace.getSpan(1))
                             .satisfies(
                                 spanData -> {
-
                                   // CompositeChunkListener has broken ordering that causes
                                   // listeners that do not override order() to appear first at all
                                   // times
@@ -86,7 +84,7 @@ abstract class CustomSpanEventTest {
                                             event -> event.hasName("chunk.before"),
                                             event -> event.hasName("chunk.after"));
                                   } else {
-                                    Assertions.assertThat(spanData.getEvents()).isEmpty();
+                                    assertThat(spanData.getEvents()).isEmpty();
                                   }
                                 }),
                     span -> {}, // ignore
