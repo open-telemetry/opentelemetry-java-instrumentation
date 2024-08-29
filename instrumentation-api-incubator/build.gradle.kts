@@ -75,4 +75,8 @@ tasks {
   sourcesJar {
     dependsOn("generateJflex")
   }
+
+  check {
+    dependsOn(testing.suites)
+  }
 }

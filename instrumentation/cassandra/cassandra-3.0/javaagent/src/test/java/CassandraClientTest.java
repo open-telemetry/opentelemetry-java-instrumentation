@@ -154,6 +154,13 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  NetworkAttributes.NETWORK_TYPE,
+                                  SemconvStabilityUtil.getAttributeKey(
+                                              NetworkAttributes.NETWORK_TYPE)
+                                          == null
+                                      ? null
+                                      : "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
