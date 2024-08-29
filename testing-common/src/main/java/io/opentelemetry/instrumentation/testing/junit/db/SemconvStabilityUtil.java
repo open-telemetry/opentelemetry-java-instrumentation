@@ -50,13 +50,13 @@ public class SemconvStabilityUtil {
 
   @SuppressWarnings("unchecked")
   public static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (isStable()) {
       return (AttributeKey<T>) oldToNewMap.get(oldKey);
     }
     return oldKey;
   }
 
-  public boolean isStable() {
+  public static boolean isStable() {
     return SemconvStability.emitStableDatabaseSemconv();
   }
 }
