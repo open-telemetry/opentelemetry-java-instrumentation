@@ -25,7 +25,7 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
-class HostIdResourceProviderTest {
+class HostIdResourceTest {
 
   private static class LinuxTestCase {
     private final String name;
@@ -63,10 +63,10 @@ class HostIdResourceProviderTest {
                 DynamicTest.dynamicTest(
                     testCase.name,
                     () -> {
-                      HostIdResourceProvider provider =
-                          new HostIdResourceProvider(() -> "linux", testCase.pathReader, null);
+                      HostIdResource hostIdResource =
+                          new HostIdResource(() -> "linux", testCase.pathReader, null);
 
-                      assertHostId(testCase.expectedValue, provider);
+                      assertHostId(testCase.expectedValue, hostIdResource);
                     }))
         .collect(Collectors.toList());
   }
@@ -87,18 +87,18 @@ class HostIdResourceProviderTest {
                 DynamicTest.dynamicTest(
                     testCase.name,
                     () -> {
-                      HostIdResourceProvider provider =
-                          new HostIdResourceProvider(
+                      HostIdResource hostIdResource =
+                          new HostIdResource(
                               () -> "Windows 95", null, testCase.queryWindowsRegistry);
 
-                      assertHostId(testCase.expectedValue, provider);
+                      assertHostId(testCase.expectedValue, hostIdResource);
                     }))
         .collect(Collectors.toList());
   }
 
-  private static void assertHostId(String expectedValue, HostIdResourceProvider provider) {
+  private static void assertHostId(String expectedValue, HostIdResource hostIdResource) {
     MapAssert<AttributeKey<?>, Object> that =
-        assertThat(provider.createResource(null).getAttributes().asMap());
+        assertThat(hostIdResource.createResource().getAttributes().asMap());
 
     if (expectedValue == null) {
       that.isEmpty();
