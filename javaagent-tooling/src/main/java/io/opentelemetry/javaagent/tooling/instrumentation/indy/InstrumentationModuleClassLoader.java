@@ -109,10 +109,15 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     if (cachedLookup == null) {
       // Load the injected copy of LookupExposer and invoke it
       try {
+        MethodType getLookupType = MethodType.methodType(MethodHandles.Lookup.class);
         // we don't mind the race condition causing the initialization to run multiple times here
         Class<?> lookupExposer = loadClass(LookupExposer.class.getName());
-        cachedLookup = (MethodHandles.Lookup) lookupExposer.getMethod("getLookup").invoke(null);
-      } catch (Exception e) {
+        // Note: we must use MethodHandles instead of reflection here to avoid a recursion
+        // for our internal ReflectionInstrumentationModule which instruments reflection methods
+        cachedLookup = (MethodHandles.Lookup) MethodHandles.publicLookup()
+            .findStatic(lookupExposer, "getLookup", getLookupType)
+            .invoke();
+      } catch (Throwable e) {
         throw new IllegalStateException(e);
       }
     }
