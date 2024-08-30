@@ -45,12 +45,6 @@ public class IndyModuleRegistry {
 
     String groupName = getModuleGroup(module);
 
-    // this is a hack attempt to make it work
-    if (instrumentedClassLoader != null && instrumentedClassLoader.getClass().getName()
-        .startsWith("io.opentelemetry.javaagent.tooling.HelperInjector$1")) {
-      instrumentedClassLoader = null;
-    }
-
     Map<String, InstrumentationModuleClassLoader> loadersByGroupName =
         instrumentationClassLoaders.get(instrumentedClassLoader);
 
