@@ -35,11 +35,6 @@ public class ReflectionInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "internal-reflection";
-  }
-
-  @Override
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder(
