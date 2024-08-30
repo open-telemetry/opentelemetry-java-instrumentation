@@ -158,8 +158,7 @@ abstract class ItemLevelSpanTest {
           // as chunks are processed in parallel we need to sort them to guarantee that they are
           // in the expected order
           // firstly compute child span count for each chunk, we'll sort chunks from larger to
-          // smaller
-          // based on child count
+          // smaller based on child count
           List<SpanData> all = with.getAll();
           Map<SpanData, Number> childCount = new HashMap<>();
           all.forEach(
