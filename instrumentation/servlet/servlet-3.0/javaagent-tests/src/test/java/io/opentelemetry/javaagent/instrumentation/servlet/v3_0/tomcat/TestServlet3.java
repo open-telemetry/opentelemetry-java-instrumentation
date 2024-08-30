@@ -5,7 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_PRINT_WRITER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM;
 
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -38,57 +47,44 @@ public class TestServlet3 {
           endpoint,
           () -> {
             resp.setContentType("text/plain");
-            switch (endpoint.name()) {
-              case "SUCCESS":
-                resp.setStatus(endpoint.getStatus());
-                resp.getWriter().print(endpoint.getBody());
-                break;
-              case "INDEXED_CHILD":
-                endpoint.collectSpanAttributes(req::getParameter);
-                resp.setStatus(endpoint.getStatus());
-                break;
-              case "QUERY_PARAM":
-                resp.setStatus(endpoint.getStatus());
-                resp.getWriter().print(req.getQueryString());
-                break;
-              case "REDIRECT":
-                resp.sendRedirect(endpoint.getBody());
-                break;
-              case "CAPTURE_HEADERS":
-                resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
-                resp.setStatus(endpoint.getStatus());
-                resp.getWriter().print(endpoint.getBody());
-                break;
-              case "CAPTURE_PARAMETERS":
-                req.setCharacterEncoding("UTF8");
-                String value = req.getParameter("test-parameter");
-                if (!value.equals("test value õäöü")) {
-                  throw new ServletException(
-                      "request parameter does not have expected value " + value);
-                }
+            if (SUCCESS.equals(endpoint)) {
+              resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(endpoint.getBody());
+            } else if (INDEXED_CHILD.equals(endpoint)) {
+              endpoint.collectSpanAttributes(req::getParameter);
+              resp.setStatus(endpoint.getStatus());
+            } else if (QUERY_PARAM.equals(endpoint)) {
+              resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(req.getQueryString());
+            } else if (REDIRECT.equals(endpoint)) {
+              resp.sendRedirect(endpoint.getBody());
+            } else if (CAPTURE_HEADERS.equals(endpoint)) {
+              resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
+              resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(endpoint.getBody());
+            } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
+              req.setCharacterEncoding("UTF8");
+              String value = req.getParameter("test-parameter");
+              if (!value.equals("test value õäöü")) {
+                throw new ServletException("request parameter does not have expected value " + value);
+              }
 
-                resp.setStatus(endpoint.getStatus());
-                resp.getWriter().print(endpoint.getBody());
-                break;
-              case "ERROR":
-                resp.sendError(endpoint.getStatus(), endpoint.getBody());
-                break;
-              case "EXCEPTION":
-                throw new ServletException(endpoint.getBody());
-              case "HTML_PRINT_WRITER":
-                resp.setContentType("text/html");
-                resp.setStatus(endpoint.getStatus());
-                resp.setContentLength(endpoint.getBody().length());
-                resp.getWriter().print(endpoint.getBody());
-                break;
-              case "HTML_SERVLET_OUTPUT_STREAM":
-                resp.setContentType("text/html");
-                resp.setStatus(endpoint.getStatus());
-                resp.setContentLength(endpoint.getBody().length());
-                resp.getOutputStream().print(endpoint.getBody());
-                break;
-              default:
-                break;
+              resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(endpoint.getBody());
+            } else if (ERROR.equals(endpoint)) {
+              resp.sendError(endpoint.getStatus(), endpoint.getBody());
+            } else if (EXCEPTION.equals(endpoint)) {
+              throw new ServletException(endpoint.getBody());
+            } else if (HTML_PRINT_WRITER.equals(endpoint)) {
+              resp.setContentType("text/html");
+              resp.setStatus(endpoint.getStatus());
+              resp.setContentLength(endpoint.getBody().length());
+              resp.getWriter().print(endpoint.getBody());
+            } else if (HTML_SERVLET_OUTPUT_STREAM.equals(endpoint)) {
+              resp.setContentType("text/html");
+              resp.setStatus(endpoint.getStatus());
+              resp.setContentLength(endpoint.getBody().length());
+              resp.getOutputStream().print(endpoint.getBody());
             }
             return null;
           });
@@ -114,6 +110,7 @@ public class TestServlet3 {
                   () -> {
                     resp.setContentType("text/plain");
                     switch (endpoint.name()) {
+                      //todo
                       case "SUCCESS":
                         resp.setStatus(endpoint.getStatus());
                         resp.getWriter().print(endpoint.getBody());
@@ -202,6 +199,7 @@ public class TestServlet3 {
             endpoint,
             () -> {
               resp.setContentType("text/plain");
+              //todo
               switch (endpoint.name()) {
                 case "SUCCESS":
                   resp.setStatus(endpoint.getStatus());
