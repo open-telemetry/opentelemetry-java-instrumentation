@@ -75,7 +75,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
-                                equalTo(DB_NAME, parameter.keyspace),
+                                equalTo(
+                                    SemconvStabilityUtil.getAttributeKey(DB_NAME),
+                                    parameter.keyspace),
                                 equalTo(
                                     SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
                                     parameter.expectedStatement),
