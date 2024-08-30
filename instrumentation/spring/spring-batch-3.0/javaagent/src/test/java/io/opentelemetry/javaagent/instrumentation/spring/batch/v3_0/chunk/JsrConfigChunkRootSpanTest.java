@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JavaxBatchConfigRunner;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JsrConfigChunkRootSpanTest extends ChunkRootSpanTest {
+class JsrConfigChunkRootSpanTest extends AbstractChunkRootSpanTest {
 
   @RegisterExtension static final JavaxBatchConfigRunner runner = new JavaxBatchConfigRunner();
 

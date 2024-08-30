@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.Appli
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-class XmlConfigChunkRootSpanTest extends ChunkRootSpanTest {
+class XmlConfigChunkRootSpanTest extends AbstractChunkRootSpanTest {
 
   @RegisterExtension
   static final ApplicationConfigRunner runner =

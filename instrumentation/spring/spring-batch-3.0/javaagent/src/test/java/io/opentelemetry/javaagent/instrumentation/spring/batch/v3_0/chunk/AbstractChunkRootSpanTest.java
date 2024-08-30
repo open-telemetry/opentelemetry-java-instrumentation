@@ -5,10 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -22,14 +18,14 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-abstract class ChunkRootSpanTest {
+abstract class AbstractChunkRootSpanTest {
 
   private final JobRunner jobRunner;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public ChunkRootSpanTest(JobRunner jobRunner) {
+  public AbstractChunkRootSpanTest(JobRunner jobRunner) {
     this.jobRunner = jobRunner;
   }
 

@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.Sprin
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-class JavaConfigChunkRootSpanTest extends ChunkRootSpanTest {
+class JavaConfigChunkRootSpanTest extends AbstractChunkRootSpanTest {
 
   @RegisterExtension
   static final ApplicationConfigRunner runner =
