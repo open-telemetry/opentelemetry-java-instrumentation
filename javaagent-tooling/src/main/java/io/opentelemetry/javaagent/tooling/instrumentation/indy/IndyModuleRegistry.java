@@ -48,7 +48,6 @@ public class IndyModuleRegistry {
     Map<String, InstrumentationModuleClassLoader> loadersByGroupName =
         instrumentationClassLoaders.get(instrumentedClassLoader);
 
-
     if (loadersByGroupName == null) {
       throw new IllegalArgumentException(
           module

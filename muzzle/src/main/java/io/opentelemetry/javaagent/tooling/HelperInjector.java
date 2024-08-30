@@ -172,10 +172,8 @@ public class HelperInjector implements Transformer {
     injectedClassLoaders.computeIfAbsent(
         maskNullClassLoader(classLoader),
         cl -> {
-
-          List<HelperClassDefinition> helpers = helperClassesGenerator.apply(
-              isBootClassLoader(cl) ? null : cl
-          );
+          List<HelperClassDefinition> helpers =
+              helperClassesGenerator.apply(isBootClassLoader(cl) ? null : cl);
 
           LinkedHashMap<String, Supplier<byte[]>> classesToInject =
               helpers.stream()

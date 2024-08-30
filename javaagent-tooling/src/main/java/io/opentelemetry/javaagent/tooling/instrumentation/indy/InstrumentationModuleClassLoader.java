@@ -114,9 +114,11 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
         Class<?> lookupExposer = loadClass(LookupExposer.class.getName());
         // Note: we must use MethodHandles instead of reflection here to avoid a recursion
         // for our internal ReflectionInstrumentationModule which instruments reflection methods
-        cachedLookup = (MethodHandles.Lookup) MethodHandles.publicLookup()
-            .findStatic(lookupExposer, "getLookup", getLookupType)
-            .invoke();
+        cachedLookup =
+            (MethodHandles.Lookup)
+                MethodHandles.publicLookup()
+                    .findStatic(lookupExposer, "getLookup", getLookupType)
+                    .invoke();
       } catch (Throwable e) {
         throw new IllegalStateException(e);
       }
