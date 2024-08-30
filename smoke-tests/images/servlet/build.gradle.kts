@@ -4,7 +4,6 @@ import org.apache.commons.lang.StringUtils
 
 plugins {
   id("otel.spotless-conventions")
-
   id("com.bmuschko.docker-remote-api")
 }
 

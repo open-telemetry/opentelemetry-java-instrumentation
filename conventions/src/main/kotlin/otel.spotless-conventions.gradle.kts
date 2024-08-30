@@ -14,14 +14,14 @@ spotless {
     toggleOffOn()
     target("src/**/*.java")
   }
-  plugins.withId("groovy") {
-    groovy {
-      licenseHeaderFile(
-        rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|(?:abstract )?class)"
-      )
-      endWithNewline()
-    }
+  groovy {
+    greclipse()
+    licenseHeaderFile(
+      rootProject.file("buildscripts/spotless.license.java"),
+      "(package|import|(?:abstract )?class)"
+    )
+    target("src/**/*.groovy")
+    endWithNewline()
   }
   plugins.withId("scala") {
     scala {
@@ -107,6 +107,9 @@ if (project == rootProject) {
   with(extensions["spotlessPredeclare"] as SpotlessExtension) {
     java {
       googleJavaFormat()
+    }
+    groovy {
+      greclipse()
     }
     scala {
       scalafmt()
