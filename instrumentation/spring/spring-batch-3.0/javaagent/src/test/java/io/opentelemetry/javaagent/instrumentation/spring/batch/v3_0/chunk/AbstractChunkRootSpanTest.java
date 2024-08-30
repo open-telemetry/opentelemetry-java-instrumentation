@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 
-
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
