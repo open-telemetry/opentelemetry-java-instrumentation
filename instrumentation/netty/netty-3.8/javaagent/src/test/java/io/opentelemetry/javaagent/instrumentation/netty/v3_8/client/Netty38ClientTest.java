@@ -137,6 +137,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
+    optionsBuilder.disableTestSpanEndsAfter();
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {

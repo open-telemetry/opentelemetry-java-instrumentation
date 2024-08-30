@@ -56,6 +56,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     // jetty 12 does not support to reuse request
     // use request.send() twice will block the program infinitely
     optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.spanEndsAfterBody();
   }
 
   @Override

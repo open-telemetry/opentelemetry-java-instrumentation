@@ -120,6 +120,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.setHttpAttributes(ClientTest::getHttpAttributes);
     optionsBuilder.setExpectedClientSpanNameMapper(ClientTest::getExpectedClientSpanName);
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setClientSpanErrorMapper(
         (uri, error) -> {
           // all errors should be wrapped in RuntimeExceptions due to how we run things in

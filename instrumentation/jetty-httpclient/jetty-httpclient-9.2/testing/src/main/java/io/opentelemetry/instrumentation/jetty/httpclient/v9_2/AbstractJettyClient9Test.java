@@ -49,6 +49,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
   }
 
   @Override
