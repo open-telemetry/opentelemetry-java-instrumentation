@@ -137,7 +137,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
-    optionsBuilder.disableTestReadTimeout();
+    optionsBuilder.disableTestSpanEndsAfter();
 
     optionsBuilder.setExpectedClientSpanNameMapper(Netty40ClientTest::expectedClientSpanName);
     optionsBuilder.setHttpAttributes(Netty40ClientTest::httpAttributes);

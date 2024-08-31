@@ -152,6 +152,8 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
     optionsBuilder.disableTestReusedRequest();
 
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
+
+    optionsBuilder.spanEndsAfterBody();
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {

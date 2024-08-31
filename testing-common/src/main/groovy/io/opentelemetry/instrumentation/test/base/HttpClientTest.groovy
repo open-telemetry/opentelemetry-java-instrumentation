@@ -354,6 +354,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.highConcurrencyOnSingleConnection()
   }
 
+  def "http client span ends after headers are received"() {
+    junitTest.spanEndsAfterHeadersReceived()
+  }
+
   // ideally private, but then groovy closures in this class cannot find them
   final int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     def request = buildRequest(method, uri, headers)

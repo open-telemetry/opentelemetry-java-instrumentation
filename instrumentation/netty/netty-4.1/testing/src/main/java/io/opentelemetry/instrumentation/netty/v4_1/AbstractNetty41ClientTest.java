@@ -112,6 +112,7 @@ public abstract class AbstractNetty41ClientTest
                 this::configureChannel));
 
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
   }
 
   private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {

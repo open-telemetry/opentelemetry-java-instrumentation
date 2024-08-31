@@ -1000,7 +1000,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             uri,
             // the time that server waits before completing the response, we expect the response
             // headers to arrive much sooner
-            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(15))));
+            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(2))));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -1013,8 +1013,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           // verify that the span length is less than the delay used to complete the response body
           assertThat(
                   span.getEndEpochNanos() - span.getStartEpochNanos()
-                      <= TimeUnit.SECONDS.toNanos(10))
-              .describedAs("Span duration should be less than 10s")
+                      <= TimeUnit.SECONDS.toNanos(2))
+              .describedAs("Span duration should be less than 2s")
               .isTrue();
         });
   }

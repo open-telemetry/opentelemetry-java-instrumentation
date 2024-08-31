@@ -109,6 +109,7 @@ abstract class AbstractReactorNettyHttpClientTest
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(52);
+    optionsBuilder.spanEndsAfterBody();
 
     // TODO: remove this test altogether? this scenario is (was) only implemented in reactor-netty,
     // all other HTTP clients worked in a different way
