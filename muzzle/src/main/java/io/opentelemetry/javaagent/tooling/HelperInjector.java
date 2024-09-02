@@ -173,7 +173,7 @@ public class HelperInjector implements Transformer {
         maskNullClassLoader(classLoader),
         cl -> {
           List<HelperClassDefinition> helpers =
-              helperClassesGenerator.apply(isBootClassLoader(cl) ? null : cl);
+              helperClassesGenerator.apply(unmaskNullClassLoader(cl));
 
           LinkedHashMap<String, Supplier<byte[]>> classesToInject =
               helpers.stream()
@@ -354,6 +354,10 @@ public class HelperInjector implements Transformer {
 
   private static ClassLoader maskNullClassLoader(ClassLoader classLoader) {
     return classLoader != null ? classLoader : BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
+  }
+
+  private static ClassLoader unmaskNullClassLoader(ClassLoader classLoader) {
+    return isBootClassLoader(classLoader) ? null : classLoader;
   }
 
   private static boolean isBootClassLoader(ClassLoader classLoader) {
