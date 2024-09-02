@@ -30,7 +30,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@2c779ab0d087cd7fe7b826087247c2c81f27bfa6 # v3.26.5
+        uses: github/codeql-action/init@4dd16135b69a43b6c8efb853346f8437d92d3c93 # v3.26.6
         with:
           languages: java
           # using "latest" helps to keep up with the latest Kotlin support
@@ -38,14 +38,14 @@ jobs:
           tools: latest
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+        uses: gradle/actions/setup-gradle@16bf8bc8fe830fa669c3c9f914d3eb147c629707 # v4.0.1
 
       - name: Build
         # skipping build cache is needed so that all modules will be analyzed
         run: ./gradlew assemble -x javadoc --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@2c779ab0d087cd7fe7b826087247c2c81f27bfa6 # v3.26.5
+        uses: github/codeql-action/analyze@4dd16135b69a43b6c8efb853346f8437d92d3c93 # v3.26.6
 
   workflow-notification:
     needs:
