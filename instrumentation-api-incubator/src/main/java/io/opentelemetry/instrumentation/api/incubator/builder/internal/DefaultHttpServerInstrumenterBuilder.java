@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -52,7 +53,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       httpAttributesExtractorBuilder;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
-  private final TextMapGetter<REQUEST> headerGetter;
+  @Nullable private final TextMapGetter<REQUEST> headerGetter;
   private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
@@ -64,7 +65,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      TextMapGetter<REQUEST> headerGetter) {
+      @Nullable TextMapGetter<REQUEST> headerGetter) {
     this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
     httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
