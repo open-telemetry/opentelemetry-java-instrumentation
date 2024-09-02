@@ -83,6 +83,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
       throws Exception {
     HttpResponse response = sendRequest(request);
     // read request body to avoid broken pipe errors on the server side
+    // skip reading body of long-request to make the test a bit faster
     if (!uri.toString().contains("/long-request")) {
       response.parseAsString();
     }

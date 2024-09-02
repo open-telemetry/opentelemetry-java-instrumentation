@@ -45,6 +45,7 @@ class HttpUrlConnectionUseCachesFalseTest extends AbstractHttpClientTest<HttpURL
       Span parentSpan = Span.current();
       InputStream stream = connection.getInputStream();
       assertThat(Span.current()).isEqualTo(parentSpan);
+      // skip reading body of long-request to make the test a bit faster
       if (!uri.toString().contains("/long-request")) {
         readLines(stream);
       }
