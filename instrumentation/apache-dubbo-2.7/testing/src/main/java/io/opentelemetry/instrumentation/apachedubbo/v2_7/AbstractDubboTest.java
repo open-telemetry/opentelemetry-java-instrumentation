@@ -14,14 +14,13 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import org.apache.dubbo.common.utils.NetUtils;
@@ -37,14 +36,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class AbstractDubboTest {
+public abstract class AbstractDubboTest {
 
   private final ProtocolConfig protocolConfig = new ProtocolConfig();
 
-  abstract InstrumentationExtension testing();
+  protected abstract InstrumentationExtension testing();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private DubboBootstrap bootstrap;
   private DubboBootstrap consumerBootstrap;
@@ -63,18 +63,9 @@ abstract class AbstractDubboTest {
   }
 
   @AfterEach
-  @SuppressWarnings("CatchingUnchecked")
   public void afterEach() {
-    List<DubboBootstrap> dubboBootstraps = Arrays.asList(bootstrap, consumerBootstrap);
-    for (DubboBootstrap bootstrap : dubboBootstraps) {
-      try {
-        if (bootstrap != null) {
-          bootstrap.destroy();
-        }
-      } catch (Exception e) {
-        // ignore
-      }
-    }
+    cleanup.deferCleanup(bootstrap::destroy);
+    cleanup.deferCleanup(consumerBootstrap::destroy);
   }
 
   ReferenceConfig<HelloService> configureClient(int port) {
@@ -95,8 +86,12 @@ abstract class AbstractDubboTest {
     return service;
   }
 
-  @Test
   @SuppressWarnings({"rawtypes", "unchecked"})
+  ReferenceConfig<GenericService> convertReference(ReferenceConfig<HelloService> config) {
+    return (ReferenceConfig) config;
+  }
+
+  @Test
   void testApacheDubboBase() {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
@@ -110,7 +105,7 @@ abstract class AbstractDubboTest {
 
     // consumer boostrap
     consumerBootstrap = DubboTestUtil.newDubboBootstrap();
-    ReferenceConfig referenceConfig = configureClient(port);
+    ReferenceConfig<HelloService> referenceConfig = configureClient(port);
     ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
     consumerProtocolConfig.setRegister(false);
     consumerBootstrap
@@ -120,15 +115,15 @@ abstract class AbstractDubboTest {
         .start();
 
     // generic call
-    ReferenceConfig<GenericService> reference = referenceConfig;
+    ReferenceConfig<GenericService> reference = convertReference(referenceConfig);
     GenericService genericService = reference.get();
 
-    Object[] o = new Object[1];
-    o[0] = "hello";
     Object response =
         runWithSpan(
             "parent",
-            () -> genericService.$invoke("hello", new String[] {String.class.getName()}, o));
+            () ->
+                genericService.$invoke(
+                    "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
     assertThat(response).isEqualTo("hello");
     testing()
@@ -141,7 +136,9 @@ abstract class AbstractDubboTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -174,7 +171,9 @@ abstract class AbstractDubboTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
@@ -190,7 +189,6 @@ abstract class AbstractDubboTest {
   }
 
   @Test
-  @SuppressWarnings({"rawtypes", "unchecked"})
   void testApacheDubboTest() throws ExecutionException, InterruptedException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
@@ -205,7 +203,7 @@ abstract class AbstractDubboTest {
     ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
     consumerProtocolConfig.setRegister(false);
 
-    ReferenceConfig referenceConfig = configureClient(port);
+    ReferenceConfig<HelloService> referenceConfig = configureClient(port);
     consumerBootstrap = DubboTestUtil.newDubboBootstrap();
     consumerBootstrap
         .application(new ApplicationConfig("dubbo-demo-async-api-consumer"))
@@ -214,14 +212,14 @@ abstract class AbstractDubboTest {
         .start();
 
     // generic call
-    ReferenceConfig<GenericService> reference = referenceConfig;
+    ReferenceConfig<GenericService> reference = convertReference(referenceConfig);
     GenericService genericService = reference.get();
-    Object[] o = new Object[1];
-    o[0] = "hello";
     CompletableFuture<Object> response =
         runWithSpan(
             "parent",
-            () -> genericService.$invokeAsync("hello", new String[] {String.class.getName()}, o));
+            () ->
+                genericService.$invokeAsync(
+                    "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
     assertThat(response.get()).isEqualTo("hello");
 
@@ -235,7 +233,9 @@ abstract class AbstractDubboTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -268,7 +268,9 @@ abstract class AbstractDubboTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),

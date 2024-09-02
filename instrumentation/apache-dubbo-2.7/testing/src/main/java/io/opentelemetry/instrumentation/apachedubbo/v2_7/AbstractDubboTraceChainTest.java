@@ -16,14 +16,13 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.MiddleServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.List;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ProtocolConfig;
@@ -37,14 +36,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class AbstractDubboTraceChainTest {
+public abstract class AbstractDubboTraceChainTest {
 
   private DubboBootstrap bootstrap;
   private DubboBootstrap consumerBootstrap;
   private DubboBootstrap middleBootstrap;
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -59,22 +59,13 @@ abstract class AbstractDubboTraceChainTest {
     System.clearProperty("dubbo.application.qos-enable");
   }
 
-  abstract InstrumentationExtension testing();
+  protected abstract InstrumentationExtension testing();
 
   @AfterEach
-  @SuppressWarnings("CatchingUnchecked")
   public void afterEach() {
-    List<DubboBootstrap> dubboBootstraps =
-        Arrays.asList(bootstrap, consumerBootstrap, middleBootstrap);
-    for (DubboBootstrap bootstrap : dubboBootstraps) {
-      try {
-        if (bootstrap != null) {
-          bootstrap.destroy();
-        }
-      } catch (Exception e) {
-        // ignore
-      }
-    }
+    cleanup.deferCleanup(bootstrap::destroy);
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    cleanup.deferCleanup(middleBootstrap::destroy);
   }
 
   ReferenceConfig<HelloService> configureClient(int port) {
@@ -122,9 +113,13 @@ abstract class AbstractDubboTraceChainTest {
     return service;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  ReferenceConfig<GenericService> convertReference(ReferenceConfig<MiddleService> config) {
+    return (ReferenceConfig) config;
+  }
+
   @Test
   @DisplayName("test that context is propagated correctly in chained dubbo calls")
-  @SuppressWarnings({"rawtypes", "unchecked"})
   void testDubboChain() {
     int port = PortUtils.findOpenPorts(2);
     int middlePort = port + 1;
@@ -157,7 +152,7 @@ abstract class AbstractDubboTraceChainTest {
     ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
     consumerProtocolConfig.setRegister(false);
 
-    ReferenceConfig middleReference = configureMiddleClient(middlePort);
+    ReferenceConfig<MiddleService> middleReference = configureMiddleClient(middlePort);
     consumerBootstrap = DubboTestUtil.newDubboBootstrap();
     consumerBootstrap
         .application(new ApplicationConfig("dubbo-demo-api-consumer"))
@@ -165,14 +160,14 @@ abstract class AbstractDubboTraceChainTest {
         .protocol(consumerProtocolConfig)
         .start();
 
-    GenericService genericService = (GenericService) middleReference.get();
+    GenericService genericService = convertReference(middleReference).get();
 
-    Object[] o = new Object[1];
-    o[0] = "hello";
     Object response =
         runWithSpan(
             "parent",
-            () -> genericService.$invoke("hello", new String[] {String.class.getName()}, o));
+            () ->
+                genericService.$invoke(
+                    "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
     assertThat(response).isEqualTo("hello");
     testing()
@@ -185,7 +180,9 @@ abstract class AbstractDubboTraceChainTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -218,7 +215,9 @@ abstract class AbstractDubboTraceChainTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
@@ -241,7 +240,9 @@ abstract class AbstractDubboTraceChainTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(2))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -274,7 +275,9 @@ abstract class AbstractDubboTraceChainTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfying(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
@@ -296,7 +299,6 @@ abstract class AbstractDubboTraceChainTest {
 
   @Test
   @DisplayName("test ignore injvm calls")
-  @SuppressWarnings({"rawtypes", "unchecked"})
   void testDubboChainInJvm() {
     int port = PortUtils.findOpenPorts(2);
     int middlePort = port + 1;
@@ -328,7 +330,7 @@ abstract class AbstractDubboTraceChainTest {
     ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
     consumerProtocolConfig.setRegister(false);
 
-    ReferenceConfig middleReference = configureMiddleClient(middlePort);
+    ReferenceConfig<MiddleService> middleReference = configureMiddleClient(middlePort);
     consumerBootstrap = DubboTestUtil.newDubboBootstrap();
     consumerBootstrap
         .application(new ApplicationConfig("dubbo-demo-api-consumer"))
@@ -336,14 +338,14 @@ abstract class AbstractDubboTraceChainTest {
         .protocol(consumerProtocolConfig)
         .start();
 
-    GenericService genericService = (GenericService) middleReference.get();
+    GenericService genericService = convertReference(middleReference).get();
 
-    Object[] o = new Object[1];
-    o[0] = "hello";
     Object response =
         runWithSpan(
             "parent",
-            () -> genericService.$invoke("hello", new String[] {String.class.getName()}, o));
+            () ->
+                genericService.$invoke(
+                    "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
     assertThat(response).isEqualTo("hello");
     testing()
@@ -356,7 +358,9 @@ abstract class AbstractDubboTraceChainTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -389,7 +393,9 @@ abstract class AbstractDubboTraceChainTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "apache_dubbo"),
+                                equalTo(
+                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),

@@ -15,7 +15,7 @@ class DubboTest extends AbstractDubboTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
-  InstrumentationExtension testing() {
+  protected InstrumentationExtension testing() {
     return testing;
   }
 }
