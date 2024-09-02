@@ -21,11 +21,13 @@ public final class ApacheHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";
   private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
+  private final OpenTelemetry openTelemetry;
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         new DefaultHttpClientInstrumenterBuilder<>(
             INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
+    this.openTelemetry = openTelemetry;
   }
 
   /**
@@ -110,6 +112,6 @@ public final class ApacheHttpClientTelemetryBuilder {
    * ApacheHttpClientTelemetryBuilder}.
    */
   public ApacheHttpClientTelemetry build() {
-    return new ApacheHttpClientTelemetry(builder.build(), builder.getPropagators());
+    return new ApacheHttpClientTelemetry(builder.build(), openTelemetry.getPropagators());
   }
 }

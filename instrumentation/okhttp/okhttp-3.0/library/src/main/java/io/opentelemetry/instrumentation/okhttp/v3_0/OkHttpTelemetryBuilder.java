@@ -22,9 +22,11 @@ import okhttp3.Response;
 public final class OkHttpTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> builder;
+  private final OpenTelemetry openTelemetry;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = OkHttpClientInstrumenterBuilderFactory.create(openTelemetry);
+    this.openTelemetry = openTelemetry;
   }
 
   /**
@@ -107,6 +109,6 @@ public final class OkHttpTelemetryBuilder {
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
   public OkHttpTelemetry build() {
-    return new OkHttpTelemetry(builder.build(), builder.getPropagators());
+    return new OkHttpTelemetry(builder.build(), openTelemetry.getPropagators());
   }
 }
