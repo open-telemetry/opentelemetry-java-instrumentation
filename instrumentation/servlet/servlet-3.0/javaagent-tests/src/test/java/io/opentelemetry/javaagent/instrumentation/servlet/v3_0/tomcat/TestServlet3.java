@@ -66,7 +66,8 @@ public class TestServlet3 {
               req.setCharacterEncoding("UTF8");
               String value = req.getParameter("test-parameter");
               if (!value.equals("test value õäöü")) {
-                throw new ServletException("request parameter does not have expected value " + value);
+                throw new ServletException(
+                    "request parameter does not have expected value " + value);
               }
 
               resp.setStatus(endpoint.getStatus());
@@ -141,16 +142,16 @@ public class TestServlet3 {
                       resp.getWriter().print(endpoint.getBody());
                       context.complete();
                     } else if (ERROR.equals(endpoint)) {
-                        resp.setStatus(endpoint.getStatus());
-                        resp.getWriter().print(endpoint.getBody());
+                      resp.setStatus(endpoint.getStatus());
+                      resp.getWriter().print(endpoint.getBody());
                       context.complete();
                     } else if (EXCEPTION.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
-                            PrintWriter writer = resp.getWriter();
-                            writer.print(endpoint.getBody());
-                            if (req.getClass().getName().contains("catalina")) {
-                              writer.close();
-                            }
+                      PrintWriter writer = resp.getWriter();
+                      writer.print(endpoint.getBody());
+                      if (req.getClass().getName().contains("catalina")) {
+                        writer.close();
+                      }
                       throw new ServletException(endpoint.getBody());
                     } else if (HTML_PRINT_WRITER.equals(endpoint)) {
                       resp.setContentType("text/html");
@@ -204,7 +205,8 @@ public class TestServlet3 {
                 req.setCharacterEncoding("UTF8");
                 String value = req.getParameter("test-parameter");
                 if (!value.equals("test value õäöü")) {
-                  throw new ServletException("request parameter does not have expected value " + value);
+                  throw new ServletException(
+                      "request parameter does not have expected value " + value);
                 }
 
                 resp.setStatus(endpoint.getStatus());
@@ -217,8 +219,8 @@ public class TestServlet3 {
                 throw new ServletException(endpoint.getBody());
               } else if (HTML_PRINT_WRITER.equals(endpoint)) {
                 // intentionally testing setting status before contentType here to cover that case
-                                  // somewhere
-                  resp.setStatus(endpoint.getStatus());
+                // somewhere
+                resp.setStatus(endpoint.getStatus());
                 resp.setContentType("text/html");
                 resp.getWriter().print(endpoint.getBody());
               } else if (HTML_SERVLET_OUTPUT_STREAM.equals(endpoint)) {
