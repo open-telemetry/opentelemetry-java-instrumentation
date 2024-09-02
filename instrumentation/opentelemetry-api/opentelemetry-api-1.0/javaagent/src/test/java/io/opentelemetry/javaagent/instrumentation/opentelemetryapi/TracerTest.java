@@ -172,11 +172,11 @@ class TracerTest {
     // Then
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "test"),
-        trace0 ->
-            trace0.hasSpansSatisfyingExactly(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0)),
-        trace1 ->
-            trace1.hasSpansSatisfyingExactly(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0)));
   }
 
@@ -197,7 +197,7 @@ class TracerTest {
   }
 
   @Test
-  @DisplayName("capture exception()")
+  @DisplayName("capture exception")
   void captureException() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
@@ -213,20 +213,7 @@ class TracerTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasTotalAttributeCount(0)
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            "java.lang.IllegalStateException"),
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            writer.toString())))));
+                span -> span.hasName("test").hasTotalAttributeCount(0).hasException(throwable)));
   }
 
   @Test
