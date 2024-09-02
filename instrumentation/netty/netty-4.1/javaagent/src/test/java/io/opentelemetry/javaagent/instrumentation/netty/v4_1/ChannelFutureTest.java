@@ -29,18 +29,19 @@ class ChannelFutureTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2705
   @DisplayName("should clean up wrapped listeners")
   @Test
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings({"unchecked"})
   void testCleanUpWrappedListeners() throws InterruptedException {
     // given
     EmbeddedChannel channel = new EmbeddedChannel();
     AtomicInteger counter = new AtomicInteger();
 
-    GenericFutureListener listener1 = newListener(counter);
+    GenericFutureListener<Future<Void>> listener1 = newListener(counter);
     channel.closeFuture().addListener(listener1);
     channel.closeFuture().removeListener(listener1);
 
-    GenericFutureListener listener2 = newListener(counter);
-    GenericFutureListener listener3 = newProgressiveListener(counter);
+    GenericFutureListener<Future<Void>> listener2 = newListener(counter);
+    GenericFutureListener<ProgressiveFuture<Void>> listener3 = newProgressiveListener(counter);
+
     channel.closeFuture().addListeners(listener2, listener3);
     channel.closeFuture().removeListeners(listener2, listener3);
 
@@ -51,27 +52,25 @@ class ChannelFutureTest {
     assertThat(counter.get()).isEqualTo(0);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static GenericFutureListener newListener(AtomicInteger counter) {
-    return new GenericFutureListener() {
+  private static <T extends Future<?>> GenericFutureListener<T> newListener(AtomicInteger counter) {
+    return new GenericFutureListener<T>() {
       @Override
-      public void operationComplete(Future future) throws Exception {
+      public void operationComplete(T future) throws Exception {
         counter.incrementAndGet();
       }
     };
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static GenericFutureListener newProgressiveListener(AtomicInteger counter) {
-    return new GenericProgressiveFutureListener() {
+  private static <T extends ProgressiveFuture<?>> GenericFutureListener<T> newProgressiveListener(
+      AtomicInteger counter) {
+    return new GenericProgressiveFutureListener<T>() {
       @Override
-      public void operationProgressed(ProgressiveFuture future, long progress, long total)
-          throws Exception {
+      public void operationProgressed(T future, long progress, long total) {
         counter.incrementAndGet();
       }
 
       @Override
-      public void operationComplete(Future future) throws Exception {
+      public void operationComplete(T future) {
         counter.incrementAndGet();
       }
     };
