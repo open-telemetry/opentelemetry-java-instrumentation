@@ -118,9 +118,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, responseCode, null)
-                    .hasNoParent()
-                    .hasStatus(StatusData.unset()),
+                span ->
+                    assertClientSpan(span, uri, method, responseCode, null)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset()),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 
