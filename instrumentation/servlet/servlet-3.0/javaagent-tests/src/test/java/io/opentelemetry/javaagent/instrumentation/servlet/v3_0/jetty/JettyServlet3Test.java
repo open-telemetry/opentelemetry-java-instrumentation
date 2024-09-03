@@ -82,13 +82,12 @@ public abstract class JettyServlet3Test
       return "HTTP " + getContextPath() + endpoint.getPath();
     }
 
-    switch (endpoint.name()) {
-      case "NOT_FOUND":
-        return method;
-      case "PATH_PARAM":
-        return method + " " + getContextPath() + "/path/:id/param";
-      default:
-        return method + " " + getContextPath() + endpoint.getPath();
+    if (ServerEndpoint.NOT_FOUND.equals(endpoint)) {
+      return method;
+    } else if (ServerEndpoint.PATH_PARAM.equals(endpoint)) {
+      return method + " " + getContextPath() + "/path/:id/param";
+    } else {
+      return method + " " + getContextPath() + endpoint.getPath();
     }
   }
 
