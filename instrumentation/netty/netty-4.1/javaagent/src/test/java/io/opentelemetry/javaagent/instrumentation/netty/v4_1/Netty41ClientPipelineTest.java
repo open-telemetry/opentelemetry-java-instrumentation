@@ -28,35 +28,38 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class Netty41ClientAgentTest {
+class Netty41ClientPipelineTest {
 
-  private HttpClientTestServer server;
+  private static HttpClientTestServer server;
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @RegisterExtension
   static InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @BeforeEach
-  void setUp() {
+  @BeforeAll
+  static void setUp() {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
   }
 
-  @AfterEach
-  void tearDown() {
+  @AfterAll
+  static void tearDown() {
     server.stop();
   }
 
@@ -65,6 +68,7 @@ class Netty41ClientAgentTest {
   void testConnectionReuse() throws InterruptedException {
     // Create a simple Netty pipeline
     EventLoopGroup group = new NioEventLoopGroup();
+    cleanup.deferCleanup(group::shutdownGracefully);
     Bootstrap b = new Bootstrap();
     b.group(group)
         .channel(NioSocketChannel.class)
@@ -91,8 +95,7 @@ class Netty41ClientAgentTest {
               return channel;
             });
     // This is a cheap/easy way to block/ensure that the first request has finished and check
-    // reported spans midway through
-    // the complex sequence of events
+    // reported spans midway through the complex sequence of events
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -100,6 +103,7 @@ class Netty41ClientAgentTest {
                 span -> span.hasParent(trace.getSpan(0)).hasKind(SpanKind.CLIENT),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
 
+    testing.clearData();
     // now run a second request through the same channel
     testing.runWithSpan(
         "parent2",
@@ -110,16 +114,9 @@ class Netty41ClientAgentTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
-                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
                 span -> span.hasNoParent().hasName("parent2").hasKind(SpanKind.INTERNAL),
                 span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
-
-    group.shutdownGracefully();
   }
 
   @Test
@@ -181,8 +178,8 @@ class Netty41ClientAgentTest {
 
     channel.pipeline().addLast(new SimpleHandler(), new OtherSimpleHandler());
 
-    assertThat(channel.pipeline().remove("Netty41ClientAgentTest$SimpleHandler#0")).isNotNull();
-    assertThat(channel.pipeline().remove("Netty41ClientAgentTest$OtherSimpleHandler#0"))
+    assertThat(channel.pipeline().remove("Netty41ClientPipelineTest$SimpleHandler#0")).isNotNull();
+    assertThat(channel.pipeline().remove("Netty41ClientPipelineTest$OtherSimpleHandler#0"))
         .isNotNull();
   }
 
@@ -191,8 +188,7 @@ class Netty41ClientAgentTest {
       "when a traced handler is added from an initializer we still detect it and add our channel handlers")
   void testAddInitializer() {
     // This test method replicates a scenario similar to how reactor 0.8.x register the
-    // `HttpClientCodec` handler
-    // into the pipeline.
+    // `HttpClientCodec` handler into the pipeline.
     assumeTrue(Boolean.getBoolean("testLatestDeps"));
     EmbeddedChannel channel = new EmbeddedChannel();
 
@@ -231,7 +227,7 @@ class Netty41ClientAgentTest {
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(2))));
   }
 
-  class TracedClass {
+  static class TracedClass {
     private final Bootstrap bootstrap;
 
     private TracedClass() {
@@ -304,8 +300,6 @@ class Netty41ClientAgentTest {
 
     @Override
     @Deprecated
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-      super.exceptionCaught(ctx, cause);
-    }
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {}
   }
 }

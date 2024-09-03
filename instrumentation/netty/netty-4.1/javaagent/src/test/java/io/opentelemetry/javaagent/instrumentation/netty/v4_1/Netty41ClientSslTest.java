@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.bootstrap.Bootstrap;
@@ -29,12 +28,11 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.netty.v4_1.ClientHandler;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
@@ -46,22 +44,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLHandshakeException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty41ClientSslTest {
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @RegisterExtension
   static InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private HttpClientTestServer server;
+  private static HttpClientTestServer server;
 
-  private EventLoopGroup eventLoopGroup;
+  private static EventLoopGroup eventLoopGroup;
 
-  @SuppressWarnings("UnusedMethod")
   private static Bootstrap createBootstrap(
       EventLoopGroup eventLoopGroup, List<String> enabledProtocols) {
     Bootstrap bootstrap = new Bootstrap();
@@ -87,8 +86,8 @@ class Netty41ClientSslTest {
     return bootstrap;
   }
 
-  @BeforeEach
-  void setUp() {
+  @BeforeAll
+  static void setUp() {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
     eventLoopGroup = new NioEventLoopGroup();
@@ -96,8 +95,8 @@ class Netty41ClientSslTest {
     System.setProperty("otel.instrumentation.netty.ssl-telemetry.enabled", "true");
   }
 
-  @AfterEach
-  void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+  @AfterAll
+  static void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
     server.stop().get(10, TimeUnit.SECONDS);
     eventLoopGroup.shutdownGracefully();
     System.clearProperty("otel.instrumentation.netty.connection-telemetry.enabled");
@@ -121,6 +120,7 @@ class Netty41ClientSslTest {
           "parent",
           () -> {
             Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+            cleanup.deferCleanup(channel::close);
             CompletableFuture<Integer> result = new CompletableFuture<>();
             channel.pipeline().addLast(new ClientHandler(result));
             channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
@@ -130,14 +130,7 @@ class Netty41ClientSslTest {
       thrownException = e;
     }
 
-    List<AttributeAssertion> attributeAssertion =
-        asList(
-            equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, thrownException.getCause().getMessage()),
-            satisfies(ExceptionAttributes.EXCEPTION_STACKTRACE, v -> v.isNotNull()),
-            equalTo(
-                ExceptionAttributes.EXCEPTION_TYPE,
-                thrownException.getCause().getClass().getCanonicalName()));
-
+    Throwable finalThrownException = thrownException;
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -145,8 +138,7 @@ class Netty41ClientSslTest {
                     span.hasName("parent")
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event -> event.hasAttributesSatisfyingExactly(attributeAssertion)),
+                        .hasException(finalThrownException.getCause()),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(SpanKind.INTERNAL)
@@ -170,19 +162,7 @@ class Netty41ClientSslTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event.hasAttributesSatisfyingExactly(
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_TYPE,
-                                        v ->
-                                            v.isEqualTo(
-                                                SSLHandshakeException.class.getCanonicalName())),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                        v -> v.isInstanceOf(String.class)),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_MESSAGE, v -> v.isNotNull())))
+                        .hasException(new SSLHandshakeException(null))
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
@@ -204,7 +184,6 @@ class Netty41ClientSslTest {
 
   @Test
   @DisplayName("should successfully establish SSL handshake")
-  @SuppressWarnings("InterruptedExceptionSwallowed")
   public void testSuccessSslHandshake() throws Exception {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, null);
     URI uri = server.resolveHttpsAddress("/success");
@@ -217,6 +196,7 @@ class Netty41ClientSslTest {
         "parent",
         () -> {
           Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+          cleanup.deferCleanup(channel::close);
           CompletableFuture<Integer> result = new CompletableFuture<>();
           channel.pipeline().addLast(new ClientHandler(result));
           channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
