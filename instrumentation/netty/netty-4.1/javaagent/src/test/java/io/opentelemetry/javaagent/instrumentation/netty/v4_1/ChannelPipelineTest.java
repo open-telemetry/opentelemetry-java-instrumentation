@@ -29,7 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class ChannelPipelineTest extends AgentInstrumentationSpecification {
+class ChannelPipelineTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -133,13 +133,13 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
 
     // only the noop handler
     assertThat(channelPipeline.first()).isEqualTo(noopHandler);
-    assertThat(channelPipeline.last()).isEqualTo(noopHandler);
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
 
     //      when:
     replaceMethod.accept(channelPipeline, "test", noopHandler, "http", handler);
 
     // noop handler was removed; http and instrumentation handlers were added
-    //      channelPipeline.size() == 1
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
     assertThat(channelPipeline.first()).isEqualTo(handler);
     assertThat(channelPipeline.last().getClass().getSimpleName())
         .isEqualTo("HttpClientTracingHandler");
@@ -149,20 +149,21 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     replaceMethod.accept(channelPipeline, "http", handler, "test", anotherNoopHandler);
     // http and instrumentation handlers were removed; noop handler was added
     assertThat(channelPipeline.first()).isEqualTo(anotherNoopHandler);
-    assertThat(channelPipeline.last()).isEqualTo(anotherNoopHandler);
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
   }
 
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4056
-  @DisplayName("Test remove our handler")
+  @DisplayName("Should addAfter and removeLast handler")
   @Test
   void testAddAfterAndRemoveLast() {
     // no handlers initially
-    assertThat(channelPipeline.first()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     channelPipeline.addLast("http", handler);
 
     assertThat(channelPipeline.first()).isEqualTo(handler);
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
     assertThat(channelPipeline.last().getClass().getSimpleName())
         .isEqualTo("HttpClientTracingHandler");
 
@@ -170,6 +171,7 @@ class ChannelPipelineTest extends AgentInstrumentationSpecification {
     channelPipeline.addAfter("http", "noop", noopHandler);
 
     // instrumentation handler is between with http and noop;
+    assertThat(channelPipeline.toMap().size()).isEqualTo(2);
     assertThat(channelPipeline.first()).isEqualTo(handler);
     assertThat(channelPipeline.last()).isEqualTo(noopHandler);
 

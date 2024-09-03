@@ -146,14 +146,8 @@ class Netty41ConnectionSpanTest {
   void testFailingRequest() throws Exception {
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT);
     DefaultFullHttpRequest request = buildRequest("GET", uri, new HashMap<>());
-    Throwable thrownException = null;
-    try {
-      testing.runWithSpan("parent", () -> sendRequest(request, uri));
-    } catch (Throwable e) {
-      thrownException = e;
-    }
-
-    Throwable finalThrownException = thrownException;
+    Throwable finalThrownException =
+        catchThrowable(() -> testing.runWithSpan("parent", () -> sendRequest(request, uri)));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
