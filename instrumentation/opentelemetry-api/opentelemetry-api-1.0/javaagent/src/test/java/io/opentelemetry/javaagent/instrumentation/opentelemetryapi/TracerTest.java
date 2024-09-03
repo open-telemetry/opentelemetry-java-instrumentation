@@ -217,7 +217,7 @@ class TracerTest {
   }
 
   @Test
-  @DisplayName("capture exception with Attributes()")
+  @DisplayName("capture exception with Attributes")
   void captureExceptionWithAttributes() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
