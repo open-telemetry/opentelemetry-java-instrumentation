@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
@@ -114,23 +115,21 @@ class Netty41ClientSslTest {
             HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getPath(), Unpooled.EMPTY_BUFFER);
     request.headers().set(HttpHeaderNames.HOST, uri.getHost() + ":" + uri.getPort());
 
-    Throwable thrownException = null;
-    try {
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
-            cleanup.deferCleanup(channel::close);
-            CompletableFuture<Integer> result = new CompletableFuture<>();
-            channel.pipeline().addLast(new ClientHandler(result));
-            channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
-            result.get(10, TimeUnit.SECONDS);
-          });
-    } catch (Throwable e) {
-      thrownException = e;
-    }
+    Throwable finalThrownException =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () -> {
+                      Channel channel =
+                          bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+                      cleanup.deferCleanup(channel::close);
+                      CompletableFuture<Integer> result = new CompletableFuture<>();
+                      channel.pipeline().addLast(new ClientHandler(result));
+                      channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
+                      result.get(10, TimeUnit.SECONDS);
+                    }));
 
-    Throwable finalThrownException = thrownException;
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

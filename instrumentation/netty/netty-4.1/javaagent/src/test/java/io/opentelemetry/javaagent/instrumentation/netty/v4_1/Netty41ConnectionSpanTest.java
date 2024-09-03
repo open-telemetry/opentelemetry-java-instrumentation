@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
@@ -30,7 +31,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
@@ -156,22 +156,7 @@ class Netty41ConnectionSpanTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event.hasAttributesSatisfyingExactly(
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_TYPE,
-                                        v ->
-                                            v.isEqualTo(
-                                                finalThrownException
-                                                    .getClass()
-                                                    .getCanonicalName())),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                        v -> v.isInstanceOf(String.class)),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_MESSAGE,
-                                        v -> v.isEqualTo(finalThrownException.getMessage())))),
+                        .hasException(finalThrownException),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(SpanKind.INTERNAL)
@@ -184,22 +169,7 @@ class Netty41ConnectionSpanTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event.hasAttributesSatisfyingExactly(
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_TYPE,
-                                        v ->
-                                            v.isEqualTo(
-                                                finalThrownException
-                                                    .getClass()
-                                                    .getCanonicalName())),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                        v -> v.isInstanceOf(String.class)),
-                                    satisfies(
-                                        ExceptionAttributes.EXCEPTION_MESSAGE,
-                                        v -> v.isEqualTo(finalThrownException.getMessage()))))
+                        .hasException(finalThrownException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                             satisfies(

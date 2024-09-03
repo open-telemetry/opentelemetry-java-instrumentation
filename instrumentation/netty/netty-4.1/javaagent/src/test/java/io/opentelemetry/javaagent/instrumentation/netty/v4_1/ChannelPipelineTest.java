@@ -13,7 +13,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.DefaultChannelPipeline;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
@@ -38,9 +37,6 @@ class ChannelPipelineTest {
   private ChannelPipeline channelPipeline;
   private ChannelHandler handler;
 
-  // regression test for
-  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
-  // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
   static Stream<Arguments> removeMethodProvider() {
     return Stream.of(
         Arguments.of(
@@ -68,6 +64,9 @@ class ChannelPipelineTest {
     handler = new HttpClientCodec();
   }
 
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
+  // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
   @ParameterizedTest(name = "{0}")
   @MethodSource("removeMethodProvider")
   @DisplayName("Test remove our handler")
@@ -89,7 +88,6 @@ class ChannelPipelineTest {
     assertThat(channelPipeline.first()).isNull();
   }
 
-  // Method to provide test data (similar to Spock's `where` block)
   static Stream<Arguments> replaceMethodProvider() {
     return Stream.of(
         Arguments.of(
