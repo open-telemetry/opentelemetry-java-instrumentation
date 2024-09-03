@@ -11,9 +11,13 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -66,27 +70,23 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
 
     assertThat(response.status().code()).isEqualTo(success ? 200 : 404);
 
-    if (success) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("GET " + getContextPath() + route)
-                          .hasKind(SpanKind.SERVER)
-                          .hasStatus(StatusData.unset())));
-    } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("GET " + getContextPath() + route)
-                          .hasKind(SpanKind.SERVER)
-                          .hasStatus(
-                              response.status().code() >= 500
-                                  ? StatusData.error()
-                                  : StatusData.unset()),
-                  span -> {}));
-    }
+    testing.waitAndAssertTraces(
+        trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(
+              span ->
+                  span.hasName("GET " + getContextPath() + route)
+                      .hasKind(SpanKind.SERVER)
+                      .hasStatus(
+                          !success && response.status().code() >= 500
+                              ? StatusData.error()
+                              : StatusData.unset()));
+          if (!success) {
+            assertions.add(span -> {});
+          }
+
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 
   public static class TestServlet extends HttpServlet {

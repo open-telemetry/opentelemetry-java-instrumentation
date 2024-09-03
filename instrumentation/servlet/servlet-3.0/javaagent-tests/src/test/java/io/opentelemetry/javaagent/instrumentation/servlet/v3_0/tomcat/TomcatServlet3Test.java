@@ -14,9 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -24,9 +22,11 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -143,8 +143,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
 
   @ParameterizedTest
   @CsvSource({"1", "4"})
-  void access_log_has_ids_for__count_requests(int count) {
-    setUp();
+  void accessLogHasIdsForCountRequests(int count) {
     AggregatedHttpRequest request = request(ACCESS_LOG_SUCCESS, "GET");
 
     IntStream.range(0, count)
@@ -164,21 +163,23 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
 
-    Consumer<TraceAssert> check =
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertServerSpan(span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
-                span -> assertControllerSpan(span, null));
     testing()
         .waitAndAssertTraces(
-            IntStream.range(0, count).mapToObj(i -> check).collect(Collectors.toList()));
-
-    List<List<SpanData>> traces = TelemetryDataUtil.groupTraces(testing().getExportedSpans());
-
-    for (int i = 0; i < count; i++) {
-      assertThat(loggedTraces).contains(traces.get(i).get(0).getTraceId());
-      assertThat(loggedSpans).contains(traces.get(i).get(0).getSpanId());
-    }
+            IntStream.range(0, count)
+                .mapToObj(
+                    i ->
+                        (Consumer<TraceAssert>)
+                            trace -> {
+                              trace.hasSpansSatisfyingExactly(
+                                  span ->
+                                      assertServerSpan(
+                                          span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
+                                  span -> assertControllerSpan(span, null));
+                              SpanData span = trace.getSpan(0);
+                              assertThat(loggedTraces).contains(span.getTraceId());
+                              assertThat(loggedSpans).contains(span.getSpanId());
+                            })
+                .collect(Collectors.toList()));
   }
 
   @Test
@@ -191,30 +192,30 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     assertThat(response.status().code()).isEqualTo(ACCESS_LOG_ERROR.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(ACCESS_LOG_ERROR.getBody());
 
-    int spanCount = 2;
+    List<BiConsumer<SpanDataAssert, TraceAssert>> spanDataAsserts = new ArrayList<>();
+    spanDataAsserts.add(
+        (span, trace) -> assertServerSpan(span, "GET", ACCESS_LOG_ERROR, ERROR.getStatus()));
+    spanDataAsserts.add((span, trace) -> assertControllerSpan(span, null));
     if (errorEndpointUsesSendError()) {
-      spanCount++;
-    }
-
-    List<SpanData> spanData = TelemetryDataUtil.groupTraces(testing().getExportedSpans()).get(0);
-    List<SpanDataAssert> spans =
-        spanData.stream().map(OpenTelemetryAssertions::assertThat).collect(Collectors.toList());
-    assertThat(spans).hasSize(spanCount);
-
-    assertServerSpan(spans.get(0), "GET", ACCESS_LOG_ERROR, ERROR.getStatus());
-    assertControllerSpan(spans.get(1), null);
-    if (errorEndpointUsesSendError()) {
-      spans
-          .get(2)
-          .satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
-          .hasKind(SpanKind.INTERNAL)
-          .hasParent(spanData.get(1));
+      spanDataAsserts.add(
+          (span, trace) ->
+              span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(1)));
     }
 
     accessLogValue.waitForLoggedIds(1);
-    Map.Entry<String, String> entry = accessLogValue.getLoggedIds().get(0);
-
-    assertThat(spanData.get(0).getTraceId()).isEqualTo(entry.getKey());
-    assertThat(spanData.get(0).getSpanId()).isEqualTo(entry.getValue());
+    testing()
+        .waitAndAssertTraces(
+            trace -> {
+              trace.hasSpansSatisfyingExactly(
+                  spanDataAsserts.stream()
+                      .map(e -> (Consumer<SpanDataAssert>) span -> e.accept(span, trace))
+                      .collect(Collectors.toList()));
+              SpanData span = trace.getSpan(0);
+              Map.Entry<String, String> entry = accessLogValue.getLoggedIds().get(0);
+              assertThat(entry.getKey()).isEqualTo(span.getTraceId());
+              assertThat(entry.getValue()).isEqualTo(span.getSpanId());
+            });
   }
 }
