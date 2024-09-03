@@ -32,17 +32,12 @@ import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractDubboTraceChainTest {
-
-  private DubboBootstrap bootstrap;
-  private DubboBootstrap consumerBootstrap;
-  private DubboBootstrap middleBootstrap;
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -60,13 +55,6 @@ public abstract class AbstractDubboTraceChainTest {
   }
 
   protected abstract InstrumentationExtension testing();
-
-  @AfterEach
-  public void afterEach() {
-    cleanup.deferCleanup(bootstrap::destroy);
-    cleanup.deferCleanup(consumerBootstrap::destroy);
-    cleanup.deferCleanup(middleBootstrap::destroy);
-  }
 
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>();
@@ -128,7 +116,8 @@ public abstract class AbstractDubboTraceChainTest {
     ProtocolConfig protocolConfig = new ProtocolConfig();
     protocolConfig.setPort(port);
 
-    bootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
     bootstrap
         .application(new ApplicationConfig("dubbo-test-provider"))
         .service(configureServer())
@@ -140,7 +129,8 @@ public abstract class AbstractDubboTraceChainTest {
     middleProtocolConfig.setPort(middlePort);
 
     ReferenceConfig<HelloService> clientReference = configureClient(port);
-    middleBootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap middleBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(middleBootstrap::destroy);
     middleBootstrap
         .application(new ApplicationConfig("dubbo-demo-middle"))
         .reference(clientReference)
@@ -153,7 +143,8 @@ public abstract class AbstractDubboTraceChainTest {
     consumerProtocolConfig.setRegister(false);
 
     ReferenceConfig<MiddleService> middleReference = configureMiddleClient(middlePort);
-    consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
     consumerBootstrap
         .application(new ApplicationConfig("dubbo-demo-api-consumer"))
         .reference(middleReference)
@@ -307,7 +298,8 @@ public abstract class AbstractDubboTraceChainTest {
     ProtocolConfig protocolConfig = new ProtocolConfig();
     protocolConfig.setPort(port);
 
-    bootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
     bootstrap
         .application(new ApplicationConfig("dubbo-test-provider"))
         .service(configureServer())
@@ -319,7 +311,8 @@ public abstract class AbstractDubboTraceChainTest {
     middleProtocolConfig.setPort(middlePort);
 
     ReferenceConfig<HelloService> clientReference = configureLocalClient(port);
-    middleBootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap middleBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(middleBootstrap::destroy);
     middleBootstrap
         .application(new ApplicationConfig("dubbo-demo-middle"))
         .service(configureMiddleServer(clientReference))
@@ -331,7 +324,8 @@ public abstract class AbstractDubboTraceChainTest {
     consumerProtocolConfig.setRegister(false);
 
     ReferenceConfig<MiddleService> middleReference = configureMiddleClient(middlePort);
-    consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
     consumerBootstrap
         .application(new ApplicationConfig("dubbo-demo-api-consumer"))
         .reference(middleReference)

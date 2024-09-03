@@ -33,7 +33,6 @@ import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,9 +45,6 @@ public abstract class AbstractDubboTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private DubboBootstrap bootstrap;
-  private DubboBootstrap consumerBootstrap;
-
   @BeforeAll
   static void setUp() throws Exception {
     System.setProperty("dubbo.application.qos-enable", "false");
@@ -60,12 +56,6 @@ public abstract class AbstractDubboTest {
   @AfterAll
   static void tearDown() {
     System.clearProperty("dubbo.application.qos-enable");
-  }
-
-  @AfterEach
-  public void afterEach() {
-    cleanup.deferCleanup(bootstrap::destroy);
-    cleanup.deferCleanup(consumerBootstrap::destroy);
   }
 
   ReferenceConfig<HelloService> configureClient(int port) {
@@ -96,7 +86,8 @@ public abstract class AbstractDubboTest {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
     // provider boostrap
-    bootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
     bootstrap
         .application(new ApplicationConfig("dubbo-test-provider"))
         .service(configureServer())
@@ -104,7 +95,8 @@ public abstract class AbstractDubboTest {
         .start();
 
     // consumer boostrap
-    consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
     ReferenceConfig<HelloService> referenceConfig = configureClient(port);
     ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
     consumerProtocolConfig.setRegister(false);
@@ -194,7 +186,8 @@ public abstract class AbstractDubboTest {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
 
-    bootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
     bootstrap
         .application(new ApplicationConfig("dubbo-test-async-provider"))
         .service(configureServer())
@@ -205,7 +198,8 @@ public abstract class AbstractDubboTest {
     consumerProtocolConfig.setRegister(false);
 
     ReferenceConfig<HelloService> referenceConfig = configureClient(port);
-    consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
     consumerBootstrap
         .application(new ApplicationConfig("dubbo-demo-async-api-consumer"))
         .reference(referenceConfig)
