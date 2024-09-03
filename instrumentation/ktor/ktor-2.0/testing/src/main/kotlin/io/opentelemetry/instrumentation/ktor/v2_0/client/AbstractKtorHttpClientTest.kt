@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
+import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.semconv.NetworkAttributes
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
@@ -89,7 +90,7 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
     testing.waitAndAssertTraces(
       Consumer { trace: TraceAssert ->
         val span = trace.getSpan(0)
-        assertThat(span).hasKind(SpanKind.CLIENT)
+        assertThat(span).hasKind(SpanKind.CLIENT).hasStatus(StatusData.unset())
         assertThat(span.endEpochNanos - span.startEpochNanos >= 1_000_000_000)
           .describedAs("Span duration should be at least 1000ms")
           .isTrue()
