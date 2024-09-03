@@ -120,7 +120,7 @@ public abstract class AbstractDubboTraceChainTest {
 
   @Test
   @DisplayName("test that context is propagated correctly in chained dubbo calls")
-  void testDubboChain() {
+  void testDubboChain() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPorts(2);
     int middlePort = port + 1;
 
@@ -299,7 +299,7 @@ public abstract class AbstractDubboTraceChainTest {
 
   @Test
   @DisplayName("test ignore injvm calls")
-  void testDubboChainInJvm() {
+  void testDubboChainInJvm() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPorts(2);
     int middlePort = port + 1;
 

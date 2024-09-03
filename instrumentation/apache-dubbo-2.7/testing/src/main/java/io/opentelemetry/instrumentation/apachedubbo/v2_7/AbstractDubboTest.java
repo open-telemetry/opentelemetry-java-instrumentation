@@ -92,7 +92,7 @@ public abstract class AbstractDubboTest {
   }
 
   @Test
-  void testApacheDubboBase() {
+  void testApacheDubboBase() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
     // provider boostrap
@@ -189,7 +189,8 @@ public abstract class AbstractDubboTest {
   }
 
   @Test
-  void testApacheDubboTest() throws ExecutionException, InterruptedException {
+  void testApacheDubboTest()
+      throws ExecutionException, InterruptedException, ReflectiveOperationException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
 

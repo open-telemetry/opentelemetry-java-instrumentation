@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 
@@ -26,32 +25,23 @@ class DubboTestUtil {
     }
   }
 
-  @SuppressWarnings("ThrowSpecificExceptions")
-  static DubboBootstrap newDubboBootstrap() {
+  static DubboBootstrap newDubboBootstrap() throws ReflectiveOperationException {
     Object newFrameworkModel = newFrameworkModel();
-    try {
-      if (newFrameworkModel == null) {
-        return newDubboBootstrapV27();
-      } else {
-        return newDubboBootstrapV3(newFrameworkModel);
-      }
-    } catch (ReflectiveOperationException exception) {
-      throw new RuntimeException("Error creating new DubboBootstrap instance", exception);
+    if (newFrameworkModel == null) {
+      return newDubboBootstrapV27();
+    } else {
+      return newDubboBootstrapV3(newFrameworkModel);
     }
   }
 
   private static DubboBootstrap newDubboBootstrapV3(Object newFrameworkModel)
-      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+      throws ReflectiveOperationException {
     Method getInstance =
         DubboBootstrap.class.getDeclaredMethod("newInstance", newFrameworkModel.getClass());
     return (DubboBootstrap) getInstance.invoke(null, newFrameworkModel);
   }
 
-  private static DubboBootstrap newDubboBootstrapV27()
-      throws NoSuchMethodException,
-          InstantiationException,
-          IllegalAccessException,
-          InvocationTargetException {
+  private static DubboBootstrap newDubboBootstrapV27() throws ReflectiveOperationException {
     Constructor<DubboBootstrap> constructor = DubboBootstrap.class.getDeclaredConstructor();
     constructor.setAccessible(true);
     return constructor.newInstance();
