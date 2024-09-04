@@ -23,7 +23,8 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 public class EnduserAttributesCapturerTest {
 
-  @RegisterExtension InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
   void nothingEnabled() {
