@@ -119,7 +119,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+                span ->
+                    assertClientSpan(span, uri, method, responseCode, null)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset()),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 
@@ -975,7 +978,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200, null).hasNoParent(),
+              span ->
+                  assertClientSpan(span, uri, method, 200, null)
+                      .hasNoParent()
+                      .hasStatus(StatusData.unset()),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           SpanData span = trace.getSpan(0);
           // make sure the span is at least as long as the delay we set when sending the request
@@ -1007,7 +1013,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertClientSpan(span, uri, method, 200, null).hasNoParent(),
+              span ->
+                  assertClientSpan(span, uri, method, 200, null)
+                      .hasNoParent()
+                      .hasStatus(StatusData.unset()),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           SpanData span = trace.getSpan(0);
           // verify that the span length is less than the delay used to complete the response body
