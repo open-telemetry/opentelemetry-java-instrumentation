@@ -78,7 +78,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private final ElementMatcher<String> agentClassNamesMatcher;
 
   /**
-   * Mutable list of packages from the agent classloader to hide. So even if a class matches {@link
+   * Mutable set of packages from the agent classloader to hide. So even if a class matches {@link
    * #agentClassNamesMatcher}, it will not be attempted to be loaded from the agent classloader if
    * it is from any of these packages.
    */
