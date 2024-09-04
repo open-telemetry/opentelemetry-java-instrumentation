@@ -5,24 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
@@ -43,6 +43,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.common.naming.TopicName;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -72,12 +73,12 @@ abstract class AbstractPulsarClientTest {
   static Consumer<String> consumer;
   static Producer<String> producer2;
 
-  private static String brokerHost;
-  private static int brokerPort;
+  static String brokerHost;
+  static int brokerPort;
 
   private static final AttributeKey<String> MESSAGE_TYPE =
       AttributeKey.stringKey("messaging.pulsar.message.type");
-  private static final double[] DURATION_BUCKETS =
+  static final double[] DURATION_BUCKETS =
       new double[] {
         0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0
       };
@@ -172,7 +173,24 @@ abstract class AbstractPulsarClientTest {
     assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
+                    .hasName("messaging.receive.duration")
+                    .hasUnit("s")
+                    .hasDescription("Measures the duration of receive operation.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost))
+                                        .hasBucketBoundaries(DURATION_BUCKETS))),
+            metric ->
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -187,7 +205,23 @@ abstract class AbstractPulsarClientTest {
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+                                        .hasBucketBoundaries(DURATION_BUCKETS))),
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.receive.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Measures the number of received messages.")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost)))));
   }
 
   @Test
@@ -251,6 +285,59 @@ abstract class AbstractPulsarClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))));
+
+    assertThat(testing.metrics())
+        .satisfiesExactlyInAnyOrder(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.receive.duration")
+                    .hasUnit("s")
+                    .hasDescription("Measures the duration of receive operation.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost))
+                                        .hasBucketBoundaries(DURATION_BUCKETS))),
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.publish.duration")
+                    .hasUnit("s")
+                    .hasDescription("Measures the duration of publish operation.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost))
+                                        .hasBucketBoundaries(DURATION_BUCKETS))),
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.receive.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Measures the number of received messages.")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost)))));
   }
 
   static List<AttributeAssertion> sendAttributes(
@@ -272,6 +359,10 @@ abstract class AbstractPulsarClientTest {
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.test_message_header"),
               Collections.singletonList("test")));
+    }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
+    if (partitionIndex != -1) {
+      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
   }
@@ -307,6 +398,10 @@ abstract class AbstractPulsarClientTest {
     if (isBatch) {
       assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
     }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
+    if (partitionIndex != -1) {
+      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
+    }
     return assertions;
   }
 
@@ -325,6 +420,10 @@ abstract class AbstractPulsarClientTest {
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.test_message_header"),
               Collections.singletonList("test")));
+    }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
+    if (partitionIndex != -1) {
+      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
   }

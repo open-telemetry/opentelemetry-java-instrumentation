@@ -1,10 +1,10 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.8"
+    id("com.github.jk1.dependency-license-report") version "2.9"
     id("com.google.cloud.tools.jib") version "3.4.3"
-    id("com.gradle.plugin-publish") version "1.2.1"
+    id("com.gradle.plugin-publish") version "1.2.2"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.0.10"
+    id("org.jetbrains.kotlin.jvm") version "2.0.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.10.2"
@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.17.6"
+  id("com.gradle.develocity") version "3.18"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
@@ -121,6 +121,7 @@ include(":javaagent-bootstrap")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
 include(":javaagent-tooling:javaagent-tooling-java9")
+include(":javaagent-tooling:jdk18-testing")
 include(":javaagent-internal-logging-application")
 include(":javaagent-internal-logging-simple")
 include(":javaagent")
@@ -332,14 +333,15 @@ include(":instrumentation:jaxws:jaxws-2.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-arquillian-testing")
 include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-common-testing")
-include(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent")
-include(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent-unit-tests")
 include(":instrumentation:jaxws:jaxws-2.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-2.0-tomee-testing")
 include(":instrumentation:jaxws:jaxws-2.0-wildfly-testing")
 include(":instrumentation:jaxws:jaxws-3.0-common-testing")
+include(":instrumentation:jaxws:jaxws-3.0-cxf-4.0-testing")
 include(":instrumentation:jaxws:jaxws-3.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-common:javaagent")
+include(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent")
+include(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent-unit-tests")
 include(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent")
 include(":instrumentation:jaxws:jaxws-metro-2.2:javaagent")
 include(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent")

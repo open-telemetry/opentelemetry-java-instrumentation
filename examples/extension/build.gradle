@@ -13,8 +13,8 @@ plugins {
   id "com.gradleup.shadow" version "8.3.0"
   id "com.diffplug.spotless" version "6.25.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.7.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "2.7.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.8.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "2.8.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -23,13 +23,13 @@ version '1.0'
 ext {
   versions = [
     // this line is managed by .github/scripts/update-sdk-version.sh
-    opentelemetrySdk           : "1.40.0",
+    opentelemetrySdk           : "1.41.0",
 
     // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "2.7.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "2.7.0-alpha-SNAPSHOT",
+    opentelemetryJavaagent     : "2.8.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "2.8.0-alpha-SNAPSHOT",
 
-    junit                      : "5.10.3"
+    junit                      : "5.11.0"
   ]
 
   deps = [
@@ -96,7 +96,7 @@ dependencies {
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation 'org.apache.commons:commons-lang3:3.16.0'
+  implementation 'org.apache.commons:commons-lang3:3.17.0'
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:1.20.1")
@@ -108,7 +108,7 @@ dependencies {
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.6")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.7")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")

@@ -79,6 +79,9 @@ public class MethodInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
         @Advice.Thrown Throwable throwable) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
 
       returnValue =

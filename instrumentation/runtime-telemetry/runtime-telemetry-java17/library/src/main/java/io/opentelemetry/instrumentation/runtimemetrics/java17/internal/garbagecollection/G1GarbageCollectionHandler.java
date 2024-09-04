@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal.garbagecollection;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.JfrFeature;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants;
@@ -23,25 +23,24 @@ public final class G1GarbageCollectionHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.G1GarbageCollection";
   private static final Attributes ATTR =
       Attributes.of(
-          Constants.ATTR_GC,
+          Constants.ATTR_GC_NAME,
           "G1 Young Generation",
-          Constants.ATTR_ACTION,
+          Constants.ATTR_GC_ACTION,
           Constants.END_OF_MINOR_GC);
-  private final LongHistogram histogram;
+  private final DoubleHistogram histogram;
 
   public G1GarbageCollectionHandler(Meter meter) {
     histogram =
         meter
             .histogramBuilder(Constants.METRIC_NAME_GC_DURATION)
             .setDescription(Constants.METRIC_DESCRIPTION_GC_DURATION)
-            .setUnit(Constants.MILLISECONDS)
-            .ofLongs()
+            .setUnit(Constants.SECONDS)
             .build();
   }
 
   @Override
   public void accept(RecordedEvent ev) {
-    histogram.record(ev.getLong(Constants.DURATION), ATTR);
+    histogram.record(ev.getDouble(Constants.DURATION), ATTR);
   }
 
   @Override

@@ -5,13 +5,12 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.spi.ContextAware;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.net.URL;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,7 +64,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
     assertThat(logDataList).hasSize(1);
     LogRecordData logData = logDataList.get(0);
-    OpenTelemetryAssertions.assertThat(logData)
+    assertThat(logData)
         .hasResource(resource)
         .hasInstrumentationScope(instrumentationScopeInfo)
         .hasBody("log message 1")

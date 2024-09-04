@@ -118,7 +118,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+                span ->
+                    assertClientSpan(span, uri, method, responseCode, null)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset()),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 
@@ -999,7 +1002,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 // TODO: Move to test knob rather than always treating as optional
                 if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
                   assertThat(attrs)
-                      .containsEntry(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1");
+                      .hasEntrySatisfying(
+                          NetworkAttributes.NETWORK_PEER_ADDRESS,
+                          addr -> assertThat(addr).isIn("127.0.0.1", "0:0:0:0:0:0:0:1"));
                 }
                 if (attrs.get(NetworkAttributes.NETWORK_PEER_PORT) != null) {
                   assertThat(attrs)
@@ -1048,7 +1053,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
 
-  private int doRequest(String method, URI uri) throws Exception {
+  protected int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
   }
 
