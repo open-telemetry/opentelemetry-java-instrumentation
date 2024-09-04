@@ -84,6 +84,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
     // TODO nested client span is not created, but context is still injected
     //  which is not what the test expects
     optionsBuilder.disableTestWithClientParent();
+    optionsBuilder.spanEndsAfterBody();
 
     optionsBuilder.setHttpAttributes(
         uri -> {
