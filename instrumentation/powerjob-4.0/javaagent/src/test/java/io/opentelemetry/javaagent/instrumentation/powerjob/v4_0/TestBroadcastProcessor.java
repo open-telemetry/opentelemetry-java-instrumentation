@@ -12,6 +12,7 @@ import tech.powerjob.worker.core.processor.TaskResult;
 import tech.powerjob.worker.core.processor.sdk.BroadcastProcessor;
 
 class TestBroadcastProcessor implements BroadcastProcessor {
+
   @Override
   public ProcessResult preProcess(TaskContext taskContext) {
     return new ProcessResult(true, "preProcess success");

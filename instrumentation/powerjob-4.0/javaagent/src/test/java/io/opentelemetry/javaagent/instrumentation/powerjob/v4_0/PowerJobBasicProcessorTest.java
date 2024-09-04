@@ -59,12 +59,12 @@ class PowerJobBasicProcessorTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
-                span.hasName(String.format("%s.process", TestBasicProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.unset());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        TestBasicProcessor.class.getName(), jobId, jobParam, BASIC_PROCESSOR));
+                span.hasName(String.format("%s.process", TestBasicProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            TestBasicProcessor.class.getName(), jobId, jobParam, BASIC_PROCESSOR));
               });
         });
   }
@@ -81,12 +81,15 @@ class PowerJobBasicProcessorTest {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName(
-                    String.format("%s.process", TestBasicFailProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.error());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        TestBasicFailProcessor.class.getName(), jobId, jobParam, BASIC_PROCESSOR));
+                        String.format("%s.process", TestBasicFailProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            TestBasicFailProcessor.class.getName(),
+                            jobId,
+                            jobParam,
+                            BASIC_PROCESSOR));
               });
         });
   }
@@ -103,15 +106,15 @@ class PowerJobBasicProcessorTest {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName(
-                    String.format("%s.process", TestBroadcastProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.unset());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        TestBroadcastProcessor.class.getName(),
-                        jobId,
-                        jobParam,
-                        BROADCAST_PROCESSOR));
+                        String.format("%s.process", TestBroadcastProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            TestBroadcastProcessor.class.getName(),
+                            jobId,
+                            jobParam,
+                            BROADCAST_PROCESSOR));
               });
         });
   }
@@ -128,12 +131,15 @@ class PowerJobBasicProcessorTest {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName(
-                    String.format("%s.process", TestMapProcessProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.unset());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        TestMapProcessProcessor.class.getName(), jobId, jobParam, MAP_PROCESSOR));
+                        String.format("%s.process", TestMapProcessProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            TestMapProcessProcessor.class.getName(),
+                            jobId,
+                            jobParam,
+                            MAP_PROCESSOR));
               });
         });
   }
@@ -150,16 +156,16 @@ class PowerJobBasicProcessorTest {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName(
-                    String.format(
-                        "%s.process", TestMapReduceProcessProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.unset());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        TestMapReduceProcessProcessor.class.getName(),
-                        jobId,
-                        jobParam,
-                        MAP_REDUCE_PROCESSOR));
+                        String.format(
+                            "%s.process", TestMapReduceProcessProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            TestMapReduceProcessProcessor.class.getName(),
+                            jobId,
+                            jobParam,
+                            MAP_REDUCE_PROCESSOR));
               });
         });
   }
@@ -177,12 +183,12 @@ class PowerJobBasicProcessorTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
-                span.hasName(String.format("%s.process", ShellProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.unset());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        ShellProcessor.class.getName(), jobId, jobParam, SHELL_PROCESSOR));
+                span.hasName(String.format("%s.process", ShellProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            ShellProcessor.class.getName(), jobId, jobParam, SHELL_PROCESSOR));
               });
         });
   }
@@ -200,12 +206,12 @@ class PowerJobBasicProcessorTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
-                span.hasName(String.format("%s.process", PythonProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.unset());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        PythonProcessor.class.getName(), jobId, jobParam, PYTHON_PROCESSOR));
+                span.hasName(String.format("%s.process", PythonProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            PythonProcessor.class.getName(), jobId, jobParam, PYTHON_PROCESSOR));
               });
         });
   }
@@ -224,12 +230,12 @@ class PowerJobBasicProcessorTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
-                span.hasName(String.format("%s.process", HttpProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.error());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        HttpProcessor.class.getName(), jobId, jobParam, HTTP_PROCESSOR));
+                span.hasName(String.format("%s.process", HttpProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            HttpProcessor.class.getName(), jobId, jobParam, HTTP_PROCESSOR));
               });
         });
   }
@@ -254,15 +260,15 @@ class PowerJobBasicProcessorTest {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName(
-                    String.format("%s.process", FileCleanupProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.unset());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        FileCleanupProcessor.class.getName(),
-                        jobId,
-                        jobParam,
-                        FILE_CLEANUP_PROCESSOR));
+                        String.format("%s.process", FileCleanupProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            FileCleanupProcessor.class.getName(),
+                            jobId,
+                            jobParam,
+                            FILE_CLEANUP_PROCESSOR));
               });
         });
   }
@@ -282,16 +288,16 @@ class PowerJobBasicProcessorTest {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName(
-                    String.format(
-                        "%s.process", SpringDatasourceSqlProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.error());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        SpringDatasourceSqlProcessor.class.getName(),
-                        jobId,
-                        jobParam,
-                        SPRING_DATASOURCE_SQL_PROCESSOR));
+                        String.format(
+                            "%s.process", SpringDatasourceSqlProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            SpringDatasourceSqlProcessor.class.getName(),
+                            jobId,
+                            jobParam,
+                            SPRING_DATASOURCE_SQL_PROCESSOR));
               });
         });
   }
@@ -311,16 +317,16 @@ class PowerJobBasicProcessorTest {
           trace.hasSpansSatisfyingExactly(
               span -> {
                 span.hasName(
-                    String.format(
-                        "%s.process", DynamicDatasourceSqlProcessor.class.getSimpleName()));
-                span.hasKind(SpanKind.INTERNAL);
-                span.hasStatus(StatusData.error());
-                span.hasAttributesSatisfying(
-                    attributeAssertions(
-                        DynamicDatasourceSqlProcessor.class.getName(),
-                        jobId,
-                        jobParam,
-                        DYNAMIC_DATASOURCE_SQL_PROCESSOR));
+                        String.format(
+                            "%s.process", DynamicDatasourceSqlProcessor.class.getSimpleName()))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        attributeAssertions(
+                            DynamicDatasourceSqlProcessor.class.getName(),
+                            jobId,
+                            jobParam,
+                            DYNAMIC_DATASOURCE_SQL_PROCESSOR));
               });
         });
   }

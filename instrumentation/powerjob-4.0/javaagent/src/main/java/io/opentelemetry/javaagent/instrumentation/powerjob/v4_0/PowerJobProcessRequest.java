@@ -6,16 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.BASIC_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.BROADCAST_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.DYNAMIC_DATASOURCE_SQL_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.FILE_CLEANUP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.HTTP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.MAP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.MAP_REDUCE_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.PYTHON_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.SHELL_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.SPRING_DATASOURCE_SQL_PROCESSOR;
 
+import java.util.Arrays;
+import java.util.List;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
 import tech.powerjob.official.processors.impl.HttpProcessor;
 import tech.powerjob.official.processors.impl.script.PythonProcessor;
@@ -37,43 +30,40 @@ public final class PowerJobProcessRequest {
 
   private String jobParams;
   private String instanceParams;
+  private static final List<Class<?>> KNOWN_PROCESSORS =
+      Arrays.asList(
+          FileCleanupProcessor.class,
+          BroadcastProcessor.class,
+          MapReduceProcessor.class,
+          MapProcessor.class,
+          ShellProcessor.class,
+          PythonProcessor.class,
+          HttpProcessor.class,
+          SpringDatasourceSqlProcessor.class,
+          DynamicDatasourceSqlProcessor.class);
 
   private PowerJobProcessRequest(Long jobId) {
     this.jobId = jobId;
   }
 
   public static PowerJobProcessRequest createRequest(
-      Long jobId, BasicProcessor handler, String methodName) {
+      Long jobId,
+      BasicProcessor handler,
+      String methodName,
+      String jobParams,
+      String instanceParams) {
     PowerJobProcessRequest request = new PowerJobProcessRequest(jobId);
     request.methodName = methodName;
     request.declaringClass = handler.getClass();
+    request.jobParams = jobParams;
+    request.instanceParams = instanceParams;
     request.jobType = BASIC_PROCESSOR;
-    if (handler instanceof BroadcastProcessor) {
-      request.jobType = BROADCAST_PROCESSOR;
-    }
-    if (handler instanceof MapProcessor) {
-      request.jobType = MAP_PROCESSOR;
-    }
-    if (handler instanceof MapReduceProcessor) {
-      request.jobType = MAP_REDUCE_PROCESSOR;
-    }
-    if (handler instanceof ShellProcessor) {
-      request.jobType = SHELL_PROCESSOR;
-    }
-    if (handler instanceof PythonProcessor) {
-      request.jobType = PYTHON_PROCESSOR;
-    }
-    if (handler instanceof HttpProcessor) {
-      request.jobType = HTTP_PROCESSOR;
-    }
-    if (handler instanceof FileCleanupProcessor) {
-      request.jobType = FILE_CLEANUP_PROCESSOR;
-    }
-    if (handler instanceof SpringDatasourceSqlProcessor) {
-      request.jobType = SPRING_DATASOURCE_SQL_PROCESSOR;
-    }
-    if (handler instanceof DynamicDatasourceSqlProcessor) {
-      request.jobType = DYNAMIC_DATASOURCE_SQL_PROCESSOR;
+
+    for (Class<?> processorClass : KNOWN_PROCESSORS) {
+      if (processorClass.isInstance(handler)) {
+        request.jobType = processorClass.getSimpleName();
+        break;
+      }
     }
     return request;
   }
