@@ -36,6 +36,9 @@ public class ReflectionInstrumentationModule extends InstrumentationModule
 
   @Override
   public void injectClasses(ClassInjector injector) {
+    // we do not use ByteBuddy Advice dispatching in this instrumentation
+    // Instead, we manually call ReflectionHelper via ASM
+    // Easiest solution to work with indy is to inject an indy-proxy to be invoked
     injector
         .proxyBuilder(
             "io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionHelper")
