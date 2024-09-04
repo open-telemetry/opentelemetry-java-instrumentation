@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -66,7 +65,7 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
 
     if (JettyServlet3Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
       span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
-          .hasKind(SpanKind.INTERNAL);
+          .hasKind(SpanKind.INTERNAL).hasParent(parentSpan);
     }
 
     return super.assertResponseSpan(span, parentSpan, method, endpoint);

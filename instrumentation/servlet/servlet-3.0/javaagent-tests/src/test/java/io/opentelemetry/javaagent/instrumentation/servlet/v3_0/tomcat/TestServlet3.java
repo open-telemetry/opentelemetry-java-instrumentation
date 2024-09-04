@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
@@ -85,7 +86,8 @@ public class TestServlet3 {
               resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
               resp.setContentLength(endpoint.getBody().length());
-              resp.getOutputStream().print(endpoint.getBody());
+              byte[] body = endpoint.getBody().getBytes(StandardCharsets.UTF_8);
+              resp.getOutputStream().write(body, 0, body.length);
             }
             return null;
           });
