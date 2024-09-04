@@ -29,7 +29,7 @@ class ChannelFutureTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2705
   @DisplayName("should clean up wrapped listeners")
   @Test
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings("unchecked")
   void testCleanUpWrappedListeners() throws InterruptedException {
     // given
     EmbeddedChannel channel = new EmbeddedChannel();

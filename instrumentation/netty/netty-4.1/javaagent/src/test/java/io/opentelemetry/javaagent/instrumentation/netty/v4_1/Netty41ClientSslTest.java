@@ -106,7 +106,6 @@ class Netty41ClientSslTest {
 
   @Test
   @DisplayName("should fail SSL handshake")
-  @SuppressWarnings("InterruptedExceptionSwallowed")
   public void testFailSslHandshake() throws Exception {
     Bootstrap bootstrap = createBootstrap(eventLoopGroup, Collections.singletonList("SSLv3"));
     URI uri = server.resolveHttpsAddress("/success");
