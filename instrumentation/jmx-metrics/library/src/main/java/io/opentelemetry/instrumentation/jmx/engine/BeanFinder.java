@@ -117,12 +117,10 @@ class BeanFinder {
       Set<ObjectName> allObjectNames = new HashSet<>();
 
       for (ObjectName pattern : beans.getNamePatterns()) {
-        Set<ObjectName> objectNames = null;
         try {
-          objectNames = connection.queryNames(pattern, beans.getQueryExp());
-          allObjectNames.addAll(objectNames);
+          allObjectNames.addAll(connection.queryNames(pattern, beans.getQueryExp()));
         } catch (IOException e) {
-          logger.log(Level.WARNING, "IO error while querying mbean", e);
+          logger.log(Level.WARNING, "IO error while resolving mbean", e);
         }
       }
 

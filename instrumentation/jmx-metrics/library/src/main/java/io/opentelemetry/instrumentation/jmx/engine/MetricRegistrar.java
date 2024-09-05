@@ -17,6 +17,7 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import javax.management.MBeanServerConnection;
@@ -56,79 +57,69 @@ class MetricRegistrar {
       extractor.setStatus(status);
     }
 
-    if (firstEnrollment) {
-      MetricInfo metricInfo = extractor.getInfo();
-      String metricName = metricInfo.getMetricName();
-      MetricInfo.Type instrumentType = metricInfo.getType();
-      String description =
-          metricInfo.getDescription() != null
-              ? metricInfo.getDescription()
-              : attributeInfo.getDescription();
-      String unit = metricInfo.getUnit();
+    if (!firstEnrollment) {
+      return;
+    }
 
-      switch (instrumentType) {
-          // CHECKSTYLE:OFF
-        case COUNTER:
-          {
-            // CHECKSTYLE:ON
-            LongCounterBuilder builder = meter.counterBuilder(metricName);
-            if (description != null) {
-              builder = builder.setDescription(description);
-            }
-            if (unit != null) {
-              builder = builder.setUnit(unit);
-            }
+    MetricInfo metricInfo = extractor.getInfo();
+    String metricName = metricInfo.getMetricName();
+    MetricInfo.Type instrumentType = metricInfo.getType();
+    String description =
+        metricInfo.getDescription() != null
+            ? metricInfo.getDescription()
+            : attributeInfo.getDescription();
+    String unit = metricInfo.getUnit();
 
-            if (attributeInfo.usesDoubleValues()) {
-              builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
-            } else {
-              builder.buildWithCallback(longTypeCallback(extractor));
-            }
-            logger.log(INFO, "Created Counter for {0}", metricName);
+    switch (instrumentType) {
+        // CHECKSTYLE:OFF
+      case COUNTER:
+        {
+          // CHECKSTYLE:ON
+          LongCounterBuilder builder = meter.counterBuilder(metricName);
+          Optional.ofNullable(description).ifPresent(builder::setDescription);
+          Optional.ofNullable(unit).ifPresent(builder::setUnit);
+
+          if (attributeInfo.usesDoubleValues()) {
+            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
+          } else {
+            builder.buildWithCallback(longTypeCallback(extractor));
           }
-          break;
+          logger.log(INFO, "Created Counter for {0}", metricName);
+        }
+        break;
 
-          // CHECKSTYLE:OFF
-        case UPDOWNCOUNTER:
-          {
-            // CHECKSTYLE:ON
-            LongUpDownCounterBuilder builder = meter.upDownCounterBuilder(metricName);
-            if (description != null) {
-              builder = builder.setDescription(description);
-            }
-            if (unit != null) {
-              builder = builder.setUnit(unit);
-            }
+        // CHECKSTYLE:OFF
+      case UPDOWNCOUNTER:
+        {
+          // CHECKSTYLE:ON
+          LongUpDownCounterBuilder builder = meter.upDownCounterBuilder(metricName);
+          Optional.ofNullable(description).ifPresent(builder::setDescription);
+          Optional.ofNullable(unit).ifPresent(builder::setUnit);
 
-            if (attributeInfo.usesDoubleValues()) {
-              builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
-            } else {
-              builder.buildWithCallback(longTypeCallback(extractor));
-            }
-            logger.log(INFO, "Created UpDownCounter for {0}", metricName);
+          if (attributeInfo.usesDoubleValues()) {
+            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
+          } else {
+            builder.buildWithCallback(longTypeCallback(extractor));
           }
-          break;
+          logger.log(INFO, "Created UpDownCounter for {0}", metricName);
+        }
+        break;
 
-          // CHECKSTYLE:OFF
-        case GAUGE:
-          {
-            // CHECKSTYLE:ON
-            DoubleGaugeBuilder builder = meter.gaugeBuilder(metricName);
-            if (description != null) {
-              builder = builder.setDescription(description);
-            }
-            if (unit != null) {
-              builder = builder.setUnit(unit);
-            }
+        // CHECKSTYLE:OFF
+      case GAUGE:
+        {
+          // CHECKSTYLE:ON
+          DoubleGaugeBuilder builder = meter.gaugeBuilder(metricName);
+          Optional.ofNullable(description).ifPresent(builder::setDescription);
+          Optional.ofNullable(unit).ifPresent(builder::setUnit);
 
-            if (attributeInfo.usesDoubleValues()) {
-              builder.buildWithCallback(doubleTypeCallback(extractor));
-            } else {
-              builder.ofLongs().buildWithCallback(longTypeCallback(extractor));
-            }
-            logger.log(INFO, "Created Gauge for {0}", metricName);
+          if (attributeInfo.usesDoubleValues()) {
+            builder.buildWithCallback(doubleTypeCallback(extractor));
+          } else {
+            builder.ofLongs().buildWithCallback(longTypeCallback(extractor));
           }
-      }
+          logger.log(INFO, "Created Gauge for {0}", metricName);
+        }
     }
   }
 
