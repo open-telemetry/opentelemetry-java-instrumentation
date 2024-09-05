@@ -37,7 +37,7 @@ dependencies {
   }
 
   // this is needed for the async logging test
-  testImplementation("com.lmax:disruptor:3.4.2")
+  testLibrary("com.lmax:disruptor:3.4.2")
 }
 
 tasks.withType<Test>().configureEach {
