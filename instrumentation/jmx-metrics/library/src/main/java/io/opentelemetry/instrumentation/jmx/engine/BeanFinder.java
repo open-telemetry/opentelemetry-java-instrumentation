@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.management.MBeanServerConnection;
-import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 
 /**
