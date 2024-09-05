@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.BASIC_PROCESSOR;
-
 import java.util.Arrays;
 import java.util.List;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
@@ -21,15 +19,12 @@ import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 
 public final class PowerJobProcessRequest {
-  private String methodName;
+  private final String methodName;
   private final Long jobId;
-  private String jobType;
-  private Class<?> declaringClass;
-
-  private boolean failed;
-
-  private String jobParams;
-  private String instanceParams;
+  private final String jobType;
+  private final Class<?> declaringClass;
+  private final String jobParams;
+  private final String instanceParams;
   private static final List<Class<?>> KNOWN_PROCESSORS =
       Arrays.asList(
           FileCleanupProcessor.class,
@@ -42,8 +37,19 @@ public final class PowerJobProcessRequest {
           SpringDatasourceSqlProcessor.class,
           DynamicDatasourceSqlProcessor.class);
 
-  private PowerJobProcessRequest(Long jobId) {
+  private PowerJobProcessRequest(
+      Long jobId,
+      String methodName,
+      Class<?> declaringClass,
+      String jobParams,
+      String instanceParams,
+      String jobType) {
     this.jobId = jobId;
+    this.methodName = methodName;
+    this.jobType = jobType;
+    this.declaringClass = declaringClass;
+    this.jobParams = jobParams;
+    this.instanceParams = instanceParams;
   }
 
   public static PowerJobProcessRequest createRequest(
@@ -52,28 +58,15 @@ public final class PowerJobProcessRequest {
       String methodName,
       String jobParams,
       String instanceParams) {
-    PowerJobProcessRequest request = new PowerJobProcessRequest(jobId);
-    request.methodName = methodName;
-    request.declaringClass = handler.getClass();
-    request.jobParams = jobParams;
-    request.instanceParams = instanceParams;
-    request.jobType = BASIC_PROCESSOR;
-
+    String jobType = "BasicProcessor";
     for (Class<?> processorClass : KNOWN_PROCESSORS) {
       if (processorClass.isInstance(handler)) {
-        request.jobType = processorClass.getSimpleName();
+        jobType = processorClass.getSimpleName();
         break;
       }
     }
-    return request;
-  }
-
-  public void setFailed() {
-    failed = true;
-  }
-
-  public boolean isFailed() {
-    return failed;
+    return new PowerJobProcessRequest(
+        jobId, methodName, handler.getClass(), jobParams, instanceParams, jobType);
   }
 
   public String getMethodName() {
@@ -92,16 +85,8 @@ public final class PowerJobProcessRequest {
     return jobParams;
   }
 
-  public void setJobParams(String jobParams) {
-    this.jobParams = jobParams;
-  }
-
   public String getInstanceParams() {
     return instanceParams;
-  }
-
-  public void setInstanceParams(String instanceParams) {
-    this.instanceParams = instanceParams;
   }
 
   public String getJobType() {

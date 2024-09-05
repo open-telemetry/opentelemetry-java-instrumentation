@@ -10,9 +10,10 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
+import tech.powerjob.worker.core.processor.ProcessResult;
 
 class PowerJobExperimentalAttributeExtractor
-    implements AttributesExtractor<PowerJobProcessRequest, Void> {
+    implements AttributesExtractor<PowerJobProcessRequest, ProcessResult> {
 
   private static final AttributeKey<Long> POWERJOB_JOB_ID =
       AttributeKey.longKey("scheduling.powerjob.job.id");
@@ -39,6 +40,6 @@ class PowerJobExperimentalAttributeExtractor
       AttributesBuilder attributes,
       Context context,
       PowerJobProcessRequest powerJobProcessRequest,
-      @Nullable Void unused,
+      @Nullable ProcessResult unused,
       @Nullable Throwable error) {}
 }

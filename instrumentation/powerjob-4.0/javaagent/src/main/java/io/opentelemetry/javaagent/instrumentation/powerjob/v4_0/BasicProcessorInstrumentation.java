@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobSingletons.helper;
+import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -61,10 +61,11 @@ public class BasicProcessorInstrumentation implements TypeInstrumentation {
               "process",
               taskContext.getJobParams(),
               taskContext.getInstanceParams());
-      context = helper().startSpan(parentContext, request);
-      if (context == null) {
+
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return;
       }
+      context = instrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
@@ -76,7 +77,11 @@ public class BasicProcessorInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") PowerJobProcessRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      helper().stopSpan(result, request, throwable, scope, context);
+      if (scope == null) {
+        return;
+      }
+      scope.close();
+      instrumenter().end(context, request, result, throwable);
     }
   }
 }

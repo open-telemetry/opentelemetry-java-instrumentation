@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import tech.powerjob.worker.core.processor.ProcessResult;
 
 public final class PowerJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.powerjob-4.0";
@@ -22,20 +23,24 @@ public final class PowerJobSingletons {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.powerjob.experimental-span-attributes", false);
-  private static final Instrumenter<PowerJobProcessRequest, Void> INSTRUMENTER = create();
+  private static final Instrumenter<PowerJobProcessRequest, ProcessResult> INSTRUMENTER = create();
 
-  private static Instrumenter<PowerJobProcessRequest, Void> create() {
+  public static Instrumenter<PowerJobProcessRequest, ProcessResult> instrumenter() {
+    return INSTRUMENTER;
+  }
+
+  private static Instrumenter<PowerJobProcessRequest, ProcessResult> create() {
     PowerJobCodeAttributesGetter codeAttributesGetter = new PowerJobCodeAttributesGetter();
     SpanNameExtractor<PowerJobProcessRequest> spanNameExtractor =
         CodeSpanNameExtractor.create(codeAttributesGetter);
 
-    InstrumenterBuilder<PowerJobProcessRequest, Void> builder =
-        Instrumenter.<PowerJobProcessRequest, Void>builder(
+    InstrumenterBuilder<PowerJobProcessRequest, ProcessResult> builder =
+        Instrumenter.<PowerJobProcessRequest, ProcessResult>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .setSpanStatusExtractor(
                 (spanStatusBuilder, powerJobProcessRequest, response, error) -> {
-                  if (error != null || powerJobProcessRequest.isFailed()) {
+                  if (error != null || response == null || !response.isSuccess()) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   }
                 });
@@ -47,20 +52,6 @@ public final class PowerJobSingletons {
     }
 
     return builder.buildInstrumenter();
-  }
-
-  private static final PowerJobHelper HELPER =
-      PowerJobHelper.create(
-          INSTRUMENTER,
-          processResult -> {
-            if (processResult != null) {
-              return !processResult.isSuccess();
-            }
-            return false;
-          });
-
-  public static PowerJobHelper helper() {
-    return HELPER;
   }
 
   private PowerJobSingletons() {}

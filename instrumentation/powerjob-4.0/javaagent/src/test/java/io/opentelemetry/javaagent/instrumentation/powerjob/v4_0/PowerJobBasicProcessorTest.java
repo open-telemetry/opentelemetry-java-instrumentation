@@ -5,16 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.BASIC_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.BROADCAST_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.DYNAMIC_DATASOURCE_SQL_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.FILE_CLEANUP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.HTTP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.MAP_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.MAP_REDUCE_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.PYTHON_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.SHELL_PROCESSOR;
-import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobConstants.SPRING_DATASOURCE_SQL_PROCESSOR;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 
@@ -47,6 +37,17 @@ import tech.powerjob.worker.log.OmsLogger;
 class PowerJobBasicProcessorTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private static final String BASIC_PROCESSOR = "BasicProcessor";
+  private static final String BROADCAST_PROCESSOR = "BroadcastProcessor";
+  private static final String MAP_PROCESSOR = "MapProcessor";
+  private static final String MAP_REDUCE_PROCESSOR = "MapReduceProcessor";
+  private static final String SHELL_PROCESSOR = "ShellProcessor";
+  private static final String PYTHON_PROCESSOR = "PythonProcessor";
+  private static final String HTTP_PROCESSOR = "HttpProcessor";
+  private static final String FILE_CLEANUP_PROCESSOR = "FileCleanupProcessor";
+  private static final String SPRING_DATASOURCE_SQL_PROCESSOR = "SpringDatasourceSqlProcessor";
+  private static final String DYNAMIC_DATASOURCE_SQL_PROCESSOR = "DynamicDatasourceSqlProcessor";
 
   @Test
   void testBasicProcessor() throws Exception {
