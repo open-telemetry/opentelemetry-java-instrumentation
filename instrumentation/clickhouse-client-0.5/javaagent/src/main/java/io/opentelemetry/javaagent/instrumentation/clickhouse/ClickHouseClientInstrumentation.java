@@ -17,7 +17,6 @@ import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.config.ClickHouseDefaults;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -43,19 +42,12 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ClickHouseExecuteAndWaitAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static ClickHouseScope onEnter(
+        @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest) {
 
-      callDepth = CallDepth.forClass(ClickHouseClient.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
-      }
-
-      if (clickHouseRequest == null) {
-        return;
+      CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
+      if (callDepth.getAndIncrement() > 0 || clickHouseRequest == null) {
+        return null;
       }
 
       Context parentContext = currentContext();
@@ -71,31 +63,22 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
               clickHouseRequest.getPreparedQuery().getOriginalQuery());
 
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      return ClickHouseScope.start(parentContext, request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") ClickHouseDbRequest clickHouseRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter ClickHouseScope scope) {
 
-      if (callDepth.decrementAndGet() > 0) {
+      CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
+      if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;
       }
 
-      if (scope == null) {
-        return;
-      }
-
-      scope.close();
-      instrumenter().end(context, clickHouseRequest, null, throwable);
+      scope.end(throwable);
     }
   }
 }
