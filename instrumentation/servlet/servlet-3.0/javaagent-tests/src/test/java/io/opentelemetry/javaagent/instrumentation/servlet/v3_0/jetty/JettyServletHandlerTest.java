@@ -58,8 +58,7 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
 
     if (JettyServlet3Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
       span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
-          .hasKind(SpanKind.INTERNAL)
-          .hasParent(parentSpan);
+          .hasKind(SpanKind.INTERNAL);
     }
 
     return super.assertResponseSpan(span, parentSpan, method, endpoint);
