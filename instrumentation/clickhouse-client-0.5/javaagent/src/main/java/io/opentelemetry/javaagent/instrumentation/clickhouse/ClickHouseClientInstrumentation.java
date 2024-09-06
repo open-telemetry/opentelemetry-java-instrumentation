@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.clickhouse.ClickHouseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -61,10 +60,6 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
                   .getDatabase()
                   .orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
               clickHouseRequest.getPreparedQuery().getOriginalQuery());
-
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
 
       return ClickHouseScope.start(parentContext, request);
     }

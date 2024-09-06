@@ -24,15 +24,15 @@ public final class ClickHouseScope {
 
   public static ClickHouseScope start(
       Context parentContext, ClickHouseDbRequest clickHouseDbRequest) {
+    if (!instrumenter().shouldStart(parentContext, clickHouseDbRequest)) {
+      return null;
+    }
+
     Context context = instrumenter().start(parentContext, clickHouseDbRequest);
     return new ClickHouseScope(clickHouseDbRequest, context, context.makeCurrent());
   }
 
   public void end(Throwable throwable) {
-    if (scope == null) {
-      return;
-    }
-
     scope.close();
     instrumenter().end(context, clickHouseDbRequest, null, throwable);
   }
