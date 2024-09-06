@@ -74,10 +74,14 @@ class ChannelPipelineTest {
       String testName, BiConsumer<ChannelPipeline, ChannelHandler> removeMethod) {
     // when no handlers
     assertThat(channelPipeline.first()).isNull();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     // then add handler
     channelPipeline.addLast("http", handler);
     assertThat(channelPipeline.first()).isEqualTo(handler);
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
+
     // our handler was also added
     assertThat(channelPipeline.last().getClass().getSimpleName())
         .isEqualTo("HttpClientTracingHandler");
@@ -86,6 +90,8 @@ class ChannelPipelineTest {
     removeMethod.accept(channelPipeline, handler);
     // removing handler also removes our handler
     assertThat(channelPipeline.first()).isNull();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
   }
 
   static Stream<Arguments> replaceMethodProvider() {
@@ -125,6 +131,8 @@ class ChannelPipelineTest {
   void testReplaceHandlerDesc(String desc, ReplaceMethod replaceMethod) {
     // no handlers initially
     assertThat(channelPipeline.first()).isNull();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     NoopChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addFirst("test", noopHandler);
@@ -133,7 +141,7 @@ class ChannelPipelineTest {
     assertThat(channelPipeline.first()).isEqualTo(noopHandler);
     assertThat(channelPipeline.toMap().size()).isEqualTo(1);
 
-    //      when:
+    // when
     replaceMethod.accept(channelPipeline, "test", noopHandler, "http", handler);
 
     // noop handler was removed; http and instrumentation handlers were added
@@ -156,34 +164,35 @@ class ChannelPipelineTest {
   @Test
   void testAddAfterAndRemoveLast() {
     // no handlers initially
+    assertThat(channelPipeline.first()).isNull();
+    assertThat(channelPipeline.last()).isNull();
     assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     channelPipeline.addLast("http", handler);
-
-    assertThat(channelPipeline.first()).isEqualTo(handler);
     assertThat(channelPipeline.toMap().size()).isEqualTo(1);
+    assertThat(channelPipeline.first()).isEqualTo(handler);
     assertThat(channelPipeline.last().getClass().getSimpleName())
         .isEqualTo("HttpClientTracingHandler");
 
     ChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addAfter("http", "noop", noopHandler);
-
     // instrumentation handler is between with http and noop;
     assertThat(channelPipeline.toMap().size()).isEqualTo(2);
     assertThat(channelPipeline.first()).isEqualTo(handler);
     assertThat(channelPipeline.last()).isEqualTo(noopHandler);
 
     channelPipeline.removeLast();
-
     // http and instrumentation handlers will be remained;
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
     assertThat(channelPipeline.first()).isEqualTo(handler);
     assertThat(channelPipeline.last().getClass().getSimpleName())
         .isEqualTo("HttpClientTracingHandler");
 
     ChannelHandler removed = channelPipeline.removeLast();
-
     // removing tracing handler also removes the http handler and returns it
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
     assertThat(channelPipeline.first()).isNull();
+    assertThat(channelPipeline.last()).isNull();
     assertThat(removed).isEqualTo(handler);
   }
 
@@ -194,6 +203,8 @@ class ChannelPipelineTest {
   void testHandlerNotInHandlersMap() {
     // no handlers initially
     assertThat(channelPipeline.first()).isNull();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     // add handler
     channelPipeline.addLast("http", handler);
