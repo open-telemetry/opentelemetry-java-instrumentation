@@ -55,11 +55,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
     HttpClient theClient = uri.getScheme().equalsIgnoreCase("https") ? httpsClient : client;
-    Request request =
-        theClient
-            .newRequest(uri)
-            .method(method)
-            .agent("Jetty");
+    Request request = theClient.newRequest(uri).method(method).agent("Jetty");
     headers.forEach(request::header);
 
     if (uri.toString().contains("/read-timeout")) {
