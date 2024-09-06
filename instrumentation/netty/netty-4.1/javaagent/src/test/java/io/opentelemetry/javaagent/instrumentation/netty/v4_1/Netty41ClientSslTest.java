@@ -92,16 +92,12 @@ class Netty41ClientSslTest {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
     eventLoopGroup = new NioEventLoopGroup();
-    System.setProperty("otel.instrumentation.netty.connection-telemetry.enabled", "true");
-    System.setProperty("otel.instrumentation.netty.ssl-telemetry.enabled", "true");
   }
 
   @AfterAll
   static void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
     server.stop().get(10, TimeUnit.SECONDS);
     eventLoopGroup.shutdownGracefully();
-    System.clearProperty("otel.instrumentation.netty.connection-telemetry.enabled");
-    System.clearProperty("otel.instrumentation.netty.ssl-telemetry.enabled");
   }
 
   @Test
