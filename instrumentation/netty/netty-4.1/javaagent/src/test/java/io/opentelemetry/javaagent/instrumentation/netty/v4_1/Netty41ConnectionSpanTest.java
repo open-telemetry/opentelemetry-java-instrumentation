@@ -114,7 +114,7 @@ class Netty41ConnectionSpanTest {
     assertThat(responseCode).isEqualTo(200);
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("RESOLVE")
@@ -150,7 +150,7 @@ class Netty41ConnectionSpanTest {
         catchThrowable(() -> testing.runWithSpan("parent", () -> sendRequest(request, uri)));
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("parent")
                         .hasKind(SpanKind.INTERNAL)

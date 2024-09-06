@@ -127,7 +127,7 @@ class Netty41ClientSslTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("parent")
                         .hasNoParent()
@@ -199,7 +199,7 @@ class Netty41ClientSslTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
                     span.hasName("RESOLVE")
