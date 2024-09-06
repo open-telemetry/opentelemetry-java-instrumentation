@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
@@ -980,59 +979,37 @@ class JdbcInstrumentationTest {
   static Stream<Arguments> getConnectionStream() {
     return Stream.of(
         Arguments.of(
-            (Supplier<DataSource>) () -> new JdbcDataSource(),
+            new JdbcDataSource(),
             (Consumer<DataSource>) ds -> ((JdbcDataSource) ds).setUrl(jdbcUrls.get("h2")),
             "h2",
             null,
             "h2:mem:"),
         Arguments.of(
-            (Supplier<DataSource>) () -> new EmbeddedDataSource(),
+            new EmbeddedDataSource(),
             (Consumer<DataSource>)
                 ds -> ((EmbeddedDataSource) ds).setDatabaseName("memory:" + dbName),
             "derby",
             "APP",
             "derby:memory:"),
+        Arguments.of(cpDatasources.get("hikari").get("h2"), null, "h2", null, "h2:mem:"),
         Arguments.of(
-            (Supplier<DataSource>) () -> cpDatasources.get("hikari").get("h2"),
-            null,
-            "h2",
-            null,
-            "h2:mem:"),
+            cpDatasources.get("hikari").get("derby"), null, "derby", "APP", "derby:memory:"),
+        Arguments.of(cpDatasources.get("c3p0").get("h2"), null, "h2", null, "h2:mem:"),
         Arguments.of(
-            (Supplier<DataSource>) () -> cpDatasources.get("hikari").get("derby"),
-            null,
-            "derby",
-            "APP",
-            "derby:memory:"),
-        Arguments.of(
-            (Supplier<DataSource>) () -> cpDatasources.get("c3p0").get("h2"),
-            null,
-            "h2",
-            null,
-            "h2:mem:"),
-        Arguments.of(
-            (Supplier<DataSource>) () -> cpDatasources.get("c3p0").get("derby"),
-            null,
-            "derby",
-            "APP",
-            "derby:memory:"));
+            cpDatasources.get("c3p0").get("derby"), null, "derby", "APP", "derby:memory:"));
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(autoCloseArguments = false)
   @MethodSource("getConnectionStream")
   @DisplayName(
       "calling #datasource.class.simpleName getConnection generates a span when under existing trace")
   void testGetConnection(
-      // if the parameter is Datasource which is implement Closeable, junit will close  the ds in
-      // cpDatasources
-      // other test case will fail. So this is a workaround
-      Supplier<DataSource> datasourceSupplier,
+      DataSource datasource,
       Consumer<DataSource> init,
       String system,
       String user,
       String connectionString)
       throws SQLException {
-    DataSource datasource = datasourceSupplier.get();
     // Tomcat's pool doesn't work because the getConnection method is
     // implemented in a parent class that doesn't implement DataSource
     boolean recursive = datasource instanceof EmbeddedDataSource;
