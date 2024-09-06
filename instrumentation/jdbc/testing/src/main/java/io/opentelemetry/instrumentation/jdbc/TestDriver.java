@@ -13,7 +13,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-class TestDriver implements Driver {
+public class TestDriver implements Driver {
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
     return new TestConnection();
