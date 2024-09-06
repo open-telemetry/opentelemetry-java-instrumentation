@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import tech.powerjob.worker.core.processor.ProcessResult;
 
@@ -40,8 +41,11 @@ public final class PowerJobSingletons {
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .setSpanStatusExtractor(
                 (spanStatusBuilder, powerJobProcessRequest, response, error) -> {
-                  if (error != null || response == null || !response.isSuccess()) {
+                  if (response != null && !response.isSuccess()) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault()
+                        .extract(spanStatusBuilder, powerJobProcessRequest, response, error);
                   }
                 });
 
