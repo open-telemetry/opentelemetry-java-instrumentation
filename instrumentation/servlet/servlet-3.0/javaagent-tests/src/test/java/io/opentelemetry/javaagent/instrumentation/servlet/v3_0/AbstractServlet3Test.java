@@ -17,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -25,8 +26,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import java.util.HashSet;
+import java.util.Set;
 import javax.servlet.Servlet;
 import org.junit.jupiter.api.Test;
 
@@ -69,6 +73,20 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
     options.setTestCaptureRequestParameters(true);
     options.setHasResponseCustomizer(e -> true);
     options.setHasResponseSpan(this::hasResponseSpan);
+
+    if (!testRoute()) {
+      options.setHttpAttributes(
+          serverEndpoint -> {
+            Set<AttributeKey<?>> attributes =
+                new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+            attributes.add(HttpAttributes.HTTP_ROUTE);
+            return attributes;
+          });
+    }
+  }
+
+  protected boolean testRoute() {
+    return true;
   }
 
   protected boolean hasResponseSpan(ServerEndpoint endpoint) {
@@ -98,6 +116,11 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    // no need to compute route if we're not expecting it
+    if (!testRoute()) {
+      return null;
+    }
+
     if (method.equals(HttpConstants._OTHER)) {
       return getContextPath() + endpoint.getPath();
     }
