@@ -9,11 +9,9 @@ import io.opentelemetry.instrumentation.testing.junit._
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.javaagent.instrumentation.zio.v2_0.ZioTestFixtures._
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
-import io.opentelemetry.sdk.trace.data.SpanData
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{Test, TestInstance}
 
-import java.util
 import java.util.function.Consumer
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

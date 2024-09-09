@@ -60,11 +60,11 @@ dependencies {
   implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.0")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.18")
-  implementation("org.owasp:dependency-check-gradle:10.0.3")
+  implementation("org.owasp:dependency-check-gradle:10.0.4")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.15.0")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.15.1")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.0.1")

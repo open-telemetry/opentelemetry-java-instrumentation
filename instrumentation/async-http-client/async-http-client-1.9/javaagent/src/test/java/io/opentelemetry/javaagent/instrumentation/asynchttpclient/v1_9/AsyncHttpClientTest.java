@@ -95,6 +95,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.spanEndsAfterBody();
     optionsBuilder.disableTestRedirects();
 
     // disable read timeout test for non latest because it is flaky with 1.9.0

@@ -98,7 +98,11 @@ class KtorClientTracing internal constructor(
         scope.launch {
           val job = it.call.coroutineContext.job
           job.join()
-          val cause = job.getCancellationException()
+          val cause = if (!job.isCancelled) {
+            null
+          } else {
+            kotlin.runCatching { job.getCancellationException() }.getOrNull()
+          }
 
           plugin.endSpan(openTelemetryContext, it.call, cause)
         }

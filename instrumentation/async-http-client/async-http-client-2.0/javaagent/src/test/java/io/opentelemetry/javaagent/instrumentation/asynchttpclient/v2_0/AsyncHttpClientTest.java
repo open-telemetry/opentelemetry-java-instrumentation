@@ -96,5 +96,6 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
   }
 }

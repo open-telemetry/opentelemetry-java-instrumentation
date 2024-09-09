@@ -90,6 +90,7 @@ abstract class AbstractReactorNettyHttpClientTest
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {

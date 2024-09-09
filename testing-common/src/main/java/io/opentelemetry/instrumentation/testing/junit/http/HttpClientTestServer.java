@@ -108,14 +108,19 @@ public final class HttpClientTestServer extends ServerExtension {
               writer.write(ResponseHeaders.of(HttpStatus.OK));
               writer.write(HttpData.ofUtf8("Hello"));
 
+              long delay = TimeUnit.SECONDS.toMillis(1);
+              String delayString = req.headers().get("delay");
+              if (delayString != null) {
+                delay = Long.parseLong(delayString);
+              }
               ctx.eventLoop()
                   .schedule(
                       () -> {
                         writer.write(HttpData.ofUtf8("World"));
                         writer.close();
                       },
-                      1,
-                      TimeUnit.SECONDS);
+                      delay,
+                      TimeUnit.MILLISECONDS);
 
               return writer;
             })

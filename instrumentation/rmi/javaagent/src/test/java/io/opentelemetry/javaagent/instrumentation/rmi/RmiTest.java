@@ -37,7 +37,7 @@ class RmiTest {
   private static Registry serverRegistry;
   private static Registry clientRegistry;
 
-  @RegisterExtension final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
   @BeforeAll
   static void setUp() throws Exception {

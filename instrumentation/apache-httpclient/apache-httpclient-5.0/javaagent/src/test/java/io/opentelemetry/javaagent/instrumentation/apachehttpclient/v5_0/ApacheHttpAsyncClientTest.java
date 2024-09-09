@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -86,6 +87,13 @@ class ApacheHttpAsyncClientTest {
   }
 
   abstract class AbstractTest extends AbstractApacheHttpClientTest<SimpleHttpRequest> {
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.spanEndsAfterBody();
+    }
+
     @Override
     public SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       SimpleHttpRequest httpRequest = super.buildRequest(method, uri, headers);
