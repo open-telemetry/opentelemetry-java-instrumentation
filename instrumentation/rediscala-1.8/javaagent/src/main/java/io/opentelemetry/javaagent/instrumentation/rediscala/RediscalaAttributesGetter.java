@@ -50,8 +50,20 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(RedisCommand<?, ?> redisCommand) {
+    return null;
+  }
+
+  @Deprecated
   @Override
   public String getOperation(RedisCommand<?, ?> redisCommand) {
+    return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
+  }
+
+  @Override
+  public String getOperationName(RedisCommand<?, ?> redisCommand) {
     return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
   }
 }

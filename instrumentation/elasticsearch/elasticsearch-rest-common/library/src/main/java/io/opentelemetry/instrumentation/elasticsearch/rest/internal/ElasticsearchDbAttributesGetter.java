@@ -68,6 +68,7 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getStatement(ElasticsearchRestRequest request) {
@@ -92,9 +93,41 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(ElasticsearchRestRequest request) {
+    ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
+    HttpEntity httpEntity = request.getHttpEntity();
+    if (captureSearchQuery
+        && epDefinition != null
+        && epDefinition.isSearchEndpoint()
+        && httpEntity != null
+        && httpEntity.isRepeatable()) {
+      // Retrieve HTTP body for search-type Elasticsearch requests when CAPTURE_SEARCH_QUERY is
+      // enabled.
+      try {
+        return new BufferedReader(
+                new InputStreamReader(httpEntity.getContent(), StandardCharsets.UTF_8))
+            .lines()
+            .collect(Collectors.joining());
+      } catch (IOException e) {
+        logger.log(FINE, "Failed reading HTTP body content.", e);
+      }
+    }
+    return null;
+  }
+
+  @Deprecated
   @Override
   @Nullable
   public String getOperation(ElasticsearchRestRequest request) {
+    ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
+    return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
     return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
   }

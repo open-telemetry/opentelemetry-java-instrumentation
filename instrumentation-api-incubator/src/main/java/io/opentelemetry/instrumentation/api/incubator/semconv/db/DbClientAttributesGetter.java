@@ -20,9 +20,21 @@ import javax.annotation.Nullable;
  */
 public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttributesGetter<REQUEST> {
 
+  /**
+   * @deprecated Use {@link #getDbQueyText(Object)} instead.
+   */
   @Nullable
   String getStatement(REQUEST request);
 
   @Nullable
+  String getDbQueryText(REQUEST request);
+
+  /**
+   * @deprecated Use {@link #getOperationName(Object)} instead.
+   */
+  @Nullable
   String getOperation(REQUEST request);
+
+  @Nullable
+  String getOperationName(REQUEST request);
 }

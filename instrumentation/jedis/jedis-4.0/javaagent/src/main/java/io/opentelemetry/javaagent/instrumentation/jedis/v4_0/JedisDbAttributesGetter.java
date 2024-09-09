@@ -41,13 +41,27 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return null;
   }
 
+  @Deprecated
   @Override
   public String getStatement(JedisRequest request) {
     return request.getStatement();
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(JedisRequest request) {
+    return request.getStatement();
+  }
+
+  @Deprecated
   @Override
   public String getOperation(JedisRequest request) {
+    return request.getOperation();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(JedisRequest request) {
     return request.getOperation();
   }
 }

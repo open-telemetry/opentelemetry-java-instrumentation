@@ -25,11 +25,12 @@ public interface SqlClientAttributesGetter<REQUEST>
    * Get the raw SQL statement. The value returned by this method is later sanitized by the {@link
    * SqlClientAttributesExtractor} before being set as span attribute.
    *
-   * @deprecated Use {@link #getDbQueryText(Object)} instead.
+   * @deprecated Use {@link #getRawQueryText(Object)} instead.
    */
   @Deprecated
   @Nullable
   String getRawStatement(REQUEST request);
 
-  String getDbQueryText(REQUEST request);
+  @Nullable
+  String getRawQueryText(REQUEST request);
 }

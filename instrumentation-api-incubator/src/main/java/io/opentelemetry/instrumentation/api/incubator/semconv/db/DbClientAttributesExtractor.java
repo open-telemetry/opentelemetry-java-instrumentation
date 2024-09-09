@@ -48,12 +48,12 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(attributes, DB_QUERY_TEXT, getter.getStatement(request));
-      internalSet(attributes, DB_OPERATION_NAME, getter.getOperation(request));
+      internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
+      internalSet(attributes, DB_OPERATION_NAME, getter.getOperationName(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_STATEMENT, getter.getStatement(request));
-      internalSet(attributes, DB_OPERATION, getter.getOperation(request));
+      internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
+      internalSet(attributes, DB_OPERATION, getter.getOperationName(request));
     }
   }
 }

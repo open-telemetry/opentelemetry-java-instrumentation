@@ -33,7 +33,7 @@ class SqlClientAttributesExtractorTest {
     }
 
     @Override
-    public String getDbQueryText(Map<String, String> map) {
+    public String getRawQueryText(Map<String, String> map) {
       return map.get("db.query.text");
     }
 

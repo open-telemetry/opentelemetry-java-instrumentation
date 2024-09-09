@@ -50,7 +50,7 @@ public enum VertxSqlClientAttributesGetter
   }
 
   @Override
-  public String getDbQueryText(VertxSqlClientRequest request) {
+  public String getRawQueryText(VertxSqlClientRequest request) {
     return request.getDbQueryText();
   }
 }

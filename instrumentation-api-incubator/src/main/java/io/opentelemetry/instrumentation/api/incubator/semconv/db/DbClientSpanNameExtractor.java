@@ -13,8 +13,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions: {@code <db.operation> <db.name>}.
    *
-   * @see DbClientAttributesGetter#getOperation(Object) used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#getName(Object) used to extract {@code <db.name>}.
+   * @see DbClientAttributesGetter#getOperationName(Object) used to extract {@code
+   *     <db.operation.name>}.
+   * @see DbClientAttributesGetter#getNamespace(Object) used to extract {@code <db.namespace>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       DbClientAttributesGetter<REQUEST> getter) {
@@ -25,8 +26,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions: {@code <db.operation> <db.name>.<identifier>}.
    *
-   * @see SqlStatementInfo#getOperation() used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#getName(Object) used to extract {@code <db.name>}.
+   * @see SqlStatementInfo#getOperation() () used to extract {@code <db.operation>}.
+   * @see DbClientAttributesGetter#getNamespace(Object) used to extract {@code <db.namespace>}.
    * @see SqlStatementInfo#getMainIdentifier() used to extract {@code <db.table>} or stored
    *     procedure name.
    */
@@ -73,7 +74,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     @Override
     public String extract(REQUEST request) {
       String dbName = getter.getNamespace(request);
-      String operation = getter.getOperation(request);
+      String operation = getter.getOperationName(request);
       return computeSpanName(dbName, operation, null);
     }
   }
@@ -93,7 +94,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     @Override
     public String extract(REQUEST request) {
       String dbName = getter.getNamespace(request);
-      SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getDbQueryText(request));
+      SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawQueryText(request));
       return computeSpanName(
           dbName, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
     }

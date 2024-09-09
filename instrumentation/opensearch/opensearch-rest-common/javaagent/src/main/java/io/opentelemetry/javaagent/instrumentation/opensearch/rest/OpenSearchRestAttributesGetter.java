@@ -42,15 +42,27 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
-  @Nullable
   public String getStatement(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }
 
   @Override
+  public String getDbQueryText(OpenSearchRestRequest request) {
+    return request.getMethod() + " " + request.getOperation();
+  }
+
+  @Deprecated
+  @Override
   @Nullable
   public String getOperation(OpenSearchRestRequest request) {
+    return request.getMethod();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
   }
 }

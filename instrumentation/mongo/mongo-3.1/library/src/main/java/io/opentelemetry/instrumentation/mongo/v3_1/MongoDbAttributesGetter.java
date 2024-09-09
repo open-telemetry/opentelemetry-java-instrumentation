@@ -93,14 +93,28 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
+  @Deprecated
   @Override
   public String getStatement(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(CommandStartedEvent event) {
+    return sanitizeStatement(event.getCommand());
+  }
+
+  @Deprecated
   @Override
   @Nullable
   public String getOperation(CommandStartedEvent event) {
+    return event.getCommandName();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(CommandStartedEvent event) {
     return event.getCommandName();
   }
 

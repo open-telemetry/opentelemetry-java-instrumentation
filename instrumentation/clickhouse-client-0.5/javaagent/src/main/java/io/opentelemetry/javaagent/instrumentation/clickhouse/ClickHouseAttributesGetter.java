@@ -10,6 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class ClickHouseAttributesGetter implements DbClientAttributesGetter<ClickHouseDbRequest> {
+  @Deprecated
   @Nullable
   @Override
   public String getStatement(ClickHouseDbRequest request) {
@@ -21,7 +22,26 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
 
   @Nullable
   @Override
+  public String getDbQueryText(ClickHouseDbRequest request) {
+    if (request.getSqlStatementInfo() == null) {
+      return null;
+    }
+    return request.getSqlStatementInfo().getFullStatement();
+  }
+
+  @Deprecated
+  @Nullable
+  @Override
   public String getOperation(ClickHouseDbRequest request) {
+    if (request.getSqlStatementInfo() == null) {
+      return null;
+    }
+    return request.getSqlStatementInfo().getOperation();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(ClickHouseDbRequest request) {
     if (request.getSqlStatementInfo() == null) {
       return null;
     }

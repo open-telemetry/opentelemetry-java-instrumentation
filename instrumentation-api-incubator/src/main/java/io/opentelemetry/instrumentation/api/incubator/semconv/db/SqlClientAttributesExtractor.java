@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>db.sql.table</code> attribute. The raw SQL statements returned by the {@link
- * SqlClientAttributesGetter#getDbQueryText(Object)} method are sanitized before use, all statement
+ * SqlClientAttributesGetter#getRawQueryText(Object)} method are sanitized before use, all statement
  * parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
@@ -72,7 +72,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
     String statement =
         SemconvStability.emitStableDatabaseSemconv()
-            ? getter.getDbQueryText(request)
+            ? getter.getRawQueryText(request)
             : getter.getRawStatement(request);
     SqlStatementInfo sanitizedStatement = sanitizer.sanitize(statement);
     String operation = sanitizedStatement.getOperation();

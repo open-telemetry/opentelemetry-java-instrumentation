@@ -40,15 +40,29 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getStatement(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
+    return null;
+  }
+
+  @Deprecated
   @Override
   @Nullable
   public String getOperation(SpymemcachedRequest spymemcachedRequest) {
+    return spymemcachedRequest.dbOperation();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.dbOperation();
   }
 }

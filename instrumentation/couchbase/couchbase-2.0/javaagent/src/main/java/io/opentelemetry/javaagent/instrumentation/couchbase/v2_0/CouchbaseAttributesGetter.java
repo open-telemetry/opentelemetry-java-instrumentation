@@ -43,15 +43,29 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getStatement(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.statement();
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
+    return couchbaseRequest.statement();
+  }
+
+  @Deprecated
   @Override
   @Nullable
   public String getOperation(CouchbaseRequestInfo couchbaseRequest) {
+    return couchbaseRequest.operation();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
   }
 }

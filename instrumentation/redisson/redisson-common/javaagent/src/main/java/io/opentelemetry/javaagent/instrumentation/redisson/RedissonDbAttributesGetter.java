@@ -40,14 +40,27 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return null;
   }
 
+  @Deprecated
   @Override
   public String getStatement(RedissonRequest request) {
     return request.getStatement();
   }
 
+  @Override
+  public String getDbQueryText(RedissonRequest request) {
+    return request.getStatement();
+  }
+
+  @Deprecated
   @Nullable
   @Override
   public String getOperation(RedissonRequest request) {
+    return request.getOperation();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(RedissonRequest request) {
     return request.getOperation();
   }
 }

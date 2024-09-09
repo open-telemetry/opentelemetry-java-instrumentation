@@ -52,6 +52,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
+  @Deprecated
   @Override
   public String getStatement(RedisCommand<?, ?, ?> request) {
     String command = LettuceInstrumentationUtil.getCommandName(request);
@@ -62,8 +63,26 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return sanitizer.sanitize(command, args);
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(RedisCommand<?, ?, ?> request) {
+    String command = LettuceInstrumentationUtil.getCommandName(request);
+    List<String> args =
+        request.getArgs() == null
+            ? Collections.emptyList()
+            : LettuceArgSplitter.splitArgs(request.getArgs().toCommandString());
+    return sanitizer.sanitize(command, args);
+  }
+
+  @Deprecated
   @Override
   public String getOperation(RedisCommand<?, ?, ?> request) {
+    return request.getType().name();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(RedisCommand<?, ?, ?> request) {
     return request.getType().name();
   }
 }

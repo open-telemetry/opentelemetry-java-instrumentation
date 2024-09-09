@@ -47,6 +47,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getStatement(GeodeRequest request) {
@@ -54,9 +55,23 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return sanitizer.sanitize(request.getQuery()).getFullStatement();
   }
 
+  @Nullable
+  @Override
+  public String getDbQueryText(GeodeRequest request) {
+    // sanitized statement is cached
+    return sanitizer.sanitize(request.getQuery()).getFullStatement();
+  }
+
+  @Deprecated
   @Override
   @Nullable
   public String getOperation(GeodeRequest request) {
+    return request.getOperation();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(GeodeRequest request) {
     return request.getOperation();
   }
 }

@@ -13,45 +13,58 @@ final class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest> {
 
   @Override
-  public String getSystem(ElasticTransportRequest s) {
+  public String getSystem(ElasticTransportRequest request) {
     return DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
   }
 
   @Deprecated
   @Override
   @Nullable
-  public String getUser(ElasticTransportRequest s) {
+  public String getUser(ElasticTransportRequest request) {
     return null;
   }
 
   @Deprecated
   @Override
   @Nullable
-  public String getName(ElasticTransportRequest s) {
+  public String getName(ElasticTransportRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getNamespace(ElasticTransportRequest s) {
+  public String getNamespace(ElasticTransportRequest request) {
     return null;
   }
 
   @Deprecated
   @Override
   @Nullable
-  public String getConnectionString(ElasticTransportRequest s) {
+  public String getConnectionString(ElasticTransportRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
-  public String getStatement(ElasticTransportRequest s) {
+  public String getStatement(ElasticTransportRequest request) {
     return null;
   }
 
+  @Nullable
   @Override
-  public String getOperation(ElasticTransportRequest action) {
-    return action.getAction().getClass().getSimpleName();
+  public String getDbQueryText(ElasticTransportRequest request) {
+    return null;
+  }
+
+  @Deprecated
+  @Override
+  public String getOperation(ElasticTransportRequest request) {
+    return request.getAction().getClass().getSimpleName();
+  }
+
+  @Override
+  public String getOperationName(ElasticTransportRequest request) {
+    return request.getAction().getClass().getSimpleName();
   }
 }
