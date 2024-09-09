@@ -52,13 +52,16 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
       return InClassLoaderMatcher.get() && !packageName.startsWith("io.opentelemetry.");
     }
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) boolean result,
+    public static boolean onExit(
+        @Advice.Return boolean result,
         @Advice.Enter boolean inClassLoaderMatcher) {
+
       if (inClassLoaderMatcher) {
-        result = false;
+        return false;
       }
+      return result;
     }
   }
 }
