@@ -34,8 +34,7 @@ import org.slf4j.LoggerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractCouchbaseTest {
-  private static final Logger logger =
-      LoggerFactory.getLogger(AbstractCouchbaseTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractCouchbaseTest.class);
 
   protected static final String USERNAME = "Administrator";
   protected static final String PASSWORD = "password";
