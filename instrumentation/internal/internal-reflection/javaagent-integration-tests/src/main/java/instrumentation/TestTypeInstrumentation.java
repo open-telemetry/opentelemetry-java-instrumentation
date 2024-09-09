@@ -36,7 +36,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static String methodExit(@Advice.This Runnable test, @Advice.Return String result) {
       VirtualField.find(Runnable.class, String.class).set(test, "instrumented");
-      return  "instrumented";
+      return "instrumented";
     }
   }
 
