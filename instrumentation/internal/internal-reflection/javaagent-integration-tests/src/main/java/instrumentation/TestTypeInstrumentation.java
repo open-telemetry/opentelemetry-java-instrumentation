@@ -32,21 +32,21 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TestAdvice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This Runnable test, @Advice.Return(readOnly = false) String result) {
+    public static String methodExit(@Advice.This Runnable test, @Advice.Return String result) {
       VirtualField.find(Runnable.class, String.class).set(test, "instrumented");
-      result = "instrumented";
+      return  "instrumented";
     }
   }
 
   @SuppressWarnings("unused")
   public static class Test2Advice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This Runnable test, @Advice.Return(readOnly = false) String result) {
-      result = VirtualField.find(Runnable.class, String.class).get(test);
+    public static String methodExit(@Advice.This Runnable test, @Advice.Return String result) {
+      return VirtualField.find(Runnable.class, String.class).get(test);
     }
   }
 }
