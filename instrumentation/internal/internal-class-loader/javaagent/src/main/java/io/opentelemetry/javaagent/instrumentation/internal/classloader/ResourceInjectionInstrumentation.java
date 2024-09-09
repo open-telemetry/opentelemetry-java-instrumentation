@@ -60,38 +60,38 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetResourceAdvice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static URL onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
-        @Advice.Return(readOnly = false) URL resource) {
+        @Advice.Return URL resource) {
+
       if (resource != null) {
-        return;
+        return resource;
       }
 
-      URL helper = HelperResources.loadOne(classLoader, name);
-      if (helper != null) {
-        resource = helper;
-      }
+      return HelperResources.loadOne(classLoader, name);
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetResourcesAdvice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static Enumeration<URL> onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
-        @Advice.Return(readOnly = false) Enumeration<URL> resources) {
+        @Advice.Return Enumeration<URL> resources) {
+
       List<URL> helpers = HelperResources.loadAll(classLoader, name);
       if (helpers.isEmpty()) {
-        return;
+        return resources;
       }
 
       if (!resources.hasMoreElements()) {
-        resources = Collections.enumeration(helpers);
-        return;
+        return Collections.enumeration(helpers);
       }
 
       List<URL> result = Collections.list(resources);
@@ -109,29 +109,34 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
         }
       }
 
-      resources = Collections.enumeration(result);
+      return Collections.enumeration(result);
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetResourceAsStreamAdvice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static InputStream onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
-        @Advice.Return(readOnly = false) InputStream inputStream) {
+        @Advice.Return InputStream inputStream) {
+
       if (inputStream != null) {
-        return;
+        return inputStream;
       }
 
       URL helper = HelperResources.loadOne(classLoader, name);
-      if (helper != null) {
-        try {
-          inputStream = helper.openStream();
-        } catch (IOException ignored) {
-          // ClassLoader.getResourceAsStream also ignores io exceptions from opening the stream
-        }
+      if (helper == null) {
+        return null;
+      }
+
+      try {
+        return helper.openStream();
+      } catch (IOException ignored) {
+        // ClassLoader.getResourceAsStream also ignores io exceptions from opening the stream
+        return null;
       }
     }
   }

@@ -26,11 +26,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
-  }
-
-  @Override
   public boolean isHelperClass(String className) {
     return className.equals("io.opentelemetry.javaagent.tooling.Constants");
   }

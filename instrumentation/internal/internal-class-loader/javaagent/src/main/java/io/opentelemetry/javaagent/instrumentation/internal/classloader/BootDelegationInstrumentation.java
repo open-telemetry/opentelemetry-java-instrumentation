@@ -136,13 +136,12 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result,
-        @Advice.Enter Class<?> resultFromBootstrapLoader) {
-      if (resultFromBootstrapLoader != null) {
-        result = resultFromBootstrapLoader;
-      }
+    public static Class<?> onExit(
+        @Advice.Return Class<?> result, @Advice.Enter Class<?> resultFromBootstrapLoader) {
+
+      return resultFromBootstrapLoader != null ? resultFromBootstrapLoader : result;
     }
   }
 }
