@@ -47,7 +47,6 @@ class LoggerTest {
             .build();
   }
 
-  @SuppressWarnings("deprecation") // LogRecordData.getBody() is deprecated
   @Test
   void logRecordBuilder() {
     SpanContext spanContext =
