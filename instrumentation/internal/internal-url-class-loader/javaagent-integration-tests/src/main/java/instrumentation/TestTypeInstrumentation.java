@@ -34,9 +34,10 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetHostNameAdvice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(@Advice.Return(readOnly = false) String hostName) {
-      hostName = "not-the-host-name";
+    public static String methodExit(@Advice.Return String hostName) {
+      return "not-the-host-name";
     }
   }
 }
