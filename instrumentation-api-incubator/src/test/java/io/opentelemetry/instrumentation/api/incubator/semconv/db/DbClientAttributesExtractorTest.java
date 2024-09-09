@@ -29,6 +29,7 @@ class DbClientAttributesExtractorTest {
       return map.get("db.system");
     }
 
+    @Deprecated
     @Override
     public String getUser(Map<String, String> map) {
       return map.get("db.user");
@@ -46,22 +47,34 @@ class DbClientAttributesExtractorTest {
       return map.get("db.namespace");
     }
 
+    @Deprecated
     @Override
     public String getConnectionString(Map<String, String> map) {
       return map.get("db.connection_string");
     }
 
+    @Deprecated
     @Override
     public String getStatement(Map<String, String> map) {
       return map.get("db.statement");
     }
 
+    @Nullable
+    @Override
+    public String getDbQueryText(Map<String, String> map) {
+      return map.get("db.query.text");
+    }
+
+    @Deprecated
     @Override
     public String getOperation(Map<String, String> map) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        return map.get("db.operation.name");
-      }
       return map.get("db.operation");
+    }
+
+    @Nullable
+    @Override
+    public String getOperationName(Map<String, String> map) {
+      return map.get("db.operation.name");
     }
   }
 
@@ -71,7 +84,9 @@ class DbClientAttributesExtractorTest {
     // given
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
-    request.put("db.user", "username");
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      request.put("db.user", "username");
+    }
     request.put(
         SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME).getKey(), "potatoes");
     request.put("db.connection_string", "mydb:///potatoes");

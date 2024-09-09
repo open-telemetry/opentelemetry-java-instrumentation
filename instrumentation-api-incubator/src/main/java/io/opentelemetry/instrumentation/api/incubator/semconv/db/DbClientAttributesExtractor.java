@@ -43,6 +43,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     super(getter);
   }
 
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
@@ -52,8 +53,8 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, DB_OPERATION_NAME, getter.getOperationName(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
-      internalSet(attributes, DB_OPERATION, getter.getOperationName(request));
+      internalSet(attributes, DB_STATEMENT, getter.getStatement(request));
+      internalSet(attributes, DB_OPERATION, getter.getOperation(request));
     }
   }
 }

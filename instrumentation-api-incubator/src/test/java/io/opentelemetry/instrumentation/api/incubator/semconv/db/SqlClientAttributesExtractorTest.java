@@ -42,6 +42,7 @@ class SqlClientAttributesExtractorTest {
       return map.get("db.system");
     }
 
+    @Deprecated
     @Override
     public String getUser(Map<String, String> map) {
       return map.get("db.user");
@@ -60,6 +61,7 @@ class SqlClientAttributesExtractorTest {
       return map.get("db.namespace");
     }
 
+    @Deprecated
     @Override
     public String getConnectionString(Map<String, String> map) {
       return map.get("db.connection_string");
