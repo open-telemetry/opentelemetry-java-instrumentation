@@ -29,9 +29,14 @@ import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractCouchbaseTest {
+  private static final Logger logger =
+      LoggerFactory.getLogger(AbstractCouchbaseTest.class);
+
   protected static final String USERNAME = "Administrator";
   protected static final String PASSWORD = "password";
 
@@ -62,7 +67,7 @@ public abstract class AbstractCouchbaseTest {
     HttpServer httpServer = (HttpServer) httpServerFiled.get(mock);
     httpServer.register("/query", new QueryServer());
     mock.start();
-    System.err.println("CouchbaseMock listening on localhost:$port");
+    logger.info("CouchbaseMock listening on localhost:{}", port);
 
     mock.createBucket(convert(bucketCouchbase));
     mock.createBucket(convert(bucketMemcache));
