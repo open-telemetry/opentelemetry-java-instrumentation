@@ -30,6 +30,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     return "influxdb";
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getUser(InfluxDbRequest request) {
@@ -51,6 +52,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     return "".equals(dbName) ? null : dbName;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getConnectionString(InfluxDbRequest influxDbRequest) {

@@ -21,6 +21,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return DbIncubatingAttributes.DbSystemValues.GEODE;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(GeodeRequest request) {
@@ -39,6 +40,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return request.getRegion().getName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(GeodeRequest request) {

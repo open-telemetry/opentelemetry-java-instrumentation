@@ -18,6 +18,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return CASSANDRA;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CassandraRequest request) {
@@ -37,6 +38,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CassandraRequest request) {

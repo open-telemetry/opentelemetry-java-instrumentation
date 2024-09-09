@@ -41,6 +41,7 @@ final class ElasticsearchDbAttributesGetter
     return ELASTICSEARCH;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(ElasticsearchRestRequest request) {
@@ -60,6 +61,7 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(ElasticsearchRestRequest request) {

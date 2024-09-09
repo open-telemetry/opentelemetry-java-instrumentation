@@ -17,6 +17,7 @@ final class ElasticsearchTransportAttributesGetter
     return DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(ElasticTransportRequest s) {
@@ -36,6 +37,7 @@ final class ElasticsearchTransportAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(ElasticTransportRequest s) {

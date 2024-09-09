@@ -25,6 +25,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(RedisCommand<?, ?, ?> request) {
@@ -44,6 +45,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(RedisCommand<?, ?, ?> request) {

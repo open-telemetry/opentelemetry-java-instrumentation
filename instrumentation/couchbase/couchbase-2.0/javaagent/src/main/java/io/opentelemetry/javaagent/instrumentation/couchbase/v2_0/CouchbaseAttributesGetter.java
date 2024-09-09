@@ -16,6 +16,7 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return DbIncubatingAttributes.DbSystemValues.COUCHBASE;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CouchbaseRequestInfo couchbaseRequest) {
@@ -35,6 +36,7 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return couchbaseRequest.bucket();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CouchbaseRequestInfo couchbaseRequest) {

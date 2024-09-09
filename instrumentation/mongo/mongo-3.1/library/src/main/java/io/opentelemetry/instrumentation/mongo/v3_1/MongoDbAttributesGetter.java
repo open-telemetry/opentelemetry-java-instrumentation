@@ -54,6 +54,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return MONGODB;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CommandStartedEvent event) {
@@ -73,6 +74,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return event.getDatabaseName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CommandStartedEvent event) {

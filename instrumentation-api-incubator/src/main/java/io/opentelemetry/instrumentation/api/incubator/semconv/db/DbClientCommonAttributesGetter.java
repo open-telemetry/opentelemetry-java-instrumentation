@@ -13,6 +13,7 @@ public interface DbClientCommonAttributesGetter<REQUEST> {
   @Nullable
   String getSystem(REQUEST request);
 
+  @Deprecated
   @Nullable
   String getUser(REQUEST request);
 
@@ -26,6 +27,7 @@ public interface DbClientCommonAttributesGetter<REQUEST> {
   @Nullable
   String getNamespace(REQUEST request);
 
+  @Deprecated
   @Nullable
   String getConnectionString(REQUEST request);
 }

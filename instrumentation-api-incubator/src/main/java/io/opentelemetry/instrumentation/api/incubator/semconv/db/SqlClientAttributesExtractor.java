@@ -20,8 +20,8 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>db.sql.table</code> attribute. The raw SQL statements returned by the {@link
- * SqlClientAttributesGetter#getDbQueryText(Object)} (Object)} method are sanitized before use, all
- * statement parameters are removed.
+ * SqlClientAttributesGetter#getDbQueryText(Object)} method are sanitized before use, all statement
+ * parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<

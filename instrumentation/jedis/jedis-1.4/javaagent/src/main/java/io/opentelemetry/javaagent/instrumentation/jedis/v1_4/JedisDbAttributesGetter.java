@@ -21,6 +21,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(JedisRequest request) {
@@ -39,6 +40,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return null;
   }
 
+  @Deprecated
   @Override
   public String getConnectionString(JedisRequest request) {
     return null;

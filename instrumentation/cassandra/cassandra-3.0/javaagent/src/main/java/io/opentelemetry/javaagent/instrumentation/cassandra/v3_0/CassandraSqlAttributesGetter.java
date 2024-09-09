@@ -16,6 +16,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return DbIncubatingAttributes.DbSystemValues.CASSANDRA;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CassandraRequest request) {
@@ -35,6 +36,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return request.getSession().getLoggedKeyspace();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CassandraRequest request) {

@@ -21,6 +21,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return request.getDbInfo().getSystem();
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getUser(DbRequest request) {
@@ -42,6 +43,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getConnectionString(DbRequest request) {

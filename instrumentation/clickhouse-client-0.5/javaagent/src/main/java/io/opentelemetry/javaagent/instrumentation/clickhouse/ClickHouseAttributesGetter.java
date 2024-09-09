@@ -34,6 +34,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return DbIncubatingAttributes.DbSystemValues.CLICKHOUSE;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getUser(ClickHouseDbRequest request) {
@@ -57,6 +58,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return getName(request);
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getConnectionString(ClickHouseDbRequest request) {
