@@ -9,8 +9,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.resources.HostIdResource;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
-import io.opentelemetry.sdk.resources.Resource;
 
 /**
  * Declarative config host id resource provider.
@@ -20,21 +18,9 @@ import io.opentelemetry.sdk.resources.Resource;
  */
 @SuppressWarnings("rawtypes")
 @AutoService(ComponentProvider.class)
-public class HostIdResourceComponentProvider implements ComponentProvider<Resource>, Ordered {
-  @Override
-  public Class<Resource> getType() {
-    return Resource.class;
-  }
-
-  @Override
-  public String getName() {
-    // getName() is unused for Resource ComponentProviders
-    return "unused";
-  }
-
-  @Override
-  public Resource create(StructuredConfigProperties config) {
-    return HostIdResource.get();
+public class HostIdResourceComponentProvider extends ResourceComponentProvider implements Ordered {
+  public HostIdResourceComponentProvider() {
+    super(HostIdResource::get);
   }
 
   @Override

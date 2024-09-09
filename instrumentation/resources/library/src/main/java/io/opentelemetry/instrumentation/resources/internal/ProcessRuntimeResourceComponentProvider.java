@@ -8,8 +8,6 @@ package io.opentelemetry.instrumentation.resources.internal;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
-import io.opentelemetry.sdk.resources.Resource;
 
 /**
  * Declarative config process runtime resource provider.
@@ -19,20 +17,8 @@ import io.opentelemetry.sdk.resources.Resource;
  */
 @SuppressWarnings("rawtypes")
 @AutoService(ComponentProvider.class)
-public class ProcessRuntimeResourceComponentProvider implements ComponentProvider<Resource> {
-  @Override
-  public Class<Resource> getType() {
-    return Resource.class;
-  }
-
-  @Override
-  public String getName() {
-    // getName() is unused for Resource ComponentProviders
-    return "unused";
-  }
-
-  @Override
-  public Resource create(StructuredConfigProperties config) {
-    return ProcessRuntimeResource.get();
+public class ProcessRuntimeResourceComponentProvider extends ResourceComponentProvider {
+  public ProcessRuntimeResourceComponentProvider() {
+    super(ProcessRuntimeResource::get);
   }
 }
