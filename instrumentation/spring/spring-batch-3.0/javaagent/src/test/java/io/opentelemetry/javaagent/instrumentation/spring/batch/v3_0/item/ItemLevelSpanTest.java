@@ -241,6 +241,8 @@ abstract class ItemLevelSpanTest {
                   span.hasName("BatchJob parallelItemsJob.parallelItemsStep.ItemWrite")
                       .hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(14)));
+
+          trace.hasSpansSatisfyingExactly(assertions);
         });
   }
 

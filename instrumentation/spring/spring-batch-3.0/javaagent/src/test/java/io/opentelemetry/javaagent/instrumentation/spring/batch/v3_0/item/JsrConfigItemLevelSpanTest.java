@@ -15,9 +15,4 @@ public class JsrConfigItemLevelSpanTest extends ItemLevelSpanTest {
   public JsrConfigItemLevelSpanTest() {
     super(runner);
   }
-
-  @Override
-  void shouldTraceAllItemOperationsOnAparallelItemsJob() {
-    // does not work - not sure why
-  }
 }
