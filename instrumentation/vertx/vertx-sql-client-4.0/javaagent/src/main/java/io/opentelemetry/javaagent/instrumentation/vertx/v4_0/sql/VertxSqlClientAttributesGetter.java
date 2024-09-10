@@ -17,6 +17,7 @@ public enum VertxSqlClientAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(VertxSqlClientRequest request) {
@@ -36,6 +37,7 @@ public enum VertxSqlClientAttributesGetter
     return request.getDatabase();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(VertxSqlClientRequest request) {
