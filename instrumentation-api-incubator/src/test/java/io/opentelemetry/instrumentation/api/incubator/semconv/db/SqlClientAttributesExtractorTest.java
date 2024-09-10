@@ -74,9 +74,9 @@ class SqlClientAttributesExtractorTest {
     // given
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
-    request.put("db.user", "username");
-    request.put("db.connection_string", "mydb:///potatoes");
     if (SemconvStability.emitOldDatabaseSemconv()) {
+      request.put("db.user", "username");
+      request.put("db.connection_string", "mydb:///potatoes");
       request.put("db.name", "potatoes");
       request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
@@ -97,21 +97,32 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-            entry(DbIncubatingAttributes.DB_USER, "username"),
-            entry(SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME), "potatoes"),
-            entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-                "SELECT * FROM potato WHERE id=?"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-                "SELECT"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_SQL_TABLE),
-                "potato"));
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(DbIncubatingAttributes.DB_USER, "username"),
+              entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
+              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
+              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+              entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"));
+    } else {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME), "potatoes"),
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                  "SELECT * FROM potato WHERE id=?"),
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                  "SELECT"),
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_SQL_TABLE),
+                  "potato"));
+    }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
@@ -120,7 +131,11 @@ class SqlClientAttributesExtractorTest {
   void shouldNotExtractTableIfAttributeIsNotSet() {
     // given
     Map<String, String> request = new HashMap<>();
-    request.put("db.statement", "SELECT *");
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      request.put("db.statement", "SELECT *");
+    } else {
+      request.put("db.query.text", "SELECT *");
+    }
 
     Context context = Context.root();
 
@@ -132,21 +147,32 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(attributes, context, request);
 
     // then
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-                "SELECT *"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-                "SELECT"));
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
+              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
+    } else {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                  "SELECT *"),
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                  "SELECT"));
+    }
   }
 
   @Test
   void shouldExtractTableToSpecifiedKey() {
     // given
     Map<String, String> request = new HashMap<>();
-    request.put("db.statement", "SELECT * FROM table");
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      request.put("db.statement", "SELECT * FROM table");
+    } else {
+      request.put("db.query.text", "SELECT * FROM table");
+    }
 
     Context context = Context.root();
 
@@ -161,17 +187,25 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(attributes, context, request);
 
     // then
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-                "SELECT * FROM table"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-                "SELECT"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE),
-                "table"));
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
+              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+              entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
+    } else {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                  "SELECT * FROM table"),
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                  "SELECT"),
+              entry(
+                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE),
+                  "table"));
+    }
   }
 
   @Test

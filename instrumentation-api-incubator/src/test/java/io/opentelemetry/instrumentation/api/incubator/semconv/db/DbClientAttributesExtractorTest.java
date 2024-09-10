@@ -86,10 +86,10 @@ class DbClientAttributesExtractorTest {
     request.put("db.system", "myDb");
     if (SemconvStability.emitOldDatabaseSemconv()) {
       request.put("db.user", "username");
+      request.put("db.connection_string", "mydb:///potatoes");
     }
     request.put(
         SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME).getKey(), "potatoes");
-    request.put("db.connection_string", "mydb:///potatoes");
     request.put(
         SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT).getKey(),
         "SELECT * FROM potato");
