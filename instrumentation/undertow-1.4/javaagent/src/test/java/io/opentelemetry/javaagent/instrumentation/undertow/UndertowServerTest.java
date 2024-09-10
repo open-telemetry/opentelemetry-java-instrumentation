@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
 /*
@@ -5,30 +10,44 @@ package io.opentelemetry.javaagent.instrumentation.undertow;
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.instrumentation.test.AgentTestTrait;
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.semconv.*;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;
-import java.util.function.Supplier;
+import java.net.URI;
+import java.util.Collections;
+import java.util.HashSet;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.*;
-
-//TODO make test which mixes handlers and servlets
+// TODO make test which mixes handlers and servlets
 class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
 
   @RegisterExtension
@@ -36,192 +55,214 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
 
   @Override
   public Undertow setupServer() {
-    Undertow.Builder builder = Undertow.builder()
-        .addHttpListener(port, "localhost")
-        .setHandler(Handlers.path()
-            .addExactPath(SUCCESS.rawPath(),
-                controller(SUCCESS,
-                    () -> exchange -> exchange.getResponseSender().send(SUCCESS.getBody()))
-              )
-            .addExactPath(QUERY_PARAM.rawPath(),
-                controller(QUERY_PARAM,
-                    () -> exchange -> exchange.getResponseSender().send(exchange.getQueryString()))
-              )
-            .addExactPath(REDIRECT.rawPath(),
-              controller(REDIRECT ,
-                  () -> exchange ->      {
-                    exchange.setStatusCode(StatusCodes.FOUND);
-                    exchange.getResponseHeaders().put(Headers.LOCATION, REDIRECT.getBody());
-                    exchange.endExchange();
-                  })
-            )
-            .addExactPath(CAPTURE_HEADERS.rawPath()) { exchange ->
-              controller(CAPTURE_HEADERS) {
-                exchange.setStatusCode(StatusCodes.OK)
-                exchange.getResponseHeaders().put(new HttpString("X-Test-Response"), exchange.getRequestHeaders().getFirst("X-Test-Request"))
-                exchange.getResponseSender().send(CAPTURE_HEADERS.body)
-              }
-            }
-            .addExactPath(ERROR.rawPath()) { exchange ->
-              controller(ERROR) {
-                exchange.setStatusCode(ERROR.status)
-                exchange.getResponseSender().send(ERROR.body)
-              }
-            }
-            .addExactPath(EXCEPTION.rawPath()) { exchange ->
-              controller(EXCEPTION) {
-                throw new Exception(EXCEPTION.body)
-              }
-            }
-            .addExactPath(INDEXED_CHILD.rawPath()) { exchange ->
-              controller(INDEXED_CHILD) {
-                INDEXED_CHILD.collectSpanAttributes { name -> exchange.getQueryParameters().get(name).peekFirst() }
-                exchange.getResponseSender().send(INDEXED_CHILD.body)
-              }
-            }
-            .addExactPath("sendResponse") { exchange ->
-              Span.current().addEvent("before-event")
-              runWithSpan("sendResponse") {
-                exchange.setStatusCode(StatusCodes.OK)
-                exchange.getResponseSender().send("sendResponse")
-              }
-              // event is added only when server span has not been ended
-              // we need to make sure that sending response does not end server span
-              Span.current().addEvent("after-event")
-            }
-            .addExactPath("sendResponseWithException") { exchange ->
-              Span.current().addEvent("before-event")
-              runWithSpan("sendResponseWithException") {
-                exchange.setStatusCode(StatusCodes.OK)
-                exchange.getResponseSender().send("sendResponseWithException")
-              }
-              // event is added only when server span has not been ended
-              // we need to make sure that sending response does not end server span
-              Span.current().addEvent("after-event")
-              throw new Exception("exception after sending response")
-            }
-        )
-    configureUndertow(builder)
-    Undertow server = builder.build()
-    server.start()
-    return server
+    Undertow.Builder builder =
+        Undertow.builder()
+            .addHttpListener(port, "localhost")
+            .setHandler(
+                Handlers.path()
+                    .addExactPath(
+                        SUCCESS.rawPath(),
+                        controller(
+                            SUCCESS,
+                            () -> exchange -> exchange.getResponseSender().send(SUCCESS.getBody())))
+                    .addExactPath(
+                        QUERY_PARAM.rawPath(),
+                        controller(
+                            QUERY_PARAM,
+                            () ->
+                                exchange ->
+                                    exchange.getResponseSender().send(exchange.getQueryString())))
+                    .addExactPath(
+                        REDIRECT.rawPath(),
+                        controller(
+                            REDIRECT,
+                            () ->
+                                exchange -> {
+                                  exchange.setStatusCode(StatusCodes.FOUND);
+                                  exchange
+                                      .getResponseHeaders()
+                                      .put(Headers.LOCATION, REDIRECT.getBody());
+                                  exchange.endExchange();
+                                }))
+                    .addExactPath(
+                        CAPTURE_HEADERS.rawPath(),
+                        controller(
+                            CAPTURE_HEADERS,
+                            () ->
+                                exchange -> {
+                                  exchange.setStatusCode(StatusCodes.OK);
+                                  exchange
+                                      .getResponseHeaders()
+                                      .put(
+                                          new HttpString("X-Test-Response"),
+                                          exchange.getRequestHeaders().getFirst("X-Test-Request"));
+                                  exchange.getResponseSender().send(CAPTURE_HEADERS.getBody());
+                                }))
+                    .addExactPath(
+                        ERROR.rawPath(),
+                        controller(
+                            ERROR,
+                            () ->
+                                exchange -> {
+                                  exchange.setStatusCode(ERROR.getStatus());
+                                  exchange.getResponseSender().send(ERROR.getBody());
+                                }))
+                    .addExactPath(
+                        EXCEPTION.rawPath(),
+                        controller(
+                            EXCEPTION,
+                            () ->
+                                exchange -> {
+                                  throw new Exception(EXCEPTION.getBody());
+                                }))
+                    .addExactPath(
+                        INDEXED_CHILD.rawPath(),
+                        controller(
+                            INDEXED_CHILD,
+                            () ->
+                                exchange -> {
+                                  INDEXED_CHILD.collectSpanAttributes(
+                                      name -> exchange.getQueryParameters().get(name).peekFirst());
+                                  exchange.getResponseSender().send(INDEXED_CHILD.getBody());
+                                }))
+                    .addExactPath(
+                        "sendResponse",
+                        exchange -> {
+                          Span.current().addEvent("before-event");
+                          testing.runWithSpan(
+                              "sendResponse",
+                              () -> {
+                                exchange.setStatusCode(StatusCodes.OK);
+                                exchange.getResponseSender().send("sendResponse");
+                              });
+                          // event is added only when server span has not been ended
+                          // we need to make sure that sending response does not end server span
+                          Span.current().addEvent("after-event");
+                        })
+                    .addExactPath(
+                        "sendResponseWithException",
+                        exchange -> {
+                          Span.current().addEvent("before-event");
+                          testing.runWithSpan(
+                              "sendResponseWithException",
+                              () -> {
+                                exchange.setStatusCode(StatusCodes.OK);
+                                exchange.getResponseSender().send("sendResponseWithException");
+                              });
+                          // event is added only when server span has not been ended
+                          // we need to make sure that sending response does not end server span
+                          Span.current().addEvent("after-event");
+                          throw new Exception("exception after sending response");
+                        }));
+    configureUndertow(builder);
+    Undertow server = builder.build();
+    server.start();
+    return server;
   }
 
   @Override
-  void stopServer(Undertow undertow) {
-    undertow.stop()
-  }
-
-  void configureUndertow(Undertow.Builder builder) {
+  public void stopServer(Undertow undertow) {
+    undertow.stop();
   }
 
   @Override
-  Set<AttributeKey<?>> httpAttributes(ServerEndpoint endpoint) {
-    def attributes = super.httpAttributes(endpoint)
-    attributes.remove(HttpAttributes.HTTP_ROUTE)
-    attributes
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    options.setHttpAttributes(
+        endpoint ->
+            Collections.unmodifiableSet(
+                new HashSet<>(singletonList(NetworkAttributes.NETWORK_PEER_PORT))));
+    options.setHasResponseCustomizer(serverEndpoint -> true);
+    options.setUseHttp2(useHttp2());
   }
 
-  @Override
-  boolean hasResponseCustomizer(ServerEndpoint endpoint) {
-    true
+  protected void configureUndertow(Undertow.Builder builder) {}
+
+  protected boolean useHttp2() {
+    return false;
   }
 
-  def "test send response"() {
-    setup:
-    def uri = address.resolve("sendResponse")
-    AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join()
+  @DisplayName("test send response")
+  @Test
+  void testSendResponse() {
+    URI uri = address.resolve("sendResponse");
+    AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join();
 
-    expect:
-    response.status().code() == 200
-    response.contentUtf8().trim() == "sendResponse"
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8().trim()).isEqualTo("sendResponse");
 
-    and:
-    assertTraces(1) {
-      trace(0, 2) {
-        it.span(0) {
-          hasNoParent()
-          name "GET"
-          kind SpanKind.SERVER
-
-          event(0) {
-            eventName "before-event"
-          }
-          event(1) {
-            eventName "after-event"
-          }
-
-          def protocolVersion = useHttp2() ? "2" : "1.1"
-          attributes {
-            "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-            "$UrlAttributes.URL_SCHEME" uri.getScheme()
-            "$UrlAttributes.URL_PATH" uri.getPath()
-            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" protocolVersion
-            "$ServerAttributes.SERVER_ADDRESS" uri.host
-            "$ServerAttributes.SERVER_PORT" uri.port
-            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
-            "$NetworkAttributes.NETWORK_PEER_PORT" Long
-          }
-        }
-        span(1) {
-          name "sendResponse"
-          kind SpanKind.INTERNAL
-          childOf span(0)
-        }
-      }
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasEventsSatisfyingExactly(
+                            event -> event.hasName("before-event"),
+                            event -> event.hasName("after-event"))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP),
+                            equalTo(UrlAttributes.URL_SCHEME, uri.getScheme()),
+                            equalTo(UrlAttributes.URL_PATH, uri.getPath()),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                            equalTo(
+                                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+                                useHttp2() ? "2" : "1.1"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                k -> k.isInstanceOf(Long.class))),
+                span ->
+                    span.hasName("sendResponse")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
-  def "test send response with exception"() {
-    setup:
-    def uri = address.resolve("sendResponseWithException")
-    AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join()
+  @Test
+  @DisplayName("test send response with exception")
+  void testSendReponseWithException() {
+    URI uri = address.resolve("sendResponseWithException");
+    AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join();
 
-    expect:
-    response.status().code() == 200
-    response.contentUtf8().trim() == "sendResponseWithException"
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8().trim()).isEqualTo("sendResponseWithException");
 
-    and:
-    assertTraces(1) {
-      trace(0, 2) {
-        it.span(0) {
-          hasNoParent()
-          name "GET"
-          kind SpanKind.SERVER
-          status StatusCode.ERROR
-
-          event(0) {
-            eventName "before-event"
-          }
-          event(1) {
-            eventName "after-event"
-          }
-          errorEvent(Exception, "exception after sending response", 2)
-
-          def protocolVersion = useHttp2() ? "2" : "1.1"
-          attributes {
-            "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
-            "$UrlAttributes.URL_SCHEME" uri.getScheme()
-            "$UrlAttributes.URL_PATH" uri.getPath()
-            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" protocolVersion
-            "$ServerAttributes.SERVER_ADDRESS" uri.host
-            "$ServerAttributes.SERVER_PORT" uri.port
-            "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
-            "$NetworkAttributes.NETWORK_PEER_PORT" Long
-          }
-        }
-        span(1) {
-          name "sendResponseWithException"
-          kind SpanKind.INTERNAL
-          childOf span(0)
-        }
-      }
-    }
+    Exception exception = new Exception("exception after sending response");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasEventsSatisfyingExactly(
+                            event -> event.hasName("before-event"),
+                            event -> event.hasName("after-event"))
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP),
+                            equalTo(UrlAttributes.URL_SCHEME, uri.getScheme()),
+                            equalTo(UrlAttributes.URL_PATH, uri.getPath()),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                            equalTo(
+                                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+                                useHttp2() ? "2" : "1.1"),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                NetworkAttributes.NETWORK_PEER_PORT,
+                                k -> k.isInstanceOf(Long.class))),
+                span ->
+                    span.hasName("sendResponseWithException")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 }
