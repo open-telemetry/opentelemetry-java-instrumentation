@@ -34,7 +34,7 @@ abstract class ItemLevelSpanTest {
   }
 
   @Test
-  public void shouldTraceItemReadProcessAndWriteCalls() {
+  void shouldTraceItemReadProcessAndWriteCalls() {
     runner.runJob("itemsAndTaskletJob");
 
     testing.waitAndAssertTraces(
@@ -246,7 +246,7 @@ abstract class ItemLevelSpanTest {
         });
   }
 
-  public void postProcessParallelItemsJob(String jobName, Job job) {
+  protected void postProcessParallelItemsJob(String jobName, Job job) {
     if ("parallelItemsJob".equals(jobName)) {
       Step step = ((AbstractJob) job).getStep("parallelItemsStep");
       TaskletStep taskletStep = (TaskletStep) step;

@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.Appli
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class XmlConfigItemLevelSpanTest extends ItemLevelSpanTest {
+class XmlConfigItemLevelSpanTest extends ItemLevelSpanTest {
 
   static XmlConfigItemLevelSpanTest instance;
 
