@@ -16,6 +16,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getUser(RedissonRequest request) {
@@ -35,6 +36,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return null;
   }
 
+  @Deprecated
   @Override
   public String getConnectionString(RedissonRequest request) {
     return null;

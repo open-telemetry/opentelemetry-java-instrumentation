@@ -17,6 +17,7 @@ final class OpenSearchRestAttributesGetter
     return DbIncubatingAttributes.DbSystemValues.OPENSEARCH;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(OpenSearchRestRequest request) {
@@ -36,6 +37,7 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(OpenSearchRestRequest request) {
