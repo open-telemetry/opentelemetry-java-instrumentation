@@ -115,7 +115,6 @@ public class TestConnection implements Connection {
 
   @Override
   public Properties getClientInfo() throws SQLException {
-    // TODO throwable
     throw new UnsupportedOperationException("Test 123");
   }
 

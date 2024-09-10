@@ -59,7 +59,6 @@ class TestDatabaseMetaData implements DatabaseMetaData {
 
   @Override
   public boolean generatedKeyAlwaysReturned() throws SQLException {
-    ;
     return false;
   }
 

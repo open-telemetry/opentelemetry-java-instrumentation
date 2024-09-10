@@ -9,8 +9,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
+import com.google.common.collect.ImmutableMap;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -37,7 +37,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -45,7 +44,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.derby.jdbc.EmbeddedDataSource;
@@ -83,20 +81,16 @@ class JdbcInstrumentationTest {
     dbName = "jdbcUnitTest";
     dbNameLower = dbName.toLowerCase(Locale.ROOT);
     jdbcUrls =
-        Collections.unmodifiableMap(
-            Stream.of(
-                    entry("h2", "jdbc:h2:mem:" + dbName),
-                    entry("derby", "jdbc:derby:memory:" + dbName),
-                    entry("hsqldb", "jdbc:hsqldb:mem:" + dbName))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        ImmutableMap.of(
+            "h2", "jdbc:h2:mem:" + dbName,
+            "derby", "jdbc:derby:memory:" + dbName,
+            "hsqldb", "jdbc:hsqldb:mem:" + dbName);
 
     jdbcDriverClassNames =
-        Collections.unmodifiableMap(
-            Stream.of(
-                    entry("h2", "org.h2.Driver"),
-                    entry("derby", "org.apache.derby.jdbc.EmbeddedDriver"),
-                    entry("hsqldb", "org.hsqldb.jdbc.JDBCDriver"))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        ImmutableMap.of(
+            "h2", "org.h2.Driver",
+            "derby", "org.apache.derby.jdbc.EmbeddedDriver",
+            "hsqldb", "org.hsqldb.jdbc.JDBCDriver");
 
     jdbcUserNames = new HashMap<>();
     jdbcUserNames.put("derby", "APP");
@@ -345,7 +339,6 @@ class JdbcInstrumentationTest {
             "INFORMATION_SCHEMA.SYSTEM_USERS"));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @DisplayName(
       "basic statement with #connection.getClass().getCanonicalName() on #system generates spans")
   @ParameterizedTest
@@ -1018,6 +1011,8 @@ class JdbcInstrumentationTest {
       init.accept(datasource);
     }
     datasource.getConnection().close();
+    assertThat(testing.spans())
+        .noneMatch(span -> Objects.equals(span.getName(), "database.connection"));
 
     testing.clearData();
 
