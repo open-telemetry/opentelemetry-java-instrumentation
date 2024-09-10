@@ -11,9 +11,13 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
 final class ApplicationLoggerBuilder implements LoggerBuilder {
 
+  private final ApplicationLoggerFactory loggerFactory;
   private final io.opentelemetry.api.logs.LoggerBuilder agentBuilder;
 
-  ApplicationLoggerBuilder(io.opentelemetry.api.logs.LoggerBuilder agentBuilder) {
+  ApplicationLoggerBuilder(
+      ApplicationLoggerFactory loggerFactory,
+      io.opentelemetry.api.logs.LoggerBuilder agentBuilder) {
+    this.loggerFactory = loggerFactory;
     this.agentBuilder = agentBuilder;
   }
 
@@ -33,6 +37,6 @@ final class ApplicationLoggerBuilder implements LoggerBuilder {
 
   @Override
   public Logger build() {
-    return new ApplicationLogger(agentBuilder.build());
+    return loggerFactory.newLogger(agentBuilder.build());
   }
 }

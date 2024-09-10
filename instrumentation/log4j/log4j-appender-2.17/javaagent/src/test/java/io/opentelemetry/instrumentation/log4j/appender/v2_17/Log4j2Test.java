@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -173,7 +174,7 @@ class Log4j2Test {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasBody("")
+                .hasBody((Value<?>) null)
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
