@@ -62,10 +62,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class JdbcInstrumentationTest {
 
-  @RegisterExtension static AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @RegisterExtension
-  static InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static String dbName;
   private static String dbNameLower;
