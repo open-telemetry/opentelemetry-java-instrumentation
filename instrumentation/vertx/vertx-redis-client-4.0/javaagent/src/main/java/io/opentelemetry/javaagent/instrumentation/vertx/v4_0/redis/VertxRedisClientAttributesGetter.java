@@ -23,6 +23,7 @@ public enum VertxRedisClientAttributesGetter
     return DbIncubatingAttributes.DbSystemValues.REDIS;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(VertxRedisClientRequest request) {
@@ -42,12 +43,14 @@ public enum VertxRedisClientAttributesGetter
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(VertxRedisClientRequest request) {
     return request.getConnectionString();
   }
 
+  @Deprecated
   @Override
   public String getStatement(VertxRedisClientRequest request) {
     return sanitizer.sanitize(request.getCommand(), request.getArgs());
@@ -55,7 +58,20 @@ public enum VertxRedisClientAttributesGetter
 
   @Nullable
   @Override
+  public String getDbQueryText(VertxRedisClientRequest request) {
+    return sanitizer.sanitize(request.getCommand(), request.getArgs());
+  }
+
+  @Deprecated
+  @Nullable
+  @Override
   public String getOperation(VertxRedisClientRequest request) {
+    return request.getCommand();
+  }
+
+  @Nullable
+  @Override
+  public String getOperationName(VertxRedisClientRequest request) {
     return request.getCommand();
   }
 }

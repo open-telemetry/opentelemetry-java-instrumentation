@@ -15,6 +15,7 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
     return "memcached";
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(SpymemcachedRequest spymemcachedRequest) {
@@ -34,6 +35,7 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(SpymemcachedRequest spymemcachedRequest) {
