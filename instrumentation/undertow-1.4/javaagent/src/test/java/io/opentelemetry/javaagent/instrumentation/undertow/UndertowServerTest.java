@@ -28,7 +28,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -62,69 +64,82 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                 Handlers.path()
                     .addExactPath(
                         SUCCESS.rawPath(),
-                        controller(
-                            SUCCESS,
-                            () -> exchange -> exchange.getResponseSender().send(SUCCESS.getBody())))
+                        exchange ->
+                            testing.runWithSpan(
+                                "controller",
+                                (ThrowingRunnable<Exception>)
+                                    () -> exchange.getResponseSender().send(SUCCESS.getBody())))
                     .addExactPath(
                         QUERY_PARAM.rawPath(),
-                        controller(
-                            QUERY_PARAM,
-                            () ->
-                                exchange ->
-                                    exchange.getResponseSender().send(exchange.getQueryString())))
+                        exchange ->
+                            testing.runWithSpan(
+                                "controller",
+                                (ThrowingRunnable<Exception>)
+                                    () ->
+                                        exchange
+                                            .getResponseSender()
+                                            .send(exchange.getQueryString())))
                     .addExactPath(
                         REDIRECT.rawPath(),
-                        controller(
-                            REDIRECT,
-                            () ->
-                                exchange -> {
-                                  exchange.setStatusCode(StatusCodes.FOUND);
-                                  exchange
-                                      .getResponseHeaders()
-                                      .put(Headers.LOCATION, REDIRECT.getBody());
-                                  exchange.endExchange();
-                                }))
+                        exchange ->
+                            testing.runWithSpan(
+                                "controller",
+                                (ThrowingRunnable<Exception>)
+                                    () -> {
+                                      exchange.setStatusCode(StatusCodes.FOUND);
+                                      exchange
+                                          .getResponseHeaders()
+                                          .put(Headers.LOCATION, REDIRECT.getBody());
+                                      exchange.endExchange();
+                                    }))
                     .addExactPath(
                         CAPTURE_HEADERS.rawPath(),
-                        controller(
-                            CAPTURE_HEADERS,
-                            () ->
-                                exchange -> {
-                                  exchange.setStatusCode(StatusCodes.OK);
-                                  exchange
-                                      .getResponseHeaders()
-                                      .put(
-                                          new HttpString("X-Test-Response"),
-                                          exchange.getRequestHeaders().getFirst("X-Test-Request"));
-                                  exchange.getResponseSender().send(CAPTURE_HEADERS.getBody());
-                                }))
+                        exchange ->
+                            testing.runWithSpan(
+                                "controller",
+                                (ThrowingRunnable<Exception>)
+                                    () -> {
+                                      exchange.setStatusCode(StatusCodes.OK);
+                                      exchange
+                                          .getResponseHeaders()
+                                          .put(
+                                              new HttpString("X-Test-Response"),
+                                              exchange
+                                                  .getRequestHeaders()
+                                                  .getFirst("X-Test-Request"));
+                                      exchange.getResponseSender().send(CAPTURE_HEADERS.getBody());
+                                    }))
                     .addExactPath(
                         ERROR.rawPath(),
-                        controller(
-                            ERROR,
-                            () ->
-                                exchange -> {
-                                  exchange.setStatusCode(ERROR.getStatus());
-                                  exchange.getResponseSender().send(ERROR.getBody());
-                                }))
+                        exchange ->
+                            testing.runWithSpan(
+                                "controller",
+                                (ThrowingRunnable<Exception>)
+                                    () -> {
+                                      exchange.setStatusCode(ERROR.getStatus());
+                                      exchange.getResponseSender().send(ERROR.getBody());
+                                    }))
                     .addExactPath(
                         EXCEPTION.rawPath(),
-                        controller(
-                            EXCEPTION,
-                            () ->
-                                exchange -> {
-                                  throw new Exception(EXCEPTION.getBody());
-                                }))
+                        exchange ->
+                            testing.runWithSpan(
+                                "controller",
+                                (ThrowingRunnable<Exception>)
+                                    () -> {
+                                      throw new Exception(EXCEPTION.getBody());
+                                    }))
                     .addExactPath(
                         INDEXED_CHILD.rawPath(),
-                        controller(
-                            INDEXED_CHILD,
-                            () ->
-                                exchange -> {
-                                  INDEXED_CHILD.collectSpanAttributes(
-                                      name -> exchange.getQueryParameters().get(name).peekFirst());
-                                  exchange.getResponseSender().send(INDEXED_CHILD.getBody());
-                                }))
+                        exchange ->
+                            testing.runWithSpan(
+                                "controller",
+                                (ThrowingRunnable<Exception>)
+                                    () -> {
+                                      INDEXED_CHILD.collectSpanAttributes(
+                                          name ->
+                                              exchange.getQueryParameters().get(name).peekFirst());
+                                      exchange.getResponseSender().send(INDEXED_CHILD.getBody());
+                                    }))
                     .addExactPath(
                         "sendResponse",
                         exchange -> {
@@ -232,7 +247,6 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8().trim()).isEqualTo("sendResponseWithException");
 
-    Exception exception = new Exception("exception after sending response");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -242,8 +256,20 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                         .hasKind(SpanKind.SERVER)
                         .hasEventsSatisfyingExactly(
                             event -> event.hasName("before-event"),
-                            event -> event.hasName("after-event"))
-                        .hasException(exception)
+                            event -> event.hasName("after-event"),
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_TYPE,
+                                            Exception.class.getName()),
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_MESSAGE,
+                                            "exception after sending response"),
+                                        satisfies(
+                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
                             equalTo(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP),
                             equalTo(UrlAttributes.URL_SCHEME, uri.getScheme()),

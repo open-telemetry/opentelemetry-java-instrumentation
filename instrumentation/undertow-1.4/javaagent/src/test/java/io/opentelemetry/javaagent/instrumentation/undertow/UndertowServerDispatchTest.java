@@ -11,24 +11,24 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Collections.singletonList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.semconv.NetworkAttributes;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
-import io.undertow.server.HttpHandler;
 import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
+class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -44,29 +44,29 @@ public class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow>
                         SUCCESS.rawPath(),
                         exchange ->
                             exchange.dispatch(
-                                controller(
-                                    SUCCESS,
-                                    () ->
-                                        (HttpHandler)
-                                            k -> k.getResponseSender().send(SUCCESS.getBody()))))
+                                k ->
+                                    testing.runWithSpan(
+                                        "controller",
+                                        (ThrowingRunnable<Exception>)
+                                            () -> k.getResponseSender().send(SUCCESS.getBody()))))
                     .addExactPath(
                         QUERY_PARAM.rawPath(),
                         exchange ->
                             exchange.dispatch(
-                                controller(
-                                    QUERY_PARAM,
-                                    () ->
-                                        (HttpHandler)
-                                            k -> k.getResponseSender().send(k.getQueryString()))))
+                                k ->
+                                    testing.runWithSpan(
+                                        "controller",
+                                        (ThrowingRunnable<Exception>)
+                                            () -> k.getResponseSender().send(k.getQueryString()))))
                     .addExactPath(
                         REDIRECT.rawPath(),
                         exchange ->
                             exchange.dispatch(
-                                controller(
-                                    REDIRECT,
-                                    () ->
-                                        (HttpHandler)
-                                            k -> {
+                                k ->
+                                    testing.runWithSpan(
+                                        "controller",
+                                        (ThrowingRunnable<Exception>)
+                                            () -> {
                                               k.setStatusCode(StatusCodes.FOUND);
                                               k.getResponseHeaders()
                                                   .put(Headers.LOCATION, REDIRECT.getBody());
@@ -76,11 +76,11 @@ public class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow>
                         CAPTURE_HEADERS.rawPath(),
                         exchange ->
                             exchange.dispatch(
-                                controller(
-                                    CAPTURE_HEADERS,
-                                    () ->
-                                        (HttpHandler)
-                                            k -> {
+                                k ->
+                                    testing.runWithSpan(
+                                        "controller",
+                                        (ThrowingRunnable<Exception>)
+                                            () -> {
                                               k.setStatusCode(StatusCodes.OK);
                                               k.getResponseHeaders()
                                                   .put(
@@ -94,11 +94,11 @@ public class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow>
                         ERROR.rawPath(),
                         exchange ->
                             exchange.dispatch(
-                                controller(
-                                    ERROR,
-                                    () ->
-                                        (HttpHandler)
-                                            k -> {
+                                k ->
+                                    testing.runWithSpan(
+                                        "controller",
+                                        (ThrowingRunnable<Exception>)
+                                            () -> {
                                               exchange.setStatusCode(ERROR.getStatus());
                                               exchange.getResponseSender().send(ERROR.getBody());
                                             })))
@@ -106,11 +106,11 @@ public class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow>
                         INDEXED_CHILD.rawPath(),
                         exchange ->
                             exchange.dispatch(
-                                controller(
-                                    INDEXED_CHILD,
-                                    () ->
-                                        (HttpHandler)
-                                            k -> {
+                                k ->
+                                    testing.runWithSpan(
+                                        "controller",
+                                        (ThrowingRunnable<Exception>)
+                                            () -> {
                                               INDEXED_CHILD.collectSpanAttributes(
                                                   name ->
                                                       exchange
@@ -140,11 +140,8 @@ public class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow>
     options.setHasResponseCustomizer(endpoint -> true);
 
     options.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HttpAttributes.HTTP_ROUTE);
-          return attributes;
-        });
+        endpoint ->
+            Collections.unmodifiableSet(
+                new HashSet<>(singletonList(NetworkAttributes.NETWORK_PEER_PORT))));
   }
 }
