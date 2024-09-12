@@ -187,7 +187,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
-      assertThat(firstLog.getBody().asString())
+      assertThat(firstLog.getBodyValue().asString())
           .as("Should instrument logs")
           .startsWith("Starting ")
           .contains(this.getClass().getSimpleName());
