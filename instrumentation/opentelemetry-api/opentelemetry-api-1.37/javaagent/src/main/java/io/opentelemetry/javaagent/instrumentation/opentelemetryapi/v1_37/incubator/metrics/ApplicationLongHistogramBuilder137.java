@@ -11,12 +11,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongHistogramBuilder;
 import java.util.List;
 
-final class ApplicationLongHistogramBuilder137 extends ApplicationLongHistogramBuilder
+public class ApplicationLongHistogramBuilder137 extends ApplicationLongHistogramBuilder
     implements ExtendedLongHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder;
 
-  ApplicationLongHistogramBuilder137(
+  protected ApplicationLongHistogramBuilder137(
       io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;

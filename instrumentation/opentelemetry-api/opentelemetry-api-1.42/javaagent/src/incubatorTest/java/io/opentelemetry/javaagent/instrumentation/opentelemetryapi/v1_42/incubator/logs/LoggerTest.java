@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.incubator.logs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -14,6 +14,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.common.ValueType;
+import io.opentelemetry.api.incubator.logs.ExtendedLogger;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -56,6 +57,8 @@ class LoggerTest {
 
   @Test
   void logRecordBuilder() {
+    assertThat(logger).isInstanceOf(ExtendedLogger.class);
+
     SpanContext spanContext =
         SpanContext.create(
             IdGenerator.random().generateTraceId(),

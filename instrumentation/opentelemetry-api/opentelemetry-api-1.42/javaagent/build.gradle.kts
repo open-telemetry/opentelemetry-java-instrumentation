@@ -15,6 +15,7 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent"))
+  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent"))
 }
 
 configurations.configureEach {
@@ -22,5 +23,26 @@ configurations.configureEach {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.42.0")
     }
+    if (name.startsWith("incubatorTest")) {
+      resolutionStrategy {
+        force("io.opentelemetry:opentelemetry-api-incubator:1.42.0-alpha")
+      }
+    }
+  }
+}
+
+testing {
+  suites {
+    val incubatorTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-api-incubator:1.42.0-alpha")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }
