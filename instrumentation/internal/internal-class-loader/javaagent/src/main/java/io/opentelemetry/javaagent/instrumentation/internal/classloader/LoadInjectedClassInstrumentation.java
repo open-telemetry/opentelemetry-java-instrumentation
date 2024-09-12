@@ -6,19 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isProtected;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -35,41 +26,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("loadClass"))
-            .and(
-                takesArguments(1)
-                    .and(takesArgument(0, String.class))
-                    .or(
-                        takesArguments(2)
-                            .and(takesArgument(0, String.class))
-                            .and(takesArgument(1, boolean.class))))
-            .and(isPublic().or(isProtected()))
-            .and(not(isStatic())),
-        LoadInjectedClassInstrumentation.class.getName() + "$LoadClassAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class LoadClassAdvice {
-
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(
-        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
-      Class<?> helperClass = InjectedClassHelper.loadHelperClass(classLoader, name);
-      if (helperClass != null) {
-        return helperClass;
-      }
-
-      return null;
-    }
-
-    @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static Class<?> onExit(
-        @Advice.Return Class<?> result, @Advice.Enter Class<?> loadedClass) {
-
-      return loadedClass != null ? loadedClass : result;
-    }
+    // we must use inlined instrumentation with ASM to prevent stack overflow errors
+    transformer.applyTransformer(ClassLoaderAsmUtil.getInjectedClassTransformer());
   }
 }
