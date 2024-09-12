@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Update unit on opt-in Java 17 JFR based metrics from milliseconds to seconds
+  (if you are using the Java agent, this only affects you if you are using
+  `otel.instrumentation.runtime-telemetry-java17.enable-all=true`)
+  ([#12084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12084))
+
+### 📈 Enhancements
+
+- Update Pulsar instrumentation to work with next Pulsar release
+  ([#11648](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11648))
+- Capture `network.peer.address` in OkHttp 3.0 instrumentation
+  ([#12012](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12012))
+- Add support for CXF 4.0 JAX-WS
+  ([#12077](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12077))
+- Add rules for capturing Apache Camel metrics exposed by JMX MBeans
+  ([#11901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11901))
+- Make RocketMQ span status extractor delegate to the default extractor
+  ([#12183](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12183))
+- Bridge log body any value
+  ([#12204](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12204))
+- Add declarative config support for resource providers
+  ([#12144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12144))
+
+### 🛠️ Bug fixes
+
+- Fix Javaagent doesn't work with `java.net.spi.InetAddressResolverProvider`
+  ([#11987](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/11987))
+- Fix Oracle UCP 11 metrics not emitted
+  ([#12052](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12052))
+- Fix wrong database info captured while using Apache ShardingSphere
+  ([#12066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12066))
+- Fix RabbitMQ NullPointerException
+  ([#12109](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12109))
+- Fix possible `NullPointerException` in Play instrumentation
+  ([#12121](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12121))
+- Fix error span status for successful requests in Ktor
+  ([#12161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12161))
+- Make OpenTelemetryHandlerMappingFilter handle exceptions from `ServletRequestPathUtils.parseAndCache()`
+  ([#12221](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12221))
+
 ## Version 1.33.6 (2024-08-26)
 
 ### 📈 Enhancements
