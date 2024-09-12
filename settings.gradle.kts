@@ -2,7 +2,7 @@ pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "2.9"
     id("com.google.cloud.tools.jib") version "3.4.3"
-    id("com.gradle.plugin-publish") version "1.2.2"
+    id("com.gradle.plugin-publish") version "1.3.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.0.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.18"
+  id("com.gradle.develocity") version "3.18.1"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to

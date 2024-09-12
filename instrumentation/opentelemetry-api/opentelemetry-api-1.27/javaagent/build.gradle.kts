@@ -14,6 +14,8 @@ configurations.configureEach {
   if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.27.0")
+      force("io.opentelemetry:opentelemetry-sdk-logs:1.27.0")
+      force("io.opentelemetry:opentelemetry-sdk-testing:1.27.0")
     }
   }
 }

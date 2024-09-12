@@ -17,7 +17,7 @@ public class ApplicationLongUpDownCounterBuilder implements LongUpDownCounterBui
 
   private final io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder;
 
-  public ApplicationLongUpDownCounterBuilder(
+  protected ApplicationLongUpDownCounterBuilder(
       io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
