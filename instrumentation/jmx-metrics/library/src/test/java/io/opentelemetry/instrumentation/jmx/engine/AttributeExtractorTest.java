@@ -83,13 +83,12 @@ class AttributeExtractorTest {
 
     @Override
     public Enum<?> getEnumAttribute() {
-       return DummyEnum.ENUM_VALUE;
+      return DummyEnum.ENUM_VALUE;
     }
 
     private enum DummyEnum {
       ENUM_VALUE
     }
-
   }
 
   private static final String DOMAIN = "otel.jmx.test";
