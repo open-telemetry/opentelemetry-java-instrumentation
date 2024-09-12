@@ -18,6 +18,7 @@ import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
+import org.apache.logging.log4j.util.SortedArrayStringMap;
 
 class LogEventToReplay implements LogEvent {
 
@@ -59,7 +60,8 @@ class LogEventToReplay implements LogEvent {
     this.instant = logEvent.getInstant();
     this.thrown = logEvent.getThrown();
     this.marker = logEvent.getMarker();
-    this.contextData = logEvent.getContextData();
+    // copy context data, context data map may be reused
+    this.contextData = new SortedArrayStringMap(logEvent.getContextData());
     this.threadName = logEvent.getThreadName();
     this.threadId = logEvent.getThreadId();
   }
