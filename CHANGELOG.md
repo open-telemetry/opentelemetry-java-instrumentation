@@ -42,6 +42,10 @@
   ([#12161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12161))
 - Make OpenTelemetryHandlerMappingFilter handle exceptions from `ServletRequestPathUtils.parseAndCache()`
   ([#12221](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12221))
+- Fix tracing CoroutineCrudRepository.findById
+  ([#12131](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12131))
+- Fix capturing context in log4j library instrumentation with async logger
+  ([#12176](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12176))
 
 ## Version 1.33.6 (2024-08-26)
 
