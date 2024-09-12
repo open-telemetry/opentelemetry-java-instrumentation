@@ -14,9 +14,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableSet;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -38,13 +38,10 @@ import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;
 import java.net.URI;
-import java.util.Collections;
-import java.util.HashSet;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-// TODO make test which mixes handlers and servlets
 class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
 
   @RegisterExtension
@@ -178,10 +175,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setHttpAttributes(
-        endpoint ->
-            Collections.unmodifiableSet(
-                new HashSet<>(singletonList(NetworkAttributes.NETWORK_PEER_PORT))));
+    options.setHttpAttributes(endpoint -> ImmutableSet.of(NetworkAttributes.NETWORK_PEER_PORT));
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setUseHttp2(useHttp2());
   }
@@ -235,7 +229,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
 
   @Test
   @DisplayName("test send response with exception")
-  void testSendReponseWithException() {
+  void testSendResponseWithException() {
     URI uri = address.resolve("sendResponseWithException");
     AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join();
 
