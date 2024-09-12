@@ -1,7 +1,6 @@
 ---
 # For Tomcat, the default JMX domain is "Catalina:", however with some deployments like embedded in spring-boot
-# we can have the "Tomcat:" domain used, thus we have to duplicate metrics definitions as using a wildcard
-# would match too broadly
+# we can have the "Tomcat:" domain used, thus we use both MBean names for the metrics.
 
 rules:
   - beans:
