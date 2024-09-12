@@ -10,9 +10,11 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -43,8 +45,16 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
+  private static boolean isAsyncLogger() {
+    return logger.getClass().getName().contains("AsyncLogger");
+  }
+
   @Test
   void twoLogs() {
+    // with async logger OpenTelemetryAppender.install may be called before second log message is
+    // captured, so we get 2 log records instead of the expected 1
+    Assumptions.assumeFalse(isAsyncLogger());
+
     logger.info("log message 1");
     logger.info(
         "log message 2"); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
@@ -61,6 +71,10 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
   @Test
   void twoLogsStringMapMessage() {
+    // with async logger OpenTelemetryAppender.install may be called before second log message is
+    // captured, so we get 2 log records instead of the expected 1
+    Assumptions.assumeFalse(isAsyncLogger());
+
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "val1");
     message.put("key2", "val2");
@@ -81,12 +95,19 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                     equalTo(stringKey("log4j.map_message.key1"), "val1"),
                     equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }
 
   @Test
   void twoLogsStructuredDataMessage() {
+    // with async logger OpenTelemetryAppender.install may be called before second log message is
+    // captured, so we get 2 log records instead of the expected 1
+    Assumptions.assumeFalse(isAsyncLogger());
+
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
     message.put("key1", "val1");
     message.put("key2", "val2");
@@ -107,6 +128,9 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("a message")
                 .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                     equalTo(stringKey("log4j.map_message.key1"), "val1"),
                     equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }

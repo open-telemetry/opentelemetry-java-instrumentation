@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -19,6 +18,7 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -93,7 +93,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasAttributes(Attributes.empty()));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_NAME,
+                            Thread.currentThread().getName()),
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
   }
 
   @Test
@@ -123,6 +128,9 @@ abstract class AbstractOpenTelemetryAppenderTest {
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
                   .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                      equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                       equalTo(
                           ExceptionAttributes.EXCEPTION_TYPE,
                           IllegalStateException.class.getName()),
@@ -158,7 +166,13 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("key1"), "val1"), equalTo(stringKey("key2"), "val2")));
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_NAME,
+                            Thread.currentThread().getName()),
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(stringKey("key1"), "val1"),
+                        equalTo(stringKey("key2"), "val2")));
   }
 
   @Test
@@ -177,6 +191,11 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_NAME,
+                            Thread.currentThread().getName()),
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                         equalTo(stringKey("log4j.map_message.key1"), "val1"),
                         equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }
@@ -198,6 +217,11 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("val2")
                     .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_NAME,
+                            Thread.currentThread().getName()),
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                         equalTo(stringKey("log4j.map_message.key1"), "val1")));
   }
 
@@ -233,6 +257,11 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("a message")
                     .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_NAME,
+                            Thread.currentThread().getName()),
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                         equalTo(stringKey("log4j.map_message.key1"), "val1"),
                         equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }

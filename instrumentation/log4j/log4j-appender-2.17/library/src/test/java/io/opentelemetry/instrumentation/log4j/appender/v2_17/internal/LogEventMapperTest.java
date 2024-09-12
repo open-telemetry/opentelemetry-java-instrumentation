@@ -180,12 +180,12 @@ class LogEventMapperTest {
 
     @Override
     @Nullable
-    public Object getValue(Map<String, String> contextData, String key) {
+    public String getValue(Map<String, String> contextData, String key) {
       return contextData.get(key);
     }
 
     @Override
-    public void forEach(Map<String, String> contextData, BiConsumer<String, Object> action) {
+    public void forEach(Map<String, String> contextData, BiConsumer<String, String> action) {
       contextData.forEach(action);
     }
   }
