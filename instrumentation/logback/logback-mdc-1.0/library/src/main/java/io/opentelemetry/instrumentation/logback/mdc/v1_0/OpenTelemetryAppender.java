@@ -12,7 +12,6 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -33,8 +32,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     try {
       field = LoggingEvent.class.getDeclaredField("mdcPropertyMap");
       field.setAccessible(true);
-    } catch (Exception ignored) {
-      // ignored
+    } catch (Exception exception) {
       field = null;
     }
     MDC_MAP_FIELD = field;
@@ -73,16 +71,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.traceFlagsKey = traceFlagsKey;
   }
 
-  @CanIgnoreReturnValue
-  private ILoggingEvent processEvent(ILoggingEvent event) {
+  private void processEvent(ILoggingEvent event) {
     if (MDC_MAP_FIELD == null || event.getClass() != LoggingEvent.class) {
-      return event;
+      return;
     }
 
     Map<String, String> eventContext = event.getMDCPropertyMap();
     if (eventContext != null && eventContext.containsKey(traceIdKey)) {
       // Assume already instrumented event if traceId is present.
-      return event;
+      return;
     }
 
     Map<String, String> contextData = new HashMap<>();
@@ -123,13 +120,12 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       // setAccessible(true) was called on the field
     }
     ((LoggingEvent) event).setLoggerContextRemoteView(vo);
-
-    return event;
   }
 
   @Override
   protected void append(ILoggingEvent event) {
-    aai.appendLoopOnAppenders(processEvent(event));
+    processEvent(event);
+    aai.appendLoopOnAppenders(event);
   }
 
   @Override
