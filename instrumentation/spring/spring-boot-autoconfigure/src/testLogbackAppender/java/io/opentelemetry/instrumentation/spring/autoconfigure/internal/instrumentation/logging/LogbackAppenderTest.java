@@ -81,7 +81,7 @@ class LogbackAppenderTest {
             // be added a second time by LogbackAppenderApplicationListener
             logRecord -> {
               assertThat(logRecord.getInstrumentationScopeInfo().getName()).isEqualTo("test");
-              assertThat(logRecord.getBody().asString()).contains("test log message");
+              assertThat(logRecord.getBodyValue().asString()).contains("test log message");
 
               Attributes attributes = logRecord.getAttributes();
               // key1 and key2, the code attributes should not be present because they are enabled

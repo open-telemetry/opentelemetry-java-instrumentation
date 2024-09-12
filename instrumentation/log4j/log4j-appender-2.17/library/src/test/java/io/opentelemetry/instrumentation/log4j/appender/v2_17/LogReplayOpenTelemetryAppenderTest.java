@@ -6,18 +6,22 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import java.util.List;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
+
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
 
   @BeforeEach
   void setup() {
@@ -30,8 +34,13 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   }
 
   @Override
+  protected InstrumentationExtension getTesting() {
+    return testing;
+  }
+
+  @Override
   void executeAfterLogsExecution() {
-    OpenTelemetryAppender.install(openTelemetry);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
   @Test
@@ -40,14 +49,14 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     logger.info(
         "log message 2"); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
-    OpenTelemetryAppender.install(openTelemetry);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("log message 1");
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("log message 1"));
   }
 
   @Test
@@ -64,16 +73,16 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
     logger.info(message2); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
-    OpenTelemetryAppender.install(openTelemetry);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-            equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                    equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }
 
   @Test
@@ -89,16 +98,16 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     message.put("key2-2", "val2-2");
     logger.info(message2); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
-    OpenTelemetryAppender.install(openTelemetry);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("a message")
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-            equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("a message")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                    equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }
 }
