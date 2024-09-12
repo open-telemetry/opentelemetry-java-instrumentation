@@ -272,6 +272,12 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     if (value instanceof String) {
       return (String) value;
     }
+    if (value instanceof Boolean) {
+      return value.toString();
+    }
+    if (value instanceof Enum) {
+      return ((Enum<?>) value).name();
+    }
     return null;
   }
 }

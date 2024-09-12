@@ -34,6 +34,10 @@ class AttributeExtractorTest {
     double getDoubleAttribute();
 
     String getStringAttribute();
+
+    boolean getBooleanAttribute();
+
+    Enum<?> getEnumAttribute();
   }
 
   private static class Test1 implements Test1MBean {
@@ -71,6 +75,21 @@ class AttributeExtractorTest {
     public String getStringAttribute() {
       return "";
     }
+
+    @Override
+    public boolean getBooleanAttribute() {
+      return true;
+    }
+
+    @Override
+    public Enum<?> getEnumAttribute() {
+       return DummyEnum.ENUM_VALUE;
+    }
+
+    private enum DummyEnum {
+      ENUM_VALUE
+    }
+
   }
 
   private static final String DOMAIN = "otel.jmx.test";
@@ -201,5 +220,21 @@ class AttributeExtractorTest {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("StringAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info == null).isTrue();
+  }
+
+  @Test
+  void testBooleanAttribute() throws Exception {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("BooleanAttribute");
+    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNull();
+    assertThat(extractor.extractValue(theServer, objectName)).isEqualTo("true");
+  }
+
+  @Test
+  void testEnumAttribute() throws Exception {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("EnumAttribute");
+    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNull();
+    assertThat(extractor.extractValue(theServer, objectName)).isEqualTo("ENUM_VALUE");
   }
 }
