@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propa
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterFactory;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterProvider;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics.ApplicationMeterFactory115;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLoggerFactory;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLoggerFactory127;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLoggerProvider;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14;
 import java.lang.reflect.InvocationTargetException;
@@ -39,7 +41,8 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
         new ApplicationContextPropagators(agentOpenTelemetry.getPropagators());
     applicationMeterProvider =
         new ApplicationMeterProvider(getMeterFactory(), agentOpenTelemetry.getMeterProvider());
-    applicationLoggerProvider = new ApplicationLoggerProvider(agentOpenTelemetry.getLogsBridge());
+    applicationLoggerProvider =
+        new ApplicationLoggerProvider(getLoggerFactory(), agentOpenTelemetry.getLogsBridge());
   }
 
   @Override
@@ -105,9 +108,29 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
   }
 
   private static ApplicationMeterFactory getMeterFactory(String className) {
+    return getFactory(className, ApplicationMeterFactory.class);
+  }
+
+  private static ApplicationLoggerFactory getLoggerFactory() {
+    // this class is defined in opentelemetry-api-1.42
+    ApplicationLoggerFactory loggerFactory =
+        getLoggerFactory(
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs.ApplicationLoggerFactory142");
+    if (loggerFactory == null) {
+      loggerFactory = new ApplicationLoggerFactory127();
+    }
+
+    return loggerFactory;
+  }
+
+  private static ApplicationLoggerFactory getLoggerFactory(String className) {
+    return getFactory(className, ApplicationLoggerFactory.class);
+  }
+
+  private static <T> T getFactory(String className, Class<T> factoryClass) {
     try {
       Class<?> clazz = Class.forName(className);
-      return (ApplicationMeterFactory) clazz.getConstructor().newInstance();
+      return factoryClass.cast(clazz.getConstructor().newInstance());
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | InstantiationException
