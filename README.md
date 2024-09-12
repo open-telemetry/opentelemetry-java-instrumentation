@@ -15,8 +15,9 @@
     <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/open-telemetry/opentelemetry-java-instrumentation/build.yml?branch=main&style=for-the-badge">
   </a>
   <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
-    <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?style=for-the-badge">
+    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?style=for-the-badge">
   </a>
+  <img alt="Stable" src="https://camo.githubusercontent.com/51784c8ab410800de78ed97c2558c8d4b07b9a1a4cdfa850af9ad120492eaab4/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f7374617475732d737461626c652d696e666f726d6174696f6e616c3f7374796c653d666f722d7468652d6261646765">
 </p>
 
 <p align="center">
