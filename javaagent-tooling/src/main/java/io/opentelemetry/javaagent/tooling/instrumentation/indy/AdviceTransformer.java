@@ -67,6 +67,13 @@ class AdviceTransformer {
             }));
 
     TransformationContext context = new TransformationContext();
+    if (justDelegateAdvice) {
+      // when delegating, advice return type should not be changed. For example we must not
+      // introduce skipOnIndex when skipOn is used in annotations as the advice return type
+      // is not an array
+      context.disableReturnTypeChange();
+    }
+
     ClassVisitor cv =
         new ClassVisitor(AsmApi.VERSION, cw) {
 
