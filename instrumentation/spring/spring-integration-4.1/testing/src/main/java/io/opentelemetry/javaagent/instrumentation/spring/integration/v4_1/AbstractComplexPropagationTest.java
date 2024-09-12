@@ -130,7 +130,7 @@ public abstract class AbstractComplexPropagationTest {
                     Payload payload = externalQueue().take();
                     receiveChannel().send(payload.toMessage());
                   } catch (InterruptedException e) {
-                    throw new IllegalStateException(e);
+                    Thread.currentThread().interrupt();
                   }
                 }
               });
