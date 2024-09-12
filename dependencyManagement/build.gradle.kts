@@ -8,8 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-// TODO: revert before merging
-val otelSdkVersion = "1.42.0-SNAPSHOT"
+val otelSdkVersion = "1.42.1"
 val otelContribVersion = "1.38.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -41,7 +40,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.31.0"
+val errorProneVersion = "2.32.0"
 val byteBuddyVersion = "1.15.1"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
