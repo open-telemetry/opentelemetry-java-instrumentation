@@ -10,11 +10,14 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ClassLoaderInstrumentationModule extends InstrumentationModule {
+public class ClassLoaderInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public ClassLoaderInstrumentationModule() {
     super("internal-class-loader");
   }
@@ -37,5 +40,11 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
         new LoadInjectedClassInstrumentation(),
         new ResourceInjectionInstrumentation(),
         new DefineClassInstrumentation());
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    return Collections.singletonList(
+        "io.opentelemetry.javaagent.instrumentation.internal.classloader.BootDelegationHelper");
   }
 }
