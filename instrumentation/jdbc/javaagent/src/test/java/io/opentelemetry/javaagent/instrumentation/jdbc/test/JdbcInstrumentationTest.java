@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
@@ -37,6 +38,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -1011,81 +1013,59 @@ class JdbcInstrumentationTest {
       init.accept(datasource);
     }
     datasource.getConnection().close();
-    assertThat(testing.spans())
-        .noneMatch(span -> Objects.equals(span.getName(), "database.connection"));
+    assertThat(testing.spans()).noneMatch(span -> span.getName().equals("database.connection"));
 
     testing.clearData();
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          datasource.getConnection().close();
+    testing.runWithSpan("parent", () -> datasource.getConnection().close());
+    testing.waitAndAssertTraces(
+        trace -> {
+          List<Consumer<SpanDataAssert>> assertions =
+              new ArrayList<>(
+                  Arrays.asList(
+                      span1 -> span1.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                      span1 ->
+                          span1
+                              .hasName(datasource.getClass().getSimpleName() + ".getConnection")
+                              .hasKind(SpanKind.INTERNAL)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfying(
+                                  equalTo(
+                                      CodeIncubatingAttributes.CODE_NAMESPACE,
+                                      datasource.getClass().getName()),
+                                  equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
+                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, system),
+                                  satisfies(
+                                      DbIncubatingAttributes.DB_USER,
+                                      val1 ->
+                                          val1.satisfiesAnyOf(
+                                              v1 -> assertThat(v1).isEqualTo(user),
+                                              v1 -> assertThat(v1).isNull())),
+                                  equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
+                                  equalTo(getDbConnectionStringKey(), connectionString))));
+          if (recursive) {
+            assertions.add(
+                span ->
+                    span.hasName(datasource.getClass().getSimpleName() + ".getConnection")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfying(
+                            equalTo(
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                datasource.getClass().getName()),
+                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, system),
+                            satisfies(
+                                DbIncubatingAttributes.DB_USER,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isEqualTo(user),
+                                        v -> assertThat(v).isNull())),
+                            equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
+                            equalTo(getDbConnectionStringKey(), connectionString)));
+          }
+          trace.hasSpansSatisfyingExactly(assertions);
         });
-    if (recursive) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName(datasource.getClass().getSimpleName() + ".getConnection")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              equalTo(
-                                  CodeIncubatingAttributes.CODE_NAMESPACE,
-                                  datasource.getClass().getName()),
-                              equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                              equalTo(DbIncubatingAttributes.DB_SYSTEM, system),
-                              satisfies(
-                                  DbIncubatingAttributes.DB_USER,
-                                  val ->
-                                      val.satisfiesAnyOf(
-                                          v -> assertThat(v).isEqualTo(user),
-                                          v -> assertThat(v).isNull())),
-                              equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
-                              equalTo(getDbConnectionStringKey(), connectionString)),
-                  span ->
-                      span.hasName(datasource.getClass().getSimpleName() + ".getConnection")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfying(
-                              equalTo(
-                                  CodeIncubatingAttributes.CODE_NAMESPACE,
-                                  datasource.getClass().getName()),
-                              equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                              equalTo(DbIncubatingAttributes.DB_SYSTEM, system),
-                              satisfies(
-                                  DbIncubatingAttributes.DB_USER,
-                                  val ->
-                                      val.satisfiesAnyOf(
-                                          v -> assertThat(v).isEqualTo(user),
-                                          v -> assertThat(v).isNull())),
-                              equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
-                              equalTo(getDbConnectionStringKey(), connectionString))));
-    } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName(datasource.getClass().getSimpleName() + ".getConnection")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              equalTo(
-                                  CodeIncubatingAttributes.CODE_NAMESPACE,
-                                  datasource.getClass().getName()),
-                              equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                              equalTo(DbIncubatingAttributes.DB_SYSTEM, system),
-                              satisfies(
-                                  DbIncubatingAttributes.DB_USER,
-                                  val ->
-                                      val.satisfiesAnyOf(
-                                          v -> assertThat(v).isEqualTo(user),
-                                          v -> assertThat(v).isNull())),
-                              equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
-                              equalTo(getDbConnectionStringKey(), connectionString))));
-    }
   }
 
   @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
