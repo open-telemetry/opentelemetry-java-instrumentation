@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -20,7 +19,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.InetSocketAddress;
-import javax.annotation.Nullable;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -78,22 +76,6 @@ public abstract class JettyServlet3Test
     }
 
     return super.assertResponseSpan(span, controllerSpan, handlerSpan, method, endpoint);
-  }
-
-  @Override
-  public String expectedServerSpanName(
-      ServerEndpoint endpoint, String method, @Nullable String route) {
-    if (method.equals(HttpConstants._OTHER)) {
-      return "HTTP " + getContextPath() + endpoint.getPath();
-    }
-
-    if (ServerEndpoint.NOT_FOUND.equals(endpoint)) {
-      return method;
-    } else if (ServerEndpoint.PATH_PARAM.equals(endpoint)) {
-      return method + " " + getContextPath() + "/path/:id/param";
-    } else {
-      return method + " " + getContextPath() + endpoint.getPath();
-    }
   }
 
   @Override

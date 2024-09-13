@@ -863,9 +863,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         endpoint, method, route);
   }
 
+  public final boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
+    return options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE);
+  }
+
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
-    if (!options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE)) {
+    if (!hasHttpRouteAttribute(endpoint)) {
       return null;
     }
 
