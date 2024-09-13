@@ -17,7 +17,6 @@
   <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
     <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?style=for-the-badge">
   </a>
-<img alt="Stable" src="https://img.shields.io/badge/status-stable-informational?style=for-the-badge">
 </p>
 
 <p align="center">
