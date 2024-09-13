@@ -14,9 +14,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.semconv.HttpAttributes;
@@ -116,5 +116,6 @@ abstract class GrizzlyTest extends AbstractHttpServerTest<HttpServer> {
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setVerifyServerSpanEndTime(false); // fails for redirect test
     options.setTestErrorBody(false);
+    options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
   }
 }
