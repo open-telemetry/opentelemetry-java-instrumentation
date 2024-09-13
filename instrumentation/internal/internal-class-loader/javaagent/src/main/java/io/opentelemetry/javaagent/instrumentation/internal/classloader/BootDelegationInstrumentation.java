@@ -47,6 +47,10 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     // just an optimization to exclude common class loaders that are known to delegate to the
     // bootstrap loader (or happen to _be_ the bootstrap loader)
+    // The AgentClassLoader and InstrumentationModuleClassloaders are required to be excluded
+    // for the instrumentation to work properly. loadClass on those is invoked during Advice
+    // bootstrapping
+    // which therefore would cause an infinite recursion
     return not(namedOneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",

@@ -146,6 +146,7 @@ public class AgentClassLoader extends URLClassLoader {
   public Class<?> loadClass(String name) throws ClassNotFoundException {
     // We explicitly override loadClass from ClassLoader to ensure
     // that loadClass is properly excluded from our internal ClassLoader Instrumentations
+    // (e.g. LoadInjectedClassInstrumentation, BooDelegationInstrumentation)
     // Otherwise this will cause recursion in invokedynamic linkage
     return loadClass(name, false);
   }

@@ -52,11 +52,11 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
           classLoader, className, classBytes, offset, length);
     }
 
-    // TODO: the ToReturened does nothing except for signaling the AdviceTransformer that it must
+    // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
     // not touch this advice
     // this is done to ensure that ClassLoaderInstrumentationModule.loadAdviceClassesEagerly works
     // correctly
-    // we can therfore remove it, as soon as the AdviceTransformer is not applied anymore
+    // we can therefore remove it, as soon as the AdviceTransformer is not applied anymore
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Class<?> onExit(
@@ -76,11 +76,11 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
       return DefineClassHelper.beforeDefineClass(classLoader, className, classBytes);
     }
 
-    // TODO: the ToReturened does nothing except for signaling the AdviceTransformer that it must
+    // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
     // not touch this advice
     // this is done to ensure that ClassLoaderInstrumentationModule.loadAdviceClassesEagerly works
     // correctly
-    // we can therfore remove it, as soon as the AdviceTransformer is not applied anymore
+    // we can therefore remove it, as soon as the AdviceTransformer is not applied anymore
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Class<?> onExit(
