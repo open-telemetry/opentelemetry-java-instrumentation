@@ -4,10 +4,12 @@
 
 ### Migration notes
 
-- Update unit on opt-in Java 17 JFR based metrics from milliseconds to seconds
-  (if you are using the Java agent, this only affects you if you are using
-  `otel.instrumentation.runtime-telemetry-java17.enable-all=true`)
-  ([#12084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12084))
+- The unit on the opt-in Java 17 JFR-based metrics was updated from milliseconds to seconds
+  to conform with the semantic conventions.
+  If you are using the Java agent, this only affects you if you are opting in via
+  `otel.instrumentation.runtime-telemetry-java17.enable-all=true`.
+  ([#12084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12084),
+   [#12244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12244))
 
 ### 📈 Enhancements
 
