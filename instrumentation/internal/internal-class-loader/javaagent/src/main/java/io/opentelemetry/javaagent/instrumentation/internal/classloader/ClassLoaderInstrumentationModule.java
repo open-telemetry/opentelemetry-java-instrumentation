@@ -15,8 +15,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ClassLoaderInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class ClassLoaderInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public ClassLoaderInstrumentationModule() {
     super("internal-class-loader");
   }
@@ -26,7 +26,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule impl
     // internal instrumentations are always enabled by default
     return true;
   }
-
 
   @Override
   public boolean isHelperClass(String className) {
@@ -55,7 +54,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule impl
         new BootDelegationInstrumentation(),
         new LoadInjectedClassInstrumentation(),
         new ResourceInjectionInstrumentation(),
-        new DefineClassInstrumentation()
-      );
+        new DefineClassInstrumentation());
   }
 }
