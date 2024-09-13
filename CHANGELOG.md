@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.8.0 (2024-09-13)
+
 ### Migration notes
 
 - The unit on the opt-in Java 17 JFR-based metrics was updated from milliseconds to seconds
