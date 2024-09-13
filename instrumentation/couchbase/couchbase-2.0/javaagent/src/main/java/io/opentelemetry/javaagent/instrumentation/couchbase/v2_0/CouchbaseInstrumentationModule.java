@@ -33,6 +33,11 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public String getModuleGroup() {
+    return "couchbase";
+  }
+
+  @Override
   public List<String> injectedClassNames() {
     return singletonList("rx.__OpenTelemetryTracingUtil");
   }

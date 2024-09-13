@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
@@ -44,15 +45,12 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-
   private final Bootstrap bootstrap = buildBootstrap(false);
-
   private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
 
-  void cleanupSpec() {
-    if (eventLoopGroup != null) {
-      eventLoopGroup.shutdownGracefully();
-    }
+  @AfterAll
+  void cleanup() {
+    eventLoopGroup.shutdownGracefully();
   }
 
   Bootstrap buildBootstrap(boolean readTimeout) {
@@ -137,7 +135,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
-    optionsBuilder.disableTestReadTimeout();
+    optionsBuilder.spanEndsAfterBody();
 
     optionsBuilder.setExpectedClientSpanNameMapper(Netty40ClientTest::expectedClientSpanName);
     optionsBuilder.setHttpAttributes(Netty40ClientTest::httpAttributes);

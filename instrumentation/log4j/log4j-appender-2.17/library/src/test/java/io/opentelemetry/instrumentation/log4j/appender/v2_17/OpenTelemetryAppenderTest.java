@@ -5,45 +5,55 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import java.util.List;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
+
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
 
   @BeforeEach
   void setup() {
     generalBeforeEachSetup();
-    OpenTelemetryAppender.install(openTelemetry);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
+  }
+
+  @Override
+  protected InstrumentationExtension getTesting() {
+    return testing;
   }
 
   @Test
-  void logWithSpan() { // Does not work for log replay but it is not likely to occur because
+  void logWithSpan() { // Does not work for log replay, but it is not likely to occur because
     // the log replay is related to the case where an OpenTelemetry object is not yet available
     // at the time the log is executed (and if no OpenTelemetry is available, the context
     // propagation can't happen)
-    Span span1 = runWithSpan("span1", () -> logger.info("log message"));
+    Span span1 =
+        testing.runWithSpan(
+            "span1",
+            () -> {
+              logger.info("log message");
+              return Span.current();
+            });
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0).getSpanContext()).isEqualTo(span1.getSpanContext());
-  }
-
-  private static Span runWithSpan(String spanName, Runnable runnable) {
-    Span span = SdkTracerProvider.builder().build().get("tracer").spanBuilder(spanName).startSpan();
-    try (Scope ignored = span.makeCurrent()) {
-      runnable.run();
-    } finally {
-      span.end();
-    }
-    return span;
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasSpanContext(span1.getSpanContext())
+                .hasAttributesSatisfying(
+                    equalTo(
+                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
   }
 }

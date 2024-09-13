@@ -5,22 +5,16 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.SdkLoggerProvider;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -28,30 +22,19 @@ import org.slf4j.MarkerFactory;
 public class Slf4j2Test {
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");
 
-  private static InMemoryLogRecordExporter logRecordExporter;
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
+
   private static Resource resource;
   private static InstrumentationScopeInfo instrumentationScopeInfo;
 
   @BeforeAll
   static void setupAll() {
-    logRecordExporter = InMemoryLogRecordExporter.create();
     resource = Resource.getDefault();
     instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
 
-    SdkLoggerProvider loggerProvider =
-        SdkLoggerProvider.builder()
-            .setResource(resource)
-            .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
-            .build();
-    OpenTelemetrySdk openTelemetrySdk =
-        OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
-
-    OpenTelemetryAppender.install(openTelemetrySdk);
-  }
-
-  @BeforeEach
-  void setup() {
-    logRecordExporter.reset();
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
   @Test
@@ -69,24 +52,22 @@ public class Slf4j2Test {
         .addKeyValue("double key", 6.0)
         .log();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes().size())
-        .isEqualTo(12); // 4 code attributes + 8 key value pairs
-    assertThat(logData)
-        .hasAttributesSatisfying(
-            equalTo(AttributeKey.stringKey("string key"), "string value"),
-            equalTo(AttributeKey.booleanKey("boolean key"), true),
-            equalTo(AttributeKey.longKey("byte key"), 1),
-            equalTo(AttributeKey.longKey("short key"), 2),
-            equalTo(AttributeKey.longKey("int key"), 3),
-            equalTo(AttributeKey.longKey("long key"), 4),
-            equalTo(AttributeKey.doubleKey("float key"), 5.0),
-            equalTo(AttributeKey.doubleKey("double key"), 6.0));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("log message 1")
+                .hasTotalAttributeCount(12) // 4 code attributes + 8 key value pairs
+                .hasAttributesSatisfying(
+                    equalTo(AttributeKey.stringKey("string key"), "string value"),
+                    equalTo(AttributeKey.booleanKey("boolean key"), true),
+                    equalTo(AttributeKey.longKey("byte key"), 1),
+                    equalTo(AttributeKey.longKey("short key"), 2),
+                    equalTo(AttributeKey.longKey("int key"), 3),
+                    equalTo(AttributeKey.longKey("long key"), 4),
+                    equalTo(AttributeKey.doubleKey("float key"), 5.0),
+                    equalTo(AttributeKey.doubleKey("double key"), 6.0)));
   }
 
   @Test
@@ -100,16 +81,48 @@ public class Slf4j2Test {
         .addMarker(MarkerFactory.getMarker(markerName2))
         .log();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getResource()).isEqualTo(resource);
-    assertThat(logData.getInstrumentationScopeInfo()).isEqualTo(instrumentationScopeInfo);
-    assertThat(logData.getBody().asString()).isEqualTo("log message 1");
-    assertThat(logData.getAttributes().size()).isEqualTo(5); // 4 code attributes + 1 marker
-    assertThat(logData.getAttributes())
-        .hasEntrySatisfying(
-            AttributeKey.stringArrayKey("logback.marker"),
-            value -> assertThat(value).isEqualTo(Arrays.asList(markerName1, markerName2)));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("log message 1")
+                .hasTotalAttributeCount(5) // 4 code attributes + 1 marker
+                .hasAttributesSatisfying(
+                    equalTo(
+                        AttributeKey.stringArrayKey("logback.marker"),
+                        Arrays.asList(markerName1, markerName2))));
+  }
+
+  @Test
+  void arguments() {
+    logger
+        .atInfo()
+        .setMessage("log message {} and {}, bool {}, long {}")
+        .addArgument("'world'")
+        .addArgument(Math.PI)
+        .addArgument(true)
+        .addArgument(Long.MAX_VALUE)
+        .log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody(
+                    "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807")
+                .hasTotalAttributeCount(6)
+                .hasAttributesSatisfying(
+                    equalTo(
+                        AttributeKey.stringArrayKey("log.body.parameters"),
+                        Arrays.asList(
+                            "'world'",
+                            String.valueOf(Math.PI),
+                            String.valueOf(true),
+                            String.valueOf(Long.MAX_VALUE))),
+                    equalTo(
+                        AttributeKey.stringKey("log.body.template"),
+                        "log message {} and {}, bool {}, long {}")));
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import example.GreeterGrpc;
 import example.Helloworld;
 import io.grpc.BindableService;
@@ -23,7 +25,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -124,7 +125,7 @@ class GrpcTest extends AbstractGrpcTest {
                 "parent",
                 () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
 
-    OpenTelemetryAssertions.assertThat(response.getMessage()).isEqualTo("Hello test");
+    assertThat(response.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(

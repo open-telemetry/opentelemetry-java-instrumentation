@@ -124,7 +124,7 @@
       ],
       "matchPackageNames": [
         "org.slf4j:slf4j-api",
-        "org.springframework.boot",
+        "org.springframework.boot:org.springframework.boot.gradle.plugin", // this is for plugin id "org.springframework.boot"
         "org.springframework.boot:spring-boot-dependencies"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false,
@@ -163,7 +163,7 @@
     {
       // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
       "matchFileNames": ["conventions/src/main/kotlin/otel.scala-conventions.gradle.kts"],
-      "matchPackagePrefixes": ["org.scala-lang:scala-library"],
+      "matchPackageNames": ["org.scala-lang:scala-library"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     },

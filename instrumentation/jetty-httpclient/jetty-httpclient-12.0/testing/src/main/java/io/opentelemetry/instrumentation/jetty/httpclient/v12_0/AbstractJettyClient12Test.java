@@ -56,6 +56,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     // jetty 12 does not support to reuse request
     // use request.send() twice will block the program infinitely
     optionsBuilder.disableTestReusedRequest();
+    optionsBuilder.spanEndsAfterBody();
   }
 
   @Override
@@ -66,7 +67,9 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     request.agent("Jetty");
 
     request.method(method);
-    request.timeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    if (uri.toString().contains("/read-timeout")) {
+      request.timeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    }
 
     return request;
   }

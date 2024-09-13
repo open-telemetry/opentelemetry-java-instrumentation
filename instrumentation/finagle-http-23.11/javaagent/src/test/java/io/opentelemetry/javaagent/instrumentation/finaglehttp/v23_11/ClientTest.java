@@ -35,6 +35,7 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -103,7 +104,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setSingleConnectionFactory(
         (host, port) -> {
-          URI uri = URI.create(String.format("http://%s:%d", host, port));
+          URI uri = URI.create(String.format(Locale.ROOT, "http://%s:%d", host, port));
           Service<Request, Response> svc = getClient(uri, ClientType.SINGLE_CONN);
           return (path, headers) -> {
             // this is synchronized bc so is the Netty one;
@@ -119,6 +120,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.setHttpAttributes(ClientTest::getHttpAttributes);
     optionsBuilder.setExpectedClientSpanNameMapper(ClientTest::getExpectedClientSpanName);
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setClientSpanErrorMapper(
         (uri, error) -> {
           // all errors should be wrapped in RuntimeExceptions due to how we run things in
