@@ -51,8 +51,8 @@ class BeanFinder {
    * Starts bean discovery on a list of local or remote connections
    *
    * @param conf metric configuration
-   * @param connections supplier for instances of {@link MBeanServerConnection}, will be invoked after
-   *     delayed JMX initialization once the {@link #discoveryDelay} has expired.
+   * @param connections supplier for instances of {@link MBeanServerConnection}, will be invoked
+   *     after delayed JMX initialization once the {@link #discoveryDelay} has expired.
    */
   void discoverBeans(
       MetricConfiguration conf, Supplier<List<? extends MBeanServerConnection>> connections) {
