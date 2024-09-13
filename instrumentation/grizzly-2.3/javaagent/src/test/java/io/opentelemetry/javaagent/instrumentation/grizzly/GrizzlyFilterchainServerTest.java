@@ -158,7 +158,7 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
       return ctx.getStopAction();
     }
 
-    private ResponseParameters buildResponse(HttpRequestPacket request) {
+    private static ResponseParameters buildResponse(HttpRequestPacket request) {
       String uri = request.getRequestURI();
       Map<String, String> headers = new HashMap<>();
 

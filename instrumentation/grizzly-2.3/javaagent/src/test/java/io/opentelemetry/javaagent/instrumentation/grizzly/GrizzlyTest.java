@@ -52,14 +52,12 @@ abstract class GrizzlyTest extends AbstractHttpServerTest<HttpServer> {
                 endpoint,
                 () -> {
                   if (endpoint.equals(SUCCESS)) {
-                    SUCCESS:
                     try {
                       response.getWriter().write(endpoint.getBody());
                     } catch (IOException e) {
                       throw new RuntimeException(e);
                     }
                   } else if (endpoint.equals(INDEXED_CHILD)) {
-                    INDEXED_CHILD:
                     response.setStatus(endpoint.getStatus());
                     endpoint.collectSpanAttributes(request::getParameter);
                   } else if (endpoint.equals(QUERY_PARAM)) {
