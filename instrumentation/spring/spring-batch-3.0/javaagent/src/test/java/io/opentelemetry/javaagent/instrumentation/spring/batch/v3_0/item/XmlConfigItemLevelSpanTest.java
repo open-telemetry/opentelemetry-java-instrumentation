@@ -19,7 +19,7 @@ class XmlConfigItemLevelSpanTest extends ItemLevelSpanTest {
           () -> new ClassPathXmlApplicationContext("spring-batch.xml"),
           (jobName, job) -> instance.postProcessParallelItemsJob(jobName, job));
 
-  public XmlConfigItemLevelSpanTest() {
+  XmlConfigItemLevelSpanTest() {
     super(runner);
     instance = this;
   }

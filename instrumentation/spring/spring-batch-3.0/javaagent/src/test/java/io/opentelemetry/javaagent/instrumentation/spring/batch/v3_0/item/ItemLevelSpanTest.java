@@ -29,7 +29,7 @@ abstract class ItemLevelSpanTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public ItemLevelSpanTest(JobRunner runner) {
+  ItemLevelSpanTest(JobRunner runner) {
     this.runner = runner;
   }
 

@@ -10,13 +10,14 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.Sprin
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-public class JavaConfigCustomSpanEventTest extends CustomSpanEventTest {
+class JavaConfigCustomSpanEventTest extends CustomSpanEventTest {
+
   @RegisterExtension
   static final ApplicationConfigRunner runner =
       new ApplicationConfigRunner(
           () -> new AnnotationConfigApplicationContext(SpringBatchApplication.class));
 
-  public JavaConfigCustomSpanEventTest() {
+  JavaConfigCustomSpanEventTest() {
     super(runner);
   }
 }

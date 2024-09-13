@@ -19,12 +19,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractChunkRootSpanTest {
 
-  private final JobRunner jobRunner;
-
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public AbstractChunkRootSpanTest(JobRunner jobRunner) {
+  private final JobRunner jobRunner;
+
+  AbstractChunkRootSpanTest(JobRunner jobRunner) {
     this.jobRunner = jobRunner;
   }
 

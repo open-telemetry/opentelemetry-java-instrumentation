@@ -9,12 +9,13 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.Appli
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class XmlConfigCustomSpanEventTest extends CustomSpanEventTest {
+class XmlConfigCustomSpanEventTest extends CustomSpanEventTest {
+
   @RegisterExtension
   static final ApplicationConfigRunner runner =
       new ApplicationConfigRunner(() -> new ClassPathXmlApplicationContext("spring-batch.xml"));
 
-  public XmlConfigCustomSpanEventTest() {
+  XmlConfigCustomSpanEventTest() {
     super(runner);
   }
 }

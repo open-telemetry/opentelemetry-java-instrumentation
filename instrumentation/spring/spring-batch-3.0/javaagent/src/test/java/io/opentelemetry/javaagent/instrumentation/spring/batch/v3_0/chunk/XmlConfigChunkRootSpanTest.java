@@ -15,7 +15,7 @@ class XmlConfigChunkRootSpanTest extends AbstractChunkRootSpanTest {
   static final ApplicationConfigRunner runner =
       new ApplicationConfigRunner(() -> new ClassPathXmlApplicationContext("spring-batch.xml"));
 
-  public XmlConfigChunkRootSpanTest() {
+  XmlConfigChunkRootSpanTest() {
     super(runner);
   }
 }

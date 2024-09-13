@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JsrConfigCustomSpanEventTest extends CustomSpanEventTest {
+class JsrConfigCustomSpanEventTest extends CustomSpanEventTest {
 
   @RegisterExtension static final JavaxBatchConfigRunner runner = new JavaxBatchConfigRunner();
 
-  public JsrConfigCustomSpanEventTest() {
+  JsrConfigCustomSpanEventTest() {
     super(runner);
   }
 

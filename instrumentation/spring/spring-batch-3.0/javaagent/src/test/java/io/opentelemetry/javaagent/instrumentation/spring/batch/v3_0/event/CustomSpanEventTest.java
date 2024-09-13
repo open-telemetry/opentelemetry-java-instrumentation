@@ -24,12 +24,12 @@ abstract class CustomSpanEventTest {
 
   private static final boolean VERSION_GREATER_THAN_4_0 = Boolean.getBoolean("testLatestDeps");
 
-  private final JobRunner runner;
-
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public CustomSpanEventTest(JobRunner runner) {
+  private final JobRunner runner;
+
+  CustomSpanEventTest(JobRunner runner) {
     this.runner = runner;
   }
 
@@ -56,9 +56,8 @@ abstract class CustomSpanEventTest {
                                   spanData -> {
                                     // CompositeChunkListener has broken ordering that causes
                                     // listeners that do not override order() to appear first at all
-                                    // times
-                                    // because of that a custom ChunkListener will always see a Step
-                                    // span when using spring-batch versions [3, 4)
+                                    // times because of that a custom ChunkListener will always see
+                                    // a Step span when using spring-batch versions [3, 4)
                                     // that bug was fixed in 4.0
                                     if (VERSION_GREATER_THAN_4_0) {
                                       assertThat(spanData)
@@ -83,9 +82,8 @@ abstract class CustomSpanEventTest {
                                   spanData -> {
                                     // CompositeChunkListener has broken ordering that causes
                                     // listeners that do not override order() to appear first at all
-                                    // times
-                                    // because of that a custom ChunkListener will always see a Step
-                                    // span when using spring-batch versions [3, 4)
+                                    // times because of that a custom ChunkListener will always see
+                                    // a Step span when using spring-batch versions [3, 4)
                                     // that bug was fixed in 4.0
                                     if (VERSION_GREATER_THAN_4_0) {
                                       assertThat(spanData)

@@ -17,7 +17,7 @@ class JavaConfigChunkRootSpanTest extends AbstractChunkRootSpanTest {
       new ApplicationConfigRunner(
           () -> new AnnotationConfigApplicationContext(SpringBatchApplication.class));
 
-  public JavaConfigChunkRootSpanTest() {
+  JavaConfigChunkRootSpanTest() {
     super(runner);
   }
 }

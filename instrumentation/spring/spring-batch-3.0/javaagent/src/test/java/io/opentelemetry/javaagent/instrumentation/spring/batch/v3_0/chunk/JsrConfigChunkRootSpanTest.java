@@ -12,7 +12,7 @@ class JsrConfigChunkRootSpanTest extends AbstractChunkRootSpanTest {
 
   @RegisterExtension static final JavaxBatchConfigRunner runner = new JavaxBatchConfigRunner();
 
-  public JsrConfigChunkRootSpanTest() {
+  JsrConfigChunkRootSpanTest() {
     super(runner);
   }
 }
