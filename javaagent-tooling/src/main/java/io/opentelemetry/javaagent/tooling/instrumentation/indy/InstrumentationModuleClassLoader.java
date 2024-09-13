@@ -54,7 +54,7 @@ import net.bytebuddy.matcher.StringMatcher;
  */
 public class InstrumentationModuleClassLoader extends ClassLoader {
 
-  private static final Logger LOGGER =
+  private static final Logger logger =
       Logger.getLogger(InstrumentationModuleClassLoader.class.getName());
 
   static {
@@ -163,7 +163,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
           try {
             this.loadClass(adviceClass, true);
           } catch (ClassNotFoundException e) {
-            LOGGER.log(
+            logger.log(
                 Level.SEVERE,
                 "Failed to eagerly load advice class {0}",
                 new Object[] {adviceClass, e});
