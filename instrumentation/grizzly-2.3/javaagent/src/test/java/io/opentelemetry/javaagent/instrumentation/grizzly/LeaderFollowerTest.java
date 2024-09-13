@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import org.glassfish.grizzly.IOStrategy;
 import org.glassfish.grizzly.strategies.LeaderFollowerNIOStrategy;
 
-class LeaderFollowerTest extends GrizzlyIOStrategyTest {
+class LeaderFollowerTest extends GrizzlyIoStrategyTest {
 
   @Override
   IOStrategy strategy() {

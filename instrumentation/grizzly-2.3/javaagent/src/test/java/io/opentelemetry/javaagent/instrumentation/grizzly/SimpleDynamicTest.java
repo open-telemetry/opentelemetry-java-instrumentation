@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grizzly;
 import org.glassfish.grizzly.IOStrategy;
 import org.glassfish.grizzly.strategies.SimpleDynamicNIOStrategy;
 
-class SimpleDynamicTest extends GrizzlyIOStrategyTest {
+class SimpleDynamicTest extends GrizzlyIoStrategyTest {
 
   @Override
   IOStrategy strategy() {
