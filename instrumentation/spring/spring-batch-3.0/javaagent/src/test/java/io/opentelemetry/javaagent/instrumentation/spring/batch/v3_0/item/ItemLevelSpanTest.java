@@ -10,10 +10,15 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JobRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.batch.core.Job;
@@ -155,6 +160,55 @@ abstract class ItemLevelSpanTest {
           // in the expected order
           // firstly compute child span count for each chunk, we'll sort chunks from larger to
           // smaller based on child count
+
+          List<SpanData> spans = AssertAccess.getActual(trace);
+          Map<SpanData, Long> childCount = new HashMap<>();
+
+          for (SpanData span : spans) {
+            if (span.getName().equals("BatchJob parallelItemsJob.parallelItemsStep.Chunk")) {
+              childCount.put(
+                  span,
+                  spans.stream()
+                      .filter(it -> it.getParentSpanId().equals(span.getSpanId()))
+                      .count());
+            }
+          }
+
+          spans.sort(
+              Comparator.comparingLong(
+                  it -> {
+                    // job span is first
+                    if (it.getName().equals("BatchJob parallelItemsJob")) {
+                      return 0;
+                    }
+                    // step span is second
+                    if (it.getName().equals("BatchJob parallelItemsJob.parallelItemsStep")) {
+                      return 1;
+                    }
+
+                    // find the chunk this span belongs to
+                    SpanData chunkSpan = it;
+                    while (chunkSpan != null
+                        && !chunkSpan
+                            .getName()
+                            .equals("BatchJob parallelItemsJob.parallelItemsStep.Chunk")) {
+                      SpanData currentChunkSpan = chunkSpan;
+                      chunkSpan =
+                          spans.stream()
+                              .filter(
+                                  candidate ->
+                                      candidate
+                                          .getSpanId()
+                                          .equals(currentChunkSpan.getParentSpanId()))
+                              .findFirst()
+                              .orElse(null);
+                    }
+                    if (chunkSpan != null) {
+                      // sort larger chunks first
+                      return 100 - childCount.get(chunkSpan);
+                    }
+                    throw new IllegalStateException("item spans should have a parent chunk span");
+                  }));
 
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
           assertions.add(
