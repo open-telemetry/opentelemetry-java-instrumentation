@@ -31,7 +31,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -1312,26 +1310,6 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "table"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"))));
-  }
-
-  static class DbCallingConnection extends TestConnection {
-    final boolean usePreparedStatement;
-
-    DbCallingConnection(boolean usePreparedStatement) {
-      super(false);
-      this.usePreparedStatement = usePreparedStatement;
-    }
-
-    @Override
-    public DatabaseMetaData getMetaData() throws SQLException {
-      // simulate retrieving DB metadata from the DB itself
-      if (usePreparedStatement) {
-        prepareStatement("SELECT * from DB_METADATA").executeQuery();
-      } else {
-        createStatement().executeQuery("SELECT * from DB_METADATA");
-      }
-      return super.getMetaData();
-    }
   }
 
   // regression test for
