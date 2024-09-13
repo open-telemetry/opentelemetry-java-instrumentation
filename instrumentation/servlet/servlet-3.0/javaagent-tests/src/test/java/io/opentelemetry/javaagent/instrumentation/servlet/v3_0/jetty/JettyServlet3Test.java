@@ -66,13 +66,18 @@ public abstract class JettyServlet3Test
 
   @Override
   protected SpanDataAssert assertResponseSpan(
-      SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
+      SpanDataAssert span,
+      SpanData controllerSpan,
+      SpanData handlerSpan,
+      String method,
+      ServerEndpoint endpoint) {
     if (IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
       span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
-          .hasKind(SpanKind.INTERNAL);
+          .hasKind(SpanKind.INTERNAL)
+          .hasParent(handlerSpan);
     }
 
-    return super.assertResponseSpan(span, parentSpan, method, endpoint);
+    return super.assertResponseSpan(span, controllerSpan, handlerSpan, method, endpoint);
   }
 
   @Override
