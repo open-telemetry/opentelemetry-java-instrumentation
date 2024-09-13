@@ -5,22 +5,24 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class DurationUtilTest {
 
   @Test
-  void shouldConvertDurationToSeconds() {
-    // Given
+  void convertDurationToSeconds() {
     Duration duration = Duration.ofSeconds(7, 144);
-
-    // When
     double seconds = DurationUtil.toSeconds(duration);
+    assertThat(seconds).isEqualTo(7.000000144);
+  }
 
-    // Then
-    assertEquals(7.000000144, seconds);
+  @Test
+  void convertMillisSeconds() {
+    double seconds = DurationUtil.millisToSeconds(TimeUnit.SECONDS.toMillis(5));
+    assertThat(seconds).isEqualTo(5);
   }
 }
