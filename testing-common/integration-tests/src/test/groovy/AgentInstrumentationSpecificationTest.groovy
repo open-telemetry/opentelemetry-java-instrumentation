@@ -18,7 +18,7 @@ class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecific
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
 
   /**
-   * Copy of Constants#BOOTSTRAP_PACKAGE_PREFIXES because the Constants class
+   * Copy of {@link Constants#BOOTSTRAP_PACKAGE_PREFIXES} because the Constants class
    * is not accessible from here
    */
   public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES =
