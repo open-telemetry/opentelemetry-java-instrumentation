@@ -143,6 +143,14 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   @Override
+  public Class<?> loadClass(String name) throws ClassNotFoundException {
+    // We explicitly override loadClass from ClassLoader to ensure
+    // that loadClass is properly excluded from our internal ClassLoader Instrumentations
+    // Otherwise this will cause recursion in invokedynamic linkage
+    return loadClass(name, false);
+  }
+
+  @Override
   public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
     // ContextStorageOverride is meant for library instrumentation we don't want it to apply to our
     // bundled grpc

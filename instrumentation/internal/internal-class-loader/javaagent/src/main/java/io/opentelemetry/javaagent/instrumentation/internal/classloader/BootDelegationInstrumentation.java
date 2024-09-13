@@ -50,7 +50,8 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
     return not(namedOneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",
-            "io.opentelemetry.javaagent.bootstrap.AgentClassLoader"))
+            "io.opentelemetry.javaagent.bootstrap.AgentClassLoader",
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader"))
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
@@ -136,13 +137,14 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result,
-        @Advice.Enter Class<?> resultFromBootstrapLoader) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.AssignReturned.ToReturned
+    public static Class<?> onExit(
+        @Advice.Return Class<?> result, @Advice.Enter Class<?> resultFromBootstrapLoader) {
       if (resultFromBootstrapLoader != null) {
-        result = resultFromBootstrapLoader;
+        return resultFromBootstrapLoader;
       }
+      return result;
     }
   }
 }

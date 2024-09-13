@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -51,6 +53,9 @@ import net.bytebuddy.matcher.StringMatcher;
  * follow the same delegation strategy, so that bytecode inspection tools work correctly.
  */
 public class InstrumentationModuleClassLoader extends ClassLoader {
+
+  private static final Logger LOGGER =
+      Logger.getLogger(InstrumentationModuleClassLoader.class.getName());
 
   static {
     ClassLoader.registerAsParallelCapable();
@@ -150,8 +155,24 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);
     if (module instanceof ExperimentalInstrumentationModule) {
-      hiddenAgentPackages.addAll(
-          ((ExperimentalInstrumentationModule) module).agentPackagesToHide());
+      ExperimentalInstrumentationModule experimentalModule =
+          (ExperimentalInstrumentationModule) module;
+      hiddenAgentPackages.addAll(experimentalModule.agentPackagesToHide());
+      if (experimentalModule.loadAdviceClassesEagerly()) {
+        for (String adviceClass : getModuleAdviceNames(module)) {
+          try {
+            this.loadClass(adviceClass, true);
+          } catch (ClassNotFoundException e) {
+            LOGGER.log(
+                Level.SEVERE,
+                "Failed to eagerly load advice class {0}",
+                new Object[] {adviceClass, e});
+          }
+        }
+        // We also eagerly load the LookupExposer, because that is also required for invokedynamic
+        // bootstrapping
+        getLookup();
+      }
     }
   }
 
@@ -195,6 +216,14 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
+
+  @Override
+  public Class<?> loadClass(String name) throws ClassNotFoundException {
+    // We explicitly override loadClass from ClassLoader to ensure
+    // that loadClass is properly excluded from our internal ClassLoader Instrumentations
+    // Otherwise this will cause recursion in invokedynamic linkage
+    return loadClass(name, false);
+  }
 
   @Override
   @SuppressWarnings("removal") // AccessController is deprecated for removal

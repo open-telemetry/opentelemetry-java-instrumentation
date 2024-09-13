@@ -92,6 +92,12 @@ public class IndyBootstrap {
 
       IndyBootstrapDispatcher.init(
           MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType));
+
+      // Ensure that CallDepth is already loaded in case of bootstrapAdvice recursions with
+      // ClassLoader.loadClass
+      // This is required because CallDepth is a bootstrap class and therefore triggers our
+      // ClassLoader.loadClass instrumentations
+      Class.forName(CallDepth.class.getName());
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
