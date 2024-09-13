@@ -22,6 +22,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.semconv.HttpAttributes;
@@ -54,7 +55,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpServer> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private TCPNIOTransport transport;
 

@@ -14,7 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class GrizzlyTest extends AbstractHttpServerTest<HttpServer> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected HttpServer setupServer() throws Exception {
