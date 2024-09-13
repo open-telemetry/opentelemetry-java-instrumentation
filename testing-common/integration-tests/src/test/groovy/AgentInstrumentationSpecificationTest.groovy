@@ -17,12 +17,19 @@ import java.util.concurrent.TimeoutException
 class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecification {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
 
+  /**
+   * Copy of Constants#BOOTSTRAP_PACKAGE_PREFIXES because the Constants class
+   * is not accessible from here
+   */
+  public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES =
+      Arrays.asList("io.opentelemetry.javaagent.bootstrap", "io.opentelemetry.javaagent.shaded")
+
   def "classpath setup"() {
     setup:
     final List<String> bootstrapClassesIncorrectlyLoaded = []
     for (ClassPath.ClassInfo info : getTestClasspath().getAllClasses()) {
-      for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.size(); ++i) {
-        if (info.getName().startsWith(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
+      for (int i = 0; i < BOOTSTRAP_PACKAGE_PREFIXES.size(); ++i) {
+        if (info.getName().startsWith(BOOTSTRAP_PACKAGE_PREFIXES[i])) {
           Class<?> bootstrapClass = Class.forName(info.getName())
           def loader
           try {
