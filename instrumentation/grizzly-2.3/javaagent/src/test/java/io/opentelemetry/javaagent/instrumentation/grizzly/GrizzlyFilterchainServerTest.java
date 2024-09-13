@@ -19,7 +19,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.glassfish.grizzly.memory.Buffers.wrap;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
