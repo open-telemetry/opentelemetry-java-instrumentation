@@ -19,7 +19,6 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -111,10 +110,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.COUCHBASE),
                             equalTo(
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_OPERATION)
-                                    : DbIncubatingAttributes.DB_OPERATION,
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
                                 "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -152,10 +149,8 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.COUCHBASE),
                             equalTo(
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_OPERATION)
-                                    : DbIncubatingAttributes.DB_OPERATION,
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
                                 "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
