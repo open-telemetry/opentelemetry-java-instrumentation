@@ -140,7 +140,7 @@ class JdbcInstrumentationTest {
 
   static DataSource createTomcatDs(String dbType, String jdbcUrl) {
     org.apache.tomcat.jdbc.pool.DataSource ds = new org.apache.tomcat.jdbc.pool.DataSource();
-    String jdbcUrlToSet = Objects.equals(dbType, "derby") ? jdbcUrl + ";create=true" : jdbcUrl;
+    String jdbcUrlToSet = dbType.equals("derby") ? jdbcUrl + ";create=true" : jdbcUrl;
     ds.setUrl(jdbcUrlToSet);
     ds.setDriverClassName(jdbcDriverClassNames.get(dbType));
     String username = jdbcUserNames.get(dbType);
@@ -155,7 +155,7 @@ class JdbcInstrumentationTest {
 
   static DataSource createHikariDs(String dbType, String jdbcUrl) {
     HikariConfig config = new HikariConfig();
-    String jdbcUrlToSet = Objects.equals(dbType, "derby") ? jdbcUrl + ";create=true" : jdbcUrl;
+    String jdbcUrlToSet = dbType.equals("derby") ? jdbcUrl + ";create=true" : jdbcUrl;
     config.setJdbcUrl(jdbcUrlToSet);
     String username = jdbcUserNames.get(dbType);
     if (username != null) {
@@ -177,7 +177,7 @@ class JdbcInstrumentationTest {
     } catch (PropertyVetoException e) {
       throw new RuntimeException(e);
     }
-    String jdbcUrlToSet = Objects.equals(dbType, "derby") ? jdbcUrl + ";create=true" : jdbcUrl;
+    String jdbcUrlToSet = dbType.equals("derby") ? jdbcUrl + ";create=true" : jdbcUrl;
     ds.setJdbcUrl(jdbcUrlToSet);
     String username = jdbcUserNames.get(dbType);
     if (username != null) {
@@ -190,13 +190,13 @@ class JdbcInstrumentationTest {
 
   static DataSource createDs(String connectionPoolName, String dbType, String jdbcUrl) {
     DataSource ds = null;
-    if (Objects.equals(connectionPoolName, "tomcat")) {
+    if (connectionPoolName.equals("tomcat")) {
       ds = createTomcatDs(dbType, jdbcUrl);
     }
-    if (Objects.equals(connectionPoolName, "hikari")) {
+    if (connectionPoolName.equals("hikari")) {
       ds = createHikariDs(dbType, jdbcUrl);
     }
-    if (Objects.equals(connectionPoolName, "c3p0")) {
+    if (connectionPoolName.equals("c3p0")) {
       ds = createC3P0Ds(dbType, jdbcUrl);
     }
     return ds;
@@ -720,7 +720,7 @@ class JdbcInstrumentationTest {
     cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
     String sql = connection.nativeSQL(query);
-    testing.runWithSpan("parent", () -> statement.execute(sql));
+    testing.runWithSpan("parent", () -> assertThat(statement.execute(sql)).isFalse());
 
     assertThat(statement.getUpdateCount()).isEqualTo(0);
 
@@ -832,7 +832,7 @@ class JdbcInstrumentationTest {
     PreparedStatement statement = connection.prepareStatement(sql);
     cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
-    testing.runWithSpan("parent", () -> statement.executeUpdate() == 0);
+    testing.runWithSpan("parent", () -> assertThat(statement.executeUpdate()).isEqualTo(0));
 
     testing.waitAndAssertTraces(
         trace ->
