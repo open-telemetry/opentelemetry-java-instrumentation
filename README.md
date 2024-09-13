@@ -161,7 +161,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
 
-- [Jay DeLuca](https://github.com/jaydeluca)
 - [Jonas Kunz](https://github.com/JonasKunz), Elastic
 - [Steve Rao](https://github.com/steverao), Alibaba
 - [Sylvain Juge](https://github.com/SylvainJuge), Elastic
@@ -171,6 +170,7 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 - [Gregor Zietlinger](https://github.com/zeitlinger), Grafana
 - [Jack Berg](https://github.com/jack-berg), New Relic
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
+- [Jay DeLuca](https://github.com/jaydeluca)
 - [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 - [John Watson](https://github.com/jkwatson), Verta.ai
 
