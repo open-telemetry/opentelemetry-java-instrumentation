@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static java.lang.String.valueOf;
 import static java.nio.charset.Charset.defaultCharset;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.glassfish.grizzly.memory.Buffers.wrap;
@@ -46,7 +45,6 @@ import org.glassfish.grizzly.http.HttpResponsePacket;
 import org.glassfish.grizzly.http.HttpServerFilter;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.util.Parameters;
-import org.glassfish.grizzly.nio.transport.TCPNIOServerConnection;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
 import org.glassfish.grizzly.utils.DelayedExecutor;
@@ -65,7 +63,7 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
     FilterChain filterChain = setUpFilterChain();
     setUpTransport(filterChain);
 
-    TCPNIOServerConnection serverConnection = transport.bind("127.0.0.1", port);
+    transport.bind("127.0.0.1", port);
     transport.start();
     return null;
   }
@@ -110,7 +108,7 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
   }
 
   @SuppressWarnings("deprecation") // until figured out what to use
-  private FilterChain setUpFilterChain() {
+  private static FilterChain setUpFilterChain() {
     return FilterChainBuilder.stateless()
         .add(createTransportFilter())
         .add(createIdleTimeoutFilter())
@@ -119,11 +117,11 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
         .build();
   }
 
-  private TransportFilter createTransportFilter() {
+  private static TransportFilter createTransportFilter() {
     return new TransportFilter();
   }
 
-  private IdleTimeoutFilter createIdleTimeoutFilter() {
+  private static IdleTimeoutFilter createIdleTimeoutFilter() {
     return new IdleTimeoutFilter(
         new DelayedExecutor(Executors.newCachedThreadPool()), 80000, MILLISECONDS);
   }
@@ -140,7 +138,9 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
           HttpResponsePacket.Builder builder =
               HttpResponsePacket.builder(request)
                   .status(responseParameters.getStatus())
-                  .header("Content-Length", valueOf(responseParameters.getResponseBody().length));
+                  .header(
+                      "Content-Length",
+                      String.valueOf(responseParameters.getResponseBody().length));
           responseParameters.fillHeaders(builder);
           HttpResponsePacket responsePacket = builder.build();
           controller(
