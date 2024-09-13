@@ -24,7 +24,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule
 
   @Override
   public String getModuleGroup() {
-    return "akka-http-10.0-server";
+    return "akka-http";
   }
 
   @Override
