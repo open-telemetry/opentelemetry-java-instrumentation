@@ -19,9 +19,11 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
@@ -108,7 +110,12 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket"))),
+                            equalTo(
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? SemconvStabilityUtil.getAttributeKey(
+                                        DbIncubatingAttributes.DB_OPERATION)
+                                    : DbIncubatingAttributes.DB_OPERATION,
+                                "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -144,7 +151,12 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket"))),
+                            equalTo(
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? SemconvStabilityUtil.getAttributeKey(
+                                        DbIncubatingAttributes.DB_OPERATION)
+                                    : DbIncubatingAttributes.DB_OPERATION,
+                                "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
