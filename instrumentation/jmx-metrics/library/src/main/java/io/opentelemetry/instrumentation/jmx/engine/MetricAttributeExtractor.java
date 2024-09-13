@@ -28,9 +28,7 @@ public interface MetricAttributeExtractor {
   String extractValue(@Nullable MBeanServer server, @Nullable ObjectName objectName);
 
   static MetricAttributeExtractor fromConstant(String constantValue) {
-    return (a, b) -> {
-      return constantValue;
-    };
+    return (a, b) -> constantValue;
   }
 
   static MetricAttributeExtractor fromObjectNameParameter(String parameterKey) {
