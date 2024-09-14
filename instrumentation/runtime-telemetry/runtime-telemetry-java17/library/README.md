@@ -35,16 +35,16 @@ default, and the telemetry each produces:
 <!-- DO NOT MANUALLY EDIT. Regenerate table following changes to instrumentation using ./gradlew generateDocs -->
 <!-- generateDocsStart -->
 
-| JfrFeature                | Default Enabled | Metrics                                                                                                                                                                                             |
-| ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BUFFER_METRICS            | `false`         | `process.runtime.jvm.buffer.count`, `process.runtime.jvm.buffer.limit`, `process.runtime.jvm.buffer.usage`                                                                                          |
-| CLASS_LOAD_METRICS        | `false`         | `process.runtime.jvm.classes.current_loaded`, `process.runtime.jvm.classes.loaded`, `process.runtime.jvm.classes.unloaded`                                                                          |
-| CONTEXT_SWITCH_METRICS    | `true`          | `process.runtime.jvm.cpu.context_switch`                                                                                                                                                            |
-| CPU_COUNT_METRICS         | `true`          | `process.runtime.jvm.cpu.limit`                                                                                                                                                                     |
-| CPU_UTILIZATION_METRICS   | `false`         | `process.runtime.jvm.cpu.utilization`, `process.runtime.jvm.system.cpu.utilization`                                                                                                                 |
-| GC_DURATION_METRICS       | `false`         | `process.runtime.jvm.gc.duration`                                                                                                                                                                   |
-| LOCK_METRICS              | `true`          | `process.runtime.jvm.cpu.longlock`                                                                                                                                                                  |
-| MEMORY_ALLOCATION_METRICS | `true`          | `process.runtime.jvm.memory.allocation`                                                                                                                                                             |
-| MEMORY_POOL_METRICS       | `false`         | `process.runtime.jvm.memory.committed`, `process.runtime.jvm.memory.init`, `process.runtime.jvm.memory.limit`, `process.runtime.jvm.memory.usage`, `process.runtime.jvm.memory.usage_after_last_gc` |
-| NETWORK_IO_METRICS        | `true`          | `process.runtime.jvm.network.io`, `process.runtime.jvm.network.time`                                                                                                                                |
-| THREAD_METRICS            | `false`         | `process.runtime.jvm.threads.count`                                                                                                                                                                 |
+| JfrFeature                | Default Enabled | Metrics                                                                                                           |
+|---------------------------|-----------------|-------------------------------------------------------------------------------------------------------------------|
+| BUFFER_METRICS            | `false`         | `jvm.buffer.count`, `jvm.buffer.memory.limit`, `jvm.buffer.memory.usage`                                          |
+| CLASS_LOAD_METRICS        | `false`         | `jvm.class.count`, `jvm.class.loaded`, `jvm.class.unloaded`                                                       |
+| CONTEXT_SWITCH_METRICS    | `true`          | `jvm.cpu.context_switch`                                                                                          |
+| CPU_COUNT_METRICS         | `true`          | `jvm.cpu.limit`                                                                                                   |
+| CPU_UTILIZATION_METRICS   | `false`         | `jvm.cpu.recent_utilization`, `jvm.system.cpu.utilization`                                                        |
+| GC_DURATION_METRICS       | `false`         | `jvm.gc.duration`                                                                                                 |
+| LOCK_METRICS              | `true`          | `jvm.cpu.longlock`                                                                                                |
+| MEMORY_ALLOCATION_METRICS | `true`          | `jvm.memory.allocation`                                                                                           |
+| MEMORY_POOL_METRICS       | `false`         | `jvm.memory.committed`, `jvm.memory.init`, `jvm.memory.limit`, `jvm.memory.used`, `jvm.memory.used_after_last_gc` |
+| NETWORK_IO_METRICS        | `true`          | `jvm.network.io`, `jvm.network.time`                                                                              |
+| THREAD_METRICS            | `false`         | `jvm.thread.count`                                                                                                |

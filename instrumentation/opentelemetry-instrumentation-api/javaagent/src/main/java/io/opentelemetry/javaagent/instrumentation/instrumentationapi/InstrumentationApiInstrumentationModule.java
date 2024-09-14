@@ -11,11 +11,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class InstrumentationApiInstrumentationModule extends InstrumentationModule {
+public class InstrumentationApiInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public InstrumentationApiInstrumentationModule() {
     super("opentelemetry-instrumentation-api");
@@ -27,12 +29,12 @@ public class InstrumentationApiInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(new HttpRouteStateInstrumentation(), new SpanKeyInstrumentation());
   }
 
   @Override
-  public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new HttpRouteStateInstrumentation(), new SpanKeyInstrumentation());
+  public String getModuleGroup() {
+    return "opentelemetry-api-bridge";
   }
 }

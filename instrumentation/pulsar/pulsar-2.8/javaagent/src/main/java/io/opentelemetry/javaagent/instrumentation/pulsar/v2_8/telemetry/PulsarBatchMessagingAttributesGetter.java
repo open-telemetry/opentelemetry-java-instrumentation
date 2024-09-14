@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
+import org.apache.pulsar.common.naming.TopicName;
 
 enum PulsarBatchMessagingAttributesGetter
     implements MessagingAttributesGetter<PulsarBatchRequest, Void> {
@@ -79,6 +80,16 @@ enum PulsarBatchMessagingAttributesGetter
   @Override
   public Long getBatchMessageCount(PulsarBatchRequest request, @Nullable Void unused) {
     return (long) request.getMessages().size();
+  }
+
+  @Nullable
+  @Override
+  public String getDestinationPartitionId(PulsarBatchRequest request) {
+    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
+    if (partitionIndex == -1) {
+      return null;
+    }
+    return String.valueOf(partitionIndex);
   }
 
   @Override

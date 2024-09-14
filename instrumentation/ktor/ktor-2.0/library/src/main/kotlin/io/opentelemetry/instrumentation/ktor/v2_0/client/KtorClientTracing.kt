@@ -16,6 +16,9 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class KtorClientTracing internal constructor(
@@ -83,23 +86,25 @@ class KtorClientTracing internal constructor(
       }
     }
 
+    @OptIn(InternalCoroutinesApi::class)
     private fun installSpanEnd(plugin: KtorClientTracing, scope: HttpClient) {
       val endSpanPhase = PipelinePhase("OpenTelemetryEndSpan")
       scope.receivePipeline.insertPhaseBefore(HttpReceivePipeline.State, endSpanPhase)
 
       scope.receivePipeline.intercept(endSpanPhase) {
         val openTelemetryContext = it.call.attributes.getOrNull(openTelemetryContextKey)
+        openTelemetryContext ?: return@intercept
 
-        if (openTelemetryContext != null) {
-          try {
-            withContext(openTelemetryContext.asContextElement()) { proceed() }
-            plugin.endSpan(openTelemetryContext, it.call, null)
-          } catch (e: Throwable) {
-            plugin.endSpan(openTelemetryContext, it.call, e)
-            throw e
+        scope.launch {
+          val job = it.call.coroutineContext.job
+          job.join()
+          val cause = if (!job.isCancelled) {
+            null
+          } else {
+            kotlin.runCatching { job.getCancellationException() }.getOrNull()
           }
-        } else {
-          proceed()
+
+          plugin.endSpan(openTelemetryContext, it.call, cause)
         }
       }
     }

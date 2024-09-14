@@ -5,23 +5,28 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import java.util.List;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
+
   @BeforeEach
   void setup() {
-    generalBeforeEachSetup();
-    OpenTelemetryAppender.install(openTelemetrySdk);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
+  }
+
+  @Override
+  protected InstrumentationExtension getTesting() {
+    return testing;
   }
 
   @Test
@@ -29,28 +34,29 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     // the log replay is related to the case where an OpenTelemetry object is not yet available
     // at the time the log is executed (and if no OpenTelemetry is available, the context
     // propagation can't happen)
-    Span span1 = runWithSpan("span1", () -> logger.info("log message 1"));
+    Span span1 =
+        testing.runWithSpan(
+            "span1",
+            () -> {
+              logger.info("log message 1");
+              return Span.current();
+            });
 
     logger.info("log message 2");
 
     executeAfterLogsExecution();
 
-    Span span2 = runWithSpan("span2", () -> logger.info("log message 3"));
+    Span span2 =
+        testing.runWithSpan(
+            "span2",
+            () -> {
+              logger.info("log message 3");
+              return Span.current();
+            });
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(3);
-    assertThat(logDataList.get(0)).hasSpanContext(span1.getSpanContext());
-    assertThat(logDataList.get(1)).hasSpanContext(SpanContext.getInvalid());
-    assertThat(logDataList.get(2)).hasSpanContext(span2.getSpanContext());
-  }
-
-  private static Span runWithSpan(String spanName, Runnable runnable) {
-    Span span = SdkTracerProvider.builder().build().get("tracer").spanBuilder(spanName).startSpan();
-    try (Scope ignored = span.makeCurrent()) {
-      runnable.run();
-    } finally {
-      span.end();
-    }
-    return span;
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasSpanContext(span1.getSpanContext()),
+        logRecord -> logRecord.hasSpanContext(SpanContext.getInvalid()),
+        logRecord -> logRecord.hasSpanContext(span2.getSpanContext()));
   }
 }

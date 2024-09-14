@@ -86,7 +86,8 @@ public final class LogEventMapper<T> {
       @Nullable Throwable throwable,
       T contextData,
       String threadName,
-      long threadId) {
+      long threadId,
+      Context context) {
 
     AttributesBuilder attributes = Attributes.builder();
 
@@ -116,8 +117,7 @@ public final class LogEventMapper<T> {
     }
 
     builder.setAllAttributes(attributes.build());
-
-    builder.setContext(Context.current());
+    builder.setContext(context);
   }
 
   // visible for testing
@@ -165,16 +165,16 @@ public final class LogEventMapper<T> {
           contextData,
           (key, value) -> {
             if (value != null) {
-              attributes.put(getContextDataAttributeKey(key), value.toString());
+              attributes.put(getContextDataAttributeKey(key), value);
             }
           });
       return;
     }
 
     for (String key : captureContextDataAttributes) {
-      Object value = contextDataAccessor.getValue(contextData, key);
+      String value = contextDataAccessor.getValue(contextData, key);
       if (value != null) {
-        attributes.put(getContextDataAttributeKey(key), value.toString());
+        attributes.put(getContextDataAttributeKey(key), value);
       }
     }
   }

@@ -14,7 +14,7 @@ public class ApplicationDoubleHistogramBuilder implements DoubleHistogramBuilder
 
   private final io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder;
 
-  public ApplicationDoubleHistogramBuilder(
+  protected ApplicationDoubleHistogramBuilder(
       io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }

@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
@@ -29,10 +27,6 @@ import java.util.function.BiFunction;
  */
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
 
-  protected static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper()
-          .registerModule(new CustomJodaModule())
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   private final WrappedLambda wrappedLambda;
   private final Method targetMethod;
   private final BiFunction<I, Class<?>, Object> parameterMapper;

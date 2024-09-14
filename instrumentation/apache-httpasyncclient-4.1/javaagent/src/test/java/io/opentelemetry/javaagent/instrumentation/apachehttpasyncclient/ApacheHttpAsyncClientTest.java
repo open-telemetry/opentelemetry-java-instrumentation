@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -69,7 +70,7 @@ class ApacheHttpAsyncClientTest {
   }
 
   @Nested
-  class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientUriRequestTest extends AbstractTest {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -95,7 +96,7 @@ class ApacheHttpAsyncClientTest {
   }
 
   @Nested
-  class ApacheClientHostRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientHostRequestTest extends AbstractTest {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -129,7 +130,7 @@ class ApacheHttpAsyncClientTest {
   }
 
   @Nested
-  class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientHostAbsoluteUriRequestTest extends AbstractTest {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -158,6 +159,15 @@ class ApacheHttpAsyncClientTest {
               new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
               request,
               responseCallback(httpClientResult));
+    }
+  }
+
+  abstract static class AbstractTest extends AbstractHttpClientTest<HttpUriRequest> {
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.spanEndsAfterBody();
     }
   }
 
