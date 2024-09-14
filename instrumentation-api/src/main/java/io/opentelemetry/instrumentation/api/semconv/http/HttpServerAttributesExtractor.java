@@ -75,7 +75,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-
+    super.onStart(attributes, parentContext, request);
   }
 
   @Override

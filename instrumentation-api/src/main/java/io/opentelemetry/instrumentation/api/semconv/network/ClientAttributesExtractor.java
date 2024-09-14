@@ -44,8 +44,7 @@ public final class ClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-  }
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
 
   @Override
   public void onEnd(
