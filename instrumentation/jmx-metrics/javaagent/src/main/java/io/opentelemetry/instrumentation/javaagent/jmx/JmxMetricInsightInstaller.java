@@ -36,7 +36,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
           JmxMetricInsight.createService(
               GlobalOpenTelemetry.get(), beanDiscoveryDelay(config).toMillis());
       MetricConfiguration conf = buildMetricConfiguration(config);
-      service.start(conf);
+      service.startLocal(conf);
     }
   }
 
