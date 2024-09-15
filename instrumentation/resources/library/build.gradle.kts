@@ -69,3 +69,21 @@ tasks {
     )
   }
 }
+
+testing {
+  suites {
+    // Security Manager tests involve setup that can poison the environment for other tests
+    val testSecurityManager by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:resources:library"))
+        implementation("io.opentelemetry:opentelemetry-sdk-common")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}

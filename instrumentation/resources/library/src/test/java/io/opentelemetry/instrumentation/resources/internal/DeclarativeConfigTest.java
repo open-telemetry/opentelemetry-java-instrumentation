@@ -48,7 +48,8 @@ class DeclarativeConfigTest {
                       .collect(Collectors.toSet());
               // ContainerResourceComponentProvider - no container attributes reliably provided
               // HostIdResourceComponentProvider - host.id attribute not reliably provided
-              // HostResourceComponentProvider - host.arch attribute not reliably provided
+              // HostResourceComponentProvider
+              assertThat(attributeKeys).contains("host.arch");
               assertThat(attributeKeys).contains("host.name");
               // OsResourceComponentProvider
               assertThat(attributeKeys).contains("os.description");
