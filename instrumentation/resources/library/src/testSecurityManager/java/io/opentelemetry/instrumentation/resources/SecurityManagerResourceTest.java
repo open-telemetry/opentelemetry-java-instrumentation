@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ class SecurityManagerResourceTest {
   @Test
   void hostResourceTestEmpty() {
     Attributes attributes = HostResource.buildResource().getAttributes();
-    assertThat(attributes.asMap()).containsOnlyKeys(AttributeKey.stringKey("host.name"));
+    assertThat(attributes.asMap()).containsOnlyKeys(HostResource.HOST_NAME);
   }
 
   @Test
@@ -37,7 +36,7 @@ class SecurityManagerResourceTest {
   @Test
   void processResourceEmpty() {
     Attributes attributes = ProcessResource.buildResource().getAttributes();
-    assertThat(attributes.asMap()).containsOnlyKeys(AttributeKey.longKey("process.pid"));
+    assertThat(attributes.asMap()).containsOnlyKeys(ProcessResource.PROCESS_PID);
   }
 
   @Test
