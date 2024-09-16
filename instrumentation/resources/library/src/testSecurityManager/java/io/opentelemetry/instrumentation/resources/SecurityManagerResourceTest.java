@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -19,14 +20,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(SecurityManagerExtension.class)
 @EnabledOnJre(
-    value = {JRE.JAVA_8, JRE.JAVA_11, JRE.JAVA_16},
+    value = {JRE.JAVA_8, JRE.JAVA_11},
     disabledReason = "Java 17 deprecates security manager for removal")
 class SecurityManagerResourceTest {
 
   @Test
   void hostResourceTestEmpty() {
     Attributes attributes = HostResource.buildResource().getAttributes();
-    assertThat(attributes.asMap()).containsOnlyKeys(HostResource.HOST_NAME);
+    assertThat(attributes.asMap()).containsOnlyKeys(HostIncubatingAttributes.HOST_NAME);
   }
 
   @Test
