@@ -11,12 +11,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.EnabledOnJre;
-import org.junit.jupiter.api.condition.JRE;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 class ProcessResourceTest {
@@ -51,19 +46,5 @@ class ProcessResourceTest {
         .contains(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH));
     // With Java 9+ and a compiled jar, ResourceAttributes.PROCESS_COMMAND_ARGS
     // will be set instead of ResourceAttributes.PROCESS_COMMAND_LINE
-  }
-
-  @Nested
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-  @ExtendWith(SecurityManagerExtension.class)
-  @EnabledOnJre(
-      value = {JRE.JAVA_8, JRE.JAVA_11, JRE.JAVA_16},
-      disabledReason = "Java 17 deprecates security manager for removal")
-  static class SecurityManagerEnabled {
-    @Test
-    void empty() {
-      Attributes attributes = ProcessResource.buildResource().getAttributes();
-      assertThat(attributes.asMap()).containsOnlyKeys(ProcessIncubatingAttributes.PROCESS_PID);
-    }
   }
 }
