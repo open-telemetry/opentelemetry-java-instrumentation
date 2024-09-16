@@ -23,13 +23,13 @@ import java.util.regex.Pattern;
 public final class ProcessResource {
 
   // copied from ProcessIncubatingAttributes
-  static final AttributeKey<List<String>> PROCESS_COMMAND_ARGS =
+  private static final AttributeKey<List<String>> PROCESS_COMMAND_ARGS =
       AttributeKey.stringArrayKey("process.command_args");
-  static final AttributeKey<String> PROCESS_COMMAND_LINE =
+  private static final AttributeKey<String> PROCESS_COMMAND_LINE =
       AttributeKey.stringKey("process.command_line");
-  static final AttributeKey<String> PROCESS_EXECUTABLE_PATH =
+  private static final AttributeKey<String> PROCESS_EXECUTABLE_PATH =
       AttributeKey.stringKey("process.executable.path");
-  static final AttributeKey<Long> PROCESS_PID = AttributeKey.longKey("process.pid");
+  private static final AttributeKey<Long> PROCESS_PID = AttributeKey.longKey("process.pid");
 
   // Note: This pattern doesn't support file paths with spaces in them.
   // Important: This is statically used in buildResource, so must be declared/initialized first.

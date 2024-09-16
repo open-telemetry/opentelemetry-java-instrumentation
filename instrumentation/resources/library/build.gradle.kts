@@ -77,6 +77,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:resources:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-common")
+        implementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
       }
     }
   }
