@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetricsBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -21,7 +22,12 @@ public class Java17RuntimeMetricsInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+    // TODO: if config is null, declarative config is in use. Read StructuredConfigProperties
+    // instead
     ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    if (config == null) {
+      config = EmptyConfigProperties.INSTANCE;
+    }
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     RuntimeMetricsBuilder builder = null;

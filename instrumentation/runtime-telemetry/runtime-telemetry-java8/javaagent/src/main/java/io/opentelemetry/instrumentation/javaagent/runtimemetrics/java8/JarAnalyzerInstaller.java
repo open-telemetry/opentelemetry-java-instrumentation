@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
+import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -19,7 +20,13 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+    // TODO: if config is null, declarative config is in use. Read StructuredConfigProperties
+    // instead
     ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
+    if (config == null) {
+      config = EmptyConfigProperties.INSTANCE;
+    }
+
     boolean enabled =
         config.getBoolean("otel.instrumentation.runtime-telemetry.package-emitter.enabled", false);
     if (!enabled) {

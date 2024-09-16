@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.Experiment
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.ExperimentalMemoryPools;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -30,7 +31,12 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+    // TODO: if config is null, declarative config is in use. Read StructuredConfigProperties
+    // instead
     ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    if (config == null) {
+      config = EmptyConfigProperties.INSTANCE;
+    }
 
     boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
     if (!config.getBoolean("otel.instrumentation.runtime-telemetry.enabled", defaultEnabled)

@@ -121,11 +121,17 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    AgentInstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
-    copyNecessaryConfigToSystemProperties(sdkConfig);
+    ConfigProperties sdkConfigProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    if (sdkConfigProperties == null) {
+      // TODO: if config is null, declarative config is in use. Read StructuredConfigProperties
+      // instead.
+      sdkConfigProperties = EmptyConfigProperties.INSTANCE;
+    }
+    AgentInstrumentationConfig.internalInitializeConfig(
+        new ConfigPropertiesBridge(sdkConfigProperties));
+    copyNecessaryConfigToSystemProperties(sdkConfigProperties);
 
-    setBootstrapPackages(sdkConfig, extensionClassLoader);
+    setBootstrapPackages(sdkConfigProperties, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
         SdkAutoconfigureAccess.getResourceAttributes(autoConfiguredSdk));
 
@@ -155,7 +161,7 @@ public class AgentInstaller {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
 
-    agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
+    agentBuilder = configureIgnoredTypes(sdkConfigProperties, extensionClassLoader, agentBuilder);
 
     if (logger.isLoggable(FINE)) {
       agentBuilder =
@@ -175,7 +181,7 @@ public class AgentInstaller {
             new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
       }
       try {
-        agentBuilder = agentExtension.extend(agentBuilder, sdkConfig);
+        agentBuilder = agentExtension.extend(agentBuilder, sdkConfigProperties);
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
         logger.log(
@@ -196,7 +202,7 @@ public class AgentInstaller {
 
     addHttpServerResponseCustomizers(extensionClassLoader);
 
-    runAfterAgentListeners(agentListeners, autoConfiguredSdk);
+    runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfigProperties);
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
@@ -268,7 +274,9 @@ public class AgentInstaller {
   }
 
   private static void runAfterAgentListeners(
-      Iterable<AgentListener> agentListeners, AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+      Iterable<AgentListener> agentListeners,
+      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk,
+      ConfigProperties sdkConfigProperties) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
     // class initialization. Some AgentListener implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
@@ -286,8 +294,7 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        AutoConfigureUtil.getConfig(autoConfiguredSdk)
-            .getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        sdkConfigProperties.getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
     if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
