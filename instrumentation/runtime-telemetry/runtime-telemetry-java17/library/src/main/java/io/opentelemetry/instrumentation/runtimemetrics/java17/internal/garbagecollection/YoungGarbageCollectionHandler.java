@@ -42,7 +42,7 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
 
   @Override
   public void accept(RecordedEvent ev) {
-    histogram.record(DurationUtil.millisToSeconds(ev.getLong(Constants.DURATION)), attributes);
+    histogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
   }
 
   @Override

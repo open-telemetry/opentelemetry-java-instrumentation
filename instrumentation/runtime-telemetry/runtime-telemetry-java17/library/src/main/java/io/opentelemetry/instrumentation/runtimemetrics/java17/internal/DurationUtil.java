@@ -14,16 +14,11 @@ import java.util.concurrent.TimeUnit;
  */
 public final class DurationUtil {
   private static final double NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
-  private static final double MILLIS_PER_SECOND = TimeUnit.SECONDS.toMillis(1);
 
   /** Returns the duration as seconds, with fractional part included. */
   public static double toSeconds(Duration duration) {
     double epochSecs = (double) duration.getSeconds();
     return epochSecs + duration.getNano() / NANOS_PER_SECOND;
-  }
-
-  public static double millisToSeconds(long milliseconds) {
-    return milliseconds / MILLIS_PER_SECOND;
   }
 
   private DurationUtil() {}

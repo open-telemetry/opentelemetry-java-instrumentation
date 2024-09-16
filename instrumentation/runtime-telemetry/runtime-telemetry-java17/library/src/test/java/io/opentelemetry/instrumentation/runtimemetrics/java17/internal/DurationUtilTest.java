@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class DurationUtilTest {
@@ -18,11 +17,5 @@ class DurationUtilTest {
     Duration duration = Duration.ofSeconds(7, 144);
     double seconds = DurationUtil.toSeconds(duration);
     assertThat(seconds).isEqualTo(7.000000144);
-  }
-
-  @Test
-  void convertMillisSeconds() {
-    double seconds = DurationUtil.millisToSeconds(TimeUnit.SECONDS.toMillis(5));
-    assertThat(seconds).isEqualTo(5);
   }
 }

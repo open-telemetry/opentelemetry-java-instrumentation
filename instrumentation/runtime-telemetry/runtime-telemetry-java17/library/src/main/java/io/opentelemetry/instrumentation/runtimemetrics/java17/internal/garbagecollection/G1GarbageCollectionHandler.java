@@ -41,7 +41,7 @@ public final class G1GarbageCollectionHandler implements RecordedEventHandler {
 
   @Override
   public void accept(RecordedEvent ev) {
-    histogram.record(DurationUtil.millisToSeconds(ev.getLong(Constants.DURATION)), ATTR);
+    histogram.record(DurationUtil.toSeconds(ev.getDuration()), ATTR);
   }
 
   @Override
