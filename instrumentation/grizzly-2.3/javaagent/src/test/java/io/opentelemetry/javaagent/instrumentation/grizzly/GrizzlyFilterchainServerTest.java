@@ -107,12 +107,14 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
     transport.setProcessor(filterChain);
   }
 
-  @SuppressWarnings("deprecation") // until figured out what to use
+  @SuppressWarnings(
+      "deprecation") // Constructor has been deprecated in favor of builder pattern promised to be
+  // released in a next major release version, but it is not yet available.
   private static FilterChain setUpFilterChain() {
     return FilterChainBuilder.stateless()
         .add(createTransportFilter())
         .add(createIdleTimeoutFilter())
-        .add(new HttpServerFilter()) // TODO (heyams) replace with HttpCodecFilter after CI is green
+        .add(new HttpServerFilter())
         .add(new LastFilter())
         .build();
   }
