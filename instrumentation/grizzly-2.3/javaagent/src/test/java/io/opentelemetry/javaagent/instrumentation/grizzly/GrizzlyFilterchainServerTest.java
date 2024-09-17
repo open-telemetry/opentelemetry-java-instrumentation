@@ -82,8 +82,9 @@ class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<Transport> {
     options.setTestException(false);
 
     options.setTestCaptureHttpHeaders(false);
-    options.setVerifyServerSpanEndTime(
-        false); // server spans are ended inside of the controller spans
+
+    // server spans are ended inside of the controller spans
+    options.setVerifyServerSpanEndTime(false);
     options.setTestErrorBody(false);
   }
 
