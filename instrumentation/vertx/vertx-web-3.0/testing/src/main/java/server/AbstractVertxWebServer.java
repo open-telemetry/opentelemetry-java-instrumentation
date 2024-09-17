@@ -31,6 +31,8 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
   public Router buildRouter() {
     Router router = Router.router(vertx);
 
+    // verify that calling RoutingContext::next doesn't affect http.route
+    router.route(SUCCESS.getPath()).handler(RoutingContext::next);
     //noinspection Convert2Lambda
     router
         .route(SUCCESS.getPath())
