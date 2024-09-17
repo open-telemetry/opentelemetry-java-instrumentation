@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static java.util.Arrays.asList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,15 +49,6 @@ public final class SemconvStability {
 
   public static boolean emitStableDatabaseSemconv() {
     return emitStableDatabaseSemconv;
-  }
-
-  public static AttributeKey<String> getAttributeKey(String oldKey) {
-    if (emitStableDatabaseSemconv()) {
-      if ("db.cassandra.table".equals(oldKey)) {
-        return AttributeKey.stringKey("db.collection.name");
-      }
-    }
-    return AttributeKey.stringKey(oldKey);
   }
 
   private SemconvStability() {}

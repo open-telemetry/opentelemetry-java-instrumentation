@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -14,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 public final class CassandraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-3.0";
@@ -33,8 +33,9 @@ public final class CassandraSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setTableAttribute(
-                        SemconvStability.getAttributeKey(
-                            DbIncubatingAttributes.DB_CASSANDRA_TABLE.getKey()))
+                        SemconvStability.emitStableDatabaseSemconv()
+                            ? AttributeKey.stringKey("db.collection.name")
+                            : AttributeKey.stringKey("db.cassandra.table"))
                     .setStatementSanitizationEnabled(
                         AgentCommonConfig.get().isStatementSanitizationEnabled())
                     .build())
