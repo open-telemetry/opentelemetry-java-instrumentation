@@ -32,6 +32,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static play.mvc.Http.Context.Implicit.request
 
 class PlayServerTest extends HttpServerTest<Server> implements AgentTestTrait {
+
   @Override
   Server startServer(int port) {
     def router =
