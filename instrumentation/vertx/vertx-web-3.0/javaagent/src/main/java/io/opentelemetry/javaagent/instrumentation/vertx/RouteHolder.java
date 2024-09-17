@@ -20,7 +20,7 @@ public final class RouteHolder implements ImplicitContextKeyed {
     this.route = route;
   }
 
-  public static Context with(Context context, String route) {
+  public static Context init(Context context, String route) {
     if (context.get(KEY) != null) {
       return context;
     }
