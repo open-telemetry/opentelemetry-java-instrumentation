@@ -27,7 +27,7 @@ import play.libs.ws.WSClient;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSResponse;
 
-public class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
+class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

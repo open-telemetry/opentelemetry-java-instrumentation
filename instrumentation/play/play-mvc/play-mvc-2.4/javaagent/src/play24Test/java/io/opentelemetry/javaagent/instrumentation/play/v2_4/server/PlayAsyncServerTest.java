@@ -21,7 +21,7 @@ import play.server.Server;
 import scala.Tuple2;
 import scala.collection.JavaConverters;
 
-public class PlayAsyncServerTest extends PlayServerTest {
+class PlayAsyncServerTest extends PlayServerTest {
 
   @Override
   protected Server setupServer() {

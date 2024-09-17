@@ -33,7 +33,7 @@ import play.server.Server;
 import scala.Tuple2;
 import scala.collection.JavaConverters;
 
-public class PlayServerTest extends AbstractHttpServerTest<Server> {
+class PlayServerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
