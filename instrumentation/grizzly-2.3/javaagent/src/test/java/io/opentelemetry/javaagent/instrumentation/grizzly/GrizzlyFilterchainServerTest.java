@@ -5,15 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static java.nio.charset.Charset.defaultCharset;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.glassfish.grizzly.memory.Buffers.wrap;
@@ -32,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import org.glassfish.grizzly.Transport;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChain;
 import org.glassfish.grizzly.filterchain.FilterChainBuilder;
@@ -43,7 +38,6 @@ import org.glassfish.grizzly.http.HttpHeader;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 import org.glassfish.grizzly.http.HttpResponsePacket;
 import org.glassfish.grizzly.http.HttpServerFilter;
-import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.util.Parameters;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransportBuilder;
@@ -51,7 +45,7 @@ import org.glassfish.grizzly.utils.DelayedExecutor;
 import org.glassfish.grizzly.utils.IdleTimeoutFilter;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpServer> {
+class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<Transport> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -59,17 +53,17 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
   private TCPNIOTransport transport;
 
   @Override
-  protected HttpServer setupServer() throws Exception {
+  protected Transport setupServer() throws Exception {
     FilterChain filterChain = setUpFilterChain();
     setUpTransport(filterChain);
 
     transport.bind("127.0.0.1", port);
     transport.start();
-    return null;
+    return transport;
   }
 
   @Override
-  protected void stopServer(HttpServer httpServer) throws IOException {
+  protected void stopServer(Transport transport) throws IOException {
     transport.stop();
   }
 
@@ -164,47 +158,26 @@ public class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<HttpSer
       String uri = request.getRequestURI();
       Map<String, String> headers = new HashMap<>();
 
-      ServerEndpoint endpoint;
+      ServerEndpoint endpoint = ServerEndpoint.forPath(uri);
       Runnable closure = null;
-      switch (uri) {
-        case "/success":
-          endpoint = SUCCESS;
-          break;
-        case "/redirect":
-          endpoint = REDIRECT;
-          headers.put("location", REDIRECT.getBody());
-          break;
-        case "/error-status":
-          endpoint = ERROR;
-          break;
-        case "/exception":
-          throw new IllegalArgumentException(EXCEPTION.getBody());
-        case "/query":
-          endpoint = QUERY_PARAM;
-          break;
-        case "/path/123/param":
-          endpoint = PATH_PARAM;
-          break;
-        case "/authRequired":
-          endpoint = AUTH_REQUIRED;
-          break;
-        case "/child":
-          endpoint = INDEXED_CHILD;
-          Parameters parameters = new Parameters();
-          parameters.setQuery(request.getQueryStringDC());
-          parameters.setQueryStringEncoding(StandardCharsets.UTF_8);
-          parameters.handleQueryParameters();
-          closure =
-              new Runnable() {
-                @Override
-                public void run() {
-                  INDEXED_CHILD.collectSpanAttributes(parameters::getParameter);
-                }
-              };
-          break;
-        default:
-          endpoint = NOT_FOUND;
-          break;
+      if (endpoint == REDIRECT) {
+        headers.put("location", REDIRECT.getBody());
+      }
+      if (endpoint == EXCEPTION) {
+        throw new IllegalArgumentException(EXCEPTION.getBody());
+      }
+      if (endpoint == INDEXED_CHILD) {
+        Parameters parameters = new Parameters();
+        parameters.setQuery(request.getQueryStringDC());
+        parameters.setQueryStringEncoding(StandardCharsets.UTF_8);
+        parameters.handleQueryParameters();
+        closure =
+            new Runnable() {
+              @Override
+              public void run() {
+                INDEXED_CHILD.collectSpanAttributes(parameters::getParameter);
+              }
+            };
       }
 
       int status = endpoint.getStatus();
