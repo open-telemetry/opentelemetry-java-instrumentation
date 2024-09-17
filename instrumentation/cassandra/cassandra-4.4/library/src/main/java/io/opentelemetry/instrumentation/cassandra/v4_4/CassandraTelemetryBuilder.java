@@ -20,9 +20,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 public class CassandraTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.4";
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_CASSANDRA_TABLE =
-      AttributeKey.stringKey("db.cassandra.table");
 
   private final OpenTelemetry openTelemetry;
 
