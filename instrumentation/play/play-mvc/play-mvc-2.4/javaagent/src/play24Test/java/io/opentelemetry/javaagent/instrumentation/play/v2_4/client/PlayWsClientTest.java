@@ -78,6 +78,9 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
           return attributes;
         });
 
+    optionsBuilder.setTestConnectionFailure(false);
+    optionsBuilder.setSpanEndsAfterType(null);
+
     // Play HTTP client uses AsyncHttpClient internally which does not support HTTP 1.1 pipelining
     // nor waiting for connection pool slots to free up. Therefore making a single connection test
     // would require manually sequencing the connections, which is not meaningful for a high
