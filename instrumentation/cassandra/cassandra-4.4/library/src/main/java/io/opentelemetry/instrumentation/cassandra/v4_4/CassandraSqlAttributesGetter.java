@@ -34,7 +34,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
 
   @Nullable
   @Override
-  public String getNamespace(CassandraRequest request) {
+  public String getDbNamespace(CassandraRequest request) {
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 

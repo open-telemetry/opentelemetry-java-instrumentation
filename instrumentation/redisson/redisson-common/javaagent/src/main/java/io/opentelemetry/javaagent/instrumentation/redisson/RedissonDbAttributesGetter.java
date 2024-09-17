@@ -32,7 +32,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
 
   @Nullable
   @Override
-  public String getNamespace(RedissonRequest request) {
+  public String getDbNamespace(RedissonRequest request) {
     return null;
   }
 

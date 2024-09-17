@@ -33,7 +33,7 @@ final class ElasticsearchTransportAttributesGetter
 
   @Nullable
   @Override
-  public String getNamespace(ElasticTransportRequest request) {
+  public String getDbNamespace(ElasticTransportRequest request) {
     return null;
   }
 

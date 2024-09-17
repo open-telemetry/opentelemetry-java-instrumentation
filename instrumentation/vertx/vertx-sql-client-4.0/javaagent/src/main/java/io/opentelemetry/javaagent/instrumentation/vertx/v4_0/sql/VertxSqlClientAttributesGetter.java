@@ -33,7 +33,7 @@ public enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getNamespace(VertxSqlClientRequest request) {
+  public String getDbNamespace(VertxSqlClientRequest request) {
     return request.getDatabase();
   }
 

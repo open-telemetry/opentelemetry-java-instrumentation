@@ -33,7 +33,7 @@ final class OpenSearchRestAttributesGetter
 
   @Nullable
   @Override
-  public String getNamespace(OpenSearchRestRequest openSearchRestRequest) {
+  public String getDbNamespace(OpenSearchRestRequest openSearchRestRequest) {
     return null;
   }
 

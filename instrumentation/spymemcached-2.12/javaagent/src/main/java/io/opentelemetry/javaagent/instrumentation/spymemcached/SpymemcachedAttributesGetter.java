@@ -31,7 +31,7 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
 
   @Nullable
   @Override
-  public String getNamespace(SpymemcachedRequest spymemcachedRequest) {
+  public String getDbNamespace(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 

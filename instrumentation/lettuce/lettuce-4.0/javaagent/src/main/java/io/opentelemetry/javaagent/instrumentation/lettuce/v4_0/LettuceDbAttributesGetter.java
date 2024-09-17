@@ -33,7 +33,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Nullable
   @Override
-  public String getNamespace(RedisCommand<?, ?, ?> request) {
+  public String getDbNamespace(RedisCommand<?, ?, ?> request) {
     return null;
   }
 

@@ -57,7 +57,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   @Override
-  public String getNamespace(ElasticsearchRestRequest request) {
+  public String getDbNamespace(ElasticsearchRestRequest request) {
     return null;
   }
 

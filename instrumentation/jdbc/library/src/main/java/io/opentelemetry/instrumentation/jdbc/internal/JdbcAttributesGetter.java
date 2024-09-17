@@ -38,7 +38,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getNamespace(DbRequest request) {
+  public String getDbNamespace(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }

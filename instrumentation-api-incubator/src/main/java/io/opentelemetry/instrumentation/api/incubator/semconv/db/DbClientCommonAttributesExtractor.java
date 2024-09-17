@@ -38,7 +38,7 @@ abstract class DbClientCommonAttributesExtractor<
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(attributes, DB_NAMESPACE, getter.getNamespace(request));
+      internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_USER, getter.getUser(request));

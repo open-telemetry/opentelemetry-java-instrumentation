@@ -74,7 +74,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
 
   @Nullable
   @Override
-  public String getNamespace(ClickHouseDbRequest request) {
+  public String getDbNamespace(ClickHouseDbRequest request) {
     return getName(request);
   }
 

@@ -18,14 +18,14 @@ public interface DbClientCommonAttributesGetter<REQUEST> {
   String getUser(REQUEST request);
 
   /**
-   * @deprecated Use {@link #getNamespace(Object)} instead.
+   * @deprecated Use {@link #getDbNamespace(Object)} instead.
    */
   @Deprecated
   @Nullable
   String getName(REQUEST request);
 
   @Nullable
-  String getNamespace(REQUEST request);
+  String getDbNamespace(REQUEST request);
 
   @Deprecated
   @Nullable

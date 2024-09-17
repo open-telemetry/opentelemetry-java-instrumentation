@@ -43,7 +43,7 @@ class DbClientAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getNamespace(Map<String, String> map) {
+    public String getDbNamespace(Map<String, String> map) {
       return map.get("db.namespace");
     }
 

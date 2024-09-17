@@ -36,7 +36,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Nullable
   @Override
-  public String getNamespace(GeodeRequest request) {
+  public String getDbNamespace(GeodeRequest request) {
     return request.getRegion().getName();
   }
 

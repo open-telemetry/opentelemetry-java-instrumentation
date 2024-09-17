@@ -39,7 +39,7 @@ public enum VertxRedisClientAttributesGetter
 
   @Nullable
   @Override
-  public String getNamespace(VertxRedisClientRequest request) {
+  public String getDbNamespace(VertxRedisClientRequest request) {
     return null;
   }
 

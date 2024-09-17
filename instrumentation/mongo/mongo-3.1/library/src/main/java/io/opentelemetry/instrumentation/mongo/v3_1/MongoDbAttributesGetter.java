@@ -70,7 +70,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   @Override
-  public String getNamespace(CommandStartedEvent event) {
+  public String getDbNamespace(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 

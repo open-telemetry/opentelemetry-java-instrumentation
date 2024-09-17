@@ -15,7 +15,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    *
    * @see DbClientAttributesGetter#getDbOperationName(Object) used to extract {@code
    *     <db.operation.name>}.
-   * @see DbClientAttributesGetter#getNamespace(Object) used to extract {@code <db.namespace>}.
+   * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       DbClientAttributesGetter<REQUEST> getter) {
@@ -27,7 +27,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * conventions: {@code <db.operation> <db.name>.<identifier>}.
    *
    * @see SqlStatementInfo#getOperation() () used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#getNamespace(Object) used to extract {@code <db.namespace>}.
+   * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
    * @see SqlStatementInfo#getMainIdentifier() used to extract {@code <db.table>} or stored
    *     procedure name.
    */
@@ -73,7 +73,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String dbName = getter.getNamespace(request);
+      String dbName = getter.getDbNamespace(request);
       String operation = getter.getDbOperationName(request);
       return computeSpanName(dbName, operation, null);
     }
@@ -93,7 +93,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String dbName = getter.getNamespace(request);
+      String dbName = getter.getDbNamespace(request);
       SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawQueryText(request));
       return computeSpanName(
           dbName, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
