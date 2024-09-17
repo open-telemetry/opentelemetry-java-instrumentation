@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues.GEODE;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest> {
@@ -16,9 +17,15 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   private static final SqlStatementSanitizer sanitizer =
       SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
+  @Deprecated
   @Override
   public String getSystem(GeodeRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.GEODE;
+    return GEODE;
+  }
+
+  @Override
+  public String getDbSystem(GeodeRequest request) {
+    return GEODE;
   }
 
   @Deprecated

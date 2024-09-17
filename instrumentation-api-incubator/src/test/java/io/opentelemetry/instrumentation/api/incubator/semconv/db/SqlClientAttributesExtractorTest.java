@@ -37,8 +37,15 @@ class SqlClientAttributesExtractorTest {
       return map.get("db.query.text");
     }
 
+    @Deprecated
     @Override
     public String getSystem(Map<String, String> map) {
+      return map.get("db.system");
+    }
+
+    @Nullable
+    @Override
+    public String getDbSystem(Map<String, String> map) {
       return map.get("db.system");
     }
 

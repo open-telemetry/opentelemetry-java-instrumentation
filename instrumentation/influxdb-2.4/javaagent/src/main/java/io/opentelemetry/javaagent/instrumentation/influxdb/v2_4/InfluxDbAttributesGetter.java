@@ -42,8 +42,14 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     return request.getSqlStatementInfo().getOperation();
   }
 
+  @Deprecated
   @Override
   public String getSystem(InfluxDbRequest request) {
+    return "influxdb";
+  }
+
+  @Override
+  public String getDbSystem(InfluxDbRequest influxDbRequest) {
     return "influxdb";
   }
 

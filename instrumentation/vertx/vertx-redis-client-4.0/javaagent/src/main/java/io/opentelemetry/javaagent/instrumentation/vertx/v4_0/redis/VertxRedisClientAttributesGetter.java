@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues.REDIS;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 public enum VertxRedisClientAttributesGetter
@@ -18,9 +19,15 @@ public enum VertxRedisClientAttributesGetter
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
+  @Deprecated
   @Override
   public String getSystem(VertxRedisClientRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return REDIS;
+  }
+
+  @Override
+  public String getDbSystem(VertxRedisClientRequest vertxRedisClientRequest) {
+    return REDIS;
   }
 
   @Deprecated

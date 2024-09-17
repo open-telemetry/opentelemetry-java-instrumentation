@@ -5,16 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest> {
 
+  @Deprecated
   @Override
   public String getSystem(ElasticTransportRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
+    return ELASTICSEARCH;
+  }
+
+  @Override
+  public String getDbSystem(ElasticTransportRequest elasticTransportRequest) {
+    return ELASTICSEARCH;
   }
 
   @Deprecated

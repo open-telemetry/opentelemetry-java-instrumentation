@@ -15,9 +15,16 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest> {
 
+  @Deprecated
   @Nullable
   @Override
   public String getSystem(DbRequest request) {
+    return request.getDbInfo().getSystem();
+  }
+
+  @Nullable
+  @Override
+  public String getDbSystem(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 

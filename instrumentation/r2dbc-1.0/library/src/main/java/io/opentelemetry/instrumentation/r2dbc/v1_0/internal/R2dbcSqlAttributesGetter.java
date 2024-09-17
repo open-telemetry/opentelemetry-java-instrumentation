@@ -15,8 +15,15 @@ import javax.annotation.Nullable;
 public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution> {
   INSTANCE;
 
+  @Deprecated
   @Override
   public String getSystem(DbExecution request) {
+    return request.getSystem();
+  }
+
+  @Nullable
+  @Override
+  public String getDbSystem(DbExecution request) {
     return request.getSystem();
   }
 

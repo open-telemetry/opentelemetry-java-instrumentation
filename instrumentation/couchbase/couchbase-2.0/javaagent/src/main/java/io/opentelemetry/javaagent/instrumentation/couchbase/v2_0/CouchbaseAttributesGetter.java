@@ -11,8 +11,14 @@ import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter implements DbClientAttributesGetter<CouchbaseRequestInfo> {
 
+  @Deprecated
   @Override
   public String getSystem(CouchbaseRequestInfo couchbaseRequest) {
+    return DbIncubatingAttributes.DbSystemValues.COUCHBASE;
+  }
+
+  @Override
+  public String getDbSystem(CouchbaseRequestInfo couchbaseRequest) {
     return DbIncubatingAttributes.DbSystemValues.COUCHBASE;
   }
 

@@ -5,15 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues.REDIS;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest> {
 
+  @Deprecated
   @Override
   public String getSystem(RedissonRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return REDIS;
+  }
+
+  @Override
+  public String getDbSystem(RedissonRequest redissonRequest) {
+    return REDIS;
   }
 
   @Deprecated

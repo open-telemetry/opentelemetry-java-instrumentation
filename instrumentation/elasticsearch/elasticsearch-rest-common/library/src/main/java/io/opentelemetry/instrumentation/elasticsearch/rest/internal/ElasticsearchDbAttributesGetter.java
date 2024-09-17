@@ -36,8 +36,14 @@ final class ElasticsearchDbAttributesGetter
     this.captureSearchQuery = captureSearchQuery;
   }
 
+  @Deprecated
   @Override
   public String getSystem(ElasticsearchRestRequest request) {
+    return ELASTICSEARCH;
+  }
+
+  @Override
+  public String getDbSystem(ElasticsearchRestRequest elasticsearchRestRequest) {
     return ELASTICSEARCH;
   }
 

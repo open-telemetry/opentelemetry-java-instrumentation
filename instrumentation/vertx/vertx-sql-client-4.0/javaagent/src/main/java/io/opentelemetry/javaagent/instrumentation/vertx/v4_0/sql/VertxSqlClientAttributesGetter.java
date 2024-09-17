@@ -12,8 +12,15 @@ public enum VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest> {
   INSTANCE;
 
+  @Deprecated
   @Override
   public String getSystem(VertxSqlClientRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getDbSystem(VertxSqlClientRequest request) {
     return null;
   }
 

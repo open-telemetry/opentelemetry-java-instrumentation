@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues.REDIS;
+
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -20,9 +21,15 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
+  @Deprecated
   @Override
   public String getSystem(RedisCommand<?, ?, ?> request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return REDIS;
+  }
+
+  @Override
+  public String getDbSystem(RedisCommand<?, ?, ?> redisCommand) {
+    return REDIS;
   }
 
   @Deprecated

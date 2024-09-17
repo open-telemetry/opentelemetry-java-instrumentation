@@ -48,9 +48,14 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return request.getSqlStatementInfo().getOperation();
   }
 
-  @Nullable
+  @Deprecated
   @Override
   public String getSystem(ClickHouseDbRequest request) {
+    return DbIncubatingAttributes.DbSystemValues.CLICKHOUSE;
+  }
+
+  @Override
+  public String getDbSystem(ClickHouseDbRequest request) {
     return DbIncubatingAttributes.DbSystemValues.CLICKHOUSE;
   }
 

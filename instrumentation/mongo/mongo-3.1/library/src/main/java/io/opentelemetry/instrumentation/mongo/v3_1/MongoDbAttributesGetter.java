@@ -49,8 +49,14 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
 
+  @Deprecated
   @Override
   public String getSystem(CommandStartedEvent event) {
+    return MONGODB;
+  }
+
+  @Override
+  public String getDbSystem(CommandStartedEvent commandStartedEvent) {
     return MONGODB;
   }
 

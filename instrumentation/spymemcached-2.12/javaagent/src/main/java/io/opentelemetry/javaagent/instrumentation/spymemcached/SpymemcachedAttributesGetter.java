@@ -10,8 +10,14 @@ import javax.annotation.Nullable;
 
 public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<SpymemcachedRequest> {
 
+  @Deprecated
   @Override
   public String getSystem(SpymemcachedRequest spymemcachedRequest) {
+    return "memcached";
+  }
+
+  @Override
+  public String getDbSystem(SpymemcachedRequest spymemcachedRequest) {
     return "memcached";
   }
 
