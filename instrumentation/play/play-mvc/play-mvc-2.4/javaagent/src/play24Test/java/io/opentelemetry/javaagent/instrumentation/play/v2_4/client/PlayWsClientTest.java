@@ -87,7 +87,8 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
             null); // this can be omitted as it's the default. it's here for the comment above.
   }
 
-  private static CompletionStage<WSResponse> internalSendRequest(WSRequest wsRequest, String method) {
+  private static CompletionStage<WSResponse> internalSendRequest(
+      WSRequest wsRequest, String method) {
     CompletableFuture<WSResponse> result = new CompletableFuture<>();
     F.Promise<WSResponse> promise = wsRequest.execute(method);
     promise.onRedeem(result::complete);
