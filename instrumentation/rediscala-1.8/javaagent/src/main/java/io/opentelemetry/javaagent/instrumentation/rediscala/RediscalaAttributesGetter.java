@@ -65,7 +65,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
   }
 
   @Override
-  public String getOperationName(RedisCommand<?, ?> redisCommand) {
+  public String getDbOperationName(RedisCommand<?, ?> redisCommand) {
     return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
   }
 }

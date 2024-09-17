@@ -13,7 +13,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions: {@code <db.operation> <db.name>}.
    *
-   * @see DbClientAttributesGetter#getOperationName(Object) used to extract {@code
+   * @see DbClientAttributesGetter#getDbOperationName(Object) used to extract {@code
    *     <db.operation.name>}.
    * @see DbClientAttributesGetter#getNamespace(Object) used to extract {@code <db.namespace>}.
    */
@@ -74,7 +74,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     @Override
     public String extract(REQUEST request) {
       String dbName = getter.getNamespace(request);
-      String operation = getter.getOperationName(request);
+      String operation = getter.getDbOperationName(request);
       return computeSpanName(dbName, operation, null);
     }
   }

@@ -127,7 +127,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   @Override
-  public String getOperationName(ElasticsearchRestRequest request) {
+  public String getDbOperationName(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
     return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
   }

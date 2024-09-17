@@ -114,7 +114,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   @Override
-  public String getOperationName(CommandStartedEvent event) {
+  public String getDbOperationName(CommandStartedEvent event) {
     return event.getCommandName();
   }
 

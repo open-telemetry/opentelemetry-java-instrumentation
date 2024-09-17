@@ -62,7 +62,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
 
   @Nullable
   @Override
-  public String getOperationName(RedissonRequest request) {
+  public String getDbOperationName(RedissonRequest request) {
     return request.getOperation();
   }
 }

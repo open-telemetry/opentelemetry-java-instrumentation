@@ -65,7 +65,7 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
 
   @Nullable
   @Override
-  public String getOperationName(CouchbaseRequestInfo couchbaseRequest) {
+  public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
   }
 }

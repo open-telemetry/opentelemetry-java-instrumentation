@@ -21,7 +21,7 @@ public class ElasticsearchSpanNameExtractor implements SpanNameExtractor<Elastic
 
   @Override
   public String extract(ElasticsearchRestRequest elasticsearchRestRequest) {
-    String name = dbAttributesGetter.getOperationName(elasticsearchRestRequest);
+    String name = dbAttributesGetter.getDbOperationName(elasticsearchRestRequest);
     return name != null ? name : elasticsearchRestRequest.getMethod();
   }
 }

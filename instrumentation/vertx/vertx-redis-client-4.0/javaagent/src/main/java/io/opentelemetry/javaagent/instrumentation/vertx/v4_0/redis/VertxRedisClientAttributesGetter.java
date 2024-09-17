@@ -71,7 +71,7 @@ public enum VertxRedisClientAttributesGetter
 
   @Nullable
   @Override
-  public String getOperationName(VertxRedisClientRequest request) {
+  public String getDbOperationName(VertxRedisClientRequest request) {
     return request.getCommand();
   }
 }

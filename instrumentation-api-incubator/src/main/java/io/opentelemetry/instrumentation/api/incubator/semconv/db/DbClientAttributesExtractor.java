@@ -50,7 +50,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
-      internalSet(attributes, DB_OPERATION_NAME, getter.getOperationName(request));
+      internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_STATEMENT, getter.getStatement(request));

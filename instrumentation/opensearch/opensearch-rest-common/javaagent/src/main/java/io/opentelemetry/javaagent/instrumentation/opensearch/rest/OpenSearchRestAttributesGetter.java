@@ -64,7 +64,7 @@ final class OpenSearchRestAttributesGetter
 
   @Nullable
   @Override
-  public String getOperationName(OpenSearchRestRequest request) {
+  public String getDbOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
   }
 }

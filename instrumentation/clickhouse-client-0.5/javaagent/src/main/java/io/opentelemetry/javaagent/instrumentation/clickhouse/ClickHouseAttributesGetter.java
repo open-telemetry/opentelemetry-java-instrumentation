@@ -41,7 +41,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
 
   @Nullable
   @Override
-  public String getOperationName(ClickHouseDbRequest request) {
+  public String getDbOperationName(ClickHouseDbRequest request) {
     if (request.getSqlStatementInfo() == null) {
       return null;
     }

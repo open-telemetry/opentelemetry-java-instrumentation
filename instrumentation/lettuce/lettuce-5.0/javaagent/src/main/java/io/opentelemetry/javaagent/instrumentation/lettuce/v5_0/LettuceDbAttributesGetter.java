@@ -82,7 +82,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Nullable
   @Override
-  public String getOperationName(RedisCommand<?, ?, ?> request) {
+  public String getDbOperationName(RedisCommand<?, ?, ?> request) {
     return request.getType().name();
   }
 }

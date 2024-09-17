@@ -73,7 +73,7 @@ class DbClientAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getOperationName(Map<String, String> map) {
+    public String getDbOperationName(Map<String, String> map) {
       return map.get("db.operation.name");
     }
   }

@@ -64,7 +64,7 @@ final class ElasticsearchTransportAttributesGetter
   }
 
   @Override
-  public String getOperationName(ElasticTransportRequest request) {
+  public String getDbOperationName(ElasticTransportRequest request) {
     return request.getAction().getClass().getSimpleName();
   }
 }

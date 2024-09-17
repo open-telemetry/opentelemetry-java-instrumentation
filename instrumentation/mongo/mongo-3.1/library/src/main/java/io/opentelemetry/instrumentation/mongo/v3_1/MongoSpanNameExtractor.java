@@ -22,7 +22,7 @@ class MongoSpanNameExtractor implements SpanNameExtractor<CommandStartedEvent> {
 
   @Override
   public String extract(CommandStartedEvent event) {
-    String operation = dbAttributesGetter.getOperationName(event);
+    String operation = dbAttributesGetter.getDbOperationName(event);
     String dbName = dbAttributesGetter.getNamespace(event);
     if (operation == null) {
       return dbName == null ? DEFAULT_SPAN_NAME : dbName;

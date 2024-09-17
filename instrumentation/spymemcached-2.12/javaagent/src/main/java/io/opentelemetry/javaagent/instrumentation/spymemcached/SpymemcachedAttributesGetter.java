@@ -64,7 +64,7 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
 
   @Nullable
   @Override
-  public String getOperationName(SpymemcachedRequest spymemcachedRequest) {
+  public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.dbOperation();
   }
 }

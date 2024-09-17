@@ -71,7 +71,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Nullable
   @Override
-  public String getOperationName(GeodeRequest request) {
+  public String getDbOperationName(GeodeRequest request) {
     return request.getOperation();
   }
 }

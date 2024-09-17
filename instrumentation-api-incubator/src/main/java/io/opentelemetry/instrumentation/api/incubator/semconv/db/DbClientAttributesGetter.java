@@ -31,12 +31,12 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
   String getDbQueryText(REQUEST request);
 
   /**
-   * @deprecated Use {@link #getOperationName(REQUEST)} instead.
+   * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
    */
   @Deprecated
   @Nullable
   String getOperation(REQUEST request);
 
   @Nullable
-  String getOperationName(REQUEST request);
+  String getDbOperationName(REQUEST request);
 }

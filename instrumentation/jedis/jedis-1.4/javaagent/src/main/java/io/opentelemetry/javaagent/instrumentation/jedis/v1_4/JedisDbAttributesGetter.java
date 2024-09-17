@@ -65,7 +65,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
-  public String getOperationName(JedisRequest request) {
+  public String getDbOperationName(JedisRequest request) {
     return request.getCommand().name();
   }
 }

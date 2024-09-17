@@ -35,7 +35,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
 
   @Nullable
   @Override
-  public String getOperationName(InfluxDbRequest request) {
+  public String getDbOperationName(InfluxDbRequest request) {
     if (request.getOperation() != null) {
       return request.getOperation();
     }
