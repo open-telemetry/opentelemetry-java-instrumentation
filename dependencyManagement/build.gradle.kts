@@ -115,7 +115,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.7"
+  "org.snakeyaml:snakeyaml-engine:2.8"
 )
 
 javaPlatform {
