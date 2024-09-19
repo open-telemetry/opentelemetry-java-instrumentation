@@ -62,7 +62,15 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
     internalSendRequest(wsRequest, method)
         .whenComplete(
             (wsResponse, throwable) -> {
-              httpClientResult.complete(wsResponse::getStatus, throwable);
+              if (wsResponse != null) {
+                httpClientResult.complete(wsResponse::getStatus, throwable);
+              } else {
+                httpClientResult.complete(
+                    () -> {
+                      throw new IllegalArgumentException("wsResponse is null!", throwable);
+                    },
+                    throwable);
+              }
             });
   }
 
@@ -78,8 +86,7 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
           return attributes;
         });
 
-    optionsBuilder.setTestConnectionFailure(false);
-    optionsBuilder.setSpanEndsAfterType(null);
+    optionsBuilder.spanEndsAfterBody();
 
     // Play HTTP client uses AsyncHttpClient internally which does not support HTTP 1.1 pipelining
     // nor waiting for connection pool slots to free up. Therefore making a single connection test
