@@ -50,12 +50,10 @@ class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<Transport> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private TCPNIOTransport transport;
-
   @Override
   protected Transport setupServer() throws Exception {
     FilterChain filterChain = setUpFilterChain();
-    setUpTransport(filterChain);
+    TCPNIOTransport transport = setUpTransport(filterChain);
 
     transport.bind("127.0.0.1", port);
     transport.start();
@@ -88,7 +86,7 @@ class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<Transport> {
     options.setTestErrorBody(false);
   }
 
-  private void setUpTransport(FilterChain filterChain) {
+  private static TCPNIOTransport setUpTransport(FilterChain filterChain) {
     TCPNIOTransportBuilder transportBuilder =
         TCPNIOTransportBuilder.newInstance().setOptimizedForMultiplexing(true);
 
@@ -98,8 +96,10 @@ class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<Transport> {
     transportBuilder.setServerConnectionBackLog(50);
     transportBuilder.setServerSocketSoTimeout(80000);
 
-    transport = transportBuilder.build();
+    TCPNIOTransport transport = transportBuilder.build();
     transport.setProcessor(filterChain);
+
+    return transport;
   }
 
   @SuppressWarnings(
