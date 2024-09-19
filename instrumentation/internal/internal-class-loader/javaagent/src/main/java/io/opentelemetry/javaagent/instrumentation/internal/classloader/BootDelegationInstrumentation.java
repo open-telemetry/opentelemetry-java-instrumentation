@@ -49,8 +49,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
     // bootstrap loader (or happen to _be_ the bootstrap loader)
     // The AgentClassLoader and InstrumentationModuleClassloaders are required to be excluded
     // for the instrumentation to work properly. loadClass on those is invoked during Advice
-    // bootstrapping
-    // which therefore would cause an infinite recursion
+    // bootstrapping which therefore would cause an infinite recursion
     return not(namedOneOf(
             "java.lang.ClassLoader",
             "com.ibm.oti.vm.BootstrapClassLoader",
