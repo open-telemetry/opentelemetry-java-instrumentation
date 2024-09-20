@@ -93,7 +93,10 @@ class ApacheHttpAsyncClientTest {
       super.configure(optionsBuilder);
       optionsBuilder.spanEndsAfterBody();
       optionsBuilder.setHttpProtocolVersion(
-          uri -> uri.toString().startsWith("https") ? "2" : "1.1");
+          uri ->
+              Boolean.getBoolean("testLatestDeps") && uri.toString().startsWith("https")
+                  ? "2"
+                  : "1.1");
     }
 
     @Override
