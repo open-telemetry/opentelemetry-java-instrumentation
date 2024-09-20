@@ -42,7 +42,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
@@ -121,17 +120,11 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfigProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    if (sdkConfigProperties == null) {
-      // TODO: if config is null, declarative config is in use. Read StructuredConfigProperties
-      // instead.
-      sdkConfigProperties = EmptyConfigProperties.INSTANCE;
-    }
-    AgentInstrumentationConfig.internalInitializeConfig(
-        new ConfigPropertiesBridge(sdkConfigProperties));
-    copyNecessaryConfigToSystemProperties(sdkConfigProperties);
+    ConfigProperties sdkConfig = AgentListener.resolveConfigProperties(autoConfiguredSdk);
+    AgentInstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
+    copyNecessaryConfigToSystemProperties(sdkConfig);
 
-    setBootstrapPackages(sdkConfigProperties, extensionClassLoader);
+    setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
         SdkAutoconfigureAccess.getResourceAttributes(autoConfiguredSdk));
 
@@ -161,7 +154,7 @@ public class AgentInstaller {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
 
-    agentBuilder = configureIgnoredTypes(sdkConfigProperties, extensionClassLoader, agentBuilder);
+    agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
 
     if (logger.isLoggable(FINE)) {
       agentBuilder =
@@ -181,7 +174,7 @@ public class AgentInstaller {
             new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
       }
       try {
-        agentBuilder = agentExtension.extend(agentBuilder, sdkConfigProperties);
+        agentBuilder = agentExtension.extend(agentBuilder, sdkConfig);
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
         logger.log(
@@ -202,7 +195,7 @@ public class AgentInstaller {
 
     addHttpServerResponseCustomizers(extensionClassLoader);
 
-    runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfigProperties);
+    runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {

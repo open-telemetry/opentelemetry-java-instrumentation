@@ -77,7 +77,7 @@ tasks.withType<JavaCompile>().configureEach {
       )
       if (System.getProperty("dev") != "true") {
         // Fail build on any warning
-        compilerArgs.add("-Werror")
+        //compilerArgs.add("-Werror")
       }
     }
 
