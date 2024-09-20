@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap.internal;
+package io.opentelemetry.javaagent.extension;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
@@ -44,20 +44,20 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
-public final class StructuredConfigPropertiesBridge implements ConfigProperties {
+final class StructuredConfigPropertiesBridge implements ConfigProperties {
 
   private static final StructuredConfigProperties EMPTY = new EmptyStructuredConfigProperties();
 
   private final StructuredConfigProperties javaInstrumentation;
 
-  public StructuredConfigPropertiesBridge(
-      StructuredConfigProperties rootStructuredConfigProperties) {
+  StructuredConfigPropertiesBridge(StructuredConfigProperties rootStructuredConfigProperties) {
     StructuredConfigProperties instrumentation =
         rootStructuredConfigProperties.getStructured("instrumentation");
     if (instrumentation != null) {
-      javaInstrumentation = instrumentation.getStructured("java");
+      StructuredConfigProperties javaInstrumentation = instrumentation.getStructured("java");
+      this.javaInstrumentation = javaInstrumentation != null ? javaInstrumentation : EMPTY;
     } else {
-      javaInstrumentation = EMPTY;
+      this.javaInstrumentation = EMPTY;
     }
   }
 

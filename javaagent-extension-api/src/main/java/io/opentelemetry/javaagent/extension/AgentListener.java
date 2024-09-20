@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension;
 
-import io.opentelemetry.javaagent.bootstrap.internal.StructuredConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
