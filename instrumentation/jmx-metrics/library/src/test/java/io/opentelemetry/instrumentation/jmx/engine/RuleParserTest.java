@@ -30,7 +30,7 @@ class RuleParserTest {
   @BeforeAll
   static void setup() {
     parser = RuleParser.get();
-    assertThat(parser == null).isFalse();
+    assertThat(parser).isNotNull();
   }
 
   /*
@@ -68,9 +68,7 @@ class RuleParserTest {
 
   @Test
   void testConf2() {
-    InputStream is = new ByteArrayInputStream(CONF2.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF2);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(2);
@@ -103,9 +101,7 @@ class RuleParserTest {
 
   @Test
   void testConf3() {
-    InputStream is = new ByteArrayInputStream(CONF3.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF3);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -149,9 +145,7 @@ class RuleParserTest {
 
   @Test
   void testConf4() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF4.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF4);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -193,9 +187,7 @@ class RuleParserTest {
 
   @Test
   void testConf5() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF5.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF5);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -227,9 +219,7 @@ class RuleParserTest {
 
   @Test
   void testConf6() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF6.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF6);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -261,9 +251,7 @@ class RuleParserTest {
 
   @Test
   void testConf7() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF7.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF7);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -290,9 +278,7 @@ class RuleParserTest {
 
   @Test
   void testConf8() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF8.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF8);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -314,9 +300,15 @@ class RuleParserTest {
 
   @Test
   void testEmptyConf() {
-    InputStream is = new ByteArrayInputStream(EMPTY_CONF.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
+    JmxConfig config = parseConf(EMPTY_CONF);
     assertThat(config.getRules()).isEmpty();
+  }
+
+  private static JmxConfig parseConf(String s) {
+    InputStream is = new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
+    JmxConfig jmxConfig = parser.loadConfig(is);
+    assertThat(jmxConfig).isNotNull();
+    return jmxConfig;
   }
 
   /*
@@ -324,13 +316,10 @@ class RuleParserTest {
    */
 
   private static void runNegativeTest(String yaml) {
-    InputStream is = new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8));
-
     Assertions.assertThrows(
         Exception.class,
         () -> {
-          JmxConfig config = parser.loadConfig(is);
-          assertThat(config).isNotNull();
+          JmxConfig config = parseConf(yaml);
 
           List<JmxRule> defs = config.getRules();
           assertThat(defs).hasSize(1);
