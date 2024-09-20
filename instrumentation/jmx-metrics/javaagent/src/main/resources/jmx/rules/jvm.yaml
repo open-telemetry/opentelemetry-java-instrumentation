@@ -1,0 +1,77 @@
+---
+# based on: https://github.com/open-telemetry/opentelemetry-java-contrib/blob/main/jmx-metrics/src/main/resources/target-systems/jvm.groovy
+rules:
+  - bean: java.lang:type=ClassLoading
+    prefix: jvm.classes.loaded.
+    mapping:
+      LoadedClassCount:
+        metric: count
+        type: updowncounter
+        unit: "{class}"
+        desc: number of loaded classes
+
+  - bean: java.lang:type=GarbageCollector,*
+    prefix: jvm.gc.collections.
+    metricAttribute:
+      name: param(name)
+    mapping:
+      CollectionCount:
+        metric: count
+        type: updowncounter
+        unit: "{collection}"
+        desc: total number of collections that have occurred
+      CollectionTime:
+        metric: elapsed
+        type: updowncounter
+        unit: ms
+        desc: the approximate accumulated collection elapsed time in milliseconds
+
+  - bean: java.lang:type=Memory
+    prefix: jvm.memory.
+    mapping:
+      HeapMemoryUsage.used:
+        metric: heap.used
+        type: updowncounter
+        unit: By
+        desc: current heap usage
+      HeapMemoryUsage.max:
+        metric: heap.max
+        type: gauge
+        unit: By
+        desc: max allowed heap
+      NonHeapMemoryUsage.used:
+        metric: nonHeap
+        type: updowncounter
+        unit: By
+        desc: current non-heap usage
+      NonHeapMemoryUsage.max:
+        metric: nonHeap.max
+        type: gauge
+        unit: By
+        desc: max allowed non-heap
+
+  - bean: java.lang:type=MemoryPool,*
+    prefix: jvm.memory.
+    metricAttribute:
+      name: param(name)
+    mapping:
+      Usage.used:
+        metric: pool.used
+        type: updowncounter
+        unit: By
+        desc: current memory pool usage
+      Usage.max:
+        metric: pool.max
+        type: gauge
+        unit: By
+        desc: max allowed memory pool 
+
+  - bean: java.lang:type=Threading
+    prefix: jvm.threads.
+    mapping:
+      ThreadCount:
+        metric: count
+        type: updowncounter
+        unit: "{thread}"
+        desc: number of threads
+      
