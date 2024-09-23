@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.awssdk.v2_2.SnsAdviceBridge;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SnsAdviceBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
