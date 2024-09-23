@@ -3,94 +3,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchNodeClientTest;
-import java.io.File;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.UUID;
-import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
+import java.util.List;
+import java.util.stream.Stream;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.env.Environment;
-import org.elasticsearch.node.InternalSettingsPreparer;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.transport.Netty3Plugin;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest {
-  private static final Logger logger = LoggerFactory.getLogger(Elasticsearch53NodeClientTest.class);
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasticsearchClientTest {
 
-  private static final String clusterName = UUID.randomUUID().toString();
-  private static Node testNode;
-  private static Client client;
-
-  @BeforeAll
-  static void setUp(@TempDir File esWorkingDir) {
-    logger.info("ES work dir: {}", esWorkingDir);
-
-    Settings settings =
-        Settings.builder()
-            .put("path.home", esWorkingDir.getPath())
-            // Since we use listeners to close spans this should make our span closing deterministic
-            // which is good for tests
-            .put("thread_pool.listener.size", 1)
-            .put("transport.type", "netty3")
-            .put("http.type", "netty3")
-            .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
-            .put("discovery.type", "single-node")
-            .build();
-    testNode =
-        new Node(
-            new Environment(InternalSettingsPreparer.prepareSettings(settings)),
-            Collections.singletonList(Netty3Plugin.class)) {};
-    startNode(testNode);
-
-    client = testNode.client();
-    testing.runWithSpan(
-        "setup",
-        () -> {
-          // this may potentially create multiple requests and therefore multiple spans, so we wrap
-          // this call into a top level trace to get exactly one trace in the result.
-          client
-              .admin()
-              .cluster()
-              .prepareHealth()
-              .setWaitForYellowStatus()
-              .execute()
-              .actionGet(TIMEOUT);
-          // disable periodic refresh in InternalClusterInfoService as it creates spans that tests
-          // don't expect
-          client
-              .admin()
-              .cluster()
-              .updateSettings(
-                  new ClusterUpdateSettingsRequest()
-                      .transientSettings(
-                          Collections.singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", Boolean.FALSE)));
-        });
-    testing.waitForTraces(1);
-    testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() throws Exception {
-    testNode.close();
-  }
-
-  @Override
-  public Client client() {
-    return client;
-  }
-
-  /*
   private Stream<Arguments> healthArguments() {
     return Stream.of(
         Arguments.of(
@@ -140,14 +86,19 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
             named("async", (Runnable) () -> prepareGetAsync("invalid-index", "test-type", "1"))));
   }
 
+  protected String getIndexNotFoundMessage() {
+    return "no such index";
+  }
+
   @ParameterizedTest
   @MethodSource("errorArguments")
   void elasticsearchError(Runnable action) {
+    IndexNotFoundException expectedException =
+        new IndexNotFoundException(getIndexNotFoundMessage());
     assertThatThrownBy(() -> testing.runWithSpan("parent", action::run))
         .isInstanceOf(IndexNotFoundException.class)
-        .hasMessage("no such index");
+        .hasMessage(expectedException.getMessage());
 
-    IndexNotFoundException expectedException = new IndexNotFoundException("no such index");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -183,10 +134,16 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
     String indexType = "test-type";
     String id = "1";
 
+    Client client = client();
     CreateIndexResponse indexResult = client.admin().indices().prepareCreate(indexName).get();
     assertThat(indexResult.isAcknowledged()).isTrue();
 
-    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT);
+    client
+        .admin()
+        .cluster()
+        .prepareHealth()
+        .setWaitForYellowStatus()
+        .get(TimeValue.timeValueMillis(TIMEOUT));
     GetResponse emptyResult = client.prepareGet(indexName, indexType, id).get();
     assertThat(emptyResult.isExists()).isFalse();
     assertThat(emptyResult.getId()).isEqualTo(id);
@@ -259,27 +216,28 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
-                            equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
-                            equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
-                            equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.write.type"),
-                                indexType),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(AttributeKey.longKey("elasticsearch.response.status"), 201),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.total"), 2),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.successful"),
-                                1),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.failed"),
-                                0))),
+                            addIndexActionAttributes(
+                                equalTo(
+                                    DbIncubatingAttributes.DB_SYSTEM,
+                                    DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
+                                equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
+                                equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
+                                equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
+                                equalTo(
+                                    AttributeKey.stringKey("elasticsearch.request.write.type"),
+                                    indexType),
+                                equalTo(AttributeKey.longKey("elasticsearch.response.status"), 201),
+                                equalTo(
+                                    AttributeKey.longKey("elasticsearch.shard.replication.total"),
+                                    2),
+                                equalTo(
+                                    AttributeKey.longKey(
+                                        "elasticsearch.shard.replication.successful"),
+                                    1),
+                                equalTo(
+                                    AttributeKey.longKey("elasticsearch.shard.replication.failed"),
+                                    0)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -299,5 +257,15 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
                             equalTo(ELASTICSEARCH_VERSION, 1))));
   }
 
-   */
+  protected boolean hasWriteVersion() {
+    return true;
+  }
+
+  private List<AttributeAssertion> addIndexActionAttributes(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
+    if (hasWriteVersion()) {
+      result.add(equalTo(AttributeKey.longKey("elasticsearch.request.write.version"), -3));
+    }
+    return result;
+  }
 }
