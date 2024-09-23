@@ -207,9 +207,10 @@ class PowerJobBasicProcessorTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> {
+                // not asserting status as it is either unset or error depending on whether python
+                // is available or not
                 span.hasName(String.format("%s.process", PythonProcessor.class.getSimpleName()))
                     .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
                     .hasAttributesSatisfyingExactly(
                         attributeAssertions(
                             PythonProcessor.class.getName(), jobId, jobParam, PYTHON_PROCESSOR));
@@ -219,7 +220,6 @@ class PowerJobBasicProcessorTest {
 
   @Test
   void testHttpProcessor() throws Exception {
-
     long jobId = 1;
     String jobParam = "{\"method\":\"GET\"}";
     TaskContext taskContext = genTaskContext(jobId, jobParam);
@@ -243,7 +243,6 @@ class PowerJobBasicProcessorTest {
 
   @Test
   void testFileCleanerProcessor() throws Exception {
-
     long jobId = 1;
     JSONObject params = new JSONObject();
     params.put("dirPath", "/abc");
@@ -305,7 +304,6 @@ class PowerJobBasicProcessorTest {
 
   @Test
   void testDynamicDataSourceProcessor() throws Exception {
-
     long jobId = 1;
     String jobParam = "{\"dirPath\":\"/abc\"}";
     TaskContext taskContext = genTaskContext(jobId, jobParam);
