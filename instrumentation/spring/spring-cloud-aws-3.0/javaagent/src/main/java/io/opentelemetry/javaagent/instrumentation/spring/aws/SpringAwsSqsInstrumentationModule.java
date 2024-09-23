@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class SpringAwsSqsInstrumentationModule extends InstrumentationModule {
+public class SpringAwsSqsInstrumentationModule extends InstrumentationModule implements
+    ExperimentalInstrumentationModule {
 
   public SpringAwsSqsInstrumentationModule() {
     super("spring-cloud-aws", "spring-cloud-aws-3.0");
@@ -22,6 +24,11 @@ public class SpringAwsSqsInstrumentationModule extends InstrumentationModule {
   @Override
   public boolean isHelperClass(String className) {
     return className.startsWith("io.opentelemetry.contrib.awsxray.");
+  }
+
+  @Override
+  public String getModuleGroup() {
+    return "aws-sdk-v2";
   }
 
   @Override
