@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -67,42 +68,38 @@ class JdbcInstrumentationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static String dbName;
-  private static String dbNameLower;
-  private static Map<String, String> jdbcUrls;
-  private static Map<String, String> jdbcDriverClassNames;
-  private static Map<String, String> jdbcUserNames;
-  private static Properties connectionProps;
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  static final AttributeKey<String> DB_CONNECTION_STRING =
+      DbIncubatingAttributes.DB_CONNECTION_STRING;
+
+  private static final String dbName = "jdbcUnitTest";
+  private static final String dbNameLower = dbName.toLowerCase(Locale.ROOT);
+  private static final Map<String, String> jdbcUrls =
+      ImmutableMap.of(
+          "h2", "jdbc:h2:mem:" + dbName,
+          "derby", "jdbc:derby:memory:" + dbName,
+          "hsqldb", "jdbc:hsqldb:mem:" + dbName);
+  private static final Map<String, String> jdbcDriverClassNames =
+      ImmutableMap.of(
+          "h2", "org.h2.Driver",
+          "derby", "org.apache.derby.jdbc.EmbeddedDriver",
+          "hsqldb", "org.hsqldb.jdbc.JDBCDriver");
+  private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
+  private static final Properties connectionProps = new Properties();
   // JDBC Connection pool name (i.e. HikariCP) -> Map<dbName, Datasource>
-  private static Map<String, Map<String, DataSource>> cpDatasources;
+  private static final Map<String, Map<String, DataSource>> cpDatasources = Maps.newHashMap();
 
-  @BeforeAll
-  static void setUp() {
-    dbName = "jdbcUnitTest";
-    dbNameLower = dbName.toLowerCase(Locale.ROOT);
-    jdbcUrls =
-        ImmutableMap.of(
-            "h2", "jdbc:h2:mem:" + dbName,
-            "derby", "jdbc:derby:memory:" + dbName,
-            "hsqldb", "jdbc:hsqldb:mem:" + dbName);
-
-    jdbcDriverClassNames =
-        ImmutableMap.of(
-            "h2", "org.h2.Driver",
-            "derby", "org.apache.derby.jdbc.EmbeddedDriver",
-            "hsqldb", "org.hsqldb.jdbc.JDBCDriver");
-
-    jdbcUserNames = new HashMap<>();
+  static {
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
 
-    connectionProps = new Properties();
     connectionProps.put("databaseName", "someDb");
     connectionProps.put("OPEN_NEW", "true"); // So H2 doesn't complain about username/password.
+  }
 
-    cpDatasources = new HashMap<>();
-
+  @BeforeAll
+  static void setUp() {
     prepareConnectionPoolDatasources();
   }
 
@@ -354,6 +351,7 @@ class JdbcInstrumentationTest {
       String table)
       throws SQLException {
     Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
     ResultSet resultSet = testing.runWithSpan("parent", () -> statement.executeQuery(query));
 
     resultSet.next();
@@ -376,12 +374,10 @@ class JdbcInstrumentationTest {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(username),
                                         v -> assertThat(v).isNull())),
-                            equalTo(getDbConnectionStringKey(), url),
+                            equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table))));
-    statement.close();
-    connection.close();
   }
 
   static Stream<Arguments> preparedStatementStream() throws SQLException {
@@ -505,7 +501,7 @@ class JdbcInstrumentationTest {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(username),
                                         v -> assertThat(v).isNull())),
-                            equalTo(getDbConnectionStringKey(), url),
+                            equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table))));
@@ -550,7 +546,7 @@ class JdbcInstrumentationTest {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(username),
                                         v -> assertThat(v).isNull())),
-                            equalTo(getDbConnectionStringKey(), url),
+                            equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table))));
@@ -595,7 +591,7 @@ class JdbcInstrumentationTest {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(username),
                                         v -> assertThat(v).isNull())),
-                            equalTo(getDbConnectionStringKey(), url),
+                            equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table))));
@@ -739,7 +735,7 @@ class JdbcInstrumentationTest {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(username),
                                         v -> assertThat(v).isNull())),
-                            equalTo(getDbConnectionStringKey(), url),
+                            equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CREATE TABLE"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table))));
@@ -845,11 +841,12 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(username),
-                                        v -> assertThat(v).isNull())),
-                            equalTo(getDbConnectionStringKey(), url),
+                                val -> {
+                                  if (username != null) {
+                                    val.isEqualTo(username);
+                                  }
+                                }),
+                            equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CREATE TABLE"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table))));
@@ -959,11 +956,12 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(username),
-                                        v -> assertThat(v).isNull())),
-                            equalTo(getDbConnectionStringKey(), url),
+                                val -> {
+                                  if (username != null) {
+                                    val.isEqualTo(username);
+                                  }
+                                }),
+                            equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table))));
@@ -1040,7 +1038,7 @@ class JdbcInstrumentationTest {
                                               v1 -> assertThat(v1).isEqualTo(user),
                                               v1 -> assertThat(v1).isNull())),
                                   equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
-                                  equalTo(getDbConnectionStringKey(), connectionString))));
+                                  equalTo(DB_CONNECTION_STRING, connectionString))));
           if (recursive) {
             assertions.add(
                 span ->
@@ -1060,15 +1058,10 @@ class JdbcInstrumentationTest {
                                         v -> assertThat(v).isEqualTo(user),
                                         v -> assertThat(v).isNull())),
                             equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
-                            equalTo(getDbConnectionStringKey(), connectionString)));
+                            equalTo(DB_CONNECTION_STRING, connectionString)));
           }
           trace.hasSpansSatisfyingExactly(assertions);
         });
-  }
-
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
-  AttributeKey<String> getDbConnectionStringKey() {
-    return DbIncubatingAttributes.DB_CONNECTION_STRING;
   }
 
   @ParameterizedTest
@@ -1100,7 +1093,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "other_sql"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "testing ?"),
-                            equalTo(getDbConnectionStringKey(), "testdb://localhost"),
+                            equalTo(DB_CONNECTION_STRING, "testdb://localhost"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1182,7 +1175,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "other_sql"),
                             equalTo(DbIncubatingAttributes.DB_NAME, databaseName),
-                            equalTo(getDbConnectionStringKey(), "testdb://localhost"),
+                            equalTo(DB_CONNECTION_STRING, "testdb://localhost"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, table),
@@ -1232,7 +1225,7 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             equalTo(DbIncubatingAttributes.DB_USER, "SA"),
-                            equalTo(getDbConnectionStringKey(), "hsqldb:mem:"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
                                 DbIncubatingAttributes.DB_STATEMENT,
                                 "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
@@ -1305,7 +1298,7 @@ class JdbcInstrumentationTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "other_sql"),
-                            equalTo(getDbConnectionStringKey(), "testdb://localhost"),
+                            equalTo(DB_CONNECTION_STRING, "testdb://localhost"),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
                             equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "table"),
