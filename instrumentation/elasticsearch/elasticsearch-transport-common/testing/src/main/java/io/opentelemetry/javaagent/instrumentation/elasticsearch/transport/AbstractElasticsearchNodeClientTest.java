@@ -26,7 +26,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -128,6 +127,16 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasParent(trace.getSpan(0))));
   }
 
+  protected void waitYellowStatus() {
+    client()
+        .admin()
+        .cluster()
+        .prepareHealth()
+        .setWaitForYellowStatus()
+        .execute()
+        .actionGet(TIMEOUT);
+  }
+
   @Test
   void elasticsearchGet() {
     String indexName = "test-index";
@@ -138,12 +147,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
     CreateIndexResponse indexResult = client.admin().indices().prepareCreate(indexName).get();
     assertThat(indexResult.isAcknowledged()).isTrue();
 
-    client
-        .admin()
-        .cluster()
-        .prepareHealth()
-        .setWaitForYellowStatus()
-        .get(TimeValue.timeValueMillis(TIMEOUT));
+    waitYellowStatus();
     GetResponse emptyResult = client.prepareGet(indexName, indexType, id).get();
     assertThat(emptyResult.isExists()).isFalse();
     assertThat(emptyResult.getId()).isEqualTo(id);

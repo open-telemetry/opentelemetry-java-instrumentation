@@ -85,4 +85,17 @@ public abstract class AbstractElasticsearch6NodeClientTest
   protected Client client() {
     return client;
   }
+
+  @Override
+  protected void waitYellowStatus() {
+    // although the body of this method looks exactly the same as the super class method we need to
+    // have this here because return type of the execute() method has changed
+    client()
+        .admin()
+        .cluster()
+        .prepareHealth()
+        .setWaitForYellowStatus()
+        .execute()
+        .actionGet(TIMEOUT);
+  }
 }
