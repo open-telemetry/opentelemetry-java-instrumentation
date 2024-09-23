@@ -27,7 +27,7 @@ import org.elasticsearch.transport.BindTransportException;
 import org.elasticsearch.transport.RemoteTransportException;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractElasticsearchClientTest {
+abstract class AbstractElasticsearchClientTest {
 
   protected static final long TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
