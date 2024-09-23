@@ -22,3 +22,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-web:3.0.0")
 }
+
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
