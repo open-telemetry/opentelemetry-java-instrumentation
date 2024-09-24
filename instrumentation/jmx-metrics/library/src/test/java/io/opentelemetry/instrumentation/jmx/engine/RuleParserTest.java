@@ -74,11 +74,14 @@ class RuleParserTest {
     assertThat(defs).hasSize(2);
 
     JmxRule def1 = defs.get(0);
-    assertThat(def1.getBeans()).hasSize(2);
-    assertThat(def1.getMetricAttribute()).hasSize(2);
+    assertThat(def1.getBeans()).containsExactly("OBJECT:NAME1=*", "OBJECT:NAME2=*");
+    assertThat(def1.getMetricAttribute()).hasSize(2)
+        .containsEntry("LABEL_KEY1", "param(PARAMETER)")
+        .containsEntry("LABEL_KEY2", "beanattr(ATTRIBUTE)");
 
     Map<String, Metric> attr = def1.getMapping();
-    assertThat(attr).hasSize(4);
+    assertThat(attr).hasSize(4)
+        .containsKeys("ATTRIBUTE1", "ATTRIBUTE2", "ATTRIBUTE3", "ATTRIBUTE4");
 
     Metric m1 = attr.get("ATTRIBUTE1");
     assertThat(m1).isNotNull();
@@ -86,6 +89,16 @@ class RuleParserTest {
     assertThat(m1.getMetricType()).isEqualTo(MetricInfo.Type.GAUGE);
     assertThat(m1.getUnit()).isEqualTo("UNIT1");
     assertThat(m1.getMetricAttribute()).containsExactly(entry("LABEL_KEY3", "const(CONSTANT)"));
+
+    JmxRule def2 = defs.get(1);
+    assertThat(def2.getBeans()).containsExactly("OBJECT:NAME3=*");
+    assertThat(def2.getMetricAttribute()).isNull();
+
+    assertThat(def2.getMapping()).hasSize(1);
+    Metric m3 = def2.getMapping().get("ATTRIBUTE3");
+    assertThat(m3.getMetric()).isEqualTo("METRIC_NAME3");
+    assertThat(m3.getUnit()).isNull();
+
   }
 
   private static final String CONF3 =
