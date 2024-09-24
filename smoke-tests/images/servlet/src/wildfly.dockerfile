@@ -24,7 +24,7 @@ ENV JBOSS_HOME /opt/jboss/wildfly
 
 # latest eclipse-temurin docker images have removed curl in favor of wget (https://github.com/adoptium/containers/issues/630)
 # but ibm-semeru-runtimes docker images lack wget
-RUN apt-get update && apt-get -y install wget
+RUN sudo apt-get update && sudo apt-get -y install wget
 
 USER root
 RUN echo curl -O -L $DOWNLOAD_URL
