@@ -16,7 +16,7 @@ WORKDIR /opt/jboss
 
 # latest eclipse-temurin docker images have removed curl in favor of wget (https://github.com/adoptium/containers/issues/630)
 # but ibm-semeru-runtimes docker images lack wget
-RUN apt-get -y install wget
+RUN apt-get update && apt-get -y install wget
 
 # Specify the user which should be used to execute all commands below
 USER jboss
