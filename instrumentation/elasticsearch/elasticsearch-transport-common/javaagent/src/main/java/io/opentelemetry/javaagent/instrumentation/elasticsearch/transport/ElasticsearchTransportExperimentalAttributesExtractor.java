@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -24,41 +27,38 @@ public class ElasticsearchTransportExperimentalAttributesExtractor
     implements AttributesExtractor<ElasticTransportRequest, ActionResponse> {
 
   private static final AttributeKey<String> ELASTICSEARCH_ACTION =
-      AttributeKey.stringKey("elasticsearch.action");
+      stringKey("elasticsearch.action");
   private static final AttributeKey<String> ELASTICSEARCH_REQUEST =
-      AttributeKey.stringKey("elasticsearch.request");
+      stringKey("elasticsearch.request");
   private static final AttributeKey<String> ELASTICSEARCH_REQUEST_INDICES =
-      AttributeKey.stringKey("elasticsearch.request.indices");
+      stringKey("elasticsearch.request.indices");
   private static final AttributeKey<String> ELASTICSEARCH_REQUEST_SEARCH_TYPES =
-      AttributeKey.stringKey("elasticsearch.request.search.types");
-  private static final AttributeKey<String> ELASTICSEARCH_TYPE =
-      AttributeKey.stringKey("elasticsearch.type");
-  private static final AttributeKey<String> ELASTICSEARCH_ID =
-      AttributeKey.stringKey("elasticsearch.id");
-  private static final AttributeKey<Long> ELASTICSEARCH_VERSION =
-      AttributeKey.longKey("elasticsearch.version");
+      stringKey("elasticsearch.request.search.types");
+  private static final AttributeKey<String> ELASTICSEARCH_TYPE = stringKey("elasticsearch.type");
+  private static final AttributeKey<String> ELASTICSEARCH_ID = stringKey("elasticsearch.id");
+  private static final AttributeKey<Long> ELASTICSEARCH_VERSION = longKey("elasticsearch.version");
   private static final AttributeKey<Long> ELASTICSEARCH_SHARD_BROADCAST_TOTAL =
-      AttributeKey.longKey("elasticsearch.shard.broadcast.total");
+      longKey("elasticsearch.shard.broadcast.total");
   private static final AttributeKey<Long> ELASTICSEARCH_SHARD_BROADCAST_SUCCESSFUL =
-      AttributeKey.longKey("elasticsearch.shard.broadcast.successful");
+      longKey("elasticsearch.shard.broadcast.successful");
   private static final AttributeKey<Long> ELASTICSEARCH_SHARD_BROADCAST_FAILED =
-      AttributeKey.longKey("elasticsearch.shard.broadcast.failed");
+      longKey("elasticsearch.shard.broadcast.failed");
   private static final AttributeKey<Long> ELASTICSEARCH_SHARD_REPLICATION_TOTAL =
-      AttributeKey.longKey("elasticsearch.shard.replication.total");
+      longKey("elasticsearch.shard.replication.total");
   private static final AttributeKey<Long> ELASTICSEARCH_SHARD_REPLICATION_SUCCESSFUL =
-      AttributeKey.longKey("elasticsearch.shard.replication.successful");
+      longKey("elasticsearch.shard.replication.successful");
   private static final AttributeKey<Long> ELASTICSEARCH_SHARD_REPLICATION_FAILED =
-      AttributeKey.longKey("elasticsearch.shard.replication.failed");
+      longKey("elasticsearch.shard.replication.failed");
   private static final AttributeKey<Long> ELASTICSEARCH_RESPONSE_STATUS =
-      AttributeKey.longKey("elasticsearch.response.status");
+      longKey("elasticsearch.response.status");
   private static final AttributeKey<Long> ELASTICSEARCH_SHARD_BULK_ID =
-      AttributeKey.longKey("elasticsearch.shard.bulk.id");
+      longKey("elasticsearch.shard.bulk.id");
   private static final AttributeKey<String> ELASTICSEARCH_SHARD_BULK_INDEX =
-      AttributeKey.stringKey("elasticsearch.shard.bulk.index");
+      stringKey("elasticsearch.shard.bulk.index");
   private static final AttributeKey<Long> ELASTICSEARCH_NODE_FAILURES =
-      AttributeKey.longKey("elasticsearch.node.failures");
+      longKey("elasticsearch.node.failures");
   private static final AttributeKey<String> ELASTICSEARCH_NODE_CLUSTER_NAME =
-      AttributeKey.stringKey("elasticsearch.node.cluster.name");
+      stringKey("elasticsearch.node.cluster.name");
 
   @Override
   public void onStart(

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -13,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -232,20 +233,11 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
-                                equalTo(
-                                    AttributeKey.stringKey("elasticsearch.request.write.type"),
-                                    indexType),
-                                equalTo(AttributeKey.longKey("elasticsearch.response.status"), 201),
-                                equalTo(
-                                    AttributeKey.longKey("elasticsearch.shard.replication.total"),
-                                    2),
-                                equalTo(
-                                    AttributeKey.longKey(
-                                        "elasticsearch.shard.replication.successful"),
-                                    1),
-                                equalTo(
-                                    AttributeKey.longKey("elasticsearch.shard.replication.failed"),
-                                    0)))),
+                                equalTo(stringKey("elasticsearch.request.write.type"), indexType),
+                                equalTo(longKey("elasticsearch.response.status"), 201),
+                                equalTo(longKey("elasticsearch.shard.replication.total"), 2),
+                                equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
+                                equalTo(longKey("elasticsearch.shard.replication.failed"), 0)))),
         // moved here by sorting, chronologically happens before PutMappingAction
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -314,7 +306,7 @@ public abstract class AbstractElasticsearchTransportClientTest
   private List<AttributeAssertion> addIndexActionAttributes(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(addNetworkTypeAttribute(assertions));
     if (hasWriteVersion()) {
-      result.add(equalTo(AttributeKey.longKey("elasticsearch.request.write.version"), -3));
+      result.add(equalTo(longKey("elasticsearch.request.write.version"), -3));
     }
     return result;
   }
