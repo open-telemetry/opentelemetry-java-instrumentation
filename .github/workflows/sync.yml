@@ -36,6 +36,8 @@ jobs:
       uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
       with:
         target_sync_branch: main
+        git_config_user: oliver zhang
+        git_config_email: oliver_zhangjian@163.com
         # REQUIRED 'target_repo_token' exactly like this!
         target_repo_token: ${{ secrets.MY_SECRET }}
         upstream_sync_branch: main
