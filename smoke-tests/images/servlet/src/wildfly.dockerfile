@@ -14,6 +14,10 @@ RUN groupadd -r jboss -g 1001 && useradd -u 1001 -r -g jboss -m -d /opt/jboss -s
 # Set the working directory to jboss' user home directory
 WORKDIR /opt/jboss
 
+# latest eclipse-temurin docker images have removed curl in favor of wget (https://github.com/adoptium/containers/issues/630)
+# but ibm-semeru-runtimes docker images lack wget
+RUN apt-get -y install wget
+
 # Specify the user which should be used to execute all commands below
 USER jboss
 
@@ -21,10 +25,6 @@ USER jboss
 ENV WILDFLY_VERSION=${version}
 ENV DOWNLOAD_URL=${baseDownloadUrl}.tar.gz
 ENV JBOSS_HOME /opt/jboss/wildfly
-
-# latest eclipse-temurin docker images have removed curl in favor of wget (https://github.com/adoptium/containers/issues/630)
-# but ibm-semeru-runtimes docker images lack wget
-RUN apt-get -y install wget
 
 USER root
 RUN echo curl -O -L $DOWNLOAD_URL
