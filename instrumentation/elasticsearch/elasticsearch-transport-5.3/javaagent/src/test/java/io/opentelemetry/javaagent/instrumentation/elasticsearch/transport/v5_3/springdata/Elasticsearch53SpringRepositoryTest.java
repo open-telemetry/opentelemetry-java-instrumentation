@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.springdata;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -88,15 +89,10 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SearchAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.action"), "SearchAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "SearchRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.search.types"),
-                                "doc"))));
+                            equalTo(stringKey("elasticsearch.action"), "SearchAction"),
+                            equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(stringKey("elasticsearch.request.search.types"), "doc"))));
   }
 
   @Test
@@ -127,24 +123,15 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.action"), "IndexAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "IndexRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.write.type"), "doc"),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(AttributeKey.longKey("elasticsearch.response.status"), 201),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.failed"), 0),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.successful"),
-                                1),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.total"), 2)),
+                            equalTo(stringKey("elasticsearch.action"), "IndexAction"),
+                            equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
+                            equalTo(longKey("elasticsearch.request.write.version"), -3),
+                            equalTo(longKey("elasticsearch.response.status"), 201),
+                            equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
+                            equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
+                            equalTo(longKey("elasticsearch.shard.replication.total"), 2)),
                 span ->
                     span.hasName("RefreshAction")
                         .hasKind(SpanKind.CLIENT)
@@ -154,20 +141,12 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.failed"), 0),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.successful"),
-                                5),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.total"), 10))));
+                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
+                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
+                            equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
+                            equalTo(longKey("elasticsearch.shard.broadcast.total"), 10))));
     testing.clearData();
 
     assertThat(repository.findById("1").get()).isEqualTo(doc);
@@ -193,14 +172,12 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.action"), "GetAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.request"), "GetRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.type"), "doc"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.id"), "1"),
-                            equalTo(AttributeKey.longKey("elasticsearch.version"), 1))));
+                            equalTo(stringKey("elasticsearch.action"), "GetAction"),
+                            equalTo(stringKey("elasticsearch.request"), "GetRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(stringKey("elasticsearch.type"), "doc"),
+                            equalTo(stringKey("elasticsearch.id"), "1"),
+                            equalTo(longKey("elasticsearch.version"), 1))));
     testing.clearData();
 
     doc.setData("other data");
@@ -229,24 +206,15 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.action"), "IndexAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "IndexRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.write.type"), "doc"),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(AttributeKey.longKey("elasticsearch.response.status"), 200),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.failed"), 0),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.successful"),
-                                1),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.total"), 2)),
+                            equalTo(stringKey("elasticsearch.action"), "IndexAction"),
+                            equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
+                            equalTo(longKey("elasticsearch.request.write.version"), -3),
+                            equalTo(longKey("elasticsearch.response.status"), 200),
+                            equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
+                            equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
+                            equalTo(longKey("elasticsearch.shard.replication.total"), 2)),
                 span ->
                     span.hasName("RefreshAction")
                         .hasKind(SpanKind.CLIENT)
@@ -256,20 +224,12 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.failed"), 0),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.successful"),
-                                5),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.total"), 10))),
+                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
+                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
+                            equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
+                            equalTo(longKey("elasticsearch.shard.broadcast.total"), 10))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -290,14 +250,12 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.action"), "GetAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.request"), "GetRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.type"), "doc"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.id"), "1"),
-                            equalTo(AttributeKey.longKey("elasticsearch.version"), 2))));
+                            equalTo(stringKey("elasticsearch.action"), "GetAction"),
+                            equalTo(stringKey("elasticsearch.request"), "GetRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(stringKey("elasticsearch.type"), "doc"),
+                            equalTo(stringKey("elasticsearch.id"), "1"),
+                            equalTo(longKey("elasticsearch.version"), 2))));
     testing.clearData();
 
     repository.deleteById("1");
@@ -324,23 +282,14 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "DeleteAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.action"), "DeleteAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "DeleteRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.write.type"), "doc"),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.failed"), 0),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.successful"),
-                                1),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.replication.total"), 2)),
+                            equalTo(stringKey("elasticsearch.action"), "DeleteAction"),
+                            equalTo(stringKey("elasticsearch.request"), "DeleteRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
+                            equalTo(longKey("elasticsearch.request.write.version"), -3),
+                            equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
+                            equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
+                            equalTo(longKey("elasticsearch.shard.replication.total"), 2)),
                 span ->
                     span.hasName("RefreshAction")
                         .hasKind(SpanKind.CLIENT)
@@ -350,20 +299,12 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.failed"), 0),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.successful"),
-                                5),
-                            equalTo(
-                                AttributeKey.longKey("elasticsearch.shard.broadcast.total"), 10))),
+                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
+                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
+                            equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
+                            equalTo(longKey("elasticsearch.shard.broadcast.total"), 10))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -384,14 +325,9 @@ class Elasticsearch53SpringRepositoryTest {
                                 DbIncubatingAttributes.DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SearchAction"),
-                            equalTo(AttributeKey.stringKey("elasticsearch.action"), "SearchAction"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request"), "SearchRequest"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.indices"),
-                                "test-index"),
-                            equalTo(
-                                AttributeKey.stringKey("elasticsearch.request.search.types"),
-                                "doc"))));
+                            equalTo(stringKey("elasticsearch.action"), "SearchAction"),
+                            equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
+                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+                            equalTo(stringKey("elasticsearch.request.search.types"), "doc"))));
   }
 }
