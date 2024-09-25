@@ -227,7 +227,7 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
 
     when:
     // body should be large enough to trigger multiple calls to onNext
-    def body = "foobar".repeat(10000)
+    def body = "foobar" * 10000
     def response = client.post(resolveAddress(POST_STREAM), body).aggregate().join()
 
     then:
