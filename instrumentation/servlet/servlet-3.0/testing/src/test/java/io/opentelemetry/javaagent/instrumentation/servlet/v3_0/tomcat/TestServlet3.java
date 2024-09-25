@@ -176,6 +176,11 @@ public class TestServlet3 {
               latch.countDown();
             }
           });
+      try {
+        latch.await();
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+      }
     }
   }
 
