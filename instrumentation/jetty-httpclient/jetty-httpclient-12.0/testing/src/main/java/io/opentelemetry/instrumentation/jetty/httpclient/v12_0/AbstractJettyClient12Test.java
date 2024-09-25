@@ -5,23 +5,30 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.eclipse.jetty.client.ContentResponse;
+import org.eclipse.jetty.client.FutureResponseListener;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
@@ -106,6 +113,38 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
 
           requestResult.complete(result.getResponse().getStatus());
         });
+  }
+
+  @Test
+  void callbacksCalled() throws InterruptedException, ExecutionException {
+    URI uri = resolveAddress("/success");
+    Set<String> callbacks = ConcurrentHashMap.newKeySet();
+    Request request = client.newRequest(uri).method("GET");
+    FutureResponseListener responseListener =
+        new FutureResponseListener(request) {
+          @Override
+          public void onHeaders(Response response) {
+            callbacks.add("headers");
+            super.onHeaders(response);
+          }
+
+          @Override
+          public void onSuccess(Response response) {
+            callbacks.add("success");
+            super.onSuccess(response);
+          }
+
+          @Override
+          public void onComplete(Result result) {
+            callbacks.add("complete");
+            super.onComplete(result);
+          }
+        };
+    request.send(responseListener);
+    Response response = responseListener.get();
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(callbacks).containsExactlyInAnyOrder("headers", "success", "complete");
   }
 
   private static class JettyClientListener
