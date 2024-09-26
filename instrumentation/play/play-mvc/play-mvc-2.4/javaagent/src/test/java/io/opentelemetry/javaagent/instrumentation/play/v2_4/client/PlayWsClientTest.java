@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_4.client;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -27,12 +28,14 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
-  WSClient wsClient;
+  private static WSClient wsClient;
 
   @BeforeEach
   void setUp() {
     wsClient = WS.newClient(-1);
+    autoCleanup.deferCleanup(wsClient);
   }
 
   @Override
