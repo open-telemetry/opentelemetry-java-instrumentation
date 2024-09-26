@@ -130,6 +130,15 @@ abstract class AbstractRatpackForkedHttpServerTest extends AbstractRatpackHttpSe
             }
           }
         }
+        it.prefix(POST_STREAM.rawPath()) {
+          it.all { context ->
+            Promise.sync {
+              POST_STREAM
+            }.fork().then {
+              handlePostStream(context)
+            }
+          }
+        }
         it.prefix("fork_and_yieldAll") {
           it.all { context ->
             def promise = Promise.async { upstream ->
