@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeUnit;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -114,7 +115,7 @@ class ApacheHttpAsyncClientTest {
 
     @Override
     HttpResponse executeRequest(SimpleHttpRequest request, URI uri) throws Exception {
-      return client.execute(request, getContext(), null).get();
+      return client.execute(request, getContext(), null).get(30, TimeUnit.SECONDS);
     }
 
     @Override
