@@ -336,8 +336,6 @@ class JdbcInstrumentationTest {
             "INFORMATION_SCHEMA.SYSTEM_USERS"));
   }
 
-  @DisplayName(
-      "basic statement with #connection.getClass().getCanonicalName() on #system generates spans")
   @ParameterizedTest
   @MethodSource("basicStatementStream")
   public void testBasicStatement(
@@ -370,10 +368,11 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(username),
-                                        v -> assertThat(v).isNull())),
+                                val -> {
+                                  if (username != null) {
+                                    val.isEqualTo(username);
+                                  }
+                                }),
                             equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
@@ -458,8 +457,6 @@ class JdbcInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("preparedStatementStream")
-  @DisplayName(
-      "prepared statement execute on #system with #connection.getClass().getCanonicalName() generates a span")
   void testPreparedStatementExecute(
       String system,
       Connection connection,
@@ -472,7 +469,6 @@ class JdbcInstrumentationTest {
       throws SQLException {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
     ResultSet resultSet =
         testing.runWithSpan(
             "parent",
@@ -497,10 +493,11 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(username),
-                                        v -> assertThat(v).isNull())),
+                                val -> {
+                                  if (username != null) {
+                                    val.isEqualTo(username);
+                                  }
+                                }),
                             equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
@@ -509,8 +506,6 @@ class JdbcInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("preparedStatementStream")
-  @DisplayName(
-      "prepared statement query on #system with #connection.getClass().getCanonicalName() generates a span")
   void testPreparedStatementQuery(
       String system,
       Connection connection,
@@ -523,7 +518,6 @@ class JdbcInstrumentationTest {
       throws SQLException {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
     ResultSet resultSet = testing.runWithSpan("parent", () -> statement.executeQuery());
 
     resultSet.next();
@@ -542,10 +536,11 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(username),
-                                        v -> assertThat(v).isNull())),
+                                val -> {
+                                  if (username != null) {
+                                    val.isEqualTo(username);
+                                  }
+                                }),
                             equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
@@ -554,8 +549,6 @@ class JdbcInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("preparedStatementStream")
-  @DisplayName(
-      "prepared call on #system with #connection.getClass().getCanonicalName() generates a span")
   void testPreparedCall(
       String system,
       Connection connection,
@@ -568,7 +561,6 @@ class JdbcInstrumentationTest {
       throws SQLException {
     CallableStatement statement = connection.prepareCall(query);
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
     ResultSet resultSet = testing.runWithSpan("parent", () -> statement.executeQuery());
 
     resultSet.next();
@@ -587,10 +579,11 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(username),
-                                        v -> assertThat(v).isNull())),
+                                val -> {
+                                  if (username != null) {
+                                    val.isEqualTo(username);
+                                  }
+                                }),
                             equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, sanitizedQuery),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
@@ -699,8 +692,6 @@ class JdbcInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("statementUpdateStream")
-  @DisplayName(
-      "statement update on #system with #connection.getClass().getCanonicalName() generates a span")
   void testStatementUpdate(
       String system,
       Connection connection,
@@ -712,7 +703,6 @@ class JdbcInstrumentationTest {
       throws SQLException {
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
     String sql = connection.nativeSQL(query);
     testing.runWithSpan("parent", () -> assertThat(statement.execute(sql)).isFalse());
 
@@ -731,10 +721,11 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_NAME, dbNameLower),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(username),
-                                        v -> assertThat(v).isNull())),
+                                val -> {
+                                  if (username != null) {
+                                    val.isEqualTo(username);
+                                  }
+                                }),
                             equalTo(DB_CONNECTION_STRING, url),
                             equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CREATE TABLE"),
@@ -811,8 +802,6 @@ class JdbcInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("preparedStatementUpdateStream")
-  @DisplayName(
-      "prepared statement update on #system with #connection.getClass().getCanonicalName() generates a span")
   void testPreparedStatementUpdate(
       String system,
       Connection connection,
@@ -825,7 +814,6 @@ class JdbcInstrumentationTest {
     String sql = connection.nativeSQL(query);
     PreparedStatement statement = connection.prepareStatement(sql);
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
     testing.runWithSpan("parent", () -> assertThat(statement.executeUpdate()).isEqualTo(0));
 
     testing.waitAndAssertTraces(
@@ -903,8 +891,6 @@ class JdbcInstrumentationTest {
   @SuppressWarnings("CatchingUnchecked")
   @ParameterizedTest
   @MethodSource("connectionConstructorStream")
-  @DisplayName(
-      "connection constructor throwing then generating correct spans after recovery using #driver connection (prepare statement = #prepareStatement)")
   void testConnectionConstructorThrowing(
       boolean prepareStatement,
       String system,
@@ -992,8 +978,6 @@ class JdbcInstrumentationTest {
 
   @ParameterizedTest(autoCloseArguments = false)
   @MethodSource("getConnectionStream")
-  @DisplayName(
-      "calling #datasource.class.simpleName getConnection generates a span when under existing trace")
   void testGetConnection(
       DataSource datasource,
       Consumer<DataSource> init,
@@ -1033,10 +1017,11 @@ class JdbcInstrumentationTest {
                                   equalTo(DbIncubatingAttributes.DB_SYSTEM, system),
                                   satisfies(
                                       DbIncubatingAttributes.DB_USER,
-                                      val1 ->
-                                          val1.satisfiesAnyOf(
-                                              v1 -> assertThat(v1).isEqualTo(user),
-                                              v1 -> assertThat(v1).isNull())),
+                                      val -> {
+                                        if (user != null) {
+                                          val.isEqualTo(user);
+                                        }
+                                      }),
                                   equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
                                   equalTo(DB_CONNECTION_STRING, connectionString))));
           if (recursive) {
@@ -1053,10 +1038,11 @@ class JdbcInstrumentationTest {
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, system),
                             satisfies(
                                 DbIncubatingAttributes.DB_USER,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isEqualTo(user),
-                                        v -> assertThat(v).isNull())),
+                                val -> {
+                                  if (user != null) {
+                                    val.isEqualTo(user);
+                                  }
+                                }),
                             equalTo(DbIncubatingAttributes.DB_NAME, "jdbcunittest"),
                             equalTo(DB_CONNECTION_STRING, connectionString)));
           }
@@ -1142,7 +1128,6 @@ class JdbcInstrumentationTest {
   }
 
   @ParameterizedTest
-  @DisplayName("should produce proper span name #spanName")
   @MethodSource("spanNameStream")
   void testProduceProperSpanName(
       String url,
@@ -1184,7 +1169,6 @@ class JdbcInstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"hikari", "tomcat", "c3p0"})
-  @DisplayName("#connectionPoolName connections should be cached in case of wrapped connections")
   void testConnectionCached(String connectionPoolName) throws SQLException {
     String dbType = "hsqldb";
     DataSource ds = createDs(connectionPoolName, dbType, jdbcUrls.get(dbType));
@@ -1272,7 +1256,6 @@ class JdbcInstrumentationTest {
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2644
   @ParameterizedTest
-  @DisplayName("should handle recursive Statements inside Connection.getMetaData(): #desc")
   @MethodSource("recursiveStatementsStream")
   void testHandleRecursiveStatements(
       String desc,
