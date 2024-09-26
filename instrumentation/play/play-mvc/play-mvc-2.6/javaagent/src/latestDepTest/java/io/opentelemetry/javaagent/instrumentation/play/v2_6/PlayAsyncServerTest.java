@@ -29,7 +29,7 @@ class PlayAsyncServerTest extends PlayServerTest {
   private static final ExecutorService executor = Executors.newCachedThreadPool();
 
   @Override
-  protected Server setupServer(int port) {
+  protected Server setupServer() {
     ExecutionContextExecutor executionContextExecutor = HttpExecution.fromThread(executor);
     return Server.forRouter(
         Mode.TEST,

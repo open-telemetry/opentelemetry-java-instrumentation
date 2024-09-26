@@ -94,8 +94,6 @@ abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
                 .build());
   }
 
-  protected abstract Server setupServer(int port);
-
   @Override
   protected void stopServer(Server server) {
     server.stop();
@@ -112,7 +110,7 @@ abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
   }
 
   @Override
-  public SpanDataAssert assertHandlerSpan(
+  protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     span.hasName("play.request").hasKind(INTERNAL);
     if (endpoint == EXCEPTION) {
