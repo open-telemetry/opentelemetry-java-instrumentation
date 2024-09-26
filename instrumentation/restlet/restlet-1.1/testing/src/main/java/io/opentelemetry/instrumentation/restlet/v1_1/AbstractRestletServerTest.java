@@ -90,9 +90,11 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
         new Redirector(Context.getCurrent(), REDIRECT.getBody(), Redirector.MODE_CLIENT_FOUND) {
           @Override
           public void handle(Request request, Response response) {
-            controller(REDIRECT, () -> {
-              super.handle(request, response);
-            });
+            controller(
+                REDIRECT,
+                () -> {
+                  super.handle(request, response);
+                });
           }
         });
 
