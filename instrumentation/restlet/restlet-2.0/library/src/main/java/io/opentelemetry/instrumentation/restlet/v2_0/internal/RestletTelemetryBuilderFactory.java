@@ -20,7 +20,9 @@ public class RestletTelemetryBuilderFactory {
   public static DefaultHttpServerInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
     return new DefaultHttpServerInstrumenterBuilder<>(
-            "io.opentelemetry.restlet-2.0", openTelemetry, RestletHttpAttributesGetter.INSTANCE)
-        .setHeaderGetter(new RestletHeadersGetter());
+        "io.opentelemetry.restlet-2.0",
+        openTelemetry,
+        RestletHttpAttributesGetter.INSTANCE,
+        new RestletHeadersGetter());
   }
 }

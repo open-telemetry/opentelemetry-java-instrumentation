@@ -57,8 +57,10 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         serverBuilder =
             new DefaultHttpServerInstrumenterBuilder<>(
-                    instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter)
-                .setHeaderGetter(new ServletRequestGetter<>(accessor));
+                instrumentationName,
+                GlobalOpenTelemetry.get(),
+                httpAttributesGetter,
+                new ServletRequestGetter<>(accessor));
     serverBuilder.setSpanNameExtractor(e -> spanNameExtractor);
 
     return JavaagentHttpServerInstrumenters.create(

@@ -44,7 +44,7 @@ public final class JavaagentHttpServerInstrumenters {
         instrumenterBuilderConsumer);
   }
 
-  private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
+  public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
     return builder

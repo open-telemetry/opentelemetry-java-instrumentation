@@ -22,7 +22,9 @@ public class RestletTelemetryBuilderFactory {
   public static DefaultHttpServerInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
     return new DefaultHttpServerInstrumenterBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, RestletHttpAttributesGetter.INSTANCE)
-        .setHeaderGetter(RestletHeadersGetter.INSTANCE);
+        INSTRUMENTATION_NAME,
+        openTelemetry,
+        RestletHttpAttributesGetter.INSTANCE,
+        RestletHeadersGetter.INSTANCE);
   }
 }

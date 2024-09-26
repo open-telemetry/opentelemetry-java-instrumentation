@@ -40,7 +40,8 @@ class KtorServerTracing private constructor(
         DefaultHttpServerInstrumenterBuilder(
           INSTRUMENTATION_NAME,
           openTelemetry,
-          KtorHttpServerAttributesGetter.INSTANCE
+          KtorHttpServerAttributesGetter.INSTANCE,
+          null
         )
     }
 
@@ -111,7 +112,7 @@ class KtorServerTracing private constructor(
       }
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
-        configuration.builder.builder(),
+        configuration.builder.instrumenterBuilder(),
         ApplicationRequestGetter,
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )

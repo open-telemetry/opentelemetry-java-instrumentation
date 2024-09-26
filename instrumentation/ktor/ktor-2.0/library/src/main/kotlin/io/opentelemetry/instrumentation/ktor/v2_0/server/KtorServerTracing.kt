@@ -234,7 +234,7 @@ class KtorServerTracing private constructor(
       require(configuration.isOpenTelemetryInitialized()) { "OpenTelemetry must be set" }
 
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
-        configuration.serverBuilder.builder(),
+        configuration.serverBuilder.instrumenterBuilder(),
         ApplicationRequestGetter,
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )

@@ -36,7 +36,10 @@ public final class RatpackTelemetryBuilder {
             .setHeaderSetter(RequestHeaderSetter.INSTANCE);
     serverBuilder =
         new DefaultHttpServerInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, RatpackHttpAttributesGetter.INSTANCE, RatpackGetter.INSTANCE);
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            RatpackHttpAttributesGetter.INSTANCE,
+            RatpackGetter.INSTANCE);
   }
 
   /**
@@ -151,7 +154,9 @@ public final class RatpackTelemetryBuilder {
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setClientSpanNameExtractor(
-      Function<SpanNameExtractor<? super RequestSpec>, ? extends SpanNameExtractor<? super RequestSpec>>
+      Function<
+              SpanNameExtractor<? super RequestSpec>,
+              ? extends SpanNameExtractor<? super RequestSpec>>
           clientSpanNameExtractor) {
     clientBuilder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
