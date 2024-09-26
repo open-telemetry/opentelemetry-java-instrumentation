@@ -26,8 +26,7 @@ public final class UndertowSingletons {
                 builder.addContextCustomizer(
                     (context, request, attributes) -> {
                       // span is ended when counter reaches 0, we start from 2 which accounts for
-                      // the
-                      // handler that started the span and exchange completion listener
+                      // the handler that started the span and exchange completion listener
                       context = UndertowActiveHandlers.init(context, 2);
 
                       return new AppServerBridge.Builder()

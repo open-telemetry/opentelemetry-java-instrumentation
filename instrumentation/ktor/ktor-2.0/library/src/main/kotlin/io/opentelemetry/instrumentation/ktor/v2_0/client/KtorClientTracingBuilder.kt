@@ -23,9 +23,11 @@ class KtorClientTracingBuilder {
     }
   }
 
+  private lateinit var openTelemetry: OpenTelemetry
   private lateinit var clientBuilder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
+    this.openTelemetry = openTelemetry
     this.clientBuilder = DefaultHttpClientInstrumenterBuilder(
       INSTRUMENTATION_NAME,
       openTelemetry,
@@ -165,6 +167,6 @@ class KtorClientTracingBuilder {
 
   internal fun build(): KtorClientTracing = KtorClientTracing(
     instrumenter = clientBuilder.build(),
-    propagators = clientBuilder.openTelemetry.propagators,
+    propagators = openTelemetry.propagators,
   )
 }
