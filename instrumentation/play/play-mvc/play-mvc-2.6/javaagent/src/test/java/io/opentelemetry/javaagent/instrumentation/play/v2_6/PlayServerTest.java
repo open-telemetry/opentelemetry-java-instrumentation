@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_6.server;
+package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -132,6 +132,4 @@ abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
     }
     return span;
   }
-
-  public abstract Server setupServer(int port);
 }
