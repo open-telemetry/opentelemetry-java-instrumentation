@@ -65,9 +65,11 @@ if (useScansGradleCom) {
         fileFingerprints = true
       }
 
-      buildScanPublished {
-        File("build-scan.txt").printWriter().use { writer ->
-          writer.println(buildScanUri)
+      if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+        buildScanPublished {
+          File("build-scan.txt").printWriter().use { writer ->
+            writer.println(buildScanUri)
+          }
         }
       }
     }
@@ -89,9 +91,11 @@ if (useScansGradleCom) {
         value("Smoke test suite", it)
       }
 
-      buildScanPublished {
-        File("build-scan.txt").printWriter().use { writer ->
-          writer.println(buildScanUri)
+      if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+        buildScanPublished {
+          File("build-scan.txt").printWriter().use { writer ->
+            writer.println(buildScanUri)
+          }
         }
       }
     }
