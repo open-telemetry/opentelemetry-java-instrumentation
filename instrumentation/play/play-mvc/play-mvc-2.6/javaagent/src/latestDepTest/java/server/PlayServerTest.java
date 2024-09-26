@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_6;
+package server;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -13,8 +13,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Collections.emptySet;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -22,12 +22,9 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.HttpAttributes;
-import java.util.HashSet;
-import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.Mode;
-import play.mvc.Controller;
+import play.mvc.Result;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
@@ -45,61 +42,62 @@ abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
         components ->
             RoutingDsl.fromComponents(components)
                 .GET(SUCCESS.getPath())
-                .routeTo(
-                    () ->
+                .routingTo(
+                    request ->
                         controller(
                             SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())))
                 .GET(QUERY_PARAM.getPath())
-                .routeTo(
-                    () ->
+                .routingTo(
+                    request ->
                         controller(
                             QUERY_PARAM,
                             () -> Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())))
                 .GET(REDIRECT.getPath())
-                .routeTo(() -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())))
+                .routingTo(request -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())))
                 .GET(ERROR.getPath())
-                .routeTo(
-                    () ->
+                .routingTo(
+                    request ->
                         controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())))
                 .GET(EXCEPTION.getPath())
-                .routeTo(
-                    () ->
+                .routingTo(
+                    request ->
                         controller(
                             EXCEPTION,
                             () -> {
                               throw new IllegalArgumentException(EXCEPTION.getBody());
                             }))
                 .GET(CAPTURE_HEADERS.getPath())
-                .routeTo(
-                    () ->
+                .routingTo(
+                    request ->
                         controller(
                             CAPTURE_HEADERS,
                             () -> {
-                              Controller.request()
+                              Result result =
+                                  Results.status(
+                                      CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
+                              request
                                   .header("X-Test-Request")
-                                  .ifPresent(
-                                      value ->
-                                          Controller.response()
-                                              .setHeader("X-Test-Response", value));
-                              return Results.status(
-                                  CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
+                                  .ifPresent(value -> result.withHeader("X-Test-Response", value));
+                              return result;
                             }))
                 .GET(INDEXED_CHILD.getPath())
-                .routeTo(
-                    () ->
+                .routingTo(
+                    request ->
                         controller(
                             INDEXED_CHILD,
                             () -> {
                               INDEXED_CHILD.collectSpanAttributes(
-                                  name -> Controller.request().getQueryString(name));
+                                  name -> request.queryString(name).orElse(null));
                               return Results.status(
                                   INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                             }))
                 .build());
   }
 
+  protected abstract Server setupServer(int port);
+
   @Override
-  protected void stopServer(Server server) throws Exception {
+  protected void stopServer(Server server) {
     server.stop();
   }
 
@@ -107,23 +105,14 @@ abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
   protected void configure(HttpServerTestOptions options) {
     options.setHasHandlerSpan(unused -> true);
     options.setTestHttpPipelining(false);
-    options.setResponseCodeOnNonStandardHttpMethod(404);
-    // server spans are ended inside of the controller spans
-    options.setVerifyServerSpanEndTime(false);
-    options.setHttpAttributes(
-        serverEndpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HttpAttributes.HTTP_ROUTE);
-          return attributes;
-        });
+    options.setHttpAttributes(endpoint -> emptySet());
 
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
     options.disableTestNonStandardHttpMethod();
   }
 
   @Override
-  protected SpanDataAssert assertHandlerSpan(
+  public SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     span.hasName("play.request").hasKind(INTERNAL);
     if (endpoint == EXCEPTION) {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.play.v2_6;
+package server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -18,8 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import play.Mode;
 import play.libs.concurrent.HttpExecution;
-import play.mvc.Controller;
-import play.mvc.Http;
+import play.mvc.Result;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
@@ -30,7 +29,7 @@ class PlayAsyncServerTest extends PlayServerTest {
   private static final ExecutorService executor = Executors.newCachedThreadPool();
 
   @Override
-  protected Server setupServer() {
+  protected Server setupServer(int port) {
     ExecutionContextExecutor executionContextExecutor = HttpExecution.fromThread(executor);
     return Server.forRouter(
         Mode.TEST,
@@ -38,8 +37,8 @@ class PlayAsyncServerTest extends PlayServerTest {
         components ->
             RoutingDsl.fromComponents(components)
                 .GET(SUCCESS.getPath())
-                .routeAsync(
-                    () ->
+                .routingAsync(
+                    request ->
                         CompletableFuture.supplyAsync(
                             () ->
                                 controller(
@@ -47,8 +46,8 @@ class PlayAsyncServerTest extends PlayServerTest {
                                     () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())),
                             executionContextExecutor))
                 .GET(QUERY_PARAM.getPath())
-                .routeAsync(
-                    () ->
+                .routingAsync(
+                    request ->
                         CompletableFuture.supplyAsync(
                             () ->
                                 controller(
@@ -58,14 +57,14 @@ class PlayAsyncServerTest extends PlayServerTest {
                                             QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())),
                             executionContextExecutor))
                 .GET(REDIRECT.getPath())
-                .routeAsync(
-                    () ->
+                .routingAsync(
+                    request ->
                         CompletableFuture.supplyAsync(
                             () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())),
                             executionContextExecutor))
                 .GET(ERROR.getPath())
-                .routeAsync(
-                    () ->
+                .routingAsync(
+                    request ->
                         CompletableFuture.supplyAsync(
                             () ->
                                 controller(
@@ -73,39 +72,41 @@ class PlayAsyncServerTest extends PlayServerTest {
                                     () -> Results.status(ERROR.getStatus(), ERROR.getBody())),
                             executionContextExecutor))
                 .GET(EXCEPTION.getPath())
-                .routeAsync(
-                    () ->
+                .routingAsync(
+                    request ->
+                        CompletableFuture.supplyAsync(
+                            () -> {
+                              controller(
+                                  EXCEPTION,
+                                  () -> {
+                                    throw new IllegalArgumentException(EXCEPTION.getBody());
+                                  });
+                              return null;
+                            },
+                            executionContextExecutor))
+                .GET(CAPTURE_HEADERS.getPath())
+                .routingAsync(
+                    request ->
                         CompletableFuture.supplyAsync(
                             () ->
                                 controller(
-                                    EXCEPTION,
+                                    CAPTURE_HEADERS,
                                     () -> {
-                                      throw new IllegalArgumentException(EXCEPTION.getBody());
+                                      Result result =
+                                          Results.status(
+                                              CAPTURE_HEADERS.getStatus(),
+                                              CAPTURE_HEADERS.getBody());
+                                      request
+                                          .header("X-Test-Request")
+                                          .ifPresent(
+                                              value -> result.withHeader("X-Test-Response", value));
+                                      return result;
                                     }),
                             executionContextExecutor))
-                .GET(CAPTURE_HEADERS.getPath())
-                .routeAsync(
-                    () -> {
-                      Http.Request request = Controller.request();
-                      Http.Response response = Controller.response();
-                      return CompletableFuture.supplyAsync(
-                          () ->
-                              controller(
-                                  CAPTURE_HEADERS,
-                                  () -> {
-                                    request
-                                        .header("X-Test-Request")
-                                        .ifPresent(
-                                            value -> response.setHeader("X-Test-Response", value));
-                                    return Results.status(
-                                        CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
-                                  }),
-                          executionContextExecutor);
-                    })
                 .GET(INDEXED_CHILD.getPath())
-                .routeAsync(
-                    () -> {
-                      String id = Controller.request().getQueryString("id");
+                .routingAsync(
+                    request -> {
+                      String id = request.queryString("id").orElse(null);
                       return CompletableFuture.supplyAsync(
                           () ->
                               controller(
