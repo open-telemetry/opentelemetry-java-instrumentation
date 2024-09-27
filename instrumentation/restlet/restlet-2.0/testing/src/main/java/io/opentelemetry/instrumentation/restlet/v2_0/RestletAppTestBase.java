@@ -26,7 +26,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
 import org.restlet.util.Series;
 
-public class RestletAppTestBase {
+class RestletAppTestBase {
 
   public static class SuccessResource extends ServerResource {
 
