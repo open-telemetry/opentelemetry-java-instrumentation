@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts2;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
+
 import com.opensymphony.xwork2.ActionSupport;
 import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -17,40 +19,37 @@ public class GreetingAction extends ActionSupport {
   String responseBody = "default";
 
   public String success() {
-    responseBody =
-        HttpServerTest.controller(ServerEndpoint.SUCCESS, ServerEndpoint.SUCCESS::getBody);
+    responseBody = controller(ServerEndpoint.SUCCESS, ServerEndpoint.SUCCESS::getBody);
 
     return "greeting";
   }
 
   public String redirect() {
-    responseBody =
-        HttpServerTest.controller(ServerEndpoint.REDIRECT, ServerEndpoint.REDIRECT::getBody);
+    responseBody = controller(ServerEndpoint.REDIRECT, ServerEndpoint.REDIRECT::getBody);
     return "redirect";
   }
 
   public String query_param() {
-    responseBody =
-        HttpServerTest.controller(ServerEndpoint.QUERY_PARAM, ServerEndpoint.QUERY_PARAM::getBody);
+    responseBody = controller(ServerEndpoint.QUERY_PARAM, ServerEndpoint.QUERY_PARAM::getBody);
     return "greeting";
   }
 
   public String error() {
-    HttpServerTest.controller(ServerEndpoint.ERROR, ServerEndpoint.ERROR::getBody);
+    controller(ServerEndpoint.ERROR, ServerEndpoint.ERROR::getBody);
     return "error";
   }
 
   public String exception() {
-    HttpServerTest.controller(
+    controller(
         ServerEndpoint.EXCEPTION,
         () -> {
-          throw new Exception(ServerEndpoint.EXCEPTION.getBody());
+          throw new IllegalStateException(ServerEndpoint.EXCEPTION.getBody());
         });
     throw new AssertionError(); // should not reach here
   }
 
   public String path_param() {
-    HttpServerTest.controller(
+    controller(
         ServerEndpoint.PATH_PARAM,
         () ->
             "this does nothing, as responseBody is set in setId, but we need this controller span nevertheless");
