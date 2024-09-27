@@ -21,7 +21,7 @@ muzzle {
 dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
-  library("org.apache.pekko:pekko-actor_2.12:1.0.1")
+  library("org.apache.pekko:pekko-actor_2.12:1.1.1")
 
   latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:+")
 
