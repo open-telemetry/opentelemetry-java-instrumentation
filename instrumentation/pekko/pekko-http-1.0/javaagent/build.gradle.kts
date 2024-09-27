@@ -9,20 +9,20 @@ muzzle {
     module.set("pekko-http_2.12")
     versions.set("[1.0,)")
     assertInverse.set(true)
-    extraDependency("org.apache.pekko:pekko-stream_2.12:1.0.1")
+    extraDependency("org.apache.pekko:pekko-stream_2.12:1.1.1")
   }
   pass {
     group.set("org.apache.pekko")
     module.set("pekko-http_2.13")
     versions.set("[1.0,)")
     assertInverse.set(true)
-    extraDependency("org.apache.pekko:pekko-stream_2.13:1.0.1")
+    extraDependency("org.apache.pekko:pekko-stream_2.13:1.1.1")
   }
 }
 
 dependencies {
-  library("org.apache.pekko:pekko-http_2.12:1.0.0")
-  library("org.apache.pekko:pekko-stream_2.12:1.0.1")
+  library("org.apache.pekko:pekko-http_2.12:1.1.0-M1")
+  library("org.apache.pekko:pekko-stream_2.12:1.1.1")
 
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
