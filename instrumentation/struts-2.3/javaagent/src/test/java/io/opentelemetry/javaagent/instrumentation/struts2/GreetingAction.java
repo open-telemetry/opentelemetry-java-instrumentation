@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.struts2;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 
 import com.opensymphony.xwork2.ActionSupport;
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,7 +57,7 @@ public class GreetingAction extends ActionSupport {
 
   public String indexed_child() {
     responseBody =
-        HttpServerTest.controller(
+        controller(
             ServerEndpoint.INDEXED_CHILD,
             () -> {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(
@@ -73,8 +72,7 @@ public class GreetingAction extends ActionSupport {
     HttpServletResponse response = ServletActionContext.getResponse();
     response.setHeader("X-Test-Response", request.getHeader("X-Test-Request"));
     responseBody =
-        HttpServerTest.controller(
-            ServerEndpoint.CAPTURE_HEADERS, ServerEndpoint.CAPTURE_HEADERS::getBody);
+        controller(ServerEndpoint.CAPTURE_HEADERS, ServerEndpoint.CAPTURE_HEADERS::getBody);
     return "greeting";
   }
 
