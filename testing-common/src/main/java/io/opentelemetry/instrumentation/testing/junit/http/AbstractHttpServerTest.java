@@ -120,7 +120,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     if (endpoint == NOT_FOUND) {
       return closure.get();
     }
-    return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
+    return GlobalTraceUtil.runWithSpan("controller", closure::get);
+  }
+
+  public static void controller(ServerEndpoint endpoint, Runnable closure) {
+    controller(
+        endpoint,
+        () -> {
+          closure.run();
+          return null;
+        });
   }
 
   protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
