@@ -14,7 +14,7 @@ import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttri
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_STREAM_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_TABLE_NAME;
 
-import com.amazonaws.AmazonWebServiceResponse;
+import com.amazonaws.AmazonWebServiceResult;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.common.AttributeKey;
@@ -59,9 +59,9 @@ class AwsSdkExperimentalAttributesExtractor
       Request<?> request,
       @Nullable Response<?> response,
       @Nullable Throwable error) {
-    if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResponse) {
-      AmazonWebServiceResponse<?> awsResp = (AmazonWebServiceResponse<?>) response.getAwsResponse();
-      String requestId = awsResp.getRequestId();
+    if (response != null && response.getAwsResponse() instanceof AmazonWebServiceResult) {
+      AmazonWebServiceResult<?> awsResp = (AmazonWebServiceResult<?>) response.getAwsResponse();
+      String requestId = awsResp.getSdkResponseMetadata().getRequestId();
       if (requestId != null) {
         attributes.put(AWS_REQUEST_ID, requestId);
       }

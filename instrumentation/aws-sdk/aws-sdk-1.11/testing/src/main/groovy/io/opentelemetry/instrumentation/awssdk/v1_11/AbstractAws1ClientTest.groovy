@@ -103,6 +103,8 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
     client.requestHandler2s != null
     client.requestHandler2s.find { it.getClass().getSimpleName() == "TracingRequestHandler" } != null
 
+    def hasRequestId = service in ["SNS", "RDS", "EC2"]
+
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
@@ -121,6 +123,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
+            "aws.request_id" hasRequestId ? String : null
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
