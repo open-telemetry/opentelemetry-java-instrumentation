@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.awspring.cloud")
     module.set("spring-cloud-aws-sqs")
-    versions.set("(,)")
+    versions.set("[3.0.0,)")
     assertInverse.set(true)
   }
 }
