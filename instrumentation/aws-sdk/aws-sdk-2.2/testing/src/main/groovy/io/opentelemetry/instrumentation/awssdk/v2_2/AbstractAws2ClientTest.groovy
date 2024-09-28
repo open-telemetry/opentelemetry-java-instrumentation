@@ -135,7 +135,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
             "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "aws.request_id" "$requestId"
             if (service == "S3") {
               "aws.bucket.name" "somebucket"
             } else if (service == "Sqs" && operation == "CreateQueue") {
@@ -295,7 +295,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
             "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "aws.request_id" "$requestId"
             if (service == "S3") {
               "aws.bucket.name" "somebucket"
             } else if (service == "Sqs" && operation == "CreateQueue") {

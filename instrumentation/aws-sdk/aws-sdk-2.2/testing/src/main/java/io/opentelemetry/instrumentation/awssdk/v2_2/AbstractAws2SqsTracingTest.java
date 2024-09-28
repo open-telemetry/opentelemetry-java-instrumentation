@@ -166,7 +166,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
                                 satisfies(
-                                    stringKey("aws.requestId"),
+                                    stringKey("aws.request_id"),
                                     val ->
                                         val.satisfiesAnyOf(
                                             v ->
@@ -196,7 +196,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                       stringKey("aws.queue.url"),
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                   satisfies(
-                                      stringKey("aws.requestId"),
+                                      stringKey("aws.request_id"),
                                       val ->
                                           val.satisfiesAnyOf(
                                               v ->
@@ -260,7 +260,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                         stringKey("aws.queue.url"),
                                         "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                     satisfies(
-                                        stringKey("aws.requestId"),
+                                        stringKey("aws.request_id"),
                                         val ->
                                             val.satisfiesAnyOf(
                                                 v ->
@@ -507,7 +507,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                   stringKey("aws.queue.url"),
                                   "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                               satisfies(
-                                  stringKey("aws.requestId"),
+                                  stringKey("aws.request_id"),
                                   val ->
                                       val.satisfiesAnyOf(
                                           v ->
