@@ -16,14 +16,11 @@ import java.lang.reflect.Method;
 import org.apache.shenyu.common.dto.MetaData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.netty.http.client.HttpClient;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest(
     properties = {"shenyu.local.enabled=true", "spring.main.allow-bean-definition-overriding=true"},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
