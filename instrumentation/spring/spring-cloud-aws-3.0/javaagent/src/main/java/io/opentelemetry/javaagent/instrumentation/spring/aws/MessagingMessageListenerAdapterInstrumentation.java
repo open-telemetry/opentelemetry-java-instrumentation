@@ -27,6 +27,7 @@ public class MessagingMessageListenerAdapterInstrumentation implements TypeInstr
     transformer.applyAdviceToMethod(
         named("onMessage").and(takesArgument(0, named("org.springframework.messaging.Message"))),
         this.getClass().getName() + "$OnMessageAdvice");
+    // TODO: onMessage(Collection<Message<T>> messages) not instrumented
   }
 
   @SuppressWarnings("unused")
