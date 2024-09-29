@@ -39,6 +39,12 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   @Override
+  public String getHttpRoute(ServletRequestContext<REQUEST> requestContext) {
+    return accessor.getRequestUri(requestContext.request());
+  }
+
+  @Nullable
+  @Override
   public String getUrlQuery(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestQueryString(requestContext.request());
   }
