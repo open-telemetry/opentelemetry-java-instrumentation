@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -43,82 +42,86 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
                         exchange ->
                             exchange.dispatch(
                                 k ->
-                                    testing.runWithSpan(
-                                        "controller",
-                                        (ThrowingRunnable<Exception>)
-                                            () -> k.getResponseSender().send(SUCCESS.getBody()))))
+                                    controller(
+                                        SUCCESS,
+                                        () -> {
+                                          k.getResponseSender().send(SUCCESS.getBody());
+                                          return null;
+                                        })))
                     .addExactPath(
                         QUERY_PARAM.rawPath(),
                         exchange ->
                             exchange.dispatch(
                                 k ->
-                                    testing.runWithSpan(
-                                        "controller",
-                                        (ThrowingRunnable<Exception>)
-                                            () -> k.getResponseSender().send(k.getQueryString()))))
+                                    controller(
+                                        CAPTURE_HEADERS,
+                                        () -> {
+                                          k.getResponseSender().send(k.getQueryString());
+                                          return null;
+                                        })))
                     .addExactPath(
                         REDIRECT.rawPath(),
                         exchange ->
                             exchange.dispatch(
                                 k ->
-                                    testing.runWithSpan(
-                                        "controller",
-                                        (ThrowingRunnable<Exception>)
-                                            () -> {
-                                              k.setStatusCode(StatusCodes.FOUND);
-                                              k.getResponseHeaders()
-                                                  .put(Headers.LOCATION, REDIRECT.getBody());
-                                              k.endExchange();
-                                            })))
+                                    controller(
+                                        CAPTURE_HEADERS,
+                                        () -> {
+                                          k.setStatusCode(StatusCodes.FOUND);
+                                          k.getResponseHeaders()
+                                              .put(Headers.LOCATION, REDIRECT.getBody());
+                                          k.endExchange();
+                                          return null;
+                                        })))
                     .addExactPath(
                         CAPTURE_HEADERS.rawPath(),
                         exchange ->
                             exchange.dispatch(
                                 k ->
-                                    testing.runWithSpan(
-                                        "controller",
-                                        (ThrowingRunnable<Exception>)
-                                            () -> {
-                                              k.setStatusCode(StatusCodes.OK);
-                                              k.getResponseHeaders()
-                                                  .put(
-                                                      new HttpString("X-Test-Response"),
-                                                      exchange
-                                                          .getRequestHeaders()
-                                                          .getFirst("X-Test-Request"));
-                                              k.getResponseSender().send(CAPTURE_HEADERS.getBody());
-                                            })))
+                                    controller(
+                                        CAPTURE_HEADERS,
+                                        () -> {
+                                          k.setStatusCode(StatusCodes.OK);
+                                          k.getResponseHeaders()
+                                              .put(
+                                                  new HttpString("X-Test-Response"),
+                                                  exchange
+                                                      .getRequestHeaders()
+                                                      .getFirst("X-Test-Request"));
+                                          k.getResponseSender().send(CAPTURE_HEADERS.getBody());
+                                          return null;
+                                        })))
                     .addExactPath(
                         ERROR.rawPath(),
                         exchange ->
                             exchange.dispatch(
                                 k ->
-                                    testing.runWithSpan(
-                                        "controller",
-                                        (ThrowingRunnable<Exception>)
-                                            () -> {
-                                              exchange.setStatusCode(ERROR.getStatus());
-                                              exchange.getResponseSender().send(ERROR.getBody());
-                                            })))
+                                    controller(
+                                        ERROR,
+                                        () -> {
+                                          exchange.setStatusCode(ERROR.getStatus());
+                                          exchange.getResponseSender().send(ERROR.getBody());
+                                          return null;
+                                        })))
                     .addExactPath(
                         INDEXED_CHILD.rawPath(),
                         exchange ->
                             exchange.dispatch(
                                 k ->
-                                    testing.runWithSpan(
-                                        "controller",
-                                        (ThrowingRunnable<Exception>)
-                                            () -> {
-                                              INDEXED_CHILD.collectSpanAttributes(
-                                                  name ->
-                                                      exchange
-                                                          .getQueryParameters()
-                                                          .get(name)
-                                                          .peekFirst());
-                                              exchange
-                                                  .getResponseSender()
-                                                  .send(INDEXED_CHILD.getBody());
-                                            }))))
+                                    controller(
+                                        INDEXED_CHILD,
+                                        () -> {
+                                          INDEXED_CHILD.collectSpanAttributes(
+                                              name ->
+                                                  exchange
+                                                      .getQueryParameters()
+                                                      .get(name)
+                                                      .peekFirst());
+                                          exchange
+                                              .getResponseSender()
+                                              .send(INDEXED_CHILD.getBody());
+                                          return null;
+                                        }))))
             .build();
     server.start();
     return server;

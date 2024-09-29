@@ -57,60 +57,59 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                     .addExactPath(
                         SUCCESS.rawPath(),
                         exchange ->
-                            testing.runWithSpan(
-                                "controller",
-                                (ThrowingRunnable<Exception>)
-                                    () -> exchange.getResponseSender().send(SUCCESS.getBody())))
+                            controller(
+                                SUCCESS,
+                                () -> {
+                                  exchange.getResponseSender().send(SUCCESS.getBody());
+                                  return null;
+                                }))
                     .addExactPath(
                         QUERY_PARAM.rawPath(),
                         exchange ->
-                            testing.runWithSpan(
-                                "controller",
-                                (ThrowingRunnable<Exception>)
-                                    () ->
-                                        exchange
-                                            .getResponseSender()
-                                            .send(exchange.getQueryString())))
+                            controller(
+                                QUERY_PARAM,
+                                () -> {
+                                  exchange.getResponseSender().send(exchange.getQueryString());
+                                  return null;
+                                }))
                     .addExactPath(
                         REDIRECT.rawPath(),
                         exchange ->
-                            testing.runWithSpan(
-                                "controller",
-                                (ThrowingRunnable<Exception>)
-                                    () -> {
-                                      exchange.setStatusCode(StatusCodes.FOUND);
-                                      exchange
-                                          .getResponseHeaders()
-                                          .put(Headers.LOCATION, REDIRECT.getBody());
-                                      exchange.endExchange();
-                                    }))
+                            controller(
+                                REDIRECT,
+                                () -> {
+                                  exchange.setStatusCode(StatusCodes.FOUND);
+                                  exchange
+                                      .getResponseHeaders()
+                                      .put(Headers.LOCATION, REDIRECT.getBody());
+                                  exchange.endExchange();
+                                  return null;
+                                }))
                     .addExactPath(
                         CAPTURE_HEADERS.rawPath(),
                         exchange ->
-                            testing.runWithSpan(
-                                "controller",
-                                (ThrowingRunnable<Exception>)
-                                    () -> {
-                                      exchange.setStatusCode(StatusCodes.OK);
-                                      exchange
-                                          .getResponseHeaders()
-                                          .put(
-                                              new HttpString("X-Test-Response"),
-                                              exchange
-                                                  .getRequestHeaders()
-                                                  .getFirst("X-Test-Request"));
-                                      exchange.getResponseSender().send(CAPTURE_HEADERS.getBody());
-                                    }))
+                            controller(
+                                CAPTURE_HEADERS,
+                                () -> {
+                                  exchange.setStatusCode(StatusCodes.OK);
+                                  exchange
+                                      .getResponseHeaders()
+                                      .put(
+                                          new HttpString("X-Test-Response"),
+                                          exchange.getRequestHeaders().getFirst("X-Test-Request"));
+                                  exchange.getResponseSender().send(CAPTURE_HEADERS.getBody());
+                                  return null;
+                                }))
                     .addExactPath(
                         ERROR.rawPath(),
                         exchange ->
-                            testing.runWithSpan(
-                                "controller",
-                                (ThrowingRunnable<Exception>)
-                                    () -> {
-                                      exchange.setStatusCode(ERROR.getStatus());
-                                      exchange.getResponseSender().send(ERROR.getBody());
-                                    }))
+                            controller(
+                                ERROR,
+                                () -> {
+                                  exchange.setStatusCode(ERROR.getStatus());
+                                  exchange.getResponseSender().send(ERROR.getBody());
+                                  return null;
+                                }))
                     .addExactPath(
                         EXCEPTION.rawPath(),
                         exchange ->
@@ -123,15 +122,14 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                     .addExactPath(
                         INDEXED_CHILD.rawPath(),
                         exchange ->
-                            testing.runWithSpan(
-                                "controller",
-                                (ThrowingRunnable<Exception>)
-                                    () -> {
-                                      INDEXED_CHILD.collectSpanAttributes(
-                                          name ->
-                                              exchange.getQueryParameters().get(name).peekFirst());
-                                      exchange.getResponseSender().send(INDEXED_CHILD.getBody());
-                                    }))
+                            controller(
+                                INDEXED_CHILD,
+                                () -> {
+                                  INDEXED_CHILD.collectSpanAttributes(
+                                      name -> exchange.getQueryParameters().get(name).peekFirst());
+                                  exchange.getResponseSender().send(INDEXED_CHILD.getBody());
+                                  return null;
+                                }))
                     .addExactPath(
                         "sendResponse",
                         exchange -> {
