@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -37,16 +38,11 @@ class DbClientAttributesExtractorTest {
       return map.get("db.user");
     }
 
-    @Deprecated
-    @Override
-    public String getName(Map<String, String> map) {
-      return map.get("db.name");
-    }
-
     @Nullable
     @Override
     public String getDbNamespace(Map<String, String> map) {
-      return map.get("db.namespace");
+      return map.get(
+          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.name")).getKey());
     }
 
     @Deprecated
@@ -55,28 +51,18 @@ class DbClientAttributesExtractorTest {
       return map.get("db.connection_string");
     }
 
-    @Deprecated
-    @Override
-    public String getStatement(Map<String, String> map) {
-      return map.get("db.statement");
-    }
-
     @Nullable
     @Override
     public String getDbQueryText(Map<String, String> map) {
-      return map.get("db.query.text");
-    }
-
-    @Deprecated
-    @Override
-    public String getOperation(Map<String, String> map) {
-      return map.get("db.operation");
+      return map.get(
+          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.statement")).getKey());
     }
 
     @Nullable
     @Override
     public String getDbOperationName(Map<String, String> map) {
-      return map.get("db.operation.name");
+      return map.get(
+          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.operation")).getKey());
     }
   }
 

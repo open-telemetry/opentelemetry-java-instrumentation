@@ -65,28 +65,24 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     this.statementSanitizationEnabled = statementSanitizationEnabled;
   }
 
-  @SuppressWarnings("deprecation") // until old semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    String rawStatement =
-        SemconvStability.emitStableDatabaseSemconv()
-            ? getter.getRawQueryText(request)
-            : getter.getRawStatement(request);
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawStatement);
+    String rawQueryText = getter.getRawQueryText(request);
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryText);
     String operation = sanitizedStatement.getOperation();
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(
           attributes,
           DB_QUERY_TEXT,
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
       internalSet(attributes, DB_OPERATION_NAME, operation);
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(
           attributes,
           DB_STATEMENT,
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
       internalSet(attributes, DB_OPERATION, operation);
     }
     if (!SQL_CALL.equals(operation)) {

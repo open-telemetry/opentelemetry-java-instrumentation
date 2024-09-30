@@ -45,7 +45,7 @@ abstract class DbClientCommonAttributesExtractor<
       internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
       internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
     }
-    internalSet(attributes, DB_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
   }
 
   @Override
