@@ -18,9 +18,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty.dispatch.JettyDispatchTest;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
 import jakarta.servlet.Servlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 
-public class JettyServlet5DispatchAsyncTest extends JettyDispatchTest {
+public class Jetty12Servlet5DispatchAsyncTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet5.Async.class;

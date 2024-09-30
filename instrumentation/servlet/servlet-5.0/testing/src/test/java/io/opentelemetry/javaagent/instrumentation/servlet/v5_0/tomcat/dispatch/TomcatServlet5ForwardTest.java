@@ -19,10 +19,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.RequestDispatcherServlet;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.dispatch.TomcatDispatchTest;
 import org.apache.catalina.Context;
 import org.junit.jupiter.api.extension.RegisterExtension;
 

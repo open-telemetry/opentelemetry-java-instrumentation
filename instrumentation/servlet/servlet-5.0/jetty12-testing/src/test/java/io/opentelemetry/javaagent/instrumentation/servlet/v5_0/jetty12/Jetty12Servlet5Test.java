@@ -19,14 +19,15 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class JettyServlet5Test
+public abstract class Jetty12Servlet5Test
     extends AbstractServlet5Test<Server, ServletContextHandler> {
 
   @RegisterExtension
@@ -81,15 +82,17 @@ public abstract class JettyServlet5Test
   protected Server setupServer() throws Exception {
     Server jettyServer = new Server(new InetSocketAddress("localhost", port));
 
-    ServletContextHandler servletContext = new ServletContextHandler(null, getContextPath());
-    servletContext.setErrorHandler(
-        new ErrorHandler() {
-          @Override
-          protected void handleErrorPage(
-              HttpServletRequest request, Writer writer, int code, String message)
-              throws IOException {
-            Throwable th = (Throwable) request.getAttribute("jakarta.servlet.error.exception");
-            writer.write(th != null ? th.getMessage() : message);
+    ServletContextHandler servletContext = new ServletContextHandler(contextPath);
+    servletContext.errorHandler = new Request.Handler() {
+
+      @Override
+      boolean handle(Request request, Response response, Callback callback) throws Exception {
+        String message = (String) request.getAttribute("org.eclipse.jetty.server.error_message")
+        if (message != null) {
+          response.write(true, StandardCharsets.UTF_8.encode(message), Callback.NOOP)
+        }
+        callback.succeeded()
+        return true
           }
         });
     setupServlets(servletContext);
