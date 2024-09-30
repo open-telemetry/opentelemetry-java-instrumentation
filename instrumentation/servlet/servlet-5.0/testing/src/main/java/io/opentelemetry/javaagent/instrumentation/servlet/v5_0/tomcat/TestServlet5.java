@@ -14,8 +14,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_PRINT_WRITER;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;

@@ -10,12 +10,12 @@ import java.nio.file.Files;
 import java.util.UUID;
 import jakarta.servlet.Servlet;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.mapping.AbstractServlet3MappingTest;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping.AbstractServlet5MappingTest;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
 
-class TomcatServlet5MappingTest extends AbstractServlet3MappingTest<Tomcat, Context> {
+class TomcatServlet5MappingTest extends AbstractServlet5MappingTest<Tomcat, Context> {
   @Override
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();

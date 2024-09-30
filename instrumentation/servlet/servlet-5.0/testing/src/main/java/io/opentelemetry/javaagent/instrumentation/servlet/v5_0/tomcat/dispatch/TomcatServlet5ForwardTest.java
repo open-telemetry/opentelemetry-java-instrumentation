@@ -18,11 +18,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.RequestDispatcherServlet;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.RequestDispatcherServlet;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
 import jakarta.servlet.Servlet;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.dispatch.TomcatDispatchTest;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.dispatch.TomcatDispatchTest;
 import org.apache.catalina.Context;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,7 +34,7 @@ class TomcatServlet5ForwardTest extends TomcatDispatchTest {
 
   @Override
   public Class<? extends Servlet> servlet() {
-    return TestServlet3.Sync.class; // dispatch to sync servlet
+    return TestServlet5.Sync.class; // dispatch to sync servlet
   }
 
   @Override

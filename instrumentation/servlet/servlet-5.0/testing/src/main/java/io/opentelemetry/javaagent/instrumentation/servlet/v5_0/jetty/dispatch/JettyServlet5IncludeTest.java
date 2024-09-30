@@ -15,15 +15,15 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.RequestDispatcherServlet;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.RequestDispatcherServlet;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 public class JettyServlet5IncludeTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
-    return TestServlet3.Sync.class; // dispatch to sync servlet
+    return TestServlet5.Sync.class; // dispatch to sync servlet
   }
 
   @Override

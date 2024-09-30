@@ -18,7 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.apache.catalina.Context;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -37,30 +37,30 @@ class TomcatServlet5DispatchAsyncTest extends TomcatDispatchTest {
 
   @Override
   public Class<? extends Servlet> servlet() {
-    return TestServlet3.Async.class;
+    return TestServlet5.Async.class;
   }
 
   @Override
   protected void setupServlets(Context context) throws Exception {
     super.setupServlets(context);
 
-    addServlet(context, "/dispatch" + SUCCESS.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch" + QUERY_PARAM.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch" + ERROR.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch" + EXCEPTION.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch" + REDIRECT.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch" + AUTH_REQUIRED.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch" + CAPTURE_HEADERS.getPath(), TestServlet3.DispatchAsync.class);
+    addServlet(context, "/dispatch" + SUCCESS.getPath(), TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch" + QUERY_PARAM.getPath(), TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch" + ERROR.getPath(), TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch" + EXCEPTION.getPath(), TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch" + REDIRECT.getPath(), TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.getPath(), TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch" + CAPTURE_HEADERS.getPath(), TestServlet5.DispatchAsync.class);
     addServlet(
-        context, "/dispatch" + CAPTURE_PARAMETERS.getPath(), TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch" + INDEXED_CHILD.getPath(), TestServlet3.DispatchAsync.class);
+        context, "/dispatch" + CAPTURE_PARAMETERS.getPath(), TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch" + INDEXED_CHILD.getPath(), TestServlet5.DispatchAsync.class);
     addServlet(
-        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), TestServlet3.DispatchAsync.class);
+        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), TestServlet5.DispatchAsync.class);
     addServlet(
         context,
         "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
-        TestServlet3.DispatchAsync.class);
-    addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive.class);
+        TestServlet5.DispatchAsync.class);
+    addServlet(context, "/dispatch/recursive", TestServlet5.DispatchRecursive.class);
   }
 
   @Override
