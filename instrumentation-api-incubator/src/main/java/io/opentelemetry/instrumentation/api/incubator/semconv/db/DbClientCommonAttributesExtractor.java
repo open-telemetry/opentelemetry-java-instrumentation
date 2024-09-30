@@ -42,7 +42,7 @@ abstract class DbClientCommonAttributesExtractor<
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_USER, getter.getUser(request));
-      internalSet(attributes, DB_NAME, getter.getName(request));
+      internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
       internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
     }
     internalSet(attributes, DB_SYSTEM, getter.getSystem(request));

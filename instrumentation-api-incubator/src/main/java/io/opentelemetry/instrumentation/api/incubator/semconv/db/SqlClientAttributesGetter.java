@@ -29,8 +29,12 @@ public interface SqlClientAttributesGetter<REQUEST>
    */
   @Deprecated
   @Nullable
-  String getRawStatement(REQUEST request);
+  default String getRawStatement(REQUEST request) {
+    return null;
+  }
 
   @Nullable
-  String getRawQueryText(REQUEST request);
+  default String getRawQueryText(REQUEST request) {
+    return getRawStatement(request);
+  }
 }

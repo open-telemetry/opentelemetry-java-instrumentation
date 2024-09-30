@@ -12,12 +12,6 @@ import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {
 
-  @Deprecated
-  @Override
-  public String getSystem(JedisRequest request) {
-    return REDIS;
-  }
-
   @Override
   public String getDbSystem(JedisRequest jedisRequest) {
     return REDIS;
@@ -27,12 +21,6 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   @Nullable
   public String getUser(JedisRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  public String getName(JedisRequest request) {
     return null;
   }
 
@@ -48,22 +36,10 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return null;
   }
 
-  @Deprecated
-  @Override
-  public String getStatement(JedisRequest request) {
-    return request.getStatement();
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(JedisRequest request) {
     return request.getStatement();
-  }
-
-  @Deprecated
-  @Override
-  public String getOperation(JedisRequest request) {
-    return request.getOperation();
   }
 
   @Nullable

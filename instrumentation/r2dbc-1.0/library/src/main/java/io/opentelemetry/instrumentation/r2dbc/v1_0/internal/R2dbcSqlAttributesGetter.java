@@ -15,12 +15,6 @@ import javax.annotation.Nullable;
 public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution> {
   INSTANCE;
 
-  @Deprecated
-  @Override
-  public String getSystem(DbExecution request) {
-    return request.getSystem();
-  }
-
   @Nullable
   @Override
   public String getDbSystem(DbExecution request) {
@@ -34,13 +28,6 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
     return request.getUser();
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(DbExecution request) {
-    return request.getName();
-  }
-
   @Nullable
   @Override
   public String getDbNamespace(DbExecution request) {
@@ -52,13 +39,6 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   @Nullable
   public String getConnectionString(DbExecution request) {
     return request.getConnectionString();
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getRawStatement(DbExecution request) {
-    return request.getRawStatement();
   }
 
   @Override

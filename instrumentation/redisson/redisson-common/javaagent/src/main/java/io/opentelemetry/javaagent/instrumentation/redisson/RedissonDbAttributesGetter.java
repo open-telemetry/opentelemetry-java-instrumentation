@@ -12,12 +12,6 @@ import javax.annotation.Nullable;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest> {
 
-  @Deprecated
-  @Override
-  public String getSystem(RedissonRequest request) {
-    return REDIS;
-  }
-
   @Override
   public String getDbSystem(RedissonRequest redissonRequest) {
     return REDIS;
@@ -27,13 +21,6 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Nullable
   @Override
   public String getUser(RedissonRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getName(RedissonRequest request) {
     return null;
   }
 
@@ -49,22 +36,9 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return null;
   }
 
-  @Deprecated
-  @Override
-  public String getStatement(RedissonRequest request) {
-    return request.getStatement();
-  }
-
   @Override
   public String getDbQueryText(RedissonRequest request) {
     return request.getStatement();
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getOperation(RedissonRequest request) {
-    return request.getOperation();
   }
 
   @Nullable

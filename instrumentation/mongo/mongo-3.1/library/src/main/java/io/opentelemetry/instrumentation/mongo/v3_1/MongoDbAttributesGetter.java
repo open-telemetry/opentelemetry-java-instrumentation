@@ -49,12 +49,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
 
-  @Deprecated
-  @Override
-  public String getSystem(CommandStartedEvent event) {
-    return MONGODB;
-  }
-
   @Override
   public String getDbSystem(CommandStartedEvent commandStartedEvent) {
     return MONGODB;
@@ -65,13 +59,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   public String getUser(CommandStartedEvent event) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(CommandStartedEvent event) {
-    return event.getDatabaseName();
   }
 
   @Nullable
@@ -99,23 +86,10 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
-  @Deprecated
-  @Override
-  public String getStatement(CommandStartedEvent event) {
-    return sanitizeStatement(event.getCommand());
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getOperation(CommandStartedEvent event) {
-    return event.getCommandName();
   }
 
   @Nullable

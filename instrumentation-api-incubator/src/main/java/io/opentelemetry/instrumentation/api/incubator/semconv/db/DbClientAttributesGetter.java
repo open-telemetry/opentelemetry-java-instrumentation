@@ -25,18 +25,26 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
    */
   @Deprecated
   @Nullable
-  String getStatement(REQUEST request);
+  default String getStatement(REQUEST request) {
+    return null;
+  }
 
   @Nullable
-  String getDbQueryText(REQUEST request);
+  default String getDbQueryText(REQUEST request) {
+    return getStatement(request);
+  }
 
   /**
    * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
    */
   @Deprecated
   @Nullable
-  String getOperation(REQUEST request);
+  default String getOperation(REQUEST request) {
+    return null;
+  }
 
   @Nullable
-  String getDbOperationName(REQUEST request);
+  default String getDbOperationName(REQUEST request) {
+    return getOperation(request);
+  }
 }

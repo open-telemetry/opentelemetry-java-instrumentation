@@ -10,12 +10,6 @@ import javax.annotation.Nullable;
 
 public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<SpymemcachedRequest> {
 
-  @Deprecated
-  @Override
-  public String getSystem(SpymemcachedRequest spymemcachedRequest) {
-    return "memcached";
-  }
-
   @Override
   public String getDbSystem(SpymemcachedRequest spymemcachedRequest) {
     return "memcached";
@@ -25,13 +19,6 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
   @Override
   @Nullable
   public String getUser(SpymemcachedRequest spymemcachedRequest) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
@@ -48,24 +35,10 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
     return null;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getStatement(SpymemcachedRequest spymemcachedRequest) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getOperation(SpymemcachedRequest spymemcachedRequest) {
-    return spymemcachedRequest.dbOperation();
   }
 
   @Nullable

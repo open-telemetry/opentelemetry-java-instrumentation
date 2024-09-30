@@ -21,12 +21,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
-  @Deprecated
-  @Override
-  public String getSystem(RedisCommand<?, ?, ?> request) {
-    return REDIS;
-  }
-
   @Override
   public String getDbSystem(RedisCommand<?, ?, ?> redisCommand) {
     return REDIS;
@@ -36,13 +30,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   @Override
   @Nullable
   public String getUser(RedisCommand<?, ?, ?> request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(RedisCommand<?, ?, ?> request) {
     return null;
   }
 
@@ -59,17 +46,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
-  @Deprecated
-  @Override
-  public String getStatement(RedisCommand<?, ?, ?> request) {
-    String command = LettuceInstrumentationUtil.getCommandName(request);
-    List<String> args =
-        request.getArgs() == null
-            ? Collections.emptyList()
-            : LettuceArgSplitter.splitArgs(request.getArgs().toCommandString());
-    return sanitizer.sanitize(command, args);
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(RedisCommand<?, ?, ?> request) {
@@ -79,12 +55,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
             ? Collections.emptyList()
             : LettuceArgSplitter.splitArgs(request.getArgs().toCommandString());
     return sanitizer.sanitize(command, args);
-  }
-
-  @Deprecated
-  @Override
-  public String getOperation(RedisCommand<?, ?, ?> request) {
-    return request.getType().name();
   }
 
   @Nullable

@@ -13,12 +13,6 @@ import javax.annotation.Nullable;
 final class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest> {
 
-  @Deprecated
-  @Override
-  public String getSystem(ElasticTransportRequest request) {
-    return ELASTICSEARCH;
-  }
-
   @Override
   public String getDbSystem(ElasticTransportRequest elasticTransportRequest) {
     return ELASTICSEARCH;
@@ -28,13 +22,6 @@ final class ElasticsearchTransportAttributesGetter
   @Override
   @Nullable
   public String getUser(ElasticTransportRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(ElasticTransportRequest request) {
     return null;
   }
 
@@ -51,23 +38,10 @@ final class ElasticsearchTransportAttributesGetter
     return null;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getStatement(ElasticTransportRequest request) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(ElasticTransportRequest request) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  public String getOperation(ElasticTransportRequest request) {
-    return request.getAction().getClass().getSimpleName();
   }
 
   @Override

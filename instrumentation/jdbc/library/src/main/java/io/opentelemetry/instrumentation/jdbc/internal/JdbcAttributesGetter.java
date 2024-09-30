@@ -15,13 +15,6 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest> {
 
-  @Deprecated
-  @Nullable
-  @Override
-  public String getSystem(DbRequest request) {
-    return request.getDbInfo().getSystem();
-  }
-
   @Nullable
   @Override
   public String getDbSystem(DbRequest request) {
@@ -33,14 +26,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getUser(DbRequest request) {
     return request.getDbInfo().getUser();
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getName(DbRequest request) {
-    DbInfo dbInfo = request.getDbInfo();
-    return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 
   @Nullable
@@ -55,13 +40,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getConnectionString(DbRequest request) {
     return request.getDbInfo().getShortUrl();
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getRawStatement(DbRequest request) {
-    return request.getDbQueryText();
   }
 
   @Override

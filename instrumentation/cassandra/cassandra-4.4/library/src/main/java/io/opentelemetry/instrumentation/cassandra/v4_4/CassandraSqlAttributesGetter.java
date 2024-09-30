@@ -13,12 +13,6 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   // copied from DbIncubatingAttributes.DbSystemValues
   private static final String CASSANDRA = "cassandra";
 
-  @Deprecated
-  @Override
-  public String getSystem(CassandraRequest request) {
-    return CASSANDRA;
-  }
-
   @Override
   public String getDbSystem(CassandraRequest request) {
     return CASSANDRA;
@@ -29,13 +23,6 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   @Nullable
   public String getUser(CassandraRequest request) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(CassandraRequest request) {
-    return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
   @Nullable
@@ -49,13 +36,6 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   @Nullable
   public String getConnectionString(CassandraRequest request) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getRawStatement(CassandraRequest request) {
-    return request.getDbQueryText();
   }
 
   @Override

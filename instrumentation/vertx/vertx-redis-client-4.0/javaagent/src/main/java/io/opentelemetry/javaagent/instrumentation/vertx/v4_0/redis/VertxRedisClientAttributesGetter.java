@@ -19,12 +19,6 @@ public enum VertxRedisClientAttributesGetter
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
-  @Deprecated
-  @Override
-  public String getSystem(VertxRedisClientRequest request) {
-    return REDIS;
-  }
-
   @Override
   public String getDbSystem(VertxRedisClientRequest vertxRedisClientRequest) {
     return REDIS;
@@ -35,13 +29,6 @@ public enum VertxRedisClientAttributesGetter
   @Nullable
   public String getUser(VertxRedisClientRequest request) {
     return request.getUser();
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(VertxRedisClientRequest request) {
-    return null;
   }
 
   @Nullable
@@ -57,23 +44,10 @@ public enum VertxRedisClientAttributesGetter
     return request.getConnectionString();
   }
 
-  @Deprecated
-  @Override
-  public String getStatement(VertxRedisClientRequest request) {
-    return sanitizer.sanitize(request.getCommand(), request.getArgs());
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(VertxRedisClientRequest request) {
     return sanitizer.sanitize(request.getCommand(), request.getArgs());
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getOperation(VertxRedisClientRequest request) {
-    return request.getCommand();
   }
 
   @Nullable

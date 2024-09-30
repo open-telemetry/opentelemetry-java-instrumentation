@@ -36,12 +36,6 @@ final class ElasticsearchDbAttributesGetter
     this.captureSearchQuery = captureSearchQuery;
   }
 
-  @Deprecated
-  @Override
-  public String getSystem(ElasticsearchRestRequest request) {
-    return ELASTICSEARCH;
-  }
-
   @Override
   public String getDbSystem(ElasticsearchRestRequest elasticsearchRestRequest) {
     return ELASTICSEARCH;
@@ -51,13 +45,6 @@ final class ElasticsearchDbAttributesGetter
   @Override
   @Nullable
   public String getUser(ElasticsearchRestRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(ElasticsearchRestRequest request) {
     return null;
   }
 
@@ -71,31 +58,6 @@ final class ElasticsearchDbAttributesGetter
   @Override
   @Nullable
   public String getConnectionString(ElasticsearchRestRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getStatement(ElasticsearchRestRequest request) {
-    ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
-    HttpEntity httpEntity = request.getHttpEntity();
-    if (captureSearchQuery
-        && epDefinition != null
-        && epDefinition.isSearchEndpoint()
-        && httpEntity != null
-        && httpEntity.isRepeatable()) {
-      // Retrieve HTTP body for search-type Elasticsearch requests when CAPTURE_SEARCH_QUERY is
-      // enabled.
-      try {
-        return new BufferedReader(
-                new InputStreamReader(httpEntity.getContent(), StandardCharsets.UTF_8))
-            .lines()
-            .collect(Collectors.joining());
-      } catch (IOException e) {
-        logger.log(FINE, "Failed reading HTTP body content.", e);
-      }
-    }
     return null;
   }
 
@@ -121,14 +83,6 @@ final class ElasticsearchDbAttributesGetter
       }
     }
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getOperation(ElasticsearchRestRequest request) {
-    ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
-    return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
   }
 
   @Nullable

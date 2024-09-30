@@ -10,15 +10,6 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class ClickHouseAttributesGetter implements DbClientAttributesGetter<ClickHouseDbRequest> {
-  @Deprecated
-  @Nullable
-  @Override
-  public String getStatement(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
-    }
-    return request.getSqlStatementInfo().getFullStatement();
-  }
 
   @Nullable
   @Override
@@ -29,16 +20,6 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return request.getSqlStatementInfo().getFullStatement();
   }
 
-  @Deprecated
-  @Nullable
-  @Override
-  public String getOperation(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
-    }
-    return request.getSqlStatementInfo().getOperation();
-  }
-
   @Nullable
   @Override
   public String getDbOperationName(ClickHouseDbRequest request) {
@@ -46,12 +27,6 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
       return null;
     }
     return request.getSqlStatementInfo().getOperation();
-  }
-
-  @Deprecated
-  @Override
-  public String getSystem(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.CLICKHOUSE;
   }
 
   @Override
@@ -66,21 +41,14 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return null;
   }
 
-  @Deprecated
   @Nullable
   @Override
-  public String getName(ClickHouseDbRequest request) {
+  public String getDbNamespace(ClickHouseDbRequest request) {
     String dbName = request.getDbName();
     if (dbName == null || dbName.isEmpty()) {
       return null;
     }
     return dbName;
-  }
-
-  @Nullable
-  @Override
-  public String getDbNamespace(ClickHouseDbRequest request) {
-    return getName(request);
   }
 
   @Deprecated

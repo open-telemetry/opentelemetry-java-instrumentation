@@ -10,27 +10,10 @@ import javax.annotation.Nullable;
 
 final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxDbRequest> {
 
-  @Deprecated
-  @Nullable
-  @Override
-  public String getStatement(InfluxDbRequest request) {
-    return request.getSqlStatementInfo().getFullStatement();
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(InfluxDbRequest request) {
     return request.getSqlStatementInfo().getFullStatement();
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getOperation(InfluxDbRequest request) {
-    if (request.getOperation() != null) {
-      return request.getOperation();
-    }
-    return request.getSqlStatementInfo().getOperation();
   }
 
   @Nullable
@@ -40,12 +23,6 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
       return request.getOperation();
     }
     return request.getSqlStatementInfo().getOperation();
-  }
-
-  @Deprecated
-  @Override
-  public String getSystem(InfluxDbRequest request) {
-    return "influxdb";
   }
 
   @Override
@@ -58,14 +35,6 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Override
   public String getUser(InfluxDbRequest request) {
     return null;
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getName(InfluxDbRequest request) {
-    String dbName = request.getDbName();
-    return "".equals(dbName) ? null : dbName;
   }
 
   @Nullable

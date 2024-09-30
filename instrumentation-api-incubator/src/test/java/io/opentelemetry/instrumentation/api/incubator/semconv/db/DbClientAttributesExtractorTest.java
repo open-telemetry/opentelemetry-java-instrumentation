@@ -25,12 +25,6 @@ class DbClientAttributesExtractorTest {
 
   static final class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>> {
 
-    @Deprecated
-    @Override
-    public String getSystem(Map<String, String> map) {
-      return map.get("db.system");
-    }
-
     @Nullable
     @Override
     public String getDbSystem(Map<String, String> map) {

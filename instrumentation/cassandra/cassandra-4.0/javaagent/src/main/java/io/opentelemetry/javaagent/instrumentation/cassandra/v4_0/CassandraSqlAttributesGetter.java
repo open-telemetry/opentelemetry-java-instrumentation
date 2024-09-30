@@ -12,12 +12,6 @@ import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
 
-  @Deprecated
-  @Override
-  public String getSystem(CassandraRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.CASSANDRA;
-  }
-
   @Override
   public String getDbSystem(CassandraRequest cassandraRequest) {
     return DbIncubatingAttributes.DbSystemValues.CASSANDRA;
@@ -28,13 +22,6 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   @Nullable
   public String getUser(CassandraRequest request) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(CassandraRequest request) {
-    return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
   @Nullable
@@ -48,13 +35,6 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   @Nullable
   public String getConnectionString(CassandraRequest request) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getRawStatement(CassandraRequest request) {
-    return request.getDbQueryText();
   }
 
   @Override

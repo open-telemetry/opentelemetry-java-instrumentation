@@ -11,12 +11,6 @@ import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter implements DbClientAttributesGetter<CouchbaseRequestInfo> {
 
-  @Deprecated
-  @Override
-  public String getSystem(CouchbaseRequestInfo couchbaseRequest) {
-    return DbIncubatingAttributes.DbSystemValues.COUCHBASE;
-  }
-
   @Override
   public String getDbSystem(CouchbaseRequestInfo couchbaseRequest) {
     return DbIncubatingAttributes.DbSystemValues.COUCHBASE;
@@ -27,13 +21,6 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
   @Nullable
   public String getUser(CouchbaseRequestInfo couchbaseRequest) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.bucket();
   }
 
   @Nullable
@@ -49,24 +36,10 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return null;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getStatement(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.statement();
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.statement();
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getOperation(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.operation();
   }
 
   @Nullable

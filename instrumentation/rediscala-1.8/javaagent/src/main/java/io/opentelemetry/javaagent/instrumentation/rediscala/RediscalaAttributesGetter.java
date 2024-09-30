@@ -14,12 +14,6 @@ import redis.RedisCommand;
 
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?>> {
 
-  @Deprecated
-  @Override
-  public String getSystem(RedisCommand<?, ?> redisCommand) {
-    return REDIS;
-  }
-
   @Override
   public String getDbSystem(RedisCommand<?, ?> redisCommand) {
     return REDIS;
@@ -29,13 +23,6 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
   @Override
   @Nullable
   public String getUser(RedisCommand<?, ?> redisCommand) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getName(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
@@ -52,23 +39,10 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getStatement(RedisCommand<?, ?> redisCommand) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getDbQueryText(RedisCommand<?, ?> redisCommand) {
     return null;
-  }
-
-  @Deprecated
-  @Override
-  public String getOperation(RedisCommand<?, ?> redisCommand) {
-    return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
   }
 
   @Override
