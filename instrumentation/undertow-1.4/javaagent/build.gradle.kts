@@ -22,5 +22,6 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
