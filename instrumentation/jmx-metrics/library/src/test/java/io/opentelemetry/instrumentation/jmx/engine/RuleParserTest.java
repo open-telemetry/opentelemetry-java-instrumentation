@@ -427,7 +427,6 @@ class RuleParserTest {
                       expectedValue, stateAttribute.getAttributeName(), stateAttributeValue)
                   .isEqualTo(expectedValue);
             });
-
   }
 
   @Test
