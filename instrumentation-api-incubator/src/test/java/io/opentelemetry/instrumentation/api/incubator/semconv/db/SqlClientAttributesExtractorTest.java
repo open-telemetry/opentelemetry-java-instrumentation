@@ -154,21 +154,14 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(attributes, context, request);
 
     // then
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
-              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
-    } else {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(
-                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-                  "SELECT *"),
-              entry(
-                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-                  "SELECT"));
-    }
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                "SELECT *"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                "SELECT"));
   }
 
   @Test
@@ -177,7 +170,9 @@ class SqlClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     if (SemconvStability.emitOldDatabaseSemconv()) {
       request.put("db.statement", "SELECT * FROM table");
-    } else {
+    }
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
       request.put("db.query.text", "SELECT * FROM table");
     }
 
@@ -194,25 +189,17 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(attributes, context, request);
 
     // then
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
-              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
-    } else {
-      assertThat(attributes.build())
-          .containsOnly(
-              entry(
-                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-                  "SELECT * FROM table"),
-              entry(
-                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-                  "SELECT"),
-              entry(
-                  SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE),
-                  "table"));
-    }
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
+                "SELECT * FROM table"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
+                "SELECT"),
+            entry(
+                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE),
+                "table"));
   }
 
   @Test
