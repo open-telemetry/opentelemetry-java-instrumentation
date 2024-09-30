@@ -218,8 +218,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public OpenTelemetry getOpenTelemetry() {
-    return openTelemetry;
+  public <BUILDERREQUEST, BUILDERRESPONSE>
+      InstrumenterBuilder<BUILDERREQUEST, BUILDERRESPONSE> instrumenterBuilder(
+          SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
+    return Instrumenter.builder(openTelemetry, instrumentationName, spanNameExtractor);
   }
 
   @CanIgnoreReturnValue

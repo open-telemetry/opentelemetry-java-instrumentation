@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
@@ -14,7 +15,6 @@ import org.apache.pekko.http.scaladsl.model.StatusCodes.Found
 import org.apache.pekko.http.scaladsl.server.Directives._
 import org.apache.pekko.stream.ActorMaterializer
 
-import java.util.function.Supplier
 import scala.concurrent.Await
 
 object PekkoHttpTestWebServer {
@@ -32,7 +32,7 @@ object PekkoHttpTestWebServer {
       },
       path(INDEXED_CHILD.rawPath()) {
         parameterMap { map =>
-          val supplier = new Supplier[String] {
+          val supplier = new ThrowingSupplier[String, Exception] {
             def get(): String = {
               INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
                 override def getParameter(name: String): String =
@@ -107,11 +107,9 @@ object PekkoHttpTestWebServer {
     }
   }
 
-  def supplier(string: String): Supplier[String] = {
-    new Supplier[String] {
-      def get(): String = {
-        string
-      }
+  def supplier(string: String): ThrowingSupplier[String, Exception] = { () =>
+    {
+      string
     }
   }
 }

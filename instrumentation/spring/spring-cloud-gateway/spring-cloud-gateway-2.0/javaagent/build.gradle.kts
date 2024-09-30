@@ -7,6 +7,7 @@ muzzle {
     group.set("org.springframework.cloud")
     module.set("spring-cloud-starter-gateway")
     versions.set("[2.0.0.RELEASE,]")
+    assertInverse.set(true)
   }
 }
 

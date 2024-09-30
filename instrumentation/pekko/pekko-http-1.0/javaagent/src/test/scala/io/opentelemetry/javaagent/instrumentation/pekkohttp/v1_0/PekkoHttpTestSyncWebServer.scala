@@ -30,26 +30,24 @@ object PekkoHttpTestSyncWebServer {
       val endpoint = ServerEndpoint.forPath(uri.path.toString())
       AbstractHttpServerTest.controller(
         endpoint,
-        new Supplier[HttpResponse] {
-          def get(): HttpResponse = {
-            val resp = HttpResponse(status = endpoint.getStatus)
-            endpoint match {
-              case SUCCESS => resp.withEntity(endpoint.getBody)
-              case INDEXED_CHILD =>
-                INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
-                  override def getParameter(name: String): String =
-                    uri.query().get(name).orNull
-                })
-                resp.withEntity("")
-              case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
-              case REDIRECT =>
-                resp.withHeaders(headers.Location(endpoint.getBody))
-              case ERROR     => resp.withEntity(endpoint.getBody)
-              case EXCEPTION => throw new Exception(endpoint.getBody)
-              case _ =>
-                HttpResponse(status = NOT_FOUND.getStatus)
-                  .withEntity(NOT_FOUND.getBody)
-            }
+        () => {
+          val resp = HttpResponse(status = endpoint.getStatus)
+          endpoint match {
+            case SUCCESS => resp.withEntity(endpoint.getBody)
+            case INDEXED_CHILD =>
+              INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
+                override def getParameter(name: String): String =
+                  uri.query().get(name).orNull
+              })
+              resp.withEntity("")
+            case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
+            case REDIRECT =>
+              resp.withHeaders(headers.Location(endpoint.getBody))
+            case ERROR     => resp.withEntity(endpoint.getBody)
+            case EXCEPTION => throw new Exception(endpoint.getBody)
+            case _ =>
+              HttpResponse(status = NOT_FOUND.getStatus)
+                .withEntity(NOT_FOUND.getBody)
           }
         }
       )

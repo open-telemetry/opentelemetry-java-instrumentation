@@ -9,6 +9,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLogger;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLoggerFactory;
 
+// this class is used from opentelemetry-api-1.27.0 via reflection
 public class ApplicationLoggerFactory142 implements ApplicationLoggerFactory {
 
   @Override

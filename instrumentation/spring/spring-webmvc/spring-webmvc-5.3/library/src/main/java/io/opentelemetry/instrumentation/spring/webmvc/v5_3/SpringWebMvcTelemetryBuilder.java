@@ -33,8 +33,10 @@ public final class SpringWebMvcTelemetryBuilder {
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         new DefaultHttpServerInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, SpringWebMvcHttpAttributesGetter.INSTANCE)
-            .setHeaderGetter(JavaxHttpServletRequestGetter.INSTANCE);
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            SpringWebMvcHttpAttributesGetter.INSTANCE,
+            JavaxHttpServletRequestGetter.INSTANCE);
   }
 
   /**

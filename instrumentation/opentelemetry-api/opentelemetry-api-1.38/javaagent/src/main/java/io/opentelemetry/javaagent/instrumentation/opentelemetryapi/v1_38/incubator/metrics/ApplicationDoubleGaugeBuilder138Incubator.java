@@ -12,12 +12,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics.ApplicationDoubleGaugeBuilder138;
 import java.util.List;
 
-final class ApplicationDoubleGaugeBuilder138Incubator extends ApplicationDoubleGaugeBuilder138
+public class ApplicationDoubleGaugeBuilder138Incubator extends ApplicationDoubleGaugeBuilder138
     implements ExtendedDoubleGaugeBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder;
 
-  ApplicationDoubleGaugeBuilder138Incubator(
+  protected ApplicationDoubleGaugeBuilder138Incubator(
       io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
