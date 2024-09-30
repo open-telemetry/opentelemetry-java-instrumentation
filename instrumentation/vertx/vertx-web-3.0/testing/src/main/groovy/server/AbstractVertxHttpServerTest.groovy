@@ -18,6 +18,8 @@ import io.vertx.core.json.JsonObject
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
+
 abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> implements AgentTestTrait {
   @Override
   Vertx startServer(int port) {
@@ -61,6 +63,11 @@ abstract class AbstractVertxHttpServerTest extends HttpServerTest<Vertx> impleme
   @Override
   String getContextPath() {
     "/vertx-app"
+  }
+
+  @Override
+  Throwable expectedException() {
+    new IllegalStateException(EXCEPTION.body)
   }
 
   @Override

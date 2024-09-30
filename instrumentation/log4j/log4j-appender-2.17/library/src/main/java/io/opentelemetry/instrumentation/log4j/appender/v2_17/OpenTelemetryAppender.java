@@ -10,8 +10,14 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
+import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -272,6 +278,28 @@ public class OpenTelemetryAppender extends AbstractAppender {
     LogRecordBuilder builder =
         openTelemetry.getLogsBridge().loggerBuilder(instrumentationName).build().logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
+    Context context = Context.current();
+    // when using async logger we'll be executing on a different thread than what started logging
+    // reconstruct the context from context data
+    if (context == Context.root()) {
+      ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
+      String traceId = contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_ID_KEY);
+      String spanId = contextDataAccessor.getValue(contextData, ContextDataKeys.SPAN_ID_KEY);
+      String traceFlags =
+          contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
+      if (traceId != null && spanId != null && traceFlags != null) {
+        context =
+            Context.root()
+                .with(
+                    Span.wrap(
+                        SpanContext.create(
+                            traceId,
+                            spanId,
+                            TraceFlags.fromHex(traceFlags, 0),
+                            TraceState.getDefault())));
+      }
+    }
+
     mapper.mapLogEvent(
         builder,
         event.getMessage(),
@@ -280,7 +308,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
         event.getThrown(),
         contextData,
         event.getThreadName(),
-        event.getThreadId());
+        event.getThreadId(),
+        context);
 
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
@@ -297,12 +326,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     @Nullable
-    public Object getValue(ReadOnlyStringMap contextData, String key) {
+    public String getValue(ReadOnlyStringMap contextData, String key) {
       return contextData.getValue(key);
     }
 
     @Override
-    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, Object> action) {
+    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, String> action) {
       contextData.forEach(action::accept);
     }
   }

@@ -122,6 +122,15 @@ abstract class AbstractRatpackAsyncHttpServerTest extends AbstractRatpackHttpSer
             }
           }
         }
+        it.prefix(POST_STREAM.rawPath()) {
+          it.all { context ->
+            Promise.sync {
+              POST_STREAM
+            } then {
+              handlePostStream(context)
+            }
+          }
+        }
       }
       configure(it)
     }

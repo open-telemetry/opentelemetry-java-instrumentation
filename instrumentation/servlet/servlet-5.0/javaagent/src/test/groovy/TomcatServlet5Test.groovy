@@ -96,7 +96,6 @@ abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> 
       }
     })
 
-//    setupAuthentication(tomcatServer, servletContext)
     setupServlets(servletContext)
 
     (tomcatServer.host as StandardHost).errorReportValveClass = ErrorHandlerValve.name

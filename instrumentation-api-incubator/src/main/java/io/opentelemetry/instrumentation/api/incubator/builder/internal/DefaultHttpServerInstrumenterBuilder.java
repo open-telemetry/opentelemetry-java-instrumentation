@@ -53,23 +53,26 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       httpAttributesExtractorBuilder;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
-  @Nullable private TextMapGetter<REQUEST> headerGetter;
-  private Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
+  @Nullable private final TextMapGetter<REQUEST> headerGetter;
+  private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
   private final HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private boolean emitExperimentalHttpServerMetrics = false;
+  private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
   public DefaultHttpServerInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
-      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      @Nullable TextMapGetter<REQUEST> headerGetter) {
     this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
     httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpServerRouteBuilder = HttpServerRoute.builder(attributesGetter);
     this.attributesGetter = attributesGetter;
+    this.headerGetter = headerGetter;
   }
 
   /**
@@ -139,13 +142,6 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setHeaderGetter(
-      @Nullable TextMapGetter<REQUEST> headerGetter) {
-    this.headerGetter = headerGetter;
-    return this;
-  }
-
   /**
    * Configures the instrumentation to emit experimental HTTP server metrics.
    *
@@ -162,22 +158,20 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
-      Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
+      Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
           spanNameExtractorTransformer) {
     this.spanNameExtractorTransformer = spanNameExtractorTransformer;
     return this;
   }
 
-  public Instrumenter<REQUEST, RESPONSE> build() {
-    InstrumenterBuilder<REQUEST, RESPONSE> builder = builder();
-
-    if (headerGetter != null) {
-      return builder.buildServerInstrumenter(headerGetter);
-    }
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setBuilderCustomizer(
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
+    this.builderCustomizer = builderCustomizer;
+    return this;
   }
 
-  private InstrumenterBuilder<REQUEST, RESPONSE> builder() {
+  public Instrumenter<REQUEST, RESPONSE> build() {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -195,8 +189,12 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
+    builderCustomizer.accept(builder);
 
-    return builder;
+    if (headerGetter != null) {
+      return builder.buildServerInstrumenter(headerGetter);
+    }
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   @CanIgnoreReturnValue

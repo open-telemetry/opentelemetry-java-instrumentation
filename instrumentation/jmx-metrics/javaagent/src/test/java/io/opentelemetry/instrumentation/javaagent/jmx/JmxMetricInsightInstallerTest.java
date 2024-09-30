@@ -28,6 +28,7 @@ class JmxMetricInsightInstallerTest {
       new HashSet<>(
           Arrays.asList(
               "activemq.yaml",
+              "camel.yaml",
               "hadoop.yaml",
               "jetty.yaml",
               "kafka-broker.yaml",
@@ -37,7 +38,7 @@ class JmxMetricInsightInstallerTest {
   @Test
   void testToVerifyExistingRulesAreValid() throws Exception {
     RuleParser parser = RuleParser.get();
-    assertThat(parser == null).isFalse();
+    assertThat(parser).isNotNull();
 
     Path path = Paths.get(PATH_TO_ALL_EXISTING_RULES);
     assertThat(Files.exists(path)).isTrue();

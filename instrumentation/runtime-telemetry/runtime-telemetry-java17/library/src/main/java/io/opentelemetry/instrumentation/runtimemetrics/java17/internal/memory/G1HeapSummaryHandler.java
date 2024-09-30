@@ -32,9 +32,14 @@ public final class G1HeapSummaryHandler implements RecordedEventHandler {
   private static final String SURVIVOR_USED_SIZE = "survivorUsedSize";
   private static final String WHEN = "when";
   private static final Attributes ATTR_MEMORY_EDEN =
-      Attributes.of(Constants.ATTR_TYPE, Constants.HEAP, Constants.ATTR_POOL, "G1 Eden Space");
+      Attributes.of(
+          Constants.ATTR_MEMORY_TYPE, Constants.HEAP, Constants.ATTR_MEMORY_POOL, "G1 Eden Space");
   private static final Attributes ATTR_MEMORY_SURVIVOR =
-      Attributes.of(Constants.ATTR_TYPE, Constants.HEAP, Constants.ATTR_POOL, "G1 Survivor Space");
+      Attributes.of(
+          Constants.ATTR_MEMORY_TYPE,
+          Constants.HEAP,
+          Constants.ATTR_MEMORY_POOL,
+          "G1 Survivor Space");
   //  private static final Attributes ATTR_MEMORY_OLD_USED =
   //      Attributes.of(ATTR_TYPE, HEAP, ATTR_POOL, "G1 Old Gen"); // TODO needs jdk JFR support
 

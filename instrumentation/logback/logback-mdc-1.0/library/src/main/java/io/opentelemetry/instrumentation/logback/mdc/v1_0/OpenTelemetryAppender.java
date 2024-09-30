@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggerContextVO;
-import ch.qos.logback.classic.spi.LoggingEventVO;
+import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
@@ -18,14 +18,26 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
+  private static final Field MDC_MAP_FIELD;
+
+  static {
+    Field field;
+    try {
+      field = LoggingEvent.class.getDeclaredField("mdcPropertyMap");
+      field.setAccessible(true);
+    } catch (Exception exception) {
+      field = null;
+    }
+    MDC_MAP_FIELD = field;
+  }
+
   private boolean addBaggage;
   private String traceIdKey = LoggingContextConstants.TRACE_ID;
   private String spanIdKey = LoggingContextConstants.SPAN_ID;
@@ -59,11 +71,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.traceFlagsKey = traceFlagsKey;
   }
 
-  public ILoggingEvent wrapEvent(ILoggingEvent event) {
+  private void processEvent(ILoggingEvent event) {
+    if (MDC_MAP_FIELD == null || event.getClass() != LoggingEvent.class) {
+      return;
+    }
+
     Map<String, String> eventContext = event.getMDCPropertyMap();
     if (eventContext != null && eventContext.containsKey(traceIdKey)) {
       // Assume already instrumented event if traceId is present.
-      return event;
+      return;
     }
 
     Map<String, String> contextData = new HashMap<>();
@@ -98,32 +114,18 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             ? new LoggerContextVO(oldVo.getName(), eventContextMap, oldVo.getBirthTime())
             : null;
 
-    ILoggingEvent wrappedEvent =
-        (ILoggingEvent)
-            Proxy.newProxyInstance(
-                ILoggingEvent.class.getClassLoader(),
-                new Class<?>[] {ILoggingEvent.class},
-                (proxy, method, args) -> {
-                  if ("getMDCPropertyMap".equals(method.getName())) {
-                    return eventContextMap;
-                  } else if ("getLoggerContextVO".equals(method.getName())) {
-                    return vo;
-                  }
-                  try {
-                    return method.invoke(event, args);
-                  } catch (InvocationTargetException exception) {
-                    throw exception.getCause();
-                  }
-                });
-    // https://github.com/qos-ch/logback/blob/9e833ec858953a2296afdc3292f8542fc08f2a45/logback-classic/src/main/java/ch/qos/logback/classic/net/LoggingEventPreSerializationTransformer.java#L29
-    // LoggingEventPreSerializationTransformer accepts only subclasses of LoggingEvent and
-    // LoggingEventVO, here we transform our wrapped event into a LoggingEventVO
-    return LoggingEventVO.build(wrappedEvent);
+    try {
+      MDC_MAP_FIELD.set(event, eventContextMap);
+    } catch (IllegalAccessException ignored) {
+      // setAccessible(true) was called on the field
+    }
+    ((LoggingEvent) event).setLoggerContextRemoteView(vo);
   }
 
   @Override
   protected void append(ILoggingEvent event) {
-    aai.appendLoopOnAppenders(wrapEvent(event));
+    processEvent(event);
+    aai.appendLoopOnAppenders(event);
   }
 
   @Override

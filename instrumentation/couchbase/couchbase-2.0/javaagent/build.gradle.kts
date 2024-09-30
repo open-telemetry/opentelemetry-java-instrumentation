@@ -26,8 +26,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.+")
-  latestDepTestLibrary("com.couchbase.client:java-client:2.+")
+  // later versions are tested with couchbase-2.6 instrumentation
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+")
+  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+")
 }
 
 tasks.withType<Test>().configureEach {

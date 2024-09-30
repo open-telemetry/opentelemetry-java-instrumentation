@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -81,8 +82,13 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     StatefulRedisConnection<String, String> testConnection = redisClient.connect();
     cleanup.deferCleanup(testConnection);
 
-    // Lettuce tracing does not trace connect
-    assertThat(getInstrumentationExtension().spans()).isEmpty();
+    if (Boolean.getBoolean("testLatestDeps")) {
+      // ignore CLIENT SETINFO traces
+      getInstrumentationExtension().waitForTraces(2);
+    } else {
+      // Lettuce tracing does not trace connect
+      assertThat(getInstrumentationExtension().spans()).isEmpty();
+    }
   }
 
   @Test
@@ -205,6 +211,12 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     // Needs its own container or flaky from inconsistent command count
     ContainerConnection containerConnection = newContainerConnection();
     RedisCommands<String, String> commands = containerConnection.connection.sync();
+
+    if (Boolean.getBoolean("testLatestDeps")) {
+      // ignore CLIENT SETINFO traces
+      getInstrumentationExtension().waitForTraces(2);
+      getInstrumentationExtension().clearData();
+    }
 
     long res = commands.lpush("TESTLIST", "TESTLIST ELEMENT");
     assertThat(res).isEqualTo(1);
@@ -350,43 +362,82 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     commands.debugSegfault();
 
-    getInstrumentationExtension()
-        .waitAndAssertTraces(
-            trace -> {
-              if (Boolean.getBoolean("testLatestDeps")) {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("DEBUG")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                equalTo(
-                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
-                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "DEBUG SEGFAULT")));
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("DEBUG")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                equalTo(
-                                    NetworkAttributes.NETWORK_PEER_PORT, containerConnection.port),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
-                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "DEBUG SEGFAULT"))
-                            // these are no longer recorded since Lettuce 6.1.6
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end")));
-              }
-            });
+    if (Boolean.getBoolean("testLatestDeps")) {
+      getInstrumentationExtension()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("CLIENT")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(
+                                      NetworkAttributes.NETWORK_PEER_PORT,
+                                      containerConnection.port),
+                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                  equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
+                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                  equalTo(
+                                      DbIncubatingAttributes.DB_STATEMENT,
+                                      "CLIENT SETINFO lib-name Lettuce"))),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("CLIENT")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(
+                                      NetworkAttributes.NETWORK_PEER_PORT,
+                                      containerConnection.port),
+                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                  equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
+                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                  satisfies(
+                                      DbIncubatingAttributes.DB_STATEMENT,
+                                      stringAssert ->
+                                          stringAssert.startsWith("CLIENT SETINFO lib-ver")))),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("DEBUG")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(
+                                      NetworkAttributes.NETWORK_PEER_PORT,
+                                      containerConnection.port),
+                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                  equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
+                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                  equalTo(DbIncubatingAttributes.DB_STATEMENT, "DEBUG SEGFAULT"))));
+    } else {
+      getInstrumentationExtension()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("DEBUG")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(
+                                      NetworkAttributes.NETWORK_PEER_PORT,
+                                      containerConnection.port),
+                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                  equalTo(ServerAttributes.SERVER_PORT, containerConnection.port),
+                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                  equalTo(DbIncubatingAttributes.DB_STATEMENT, "DEBUG SEGFAULT"))
+                              // these are no longer recorded since Lettuce 6.1.6
+                              .hasEventsSatisfyingExactly(
+                                  event -> event.hasName("redis.encode.start"),
+                                  event -> event.hasName("redis.encode.end"))));
+    }
   }
 
   @Test
@@ -394,6 +445,12 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     // Test causes redis to crash therefore it needs its own container
     ContainerConnection containerConnection = newContainerConnection();
     RedisCommands<String, String> commands = containerConnection.connection.sync();
+
+    if (Boolean.getBoolean("testLatestDeps")) {
+      // ignore CLIENT SETINFO traces
+      getInstrumentationExtension().waitForTraces(2);
+      getInstrumentationExtension().clearData();
+    }
 
     commands.shutdown(false);
 

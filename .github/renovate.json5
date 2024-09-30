@@ -4,7 +4,6 @@
     "config:base"
   ],
   "ignorePaths": ["instrumentation/**"],
-  "baseBranches": ["main", "release/v1.33.x"],
   // needed in order to get patch-only updates in package rules below
   // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
   // so we have to apply it globally here, see
@@ -12,10 +11,18 @@
   "separateMinorPatch": true,
   "packageRules": [
     {
+      // this is to reduce the number of renovate PRs by consolidating them into a weekly batch
+      "matchManagers": ["github-actions"],
+      "extends": ["schedule:weekly"],
+      "groupName": "github actions",
+      "separateMinorPatch": false // overrides separateMinorPatch specified above
+    },
+    {
       "matchPackageNames": [
         "io.opentelemetry.contrib:opentelemetry-aws-resources",
         "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator",
         "io.opentelemetry.contrib:opentelemetry-gcp-resources",
+        "io.opentelemetry.contrib:opentelemetry-baggage-processor",
         "io.opentelemetry.proto:opentelemetry-proto",
         "io.opentelemetry.semconv:opentelemetry-semconv"
       ],
@@ -25,13 +32,6 @@
       // (TODO remove once the artifacts above release stable versions)
       "ignoreUnstable": false,
       "allowedVersions": "!/\\-SNAPSHOT$/"
-    },
-    {
-      // we are not going to update the semconv in 1.x branch
-      "matchPackageNames": ["io.opentelemetry.semconv:opentelemetry-semconv"],
-      "matchUpdateTypes": ["minor"],
-      "matchBaseBranches": ["release/v1.33.x"],
-      "enabled": false
     },
     {
       "matchPackagePrefixes": ["ch.qos.logback:"],
@@ -68,6 +68,10 @@
     {
       "matchPackagePrefixes": ["com.fasterxml.jackson"],
       "groupName": "jackson packages"
+    },
+    {
+      "matchPackagePrefixes": ["com.gradleup.shadow"],
+      "groupName": "gradle shadow packages"
     },
     {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
@@ -116,7 +120,7 @@
       ],
       "matchPackageNames": [
         "org.slf4j:slf4j-api",
-        "org.springframework.boot",
+        "org.springframework.boot:org.springframework.boot.gradle.plugin", // this is for plugin id "org.springframework.boot"
         "org.springframework.boot:spring-boot-dependencies"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false,
@@ -155,7 +159,7 @@
     {
       // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
       "matchFileNames": ["conventions/src/main/kotlin/otel.scala-conventions.gradle.kts"],
-      "matchPackagePrefixes": ["org.scala-lang:scala-library"],
+      "matchPackageNames": ["org.scala-lang:scala-library"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     },

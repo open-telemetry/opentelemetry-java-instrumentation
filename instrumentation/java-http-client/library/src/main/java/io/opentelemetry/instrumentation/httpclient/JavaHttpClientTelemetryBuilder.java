@@ -22,9 +22,11 @@ import java.util.function.Function;
 public final class JavaHttpClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
+  private final OpenTelemetry openTelemetry;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = JavaHttpClientInstrumenterBuilderFactory.create(openTelemetry);
+    this.openTelemetry = openTelemetry;
   }
 
   /**
@@ -95,7 +97,9 @@ public final class JavaHttpClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpRequest>, ? extends SpanNameExtractor<? super HttpRequest>>
+      Function<
+              SpanNameExtractor<? super HttpRequest>,
+              ? extends SpanNameExtractor<? super HttpRequest>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
@@ -103,6 +107,6 @@ public final class JavaHttpClientTelemetryBuilder {
 
   public JavaHttpClientTelemetry build() {
     return new JavaHttpClientTelemetry(
-        builder.build(), new HttpHeadersSetter(builder.getOpenTelemetry().getPropagators()));
+        builder.build(), new HttpHeadersSetter(openTelemetry.getPropagators()));
   }
 }

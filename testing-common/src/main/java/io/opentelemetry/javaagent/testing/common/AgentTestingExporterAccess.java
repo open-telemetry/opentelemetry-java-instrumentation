@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -29,6 +30,7 @@ import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.ArrayValue;
 import io.opentelemetry.proto.common.v1.InstrumentationScope;
 import io.opentelemetry.proto.common.v1.KeyValue;
+import io.opentelemetry.proto.common.v1.KeyValueList;
 import io.opentelemetry.proto.logs.v1.LogRecord;
 import io.opentelemetry.proto.logs.v1.ResourceLogs;
 import io.opentelemetry.proto.logs.v1.ScopeLogs;
@@ -91,6 +93,9 @@ public final class AgentTestingExporterAccess {
   private static final MethodHandle getLogExportRequests;
   private static final MethodHandle reset;
   private static final MethodHandle forceFlushCalled;
+  // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
+  // class is missing
+  private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
 
   static {
     try {
@@ -123,6 +128,15 @@ public final class AgentTestingExporterAccess {
               MethodType.methodType(boolean.class));
     } catch (Exception e) {
       throw new AssertionError("Error accessing fields with reflection.", e);
+    }
+  }
+
+  private static boolean classAvailable(String className) {
+    try {
+      Class.forName(className);
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
     }
   }
 
@@ -402,21 +416,62 @@ public final class AgentTestingExporterAccess {
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
-    return TestLogRecordData.builder()
-        .setResource(resource)
-        .setInstrumentationScopeInfo(instrumentationScopeInfo)
-        .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
-        .setSpanContext(
-            SpanContext.create(
-                bytesToHex(logRecord.getTraceId().toByteArray()),
-                bytesToHex(logRecord.getSpanId().toByteArray()),
-                TraceFlags.getDefault(),
-                TraceState.getDefault()))
-        .setSeverity(fromProto(logRecord.getSeverityNumber()))
-        .setSeverityText(logRecord.getSeverityText())
-        .setBody(logRecord.getBody().getStringValue())
-        .setAttributes(fromProto(logRecord.getAttributesList()))
-        .build();
+    TestLogRecordData.Builder builder =
+        TestLogRecordData.builder()
+            .setResource(resource)
+            .setInstrumentationScopeInfo(instrumentationScopeInfo)
+            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setSpanContext(
+                SpanContext.create(
+                    bytesToHex(logRecord.getTraceId().toByteArray()),
+                    bytesToHex(logRecord.getSpanId().toByteArray()),
+                    TraceFlags.getDefault(),
+                    TraceState.getDefault()))
+            .setSeverity(fromProto(logRecord.getSeverityNumber()))
+            .setSeverityText(logRecord.getSeverityText())
+            .setAttributes(fromProto(logRecord.getAttributesList()));
+    if (canUseValue) {
+      builder.setBodyValue(getBodyValue(logRecord.getBody()));
+    } else {
+      builder.setBody(logRecord.getBody().getStringValue());
+    }
+    return builder.build();
+  }
+
+  private static Value<?> getBodyValue(AnyValue value) {
+    switch (value.getValueCase()) {
+      case STRING_VALUE:
+        return Value.of(value.getStringValue());
+      case BOOL_VALUE:
+        return Value.of(value.getBoolValue());
+      case INT_VALUE:
+        return Value.of(value.getIntValue());
+      case DOUBLE_VALUE:
+        return Value.of(value.getDoubleValue());
+      case ARRAY_VALUE:
+        ArrayValue array = value.getArrayValue();
+        List<Value<?>> convertedValues = new ArrayList<>();
+        for (int i = 0; i < array.getValuesCount(); i++) {
+          convertedValues.add(getBodyValue(array.getValues(i)));
+        }
+        return Value.of(convertedValues);
+      case KVLIST_VALUE:
+        KeyValueList keyValueList = value.getKvlistValue();
+        io.opentelemetry.api.common.KeyValue[] convertedKeyValueList =
+            new io.opentelemetry.api.common.KeyValue[keyValueList.getValuesCount()];
+        for (int i = 0; i < keyValueList.getValuesCount(); i++) {
+          KeyValue keyValue = keyValueList.getValues(i);
+          convertedKeyValueList[i] =
+              io.opentelemetry.api.common.KeyValue.of(
+                  keyValue.getKey(), getBodyValue(keyValue.getValue()));
+        }
+        return Value.of(convertedKeyValueList);
+      case BYTES_VALUE:
+        return Value.of(value.getBytesValue().toByteArray());
+      case VALUE_NOT_SET:
+        return null;
+    }
+    throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
   }
 
   private static boolean isDouble(List<NumberDataPoint> points) {

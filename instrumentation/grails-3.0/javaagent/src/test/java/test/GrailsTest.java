@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -183,8 +182,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     if (endpoint == NOT_FOUND) {
       spanAssertions.add(
           span ->
-              span.satisfies(
-                      spanData -> Assertions.assertThat(spanData.getName()).endsWith(".sendError"))
+              span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasAttributesSatisfying(Attributes::isEmpty));
     }

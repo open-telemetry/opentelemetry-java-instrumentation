@@ -22,7 +22,7 @@ class MetaspaceMemoryUsageMetricTest {
       new JfrExtension(
           builder -> builder.disableAllFeatures().enableFeature(JfrFeature.MEMORY_POOL_METRICS));
 
-  /** This is a basic test for process.runtime.jvm.memory.usage. */
+  /** This is a basic test for jvm.memory.used. */
   @Test
   void shouldHaveMemoryUsageMetrics() {
     System.gc();

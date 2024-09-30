@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeUnit;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -86,6 +88,18 @@ class ApacheHttpAsyncClientTest {
   }
 
   abstract class AbstractTest extends AbstractApacheHttpClientTest<SimpleHttpRequest> {
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.spanEndsAfterBody();
+      optionsBuilder.setHttpProtocolVersion(
+          uri ->
+              Boolean.getBoolean("testLatestDeps") && uri.toString().startsWith("https")
+                  ? "2"
+                  : "1.1");
+    }
+
     @Override
     public SimpleHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
       SimpleHttpRequest httpRequest = super.buildRequest(method, uri, headers);
@@ -101,7 +115,7 @@ class ApacheHttpAsyncClientTest {
 
     @Override
     HttpResponse executeRequest(SimpleHttpRequest request, URI uri) throws Exception {
-      return client.execute(request, getContext(), null).get();
+      return client.execute(request, getContext(), null).get(30, TimeUnit.SECONDS);
     }
 
     @Override
