@@ -22,6 +22,13 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+}
+
+// since 2.3.x, undertow is compiled by JDK 11
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+if (latestDepTest) {
+  tasks.withType<JavaCompile>().configureEach {
+    options.release.set(11)
+  }
 }
