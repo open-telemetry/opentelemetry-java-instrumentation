@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -125,5 +126,11 @@ class PlayAsyncServerTest extends PlayServerTest {
   protected void stopServer(Server server) {
     server.stop();
     executor.shutdown();
+  }
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    options.setTestHttpPipelining(false);
   }
 }
