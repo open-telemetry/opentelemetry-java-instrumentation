@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty.dispatch;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.jetty.JettyServlet3Test;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty.JettyServlet5Test;
 
-public abstract class JettyDispatchTest extends JettyServlet3Test {
+public abstract class JettyDispatchTest extends JettyServlet5Test {
 
   @Override
   protected void configure(HttpServerTestOptions options) {

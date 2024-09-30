@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.mapping.TomcatServlet3FilterMappingTest;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping.TomcatServlet5FilterMappingTest;
 import org.apache.catalina.Context;
 
-class TomcatServlet5FilterUrlPatternMappingTest extends TomcatServlet3FilterMappingTest {
+class TomcatServlet5FilterUrlPatternMappingTest extends TomcatServlet5FilterMappingTest {
   @Override
   protected void setupServlets(Context context) throws Exception {
     addFilter(context, "/*", FirstFilter.class);

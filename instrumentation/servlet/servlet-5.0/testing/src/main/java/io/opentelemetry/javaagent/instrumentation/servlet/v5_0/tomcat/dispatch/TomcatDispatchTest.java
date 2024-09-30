@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.dispatch;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TomcatServlet3Test;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TomcatServlet5Test;
 
-abstract class TomcatDispatchTest extends TomcatServlet3Test {
+abstract class TomcatDispatchTest extends TomcatServlet5Test {
 
   @Override
   protected void configure(HttpServerTestOptions options) {

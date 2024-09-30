@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 
-class TomcatServlet3FilterServletNameMappingTest extends TomcatServlet5FilterMappingTest {
+class TomcatServlet5FilterServletNameMappingTest extends TomcatServlet5FilterMappingTest {
   @Override
   protected void setupServlets(Context context) throws Exception {
     Tomcat.addServlet(context, "prefix-servlet", new DefaultServlet());

@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
 import jakarta.servlet.Servlet;
 
 public class JettyServlet5AsyncTest extends JettyServlet5Test {
 
   @Override
   public Class<? extends Servlet> servlet() {
-    return TestServlet3.Async.class;
+    return TestServlet5.Async.class;
   }
 
   @Override
