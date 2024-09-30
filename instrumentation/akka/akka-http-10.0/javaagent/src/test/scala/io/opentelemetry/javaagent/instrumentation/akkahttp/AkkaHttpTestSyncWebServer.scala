@@ -16,8 +16,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   ServerEndpoint
 }
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 
-import java.util.function.Supplier
 import scala.concurrent.Await
 
 object AkkaHttpTestSyncWebServer {
@@ -30,7 +30,7 @@ object AkkaHttpTestSyncWebServer {
       val endpoint = ServerEndpoint.forPath(uri.path.toString())
       AbstractHttpServerTest.controller(
         endpoint,
-        new Supplier[HttpResponse] {
+        new ThrowingSupplier[HttpResponse, Exception] {
           def get(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {

@@ -24,7 +24,6 @@ import java.io.Writer;
 import java.util.HashSet;
 import java.util.Set;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
@@ -42,7 +41,7 @@ public class JettyServletHandlerTest extends AbstractServlet3Test<Server, Servle
     super.configure(options);
     options.setContextPath("");
     options.setTestNotFound(false);
-    options.setExpectedException(new ServletException(EXCEPTION.getBody()));
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHttpAttributes(
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =
