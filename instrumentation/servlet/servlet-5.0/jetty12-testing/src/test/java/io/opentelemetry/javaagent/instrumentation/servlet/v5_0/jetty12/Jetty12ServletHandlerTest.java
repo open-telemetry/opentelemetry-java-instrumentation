@@ -18,7 +18,7 @@ import jakarta.servlet.Servlet;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
@@ -26,7 +26,7 @@ import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.util.Callback;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
+public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, ServletContextHandler> {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =
@@ -50,10 +50,8 @@ public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, Serv
   @Override
   protected Server setupServer() throws Exception {
     Server server = new Server(port);
-    ServletHandler handler = new ServletHandler();
-    server.setHandler(handler);
-    setupServlets(handler);
-    server.addBean(
+    ServletContextHandler servletContext = new ServletContextHandler(getContextPath());
+    servletContext.setErrorHandler(
         new ErrorHandler() {
           @Override
           public boolean handle(Request request, Response response, Callback callback) {
@@ -66,15 +64,17 @@ public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, Serv
             return true;
           }
         });
+    setupServlets(servletContext);
+    server.setHandler(servletContext);
     server.start();
+
     return server;
   }
 
   @Override
   public void addServlet(
-      ServletHandler servletHandler, String path, Class<? extends Servlet> servlet)
-      throws Exception {
-    servletHandler.addServletWithMapping(servlet, path);
+      ServletContextHandler servletHandler, String path, Class<? extends Servlet> servlet) {
+    servletHandler.addServlet(servlet, path);
   }
 
   @Override

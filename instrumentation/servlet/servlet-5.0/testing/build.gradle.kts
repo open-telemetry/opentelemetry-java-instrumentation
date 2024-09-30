@@ -13,6 +13,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:servlet:servlet-5.0:testing"))
 
+  // Jetty 11 requires Java 11
   testLibrary("org.eclipse.jetty:jetty-server:11.0.0")
   testLibrary("org.eclipse.jetty:jetty-servlet:11.0.0")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.0")
