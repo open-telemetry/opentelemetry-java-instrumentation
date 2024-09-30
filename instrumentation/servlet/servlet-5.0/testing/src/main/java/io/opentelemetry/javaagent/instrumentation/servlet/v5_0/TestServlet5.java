@@ -18,16 +18,16 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractSe
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CountDownLatch;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
 
 public class TestServlet5 {
 

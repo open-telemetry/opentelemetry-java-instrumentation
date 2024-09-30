@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping;
 
-import java.io.IOException;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping.AbstractServlet5MappingTest;
+import java.io.IOException;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
