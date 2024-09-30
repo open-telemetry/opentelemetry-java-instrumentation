@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+  api(project(":testing-common"))
   api(project(":instrumentation:servlet:servlet-common:javaagent"))
   api(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
