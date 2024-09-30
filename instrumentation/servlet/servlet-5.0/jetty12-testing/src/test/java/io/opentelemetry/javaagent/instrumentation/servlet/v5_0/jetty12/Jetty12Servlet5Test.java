@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.Callback;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class Jetty12Servlet5Test
@@ -82,19 +83,15 @@ public abstract class Jetty12Servlet5Test
   protected Server setupServer() throws Exception {
     Server jettyServer = new Server(new InetSocketAddress("localhost", port));
 
-    ServletContextHandler servletContext = new ServletContextHandler(contextPath);
-    servletContext.errorHandler = new Request.Handler() {
-
-      @Override
-      boolean handle(Request request, Response response, Callback callback) throws Exception {
-        String message = (String) request.getAttribute("org.eclipse.jetty.server.error_message")
+    ServletContextHandler servletContext = new ServletContextHandler(getContextPath());
+    servletContext.setErrorHandler((request,response,callback) -> {
+        String message = (String) request.getAttribute("org.eclipse.jetty.server.error_message");
         if (message != null) {
-          response.write(true, StandardCharsets.UTF_8.encode(message), Callback.NOOP)
+          response.write(true, StandardCharsets.UTF_8.encode(message), Callback.NOOP);
         }
-        callback.succeeded()
-        return true
-          }
-        });
+        callback.succeeded();
+        return true;
+    });
     setupServlets(servletContext);
     jettyServer.setHandler(servletContext);
 
