@@ -253,7 +253,8 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
   }
 
   @Nullable
-  Number extractNumericalAttribute(MBeanServerConnection connection, ObjectName objectName) {
+  protected Number extractNumericalAttribute(
+      MBeanServerConnection connection, ObjectName objectName) {
     Object value = extractAttributeValue(connection, objectName);
     if (value instanceof Number) {
       return (Number) value;

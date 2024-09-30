@@ -20,7 +20,7 @@ import java.util.Map;
  * <li>the metric attributes
  * <li>the unit
  *
- *     <p>Known subclasses are JmxRule and Metric.
+ *     <p>Known subclasses are {@link JmxRule} and {@link Metric}.
  */
 abstract class MetricStructure {
 
@@ -30,14 +30,22 @@ abstract class MetricStructure {
   //      KEY1: SPECIFICATION1
   //      KEY2: SPECIFICATION2
   //    unit: UNIT
+  //    stateMapping:
+  //      state1: [a,b]
+  //      state2: c
+  //      state3: '*'
 
-  private Map<String, String> metricAttribute; // unused, for YAML parser only
+  private Map<String, String> metricAttribute;
+  private StateMapping stateMapping = StateMapping.empty();
+  private static final String STATE_MAPPING_WILDCARD = "*";
   private String unit;
 
   private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
 
-  public void setType(String t) {
+  MetricStructure() {}
+
+  void setType(String t) {
     // Do not complain about case variations
     t = t.trim().toUpperCase(Locale.ROOT);
     this.metricType = MetricInfo.Type.valueOf(t);
@@ -49,6 +57,36 @@ abstract class MetricStructure {
 
   public void setUnit(String unit) {
     this.unit = validateUnit(unit.trim());
+  }
+
+  void setStateMapping(Map<String, Object> stateMapping) {
+    StateMapping.Builder builder = StateMapping.builder();
+    for (Map.Entry<String, Object> entry : stateMapping.entrySet()) {
+      String stateKey = entry.getKey();
+      Object stateValue = entry.getValue();
+      if (stateValue instanceof String) {
+        addMappedValue(builder, (String) stateValue, stateKey);
+      } else if (stateValue instanceof List) {
+        for (Object listEntry : (List<?>) stateValue) {
+          if (!(listEntry instanceof String)) {
+            throw new IllegalArgumentException("unexpected state list value: " + stateKey);
+          }
+          addMappedValue(builder, (String) listEntry, stateKey);
+        }
+      } else {
+        throw new IllegalArgumentException("unexpected state value: " + stateValue);
+      }
+    }
+    this.stateMapping = builder.build();
+  }
+
+  private static void addMappedValue(
+      StateMapping.Builder builder, String stateValue, String stateKey) {
+    if (stateValue.equals(STATE_MAPPING_WILDCARD)) {
+      builder.withDefaultState(stateKey);
+    } else {
+      builder.withMappedValue(stateValue, stateKey);
+    }
   }
 
   @CanIgnoreReturnValue
@@ -67,9 +105,7 @@ abstract class MetricStructure {
   public void setMetricAttribute(Map<String, String> map) {
     this.metricAttribute = map;
     // pre-build the MetricAttributes
-    List<MetricAttribute> attrList = new ArrayList<>();
-    addMetricAttributes(attrList, map);
-    this.metricAttributes = attrList;
+    this.metricAttributes = addMetricAttributes(map);
   }
 
   // Used only for testing
@@ -91,18 +127,28 @@ abstract class MetricStructure {
     }
   }
 
-  private static void addMetricAttributes(
-      List<MetricAttribute> list, Map<String, String> metricAttributeMap) {
-    if (metricAttributeMap != null) {
-      for (String key : metricAttributeMap.keySet()) {
-        String target = metricAttributeMap.get(key);
-        if (target == null) {
-          throw new IllegalStateException(
-              "nothing specified for metric attribute key '" + key + "'");
-        }
-        list.add(buildMetricAttribute(key, target.trim()));
+  private List<MetricAttribute> addMetricAttributes(Map<String, String> metricAttributeMap) {
+
+    List<MetricAttribute> list = new ArrayList<>();
+    boolean hasStateAttribute = false;
+    for (String key : metricAttributeMap.keySet()) {
+      String target = metricAttributeMap.get(key);
+      if (target == null) {
+        throw new IllegalStateException("nothing specified for metric attribute key '" + key + "'");
       }
+      MetricAttribute attribute = buildMetricAttribute(key, target.trim());
+      if (attribute.isStateAttribute()) {
+        if (hasStateAttribute) {
+          throw new IllegalArgumentException("only one state attribute is allowed");
+        }
+        hasStateAttribute = true;
+      }
+      list.add(attribute);
     }
+    if (hasStateAttribute && stateMapping.isEmpty()) {
+      throw new IllegalArgumentException("statekey() usage without stateMapping");
+    }
+    return list;
   }
 
   private static MetricAttribute buildMetricAttribute(String key, String target) {
@@ -110,6 +156,7 @@ abstract class MetricStructure {
     //  - param(STRING)
     //  - beanattr(STRING)
     //  - const(STRING)
+    //  - statekey()
     // where STRING is the name of the corresponding parameter key, attribute name,
     // or the direct value to use
     int k = target.indexOf(')');
@@ -117,21 +164,29 @@ abstract class MetricStructure {
     // Check for one of the cases as above
     if (target.startsWith("param(")) {
       if (k > 0) {
+        String jmxAttribute = target.substring(6, k).trim();
         return new MetricAttribute(
-            key, MetricAttributeExtractor.fromObjectNameParameter(target.substring(6, k).trim()));
+            key, MetricAttributeExtractor.fromObjectNameParameter(jmxAttribute));
       }
     } else if (target.startsWith("beanattr(")) {
       if (k > 0) {
-        return new MetricAttribute(
-            key, MetricAttributeExtractor.fromBeanAttribute(target.substring(9, k).trim()));
+        String jmxAttribute = target.substring(9, k).trim();
+        return new MetricAttribute(key, MetricAttributeExtractor.fromBeanAttribute(jmxAttribute));
       }
     } else if (target.startsWith("const(")) {
       if (k > 0) {
-        return new MetricAttribute(
-            key, MetricAttributeExtractor.fromConstant(target.substring(6, k).trim()));
+        String constantValue = target.substring(6, k).trim();
+        return new MetricAttribute(key, MetricAttributeExtractor.fromConstant(constantValue));
       }
+    } else if (target.equals("statekey()")) {
+      return new MetricAttribute(key, null);
     }
 
-    throw new IllegalArgumentException("Invalid metric attribute specification for '" + key + "'");
+    String msg = "Invalid metric attribute specification for '" + key + "': " + target;
+    throw new IllegalArgumentException(msg);
+  }
+
+  public StateMapping getStateMapping() {
+    return stateMapping;
   }
 }

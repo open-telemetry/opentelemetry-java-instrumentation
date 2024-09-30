@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jmx.engine.BeanAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.BeanGroup;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
+import io.opentelemetry.instrumentation.jmx.engine.MetricAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.engine.MetricExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
@@ -17,7 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -143,8 +146,7 @@ public class JmxRule extends MetricStructure {
     }
 
     Set<String> attrNames = mapping.keySet();
-    MetricExtractor[] metricExtractors = new MetricExtractor[attrNames.size()];
-    int n = 0;
+    List<MetricExtractor> metricExtractors = new ArrayList<>();
     for (String attributeName : attrNames) {
       BeanAttributeExtractor attrExtractor = BeanAttributeExtractor.fromName(attributeName);
       // This is essentially the same as 'attributeName' but with escape characters removed
@@ -162,44 +164,85 @@ public class JmxRule extends MetricStructure {
         metricInfo = m.buildMetricInfo(prefix, niceAttributeName, getUnit(), getMetricType());
       }
 
-      List<MetricAttribute> attributeList;
       List<MetricAttribute> ownAttributes = getAttributeList();
-      if (ownAttributes != null && m != null && m.getAttributeList() != null) {
-        // MetricAttributes have been specified at two levels, need to combine them
-        attributeList = combineMetricAttributes(ownAttributes, m.getAttributeList());
-      } else if (ownAttributes != null) {
-        attributeList = ownAttributes;
-      } else if (m != null && m.getAttributeList() != null) {
-        // Get the attributes from the metric
-        attributeList = m.getAttributeList();
-      } else {
-        // There are no attributes at all
-        attributeList = new ArrayList<MetricAttribute>();
-      }
+      List<MetricAttribute> metricAttributes = m != null ? m.getAttributeList() : null;
+      List<MetricAttribute> attributeList =
+          combineMetricAttributes(ownAttributes, metricAttributes);
 
-      MetricExtractor metricExtractor =
-          new MetricExtractor(
-              attrExtractor,
-              metricInfo,
-              attributeList.toArray(new MetricAttribute[attributeList.size()]));
-      metricExtractors[n++] = metricExtractor;
+      // higher priority to metric level mapping, then jmx rule as fallback
+      final StateMapping stateMapping = getEffectiveStateMapping(m, this);
+
+      if (stateMapping.isEmpty()) {
+        MetricExtractor metricExtractor =
+            new MetricExtractor(
+                attrExtractor, metricInfo, attributeList.toArray(new MetricAttribute[0]));
+        metricExtractors.add(metricExtractor);
+      } else {
+
+        // generate one metric extractor per state metric key
+        // each metric extractor will have the state attribute replaced with a constant
+        for (String key : stateMapping.getStateKeys()) {
+          List<MetricAttribute> stateMetricAttributes =
+              attributeList.stream()
+                  .map(
+                      ma -> {
+                        if (!ma.isStateAttribute()) {
+                          return ma;
+                        } else {
+                          return new MetricAttribute(
+                              ma.getAttributeName(), MetricAttributeExtractor.fromConstant(key));
+                        }
+                      })
+                  .collect(Collectors.toList());
+
+          BeanAttributeExtractor stateMetricExtractor =
+              new BeanAttributeExtractor(attrExtractor.getAttributeName()) {
+
+                @Override
+                protected Number extractNumericalAttribute(
+                    MBeanServerConnection connection, ObjectName objectName) {
+                  String rawStateValue = attrExtractor.extractValue(connection, objectName);
+                  String mappedStateValue = stateMapping.getStateValue(rawStateValue);
+                  return key.equals(mappedStateValue) ? 1 : 0;
+                }
+              };
+
+          metricExtractors.add(
+              new MetricExtractor(
+                  stateMetricExtractor,
+                  metricInfo,
+                  stateMetricAttributes.toArray(new MetricAttribute[0])));
+        }
+      }
     }
 
-    return new MetricDef(group, metricExtractors);
+    return new MetricDef(group, metricExtractors.toArray(new MetricExtractor[0]));
   }
 
   private static List<MetricAttribute> combineMetricAttributes(
       List<MetricAttribute> ownAttributes, List<MetricAttribute> metricAttributes) {
+
     Map<String, MetricAttribute> set = new HashMap<>();
-    for (MetricAttribute ownAttribute : ownAttributes) {
-      set.put(ownAttribute.getAttributeName(), ownAttribute);
+    if (ownAttributes != null) {
+      for (MetricAttribute ownAttribute : ownAttributes) {
+        set.put(ownAttribute.getAttributeName(), ownAttribute);
+      }
+    }
+    if (metricAttributes != null) {
+      // Let the metric level defined attributes override own attributes
+      for (MetricAttribute metricAttribute : metricAttributes) {
+        set.put(metricAttribute.getAttributeName(), metricAttribute);
+      }
     }
 
-    // Let the metric level defined attributes override own attributes
-    for (MetricAttribute metricAttribute : metricAttributes) {
-      set.put(metricAttribute.getAttributeName(), metricAttribute);
-    }
+    return new ArrayList<>(set.values());
+  }
 
-    return new ArrayList<MetricAttribute>(set.values());
+  private static StateMapping getEffectiveStateMapping(Metric m, JmxRule rule) {
+    if (m == null || m.getStateMapping().isEmpty()) {
+      return rule.getStateMapping();
+    } else {
+      return m.getStateMapping();
+    }
   }
 }

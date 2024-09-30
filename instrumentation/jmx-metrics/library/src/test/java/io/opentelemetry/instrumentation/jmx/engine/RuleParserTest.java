@@ -10,6 +10,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.doReturn;
 
 import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.yaml.JmxRule;
@@ -20,9 +21,12 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 class RuleParserTest {
   private static RuleParser parser;
@@ -283,13 +287,13 @@ class RuleParserTest {
     MetricExtractor m1 = metricDef.getMetricExtractors()[0];
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
     // MetricAttribute set at the metric level should override the one set at the definition level
-    assertThat(m1.getAttributes()).hasSize(1)
+    assertThat(m1.getAttributes())
+        .hasSize(1)
         .satisfiesExactly(a -> checkConstantMetricAttribute(a, "key1", "value2"));
 
     assertThat(m1.getInfo().getMetricName())
         .describedAs("metric name should default to JMX attribute name")
         .isEqualTo("ATTRIBUTE");
-
   }
 
   private static final String CONF7 =
@@ -318,7 +322,8 @@ class RuleParserTest {
     MetricExtractor m1 = metricDef.getMetricExtractors()[0];
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
     assertThat(m1.getInfo().getMetricName()).isEqualTo("ATTRIBUTE");
-    assertThat(m1.getAttributes()).hasSize(2)
+    assertThat(m1.getAttributes())
+        .hasSize(2)
         .anySatisfy(a -> checkConstantMetricAttribute(a, "key1", "value1"))
         .anySatisfy(a -> checkConstantMetricAttribute(a, "key2", "value2"));
   }
@@ -354,14 +359,85 @@ class RuleParserTest {
     assertThat(mb1.getUnit()).isNull();
   }
 
+  private static final String CONF9 =
+      "---                                   # keep stupid spotlessJava at bay\n"
+          + "rules:\n"
+          + "  - bean: my-test:type=9\n"
+          + "    mapping:\n"
+          + "      jmxStateAttribute:\n"
+          + "        type: updowncounter\n"
+          + "        metric: state_metric\n"
+          + "        stateMapping:\n" // --> implies it's a state metric, value is either 0 or 1
+          + "          ok: STARTED\n" // as simple string
+          + "          failed: [STOPPED,FAILED]\n" // as array of strings
+          + "          degraded: '*'\n" // wildcard value for default
+          + "        metricAttribute:\n"
+          + "          state: statekey()\n" // --> only one state attribute allowed
+          + "";
+
+  @Test
+  void testStateMetricConf() throws Exception {
+    JmxConfig config = parseConf(CONF9);
+    assertThat(config).isNotNull();
+
+    List<JmxRule> rules = config.getRules();
+    assertThat(rules).hasSize(1);
+
+    JmxRule jmxRule = rules.get(0);
+    assertThat(jmxRule.getBean()).isEqualTo("my-test:type=9");
+    Metric metric = jmxRule.getMapping().get("jmxStateAttribute");
+    assertThat(metric.getMetricType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+
+    assertThat(metric.getStateMapping().isEmpty()).isFalse();
+    assertThat(metric.getStateMapping().getStateKeys()).contains("ok", "failed", "degraded");
+    assertThat(metric.getStateMapping().getDefaultStateKey()).isEqualTo("degraded");
+    assertThat(metric.getStateMapping().getStateValue("STARTED")).isEqualTo("ok");
+    assertThat(metric.getStateMapping().getStateValue("STOPPED")).isEqualTo("failed");
+    assertThat(metric.getStateMapping().getStateValue("FAILED")).isEqualTo("failed");
+    assertThat(metric.getStateMapping().getStateValue("OTHER")).isEqualTo("degraded");
+
+    assertThat(metric.getMetricAttribute()).containsEntry("state", "statekey()");
+
+    ObjectName objectName = new ObjectName(jmxRule.getBean());
+    MBeanServerConnection mockConnection = Mockito.mock(MBeanServerConnection.class);
+    doReturn("STOPPED").when(mockConnection).getAttribute(objectName, "jmxStateAttribute");
+
+    MetricDef metricDef = jmxRule.buildMetricDef();
+    assertThat(metricDef.getMetricExtractors())
+        .hasSize(3)
+        .allSatisfy(
+            me -> {
+              assertThat(me.getInfo().getMetricName()).isEqualTo("state_metric");
+              assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+
+              assertThat(me.getAttributes()).hasSize(1);
+              MetricAttribute stateAttribute = me.getAttributes()[0];
+              assertThat(stateAttribute.getAttributeName()).isEqualTo("state");
+              String stateAttributeValue =
+                  stateAttribute.acquireAttributeValue(mockConnection, objectName);
+
+              BeanAttributeExtractor attributeExtractor = me.getMetricValueExtractor();
+              assertThat(attributeExtractor).isNotNull();
+              int expectedValue = stateAttributeValue.equals("failed") ? 1 : 0;
+              Number extractedValue =
+                  attributeExtractor.extractNumericalAttribute(mockConnection, objectName);
+              assertThat(extractedValue)
+                  .describedAs(
+                      "metric value should be %d when '%s' attribute is '%s'",
+                      expectedValue, stateAttribute.getAttributeName(), stateAttributeValue)
+                  .isEqualTo(expectedValue);
+            });
+
+  }
+
   @Test
   void testEmptyConf() {
     JmxConfig config = parseConf(EMPTY_CONF);
     assertThat(config.getRules()).isEmpty();
   }
 
-  private static void checkConstantMetricAttribute(MetricAttribute attribute, String expectedName,
-      String expectedValue) {
+  private static void checkConstantMetricAttribute(
+      MetricAttribute attribute, String expectedName, String expectedValue) {
     assertThat(attribute.getAttributeName()).isEqualTo(expectedName);
     assertThat(attribute.acquireAttributeValue(null, null)).isEqualTo(expectedValue);
   }
