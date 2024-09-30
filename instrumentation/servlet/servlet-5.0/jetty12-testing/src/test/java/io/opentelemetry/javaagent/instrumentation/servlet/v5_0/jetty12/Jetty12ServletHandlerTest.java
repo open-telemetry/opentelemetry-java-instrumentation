@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.HttpAttributes;
@@ -27,10 +27,10 @@ import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
+public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =
@@ -53,7 +53,7 @@ public class JettyServletHandlerTest extends AbstractServlet5Test<Server, Servle
 
   @Override
   public boolean hasResponseSpan(ServerEndpoint endpoint) {
-    return (JettyServlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION))
+    return (Jetty12Servlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION))
         || super.hasResponseSpan(endpoint);
   }
 
@@ -65,7 +65,7 @@ public class JettyServletHandlerTest extends AbstractServlet5Test<Server, Servle
       String method,
       ServerEndpoint endpoint) {
 
-    if (JettyServlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
+    if (Jetty12Servlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
       span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(handlerSpan);
