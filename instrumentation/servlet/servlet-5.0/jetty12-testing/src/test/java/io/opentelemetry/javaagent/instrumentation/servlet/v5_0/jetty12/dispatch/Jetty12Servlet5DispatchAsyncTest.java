@@ -15,20 +15,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty.dispatch.JettyDispatchTest;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 
-public class Jetty12Servlet5DispatchAsyncTest extends JettyDispatchTest {
+public class Jetty12Servlet5DispatchAsyncTest extends Jetty12DispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet5.Async.class;
-  }
-
-  @Override
-  public boolean isAsyncTest() {
-    return true;
   }
 
   @Override

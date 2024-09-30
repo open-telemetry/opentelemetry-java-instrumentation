@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty.dispatch;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -15,11 +16,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.RequestDispatcherServlet;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.RequestDispatcherServlet;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
+@EnabledForJreRange(min = JRE.JAVA_11)
 public class JettyServlet5IncludeTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
@@ -52,6 +56,8 @@ public class JettyServlet5IncludeTest extends JettyDispatchTest {
     addServlet(context, "/dispatch" + EXCEPTION.getPath(), RequestDispatcherServlet.Include.class);
     addServlet(
         context, "/dispatch" + AUTH_REQUIRED.getPath(), RequestDispatcherServlet.Include.class);
+    addServlet(
+        context, "/dispatch" + CAPTURE_HEADERS.getPath(), RequestDispatcherServlet.Include.class);
     addServlet(
         context,
         "/dispatch" + CAPTURE_PARAMETERS.getPath(),

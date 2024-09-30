@@ -6,28 +6,24 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty12;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.HttpAttributes;
-import java.io.IOException;
-import java.io.Writer;
+import jakarta.servlet.Servlet;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.servlet.Servlet;
-import jakarta.servlet.http.HttpServletRequest;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.util.Callback;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
@@ -52,29 +48,6 @@ public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, Serv
   }
 
   @Override
-  public boolean hasResponseSpan(ServerEndpoint endpoint) {
-    return (Jetty12Servlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION))
-        || super.hasResponseSpan(endpoint);
-  }
-
-  @Override
-  protected SpanDataAssert assertResponseSpan(
-      SpanDataAssert span,
-      SpanData controllerSpan,
-      SpanData handlerSpan,
-      String method,
-      ServerEndpoint endpoint) {
-
-    if (Jetty12Servlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
-      span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
-          .hasKind(SpanKind.INTERNAL)
-          .hasParent(handlerSpan);
-    }
-
-    return super.assertResponseSpan(span, controllerSpan, handlerSpan, method, endpoint);
-  }
-
-  @Override
   protected Server setupServer() throws Exception {
     Server server = new Server(port);
     ServletHandler handler = new ServletHandler();
@@ -83,11 +56,14 @@ public class Jetty12ServletHandlerTest extends AbstractServlet5Test<Server, Serv
     server.addBean(
         new ErrorHandler() {
           @Override
-          protected void handleErrorPage(
-              HttpServletRequest request, Writer writer, int code, String message)
-              throws IOException {
-            Throwable th = (Throwable) request.getAttribute("jakarta.servlet.error.exception");
-            writer.write(th != null ? th.getMessage() : message);
+          public boolean handle(Request request, Response response, Callback callback) {
+            String message =
+                (String) request.getAttribute("org.eclipse.jetty.server.error_message");
+            if (message != null) {
+              response.write(true, StandardCharsets.UTF_8.encode(message), Callback.NOOP);
+            }
+            callback.succeeded();
+            return true;
           }
         });
     server.start();

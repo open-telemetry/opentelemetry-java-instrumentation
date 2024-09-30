@@ -6,30 +6,28 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.HttpAttributes;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.servlet.Servlet;
-import jakarta.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@EnabledForJreRange(min = JRE.JAVA_11)
 public class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
 
   @RegisterExtension
@@ -49,29 +47,6 @@ public class JettyServletHandlerTest extends AbstractServlet5Test<Server, Servle
           attributes.remove(HttpAttributes.HTTP_ROUTE);
           return attributes;
         });
-  }
-
-  @Override
-  public boolean hasResponseSpan(ServerEndpoint endpoint) {
-    return (JettyServlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION))
-        || super.hasResponseSpan(endpoint);
-  }
-
-  @Override
-  protected SpanDataAssert assertResponseSpan(
-      SpanDataAssert span,
-      SpanData controllerSpan,
-      SpanData handlerSpan,
-      String method,
-      ServerEndpoint endpoint) {
-
-    if (JettyServlet5Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
-      span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
-          .hasKind(SpanKind.INTERNAL)
-          .hasParent(handlerSpan);
-    }
-
-    return super.assertResponseSpan(span, controllerSpan, handlerSpan, method, endpoint);
   }
 
   @Override

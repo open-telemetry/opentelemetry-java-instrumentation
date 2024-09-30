@@ -18,16 +18,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
+@EnabledForJreRange(min = JRE.JAVA_11)
 public class JettyServlet5DispatchAsyncTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet5.Async.class;
-  }
-
-  @Override
-  public boolean isAsyncTest() {
-    return true;
   }
 
   @Override

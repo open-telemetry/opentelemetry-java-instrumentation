@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping.TomcatServlet5FilterMappingTest;
 import org.apache.catalina.Context;
 
 class TomcatServlet5FilterUrlPatternMappingTest extends TomcatServlet5FilterMappingTest {

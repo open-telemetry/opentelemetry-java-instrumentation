@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty12;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.TestServlet5;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 
 public class Jetty12Servlet5AsyncTest extends Jetty12Servlet5Test {
@@ -18,10 +18,5 @@ public class Jetty12Servlet5AsyncTest extends Jetty12Servlet5Test {
   @Override
   public boolean errorEndpointUsesSendError() {
     return false;
-  }
-
-  @Override
-  public boolean isAsyncTest() {
-    return true;
   }
 }
