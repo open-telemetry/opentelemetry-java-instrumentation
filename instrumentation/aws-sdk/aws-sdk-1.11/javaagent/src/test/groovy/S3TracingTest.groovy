@@ -61,7 +61,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.name" queueName
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "CreateQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -106,7 +106,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "GetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -129,7 +129,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "SetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -192,7 +192,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -287,7 +287,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "PurgeQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -342,7 +342,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.name" queueName
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "CreateQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -364,7 +364,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "GetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -406,7 +406,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "CreateTopic"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
@@ -427,7 +427,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "Subscribe"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
@@ -450,7 +450,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "SetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -471,7 +471,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "SetTopicAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
@@ -536,7 +536,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -631,7 +631,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "PurgeQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"

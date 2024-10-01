@@ -53,7 +53,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.name" queueName
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "CreateQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -76,7 +76,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "GetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -99,7 +99,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "SetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
@@ -121,7 +121,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "CreateTopic"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
@@ -143,7 +143,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "Subscribe"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
@@ -165,7 +165,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "Publish"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
@@ -186,7 +186,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
             "aws.queue.url" queueUrl
-            "aws.request_id" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
             "rpc.method" "ReceiveMessage"

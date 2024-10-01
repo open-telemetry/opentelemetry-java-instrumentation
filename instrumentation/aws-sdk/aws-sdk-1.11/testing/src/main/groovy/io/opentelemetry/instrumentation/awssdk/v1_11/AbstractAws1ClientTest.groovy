@@ -123,7 +123,7 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.endpoint" "${server.httpUri()}"
             "aws.agent" "java-aws-sdk"
-            "aws.request_id" hasRequestId ? String : null
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" hasRequestId ? String : null
             for (def addedTag : additionalAttributes) {
               "$addedTag.key" "$addedTag.value"
             }
