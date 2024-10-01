@@ -33,6 +33,9 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import software.amazon.awssdk.services.sfn.SfnClient
+import software.amazon.awssdk.services.sfn.model.DescribeStateMachineRequest
+import software.amazon.awssdk.services.sfn.model.DescribeActivityRequest
 import spock.lang.Unroll
 
 import java.time.Duration
@@ -131,6 +134,10 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "BedrockRuntime" && operation == "InvokeModel") {
               "gen_ai.request.model" "meta.llama2-13b-chat-v1"
               "gen_ai.system" "aws_bedrock"
+            } else if (service == "Sfn" && operation == "DescribeStateMachine") {
+              "aws.stepfunctions.state_machine.arn" "stateMachineArn"
+            } else if (service == "Sfn" && operation == "DescribeActivity") {
+              "aws.stepfunctions.activity.arn" "activityArn"
             }
 
           }
@@ -174,6 +181,12 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
         """
+    "Sfn" | "DescribeStateMachine" | "POST" | "UNKNOWN" | SfnClient.builder()
+    | { c -> c.describeStateMachine(DescribeStateMachineRequest.builder().stateMachineArn("stateMachineArn").build()) }
+    | ""
+    "Sfn" | "DescribeActivity" | "POST" | "UNKNOWN" | SfnClient.builder()
+    | { c -> c.describeActivity(DescribeActivityRequest.builder().activityArn("activityArn").build()) }
+    | ""
   }
 
   def "send #operation async request with builder #builder.class.getName() mocked response"() {
