@@ -29,6 +29,7 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
     return null;
   }
 
+  // TODO: make this required to implement
   @Nullable
   default String getDbQueryText(REQUEST request) {
     return getStatement(request);
@@ -43,6 +44,7 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
     return null;
   }
 
+  // TODO: make this required to implement
   @Nullable
   default String getDbOperationName(REQUEST request) {
     return getOperation(request);

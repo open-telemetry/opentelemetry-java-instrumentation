@@ -78,7 +78,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
           DB_QUERY_TEXT,
           statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
       internalSet(attributes, DB_OPERATION_NAME, operation);
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(
           attributes,
           DB_STATEMENT,

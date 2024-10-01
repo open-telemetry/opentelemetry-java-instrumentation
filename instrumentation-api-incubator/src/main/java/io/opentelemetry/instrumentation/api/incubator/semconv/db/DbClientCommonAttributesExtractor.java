@@ -37,6 +37,7 @@ abstract class DbClientCommonAttributesExtractor<
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
     }
@@ -45,7 +46,6 @@ abstract class DbClientCommonAttributesExtractor<
       internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
       internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
     }
-    internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
   }
 
   @Override
