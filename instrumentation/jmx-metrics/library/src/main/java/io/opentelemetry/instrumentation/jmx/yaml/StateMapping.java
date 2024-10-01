@@ -36,6 +36,8 @@ public class StateMapping {
   }
 
   /**
+   * Returns {@literal} true when empty, {@literal false} otherwise
+   *
    * @return {@literal true} when state mapping is empty, {@literal false} otherwise
    */
   public boolean isEmpty() {

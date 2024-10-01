@@ -10,7 +10,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.yaml.JmxRule;
@@ -400,7 +400,7 @@ class RuleParserTest {
 
     ObjectName objectName = new ObjectName(jmxRule.getBean());
     MBeanServerConnection mockConnection = Mockito.mock(MBeanServerConnection.class);
-    doReturn("STOPPED").when(mockConnection).getAttribute(objectName, "jmxStateAttribute");
+    when(mockConnection.getAttribute(objectName, "jmxStateAttribute")).thenReturn("STOPPED");
 
     MetricDef metricDef = jmxRule.buildMetricDef();
     assertThat(metricDef.getMetricExtractors())

@@ -170,7 +170,7 @@ public class JmxRule extends MetricStructure {
           combineMetricAttributes(ownAttributes, metricAttributes);
 
       // higher priority to metric level mapping, then jmx rule as fallback
-      final StateMapping stateMapping = getEffectiveStateMapping(m, this);
+      StateMapping stateMapping = getEffectiveStateMapping(m, this);
 
       if (stateMapping.isEmpty()) {
         MetricExtractor metricExtractor =
