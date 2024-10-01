@@ -12,6 +12,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -53,8 +55,9 @@ import org.testcontainers.containers.GenericContainer;
 
 class SpymemcachedTest {
   private static final String KEY_PREFIX = "SpymemcachedTest-";
-  private static final int EXPIRATION = 3600;
-  private static final int TIMING_OUT_OPERATION_TIMEOUT = 1000;
+  // https://github.com/memcached/memcached/wiki/Programming#expiration
+  private static final int EXPIRATION_SECONDS = 3600;
+  private static final int TIMING_OUT_OPERATION_TIMEOUT_MILLIS = 1000;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -82,10 +85,15 @@ class SpymemcachedTest {
   }
 
   private static MemcachedClient getMemcached() {
-    return getMemcached(builder -> {});
+    return getMemcached(emptyMap(), builder -> {});
   }
 
-  private static MemcachedClient getMemcached(Consumer<ConnectionFactoryBuilder> customizer) {
+  private static MemcachedClient getMemcached(Map<String, String> testData) {
+    return getMemcached(testData, builder -> {});
+  }
+
+  private static MemcachedClient getMemcached(
+      Map<String, String> testData, Consumer<ConnectionFactoryBuilder> customizer) {
     // Use direct executor service so our listeners finish in deterministic order
     ExecutorService listenerExecutorService = MoreExecutors.newDirectExecutorService();
 
@@ -101,24 +109,11 @@ class SpymemcachedTest {
           new MemcachedClient(connectionFactory, Collections.singletonList(memcachedAddress));
       cleanup.deferCleanup(memcached::shutdown);
 
-      // Add some keys to test on later:
-      Map<String, String> map = new HashMap<>();
-      map.put("test-get", "get test");
-      map.put("test-get-2", "get test 2");
-      map.put("test-append", "append test");
-      map.put("test-prepend", "prepend test");
-      map.put("test-delete", "delete test");
-      map.put("test-replace", "replace test");
-      map.put("test-touch", "touch test");
-      map.put("test-cas", "cas test");
-      map.put("test-decr", "200");
-      map.put("test-incr", "100");
-
       testing.runWithSpan(
           "setup",
           () -> {
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-              if (!memcached.set(key(entry.getKey()), EXPIRATION, entry.getValue()).get()) {
+            for (Map.Entry<String, String> entry : testData.entrySet()) {
+              if (!memcached.set(key(entry.getKey()), EXPIRATION_SECONDS, entry.getValue()).get()) {
                 throw new IllegalStateException("Failed to set key " + entry.getKey());
               }
             }
@@ -134,7 +129,7 @@ class SpymemcachedTest {
 
   @Test
   void getHit() {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-get", "get test"));
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get(key("test-get"))).isEqualTo("get test"));
 
@@ -181,7 +176,9 @@ class SpymemcachedTest {
     ReentrantLock queueLock = new ReentrantLock();
     OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
     MemcachedClient lockableMemcached =
-        getMemcached(builder -> builder.setOpQueueFactory(lockableQueueFactory));
+        getMemcached(
+            singletonMap("test-get", "get test"),
+            builder -> builder.setOpQueueFactory(lockableQueueFactory));
     testing.runWithSpan(
         "parent",
         () -> {
@@ -220,14 +217,15 @@ class SpymemcachedTest {
     OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
     MemcachedClient timingOutMemcached =
         getMemcached(
+            singletonMap("test-get", "get test"),
             builder ->
                 builder
                     .setOpQueueFactory(lockableQueueFactory)
-                    .setOpTimeout(TIMING_OUT_OPERATION_TIMEOUT));
+                    .setOpTimeout(TIMING_OUT_OPERATION_TIMEOUT_MILLIS));
     queueLock.lock();
     try {
       timingOutMemcached.asyncGet(key("test-get"));
-      Thread.sleep(TIMING_OUT_OPERATION_TIMEOUT + 1000);
+      Thread.sleep(TIMING_OUT_OPERATION_TIMEOUT_MILLIS + 1000);
     } finally {
       queueLock.unlock();
     }
@@ -264,7 +262,10 @@ class SpymemcachedTest {
 
   @Test
   void bulkGet() {
-    MemcachedClient memcached = getMemcached();
+    Map<String, String> testData = new HashMap<>();
+    testData.put("test-get", "get test");
+    testData.put("test-get-2", "get test 2");
+    MemcachedClient memcached = getMemcached(testData);
     Map<String, Object> result =
         testing.runWithSpan("parent", () -> memcached.getBulk(key("test-get"), key("test-get-2")));
     assertThat(result)
@@ -293,7 +294,7 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.set(key("test-set"), EXPIRATION, "bar").get()).isTrue();
+          assertThat(memcached.set(key("test-set"), EXPIRATION_SECONDS, "bar").get()).isTrue();
         });
 
     testing.waitAndAssertTraces(
@@ -316,13 +317,16 @@ class SpymemcachedTest {
     ReentrantLock queueLock = new ReentrantLock();
     OperationQueueFactory lockableQueueFactory = () -> getLockableQueue(queueLock);
     MemcachedClient lockableMemcached =
-        getMemcached(builder -> builder.setOpQueueFactory(lockableQueueFactory));
+        getMemcached(emptyMap(), builder -> builder.setOpQueueFactory(lockableQueueFactory));
     testing.runWithSpan(
         "parent",
         () -> {
           queueLock.lock();
           try {
-            assertThat(lockableMemcached.set(key("test-set-cancel"), EXPIRATION, "bar").cancel())
+            assertThat(
+                    lockableMemcached
+                        .set(key("test-set-cancel"), EXPIRATION_SECONDS, "bar")
+                        .cancel())
                 .isTrue();
           } finally {
             queueLock.unlock();
@@ -351,7 +355,7 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.add(key("test-add"), EXPIRATION, "add bar").get()).isTrue();
+          assertThat(memcached.add(key("test-add"), EXPIRATION_SECONDS, "add bar").get()).isTrue();
           assertThat(memcached.get(key("test-add"))).isEqualTo("add bar");
         });
 
@@ -386,8 +390,9 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.add(key("test-add2"), EXPIRATION, "add bar").get()).isTrue();
-          assertThat(memcached.add(key("test-add2"), EXPIRATION, "add bar 123").get()).isFalse();
+          assertThat(memcached.add(key("test-add2"), EXPIRATION_SECONDS, "add bar").get()).isTrue();
+          assertThat(memcached.add(key("test-add2"), EXPIRATION_SECONDS, "add bar 123").get())
+              .isFalse();
         });
 
     testing.waitAndAssertTraces(
@@ -416,7 +421,7 @@ class SpymemcachedTest {
 
   @Test
   void delete() throws Exception {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-delete", "delete test"));
     testing.runWithSpan(
         "parent",
         () -> {
@@ -475,11 +480,11 @@ class SpymemcachedTest {
 
   @Test
   void replace() throws Exception {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-replace", "replace test"));
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.replace(key("test-replace"), EXPIRATION, "new value").get())
+          assertThat(memcached.replace(key("test-replace"), EXPIRATION_SECONDS, "new value").get())
               .isTrue();
           assertThat(memcached.get(key("test-replace"))).isEqualTo("new value");
         });
@@ -517,7 +522,7 @@ class SpymemcachedTest {
         () -> {
           assertThat(
                   memcached
-                      .replace(key("test-replace-non-existent"), EXPIRATION, "new value")
+                      .replace(key("test-replace-non-existent"), EXPIRATION_SECONDS, "new value")
                       .get())
               .isFalse();
         });
@@ -539,7 +544,7 @@ class SpymemcachedTest {
 
   @Test
   void append() throws Exception {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-append", "append test"));
     testing.runWithSpan(
         "parent",
         () -> {
@@ -585,7 +590,7 @@ class SpymemcachedTest {
 
   @Test
   void prepend() throws Exception {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-prepend", "prepend test"));
     testing.runWithSpan(
         "parent",
         () -> {
@@ -631,12 +636,13 @@ class SpymemcachedTest {
 
   @Test
   void cas() {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-cas", "cas test"));
     testing.runWithSpan(
         "parent",
         () -> {
           CASValue<Object> casValue = memcached.gets(key("test-cas"));
-          assertThat(memcached.cas(key("test-cas"), casValue.getCas(), EXPIRATION, "cas bar"))
+          assertThat(
+                  memcached.cas(key("test-cas"), casValue.getCas(), EXPIRATION_SECONDS, "cas bar"))
               .isEqualTo(CASResponse.OK);
         });
 
@@ -670,7 +676,8 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.cas(key("test-cas-doesnt-exist"), 1234, EXPIRATION, "cas bar"))
+          assertThat(
+                  memcached.cas(key("test-cas-doesnt-exist"), 1234, EXPIRATION_SECONDS, "cas bar"))
               .isEqualTo(CASResponse.NOT_FOUND);
         });
 
@@ -691,11 +698,11 @@ class SpymemcachedTest {
 
   @Test
   void touch() throws Exception {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-touch", "touch test"));
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.touch(key("test-touch"), EXPIRATION).get()).isTrue();
+          assertThat(memcached.touch(key("test-touch"), EXPIRATION_SECONDS).get()).isTrue();
         });
 
     testing.waitAndAssertTraces(
@@ -719,7 +726,8 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.touch(key("test-touch-non-existent"), EXPIRATION).get()).isFalse();
+          assertThat(memcached.touch(key("test-touch-non-existent"), EXPIRATION_SECONDS).get())
+              .isFalse();
         });
 
     testing.waitAndAssertTraces(
@@ -739,11 +747,11 @@ class SpymemcachedTest {
 
   @Test
   void getAndTouch() {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-touch", "touch test"));
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.getAndTouch(key("test-touch"), EXPIRATION).getValue())
+          assertThat(memcached.getAndTouch(key("test-touch"), EXPIRATION_SECONDS).getValue())
               .isEqualTo("touch test");
         });
 
@@ -768,7 +776,8 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.getAndTouch(key("test-touch-non-existent"), EXPIRATION)).isNull();
+          assertThat(memcached.getAndTouch(key("test-touch-non-existent"), EXPIRATION_SECONDS))
+              .isNull();
         });
 
     testing.waitAndAssertTraces(
@@ -788,7 +797,7 @@ class SpymemcachedTest {
 
   @Test
   void decr() {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-decr", "200"));
     testing.runWithSpan(
         "parent",
         () -> {
@@ -874,7 +883,7 @@ class SpymemcachedTest {
 
   @Test
   void incr() {
-    MemcachedClient memcached = getMemcached();
+    MemcachedClient memcached = getMemcached(singletonMap("test-incr", "100"));
     testing.runWithSpan(
         "parent",
         () -> {
