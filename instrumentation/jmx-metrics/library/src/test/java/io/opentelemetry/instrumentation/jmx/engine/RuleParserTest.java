@@ -10,6 +10,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
@@ -21,12 +22,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 class RuleParserTest {
   private static RuleParser parser;
@@ -399,8 +401,16 @@ class RuleParserTest {
     assertThat(metric.getMetricAttribute()).containsEntry("state", "statekey()");
 
     ObjectName objectName = new ObjectName(jmxRule.getBean());
-    MBeanServerConnection mockConnection = Mockito.mock(MBeanServerConnection.class);
+    MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
+
+    // mock attribute value
     when(mockConnection.getAttribute(objectName, "jmxStateAttribute")).thenReturn("STOPPED");
+
+    // mock attribute discovery
+    MBeanInfo mockBeanInfo = mock(MBeanInfo.class);
+    when(mockBeanInfo.getAttributes()).thenReturn(new MBeanAttributeInfo[] {
+        new MBeanAttributeInfo("jmxStateAttribute", "java.lang.String", "", true, false, false)});
+    when(mockConnection.getMBeanInfo(objectName)).thenReturn(mockBeanInfo);
 
     MetricDef metricDef = jmxRule.buildMetricDef();
     assertThat(metricDef.getMetricExtractors())
@@ -418,6 +428,14 @@ class RuleParserTest {
 
               BeanAttributeExtractor attributeExtractor = me.getMetricValueExtractor();
               assertThat(attributeExtractor).isNotNull();
+              assertThat(attributeExtractor.getSampleValue(null, null))
+                  .describedAs("sampled value must be an integer")
+                  .isInstanceOf(Integer.class);
+
+              assertThat(attributeExtractor.getAttributeInfo(mockConnection, objectName))
+                  .describedAs("attribute info must be provided as a regular int metric")
+                  .isNotNull();
+
               int expectedValue = stateAttributeValue.equals("failed") ? 1 : 0;
               Number extractedValue =
                   attributeExtractor.extractNumericalAttribute(mockConnection, objectName);

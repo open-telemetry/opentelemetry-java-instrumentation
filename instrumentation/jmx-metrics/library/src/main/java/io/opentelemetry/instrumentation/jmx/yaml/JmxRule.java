@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
@@ -173,50 +172,69 @@ public class JmxRule extends MetricStructure {
       StateMapping stateMapping = getEffectiveStateMapping(m, this);
 
       if (stateMapping.isEmpty()) {
-        MetricExtractor metricExtractor =
+        metricExtractors.add(
             new MetricExtractor(
-                attrExtractor, metricInfo, attributeList.toArray(new MetricAttribute[0]));
-        metricExtractors.add(metricExtractor);
+                attrExtractor, metricInfo, attributeList.toArray(new MetricAttribute[0])));
       } else {
 
         // generate one metric extractor per state metric key
         // each metric extractor will have the state attribute replaced with a constant
-        for (String key : stateMapping.getStateKeys()) {
-          List<MetricAttribute> stateMetricAttributes =
-              attributeList.stream()
-                  .map(
-                      ma -> {
-                        if (!ma.isStateAttribute()) {
-                          return ma;
-                        } else {
-                          return new MetricAttribute(
-                              ma.getAttributeName(), MetricAttributeExtractor.fromConstant(key));
-                        }
-                      })
-                  .collect(Collectors.toList());
-
-          BeanAttributeExtractor stateMetricExtractor =
-              new BeanAttributeExtractor(attrExtractor.getAttributeName()) {
-
-                @Override
-                protected Number extractNumericalAttribute(
-                    MBeanServerConnection connection, ObjectName objectName) {
-                  String rawStateValue = attrExtractor.extractValue(connection, objectName);
-                  String mappedStateValue = stateMapping.getStateValue(rawStateValue);
-                  return key.equals(mappedStateValue) ? 1 : 0;
-                }
-              };
-
-          metricExtractors.add(
-              new MetricExtractor(
-                  stateMetricExtractor,
-                  metricInfo,
-                  stateMetricAttributes.toArray(new MetricAttribute[0])));
-        }
+        metricExtractors.addAll(
+            createStateMappingExtractors(stateMapping, attributeList, attrExtractor, metricInfo));
       }
     }
 
     return new MetricDef(group, metricExtractors.toArray(new MetricExtractor[0]));
+  }
+
+  private static List<MetricExtractor> createStateMappingExtractors(
+      StateMapping stateMapping,
+      List<MetricAttribute> attributeList,
+      BeanAttributeExtractor attrExtractor,
+      MetricInfo metricInfo) {
+
+    List<MetricExtractor> extractors = new ArrayList<>();
+    for (String key : stateMapping.getStateKeys()) {
+      List<MetricAttribute> stateMetricAttributes = new ArrayList<>();
+
+      for (MetricAttribute ma : attributeList) {
+        // replace state metric attribute with constant key value
+        if (!ma.isStateAttribute()) {
+          stateMetricAttributes.add(ma);
+        } else {
+          stateMetricAttributes.add(
+              new MetricAttribute(
+                  ma.getAttributeName(), MetricAttributeExtractor.fromConstant(key)));
+        }
+      }
+
+      BeanAttributeExtractor stateMetricExtractor =
+          new BeanAttributeExtractor(attrExtractor.getAttributeName()) {
+
+            @Override
+            protected Object getSampleValue(
+                MBeanServerConnection connection, ObjectName objectName) {
+              // metric actual type is sampled in the discovery process, so we have to
+              // make this extractor as extracting integers.
+              return 0;
+            }
+
+            @Override
+            protected Number extractNumericalAttribute(
+                MBeanServerConnection connection, ObjectName objectName) {
+              String rawStateValue = attrExtractor.extractValue(connection, objectName);
+              String mappedStateValue = stateMapping.getStateValue(rawStateValue);
+              return key.equals(mappedStateValue) ? 1 : 0;
+            }
+          };
+
+      extractors.add(
+          new MetricExtractor(
+              stateMetricExtractor,
+              metricInfo,
+              stateMetricAttributes.toArray(new MetricAttribute[0])));
+    }
+    return extractors;
   }
 
   private static List<MetricAttribute> combineMetricAttributes(
