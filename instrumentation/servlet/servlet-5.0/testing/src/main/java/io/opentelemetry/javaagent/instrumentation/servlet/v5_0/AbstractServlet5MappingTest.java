@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping;
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-abstract class AbstractServlet5MappingTest<SERVER, CONTEXT>
+public abstract class AbstractServlet5MappingTest<SERVER, CONTEXT>
     extends AbstractHttpServerUsingTest<SERVER> {
 
   @RegisterExtension
