@@ -102,6 +102,7 @@ abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
     options.setHasHandlerSpan(unused -> true);
     options.setHttpAttributes(endpoint -> emptySet());
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));

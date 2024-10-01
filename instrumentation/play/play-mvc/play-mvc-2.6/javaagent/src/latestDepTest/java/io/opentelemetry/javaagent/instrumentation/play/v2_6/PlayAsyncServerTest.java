@@ -75,14 +75,12 @@ class PlayAsyncServerTest extends PlayServerTest {
                 .routingAsync(
                     request ->
                         CompletableFuture.supplyAsync(
-                            () -> {
-                              controller(
-                                  EXCEPTION,
-                                  () -> {
-                                    throw new IllegalArgumentException(EXCEPTION.getBody());
-                                  });
-                              return null;
-                            },
+                            () ->
+                                controller(
+                                    EXCEPTION,
+                                    () -> {
+                                      throw new IllegalArgumentException(EXCEPTION.getBody());
+                                    }),
                             executionContextExecutor))
                 .GET(CAPTURE_HEADERS.getPath())
                 .routingAsync(
@@ -96,11 +94,10 @@ class PlayAsyncServerTest extends PlayServerTest {
                                           Results.status(
                                               CAPTURE_HEADERS.getStatus(),
                                               CAPTURE_HEADERS.getBody());
-                                      request
+                                      return request
                                           .header("X-Test-Request")
-                                          .ifPresent(
-                                              value -> result.withHeader("X-Test-Response", value));
-                                      return result;
+                                          .map(value -> result.withHeader("X-Test-Response", value))
+                                          .orElse(result);
                                     }),
                             executionContextExecutor))
                 .GET(INDEXED_CHILD.getPath())
