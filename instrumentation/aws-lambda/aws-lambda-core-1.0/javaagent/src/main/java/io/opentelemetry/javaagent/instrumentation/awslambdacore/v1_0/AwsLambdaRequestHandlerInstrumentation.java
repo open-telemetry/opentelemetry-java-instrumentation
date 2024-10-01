@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration.flushTimeout;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaInstrumentationHelper.functionInstrumenter;
@@ -59,6 +60,8 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
+    private final static long flushTimeoutNanos = flushTimeout().toNanos();
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
@@ -90,7 +93,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         functionInstrumenter().end(functionContext, input, null, throwable);
       }
 
-      OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
+      OpenTelemetrySdkAccess.forceFlush(flushTimeoutNanos, TimeUnit.NANOSECONDS);
     }
   }
 }
