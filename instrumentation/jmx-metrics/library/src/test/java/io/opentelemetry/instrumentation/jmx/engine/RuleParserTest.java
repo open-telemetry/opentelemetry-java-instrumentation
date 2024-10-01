@@ -408,8 +408,12 @@ class RuleParserTest {
 
     // mock attribute discovery
     MBeanInfo mockBeanInfo = mock(MBeanInfo.class);
-    when(mockBeanInfo.getAttributes()).thenReturn(new MBeanAttributeInfo[] {
-        new MBeanAttributeInfo("jmxStateAttribute", "java.lang.String", "", true, false, false)});
+    when(mockBeanInfo.getAttributes())
+        .thenReturn(
+            new MBeanAttributeInfo[] {
+              new MBeanAttributeInfo(
+                  "jmxStateAttribute", "java.lang.String", "", true, false, false)
+            });
     when(mockConnection.getMBeanInfo(objectName)).thenReturn(mockBeanInfo);
 
     MetricDef metricDef = jmxRule.buildMetricDef();
