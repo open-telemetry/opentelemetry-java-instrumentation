@@ -20,7 +20,7 @@ public class StateMapping {
       new StateMapping(null, Collections.emptyMap(), Collections.emptySet());
 
   /** default state to map entries that are not part of {@link #stateMapping} */
-  private final String defaultStateKey;
+  @Nullable private final String defaultStateKey;
 
   /** maps values (keys) to their respective state (value) */
   private final Map<String, String> stateMapping;
@@ -29,7 +29,7 @@ public class StateMapping {
   private final Set<String> stateKeys;
 
   private StateMapping(
-      String defaultState, Map<String, String> stateMapping, Set<String> stateKeys) {
+      @Nullable String defaultState, Map<String, String> stateMapping, Set<String> stateKeys) {
     this.defaultStateKey = defaultState;
     this.stateMapping = stateMapping;
     this.stateKeys = stateKeys;
