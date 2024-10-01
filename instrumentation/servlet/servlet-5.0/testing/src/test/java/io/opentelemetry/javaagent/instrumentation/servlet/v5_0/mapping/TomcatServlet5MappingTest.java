@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping;
 
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5MappingTest;
 import jakarta.servlet.Servlet;
 import java.io.File;
 import java.nio.file.Files;

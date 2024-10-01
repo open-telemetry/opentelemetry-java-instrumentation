@@ -23,11 +23,8 @@ import java.util.Set;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@EnabledForJreRange(min = JRE.JAVA_11)
 public class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
 
   @RegisterExtension
