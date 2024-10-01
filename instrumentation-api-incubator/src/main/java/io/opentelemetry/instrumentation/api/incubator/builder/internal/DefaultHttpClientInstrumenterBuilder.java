@@ -193,7 +193,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> build() {
-
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -222,10 +221,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       InstrumenterBuilder<BUILDERREQUEST, BUILDERRESPONSE> instrumenterBuilder(
           SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
     return Instrumenter.builder(openTelemetry, instrumentationName, spanNameExtractor);
-  }
-
-  public String getInstrumentationName() {
-    return instrumentationName;
   }
 
   @CanIgnoreReturnValue
