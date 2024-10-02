@@ -20,6 +20,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Array;
@@ -153,7 +155,7 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public void commit() throws SQLException {
-    delegate.commit();
+    wrapCall(delegate::commit, "COMMIT");
   }
 
   @Override
@@ -259,13 +261,13 @@ public class OpenTelemetryConnection implements Connection {
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback() throws SQLException {
-    delegate.rollback();
+    wrapCall(delegate::rollback, "ROLLBACK");
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback(Savepoint savepoint) throws SQLException {
-    delegate.rollback(savepoint);
+    wrapCall(() -> delegate.rollback(savepoint), "ROLLBACK");
   }
 
   @Override
@@ -368,5 +370,30 @@ public class OpenTelemetryConnection implements Connection {
   // visible for testing
   public DbInfo getDbInfo() {
     return dbInfo;
+  }
+
+  protected <E extends Exception> void wrapCall(ThrowingSupplier<E> callable, String statement)
+      throws E {
+    Context parentContext = Context.current();
+    DbRequest request = DbRequest.create(dbInfo, statement);
+    if (!this.statementInstrumenter.shouldStart(parentContext, request)) {
+      callable.call();
+      return;
+    }
+
+    Context context = this.statementInstrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      callable.call();
+    } catch (Throwable t) {
+      this.statementInstrumenter.end(context, request, null, t);
+      throw t;
+    }
+    this.statementInstrumenter.end(context, request, null, null);
+  }
+
+  protected interface ThrowingSupplier<E extends Exception> {
+    String statement = null;
+
+    void call() throws E;
   }
 }
