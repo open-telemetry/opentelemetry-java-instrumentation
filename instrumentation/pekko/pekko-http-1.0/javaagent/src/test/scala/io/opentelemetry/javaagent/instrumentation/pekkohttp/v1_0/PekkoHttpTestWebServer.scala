@@ -13,15 +13,13 @@ import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.model.StatusCodes.Found
 import org.apache.pekko.http.scaladsl.server.Directives._
-import org.apache.pekko.stream.ActorMaterializer
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 
 object PekkoHttpTestWebServer {
-  implicit val system = ActorSystem("my-system")
-  implicit val materializer = ActorMaterializer()
+  implicit val system: ActorSystem = ActorSystem("my-system")
   // needed for the future flatMap/onComplete in the end
-  implicit val executionContext = system.dispatcher
+  implicit val executionContext: ExecutionContext = system.dispatcher
 
   var route = get {
     concat(
