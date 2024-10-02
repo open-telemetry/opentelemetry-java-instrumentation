@@ -51,13 +51,10 @@ public abstract class AbstractCassandraTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractCassandraTest.class);
 
-  @SuppressWarnings("rawtypes")
-  private static GenericContainer cassandra;
+  private static GenericContainer<?> cassandra;
 
   protected static String cassandraHost;
-
   protected static String cassandraIp;
-
   protected static int cassandraPort;
 
   protected abstract InstrumentationExtension testing();

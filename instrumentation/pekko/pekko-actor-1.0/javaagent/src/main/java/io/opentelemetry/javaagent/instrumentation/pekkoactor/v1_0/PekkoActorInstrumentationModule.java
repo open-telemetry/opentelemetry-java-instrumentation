@@ -23,6 +23,7 @@ public class PekkoActorInstrumentationModule extends InstrumentationModule {
     return asList(
         new PekkoDispatcherInstrumentation(),
         new PekkoActorCellInstrumentation(),
-        new PekkoDefaultSystemMessageQueueInstrumentation());
+        new PekkoDefaultSystemMessageQueueInstrumentation(),
+        new PekkoScheduleInstrumentation());
   }
 }

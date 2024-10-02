@@ -97,6 +97,7 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     try {
       getMdcCopy = logRecords.get(0).getClass().getMethod("getMdcCopy");
     } catch (NoSuchMethodException ignored) {
+      // ignored
     }
 
     assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");

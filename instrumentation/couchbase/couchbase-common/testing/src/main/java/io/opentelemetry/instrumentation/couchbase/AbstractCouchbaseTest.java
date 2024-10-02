@@ -39,7 +39,6 @@ public abstract class AbstractCouchbaseTest {
   protected static final String USERNAME = "Administrator";
   protected static final String PASSWORD = "password";
 
-  private static final int port = PortUtils.findOpenPort();
   protected static final BucketSettings bucketCouchbase =
       DefaultBucketSettings.builder()
           .enableFlush(true)
@@ -56,6 +55,7 @@ public abstract class AbstractCouchbaseTest {
           .type(BucketType.MEMCACHED)
           .quota(100)
           .build();
+  private final int port = PortUtils.findOpenPort();
   private CouchbaseMock mock;
 
   @BeforeAll
