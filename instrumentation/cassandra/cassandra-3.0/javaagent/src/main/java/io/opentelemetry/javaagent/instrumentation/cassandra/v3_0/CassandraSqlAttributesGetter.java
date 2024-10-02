@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
 
   @Override
-  public String getSystem(CassandraRequest request) {
+  public String getDbSystem(CassandraRequest request) {
     return DbIncubatingAttributes.DbSystemValues.CASSANDRA;
   }
 
