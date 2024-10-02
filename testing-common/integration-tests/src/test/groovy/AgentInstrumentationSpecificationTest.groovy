@@ -6,7 +6,7 @@
 import com.google.common.reflect.ClassPath
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
-import io.opentelemetry.javaagent.tooling.Constants
+import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder
 import org.slf4j.LoggerFactory
 
 import java.util.concurrent.TimeoutException
@@ -17,12 +17,7 @@ import java.util.concurrent.TimeoutException
 class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecification {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
 
-  /**
-   * Copy of {@link Constants#BOOTSTRAP_PACKAGE_PREFIXES} because the Constants class
-   * is not accessible from here
-   */
-  public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES =
-      Arrays.asList("io.opentelemetry.javaagent.bootstrap", "io.opentelemetry.javaagent.shaded")
+  public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES = BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes()
 
   def "classpath setup"() {
     setup:

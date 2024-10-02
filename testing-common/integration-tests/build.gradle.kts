@@ -8,6 +8,7 @@ dependencies {
 
   testCompileOnly(project(":instrumentation-api"))
   testCompileOnly(project(":javaagent-tooling"))
+  testCompileOnly(project(":javaagent-bootstrap"))
   testCompileOnly(project(":javaagent-extension-api"))
   testCompileOnly(project(":muzzle"))
 
