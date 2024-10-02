@@ -58,23 +58,22 @@ class KtorServerTracing private constructor(
 
     @Deprecated("Please use method `spanStatusExtractor`")
     fun setStatusExtractor(
-      extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
+      extractor: (SpanStatusExtractor<in ApplicationRequest,in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
       spanStatusExtractor { prevStatusExtractor ->
         extractor(prevStatusExtractor).extract(spanStatusBuilder, request, response, error)
       }
     }
 
-    fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
+    fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<in ApplicationRequest,in ApplicationResponse>) -> Unit) {
       serverBuilder.setStatusExtractor { prevExtractor ->
         SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
                               request: ApplicationRequest,
                               response: ApplicationResponse?,
                               throwable: Throwable? ->
-          @Suppress("UNCHECKED_CAST")
           extract(
             SpanStatusData(spanStatusBuilder, request, response, throwable),
-            prevExtractor as SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
+            prevExtractor
           )
         }
       }
