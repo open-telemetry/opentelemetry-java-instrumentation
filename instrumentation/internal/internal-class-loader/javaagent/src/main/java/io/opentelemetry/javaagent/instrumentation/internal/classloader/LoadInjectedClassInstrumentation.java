@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -31,15 +30,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // We explicitly exclude our own classloaders:
-    // The invokedynamic bootstrapping involves calling loadClass on those, which would cause
-    // an infinite recursion
-    return extendsClass(named("java.lang.ClassLoader"))
-        .and(
-            not(
-                namedOneOf(
-                    "io.opentelemetry.javaagent.bootstrap.AgentClassLoader",
-                    "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader")));
+    return extendsClass(named("java.lang.ClassLoader"));
   }
 
   @Override
