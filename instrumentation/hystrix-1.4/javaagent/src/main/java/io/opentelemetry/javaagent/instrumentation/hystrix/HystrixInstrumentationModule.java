@@ -23,7 +23,7 @@ public class HystrixInstrumentationModule extends InstrumentationModule
 
   @Override
   public boolean isHelperClass(String className) {
-    return className.equals("rx.__OpenTelemetryTracingUtil");
+    return className.equals("rx.OpenTelemetryTracingUtil");
   }
 
   @Override
@@ -33,6 +33,6 @@ public class HystrixInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> injectedClassNames() {
-    return singletonList("rx.__OpenTelemetryTracingUtil");
+    return singletonList("rx.OpenTelemetryTracingUtil");
   }
 }

@@ -78,7 +78,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @BeforeEach
-  void setup() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+  void setup() throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -95,6 +95,7 @@ public abstract class AbstractRedissonAsyncClientTest {
           .getMethod("setPingConnectionInterval", int.class)
           .invoke(singleServerConfig, 0);
     } catch (NoSuchMethodException ignored) {
+      // ignored
     }
     redisson = Redisson.create(config);
     testing.clearData();
