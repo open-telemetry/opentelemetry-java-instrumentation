@@ -65,9 +65,11 @@ if (useScansGradleCom) {
         fileFingerprints = true
       }
 
-      buildScanPublished {
-        File("build-scan.txt").printWriter().use { writer ->
-          writer.println(buildScanUri)
+      if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+        buildScanPublished {
+          File("build-scan.txt").printWriter().use { writer ->
+            writer.println(buildScanUri)
+          }
         }
       }
     }
@@ -89,9 +91,11 @@ if (useScansGradleCom) {
         value("Smoke test suite", it)
       }
 
-      buildScanPublished {
-        File("build-scan.txt").printWriter().use { writer ->
-          writer.println(buildScanUri)
+      if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+        buildScanPublished {
+          File("build-scan.txt").printWriter().use { writer ->
+            writer.println(buildScanUri)
+          }
         }
       }
     }
@@ -250,6 +254,7 @@ include(":instrumentation:elasticsearch:elasticsearch-rest-common:library")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:testing")
 include(":instrumentation:executors:bootstrap")
@@ -457,6 +462,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
@@ -544,6 +550,7 @@ include(":instrumentation:scala-fork-join-2.8:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent-unit-tests")
+include(":instrumentation:servlet:servlet-3.0:testing")
 include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent-unit-tests")
 include(":instrumentation:servlet:servlet-5.0:jetty12-testing")

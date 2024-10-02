@@ -10,6 +10,7 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.JfrFeature;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants;
+import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.DurationUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.Optional;
@@ -40,7 +41,7 @@ public final class G1GarbageCollectionHandler implements RecordedEventHandler {
 
   @Override
   public void accept(RecordedEvent ev) {
-    histogram.record(ev.getDouble(Constants.DURATION), ATTR);
+    histogram.record(DurationUtil.toSeconds(ev.getDuration()), ATTR);
   }
 
   @Override

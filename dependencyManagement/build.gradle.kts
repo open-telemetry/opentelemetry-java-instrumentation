@@ -9,7 +9,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.42.1"
-val otelContribVersion = "1.38.0-alpha"
+val otelContribVersion = "1.39.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -27,21 +27,21 @@ val groovyVersion = "4.0.23"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.17.2",
+  "com.fasterxml.jackson:jackson-bom:2.18.0",
   "com.squareup.okio:okio-bom:3.9.1", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.3.0-jre",
+  "com.google.guava:guava-bom:33.3.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.11.0",
-  "org.testcontainers:testcontainers-bom:1.20.1",
+  "org.junit:junit-bom:5.11.1",
+  "org.testcontainers:testcontainers-bom:1.20.2",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.32.0"
-val byteBuddyVersion = "1.15.1"
+val errorProneVersion = "2.33.0"
+val byteBuddyVersion = "1.15.3"
 val asmVersion = "9.7"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -87,14 +87,14 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.11.2",
+  "com.uber.nullaway:nullaway:0.11.3",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.17.1",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.16.1",
+  "commons-io:commons-io:2.17.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.4",
   "commons-validator:commons-validator:1.9.0",
@@ -115,7 +115,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.7"
+  "org.snakeyaml:snakeyaml-engine:2.8"
 )
 
 javaPlatform {

@@ -28,7 +28,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.UUID;
-import javax.servlet.ServletException;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
@@ -105,8 +104,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
           return super.expectedHttpRoute(endpoint, method);
         });
 
-    options.setExpectedException(new ServletException(EXCEPTION.getBody()));
-
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND || endpoint == REDIRECT);
   }
 

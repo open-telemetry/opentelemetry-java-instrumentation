@@ -17,8 +17,8 @@ import java.net.UnknownHostException;
 public final class HostResource {
 
   // copied from HostIncubatingAttributes
-  public static final AttributeKey<String> HOST_ARCH = AttributeKey.stringKey("host.arch");
-  public static final AttributeKey<String> HOST_NAME = AttributeKey.stringKey("host.name");
+  private static final AttributeKey<String> HOST_ARCH = AttributeKey.stringKey("host.arch");
+  private static final AttributeKey<String> HOST_NAME = AttributeKey.stringKey("host.name");
 
   private static final Resource INSTANCE = buildResource();
 

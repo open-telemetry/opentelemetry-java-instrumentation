@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -13,14 +13,9 @@ import org.junit.jupiter.api.Test;
 class DurationUtilTest {
 
   @Test
-  void shouldConvertDurationToSeconds() {
-    // Given
+  void convertDurationToSeconds() {
     Duration duration = Duration.ofSeconds(7, 144);
-
-    // When
     double seconds = DurationUtil.toSeconds(duration);
-
-    // Then
-    assertEquals(7.000000144, seconds);
+    assertThat(seconds).isEqualTo(7.000000144);
   }
 }

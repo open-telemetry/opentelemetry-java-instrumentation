@@ -29,6 +29,7 @@ public final class SpringWebfluxTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse> clientBuilder;
   private final DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>
       serverBuilder;
+  private final OpenTelemetry openTelemetry;
 
   static {
     SpringWebfluxBuilderUtil.setClientBuilderExtractor(
@@ -43,8 +44,11 @@ public final class SpringWebfluxTelemetryBuilder {
             INSTRUMENTATION_NAME, openTelemetry, WebClientHttpAttributesGetter.INSTANCE);
     serverBuilder =
         new DefaultHttpServerInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, WebfluxServerHttpAttributesGetter.INSTANCE)
-            .setHeaderGetter(WebfluxTextMapGetter.INSTANCE);
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            WebfluxServerHttpAttributesGetter.INSTANCE,
+            WebfluxTextMapGetter.INSTANCE);
+    this.openTelemetry = openTelemetry;
   }
 
   /**
@@ -194,9 +198,7 @@ public final class SpringWebfluxTelemetryBuilder {
    */
   public SpringWebfluxTelemetry build() {
     return new SpringWebfluxTelemetry(
-        clientBuilder.build(),
-        serverBuilder.build(),
-        clientBuilder.getOpenTelemetry().getPropagators());
+        clientBuilder.build(), serverBuilder.build(), openTelemetry.getPropagators());
   }
 
   private DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse> getClientBuilder() {
