@@ -46,18 +46,21 @@ import javax.annotation.Nullable;
  */
 final class StructuredConfigPropertiesBridge implements ConfigProperties {
 
+  private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
+
   private static final StructuredConfigProperties EMPTY = new EmptyStructuredConfigProperties();
 
-  private final StructuredConfigProperties javaInstrumentation;
+  // The node at .instrumentation.java
+  private final StructuredConfigProperties instrumentationJavaNode;
 
   StructuredConfigPropertiesBridge(StructuredConfigProperties rootStructuredConfigProperties) {
     StructuredConfigProperties instrumentation =
         rootStructuredConfigProperties.getStructured("instrumentation");
     if (instrumentation != null) {
       StructuredConfigProperties javaInstrumentation = instrumentation.getStructured("java");
-      this.javaInstrumentation = javaInstrumentation != null ? javaInstrumentation : EMPTY;
+      this.instrumentationJavaNode = javaInstrumentation != null ? javaInstrumentation : EMPTY;
     } else {
-      this.javaInstrumentation = EMPTY;
+      this.instrumentationJavaNode = EMPTY;
     }
   }
 
@@ -134,16 +137,16 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<StructuredConfigProperties, String, T> extractor) {
-    if (!property.startsWith("otel.instrumentation.")) {
+    if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
       return null;
     }
-    String suffix = property.substring("otel.instrumentation.".length());
+    String suffix = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
     // Split the remainder of the property on ".", and walk to the N-1 entry
     String[] segments = suffix.split("\\.");
     if (segments.length == 0) {
       return null;
     }
-    StructuredConfigProperties target = javaInstrumentation;
+    StructuredConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         StructuredConfigProperties newTarget = target.getStructured(segments[i]);

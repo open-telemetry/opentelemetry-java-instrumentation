@@ -9,10 +9,8 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
 import java.lang.instrument.Instrumentation;
-import java.util.Collections;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 /**
@@ -45,6 +43,7 @@ public interface AgentListener extends Ordered {
       return new StructuredConfigPropertiesBridge(structuredConfigProperties);
     }
     // Should never happen
-    return DefaultConfigProperties.create(Collections.emptyMap());
+    throw new IllegalStateException(
+        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or StructuredConfigProperties. This is likely a programming error in opentelemetry-java");
   }
 }
