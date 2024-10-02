@@ -17,11 +17,11 @@ import play.api.libs.ws.StandaloneWSRequest;
 import play.api.libs.ws.StandaloneWSResponse;
 import play.api.libs.ws.ahc.StandaloneAhcWSClient;
 import scala.Function1;
-import scala.collection.JavaConverters;
 import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
+import scala.jdk.javaapi.CollectionConverters;
 import scala.util.Try;
 
 public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
@@ -59,7 +59,7 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
         .url(uri.toURL().toString())
         .withMethod(method)
         .withFollowRedirects(true)
-        .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq());
+        .withHttpHeaders(CollectionConverters.asScala(headers).toList());
   }
 
   @Override
