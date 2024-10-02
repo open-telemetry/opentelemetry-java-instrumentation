@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import play.libs.ws.StandaloneWSClient;
@@ -53,7 +54,7 @@ public class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSR
   @Override
   public int sendRequest(
       StandaloneWSRequest request, String method, URI uri, Map<String, String> headers)
-      throws Exception {
+      throws ExecutionException, InterruptedException {
     return request.execute().toCompletableFuture().get().getStatus();
   }
 
@@ -76,7 +77,7 @@ public class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSR
             });
   }
 
-  private StandaloneWSClient getClient(URI uri) {
+  private static StandaloneWSClient getClient(URI uri) {
     if (uri.toString().contains("/read-timeout")) {
       return wsClientWithReadTimeout;
     }

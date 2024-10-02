@@ -102,7 +102,7 @@ public class PlayScalaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
             ExecutionContext.global());
   }
 
-  private StandaloneWSClient getClient(URI uri) {
+  private static StandaloneWSClient getClient(URI uri) {
     if (uri.toString().contains("/read-timeout")) {
       return wsClientWithReadTimeout;
     }

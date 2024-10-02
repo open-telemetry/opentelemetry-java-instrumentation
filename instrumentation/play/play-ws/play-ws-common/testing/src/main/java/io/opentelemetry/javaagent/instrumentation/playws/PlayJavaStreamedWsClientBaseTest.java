@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import play.libs.ws.StandaloneWSClient;
@@ -56,7 +57,7 @@ class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
   @Override
   public int sendRequest(
       StandaloneWSRequest request, String method, URI uri, Map<String, String> headers)
-      throws Exception {
+      throws ExecutionException, InterruptedException {
     return internalSendRequest(request).toCompletableFuture().get().getStatus();
   }
 
@@ -87,7 +88,7 @@ class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
         .thenCombine(stream, (body, response) -> response);
   }
 
-  private StandaloneWSClient getClient(URI uri) {
+  private static StandaloneWSClient getClient(URI uri) {
     if (uri.toString().contains("/read-timeout")) {
       return wsClientWithReadTimeout;
     }
