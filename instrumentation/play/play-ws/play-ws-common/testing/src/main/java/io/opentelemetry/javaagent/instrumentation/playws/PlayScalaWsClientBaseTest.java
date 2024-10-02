@@ -11,7 +11,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import play.api.libs.ws.StandaloneWSClient;
@@ -67,15 +66,15 @@ public class PlayScalaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
   @Override
   public int sendRequest(
       StandaloneWSRequest request, String method, URI uri, Map<String, String> headers)
-      throws InterruptedException, TimeoutException {
+      throws Exception {
     Future<StandaloneWSResponse> futureResponse = request.execute();
     Await.ready(futureResponse, Duration.apply(10, TimeUnit.SECONDS));
     Try<StandaloneWSResponse> value = futureResponse.value().get();
     if (value.isSuccess()) {
       return value.get().status();
     }
-    // Catch the Throwable and rethrow it as an IllegalStateException
-    throw new IllegalStateException(value.failed().get());
+    // Catch the Throwable and rethrow it
+    throw (Exception) value.failed().get();
   }
 
   @Override
