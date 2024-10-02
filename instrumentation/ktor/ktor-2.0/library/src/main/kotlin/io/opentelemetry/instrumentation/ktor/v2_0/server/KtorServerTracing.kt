@@ -58,14 +58,14 @@ class KtorServerTracing private constructor(
 
     @Deprecated("Please use method `spanStatusExtractor`")
     fun setStatusExtractor(
-      extractor: (SpanStatusExtractor<in ApplicationRequest,in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
+      extractor: (SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
       spanStatusExtractor { prevStatusExtractor ->
         extractor(prevStatusExtractor).extract(spanStatusBuilder, request, response, error)
       }
     }
 
-    fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<in ApplicationRequest,in ApplicationResponse>) -> Unit) {
+    fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> Unit) {
       serverBuilder.setStatusExtractor { prevExtractor ->
         SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
                               request: ApplicationRequest,
@@ -204,6 +204,9 @@ class KtorServerTracing private constructor(
       }
     }
 
+    /**
+     * {@link #setOpenTelemetry(OpenTelemetry)} sets the serverBuilder to a non-null value.
+     */
     internal fun isOpenTelemetryInitialized(): Boolean = this::serverBuilder.isInitialized
   }
 
