@@ -60,9 +60,9 @@ public abstract class AbstractMongo31ClientTest
   protected void createCollectionNoDescription(String dbName, String collectionName) {
     MongoClientOptions.Builder options = MongoClientOptions.builder();
     configureMongoClientOptions(options);
-    try (MongoClient client = new MongoClient(new ServerAddress(host, port), options.build())) {
-      client.getDatabase(dbName).createCollection(collectionName);
-    }
+    MongoDatabase db = new MongoClient(new ServerAddress(host, port), options.build()).getDatabase(
+        dbName);
+    db.createCollection(collectionName);
   }
 
   @Override
@@ -70,9 +70,9 @@ public abstract class AbstractMongo31ClientTest
       String dbName, String collectionName) {
     MongoClientOptions clientOptions = client.getMongoClientOptions();
     MongoClientOptions newClientOptions = MongoClientOptions.builder(clientOptions).build();
-    try (MongoClient client = new MongoClient(new ServerAddress(host, port), newClientOptions)) {
-      client.getDatabase(dbName).createCollection(collectionName);
-    }
+    MongoDatabase db = new MongoClient(new ServerAddress(host, port), newClientOptions).getDatabase(
+        dbName);
+    db.createCollection(collectionName);
   }
 
   @Override
@@ -81,9 +81,9 @@ public abstract class AbstractMongo31ClientTest
         MongoClientOptions.builder().description("some-description");
     configureMongoClientOptions(options);
     options.build();
-    try (MongoClient client = new MongoClient(new ServerAddress(host, port), options.build())) {
-      client.getDatabase(dbName).createCollection(collectionName);
-    }
+    MongoDatabase db = new MongoClient(new ServerAddress(host, port), options.build()).getDatabase(
+        dbName);
+    db.createCollection(collectionName);
   }
 
   @Override
