@@ -54,7 +54,7 @@ class StructuredConfigPropertiesBridgeTest {
 
   @Test
   void getProperties() {
-    // only properties startig with "otel.instrumentation." are resolved
+    // only properties starting with "otel.instrumentation." are resolved
     // asking for properties which don't exist or inaccessible shouldn't result in an error
     assertThat(bridge.getString("file_format")).isNull();
     assertThat(bridge.getString("file_format", "foo")).isEqualTo("foo");

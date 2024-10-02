@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.extension;
 
+import static io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties.empty;
+
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
 import java.time.Duration;
@@ -12,7 +14,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
@@ -48,20 +49,14 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
-  private static final StructuredConfigProperties EMPTY = new EmptyStructuredConfigProperties();
-
   // The node at .instrumentation.java
   private final StructuredConfigProperties instrumentationJavaNode;
 
   StructuredConfigPropertiesBridge(StructuredConfigProperties rootStructuredConfigProperties) {
-    StructuredConfigProperties instrumentation =
-        rootStructuredConfigProperties.getStructured("instrumentation");
-    if (instrumentation != null) {
-      StructuredConfigProperties javaInstrumentation = instrumentation.getStructured("java");
-      this.instrumentationJavaNode = javaInstrumentation != null ? javaInstrumentation : EMPTY;
-    } else {
-      this.instrumentationJavaNode = EMPTY;
-    }
+    instrumentationJavaNode =
+        rootStructuredConfigProperties
+            .getStructured("instrumentation", empty())
+            .getStructured("java", empty());
   }
 
   @Nullable
@@ -149,70 +144,10 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
     StructuredConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
-        StructuredConfigProperties newTarget = target.getStructured(segments[i]);
-        if (newTarget == null) {
-          target = EMPTY;
-          break;
-        }
-        target = newTarget;
+        target = target.getStructured(segments[i], empty());
       }
     }
     String lastPart = segments[segments.length - 1];
     return extractor.apply(target, lastPart);
-  }
-
-  private static class EmptyStructuredConfigProperties implements StructuredConfigProperties {
-    @Nullable
-    @Override
-    public String getString(String s) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Boolean getBoolean(String s) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer getInt(String s) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Long getLong(String s) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Double getDouble(String s) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public <T> List<T> getScalarList(String s, Class<T> aClass) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public StructuredConfigProperties getStructured(String s) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public List<StructuredConfigProperties> getStructuredList(String s) {
-      return null;
-    }
-
-    @Override
-    public Set<String> getPropertyKeys() {
-      return Collections.emptySet();
-    }
   }
 }
