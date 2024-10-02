@@ -112,7 +112,7 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
         });
   }
 
-  private AsyncHttpClient createClient(boolean readTimeout) {
+  private static AsyncHttpClient createClient(boolean readTimeout) {
     DefaultAsyncHttpClientConfig.Builder builder =
         new DefaultAsyncHttpClientConfig.Builder()
             .setMaxRequestRetry(0)
@@ -128,31 +128,31 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
     AsyncHttpClientConfig asyncHttpClientConfig = builder.build();
     return new DefaultAsyncHttpClient(asyncHttpClientConfig);
   }
-}
 
-class CustomNameResolver extends InetNameResolver {
+  private static class CustomNameResolver extends InetNameResolver {
 
-  public CustomNameResolver(EventExecutor executor) {
-    super(executor);
-  }
-
-  @Override
-  protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
-    try {
-      promise.setSuccess(InetAddress.getByName(inetHost));
-    } catch (UnknownHostException exception) {
-      promise.setFailure(exception);
+    public CustomNameResolver(EventExecutor executor) {
+      super(executor);
     }
-  }
 
-  @Override
-  protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise)
-      throws Exception {
-    try {
-      // default implementation calls InetAddress.getAllByName
-      promise.setSuccess(Collections.singletonList(InetAddress.getByName(inetHost)));
-    } catch (UnknownHostException exception) {
-      promise.setFailure(exception);
+    @Override
+    protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
+      try {
+        promise.setSuccess(InetAddress.getByName(inetHost));
+      } catch (UnknownHostException exception) {
+        promise.setFailure(exception);
+      }
+    }
+
+    @Override
+    protected void doResolveAll(String inetHost, Promise<List<InetAddress>> promise)
+        throws Exception {
+      try {
+        // default implementation calls InetAddress.getAllByName
+        promise.setSuccess(Collections.singletonList(InetAddress.getByName(inetHost)));
+      } catch (UnknownHostException exception) {
+        promise.setFailure(exception);
+      }
     }
   }
 }
