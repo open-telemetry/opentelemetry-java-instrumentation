@@ -33,6 +33,7 @@ public interface SqlClientAttributesGetter<REQUEST>
     return null;
   }
 
+  // TODO: make this required to implement
   @Nullable
   default String getRawQueryText(REQUEST request) {
     return getRawStatement(request);

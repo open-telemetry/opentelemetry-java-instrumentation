@@ -16,14 +16,6 @@ public final class VertxSqlClientRequest {
     this.sqlConnectOptions = sqlConnectOptions;
   }
 
-  /**
-   * @deprecated Use {@link #getDbQueryText()} instead.
-   */
-  @Deprecated
-  public String getStatement() {
-    return statement;
-  }
-
   public String getDbQueryText() {
     return statement;
   }

@@ -15,8 +15,8 @@ import javax.annotation.Nullable;
 public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution> {
   INSTANCE;
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbSystem(DbExecution request) {
     return request.getSystem();
   }
@@ -28,8 +28,8 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
     return request.getUser();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(DbExecution request) {
     return request.getName();
   }

@@ -31,8 +31,8 @@ public enum VertxRedisClientAttributesGetter
     return request.getUser();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
     return null;
   }
@@ -44,14 +44,14 @@ public enum VertxRedisClientAttributesGetter
     return request.getConnectionString();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(VertxRedisClientRequest request) {
     return sanitizer.sanitize(request.getCommand(), request.getArgs());
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(VertxRedisClientRequest request) {
     return request.getCommand();
   }

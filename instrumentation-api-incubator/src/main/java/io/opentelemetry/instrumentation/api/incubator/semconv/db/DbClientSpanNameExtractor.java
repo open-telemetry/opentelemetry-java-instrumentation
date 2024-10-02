@@ -26,7 +26,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions: {@code <db.operation> <db.name>.<identifier>}.
    *
-   * @see SqlStatementInfo#getOperation() () used to extract {@code <db.operation>}.
+   * @see SqlStatementInfo#getOperation() used to extract {@code <db.operation>}.
    * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
    * @see SqlStatementInfo#getMainIdentifier() used to extract {@code <db.table>} or stored
    *     procedure name.

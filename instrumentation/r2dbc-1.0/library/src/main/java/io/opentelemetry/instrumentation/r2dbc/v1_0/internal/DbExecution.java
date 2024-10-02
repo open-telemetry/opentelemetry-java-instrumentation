@@ -94,14 +94,6 @@ public final class DbExecution {
     return connectionString;
   }
 
-  /**
-   * @deprecated use {@link #getDbQueryText()} instead
-   */
-  @Deprecated
-  public String getRawStatement() {
-    return rawStatement;
-  }
-
   public String getDbQueryText() {
     return rawStatement;
   }

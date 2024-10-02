@@ -26,8 +26,8 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(RedisCommand<?, ?> redisCommand) {
     return null;
   }
@@ -39,8 +39,8 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(RedisCommand<?, ?> redisCommand) {
     return null;
   }
