@@ -22,8 +22,8 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
@@ -35,14 +35,14 @@ public class SpymemcachedAttributesGetter implements DbClientAttributesGetter<Sp
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.dbOperation();
   }

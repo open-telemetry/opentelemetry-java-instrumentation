@@ -20,7 +20,7 @@ public enum VertxRedisClientAttributesGetter
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
-  public String getDbSystem(VertxRedisClientRequest vertxRedisClientRequest) {
+  public String getDbSystem(VertxRedisClientRequest request) {
     return REDIS;
   }
 
