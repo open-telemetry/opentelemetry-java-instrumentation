@@ -58,6 +58,13 @@ val v1_38Deps by configurations.creating {
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
+val v1_40Deps by configurations.creating {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  // exclude the bom added by dependencyManagement
+  exclude("io.opentelemetry", "opentelemetry-bom")
+  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
+}
 val v1_42Deps by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
@@ -91,6 +98,10 @@ val v1_37 by configurations.creating {
   isCanBeResolved = false
 }
 val v1_38 by configurations.creating {
+  isCanBeConsumed = true
+  isCanBeResolved = false
+}
+val v1_40 by configurations.creating {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
@@ -154,6 +165,11 @@ dependencies {
         strictly("1.38.0-alpha")
       }
     }
+    v1_40Deps("io.opentelemetry:$it") {
+      version {
+        strictly("1.40.0-alpha")
+      }
+    }
     v1_42Deps("io.opentelemetry:$it") {
       version {
         strictly("1.42.0-alpha")
@@ -202,6 +218,10 @@ tasks {
     configurations = listOf(v1_38Deps)
     archiveClassifier.set("v1_38")
   }
+  val v1_40Shadow by registering(ShadowJar::class) {
+    configurations = listOf(v1_40Deps)
+    archiveClassifier.set("v1_40")
+  }
   val v1_42Shadow by registering(ShadowJar::class) {
     configurations = listOf(v1_42Deps)
     archiveClassifier.set("v1_42")
@@ -215,6 +235,7 @@ tasks {
     add(v1_32.name, v1_32Shadow)
     add(v1_37.name, v1_37Shadow)
     add(v1_38.name, v1_38Shadow)
+    add(v1_40.name, v1_40Shadow)
     add(v1_42.name, v1_42Shadow)
   }
 }

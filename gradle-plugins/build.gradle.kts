@@ -24,11 +24,11 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.15.1"
+val byteBuddyVersion = "1.15.3"
 val aetherVersion = "1.1.0"
 
 dependencies {
-  implementation("com.google.guava:guava:33.3.0-jre")
+  implementation("com.google.guava:guava:33.3.1-jre")
   // we need to use byte buddy variant that does not shade asm
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
@@ -39,11 +39,11 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.1")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.3")
 
   testImplementation("org.assertj:assertj-core:3.26.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.0"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")

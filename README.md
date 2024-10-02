@@ -171,7 +171,7 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
 - [Jay DeLuca](https://github.com/jaydeluca)
 - [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
-- [John Watson](https://github.com/jkwatson), Verta.ai
+- [John Watson](https://github.com/jkwatson), Cloudera
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -37,8 +37,8 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
   private ConfigurableApplicationContext appContext;
 
   @Container
-  private static final CassandraContainer<?> cassandra =
-      new CassandraContainer<>("cassandra:3.11.2").withExposedPorts(9042);
+  private static final CassandraContainer cassandra =
+      new CassandraContainer("cassandra:3.11.2").withExposedPorts(9042);
 
   private static String host;
 
