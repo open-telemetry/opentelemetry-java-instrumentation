@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBu
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -53,7 +54,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       httpAttributesExtractorBuilder;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
-  @Nullable private final TextMapGetter<REQUEST> headerGetter;
+  @Nullable private TextMapGetter<REQUEST> headerGetter;
   private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
@@ -65,14 +66,21 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      @Nullable TextMapGetter<REQUEST> headerGetter) {
-    this.instrumentationName = instrumentationName;
-    this.openTelemetry = openTelemetry;
+      TextMapGetter<REQUEST> headerGetter) {
+    this(instrumentationName, openTelemetry, attributesGetter);
+    this.headerGetter = Objects.requireNonNull(headerGetter, "headerGetter");
+  }
+
+  public DefaultHttpServerInstrumenterBuilder(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
     httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpServerRouteBuilder = HttpServerRoute.builder(attributesGetter);
-    this.attributesGetter = attributesGetter;
-    this.headerGetter = headerGetter;
   }
 
   /**

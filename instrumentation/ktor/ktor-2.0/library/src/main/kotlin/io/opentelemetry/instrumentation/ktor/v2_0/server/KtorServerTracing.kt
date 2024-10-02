@@ -51,8 +51,7 @@ class KtorServerTracing private constructor(
         DefaultHttpServerInstrumenterBuilder(
           INSTRUMENTATION_NAME,
           openTelemetry,
-          KtorHttpServerAttributesGetter.INSTANCE,
-          null
+          KtorHttpServerAttributesGetter.INSTANCE
         )
     }
 
