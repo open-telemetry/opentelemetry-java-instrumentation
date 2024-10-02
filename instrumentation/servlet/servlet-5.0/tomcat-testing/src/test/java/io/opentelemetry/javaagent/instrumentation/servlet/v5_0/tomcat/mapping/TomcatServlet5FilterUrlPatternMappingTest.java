@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.mapping;
+package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.mapping;
 
 import org.apache.catalina.Context;
 
