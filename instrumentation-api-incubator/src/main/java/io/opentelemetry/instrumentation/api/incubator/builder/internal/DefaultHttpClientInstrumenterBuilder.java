@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBu
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -68,23 +69,20 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-              TextMapSetter<REQUEST> headerSetter) {
-    this(
-      instrumentationName,
-      openTelemetry,
-      attributesGetter);
-    this.headerSetter = headerSetter;
-    }
+      TextMapSetter<REQUEST> headerSetter) {
+    this(instrumentationName, openTelemetry, attributesGetter);
+    this.headerSetter = Objects.requireNonNull(headerSetter, "headerSetter");
+  }
 
-    public DefaultHttpClientInstrumenterBuilder(
+  public DefaultHttpClientInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    this.instrumentationName = instrumentationName;
-    this.openTelemetry = openTelemetry;
+    this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
-    this.attributesGetter = attributesGetter;
   }
 
   /**

@@ -32,7 +32,10 @@ public final class RatpackTelemetryBuilder {
   RatpackTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
         new DefaultHttpClientInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, RatpackHttpClientAttributesGetter.INSTANCE,RequestHeaderSetter.INSTANCE);
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            RatpackHttpClientAttributesGetter.INSTANCE,
+            RequestHeaderSetter.INSTANCE);
     serverBuilder =
         new DefaultHttpServerInstrumenterBuilder<>(
             INSTRUMENTATION_NAME,

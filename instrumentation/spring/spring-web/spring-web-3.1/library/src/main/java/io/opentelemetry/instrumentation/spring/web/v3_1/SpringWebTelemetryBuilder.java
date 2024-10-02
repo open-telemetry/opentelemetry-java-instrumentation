@@ -30,7 +30,10 @@ public final class SpringWebTelemetryBuilder {
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         new DefaultHttpClientInstrumenterBuilder<>(
-                INSTRUMENTATION_NAME, openTelemetry, SpringWebHttpAttributesGetter.INSTANCE,HttpRequestSetter.INSTANCE);
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            SpringWebHttpAttributesGetter.INSTANCE,
+            HttpRequestSetter.INSTANCE);
   }
 
   private DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> getBuilder() {
