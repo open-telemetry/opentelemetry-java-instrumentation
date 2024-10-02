@@ -12,7 +12,6 @@ public enum VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest> {
   INSTANCE;
 
-  @Nullable
   @Override
   public String getDbSystem(VertxSqlClientRequest request) {
     return null;
@@ -25,8 +24,8 @@ public enum VertxSqlClientAttributesGetter
     return request.getUser();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(VertxSqlClientRequest request) {
     return request.getDatabase();
   }
@@ -39,6 +38,7 @@ public enum VertxSqlClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getRawQueryText(VertxSqlClientRequest request) {
     return request.getDbQueryText();
   }

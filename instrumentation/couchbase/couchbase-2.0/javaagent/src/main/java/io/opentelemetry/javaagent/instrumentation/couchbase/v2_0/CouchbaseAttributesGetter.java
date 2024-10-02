@@ -23,8 +23,8 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.bucket();
   }
@@ -36,14 +36,14 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.statement();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
   }

@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?, ?>> {
 
   @Override
-  public String getDbSystem(RedisCommand<?, ?, ?> redisCommand) {
+  public String getDbSystem(RedisCommand<?, ?, ?> request) {
     return REDIS;
   }
 
@@ -25,8 +25,8 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(RedisCommand<?, ?, ?> request) {
     return null;
   }
@@ -38,14 +38,14 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(RedisCommand<?, ?, ?> request) {
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(RedisCommand<?, ?, ?> request) {
     return request.getType().name();
   }

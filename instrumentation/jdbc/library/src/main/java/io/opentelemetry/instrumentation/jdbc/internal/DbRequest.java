@@ -37,8 +37,8 @@ public abstract class DbRequest {
     return create(extractDbInfo(connection), dbStatementString);
   }
 
-  public static DbRequest create(DbInfo dbInfo, String dbQueryText) {
-    return new AutoValue_DbRequest(dbInfo, dbQueryText);
+  public static DbRequest create(DbInfo dbInfo, String queryText) {
+    return new AutoValue_DbRequest(dbInfo, queryText);
   }
 
   public abstract DbInfo getDbInfo();

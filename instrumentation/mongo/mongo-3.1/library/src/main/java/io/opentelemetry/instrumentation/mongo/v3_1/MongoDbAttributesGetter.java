@@ -61,8 +61,8 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
@@ -86,14 +86,13 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
-  @Nullable
   @Override
   public String getDbQueryText(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(CommandStartedEvent event) {
     return event.getCommandName();
   }

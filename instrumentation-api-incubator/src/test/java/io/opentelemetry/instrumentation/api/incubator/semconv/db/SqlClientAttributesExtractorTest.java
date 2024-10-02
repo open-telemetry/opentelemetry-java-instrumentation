@@ -33,7 +33,6 @@ class SqlClientAttributesExtractorTest {
           SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.statement")).getKey());
     }
 
-    @Nullable
     @Override
     public String getDbSystem(Map<String, String> map) {
       return map.get("db.system");
@@ -45,7 +44,6 @@ class SqlClientAttributesExtractorTest {
       return map.get("db.user");
     }
 
-    @Nullable
     @Override
     public String getDbNamespace(Map<String, String> map) {
       return map.get(

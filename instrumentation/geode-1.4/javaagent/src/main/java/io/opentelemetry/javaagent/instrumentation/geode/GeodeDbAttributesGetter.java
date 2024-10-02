@@ -29,8 +29,8 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(GeodeRequest request) {
     return request.getRegion().getName();
   }
@@ -42,15 +42,15 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(GeodeRequest request) {
     // sanitized statement is cached
     return sanitizer.sanitize(request.getQuery()).getFullStatement();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(GeodeRequest request) {
     return request.getOperation();
   }

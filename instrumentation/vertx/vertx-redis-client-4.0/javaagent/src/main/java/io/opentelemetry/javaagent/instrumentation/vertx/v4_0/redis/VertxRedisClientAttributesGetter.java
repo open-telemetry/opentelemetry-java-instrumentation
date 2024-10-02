@@ -45,13 +45,12 @@ public enum VertxRedisClientAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(VertxRedisClientRequest request) {
     return sanitizer.sanitize(request.getCommand(), request.getArgs());
   }
 
-  @Override
   @Nullable
+  @Override
   public String getDbOperationName(VertxRedisClientRequest request) {
     return request.getCommand();
   }

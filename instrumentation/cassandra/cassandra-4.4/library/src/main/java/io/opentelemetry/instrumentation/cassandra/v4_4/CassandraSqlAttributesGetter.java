@@ -25,8 +25,8 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(CassandraRequest request) {
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
@@ -39,6 +39,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   }
 
   @Override
+  @Nullable
   public String getRawQueryText(CassandraRequest request) {
     return request.getDbQueryText();
   }

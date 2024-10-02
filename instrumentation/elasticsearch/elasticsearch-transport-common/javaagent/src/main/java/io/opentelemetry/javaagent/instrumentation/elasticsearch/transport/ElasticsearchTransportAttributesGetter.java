@@ -25,8 +25,8 @@ final class ElasticsearchTransportAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(ElasticTransportRequest request) {
     return null;
   }
@@ -38,8 +38,8 @@ final class ElasticsearchTransportAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(ElasticTransportRequest request) {
     return null;
   }

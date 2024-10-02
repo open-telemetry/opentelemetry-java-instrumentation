@@ -29,7 +29,6 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return null;
   }
 
-  @Nullable
   @Override
   public String getDbNamespace(JedisRequest request) {
     return null;
@@ -41,7 +40,6 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return null;
   }
 
-  @Nullable
   @Override
   public String getDbQueryText(JedisRequest request) {
     return sanitizer.sanitize(request.getCommand().name(), request.getArgs());

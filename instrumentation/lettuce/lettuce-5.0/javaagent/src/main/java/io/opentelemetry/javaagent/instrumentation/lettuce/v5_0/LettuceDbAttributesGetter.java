@@ -47,7 +47,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(RedisCommand<?, ?, ?> request) {
     String command = LettuceInstrumentationUtil.getCommandName(request);
     List<String> args =
@@ -58,7 +57,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   }
 
   @Override
-  @Nullable
   public String getDbOperationName(RedisCommand<?, ?, ?> request) {
     return request.getType().name();
   }

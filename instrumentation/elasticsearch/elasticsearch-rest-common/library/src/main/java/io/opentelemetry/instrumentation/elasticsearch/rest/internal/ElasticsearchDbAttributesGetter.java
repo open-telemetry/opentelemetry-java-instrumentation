@@ -37,7 +37,7 @@ final class ElasticsearchDbAttributesGetter
   }
 
   @Override
-  public String getDbSystem(ElasticsearchRestRequest elasticsearchRestRequest) {
+  public String getDbSystem(ElasticsearchRestRequest request) {
     return ELASTICSEARCH;
   }
 
@@ -48,8 +48,8 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(ElasticsearchRestRequest request) {
     return null;
   }
@@ -61,8 +61,8 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbQueryText(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
     HttpEntity httpEntity = request.getHttpEntity();
@@ -85,8 +85,8 @@ final class ElasticsearchDbAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
     return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;

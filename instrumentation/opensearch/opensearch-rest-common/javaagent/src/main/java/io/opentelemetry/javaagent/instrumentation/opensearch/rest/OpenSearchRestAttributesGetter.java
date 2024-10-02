@@ -14,7 +14,7 @@ final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest> {
 
   @Override
-  public String getDbSystem(OpenSearchRestRequest openSearchRestRequest) {
+  public String getDbSystem(OpenSearchRestRequest request) {
     return OPENSEARCH;
   }
 
@@ -25,8 +25,8 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbNamespace(OpenSearchRestRequest openSearchRestRequest) {
     return null;
   }
@@ -39,12 +39,13 @@ final class OpenSearchRestAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDbOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
   }

@@ -25,8 +25,6 @@ import org.junit.jupiter.api.Test;
 class DbClientAttributesExtractorTest {
 
   static final class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>> {
-
-    @Nullable
     @Override
     public String getDbSystem(Map<String, String> map) {
       return map.get("db.system");
@@ -39,7 +37,6 @@ class DbClientAttributesExtractorTest {
     }
 
     @Override
-    @Nullable
     public String getDbNamespace(Map<String, String> map) {
       return map.get(
           SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.name")).getKey());
@@ -52,14 +49,12 @@ class DbClientAttributesExtractorTest {
     }
 
     @Override
-    @Nullable
     public String getDbQueryText(Map<String, String> map) {
       return map.get(
           SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.statement")).getKey());
     }
 
     @Override
-    @Nullable
     public String getDbOperationName(Map<String, String> map) {
       return map.get(
           SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.operation")).getKey());

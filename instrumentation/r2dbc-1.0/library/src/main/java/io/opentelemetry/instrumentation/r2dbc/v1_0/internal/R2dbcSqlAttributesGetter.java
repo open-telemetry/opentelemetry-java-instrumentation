@@ -16,7 +16,6 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   INSTANCE;
 
   @Override
-  @Nullable
   public String getDbSystem(DbExecution request) {
     return request.getSystem();
   }
@@ -42,6 +41,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   }
 
   @Override
+  @Nullable
   public String getRawQueryText(DbExecution request) {
     return request.getDbQueryText();
   }

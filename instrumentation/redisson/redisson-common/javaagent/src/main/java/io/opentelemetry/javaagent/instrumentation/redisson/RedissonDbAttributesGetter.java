@@ -18,14 +18,14 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   }
 
   @Deprecated
-  @Override
   @Nullable
+  @Override
   public String getUser(RedissonRequest request) {
     return null;
   }
 
-  @Override
   @Nullable
+  @Override
   public String getDbNamespace(RedissonRequest request) {
     return null;
   }
@@ -41,8 +41,8 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return request.getStatement();
   }
 
-  @Override
   @Nullable
+  @Override
   public String getDbOperationName(RedissonRequest request) {
     return request.getOperation();
   }
