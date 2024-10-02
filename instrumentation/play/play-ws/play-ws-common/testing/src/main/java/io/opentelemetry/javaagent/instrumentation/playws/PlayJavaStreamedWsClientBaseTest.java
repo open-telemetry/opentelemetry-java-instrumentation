@@ -18,7 +18,7 @@ import play.libs.ws.StandaloneWSRequest;
 import play.libs.ws.StandaloneWSResponse;
 import play.libs.ws.ahc.StandaloneAhcWSClient;
 
-class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
+public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
   private static StandaloneWSClient wsClient;
   private static StandaloneWSClient wsClientWithReadTimeout;
@@ -79,7 +79,8 @@ class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
             });
   }
 
-  private static CompletionStage<StandaloneWSResponse> internalSendRequest(StandaloneWSRequest request) {
+  private static CompletionStage<StandaloneWSResponse> internalSendRequest(
+      StandaloneWSRequest request) {
     CompletionStage<? extends StandaloneWSResponse> stream = request.stream();
     // The status can be ready before the body so explicitly call wait for body to be ready
     return stream
