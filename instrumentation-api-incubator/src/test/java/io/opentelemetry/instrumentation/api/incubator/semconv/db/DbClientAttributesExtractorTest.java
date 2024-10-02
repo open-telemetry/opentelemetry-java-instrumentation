@@ -38,8 +38,8 @@ class DbClientAttributesExtractorTest {
       return map.get("db.user");
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getDbNamespace(Map<String, String> map) {
       return map.get(
           SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.name")).getKey());
@@ -51,15 +51,15 @@ class DbClientAttributesExtractorTest {
       return map.get("db.connection_string");
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getDbQueryText(Map<String, String> map) {
       return map.get(
           SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.statement")).getKey());
     }
 
-    @Nullable
     @Override
+    @Nullable
     public String getDbOperationName(Map<String, String> map) {
       return map.get(
           SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.operation")).getKey());
