@@ -43,6 +43,6 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   @Override
   @Nullable
   public String getRawQueryText(DbExecution request) {
-    return request.getDbQueryText();
+    return request.getQueryText();
   }
 }

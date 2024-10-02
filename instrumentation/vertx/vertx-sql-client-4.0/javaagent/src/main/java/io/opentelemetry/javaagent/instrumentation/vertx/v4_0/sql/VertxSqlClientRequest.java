@@ -16,7 +16,7 @@ public final class VertxSqlClientRequest {
     this.sqlConnectOptions = sqlConnectOptions;
   }
 
-  public String getDbQueryText() {
+  public String getQueryText() {
     return statement;
   }
 

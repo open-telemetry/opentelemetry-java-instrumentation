@@ -94,7 +94,7 @@ public final class DbExecution {
     return connectionString;
   }
 
-  public String getDbQueryText() {
+  public String getQueryText() {
     return rawStatement;
   }
 

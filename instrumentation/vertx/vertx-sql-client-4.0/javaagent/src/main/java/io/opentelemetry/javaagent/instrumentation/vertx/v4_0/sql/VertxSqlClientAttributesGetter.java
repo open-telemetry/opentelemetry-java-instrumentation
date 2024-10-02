@@ -40,6 +40,6 @@ public enum VertxSqlClientAttributesGetter
   @Override
   @Nullable
   public String getRawQueryText(VertxSqlClientRequest request) {
-    return request.getDbQueryText();
+    return request.getQueryText();
   }
 }
