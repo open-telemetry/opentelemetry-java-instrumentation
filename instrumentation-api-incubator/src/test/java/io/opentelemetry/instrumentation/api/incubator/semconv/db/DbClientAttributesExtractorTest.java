@@ -19,7 +19,6 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
