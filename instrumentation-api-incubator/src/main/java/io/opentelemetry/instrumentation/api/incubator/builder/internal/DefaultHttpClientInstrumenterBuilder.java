@@ -67,6 +67,18 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   public DefaultHttpClientInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+              TextMapSetter<REQUEST> headerSetter) {
+    this(
+      instrumentationName,
+      openTelemetry,
+      attributesGetter);
+    this.headerSetter = headerSetter;
+    }
+
+    public DefaultHttpClientInstrumenterBuilder(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     this.instrumentationName = instrumentationName;
     this.openTelemetry = openTelemetry;
@@ -138,13 +150,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       Set<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setHeaderSetter(
-      @Nullable TextMapSetter<REQUEST> headerSetter) {
-    this.headerSetter = headerSetter;
     return this;
   }
 

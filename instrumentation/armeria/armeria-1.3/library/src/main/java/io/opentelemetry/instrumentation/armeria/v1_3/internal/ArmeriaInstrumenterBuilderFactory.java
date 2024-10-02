@@ -33,7 +33,6 @@ public class ArmeriaInstrumenterBuilderFactory {
   public static DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
       getClientBuilder(OpenTelemetry openTelemetry) {
     return new DefaultHttpClientInstrumenterBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, ArmeriaHttpClientAttributesGetter.INSTANCE)
-        .setHeaderSetter(ClientRequestContextSetter.INSTANCE);
+            INSTRUMENTATION_NAME, openTelemetry, ArmeriaHttpClientAttributesGetter.INSTANCE,ClientRequestContextSetter.INSTANCE);
   }
 }

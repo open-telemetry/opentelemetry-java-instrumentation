@@ -44,13 +44,12 @@ public final class JavaagentHttpClientInstrumenters {
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       TextMapSetter<REQUEST> headerSetter,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
-    DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> defaultHttpClientTelemetryBuilder =
-        new DefaultHttpClientInstrumenterBuilder<>(
-            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter);
     if (headerSetter != null) {
-      defaultHttpClientTelemetryBuilder.setHeaderSetter(headerSetter);
+      return create(new DefaultHttpClientInstrumenterBuilder<>(
+          instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, headerSetter), instrumenterBuilderConsumer);
     }
-    return create(defaultHttpClientTelemetryBuilder, instrumenterBuilderConsumer);
+    return create(new DefaultHttpClientInstrumenterBuilder<>(
+        instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter), instrumenterBuilderConsumer);
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(

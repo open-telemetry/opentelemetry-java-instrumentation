@@ -22,7 +22,6 @@ public class JettyHttpClientInstrumenterBuilderFactory {
   public static DefaultHttpClientInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
     return new DefaultHttpClientInstrumenterBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE)
-        .setHeaderSetter(HttpHeaderSetter.INSTANCE);
+            INSTRUMENTATION_NAME, openTelemetry, JettyClientHttpAttributesGetter.INSTANCE,HttpHeaderSetter.INSTANCE);
   }
 }
