@@ -17,7 +17,8 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 
-class TestAccessLogValve extends ValveBase implements AccessLog {
+// public, because it's loaded by reflection
+public class TestAccessLogValve extends ValveBase implements AccessLog {
 
   public final List<Map.Entry<String, String>> getLoggedIds() {
     return loggedIds;

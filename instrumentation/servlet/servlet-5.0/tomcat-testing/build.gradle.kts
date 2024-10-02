@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+  testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
   testImplementation(project(":instrumentation:servlet:servlet-5.0:testing"))
 
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.0")
