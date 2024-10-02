@@ -21,6 +21,7 @@ public class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSR
   private static StandaloneWSClient wsClientWithReadTimeout;
 
   @BeforeEach
+  @Override
   void setup() {
     super.setup();
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
@@ -31,6 +32,7 @@ public class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSR
   }
 
   @AfterEach
+  @Override
   void tearDown() throws IOException {
     if (wsClient != null) {
       wsClient.close();

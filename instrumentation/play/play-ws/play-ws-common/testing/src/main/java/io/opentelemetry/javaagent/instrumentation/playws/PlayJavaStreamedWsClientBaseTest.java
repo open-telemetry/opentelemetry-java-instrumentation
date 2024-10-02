@@ -23,7 +23,9 @@ class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
   private static StandaloneWSClient wsClientWithReadTimeout;
 
   @BeforeEach
+  @Override
   void setup() {
+    super.setup();
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
@@ -32,13 +34,15 @@ class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
   }
 
   @AfterEach
-  public void tearDown() throws IOException {
+  @Override
+  void tearDown() throws IOException {
     if (wsClient != null) {
       wsClient.close();
     }
     if (wsClientWithReadTimeout != null) {
       wsClientWithReadTimeout.close();
     }
+    super.tearDown();
   }
 
   @Override
