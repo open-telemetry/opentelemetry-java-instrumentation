@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
+import static java.util.Collections.singletonList;
+
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.result.DeleteResult;
@@ -17,7 +19,6 @@ import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -45,12 +46,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   private final List<AutoCloseable> cleanup = new ArrayList<>();
 
   @BeforeAll
-  public void setupSpec() {
+  public void setup() {
     client = MongoClients.create("mongodb://" + host + ":" + port);
   }
 
   @AfterAll
-  public void cleanupSpec() throws Exception {
+  public void cleanup() throws Exception {
     if (client != null) {
       client.close();
       client = null;
@@ -100,7 +101,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
     MongoClientSettings.Builder settings =
         MongoClientSettings.builder()
             .applyToClusterSettings(
-                builder -> builder.hosts(Collections.singletonList(new ServerAddress(host, port))));
+                builder -> builder.hosts(singletonList(new ServerAddress(host, port))));
     settings.build();
     MongoClient tmpClient = MongoClients.create(settings.build());
     cleanup.add(tmpClient);

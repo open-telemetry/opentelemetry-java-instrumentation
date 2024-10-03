@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -22,7 +23,6 @@ import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
-import java.util.Arrays;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
@@ -40,7 +40,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   private MongoClient client;
 
   @BeforeAll
-  void setupSpec() {
+  void setup() {
     client =
         MongoClients.create(
             MongoClientSettings.builder()
@@ -53,7 +53,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @AfterAll
-  void cleanupSpec() {
+  void cleanup() {
     if (client != null) {
       client.close();
       client = null;
@@ -196,7 +196,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
                   MongoDatabase db = client.getDatabase(dbName);
                   MongoCollection<Document> coll = db.getCollection(collectionName);
                   coll.insertMany(
-                      Arrays.asList(
+                      asList(
                           new Document("_id", 0), new Document("_id", 1), new Document("_id", 2)));
                   return coll;
                 });

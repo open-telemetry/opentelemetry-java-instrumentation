@@ -35,7 +35,7 @@ public abstract class AbstractMongo31ClientTest
   private MongoClient client;
 
   @BeforeAll
-  public void setupSpec() {
+  public void setup() {
     MongoClientOptions.Builder options =
         MongoClientOptions.builder().description("some-description");
     configureMongoClientOptions(options);
@@ -43,7 +43,7 @@ public abstract class AbstractMongo31ClientTest
   }
 
   @AfterAll
-  public void cleanupSpec() {
+  public void cleanup() {
     if (client != null) {
       client.close();
     }

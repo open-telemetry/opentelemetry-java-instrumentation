@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
@@ -17,8 +20,6 @@ import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
@@ -35,12 +36,12 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   private MongoClient client;
 
   @BeforeAll
-  public void setupSpec() {
+  public void setup() {
     client = MongoClients.create("mongodb://" + host + ":" + port);
   }
 
   @AfterAll
-  public void cleanupSpec() {
+  public void cleanup() {
     if (client != null) {
       client.close();
       client = null;
@@ -74,7 +75,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     MongoClientSettings settings =
         MongoClientSettings.builder()
             .applyToClusterSettings(
-                builder -> builder.hosts(Collections.singletonList(new ServerAddress(host, port))))
+                builder -> builder.hosts(singletonList(new ServerAddress(host, port))))
             .build();
     MongoDatabase db = MongoClients.create(settings).getDatabase(dbName);
     db.createCollection(collectionName);
@@ -169,7 +170,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
                   MongoDatabase db = client.getDatabase(dbName);
                   MongoCollection<Document> coll = db.getCollection(collectionName);
                   coll.insertMany(
-                      Arrays.asList(
+                      asList(
                           new Document("_id", 0), new Document("_id", 1), new Document("_id", 2)));
                   return coll;
                 });

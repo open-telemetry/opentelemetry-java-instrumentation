@@ -45,7 +45,7 @@ public abstract class AbstractMongoClientTest<T> {
   protected int port;
 
   @BeforeAll
-  void setupSpec() {
+  void setup() {
     mongodb =
         new GenericContainer<>("mongo:4.0")
             .withExposedPorts(27017)
@@ -56,7 +56,7 @@ public abstract class AbstractMongoClientTest<T> {
   }
 
   @AfterAll
-  void cleanupSpec() {
+  void cleanup() {
     if (mongodb != null) {
       mongodb.stop();
     }

@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
 import static io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetryBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -84,8 +84,7 @@ class MongoDbAttributesGetterTest {
         sanitizeStatementAcrossVersions(
             extractor,
             new BsonDocument("cmd", new BsonString("c"))
-                .append(
-                    "f1", new BsonArray(Arrays.asList(new BsonString("c1"), new BsonString("c2"))))
+                .append("f1", new BsonArray(asList(new BsonString("c1"), new BsonString("c2"))))
                 .append("f2", new BsonString("c3")));
 
     // This can vary because of different whitespace for different MongoDB versions
