@@ -213,14 +213,11 @@ public abstract class AbstractMongo31ClientTest
     MongoClientOptions options = MongoClientOptions.builder().serverSelectionTimeout(10).build();
     MongoClient client = new MongoClient(new ServerAddress(host, PortUtils.UNUSABLE_PORT), options);
 
-    String dbName = "test_db";
-    String collectionName = createCollectionName();
-
     assertThatExceptionOfType(MongoTimeoutException.class)
         .isThrownBy(
             () -> {
-              MongoDatabase db = client.getDatabase(dbName);
-              db.createCollection(collectionName);
+              MongoDatabase db = client.getDatabase("test_db");
+              db.createCollection(createCollectionName());
             });
     // Unfortunately not caught by our instrumentation.
     testing().waitAndAssertTraces();
