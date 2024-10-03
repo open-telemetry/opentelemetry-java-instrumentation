@@ -17,5 +17,5 @@ public abstract class CassandraRequest {
 
   public abstract Session getSession();
 
-  public abstract String getRawQueryText();
+  public abstract String getQueryText();
 }

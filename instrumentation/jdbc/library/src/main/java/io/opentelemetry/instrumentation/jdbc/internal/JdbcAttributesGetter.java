@@ -45,6 +45,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getRawQueryText(DbRequest request) {
-    return request.getRawQueryText();
+    return request.getQueryText();
   }
 }
