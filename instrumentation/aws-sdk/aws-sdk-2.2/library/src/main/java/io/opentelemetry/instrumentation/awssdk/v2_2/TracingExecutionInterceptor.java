@@ -360,11 +360,10 @@ final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   private void onSdkResponse(
       Span span, SdkResponse response, ExecutionAttributes executionAttributes) {
+    if (response instanceof AwsResponse) {
+      span.setAttribute("aws.request_id", ((AwsResponse) response).responseMetadata().requestId());
+    }
     if (captureExperimentalSpanAttributes) {
-      if (response instanceof AwsResponse) {
-        span.setAttribute(
-            "aws.request_id", ((AwsResponse) response).responseMetadata().requestId());
-      }
       AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
       if (sdkRequest != null) {
         fieldMapper.mapToAttributes(response, sdkRequest, span);

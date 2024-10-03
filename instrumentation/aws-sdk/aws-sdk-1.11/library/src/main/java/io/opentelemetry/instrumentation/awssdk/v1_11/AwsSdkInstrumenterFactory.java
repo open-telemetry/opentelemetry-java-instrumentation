@@ -39,18 +39,14 @@ final class AwsSdkInstrumenterFactory {
       RpcClientAttributesExtractor.create(AwsSdkRpcAttributesGetter.INSTANCE);
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
+  private static final AwsSdkAttributesExtractor sdkAttributesExtractor =
+      new AwsSdkAttributesExtractor();
   private static final SnsAttributesExtractor snsAttributesExtractor = new SnsAttributesExtractor();
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      defaultAttributesExtractors =
-          Arrays.asList(httpAttributesExtractor, rpcAttributesExtractor, snsAttributesExtractor);
+      defaultAttributesExtractors = createAttributesExtractors(false);
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
-      extendedAttributesExtractors =
-          Arrays.asList(
-              httpAttributesExtractor,
-              rpcAttributesExtractor,
-              snsAttributesExtractor,
-              experimentalAttributesExtractor);
+      extendedAttributesExtractors = createAttributesExtractors(true);
   private static final AwsSdkSpanNameExtractor spanName = new AwsSdkSpanNameExtractor();
 
   private final OpenTelemetry openTelemetry;
@@ -67,6 +63,21 @@ final class AwsSdkInstrumenterFactory {
     this.capturedHeaders = capturedHeaders;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+  }
+
+  private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
+      boolean includeExperimental) {
+    List<AttributesExtractor<Request<?>, Response<?>>> extractors =
+        new ArrayList<>(
+            Arrays.asList(
+                httpAttributesExtractor,
+                rpcAttributesExtractor,
+                snsAttributesExtractor,
+                sdkAttributesExtractor));
+    if (includeExperimental) {
+      extractors.add(experimentalAttributesExtractor);
+    }
+    return extractors;
   }
 
   Instrumenter<Request<?>, Response<?>> requestInstrumenter() {
