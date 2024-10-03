@@ -17,6 +17,7 @@ import play.api.libs.ws.StandaloneWSRequest;
 import play.api.libs.ws.StandaloneWSResponse;
 import play.api.libs.ws.ahc.StandaloneAhcWSClient;
 import scala.Function1;
+import scala.collection.JavaConverters;
 import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
@@ -59,7 +60,7 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
         .url(uri.toURL().toString())
         .withMethod(method)
         .withFollowRedirects(true)
-        .withHttpHeaders(CollectionConverters.asScala(headers).toList());
+        .withHttpHeaders(JavaConverters.mapAsScalaMap(headers).toSeq());
   }
 
   @Override
