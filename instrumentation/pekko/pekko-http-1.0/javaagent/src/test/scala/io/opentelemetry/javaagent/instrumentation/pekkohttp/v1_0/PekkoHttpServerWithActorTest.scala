@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import java.net.URI
 
-import io.opentelemetry.instrumentation.test.utils.PortUtils
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
 import io.opentelemetry.testing.internal.armeria.common.{
   AggregatedHttpRequest,
   HttpMethod
