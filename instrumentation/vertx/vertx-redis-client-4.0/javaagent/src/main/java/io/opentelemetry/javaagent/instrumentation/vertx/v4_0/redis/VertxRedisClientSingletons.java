@@ -9,7 +9,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -37,7 +36,7 @@ public final class VertxRedisClientSingletons {
 
   static {
     SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
-        DbClientSpanNameExtractor.create(VertxRedisClientAttributesGetter.INSTANCE);
+        VertxRedisClientRequest::getCommand;
 
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(

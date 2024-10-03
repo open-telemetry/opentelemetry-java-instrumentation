@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
 
@@ -34,7 +35,10 @@ public enum VertxRedisClientAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
-    return String.valueOf(request.getDatabaseIndex());
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      return String.valueOf(request.getDatabaseIndex());
+    }
+    return null;
   }
 
   @Deprecated
