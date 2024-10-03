@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {
 
   @Override
-  public String getDbSystem(JedisRequest jedisRequest) {
+  public String getDbSystem(JedisRequest request) {
     return REDIS;
   }
 

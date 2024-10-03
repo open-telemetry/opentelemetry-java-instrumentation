@@ -18,7 +18,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
-  public String getDbSystem(JedisRequest jedisRequest) {
+  public String getDbSystem(JedisRequest request) {
     return REDIS;
   }
 

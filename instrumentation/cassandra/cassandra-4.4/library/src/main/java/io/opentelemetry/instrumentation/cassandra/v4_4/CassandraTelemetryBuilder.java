@@ -20,6 +20,11 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 public class CassandraTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.4";
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_CASSANDRA_TABLE =
+      AttributeKey.stringKey("db.cassandra.table");
+  private static final AttributeKey<String> DB_COLLECTION_NAME =
+      AttributeKey.stringKey("db.collection.name");
 
   private final OpenTelemetry openTelemetry;
 
@@ -58,8 +63,8 @@ public class CassandraTelemetryBuilder {
             SqlClientAttributesExtractor.builder(attributesGetter)
                 .setTableAttribute(
                     SemconvStability.emitStableDatabaseSemconv()
-                        ? AttributeKey.stringKey("db.collection.name")
-                        : AttributeKey.stringKey("db.cassandra.table"))
+                        ? DB_COLLECTION_NAME
+                        : DB_CASSANDRA_TABLE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(

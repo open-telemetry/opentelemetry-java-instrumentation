@@ -50,7 +50,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String getDbSystem(CommandStartedEvent commandStartedEvent) {
+  public String getDbSystem(CommandStartedEvent event) {
     return MONGODB;
   }
 

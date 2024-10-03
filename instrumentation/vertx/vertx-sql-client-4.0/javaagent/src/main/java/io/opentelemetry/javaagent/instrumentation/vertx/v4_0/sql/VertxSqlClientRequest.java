@@ -8,16 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 import io.vertx.sqlclient.SqlConnectOptions;
 
 public final class VertxSqlClientRequest {
-  private final String statement;
+  private final String rawQueryText;
   private final SqlConnectOptions sqlConnectOptions;
 
-  public VertxSqlClientRequest(String statement, SqlConnectOptions sqlConnectOptions) {
-    this.statement = statement;
+  public VertxSqlClientRequest(String rawQueryText, SqlConnectOptions sqlConnectOptions) {
+    this.rawQueryText = rawQueryText;
     this.sqlConnectOptions = sqlConnectOptions;
   }
 
-  public String getQueryText() {
-    return statement;
+  public String getRawQueryText() {
+    return rawQueryText;
   }
 
   public String getUser() {

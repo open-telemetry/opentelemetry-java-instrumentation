@@ -43,5 +43,5 @@ public abstract class DbRequest {
 
   public abstract DbInfo getDbInfo();
 
-  public abstract String getQueryText();
+  public abstract String getRawQueryText();
 }

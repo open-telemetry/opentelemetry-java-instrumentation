@@ -14,7 +14,7 @@ final class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest> {
 
   @Override
-  public String getDbSystem(ElasticTransportRequest elasticTransportRequest) {
+  public String getDbSystem(ElasticTransportRequest request) {
     return ELASTICSEARCH;
   }
 
