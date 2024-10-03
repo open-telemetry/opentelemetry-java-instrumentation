@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.ratpack;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -20,7 +21,9 @@ public class ExecutionBoundPublisherInstrumentation implements TypeInstrumentati
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("ratpack.exec.internal.DefaultExecution$ExecutionBoundPublisher");
+    return namedOneOf(
+        "ratpack.exec.internal.ExecutionBoundPublisher",
+        "ratpack.exec.internal.DefaultExecution$ExecutionBoundPublisher");
   }
 
   @Override
