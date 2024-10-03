@@ -578,10 +578,7 @@ public abstract class AbstractMongoClientTest<T> {
   @Test
   @DisplayName("test error")
   void testError() {
-    String dbName = "test_db";
-    String collectionName = createCollectionName();
-
-    assertThatIllegalArgumentException().isThrownBy(() -> error(dbName, collectionName));
+    assertThatIllegalArgumentException().isThrownBy(() -> error("test_db", createCollectionName()));
     // Unfortunately not caught by our instrumentation.
     testing().waitAndAssertTraces();
   }

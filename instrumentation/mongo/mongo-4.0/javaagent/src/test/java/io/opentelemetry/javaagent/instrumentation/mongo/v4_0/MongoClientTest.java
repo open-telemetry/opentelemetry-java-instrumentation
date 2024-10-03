@@ -36,12 +36,12 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   private MongoClient client;
 
   @BeforeAll
-  public void setup() {
+  void setup() {
     client = MongoClients.create("mongodb://" + host + ":" + port);
   }
 
   @AfterAll
-  public void cleanup() {
+  void cleanup() {
     if (client != null) {
       client.close();
       client = null;

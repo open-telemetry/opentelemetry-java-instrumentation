@@ -37,7 +37,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   private MongoClient client;
 
   @BeforeAll
-  public void setup() {
+  void setup() {
     client =
         MongoClients.create(
             MongoClientSettings.builder()
@@ -51,7 +51,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @AfterAll
-  public void cleanup() {
+  void cleanup() {
     if (client != null) {
       client.close();
       client = null;

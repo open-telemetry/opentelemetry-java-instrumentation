@@ -35,7 +35,7 @@ public abstract class AbstractMongo31ClientTest
   private MongoClient client;
 
   @BeforeAll
-  public void setup() {
+  void setup() {
     MongoClientOptions.Builder options =
         MongoClientOptions.builder().description("some-description");
     configureMongoClientOptions(options);
@@ -43,7 +43,7 @@ public abstract class AbstractMongo31ClientTest
   }
 
   @AfterAll
-  public void cleanup() {
+  void cleanup() {
     if (client != null) {
       client.close();
     }
@@ -209,7 +209,7 @@ public abstract class AbstractMongo31ClientTest
 
   @Test
   @DisplayName("test client failure")
-  public void testClientFailure() {
+  void testClientFailure() {
     MongoClientOptions options = MongoClientOptions.builder().serverSelectionTimeout(10).build();
     MongoClient client = new MongoClient(new ServerAddress(host, PortUtils.UNUSABLE_PORT), options);
 

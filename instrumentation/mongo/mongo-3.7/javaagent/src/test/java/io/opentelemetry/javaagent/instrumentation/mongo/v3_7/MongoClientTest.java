@@ -231,16 +231,13 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Test
   @DisplayName("test client failure")
   void testClientFailure() {
-    String dbName = "test_db";
-    String collectionName = createCollectionName();
-
     MongoClient client =
         MongoClients.create("mongodb://" + host + ":" + UNUSABLE_PORT + "/?connectTimeoutMS=10");
 
     assertThatThrownBy(
             () -> {
-              MongoDatabase db = client.getDatabase(dbName);
-              db.createCollection(collectionName);
+              MongoDatabase db = client.getDatabase("test_db");
+              db.createCollection(createCollectionName());
             })
         .isInstanceOf(MongoTimeoutException.class);
     // Unfortunately not caught by our instrumentation.

@@ -46,12 +46,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   private final List<AutoCloseable> cleanup = new ArrayList<>();
 
   @BeforeAll
-  public void setup() {
+  void setup() {
     client = MongoClients.create("mongodb://" + host + ":" + port);
   }
 
   @AfterAll
-  public void cleanup() throws Exception {
+  void cleanup() throws Exception {
     if (client != null) {
       client.close();
       client = null;
