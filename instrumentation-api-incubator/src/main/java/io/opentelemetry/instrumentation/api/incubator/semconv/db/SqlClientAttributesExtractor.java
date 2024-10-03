@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 /**
  * Extractor of <a
@@ -28,7 +29,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_OPERATION_NAME =
+      AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -68,11 +72,20 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     String rawStatement = getter.getRawStatement(request);
     SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawStatement);
     String operation = sanitizedStatement.getOperation();
-    internalSet(
-        attributes,
-        DB_STATEMENT,
-        statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
-    internalSet(attributes, DB_OPERATION, operation);
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      internalSet(
+          attributes,
+          DB_QUERY_TEXT,
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
+      internalSet(attributes, DB_OPERATION_NAME, operation);
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(
+          attributes,
+          DB_STATEMENT,
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
+      internalSet(attributes, DB_OPERATION, operation);
+    }
     if (!SQL_CALL.equals(operation)) {
       internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());
     }
