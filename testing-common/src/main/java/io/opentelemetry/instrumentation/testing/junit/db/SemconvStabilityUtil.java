@@ -10,7 +10,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_COSM
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_MONGODB_COLLECTION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 
@@ -23,7 +22,6 @@ import java.util.Map;
 public class SemconvStabilityUtil {
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = new HashMap<>();
   private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
-  private static final AttributeKey<Long> DB_NAMESPACE_LONG = AttributeKey.longKey("db.namespace");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
   private static final AttributeKey<String> DB_OPERATION_NAME =
       AttributeKey.stringKey("db.operation.name");
@@ -32,7 +30,6 @@ public class SemconvStabilityUtil {
 
   static {
     addKey(oldToNewMap, DB_NAME, DB_NAMESPACE);
-    addKey(oldToNewMap, DB_REDIS_DATABASE_INDEX, DB_NAMESPACE_LONG);
     addKey(oldToNewMap, DB_STATEMENT, DB_QUERY_TEXT);
     addKey(oldToNewMap, DB_OPERATION, DB_OPERATION_NAME);
     addKey(oldToNewMap, DB_SQL_TABLE, DB_COLLECTION_NAME);
