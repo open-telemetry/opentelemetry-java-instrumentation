@@ -22,21 +22,21 @@ object PekkoHttpTestWebServerWithActor {
   implicit val executionContext: ExecutionContext = system.dispatcher
 
   private case object TestMessage
-  private class KamonTestActor extends Actor {
+  private class SpanTestActor extends Actor {
     def receive = { case TestMessage =>
       sender() ! spanSummary(Span.current())
     }
   }
 
-  val kamonTestActor = system.actorOf(Props[KamonTestActor]())
+  val spanTestActor = system.actorOf(Props[SpanTestActor]())
 
   var route = get {
     path("test") {
       complete {
-        val kamonSummary = spanSummary(Span.current())
-        kamonTestActor.ask(TestMessage)(Timeout(5.seconds)).mapTo[String].map {
+        val otelSummary = spanSummary(Span.current())
+        spanTestActor.ask(TestMessage)(Timeout(5.seconds)).mapTo[String].map {
           actorSummary =>
-            s"Route=$kamonSummary\nActor=$actorSummary"
+            s"Route=$otelSummary\nActor=$actorSummary"
         }
       }
     }
