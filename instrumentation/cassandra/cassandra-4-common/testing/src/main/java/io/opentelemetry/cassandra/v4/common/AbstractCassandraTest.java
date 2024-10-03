@@ -108,7 +108,8 @@ public abstract class AbstractCassandraTest {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
                                             v -> assertThat(v).isEqualTo("ipv6"));
-                                      } else {
+                                      }
+                                      if (SemconvStability.emitStableDatabaseSemconv()) {
                                         assertThat(val).isNull();
                                       }
                                     }),
@@ -175,7 +176,8 @@ public abstract class AbstractCassandraTest {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
                                             v -> assertThat(v).isEqualTo("ipv6"));
-                                      } else {
+                                      }
+                                      if (SemconvStability.emitStableDatabaseSemconv()) {
                                         assertThat(val).isNull();
                                       }
                                     }),
