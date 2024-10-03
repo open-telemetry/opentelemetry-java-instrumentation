@@ -19,15 +19,9 @@ enum VertxRedisClientAttributesExtractor
     implements AttributesExtractor<VertxRedisClientRequest, Void> {
   INSTANCE;
 
-  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
-
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, VertxRedisClientRequest request) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(DB_NAMESPACE, String.valueOf(request.getDatabaseIndex()));
-    }
-
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(
           attributes, DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, request.getDatabaseIndex());

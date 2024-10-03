@@ -34,7 +34,7 @@ public enum VertxRedisClientAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
-    return null;
+    return String.valueOf(request.getDatabaseIndex());
   }
 
   @Deprecated
