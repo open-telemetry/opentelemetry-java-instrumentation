@@ -8,12 +8,10 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
@@ -37,8 +35,7 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbNamespace(Map<String, String> map) {
-      return map.get(
-          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.name")).getKey());
+      return map.get("db.name");
     }
 
     @Deprecated
@@ -49,14 +46,12 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbQueryText(Map<String, String> map) {
-      return map.get(
-          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.statement")).getKey());
+      return map.get("db.statement");
     }
 
     @Override
     public String getDbOperationName(Map<String, String> map) {
-      return map.get(
-          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.operation")).getKey());
+      return map.get("db.operation");
     }
   }
 
@@ -66,18 +61,11 @@ class DbClientAttributesExtractorTest {
     // given
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      request.put("db.user", "username");
-      request.put("db.connection_string", "mydb:///potatoes");
-    }
-    request.put(
-        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME).getKey(), "potatoes");
-    request.put(
-        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT).getKey(),
-        "SELECT * FROM potato");
-    request.put(
-        SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION).getKey(),
-        "SELECT");
+    request.put("db.user", "username");
+    request.put("db.name", "potatoes");
+    request.put("db.connection_string", "mydb:///potatoes");
+    request.put("db.statement", "SELECT * FROM potato");
+    request.put("db.operation", "SELECT");
 
     Context context = Context.root();
 

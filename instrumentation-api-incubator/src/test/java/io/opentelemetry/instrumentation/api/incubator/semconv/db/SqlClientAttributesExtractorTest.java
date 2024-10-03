@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -28,8 +27,7 @@ class SqlClientAttributesExtractorTest {
 
     @Override
     public String getRawQueryText(Map<String, String> map) {
-      return map.get(
-          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.statement")).getKey());
+      return map.get("db.statement");
     }
 
     @Override
@@ -45,8 +43,7 @@ class SqlClientAttributesExtractorTest {
 
     @Override
     public String getDbNamespace(Map<String, String> map) {
-      return map.get(
-          SemconvStabilityUtil.getAttributeKey(AttributeKey.stringKey("db.name")).getKey());
+      return map.get("db.name");
     }
 
     @Deprecated
@@ -62,15 +59,10 @@ class SqlClientAttributesExtractorTest {
     // given
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      request.put("db.user", "username");
-      request.put("db.connection_string", "mydb:///potatoes");
-      request.put("db.name", "potatoes");
-      request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
-      request.put("db.namespace", "potatoes");
-      request.put("db.query.text", "SELECT * FROM potato WHERE id=12345");
-    }
+    request.put("db.user", "username");
+    request.put("db.name", "potatoes");
+    request.put("db.connection_string", "mydb:///potatoes");
+    request.put("db.statement", "SELECT * FROM potato WHERE id=12345");
 
     Context context = Context.root();
 
@@ -119,11 +111,7 @@ class SqlClientAttributesExtractorTest {
   void shouldNotExtractTableIfAttributeIsNotSet() {
     // given
     Map<String, String> request = new HashMap<>();
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      request.put("db.statement", "SELECT *");
-    } else {
-      request.put("db.query.text", "SELECT *");
-    }
+    request.put("db.statement", "SELECT *");
 
     Context context = Context.root();
 
@@ -149,13 +137,7 @@ class SqlClientAttributesExtractorTest {
   void shouldExtractTableToSpecifiedKey() {
     // given
     Map<String, String> request = new HashMap<>();
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      request.put("db.statement", "SELECT * FROM table");
-    }
-
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      request.put("db.query.text", "SELECT * FROM table");
-    }
+    request.put("db.statement", "SELECT * FROM table");
 
     Context context = Context.root();
 
