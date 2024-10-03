@@ -24,10 +24,4 @@ class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest im
   boolean testHttpPipelining() {
     false
   }
-
-  @Override
-  boolean testPostStream() {
-    // controller span is parent of onNext span which is not expected
-    Boolean.getBoolean("testLatestDeps")
-  }
 }
