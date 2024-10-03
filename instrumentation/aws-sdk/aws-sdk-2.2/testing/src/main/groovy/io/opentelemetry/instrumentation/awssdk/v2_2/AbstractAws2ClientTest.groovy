@@ -38,11 +38,11 @@ import software.amazon.awssdk.services.sfn.model.DescribeStateMachineRequest
 import software.amazon.awssdk.services.sfn.model.DescribeActivityRequest
 import software.amazon.awssdk.services.lambda.LambdaClient
 import software.amazon.awssdk.services.lambda.model.GetFunctionRequest
-import software.amazon.awssdk.services.lambda.model.GetEventSourceMappingRequest;
-import software.amazon.awssdk.services.sns.SnsClient;
-import software.amazon.awssdk.services.sns.model.PublishRequest;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.lambda.model.GetEventSourceMappingRequest
+import software.amazon.awssdk.services.sns.SnsClient
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest
 import spock.lang.Unroll
 
 
