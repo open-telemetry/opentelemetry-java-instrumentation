@@ -204,25 +204,25 @@ class VertxRedisClientTest {
   private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
     if (SemconvStabilityUtil.isStable()) {
       return new AttributeAssertion[] {
-          equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-          equalTo(AttributeKey.stringKey("db.query.text"), statement),
-          equalTo(AttributeKey.stringKey("db.operation.name"), operation),
-          equalTo(AttributeKey.stringKey("db.namespace"), "1"),
-          equalTo(ServerAttributes.SERVER_ADDRESS, host),
-          equalTo(ServerAttributes.SERVER_PORT, port),
-          equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
+        equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+        equalTo(AttributeKey.stringKey("db.query.text"), statement),
+        equalTo(AttributeKey.stringKey("db.operation.name"), operation),
+        equalTo(AttributeKey.stringKey("db.namespace"), "1"),
+        equalTo(ServerAttributes.SERVER_ADDRESS, host),
+        equalTo(ServerAttributes.SERVER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
       };
     } else {
       return new AttributeAssertion[] {
-          equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-          equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
-          equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
-          equalTo(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, 1),
-          equalTo(ServerAttributes.SERVER_ADDRESS, host),
-          equalTo(ServerAttributes.SERVER_PORT, port),
-          equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
+        equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+        equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
+        equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
+        equalTo(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, 1),
+        equalTo(ServerAttributes.SERVER_ADDRESS, host),
+        equalTo(ServerAttributes.SERVER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
       };
     }
   }
