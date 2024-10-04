@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
@@ -202,7 +203,8 @@ class VertxRedisClientTest {
   }
 
   private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
-    if (SemconvStabilityUtil.isStable()) {
+    // not testing database/dup
+    if (SemconvStability.emitStableDatabaseSemconv()) {
       return new AttributeAssertion[] {
         equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
         equalTo(AttributeKey.stringKey("db.query.text"), statement),
