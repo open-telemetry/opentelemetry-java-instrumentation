@@ -24,41 +24,6 @@ dependencies {
   testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
 }
 
-testing {
-  suites {
-    val testStableDatabaseSemconv by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation(project())
-        implementation(project(":testing-common"))
-        implementation("io.opentelemetry:opentelemetry-sdk")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-      }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
-    val testBothDatabaseSemconv by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation(project())
-        implementation(project(":testing-common"))
-        implementation("io.opentelemetry:opentelemetry-sdk")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-      }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
@@ -76,7 +41,16 @@ tasks {
     dependsOn("generateJflex")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
+    dependsOn(testBothSemconv)
   }
 }

@@ -8,11 +8,12 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -80,18 +81,35 @@ class DbClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-            entry(DbIncubatingAttributes.DB_USER, "username"),
-            entry(SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME), "potatoes"),
-            entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-                "SELECT * FROM potato"),
-            entry(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-                "SELECT"));
+    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(DbIncubatingAttributes.DB_USER, "username"),
+              entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
+              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
+              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+              entry(AttributeKey.stringKey("db.namespace"), "potatoes"),
+              entry(AttributeKey.stringKey("db.query.text"), "SELECT * FROM potato"),
+              entry(AttributeKey.stringKey("db.operation.name"), "SELECT"));
+    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(DbIncubatingAttributes.DB_USER, "username"),
+              entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
+              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
+              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
+    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(AttributeKey.stringKey("db.namespace"), "potatoes"),
+              entry(AttributeKey.stringKey("db.query.text"), "SELECT * FROM potato"),
+              entry(AttributeKey.stringKey("db.operation.name"), "SELECT"));
+    }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
