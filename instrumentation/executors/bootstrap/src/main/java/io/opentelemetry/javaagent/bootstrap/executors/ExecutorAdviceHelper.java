@@ -94,8 +94,11 @@ public final class ExecutorAdviceHelper {
    * Clean up {@code propagatedContext} in case of any submission errors. Call this method after the
    * submission method has exited.
    */
-  public static void cleanUpAfterSubmit(
-      @Nullable PropagatedContext propagatedContext, @Nullable Throwable throwable) {
+  public static <T> void cleanUpAfterSubmit(
+      @Nullable PropagatedContext propagatedContext,
+      @Nullable Throwable throwable,
+      VirtualField<T, PropagatedContext> virtualField,
+      T task) {
     if (propagatedContext != null && throwable != null) {
       /*
       Note: this may potentially clear somebody else's parent span if we didn't set it
@@ -106,6 +109,7 @@ public final class ExecutorAdviceHelper {
       exceptions.
        */
       propagatedContext.clear();
+      virtualField.set(task, null);
     }
   }
 
@@ -118,6 +122,7 @@ public final class ExecutorAdviceHelper {
 
     PropagatedContext propagatedContext = virtualField.get(task);
     if (propagatedContext != null) {
+      virtualField.set(task, null);
       propagatedContext.clear();
     }
   }

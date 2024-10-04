@@ -22,6 +22,7 @@ public final class TaskAdviceHelper {
       VirtualField<T, PropagatedContext> virtualField, T task) {
     PropagatedContext propagatedContext = virtualField.get(task);
     if (propagatedContext != null) {
+      virtualField.set(task, null);
       Context context = propagatedContext.getAndClear();
       if (context != null) {
         return context.makeCurrent();
