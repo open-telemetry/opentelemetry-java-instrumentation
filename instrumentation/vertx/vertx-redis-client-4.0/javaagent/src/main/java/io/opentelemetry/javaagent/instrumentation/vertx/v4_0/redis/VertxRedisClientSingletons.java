@@ -35,6 +35,8 @@ public final class VertxRedisClientSingletons {
       VirtualField.find(RedisStandaloneConnection.class, RedisURI.class);
 
   static {
+    // Redis semantic conventions don't follow the regular pattern of adding the db.namespace to
+    // the span name
     SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
         VertxRedisClientRequest::getCommand;
 
