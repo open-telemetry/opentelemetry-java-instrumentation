@@ -106,7 +106,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     }
 
     @Bean
-    AutoConfigurationCustomizerProvider customizerUsingPropertyDefinedInASpringFile() {
+    AutoConfigurationCustomizerProvider customizerUsingPropertyDefinedInaSpringFile() {
       return customizer ->
           customizer.addResourceCustomizer(
               (resource, config) -> {
