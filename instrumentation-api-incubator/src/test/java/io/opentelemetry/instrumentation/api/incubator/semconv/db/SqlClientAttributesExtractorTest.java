@@ -134,6 +134,7 @@ class SqlClientAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // to support old database semantic conventions
   void shouldExtractTableToSpecifiedKey() {
     // given
     Map<String, String> request = new HashMap<>();
@@ -143,8 +144,7 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
-            .setTableAttribute(
-                SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_CASSANDRA_TABLE))
+            .setOldSemconvTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
             .build();
 
     // when

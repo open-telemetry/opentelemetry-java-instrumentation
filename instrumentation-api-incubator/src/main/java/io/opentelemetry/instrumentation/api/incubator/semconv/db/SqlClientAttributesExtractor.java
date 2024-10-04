@@ -33,6 +33,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
+  private static final AttributeKey<String> DB_COLLECTION_NAME =
+      AttributeKey.stringKey("db.collection.name");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -53,15 +55,15 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   // sanitizer is also used to extract operation and table name, so we have it always enable here
   private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
-  private final AttributeKey<String> dbTableAttribute;
+  private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST> getter,
-      AttributeKey<String> dbTableAttribute,
+      AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled) {
     super(getter);
-    this.dbTableAttribute = dbTableAttribute;
+    this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     this.statementSanitizationEnabled = statementSanitizationEnabled;
   }
 
@@ -87,7 +89,12 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, DB_OPERATION, operation);
     }
     if (!SQL_CALL.equals(operation)) {
-      internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
+      }
     }
   }
 }

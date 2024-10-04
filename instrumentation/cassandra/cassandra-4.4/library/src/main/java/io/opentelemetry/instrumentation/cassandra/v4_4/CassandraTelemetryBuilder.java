@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 
 /** A builder of {@link CassandraTelemetry}. */
@@ -23,8 +22,6 @@ public class CassandraTelemetryBuilder {
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_CASSANDRA_TABLE =
       AttributeKey.stringKey("db.cassandra.table");
-  private static final AttributeKey<String> DB_COLLECTION_NAME =
-      AttributeKey.stringKey("db.collection.name");
 
   private final OpenTelemetry openTelemetry;
 
@@ -53,6 +50,7 @@ public class CassandraTelemetryBuilder {
     return new CassandraTelemetry(createInstrumenter(openTelemetry, statementSanitizationEnabled));
   }
 
+  @SuppressWarnings("deprecation") // to support old database semantic conventions
   protected Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
       OpenTelemetry openTelemetry, boolean statementSanitizationEnabled) {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
@@ -61,10 +59,7 @@ public class CassandraTelemetryBuilder {
             openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
-                .setTableAttribute(
-                    SemconvStability.emitStableDatabaseSemconv()
-                        ? DB_COLLECTION_NAME
-                        : DB_CASSANDRA_TABLE)
+                .setOldSemconvTableAttribute(DB_CASSANDRA_TABLE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(
