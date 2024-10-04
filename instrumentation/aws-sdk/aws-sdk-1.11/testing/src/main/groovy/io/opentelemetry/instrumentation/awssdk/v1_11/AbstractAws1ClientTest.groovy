@@ -35,6 +35,15 @@ import com.amazonaws.services.bedrock.AmazonBedrockClientBuilder
 import com.amazonaws.services.bedrock.model.GetGuardrailRequest
 import com.amazonaws.services.bedrockruntime.AmazonBedrockRuntimeClientBuilder
 import com.amazonaws.services.bedrockruntime.model.InvokeModelRequest
+import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest
+import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest
+import com.amazonaws.services.sns.AmazonSNSClientBuilder
+import com.amazonaws.services.sns.model.PublishRequest
+import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
+import com.amazonaws.services.secretsmanager.model.CreateSecretRequest
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder
+import com.amazonaws.services.lambda.model.GetEventSourceMappingRequest
+import com.amazonaws.services.lambda.model.GetFunctionRequest
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.SemanticAttributes
@@ -207,6 +216,45 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
             "stop": "holes"
         }
       """
+    "AWSStepFunctions" | "DescribeStateMachine" | "POST" | "/" | AWSStepFunctionsClientBuilder.standard()
+    | { c -> c.describeStateMachine(new DescribeStateMachineRequest().withStateMachineArn("stateMachineArn")) }
+    | ["aws.stepfunctions.state_machine.arn": "stateMachineArn"]
+    | ""
+    "AWSStepFunctions" | "DescribeActivity" | "POST" | "/" | AWSStepFunctionsClientBuilder.standard()
+    | { c -> c.describeActivity(new DescribeActivityRequest().withActivityArn("activityArn")) }
+    | ["aws.stepfunctions.activity.arn": "activityArn"]
+    | ""
+    "SNS" | "Publish" | "POST" | "/" | AmazonSNSClientBuilder.standard()
+    | { c -> c.publish(new PublishRequest().withMessage("message").withTopicArn("topicArn")) }
+    | ["aws.sns.topic.arn": "topicArn"]
+    | """
+      <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
+          <PublishResult>
+              <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>
+          </PublishResult>
+          <ResponseMetadata>
+              <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>
+          </ResponseMetadata>
+      </PublishResponse>
+      """
+    "AWSSecretsManager" | "CreateSecret" | "POST" | "/" | AWSSecretsManagerClientBuilder.standard()
+    | { c -> c.createSecret(new CreateSecretRequest().withName("secretName").withSecretString("secretValue")) }
+    | ["aws.secretsmanager.secret.arn": "arn:aws:secretsmanager:us-west-2:123456789012:secret:MyTestDatabaseSecret-a1b2c3"]
+    | """
+      {
+        "ARN": "arn:aws:secretsmanager:us-west-2:123456789012:secret:MyTestDatabaseSecret-a1b2c3",
+        "Name":"MyTestDatabaseSecret",
+        "VersionId": "EXAMPLE1-90ab-cdef-fedc-ba987SECRET1"
+      }
+    """
+    "AWSLambda" | "GetEventSourceMapping" | "GET" | "/" | AWSLambdaClientBuilder.standard()
+    | { c -> c.getEventSourceMapping(new GetEventSourceMappingRequest().withUUID("uuid")) }
+    | ["aws.lambda.resource_mapping.id": "uuid"]
+    | ""
+    "AWSLambda" | "GetFunction" | "GET" | "/" | AWSLambdaClientBuilder.standard()
+    | { c-> c.getFunction(new GetFunctionRequest().withFunctionName("functionName")) }
+    | ["aws.lambda.function.name": "functionName"]
+    | ""
   }
 
   def "send #operation request to closed port"() {
