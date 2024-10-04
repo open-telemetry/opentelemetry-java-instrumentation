@@ -104,6 +104,17 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                           Attributes.of(
                               AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
     }
+
+    @Bean
+    AutoConfigurationCustomizerProvider customizerUsingPropertyDefinedInASpringFile() {
+      return customizer ->
+          customizer.addResourceCustomizer(
+              (resource, config) -> {
+                String propValue = config.getString("APPLICATION-PROP");
+                assertThat(propValue).isNotEmpty();
+                return resource;
+              });
+    }
   }
 
   @Test
