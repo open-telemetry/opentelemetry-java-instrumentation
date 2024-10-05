@@ -109,6 +109,7 @@ public final class ExecutorAdviceHelper {
       exceptions.
        */
       propagatedContext.clear();
+      // setting the field to null removes it from the fallback map
       virtualField.set(task, null);
     }
   }
@@ -122,8 +123,9 @@ public final class ExecutorAdviceHelper {
 
     PropagatedContext propagatedContext = virtualField.get(task);
     if (propagatedContext != null) {
-      virtualField.set(task, null);
       propagatedContext.clear();
+      // setting the field to null removes it from the fallback map
+      virtualField.set(task, null);
     }
   }
 
