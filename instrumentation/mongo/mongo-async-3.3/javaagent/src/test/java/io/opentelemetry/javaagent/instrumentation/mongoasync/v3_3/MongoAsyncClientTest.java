@@ -54,7 +54,6 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   void cleanup() {
     if (client != null) {
       client.close();
-      client = null;
     }
   }
 
@@ -167,7 +166,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
               result.complete(((UpdateResult) res));
               collection.count(toCallback(o -> count.complete(((Long) o))));
             }));
-    return (int) result.join().getModifiedCount();
+    return Math.toIntExact(result.join().getModifiedCount());
   }
 
   @Override
@@ -204,7 +203,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
               result.complete((DeleteResult) res);
               collection.count(toCallback(value -> count.complete(((Long) value))));
             }));
-    return (int) result.join().getDeletedCount();
+    return Math.toIntExact(result.join().getDeletedCount());
   }
 
   @Override

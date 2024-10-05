@@ -44,7 +44,6 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   void cleanup() {
     if (client != null) {
       client.close();
-      client = null;
     }
   }
 
@@ -84,7 +83,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Override
   public int getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
-    return (int) db.getCollection(collectionName).estimatedDocumentCount();
+    return Math.toIntExact(db.getCollection(collectionName).estimatedDocumentCount());
   }
 
   @Override
@@ -105,7 +104,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   @Override
   public int insert(MongoCollection<Document> collection) {
     collection.insertOne(new Document("password", "SECRET"));
-    return (int) collection.estimatedDocumentCount();
+    return Math.toIntExact(collection.estimatedDocumentCount());
   }
 
   @Override
@@ -132,7 +131,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
             new BsonDocument("password", new BsonString("OLDPW")),
             new BsonDocument("$set", new BsonDocument("password", new BsonString("NEWPW"))));
     collection.estimatedDocumentCount();
-    return (int) result.getModifiedCount();
+    return Math.toIntExact(result.getModifiedCount());
   }
 
   @Override
@@ -157,7 +156,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     DeleteResult result =
         collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")));
     collection.estimatedDocumentCount();
-    return (int) result.getDeletedCount();
+    return Math.toIntExact(result.getDeletedCount());
   }
 
   @Override

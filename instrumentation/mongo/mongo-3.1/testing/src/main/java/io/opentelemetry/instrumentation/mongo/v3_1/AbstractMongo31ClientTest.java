@@ -47,7 +47,6 @@ public abstract class AbstractMongo31ClientTest
     if (client != null) {
       client.close();
     }
-    client = null;
   }
 
   @Override
@@ -89,7 +88,7 @@ public abstract class AbstractMongo31ClientTest
   @Override
   protected int getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
-    return (int) db.getCollection(collectionName).count();
+    return Math.toIntExact(db.getCollection(collectionName).count());
   }
 
   @Override
@@ -110,7 +109,7 @@ public abstract class AbstractMongo31ClientTest
   @Override
   protected int insert(MongoCollection<Document> collection) {
     collection.insertOne(new Document("password", "SECRET"));
-    return (int) collection.count();
+    return Math.toIntExact(collection.count());
   }
 
   @Override
@@ -137,7 +136,7 @@ public abstract class AbstractMongo31ClientTest
             new BsonDocument("password", new BsonString("OLDPW")),
             new BsonDocument("$set", new BsonDocument("password", new BsonString("NEWPW"))));
     collection.count();
-    return (int) result.getModifiedCount();
+    return Math.toIntExact(result.getModifiedCount());
   }
 
   @Override
@@ -162,7 +161,7 @@ public abstract class AbstractMongo31ClientTest
     DeleteResult result =
         collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")));
     collection.count();
-    return (int) result.getDeletedCount();
+    return Math.toIntExact(result.getDeletedCount());
   }
 
   @Override

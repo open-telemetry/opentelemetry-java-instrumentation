@@ -54,7 +54,6 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   void cleanup() throws Exception {
     if (client != null) {
       client.close();
-      client = null;
     }
     for (AutoCloseable resource : cleanup) {
       resource.close();
@@ -182,7 +181,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   @Override
   public int update(MongoCollection<Document> collection) throws Exception {
     CompletableFuture<UpdateResult> result = new CompletableFuture<>();
-    CompletableFuture<Integer> count = new CompletableFuture<>();
+    CompletableFuture<Long> count = new CompletableFuture<>();
     collection
         .updateOne(
             new BsonDocument("password", new BsonString("OLDPW")),
@@ -193,9 +192,9 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
                   result.complete(((UpdateResult) updateResult));
                   collection
                       .estimatedDocumentCount()
-                      .subscribe(toSubscriber(o -> count.complete(((Integer) o))));
+                      .subscribe(toSubscriber(o -> count.complete(((Long) o))));
                 }));
-    return (int) result.get(30, TimeUnit.SECONDS).getModifiedCount();
+    return Math.toIntExact(result.get(30, TimeUnit.SECONDS).getModifiedCount());
   }
 
   @Override
@@ -226,7 +225,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   public int delete(MongoCollection<Document> collection)
       throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<DeleteResult> result = new CompletableFuture<>();
-    CompletableFuture<Integer> count = new CompletableFuture<>();
+    CompletableFuture<Long> count = new CompletableFuture<>();
     collection
         .deleteOne(new BsonDocument("password", new BsonString("SECRET")))
         .subscribe(
@@ -235,9 +234,9 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
                   result.complete(((DeleteResult) deleteResult));
                   collection
                       .estimatedDocumentCount()
-                      .subscribe(toSubscriber(o -> count.complete(((Integer) o))));
+                      .subscribe(toSubscriber(o -> count.complete(((Long) o))));
                 }));
-    return (int) result.get(30, TimeUnit.SECONDS).getDeletedCount();
+    return Math.toIntExact(result.get(30, TimeUnit.SECONDS).getDeletedCount());
   }
 
   @Override
