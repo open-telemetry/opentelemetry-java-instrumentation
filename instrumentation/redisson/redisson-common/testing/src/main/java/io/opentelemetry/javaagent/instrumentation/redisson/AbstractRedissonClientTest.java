@@ -361,25 +361,24 @@ public abstract class AbstractRedissonClientTest {
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("SADD")
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              NetworkAttributes.NETWORK_TYPE,
-                              SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
-                          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                          equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                          equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                          equalTo(
-                              SemconvStabilityUtil.getAttributeKey(
-                                  DbIncubatingAttributes.DB_STATEMENT),
-                              "SADD set1 ?"),
-                          equalTo(
-                              SemconvStabilityUtil.getAttributeKey(
-                                  DbIncubatingAttributes.DB_OPERATION),
-                              "SADD"));
-                }));
+                span ->
+                    span.hasName("SADD")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
+                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "SADD set1 ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "SADD"))));
   }
 
   @Test
