@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
@@ -118,10 +119,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 NetworkAttributes.NETWORK_TYPE,
-                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
-                                        == null
-                                    ? null
-                                    : "ipv4"),
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -146,7 +144,8 @@ public abstract class AbstractRedissonAsyncClientTest {
               return future.whenComplete(
                   (res, throwable) -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {});
+                    testing.runWithSpan("callback", () -> {
+                    });
                   });
             });
     result.toCompletableFuture().get(30, TimeUnit.SECONDS);
@@ -162,10 +161,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 NetworkAttributes.NETWORK_TYPE,
-                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
-                                        == null
-                                    ? null
-                                    : "ipv4"),
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -231,7 +227,8 @@ public abstract class AbstractRedissonAsyncClientTest {
               return batchResultFuture.whenComplete(
                   (res, throwable) -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {});
+                    testing.runWithSpan("callback", () -> {
+                    });
                   });
             });
     result.toCompletableFuture().get(30, TimeUnit.SECONDS);
@@ -247,10 +244,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 NetworkAttributes.NETWORK_TYPE,
-                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
-                                        == null
-                                    ? null
-                                    : "ipv4"),
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -265,10 +259,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 NetworkAttributes.NETWORK_TYPE,
-                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
-                                        == null
-                                    ? null
-                                    : "ipv4"),
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -287,10 +278,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 NetworkAttributes.NETWORK_TYPE,
-                                SemconvStabilityUtil.getAttributeKey(NetworkAttributes.NETWORK_TYPE)
-                                        == null
-                                    ? null
-                                    : "ipv4"),
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
