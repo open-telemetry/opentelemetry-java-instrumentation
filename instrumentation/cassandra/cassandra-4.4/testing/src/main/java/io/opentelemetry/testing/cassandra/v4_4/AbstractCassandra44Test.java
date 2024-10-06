@@ -68,8 +68,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
                                             v -> assertThat(v).isEqualTo("ipv6"));
-                                      }
-                                      if (SemconvStability.emitStableDatabaseSemconv()) {
+                                      } else {
                                         assertThat(val).isNull();
                                       }
                                     }),
