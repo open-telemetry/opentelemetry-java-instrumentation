@@ -16,8 +16,9 @@ import javax.annotation.Nullable;
  * An interface for getting database network attributes.
  *
  * <p>Instrumentation authors will create implementations of this interface for their specific
- * library/framework. It will be used by the {@link DbNetworkAttributesExtractor} (or other convention
- * specific extractors) to obtain the various database network attributes in a type-generic way.
+ * library/framework. It will be used by the {@link DbNetworkAttributesExtractor} (or other
+ * convention specific extractors) to obtain the various database network attributes in a
+ * type-generic way.
  */
 public interface DbNetworkAttributesGetter<REQUEST, RESPONSE> {
 

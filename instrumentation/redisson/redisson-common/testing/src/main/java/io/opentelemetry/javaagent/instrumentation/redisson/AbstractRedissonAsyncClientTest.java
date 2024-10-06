@@ -144,8 +144,7 @@ public abstract class AbstractRedissonAsyncClientTest {
               return future.whenComplete(
                   (res, throwable) -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {
-                    });
+                    testing.runWithSpan("callback", () -> {});
                   });
             });
     result.toCompletableFuture().get(30, TimeUnit.SECONDS);
@@ -227,8 +226,7 @@ public abstract class AbstractRedissonAsyncClientTest {
               return batchResultFuture.whenComplete(
                   (res, throwable) -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {
-                    });
+                    testing.runWithSpan("callback", () -> {});
                   });
             });
     result.toCompletableFuture().get(30, TimeUnit.SECONDS);
