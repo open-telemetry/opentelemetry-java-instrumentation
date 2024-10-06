@@ -514,11 +514,7 @@ public abstract class AbstractRedissonClientTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(
                                   NetworkAttributes.NETWORK_TYPE,
-                                  SemconvStabilityUtil.getAttributeKey(
-                                              NetworkAttributes.NETWORK_TYPE)
-                                          == null
-                                      ? null
-                                      : "ipv4"),
+                                  SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
