@@ -69,7 +69,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                             v -> assertThat(v).isEqualTo("ipv4"),
                                             v -> assertThat(v).isEqualTo("ipv6"));
                                       } else {
-                                        assertThat(val).isNull();
+                                        val.isNull();
                                       }
                                     }),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
