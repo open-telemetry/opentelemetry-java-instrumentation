@@ -22,7 +22,6 @@ import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
-import scala.jdk.javaapi.CollectionConverters;
 import scala.util.Try;
 
 public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
