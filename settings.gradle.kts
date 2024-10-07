@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.0.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.10.2"
+    id("org.graalvm.buildtools.native") version "0.10.2" // See https://github.com/micronaut-projects/micronaut-tracing/blob/bdaa648ce716f1dd784ef9007de55623d45a8fb0/tracing-opentelemetry/src/main/java/io/micronaut/tracing/opentelemetry/DefaultOpenTelemetryFactory.java#L87
   }
 }
 
