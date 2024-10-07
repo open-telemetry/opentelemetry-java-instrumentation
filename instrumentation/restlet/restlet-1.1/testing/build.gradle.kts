@@ -17,9 +17,7 @@ dependencies {
   implementation("org.restlet:org.restlet.ext.spring:1.1.5")
   implementation("org.springframework:spring:2.5.6")
 
-  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 
   val jettyVersion = "8.1.8.v20121106"
   api("org.eclipse.jetty:jetty-annotations:$jettyVersion")
