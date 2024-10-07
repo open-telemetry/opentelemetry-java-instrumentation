@@ -48,7 +48,7 @@ class KtorServerTracing private constructor(
 
     fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
       this.serverBuilder =
-        DefaultHttpServerInstrumenterBuilder(
+        DefaultHttpServerInstrumenterBuilder.create(
           INSTRUMENTATION_NAME,
           openTelemetry,
           KtorHttpServerAttributesGetter.INSTANCE

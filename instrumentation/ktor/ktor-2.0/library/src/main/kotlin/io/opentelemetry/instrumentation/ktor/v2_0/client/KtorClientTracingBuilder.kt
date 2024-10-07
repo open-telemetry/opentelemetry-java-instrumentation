@@ -28,7 +28,7 @@ class KtorClientTracingBuilder {
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
-    this.clientBuilder = DefaultHttpClientInstrumenterBuilder(
+    this.clientBuilder = DefaultHttpClientInstrumenterBuilder.create(
       INSTRUMENTATION_NAME,
       openTelemetry,
       KtorHttpClientAttributesGetter
