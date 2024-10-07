@@ -564,6 +564,7 @@ include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagen
 include(":instrumentation:spring:spring-boot-autoconfigure")
 include(":instrumentation:spring:spring-boot-resources:javaagent")
 include(":instrumentation:spring:spring-boot-resources:javaagent-unit-tests")
+include(":instrumentation:spring:spring-cloud-aws-3.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.2:testing")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing")
