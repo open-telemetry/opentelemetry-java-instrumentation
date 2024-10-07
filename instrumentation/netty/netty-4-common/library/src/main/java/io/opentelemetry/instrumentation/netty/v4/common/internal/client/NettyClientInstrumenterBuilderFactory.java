@@ -20,7 +20,7 @@ public final class NettyClientInstrumenterBuilderFactory {
   public static DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> create(
       String instrumentationName, OpenTelemetry openTelemetry) {
 
-    return new DefaultHttpClientInstrumenterBuilder<>(
+    return DefaultHttpClientInstrumenterBuilder.create(
         instrumentationName,
         openTelemetry,
         new NettyHttpClientAttributesGetter(),

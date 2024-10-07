@@ -21,7 +21,7 @@ public class RestletTelemetryBuilderFactory {
 
   public static DefaultHttpServerInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
-    return new DefaultHttpServerInstrumenterBuilder<>(
+    return DefaultHttpServerInstrumenterBuilder.create(
         INSTRUMENTATION_NAME,
         openTelemetry,
         RestletHttpAttributesGetter.INSTANCE,

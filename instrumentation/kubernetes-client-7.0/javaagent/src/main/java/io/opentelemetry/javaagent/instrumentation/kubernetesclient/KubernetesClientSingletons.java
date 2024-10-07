@@ -25,7 +25,7 @@ public class KubernetesClientSingletons {
 
   static {
     INSTRUMENTER =
-        new DefaultHttpClientInstrumenterBuilder<>(
+        DefaultHttpClientInstrumenterBuilder.create(
                 "io.opentelemetry.kubernetes-client-7.0",
                 GlobalOpenTelemetry.get(),
                 new KubernetesHttpAttributesGetter())

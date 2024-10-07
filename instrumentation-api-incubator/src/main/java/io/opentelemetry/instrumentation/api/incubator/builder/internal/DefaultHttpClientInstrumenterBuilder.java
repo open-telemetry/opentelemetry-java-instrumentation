@@ -59,30 +59,43 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
-  @Nullable private TextMapSetter<REQUEST> headerSetter;
+  @Nullable private final TextMapSetter<REQUEST> headerSetter;
   private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
-  public DefaultHttpClientInstrumenterBuilder(
+  private DefaultHttpClientInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
       TextMapSetter<REQUEST> headerSetter) {
-    this(instrumentationName, openTelemetry, attributesGetter);
-    this.headerSetter = Objects.requireNonNull(headerSetter, "headerSetter");
-  }
-
-  public DefaultHttpClientInstrumenterBuilder(
-      String instrumentationName,
-      OpenTelemetry openTelemetry,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
     this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
     this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
+    this.headerSetter = headerSetter;
+  }
+
+  public static <REQUEST, RESPONSE> DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> create(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    return new DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>(
+        instrumentationName, openTelemetry, attributesGetter, null);
+  }
+
+  public static <REQUEST, RESPONSE> DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> create(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      TextMapSetter<REQUEST> headerSetter) {
+    return new DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>(
+        instrumentationName,
+        openTelemetry,
+        attributesGetter,
+        Objects.requireNonNull(headerSetter, "headerSetter"));
   }
 
   /**

@@ -21,7 +21,7 @@ public class JettyHttpClientInstrumenterBuilderFactory {
 
   public static DefaultHttpClientInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
-    return new DefaultHttpClientInstrumenterBuilder<>(
+    return DefaultHttpClientInstrumenterBuilder.create(
         INSTRUMENTATION_NAME,
         openTelemetry,
         JettyClientHttpAttributesGetter.INSTANCE,

@@ -31,13 +31,13 @@ public final class RatpackTelemetryBuilder {
 
   RatpackTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
-        new DefaultHttpClientInstrumenterBuilder<>(
+        DefaultHttpClientInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
             RatpackHttpClientAttributesGetter.INSTANCE,
             RequestHeaderSetter.INSTANCE);
     serverBuilder =
-        new DefaultHttpServerInstrumenterBuilder<>(
+        DefaultHttpServerInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
             RatpackHttpAttributesGetter.INSTANCE,

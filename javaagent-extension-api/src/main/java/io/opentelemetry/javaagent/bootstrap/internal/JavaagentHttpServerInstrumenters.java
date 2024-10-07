@@ -39,7 +39,7 @@ public final class JavaagentHttpServerInstrumenters {
       TextMapGetter<REQUEST> headerGetter,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
     return create(
-        new DefaultHttpServerInstrumenterBuilder<>(
+        DefaultHttpServerInstrumenterBuilder.create(
             instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, headerGetter),
         instrumenterBuilderConsumer);
   }

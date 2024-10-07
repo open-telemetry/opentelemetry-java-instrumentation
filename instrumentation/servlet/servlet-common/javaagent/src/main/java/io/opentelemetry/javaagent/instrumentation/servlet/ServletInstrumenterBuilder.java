@@ -56,7 +56,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     DefaultHttpServerInstrumenterBuilder<
             ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
         serverBuilder =
-            new DefaultHttpServerInstrumenterBuilder<>(
+            DefaultHttpServerInstrumenterBuilder.create(
                 instrumentationName,
                 GlobalOpenTelemetry.get(),
                 httpAttributesGetter,
