@@ -110,8 +110,12 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
       return customizer ->
           customizer.addResourceCustomizer(
               (resource, config) -> {
-                String propValue = config.getString("APPLICATION-PROP");
-                assertThat(propValue).isNotEmpty();
+                String valueForKeyDeclaredZsEnvVariable = config.getString("APPLICATION_PROP");
+                assertThat(valueForKeyDeclaredZsEnvVariable).isNotEmpty();
+
+                String valueForKeyWithDash = config.getString("application.prop-with-dash");
+                assertThat(valueForKeyWithDash).isNotEmpty();
+
                 return resource;
               });
     }

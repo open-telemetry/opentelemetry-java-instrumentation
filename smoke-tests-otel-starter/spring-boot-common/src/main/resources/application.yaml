@@ -21,6 +21,7 @@ otel:
 
 application:
   prop: propValue
+  prop-with-dash: provWithDashValue
 
 spring:
   kafka:
