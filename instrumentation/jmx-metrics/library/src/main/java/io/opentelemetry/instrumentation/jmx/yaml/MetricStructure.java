@@ -66,27 +66,6 @@ abstract class MetricStructure {
     this.unit = validateUnit(unit.trim());
   }
 
-  void setStateMapping(Map<String, Object> stateMapping) {
-    StateMapping.Builder builder = StateMapping.builder();
-    for (Map.Entry<String, Object> entry : stateMapping.entrySet()) {
-      String stateKey = entry.getKey();
-      Object stateValue = entry.getValue();
-      if (stateValue instanceof String) {
-        addMappedValue(builder, (String) stateValue, stateKey);
-      } else if (stateValue instanceof List) {
-        for (Object listEntry : (List<?>) stateValue) {
-          if (!(listEntry instanceof String)) {
-            throw new IllegalArgumentException("unexpected state list value: " + stateKey);
-          }
-          addMappedValue(builder, (String) listEntry, stateKey);
-        }
-      } else {
-        throw new IllegalArgumentException("unexpected state value: " + stateValue);
-      }
-    }
-    this.stateMapping = builder.build();
-  }
-
   private static void addMappedValue(
       StateMapping.Builder builder, String stateValue, String stateKey) {
     if (stateValue.equals(STATE_MAPPING_WILDCARD)) {
@@ -147,6 +126,7 @@ abstract class MetricStructure {
       if (value instanceof String) {
         attribute = buildMetricAttribute(key, ((String) value).trim());
       } else if (value instanceof Map) {
+        // here we use the structure to detect a state metric attribute and parse it.
         attribute = buildStateMetricAttribute(key, (Map<?, ?>) value);
       } else {
         throw new IllegalArgumentException("unexpected metric attribute: " + value);
@@ -194,7 +174,7 @@ abstract class MetricStructure {
       throw new IllegalArgumentException("state map is empty for key " + key);
     }
     if (!stateMapping.isEmpty()) {
-      throw new IllegalStateException("state map already set for " + key);
+      throw new IllegalStateException("only a single state map is expected");
     }
 
     StateMapping.Builder builder = StateMapping.builder();

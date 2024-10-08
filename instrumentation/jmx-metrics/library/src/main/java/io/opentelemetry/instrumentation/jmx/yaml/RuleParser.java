@@ -133,13 +133,11 @@ public class RuleParser {
     if (type != null) {
       out.setType(type);
     }
-
-    Map<String, Object> stateMapping =
-        (Map<String, Object>) metricStructureYaml.remove("stateMapping");
-    if (stateMapping != null) {
-      out.setStateMapping(stateMapping);
+    Map<String, Object> metricAttribute =
+        (Map<String, Object>) metricStructureYaml.remove("metricAttribute");
+    if (metricAttribute != null) {
+      out.setMetricAttribute(metricAttribute);
     }
-
     String unit = (String) metricStructureYaml.remove("unit");
     if (unit != null) {
       out.setUnit(unit);
