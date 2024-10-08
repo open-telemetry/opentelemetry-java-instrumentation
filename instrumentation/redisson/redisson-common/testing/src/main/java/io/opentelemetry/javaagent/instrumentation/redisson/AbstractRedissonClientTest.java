@@ -99,6 +99,7 @@ public abstract class AbstractRedissonClientTest {
           .getMethod("setPingConnectionInterval", int.class)
           .invoke(singleServerConfig, 0);
     } catch (NoSuchMethodException ignored) {
+      // ignored
     }
     redisson = Redisson.create(config);
     testing.clearData();

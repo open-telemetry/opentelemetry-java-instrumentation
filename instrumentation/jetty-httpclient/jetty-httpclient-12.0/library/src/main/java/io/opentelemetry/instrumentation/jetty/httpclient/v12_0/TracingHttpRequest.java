@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientTracingListener;
+import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientWrapUtil;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import org.eclipse.jetty.client.HttpClient;
@@ -34,14 +35,9 @@ class TracingHttpRequest extends HttpRequest {
   @Override
   public void send(Response.CompleteListener listener) {
     parentContext = Context.current();
-    // start span and attach listeners.
+    // start span and attach listeners - must handle all listeners, not just CompleteListener.
     JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
-    super.send(
-        result -> {
-          try (Scope scope = openScope()) {
-            listener.onComplete(result);
-          }
-        });
+    super.send(JettyClientWrapUtil.wrapTheListener(listener, parentContext));
   }
 
   private Scope openScope() {

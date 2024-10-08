@@ -10,7 +10,6 @@ import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.model.HttpMethods.GET
 import org.apache.pekko.http.scaladsl.model._
-import org.apache.pekko.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   ServerEndpoint
@@ -22,7 +21,6 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object PekkoHttpTestAsyncWebServer {
   implicit val system: ActorSystem = ActorSystem("my-system")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
   // needed for the future flatMap/onComplete in the end
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
   val asyncHandler: HttpRequest => Future[HttpResponse] = {

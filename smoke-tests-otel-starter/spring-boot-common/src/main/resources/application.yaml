@@ -19,6 +19,10 @@ otel:
     attributes:
       attributeFromYaml: true # boolean will be automatically converted to string by spring
 
+application:
+  prop: propValue
+  prop-with-dash: provWithDashValue
+
 spring:
   kafka:
     bootstrap-servers: localhost:9094

@@ -105,8 +105,12 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(0) Runnable task,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      VirtualField<Runnable, PropagatedContext> virtualField =
+          VirtualField.find(Runnable.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
     }
   }
 
@@ -126,8 +130,12 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(0) ForkJoinTask<?> task,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
+          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
     }
   }
 
@@ -148,6 +156,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
+        @Advice.Argument(0) Runnable task,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
@@ -156,7 +165,9 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
             VirtualField.find(Future.class, PropagatedContext.class);
         virtualField.set(future, propagatedContext);
       }
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+      VirtualField<Runnable, PropagatedContext> virtualField =
+          VirtualField.find(Runnable.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
     }
   }
 
@@ -176,6 +187,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
+        @Advice.Argument(0) Callable<?> task,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable,
         @Advice.Return Future<?> future) {
@@ -184,7 +196,9 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
             VirtualField.find(Future.class, PropagatedContext.class);
         virtualField.set(future, propagatedContext);
       }
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+      VirtualField<Callable<?>, PropagatedContext> virtualField =
+          VirtualField.find(Callable.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
     }
   }
 
@@ -230,7 +244,8 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
             VirtualField<Callable<?>, PropagatedContext> virtualField =
                 VirtualField.find(Callable.class, PropagatedContext.class);
             PropagatedContext propagatedContext = virtualField.get(task);
-            ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+            ExecutorAdviceHelper.cleanUpAfterSubmit(
+                propagatedContext, throwable, virtualField, task);
           }
         }
       }

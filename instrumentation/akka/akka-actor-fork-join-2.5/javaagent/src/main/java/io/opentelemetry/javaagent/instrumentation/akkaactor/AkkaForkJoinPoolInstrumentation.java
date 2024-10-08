@@ -60,8 +60,12 @@ public class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(0) ForkJoinTask<?> task,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
+          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
     }
   }
 }

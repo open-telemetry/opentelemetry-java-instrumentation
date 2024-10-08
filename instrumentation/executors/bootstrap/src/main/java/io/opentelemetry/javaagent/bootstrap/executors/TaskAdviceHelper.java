@@ -22,6 +22,8 @@ public final class TaskAdviceHelper {
       VirtualField<T, PropagatedContext> virtualField, T task) {
     PropagatedContext propagatedContext = virtualField.get(task);
     if (propagatedContext != null) {
+      // setting the field to null removes it from the fallback map
+      virtualField.set(task, null);
       Context context = propagatedContext.getAndClear();
       if (context != null) {
         return context.makeCurrent();
