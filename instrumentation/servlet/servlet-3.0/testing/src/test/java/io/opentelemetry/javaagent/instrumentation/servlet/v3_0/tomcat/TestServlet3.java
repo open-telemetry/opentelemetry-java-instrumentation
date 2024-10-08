@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -16,7 +17,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM;
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -37,14 +36,14 @@ public class TestServlet3 {
   @WebServlet
   public static class Sync extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       String servletPath = (String) req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
       if (servletPath == null) {
         servletPath = req.getServletPath();
       }
 
       ServerEndpoint endpoint = ServerEndpoint.forPath(servletPath);
-      HttpServerTest.controller(
+      controller(
           endpoint,
           () -> {
             resp.setContentType("text/plain");
@@ -67,7 +66,7 @@ public class TestServlet3 {
               req.setCharacterEncoding("UTF8");
               String value = req.getParameter("test-parameter");
               if (!value.equals("test value õäöü")) {
-                throw new ServletException(
+                throw new IllegalStateException(
                     "request parameter does not have expected value " + value);
               }
 
@@ -76,7 +75,7 @@ public class TestServlet3 {
             } else if (ERROR.equals(endpoint)) {
               resp.sendError(endpoint.getStatus(), endpoint.getBody());
             } else if (EXCEPTION.equals(endpoint)) {
-              throw new ServletException(endpoint.getBody());
+              throw new IllegalStateException(endpoint.getBody());
             } else if (HTML_PRINT_WRITER.equals(endpoint)) {
               resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
@@ -108,7 +107,7 @@ public class TestServlet3 {
       context.start(
           () -> {
             try {
-              HttpServerTest.controller(
+              controller(
                   endpoint,
                   () -> {
                     resp.setContentType("text/plain");
@@ -136,7 +135,7 @@ public class TestServlet3 {
                       req.setCharacterEncoding("UTF8");
                       String value = req.getParameter("test-parameter");
                       if (!value.equals("test value õäöü")) {
-                        throw new ServletException(
+                        throw new IllegalStateException(
                             "request parameter does not have expected value " + value);
                       }
 
@@ -157,7 +156,7 @@ public class TestServlet3 {
                         // response is sent
                         writer.close();
                       }
-                      throw new ServletException(endpoint.getBody());
+                      throw new IllegalStateException(endpoint.getBody());
                     } else if (HTML_PRINT_WRITER.equals(endpoint)) {
                       resp.setContentType("text/html");
                       resp.setStatus(endpoint.getStatus());
@@ -172,6 +171,11 @@ public class TestServlet3 {
                     }
                     return null;
                   });
+            } catch (Exception exception) {
+              if (exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+              }
+              throw new IllegalStateException(exception);
             } finally {
               latch.countDown();
             }
@@ -187,12 +191,12 @@ public class TestServlet3 {
   @WebServlet(asyncSupported = true)
   public static class FakeAsync extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       AsyncContext context = req.startAsync();
       try {
         ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
 
-        HttpServerTest.controller(
+        controller(
             endpoint,
             () -> {
               resp.setContentType("text/plain");
@@ -215,7 +219,7 @@ public class TestServlet3 {
                 req.setCharacterEncoding("UTF8");
                 String value = req.getParameter("test-parameter");
                 if (!value.equals("test value õäöü")) {
-                  throw new ServletException(
+                  throw new IllegalStateException(
                       "request parameter does not have expected value " + value);
                 }
 
@@ -226,7 +230,7 @@ public class TestServlet3 {
               } else if (EXCEPTION.equals(endpoint)) {
                 resp.setStatus(endpoint.getStatus());
                 resp.getWriter().print(endpoint.getBody());
-                throw new ServletException(endpoint.getBody());
+                throw new IllegalStateException(endpoint.getBody());
               } else if (HTML_PRINT_WRITER.equals(endpoint)) {
                 // intentionally testing setting status before contentType here to cover that case
                 // somewhere

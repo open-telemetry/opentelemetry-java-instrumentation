@@ -31,7 +31,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardHost;
@@ -63,7 +62,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setExpectedException(new ServletException(EXCEPTION.getBody()));
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setContextPath("/tomcat-context");
     options.setTestError(testError());
   }

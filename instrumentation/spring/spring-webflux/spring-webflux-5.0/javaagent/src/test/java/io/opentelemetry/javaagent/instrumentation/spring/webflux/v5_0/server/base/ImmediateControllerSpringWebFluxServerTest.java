@@ -45,7 +45,7 @@ public class ImmediateControllerSpringWebFluxServerTest extends ControllerSpring
     @Override
     protected <T> Mono<T> wrapControllerMethod(
         ServerEndpoint endpoint, Supplier<T> controllerMethod) {
-      return Mono.just(controller(endpoint, controllerMethod));
+      return Mono.just(controller(endpoint, controllerMethod::get));
     }
   }
 }

@@ -448,6 +448,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           try {
             doRequest(method, uri);
           } catch (Throwable ignored) {
+            // ignored
           }
         });
 

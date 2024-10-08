@@ -27,7 +27,8 @@ import org.restlet.resource.Resource;
 import org.restlet.resource.StringRepresentation;
 import org.restlet.resource.Variant;
 
-public class RestletAppTestBase {
+class RestletAppTestBase {
+
   abstract static class BaseResource extends Resource {
 
     @Override
