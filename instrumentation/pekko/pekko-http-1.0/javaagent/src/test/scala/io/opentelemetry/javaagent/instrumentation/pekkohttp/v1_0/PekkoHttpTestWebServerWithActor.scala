@@ -16,7 +16,7 @@ import org.apache.pekko.util.Timeout
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.DurationInt
 
-object PekkoHttpTestWebServerWithActor {
+class PekkoHttpTestWebServerWithActor(port: Int) {
   implicit val system: ActorSystem = ActorSystem("http-server-with-actor")
   // needed for the future flatMap/onComplete in the end
   implicit val executionContext: ExecutionContext = system.dispatcher
@@ -28,9 +28,9 @@ object PekkoHttpTestWebServerWithActor {
     }
   }
 
-  val spanTestActor = system.actorOf(Props[SpanTestActor]())
+  val spanTestActor = system.actorOf(Props(new SpanTestActor))
 
-  var route = get {
+  val route = get {
     path("test") {
       complete {
         val otelSummary = spanSummary(Span.current())
@@ -42,17 +42,11 @@ object PekkoHttpTestWebServerWithActor {
     }
   }
 
-  private var binding: ServerBinding = null
-
-  def start(port: Int): Unit = synchronized {
-    if (null == binding) {
-      binding =
-        Await.result(Http().bindAndHandle(route, "localhost", port), 10.seconds)
-    }
-  }
+  var binding: ServerBinding =
+    Await.result(Http().bindAndHandle(route, "localhost", port), 10.seconds)
 
   def stop(): Unit = synchronized {
-    if (null != binding) {
+    if (binding != null) {
       binding.unbind()
       system.terminate()
       binding = null
