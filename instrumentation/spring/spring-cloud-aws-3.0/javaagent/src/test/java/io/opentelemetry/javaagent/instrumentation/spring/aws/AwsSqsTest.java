@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.concurrent.CompletableFuture;
@@ -95,7 +96,10 @@ class AwsSqsTest {
                                 v ->
                                     v.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(AttributeKey.stringKey("aws.queue.name"), "test-queue")),
+                            equalTo(AttributeKey.stringKey("aws.queue.name"), "test-queue"),
+                            satisfies(
+                                AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("test-queue publish")
                         .hasKind(SpanKind.PRODUCER)
@@ -129,7 +133,10 @@ class AwsSqsTest {
                                 stringKey("aws.queue.url"),
                                 "http://localhost:"
                                     + AwsSqsTestApplication.sqsPort
-                                    + "/000000000000/test-queue")),
+                                    + "/000000000000/test-queue"),
+                            satisfies(
+                                AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("test-queue process")
                         .hasKind(SpanKind.CONSUMER)
@@ -184,6 +191,9 @@ class AwsSqsTest {
                                 stringKey("aws.queue.url"),
                                 "http://localhost:"
                                     + AwsSqsTestApplication.sqsPort
-                                    + "/000000000000/test-queue"))));
+                                    + "/000000000000/test-queue"),
+                            satisfies(
+                                AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                val -> val.isInstanceOf(String.class)))));
   }
 }
