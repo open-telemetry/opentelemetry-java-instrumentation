@@ -25,7 +25,7 @@ public final class ApacheHttpClientTelemetryBuilder {
 
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpClientInstrumenterBuilder<>(
+        DefaultHttpClientInstrumenterBuilder.create(
             INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
     this.openTelemetry = openTelemetry;
   }

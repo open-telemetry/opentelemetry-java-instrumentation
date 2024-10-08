@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import io.opentelemetry.api.internal.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -65,8 +66,9 @@ public class SpringConfigProperties implements ConfigProperties {
   @Nullable
   @Override
   public String getString(String name) {
-    String value = environment.getProperty(name, String.class);
-    if (value == null && name.equals("otel.exporter.otlp.protocol")) {
+    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
+    String value = environment.getProperty(normalizedName, String.class);
+    if (value == null && normalizedName.equals("otel.exporter.otlp.protocol")) {
       // SDK autoconfigure module defaults to `grpc`, but this module aligns with recommendation
       // in specification to default to `http/protobuf`
       return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
@@ -77,35 +79,46 @@ public class SpringConfigProperties implements ConfigProperties {
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
-    return or(environment.getProperty(name, Boolean.class), otelSdkProperties.getBoolean(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Boolean.class),
+        otelSdkProperties.getBoolean(name));
   }
 
   @Nullable
   @Override
   public Integer getInt(String name) {
-    return or(environment.getProperty(name, Integer.class), otelSdkProperties.getInt(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Integer.class),
+        otelSdkProperties.getInt(name));
   }
 
   @Nullable
   @Override
   public Long getLong(String name) {
-    return or(environment.getProperty(name, Long.class), otelSdkProperties.getLong(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Long.class),
+        otelSdkProperties.getLong(name));
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    return or(environment.getProperty(name, Double.class), otelSdkProperties.getDouble(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Double.class),
+        otelSdkProperties.getDouble(name));
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String name) {
-    if (name.equals("otel.propagators")) {
+
+    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
+
+    if (normalizedName.equals("otel.propagators")) {
       return propagationProperties.getPropagators();
     }
 
-    return or(environment.getProperty(name, List.class), otelSdkProperties.getList(name));
+    return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -123,8 +136,10 @@ public class SpringConfigProperties implements ConfigProperties {
   @Override
   public Map<String, String> getMap(String name) {
     Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);
+
+    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
     // maps from config properties are not supported by Environment, so we have to fake it
-    switch (name) {
+    switch (normalizedName) {
       case "otel.resource.attributes":
         return mergeWithOtel(resourceProperties.getAttributes(), otelSdkMap);
       case "otel.exporter.otlp.headers":
@@ -139,7 +154,7 @@ public class SpringConfigProperties implements ConfigProperties {
         break;
     }
 
-    String value = environment.getProperty(name);
+    String value = environment.getProperty(normalizedName);
     if (value == null) {
       return otelSdkMap;
     }

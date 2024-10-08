@@ -10,11 +10,11 @@
   </Appenders>
   <Loggers>
     <Logger name="TestLogger" level="All">
-      <AppenderRef ref="OpenTelemetryAppender" level="All"/>
-      <AppenderRef ref="Console" level="All"/>
+      <AppenderRef ref="OpenTelemetryAppender"/>
+      <AppenderRef ref="Console"/>
     </Logger>
-    <Root>
-      <AppenderRef ref="Console" level="All"/>
+    <Root level="All">
+      <AppenderRef ref="Console"/>
     </Root>
   </Loggers>
 </Configuration>

@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBu
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -61,18 +62,38 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean emitExperimentalHttpServerMetrics = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
-  public DefaultHttpServerInstrumenterBuilder(
+  private DefaultHttpServerInstrumenterBuilder(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      @Nullable TextMapGetter<REQUEST> headerGetter) {
-    this.instrumentationName = instrumentationName;
-    this.openTelemetry = openTelemetry;
+      TextMapGetter<REQUEST> headerGetter) {
+    this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
     httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpServerRouteBuilder = HttpServerRoute.builder(attributesGetter);
-    this.attributesGetter = attributesGetter;
     this.headerGetter = headerGetter;
+  }
+
+  public static <REQUEST, RESPONSE> DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> create(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    return new DefaultHttpServerInstrumenterBuilder<>(
+        instrumentationName, openTelemetry, attributesGetter, null);
+  }
+
+  public static <REQUEST, RESPONSE> DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> create(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      TextMapGetter<REQUEST> headerGetter) {
+    return new DefaultHttpServerInstrumenterBuilder<>(
+        instrumentationName,
+        openTelemetry,
+        attributesGetter,
+        Objects.requireNonNull(headerGetter, "headerGetter"));
   }
 
   /**
@@ -172,6 +193,15 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> build() {
+    InstrumenterBuilder<REQUEST, RESPONSE> builder = instrumenterBuilder();
+
+    if (headerGetter != null) {
+      return builder.buildServerInstrumenter(headerGetter);
+    }
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
+  }
+
+  public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder() {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -190,11 +220,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
     }
     builderCustomizer.accept(builder);
-
-    if (headerGetter != null) {
-      return builder.buildServerInstrumenter(headerGetter);
-    }
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
+    return builder;
   }
 
   @CanIgnoreReturnValue
