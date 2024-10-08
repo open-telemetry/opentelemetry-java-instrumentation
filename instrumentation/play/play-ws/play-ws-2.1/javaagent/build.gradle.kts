@@ -55,7 +55,6 @@ testing {
   }
 }
 
-
 tasks {
   if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
