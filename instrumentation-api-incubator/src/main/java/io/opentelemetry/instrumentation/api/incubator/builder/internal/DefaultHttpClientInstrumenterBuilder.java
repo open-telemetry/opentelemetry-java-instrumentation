@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBu
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -58,21 +59,43 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
-  @Nullable private TextMapSetter<REQUEST> headerSetter;
+  @Nullable private final TextMapSetter<REQUEST> headerSetter;
   private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
-  public DefaultHttpClientInstrumenterBuilder(
+  private DefaultHttpClientInstrumenterBuilder(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      TextMapSetter<REQUEST> headerSetter) {
+    this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
+    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
+    httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
+    this.headerSetter = headerSetter;
+  }
+
+  public static <REQUEST, RESPONSE> DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> create(
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    this.instrumentationName = instrumentationName;
-    this.openTelemetry = openTelemetry;
-    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
-    httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
-    this.attributesGetter = attributesGetter;
+    return new DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>(
+        instrumentationName, openTelemetry, attributesGetter, null);
+  }
+
+  public static <REQUEST, RESPONSE> DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> create(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      TextMapSetter<REQUEST> headerSetter) {
+    return new DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>(
+        instrumentationName,
+        openTelemetry,
+        attributesGetter,
+        Objects.requireNonNull(headerSetter, "headerSetter"));
   }
 
   /**
@@ -141,13 +164,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setHeaderSetter(
-      @Nullable TextMapSetter<REQUEST> headerSetter) {
-    this.headerSetter = headerSetter;
-    return this;
-  }
-
   /**
    * Configures the instrumentation to emit experimental HTTP client metrics.
    *
@@ -193,7 +209,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> build() {
-
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 

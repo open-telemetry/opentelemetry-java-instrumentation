@@ -21,7 +21,7 @@ public class OkHttpClientInstrumenterBuilderFactory {
 
   public static DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> create(
       OpenTelemetry openTelemetry) {
-    return new DefaultHttpClientInstrumenterBuilder<>(
+    return DefaultHttpClientInstrumenterBuilder.create(
         INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE);
   }
 }
