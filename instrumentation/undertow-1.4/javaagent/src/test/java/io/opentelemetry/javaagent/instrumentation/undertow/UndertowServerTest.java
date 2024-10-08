@@ -59,19 +59,13 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                         exchange ->
                             controller(
                                 SUCCESS,
-                                () -> {
-                                  exchange.getResponseSender().send(SUCCESS.getBody());
-                                  return null;
-                                }))
+                                () -> exchange.getResponseSender().send(SUCCESS.getBody())))
                     .addExactPath(
                         QUERY_PARAM.rawPath(),
                         exchange ->
                             controller(
                                 QUERY_PARAM,
-                                () -> {
-                                  exchange.getResponseSender().send(exchange.getQueryString());
-                                  return null;
-                                }))
+                                () -> exchange.getResponseSender().send(exchange.getQueryString())))
                     .addExactPath(
                         REDIRECT.rawPath(),
                         exchange ->
@@ -83,7 +77,6 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                                       .getResponseHeaders()
                                       .put(Headers.LOCATION, REDIRECT.getBody());
                                   exchange.endExchange();
-                                  return null;
                                 }))
                     .addExactPath(
                         CAPTURE_HEADERS.rawPath(),
@@ -98,7 +91,6 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                                           new HttpString("X-Test-Response"),
                                           exchange.getRequestHeaders().getFirst("X-Test-Request"));
                                   exchange.getResponseSender().send(CAPTURE_HEADERS.getBody());
-                                  return null;
                                 }))
                     .addExactPath(
                         ERROR.rawPath(),
@@ -108,7 +100,6 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                                 () -> {
                                   exchange.setStatusCode(ERROR.getStatus());
                                   exchange.getResponseSender().send(ERROR.getBody());
-                                  return null;
                                 }))
                     .addExactPath(
                         EXCEPTION.rawPath(),
@@ -128,7 +119,6 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                                   INDEXED_CHILD.collectSpanAttributes(
                                       name -> exchange.getQueryParameters().get(name).peekFirst());
                                   exchange.getResponseSender().send(INDEXED_CHILD.getBody());
-                                  return null;
                                 }))
                     .addExactPath(
                         "sendResponse",
