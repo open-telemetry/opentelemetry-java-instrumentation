@@ -20,7 +20,7 @@ import java.util.Map;
  * <li>the metric attributes
  * <li>the unit
  *
- * <p>Known subclasses are {@link JmxRule} and {@link Metric}.
+ *     <p>Known subclasses are {@link JmxRule} and {@link Metric}.
  */
 abstract class MetricStructure {
 
@@ -82,9 +82,8 @@ abstract class MetricStructure {
   }
 
   /**
-   * When the YAML parser sets the metric attributes, convert them immediately to
-   * MetricAttribute objects. Any errors during conversion will show in the context of the parsed
-   * YAML file.
+   * When the YAML parser sets the metric attributes, convert them immediately to MetricAttribute
+   * objects. Any errors during conversion will show in the context of the parsed YAML file.
    *
    * @param map the mapping of metric attribute keys to evaluating snippets
    */

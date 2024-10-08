@@ -376,7 +376,6 @@ class RuleParserTest {
           + "            degraded: '*'\n" // wildcard value for default
           + "";
 
-
   @Test
   void testStateMetricConf() throws Exception {
     JmxConfig config = parseConf(CONF9);
@@ -401,7 +400,6 @@ class RuleParserTest {
     Map<String, Object> metricAttributeMap = metric.getMetricAttribute();
     assertThat(metricAttributeMap).containsKey("state_attribute").hasSize(1);
     assertThat(metricAttributeMap.get("state_attribute")).isInstanceOf(Map.class);
-
 
     ObjectName objectName = new ObjectName(jmxRule.getBean());
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);

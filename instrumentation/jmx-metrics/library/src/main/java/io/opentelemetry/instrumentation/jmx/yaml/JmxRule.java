@@ -229,8 +229,12 @@ public class JmxRule extends MetricStructure {
           };
 
       // state metric are always up/down counters
-      MetricInfo stateMetricInfo = new MetricInfo(metricInfo.getMetricName(),
-          metricInfo.getDescription(), metricInfo.getUnit(), MetricInfo.Type.UPDOWNCOUNTER);
+      MetricInfo stateMetricInfo =
+          new MetricInfo(
+              metricInfo.getMetricName(),
+              metricInfo.getDescription(),
+              metricInfo.getUnit(),
+              MetricInfo.Type.UPDOWNCOUNTER);
 
       extractors.add(
           new MetricExtractor(

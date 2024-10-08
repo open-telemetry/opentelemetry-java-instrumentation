@@ -63,5 +63,4 @@ public class MetricInfo {
   public Type getType() {
     return type;
   }
-
 }
