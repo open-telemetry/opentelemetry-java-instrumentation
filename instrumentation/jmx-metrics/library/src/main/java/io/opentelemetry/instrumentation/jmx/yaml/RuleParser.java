@@ -140,11 +140,6 @@ public class RuleParser {
       out.setStateMapping(stateMapping);
     }
 
-    Map<String, String> metricAttribute =
-        (Map<String, String>) metricStructureYaml.remove("metricAttribute");
-    if (metricAttribute != null) {
-      out.setMetricAttribute(metricAttribute);
-    }
     String unit = (String) metricStructureYaml.remove("unit");
     if (unit != null) {
       out.setUnit(unit);

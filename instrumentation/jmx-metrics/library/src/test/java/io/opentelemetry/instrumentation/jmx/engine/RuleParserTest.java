@@ -367,15 +367,15 @@ class RuleParserTest {
           + "  - bean: my-test:type=9\n"
           + "    mapping:\n"
           + "      jmxStateAttribute:\n"
-          + "        type: updowncounter\n"
+          + "        type: state\n"
           + "        metric: state_metric\n"
-          + "        stateMapping:\n" // --> implies it's a state metric, value is either 0 or 1
-          + "          ok: STARTED\n" // as simple string
-          + "          failed: [STOPPED,FAILED]\n" // as array of strings
-          + "          degraded: '*'\n" // wildcard value for default
           + "        metricAttribute:\n"
-          + "          state: statekey()\n" // --> only one state attribute allowed
+          + "          state_attribute: \n" // --> only one state attribute allowed
+          + "            ok: STARTED\n" // as simple string
+          + "            failed: [STOPPED,FAILED]\n" // as array of strings
+          + "            degraded: '*'\n" // wildcard value for default
           + "";
+
 
   @Test
   void testStateMetricConf() throws Exception {
@@ -388,7 +388,7 @@ class RuleParserTest {
     JmxRule jmxRule = rules.get(0);
     assertThat(jmxRule.getBean()).isEqualTo("my-test:type=9");
     Metric metric = jmxRule.getMapping().get("jmxStateAttribute");
-    assertThat(metric.getMetricType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+    assertThat(metric.getMetricType()).isEqualTo(MetricInfo.Type.STATE);
 
     assertThat(metric.getStateMapping().isEmpty()).isFalse();
     assertThat(metric.getStateMapping().getStateKeys()).contains("ok", "failed", "degraded");
@@ -398,7 +398,10 @@ class RuleParserTest {
     assertThat(metric.getStateMapping().getStateValue("FAILED")).isEqualTo("failed");
     assertThat(metric.getStateMapping().getStateValue("OTHER")).isEqualTo("degraded");
 
-    assertThat(metric.getMetricAttribute()).containsEntry("state", "statekey()");
+    Map<String, Object> metricAttributeMap = metric.getMetricAttribute();
+    assertThat(metricAttributeMap).containsKey("state_attribute").hasSize(1);
+    assertThat(metricAttributeMap.get("state_attribute")).isInstanceOf(Map.class);
+
 
     ObjectName objectName = new ObjectName(jmxRule.getBean());
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
@@ -426,7 +429,7 @@ class RuleParserTest {
 
               assertThat(me.getAttributes()).hasSize(1);
               MetricAttribute stateAttribute = me.getAttributes()[0];
-              assertThat(stateAttribute.getAttributeName()).isEqualTo("state");
+              assertThat(stateAttribute.getAttributeName()).isEqualTo("state_attribute");
               String stateAttributeValue =
                   stateAttribute.acquireAttributeValue(mockConnection, objectName);
 

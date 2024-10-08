@@ -120,6 +120,13 @@ class MetricRegistrar {
           }
           logger.log(INFO, "Created Gauge for {0}", metricName);
         }
+        break;
+      // CHECKSTYLE:OFF
+      case STATE:
+      {
+        // CHECKSTYLE:ON
+        throw new IllegalStateException("state metrics should not be registered");
+      }
     }
   }
 
