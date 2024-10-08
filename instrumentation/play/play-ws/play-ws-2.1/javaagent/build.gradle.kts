@@ -43,6 +43,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 testing {
   suites {
     val latestDepTest by registering(JvmTestSuite::class) {
@@ -53,7 +55,7 @@ testing {
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 tasks {
   if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
@@ -68,14 +70,5 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-  }
-}
-
-if (findProperty("testLatestDeps") as Boolean) {
-  configurations {
-    // play-ws artifact name is different for regular and latest tests
-    testImplementation {
-      exclude("com.typesafe.play", "play-ahc-ws-standalone_$scalaVersion")
-    }
   }
 }
