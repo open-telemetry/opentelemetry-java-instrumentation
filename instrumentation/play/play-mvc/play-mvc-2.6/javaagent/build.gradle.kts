@@ -69,10 +69,6 @@ tasks {
     }
   }
 
-  named("latestDepTest") {
-    enabled = testLatestDeps
-  }
-
   check {
     dependsOn(testing.suites)
   }
