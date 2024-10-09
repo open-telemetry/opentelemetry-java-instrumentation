@@ -28,7 +28,7 @@ tasks.withType<Test>().configureEach {
 // since 2.3.x, undertow is compiled by JDK 11
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 if (latestDepTest) {
-  tasks.withType<JavaCompile>().configureEach {
-    options.release.set(11)
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }
