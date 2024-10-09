@@ -47,10 +47,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     // just an optimization to exclude common class loaders that are known to delegate to the
     // bootstrap loader (or happen to _be_ the bootstrap loader)
-    return not(namedOneOf(
-            "java.lang.ClassLoader",
-            "com.ibm.oti.vm.BootstrapClassLoader",
-            "io.opentelemetry.javaagent.bootstrap.AgentClassLoader"))
+    return not(namedOneOf("java.lang.ClassLoader", "com.ibm.oti.vm.BootstrapClassLoader"))
         .and(extendsClass(named("java.lang.ClassLoader")));
   }
 
@@ -136,13 +133,14 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result,
-        @Advice.Enter Class<?> resultFromBootstrapLoader) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.AssignReturned.ToReturned
+    public static Class<?> onExit(
+        @Advice.Return Class<?> result, @Advice.Enter Class<?> resultFromBootstrapLoader) {
       if (resultFromBootstrapLoader != null) {
-        result = resultFromBootstrapLoader;
+        return resultFromBootstrapLoader;
       }
+      return result;
     }
   }
 }
