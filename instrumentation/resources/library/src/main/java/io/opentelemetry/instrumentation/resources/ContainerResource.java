@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -77,7 +78,7 @@ public final class ContainerResource {
 
     @MustBeClosed
     Stream<String> lines(Path path) throws IOException {
-      return Files.lines(path);
+      return Files.lines(path, Charset.defaultCharset());
     }
 
     List<String> lineList(Path path) throws IOException {
