@@ -19,6 +19,9 @@ dependencies {
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
+  testLibrary("software.amazon.awssdk:sfn:2.2.0")
+  testLibrary("software.amazon.awssdk:secretsmanager:2.2.0")
+  testLibrary("software.amazon.awssdk:lambda:2.2.0")
 
   // last version that does not use json protocol
   latestDepTestLibrary("software.amazon.awssdk:sqs:2.21.17")

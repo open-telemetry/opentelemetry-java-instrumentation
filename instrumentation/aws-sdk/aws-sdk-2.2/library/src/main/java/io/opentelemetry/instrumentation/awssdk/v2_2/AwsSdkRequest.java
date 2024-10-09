@@ -12,8 +12,12 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BED
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKRUNTIME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.KINESIS;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.LAMBDA;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.S3;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SECRETSMANAGER;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SNS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.SQS;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.STEPFUNCTION;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.response;
 
@@ -76,6 +80,10 @@ enum AwsSdkRequest {
   BedrockListDataSourcesRequest(BEDROCKKNOWLEDGEBASEOPERATION, "ListDataSourcesRequest"),
   BedrockUpdateAgentKnowledgeBaseRequest(
       BEDROCKKNOWLEDGEBASEOPERATION, "UpdateAgentKnowledgeBaseRequest"),
+  SfnRequest(STEPFUNCTION, "SfnRequest"),
+  SnsRequest(SNS, "SnsRequest"),
+  SecretsManagerRequest(SECRETSMANAGER, "SecretsManagerRequest"),
+  LambdaRequest(LAMBDA, "LambdaRequest"),
   // specific requests
   BatchGetItem(
       DYNAMODB,

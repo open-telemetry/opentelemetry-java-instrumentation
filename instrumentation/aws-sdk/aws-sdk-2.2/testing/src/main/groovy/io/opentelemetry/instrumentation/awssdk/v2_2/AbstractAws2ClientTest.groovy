@@ -33,7 +33,18 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import software.amazon.awssdk.services.sfn.SfnClient
+import software.amazon.awssdk.services.sfn.model.DescribeStateMachineRequest
+import software.amazon.awssdk.services.sfn.model.DescribeActivityRequest
+import software.amazon.awssdk.services.lambda.LambdaClient
+import software.amazon.awssdk.services.lambda.model.GetFunctionRequest
+import software.amazon.awssdk.services.lambda.model.GetEventSourceMappingRequest
+import software.amazon.awssdk.services.sns.SnsClient
+import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest
 import spock.lang.Unroll
+
 
 import java.time.Duration
 import java.util.concurrent.Future
@@ -131,6 +142,18 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             } else if (service == "BedrockRuntime" && operation == "InvokeModel") {
               "gen_ai.request.model" "meta.llama2-13b-chat-v1"
               "gen_ai.system" "aws_bedrock"
+            } else if (service == "Sfn" && operation == "DescribeStateMachine") {
+              "aws.stepfunctions.state_machine.arn" "stateMachineArn"
+            } else if (service == "Sfn" && operation == "DescribeActivity") {
+              "aws.stepfunctions.activity.arn" "activityArn"
+            } else if (service == "Lambda" && operation == "GetFunction") {
+              "aws.lambda.function.name" "functionName"
+            } else if (service == "Lambda" && operation == "GetEventSourceMapping") {
+              "aws.lambda.resource_mapping.id" "sourceEventId"
+            } else if (service == "Sns") {
+              "aws.sns.topic.arn" "topicArn"
+            } else if (service == "SecretsManager") {
+              "aws.secretsmanager.secret.arn" "someSecretArn"
             }
 
           }
@@ -174,6 +197,41 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
           <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>
         </DeleteOptionGroupResponse>
         """
+    "Sfn" | "DescribeStateMachine" | "POST" | "UNKNOWN" | SfnClient.builder()
+    | { c -> c.describeStateMachine(DescribeStateMachineRequest.builder().stateMachineArn("stateMachineArn").build()) }
+    | ""
+    "Sfn" | "DescribeActivity" | "POST" | "UNKNOWN" | SfnClient.builder()
+    | { c -> c.describeActivity(DescribeActivityRequest.builder().activityArn("activityArn").build()) }
+    | ""
+    "Lambda" | "GetFunction" | "GET" | "UNKNOWN" | LambdaClient.builder()
+    | { c -> c.getFunction(GetFunctionRequest.builder().functionName("functionName").build()) }
+    | ""
+    "Lambda" | "GetEventSourceMapping" | "GET" |"UNKNOWN" | LambdaClient.builder()
+    | { c -> c.getEventSourceMapping(GetEventSourceMappingRequest.builder().uuid("sourceEventId").build()) }
+    | ""
+    "Sns" | "Publish" | "POST" | "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0" | SnsClient.builder()
+    | { c -> c.publish(PublishRequest.builder().topicArn("topicArn").message("message").build()) }
+    | """
+      <PublishResponse xmlns="https://sns.amazonaws.com/doc/2010-03-31/">
+          <PublishResult>
+              <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>
+          </PublishResult>
+          <ResponseMetadata>
+              <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>
+          </ResponseMetadata>
+      </PublishResponse>
+    """
+    "SecretsManager" | "GetSecretValue" | "POST" | "UNKNOWN" | SecretsManagerClient.builder()
+    | { c -> c.getSecretValue(GetSecretValueRequest.builder().secretId("someSecret1").build()) }
+    | """
+      {
+        "ARN":"someSecretArn",
+        "CreatedDate":1.523477145713E9,
+        "Name":"MyTestDatabaseSecret",
+        "SecretString":"{\\n  \\"username\\":\\"david\\",\\n  \\"password\\":\\"EXAMPLE-PASSWORD\\"\\n}\\n",
+        "VersionId":"EXAMPLE1-90ab-cdef-fedc-ba987SECRET1"
+      }
+    """
   }
 
   def "send #operation async request with builder #builder.class.getName() mocked response"() {
