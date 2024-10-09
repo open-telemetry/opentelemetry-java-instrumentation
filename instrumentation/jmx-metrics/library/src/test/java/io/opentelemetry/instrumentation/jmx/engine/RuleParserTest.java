@@ -254,7 +254,7 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
     assertThat(m1.getAttributes()).isEmpty();
 
@@ -286,7 +286,7 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
     // MetricAttribute set at the metric level should override the one set at the definition level
     assertThat(m1.getAttributes())
@@ -321,7 +321,7 @@ class RuleParserTest {
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
     // Test that the MBean attribute is correctly parsed
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
     assertThat(m1.getInfo().getMetricName()).isEqualTo("ATTRIBUTE");
     assertThat(m1.getAttributes())
@@ -350,7 +350,7 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("Attr.with.dot");
     assertThat(m1.getAttributes()).isEmpty();
 
@@ -426,7 +426,7 @@ class RuleParserTest {
               assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
 
               assertThat(me.getAttributes()).hasSize(1);
-              MetricAttribute stateAttribute = me.getAttributes()[0];
+              MetricAttribute stateAttribute = me.getAttributes().get(0);
               assertThat(stateAttribute.getAttributeName()).isEqualTo("state_attribute");
               String stateAttributeValue =
                   stateAttribute.acquireAttributeValue(mockConnection, objectName);

@@ -180,9 +180,8 @@ class MetricRegistrar {
    */
   static Attributes createMetricAttributes(
       MBeanServerConnection connection, ObjectName objectName, MetricExtractor extractor) {
-    MetricAttribute[] metricAttributes = extractor.getAttributes();
     AttributesBuilder attrBuilder = Attributes.builder();
-    for (MetricAttribute metricAttribute : metricAttributes) {
+    for (MetricAttribute metricAttribute : extractor.getAttributes()) {
       String attributeValue = metricAttribute.acquireAttributeValue(connection, objectName);
       if (attributeValue != null) {
         attrBuilder = attrBuilder.put(metricAttribute.getAttributeName(), attributeValue);

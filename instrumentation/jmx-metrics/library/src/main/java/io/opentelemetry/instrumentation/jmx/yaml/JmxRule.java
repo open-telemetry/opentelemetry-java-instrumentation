@@ -128,14 +128,9 @@ public class JmxRule extends MetricStructure {
   public MetricDef buildMetricDef() throws Exception {
     BeanGroup group;
     if (bean != null) {
-      group = new BeanGroup(null, new ObjectName(bean));
+      group = BeanGroup.forSingleBean(bean);
     } else if (beans != null && !beans.isEmpty()) {
-      ObjectName[] objectNames = new ObjectName[beans.size()];
-      int k = 0;
-      for (String oneBean : beans) {
-        objectNames[k++] = new ObjectName(oneBean);
-      }
-      group = new BeanGroup(null, objectNames);
+      group = BeanGroup.forBeans(beans);
     } else {
       throw new IllegalStateException("No ObjectName specified");
     }
@@ -172,9 +167,7 @@ public class JmxRule extends MetricStructure {
       StateMapping stateMapping = getEffectiveStateMapping(m, this);
 
       if (stateMapping.isEmpty()) {
-        metricExtractors.add(
-            new MetricExtractor(
-                attrExtractor, metricInfo, attributeList.toArray(new MetricAttribute[0])));
+        metricExtractors.add(new MetricExtractor(attrExtractor, metricInfo, attributeList));
       } else {
 
         // generate one metric extractor per state metric key
@@ -184,7 +177,7 @@ public class JmxRule extends MetricStructure {
       }
     }
 
-    return new MetricDef(group, metricExtractors.toArray(new MetricExtractor[0]));
+    return new MetricDef(group, metricExtractors);
   }
 
   private static List<MetricExtractor> createStateMappingExtractors(
@@ -237,10 +230,7 @@ public class JmxRule extends MetricStructure {
               MetricInfo.Type.UPDOWNCOUNTER);
 
       extractors.add(
-          new MetricExtractor(
-              stateMetricExtractor,
-              stateMetricInfo,
-              stateMetricAttributes.toArray(new MetricAttribute[0])));
+          new MetricExtractor(stateMetricExtractor, stateMetricInfo, stateMetricAttributes));
     }
     return extractors;
   }
