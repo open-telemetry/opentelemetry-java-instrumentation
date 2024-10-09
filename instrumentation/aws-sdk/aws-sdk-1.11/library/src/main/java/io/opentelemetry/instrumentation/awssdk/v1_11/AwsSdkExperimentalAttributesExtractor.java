@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttri
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_BEDROCK_SYSTEM;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_BUCKET_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_ENDPOINT;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_GUARDRAIL_ARN;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_GUARDRAIL_ID;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_KNOWLEDGE_BASE_ID;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_LAMBDA_NAME;
@@ -154,6 +155,7 @@ class AwsSdkExperimentalAttributesExtractor
     switch (serviceName) {
       case BEDROCK_SERVICE:
         setAttribute(attributes, AWS_GUARDRAIL_ID, awsResp, RequestAccess::getGuardrailId);
+        setAttribute(attributes, AWS_GUARDRAIL_ARN, awsResp, RequestAccess::getGuardrailArn);
         break;
       case BEDROCK_AGENT_SERVICE:
         String responseClassName = awsResp.getClass().getSimpleName();

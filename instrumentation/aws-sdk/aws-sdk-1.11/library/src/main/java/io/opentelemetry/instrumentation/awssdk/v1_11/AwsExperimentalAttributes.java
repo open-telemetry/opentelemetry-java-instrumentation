@@ -23,6 +23,7 @@ final class AwsExperimentalAttributes {
       stringKey("aws.bedrock.knowledge_base.id");
   static final AttributeKey<String> AWS_DATA_SOURCE_ID = stringKey("aws.bedrock.data_source.id");
   static final AttributeKey<String> AWS_GUARDRAIL_ID = stringKey("aws.bedrock.guardrail.id");
+  static final AttributeKey<String> AWS_GUARDRAIL_ARN = stringKey("aws.bedrock.guardrail.arn");
 
   // TODO: Merge in gen_ai attributes in opentelemetry-semconv-incubating once upgrade to v1.26.0
   static final AttributeKey<String> AWS_BEDROCK_RUNTIME_MODEL_ID =

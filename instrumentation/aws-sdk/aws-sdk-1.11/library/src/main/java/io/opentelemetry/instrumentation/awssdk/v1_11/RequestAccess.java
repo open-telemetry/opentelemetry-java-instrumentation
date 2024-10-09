@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 final class RequestAccess {
@@ -111,6 +112,11 @@ final class RequestAccess {
   }
 
   @Nullable
+  static String getGuardrailArn(Object request) {
+    return findNestedAccessorOrNull(request, "getGuardrailArn");
+  }
+
+  @Nullable
   static String getModelId(Object request) {
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getModelId, request);
@@ -172,5 +178,22 @@ final class RequestAccess {
     } catch (Throwable t) {
       return null;
     }
+  }
+
+  @Nullable
+  private static String findNestedAccessorOrNull(Object obj, String... methodNames) {
+    Object current = obj;
+    for (String methodName : methodNames) {
+      if (current == null) {
+        return null;
+      }
+      try {
+        Method method = current.getClass().getMethod(methodName);
+        current = method.invoke(current);
+      } catch (Exception e) {
+        return null;
+      }
+    }
+    return (current instanceof String) ? (String) current : null;
   }
 }

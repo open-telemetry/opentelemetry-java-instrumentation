@@ -16,6 +16,7 @@ final class AwsExperimentalAttributes {
   static final AttributeKey<String> AWS_STREAM_NAME = stringKey("aws.stream.name");
   static final AttributeKey<String> AWS_TABLE_NAME = stringKey("aws.table.name");
   static final AttributeKey<String> AWS_GUARDRAIL_ID = stringKey("aws.bedrock.guardrail.id");
+  static final AttributeKey<String> AWS_GUARDRAIL_ARN = stringKey("aws.bedrock.guardrail.arn");
   static final AttributeKey<String> AWS_AGENT_ID = stringKey("aws.bedrock.agent.id");
   static final AttributeKey<String> AWS_DATA_SOURCE_ID = stringKey("aws.bedrock.data_source.id");
   static final AttributeKey<String> AWS_KNOWLEDGE_BASE_ID =
