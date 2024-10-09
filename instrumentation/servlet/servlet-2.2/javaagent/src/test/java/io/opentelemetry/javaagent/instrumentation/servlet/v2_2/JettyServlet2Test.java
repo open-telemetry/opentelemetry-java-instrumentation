@@ -93,6 +93,7 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
     options.setTestCaptureHttpHeaders(false);
     options.setHasResponseSpan(e -> e.equals(REDIRECT) || e.equals(ERROR));
     options.setHasResponseCustomizer(e -> true);
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
   }
 
   @Override

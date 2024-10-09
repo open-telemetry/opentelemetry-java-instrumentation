@@ -30,8 +30,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.util.concurrent.ListenableFuture;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 public abstract class AbstractSpringKafkaTest {
@@ -46,9 +46,9 @@ public abstract class AbstractSpringKafkaTest {
   @BeforeAll
   static void setUpKafka() {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.0"))
+        new KafkaContainer(DockerImageName.parse("apache/kafka:3.8.0"))
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
-            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
   }

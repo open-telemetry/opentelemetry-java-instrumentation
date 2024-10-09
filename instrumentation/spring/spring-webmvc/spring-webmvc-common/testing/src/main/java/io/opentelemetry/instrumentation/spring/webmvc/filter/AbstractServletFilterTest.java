@@ -49,6 +49,7 @@ public abstract class AbstractServletFilterTest
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
   }
 
   @Override

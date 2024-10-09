@@ -12,8 +12,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import java.io.IOException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,10 +25,10 @@ public class TestServlet2 {
 
   public static class Sync extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       req.getRequestDispatcher(null);
       ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
-      HttpServerTest.controller(
+      AbstractHttpServerTest.controller(
           endpoint,
           () -> {
             resp.setContentType("text/plain");
@@ -42,7 +43,7 @@ public class TestServlet2 {
             } else if (ERROR.equals(endpoint)) {
               resp.sendError(endpoint.getStatus(), endpoint.getBody());
             } else if (EXCEPTION.equals(endpoint)) {
-              throw new Exception(endpoint.getBody());
+              throw new IllegalStateException(endpoint.getBody());
             } else if (INDEXED_CHILD.equals(endpoint)) {
               INDEXED_CHILD.collectSpanAttributes(req::getParameter);
               resp.setStatus(endpoint.getStatus());

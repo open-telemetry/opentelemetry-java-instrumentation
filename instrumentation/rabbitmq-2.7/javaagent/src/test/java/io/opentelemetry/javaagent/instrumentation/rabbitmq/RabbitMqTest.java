@@ -82,6 +82,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         conn.close();
       }
     } catch (ShutdownSignalException ignored) {
+      // ignored
     }
   }
 

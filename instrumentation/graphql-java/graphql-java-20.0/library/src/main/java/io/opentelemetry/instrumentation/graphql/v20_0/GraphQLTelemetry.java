@@ -11,7 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
 
-@SuppressWarnings("AbbreviationAsWordInName")
+@SuppressWarnings({"AbbreviationAsWordInName", "MemberName"})
 public final class GraphQLTelemetry {
 
   /** Returns a new {@link GraphQLTelemetry} configured with the given {@link OpenTelemetry}. */

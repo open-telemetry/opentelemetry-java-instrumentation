@@ -27,22 +27,22 @@ val groovyVersion = "4.0.23"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.17.2",
+  "com.fasterxml.jackson:jackson-bom:2.18.0",
   "com.squareup.okio:okio-bom:3.9.1", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.3.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.11.1",
-  "org.testcontainers:testcontainers-bom:1.20.1",
+  "org.junit:junit-bom:5.11.2",
+  "org.testcontainers:testcontainers-bom:1.20.2",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.32.0"
-val byteBuddyVersion = "1.15.2"
-val asmVersion = "9.7"
+val errorProneVersion = "2.33.0"
+val byteBuddyVersion = "1.15.3"
+val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.16"
@@ -115,7 +115,8 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.8"
+  "org.snakeyaml:snakeyaml-engine:2.8",
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.8"
 )
 
 javaPlatform {

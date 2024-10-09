@@ -10,7 +10,7 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.gradleup.shadow" version "8.3.2"
+  id "com.gradleup.shadow" version "8.3.3"
   id "com.diffplug.spotless" version "6.25.0"
 
   id "io.opentelemetry.instrumentation.muzzle-generation" version "2.9.0-alpha-SNAPSHOT"
@@ -29,7 +29,7 @@ ext {
     opentelemetryJavaagent     : "2.9.0-SNAPSHOT",
     opentelemetryJavaagentAlpha: "2.9.0-alpha-SNAPSHOT",
 
-    junit                      : "5.11.1"
+    junit                      : "5.11.2"
   ]
 
   deps = [
@@ -99,8 +99,8 @@ dependencies {
   implementation 'org.apache.commons:commons-lang3:3.17.0'
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:1.20.1")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+  testImplementation("org.testcontainers:testcontainers:1.20.2")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
   testImplementation("com.google.protobuf:protobuf-java-util:3.25.5")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
@@ -108,7 +108,7 @@ dependencies {
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.8")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.9")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")

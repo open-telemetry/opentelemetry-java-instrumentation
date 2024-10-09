@@ -43,8 +43,7 @@ class PekkoHttpClientInstrumentationTest
     HttpClientInstrumentationExtension.forAgent()
 
   val system: ActorSystem = ActorSystem.create()
-  implicit val materializer: ActorMaterializer =
-    ActorMaterializer.create(system)
+  val materializer: ActorMaterializer = ActorMaterializer.create(system)
 
   override def buildRequest(
       method: String,

@@ -16,11 +16,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.util.Series;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
   INSTANCE;
 
   @Override

@@ -99,6 +99,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
     options.setTestErrorBody(false);
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
 
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);

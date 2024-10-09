@@ -9,7 +9,7 @@ import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
 
-@SuppressWarnings("AbbreviationAsWordInName")
+@SuppressWarnings({"AbbreviationAsWordInName", "MemberName"})
 public final class GraphQLTelemetry {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-12.0";
 

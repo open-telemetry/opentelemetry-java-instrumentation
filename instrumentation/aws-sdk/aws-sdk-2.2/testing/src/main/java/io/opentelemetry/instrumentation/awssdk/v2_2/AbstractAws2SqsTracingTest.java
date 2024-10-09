@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
@@ -166,7 +167,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
                                 satisfies(
-                                    stringKey("aws.requestId"),
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val ->
                                         val.satisfiesAnyOf(
                                             v ->
@@ -196,7 +197,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                       stringKey("aws.queue.url"),
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                   satisfies(
-                                      stringKey("aws.requestId"),
+                                      AwsIncubatingAttributes.AWS_REQUEST_ID,
                                       val ->
                                           val.satisfiesAnyOf(
                                               v ->
@@ -260,7 +261,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                         stringKey("aws.queue.url"),
                                         "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                     satisfies(
-                                        stringKey("aws.requestId"),
+                                        AwsIncubatingAttributes.AWS_REQUEST_ID,
                                         val ->
                                             val.satisfiesAnyOf(
                                                 v ->
@@ -507,7 +508,7 @@ public abstract class AbstractAws2SqsTracingTest {
                                   stringKey("aws.queue.url"),
                                   "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                               satisfies(
-                                  stringKey("aws.requestId"),
+                                  AwsIncubatingAttributes.AWS_REQUEST_ID,
                                   val ->
                                       val.satisfiesAnyOf(
                                           v ->

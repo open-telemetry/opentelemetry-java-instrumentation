@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletException;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.UUID;
@@ -110,8 +109,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
           return super.expectedHttpRoute(endpoint, method);
         });
 
-    options.setExpectedException(new ServletException(EXCEPTION.getBody()));
-
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND || endpoint == REDIRECT);
   }
 

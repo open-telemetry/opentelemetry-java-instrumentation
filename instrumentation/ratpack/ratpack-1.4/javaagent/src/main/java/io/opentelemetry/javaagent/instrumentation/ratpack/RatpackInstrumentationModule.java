@@ -33,6 +33,7 @@ public class RatpackInstrumentationModule extends InstrumentationModule
         new ContinuationStreamInstrumentation(),
         new DefaultExecutionInstrumentation(),
         new DefaultExecStarterInstrumentation(),
+        new ExecutionBoundPublisherInstrumentation(),
         new ServerErrorHandlerInstrumentation(),
         new ServerRegistryInstrumentation());
   }

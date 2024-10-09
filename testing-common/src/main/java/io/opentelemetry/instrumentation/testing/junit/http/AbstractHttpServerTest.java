@@ -29,6 +29,8 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -75,7 +77,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.api.AssertAccess;
@@ -115,12 +116,23 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   protected void configure(HttpServerTestOptions options) {}
 
-  public static <T> T controller(ServerEndpoint endpoint, Supplier<T> closure) {
+  public static <T, E extends Throwable> T controller(
+      ServerEndpoint endpoint, ThrowingSupplier<T, E> closure) throws E {
     assert Span.current().getSpanContext().isValid() : "Controller should have a parent span.";
     if (endpoint == NOT_FOUND) {
       return closure.get();
     }
-    return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
+    return GlobalTraceUtil.runWithSpan("controller", closure);
+  }
+
+  public static <E extends Throwable> void controller(
+      ServerEndpoint endpoint, ThrowingRunnable<E> closure) throws E {
+    controller(
+        endpoint,
+        () -> {
+          closure.run();
+          return null;
+        });
   }
 
   protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {

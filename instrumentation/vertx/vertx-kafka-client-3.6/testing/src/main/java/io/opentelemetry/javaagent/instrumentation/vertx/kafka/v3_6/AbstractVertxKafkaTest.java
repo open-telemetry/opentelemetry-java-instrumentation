@@ -41,9 +41,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 public abstract class AbstractVertxKafkaTest {
@@ -61,10 +61,10 @@ public abstract class AbstractVertxKafkaTest {
   @BeforeAll
   static void setUpAll() {
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.0"))
+        new KafkaContainer(DockerImageName.parse("apache/kafka:3.8.0"))
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
             .withLogConsumer(new Slf4jLogConsumer(logger))
-            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
 

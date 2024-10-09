@@ -96,6 +96,7 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     options.setTestPathParam(true);
     options.setTestErrorBody(false);
     options.setHasHandlerSpan(endpoint -> !endpoint.equals(NOT_FOUND));
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseSpan(
         endpoint ->
             endpoint == REDIRECT
@@ -139,7 +140,8 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
         .hasKind(SpanKind.INTERNAL);
 
     if (endpoint.equals(EXCEPTION)) {
-      span.hasStatus(StatusData.error()).hasException(new Exception(EXCEPTION.getBody()));
+      span.hasStatus(StatusData.error())
+          .hasException(new IllegalStateException(EXCEPTION.getBody()));
     }
 
     span.hasAttributesSatisfyingExactly(
