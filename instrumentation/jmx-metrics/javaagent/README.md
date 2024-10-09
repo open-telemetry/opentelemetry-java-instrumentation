@@ -221,6 +221,54 @@ Thus, the above definitions will create several metrics, named `my.kafka.streams
 
 The metric descriptions will remain undefined, unless they are provided by the queried MBeans.
 
+### State Metrics
+
+Some JMX attributes expose current state as a non-numeric MBean attribute, in order to capture those as metrics it is recommended to use the special `state` metric type.
+For example, with Tomcat connector, the `Catalina:type=Connector,port=*` MBean has `stateName` (of type `String`), we can define the following rule:
+
+```yaml
+---
+rules:
+  - bean: Catalina:type=Connector,port=*
+    mapping:
+      stateName:
+        type: state
+        metric: tomcat.connector.state
+        metricAttribute:
+          port: param(port)
+          state:
+            ok: STARTED
+            failed: [STOPPED,FAILED]
+            degraded: '*'
+```
+
+For a given value of `port`, let's say `8080` This will capture the `tomcat.connector.state` metric of type `updowncounter` with value `0` or `1` and the `state` metric attribute will have a value in [`ok`,`failed`,`degraded`].
+For every sample, 3 metrics will be captured for each value of `state` depending on the value of `stateName`:
+
+When `stateName` = `STARTED`, we have:
+
+- `tomcat.connector.state` value = `1`, attributes `port` = `8080` and `state` = `ok`
+- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `failed`
+- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `degraded`
+
+When `stateName` = `STOPPED` or `FAILED`, we have:
+
+- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `ok`
+- `tomcat.connector.state` value = `1`, attributes `port` = `8080` and `state` = `failed`
+- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `degraded`
+
+For other values of `stateName`, we have:
+
+- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `ok`
+- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `failed`
+- `tomcat.connector.state` value = `1`, attributes `port` = `8080` and `state` = `degraded`
+
+Each state key can be mapped to one or more values of the MBean attribute using:
+- a string literal or a string array
+- a `*` wildcard to provide default option and avoid enumerating all values.
+
+Exactly one wildcard is expected to be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
+
 ### General Syntax
 
 Here is the general description of the accepted configuration file syntax. The whole contents of the file is case-sensitive, with exception for `type` as described in the table below.
