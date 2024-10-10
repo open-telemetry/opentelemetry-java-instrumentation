@@ -39,6 +39,8 @@ enum AwsSdkRequestType {
       request(AWS_GUARDRAIL_ID.getKey(), "guardrailIdentifier"),
       response(AWS_GUARDRAIL_ARN.getKey(), "guardrailArn")),
   BEDROCKAGENTOPERATION(
+      request(AWS_AGENT_ID.getKey(), "agentId"), response(AWS_AGENT_ID.getKey(), "agentId")),
+  BEDROCKAGENTRUNTIMEOPERATION(
       request(AWS_AGENT_ID.getKey(), "agentId"),
       response(AWS_AGENT_ID.getKey(), "agentId"),
       request(AWS_KNOWLEDGE_BASE_ID.getKey(), "knowledgeBaseId"),

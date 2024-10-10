@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCK;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKAGENTOPERATION;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKAGENTRUNTIMEOPERATION;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKDATASOURCEOPERATION;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKKNOWLEDGEBASEOPERATION;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkRequestType.BEDROCKRUNTIME;
@@ -42,7 +43,7 @@ enum AwsSdkRequest {
   SqsRequest(SQS, "SqsRequest"),
   KinesisRequest(KINESIS, "KinesisRequest"),
   BedrockRequest(BEDROCK, "BedrockRequest"),
-  BedrockAgentRuntimeRequest(BEDROCKAGENTOPERATION, "BedrockAgentRuntimeRequest"),
+  BedrockAgentRuntimeRequest(BEDROCKAGENTRUNTIMEOPERATION, "BedrockAgentRuntimeRequest"),
   BedrockRuntimeRequest(BEDROCKRUNTIME, "BedrockRuntimeRequest"),
   // BedrockAgent API based requests. We only support operations that are related to
   // Agent/DataSources/KnowledgeBases
