@@ -233,10 +233,10 @@ rules:
     mapping:
       stateName:
         type: state
-        metric: tomcat.connector.state
+        metric: tomcat.connector
         metricAttribute:
           port: param(port)
-          state:
+          connector_state:
             ok: STARTED
             failed: [STOPPED,FAILED]
             degraded: '*'
@@ -247,27 +247,27 @@ For every sample, 3 metrics will be captured for each value of `state` depending
 
 When `stateName` = `STARTED`, we have:
 
-- `tomcat.connector.state` value = `1`, attributes `port` = `8080` and `state` = `ok`
-- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `failed`
-- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `degraded`
+- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
 
 When `stateName` = `STOPPED` or `FAILED`, we have:
 
-- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `ok`
-- `tomcat.connector.state` value = `1`, attributes `port` = `8080` and `state` = `failed`
-- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `degraded`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
 
 For other values of `stateName`, we have:
 
-- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `ok`
-- `tomcat.connector.state` value = `0`, attributes `port` = `8080` and `state` = `failed`
-- `tomcat.connector.state` value = `1`, attributes `port` = `8080` and `state` = `degraded`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `degraded`
 
 Each state key can be mapped to one or more values of the MBean attribute using:
 - a string literal or a string array
 - a `*` wildcard to provide default option and avoid enumerating all values.
 
-Exactly one wildcard is expected to be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
+Exactly one wildcard must be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
 
 ### General Syntax
 
