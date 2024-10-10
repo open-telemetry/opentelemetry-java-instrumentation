@@ -97,9 +97,13 @@ public class RuleParser {
     Map<String, Metric> mappings = new LinkedHashMap<>();
     if (mappingYaml != null) {
       mappingYaml.forEach(
-          (name, metricYaml) ->
-              mappings.put(
-                  name, metricYaml == null ? null : parseMetric((Map<String, Object>) metricYaml)));
+          (name, metricYaml) -> {
+            Metric m = null;
+            if (metricYaml != null) {
+              m = parseMetric((Map<String, Object>) metricYaml);
+            }
+            mappings.put(name, m);
+          });
     }
     return mappings;
   }
@@ -124,12 +128,13 @@ public class RuleParser {
   @SuppressWarnings("unchecked")
   private static void parseMetricStructure(
       Map<String, Object> metricStructureYaml, MetricStructure out) {
+
     String type = (String) metricStructureYaml.remove("type");
     if (type != null) {
       out.setType(type);
     }
-    Map<String, String> metricAttribute =
-        (Map<String, String>) metricStructureYaml.remove("metricAttribute");
+    Map<String, Object> metricAttribute =
+        (Map<String, Object>) metricStructureYaml.remove("metricAttribute");
     if (metricAttribute != null) {
       out.setMetricAttribute(metricAttribute);
     }

@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
 
@@ -16,7 +20,7 @@ import javax.management.QueryExp;
 public class BeanGroup {
   // How to specify the MBean(s)
   @Nullable private final QueryExp queryExp;
-  private final ObjectName[] namePatterns;
+  private final List<ObjectName> namePatterns;
 
   /**
    * Constructor for BeanGroup.
@@ -25,9 +29,21 @@ public class BeanGroup {
    * @param namePatterns an array of ObjectNames used to look for MBeans; usually they will be
    *     patterns. If multiple patterns are provided, they work as logical OR.
    */
-  public BeanGroup(@Nullable QueryExp queryExp, ObjectName... namePatterns) {
+  private BeanGroup(@Nullable QueryExp queryExp, List<ObjectName> namePatterns) {
     this.queryExp = queryExp;
     this.namePatterns = namePatterns;
+  }
+
+  public static BeanGroup forSingleBean(String bean) throws MalformedObjectNameException {
+    return new BeanGroup(null, Collections.singletonList(new ObjectName(bean)));
+  }
+
+  public static BeanGroup forBeans(List<String> beans) throws MalformedObjectNameException {
+    List<ObjectName> list = new ArrayList<>();
+    for (String name : beans) {
+      list.add(new ObjectName(name));
+    }
+    return new BeanGroup(null, list);
   }
 
   @Nullable
@@ -35,7 +51,7 @@ public class BeanGroup {
     return queryExp;
   }
 
-  ObjectName[] getNamePatterns() {
+  List<ObjectName> getNamePatterns() {
     return namePatterns;
   }
 }

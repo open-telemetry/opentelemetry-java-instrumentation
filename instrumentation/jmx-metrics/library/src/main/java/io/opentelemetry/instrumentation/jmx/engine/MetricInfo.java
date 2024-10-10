@@ -19,7 +19,9 @@ public class MetricInfo {
   public enum Type {
     COUNTER,
     UPDOWNCOUNTER,
-    GAUGE
+    GAUGE,
+    /** state metric captured as updowncounter */
+    STATE
   }
 
   // How to report the metric using OpenTelemetry API
@@ -44,21 +46,21 @@ public class MetricInfo {
     this.type = type == null ? Type.GAUGE : type;
   }
 
-  String getMetricName() {
+  public String getMetricName() {
     return metricName;
   }
 
   @Nullable
-  String getDescription() {
+  public String getDescription() {
     return description;
   }
 
   @Nullable
-  String getUnit() {
+  public String getUnit() {
     return unit;
   }
 
-  Type getType() {
+  public Type getType() {
     return type;
   }
 }
