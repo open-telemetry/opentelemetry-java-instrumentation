@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
@@ -34,10 +35,11 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PekkoBindAndHandleAdvice {
 
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 0, readOnly = false) Flow<HttpRequest, HttpResponse, ?> handler) {
-      handler = PekkoFlowWrapper.wrap(handler);
+    public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
+        @Advice.Argument(value = 0) Flow<HttpRequest, HttpResponse, ?> handler) {
+      return PekkoFlowWrapper.wrap(handler);
     }
   }
 }
