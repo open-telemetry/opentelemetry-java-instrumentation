@@ -34,12 +34,6 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // GrailsTest fails
-    return false;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AsyncContextInstrumentation(BASE_PACKAGE, adviceClassName(".AsyncDispatchAdvice")),
