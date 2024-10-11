@@ -233,6 +233,5 @@ For this reason, the following instrumentations are disabled by default:
 - `micrometer` which produces a lot of metrics that are already captured
 - `spring-boot-actuator-autoconfigure` which will enable `micrometer`
 
-
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
 `-Dotel.instrumentation.jdbc-datasource.enabled=true`
