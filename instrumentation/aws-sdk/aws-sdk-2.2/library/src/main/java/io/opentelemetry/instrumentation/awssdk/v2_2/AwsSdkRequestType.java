@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_AGENT_ID;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_BUCKET_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_DATA_SOURCE_ID;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_GUARDRAIL_ARN;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_GUARDRAIL_ID;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_KNOWLEDGE_BASE_ID;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_LAMBDA_ARN;
@@ -34,9 +35,16 @@ enum AwsSdkRequestType {
   SQS(request(AWS_QUEUE_URL.getKey(), "QueueUrl"), request(AWS_QUEUE_NAME.getKey(), "QueueName")),
   KINESIS(request(AWS_STREAM_NAME.getKey(), "StreamName")),
   DYNAMODB(request(AWS_TABLE_NAME.getKey(), "TableName")),
-  BEDROCK(request(AWS_GUARDRAIL_ID.getKey(), "guardrailIdentifier")),
+  BEDROCK(
+      request(AWS_GUARDRAIL_ID.getKey(), "guardrailIdentifier"),
+      response(AWS_GUARDRAIL_ARN.getKey(), "guardrailArn")),
   BEDROCKAGENTOPERATION(
       request(AWS_AGENT_ID.getKey(), "agentId"), response(AWS_AGENT_ID.getKey(), "agentId")),
+  BEDROCKAGENTRUNTIMEOPERATION(
+      request(AWS_AGENT_ID.getKey(), "agentId"),
+      response(AWS_AGENT_ID.getKey(), "agentId"),
+      request(AWS_KNOWLEDGE_BASE_ID.getKey(), "knowledgeBaseId"),
+      response(AWS_KNOWLEDGE_BASE_ID.getKey(), "knowledgeBaseId")),
   BEDROCKDATASOURCEOPERATION(
       request(AWS_DATA_SOURCE_ID.getKey(), "dataSourceId"),
       response(AWS_DATA_SOURCE_ID.getKey(), "dataSourceId")),
