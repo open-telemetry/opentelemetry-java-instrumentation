@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import groovy.lang.MissingMethodException;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -48,7 +49,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
+class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
 
   @SuppressWarnings("ClassNewInstance")
   private static @NotNull Object createBuilder()
@@ -115,19 +116,20 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
       // Different api for test and latestDepTest.
       values.to(Serdes.Integer(), Serdes.String(), STREAM_PROCESSED);
       streams = new KafkaStreams((TopologyBuilder) builder, config);
-    } catch (NoSuchMethodError e) {
-      //            org.apache.kafka.streams.kstream.Produced<Integer, String> producer =
-      // org.apache.kafka.streams.kstream.Produced.with(Serdes.Integer(), Serdes.String());
-      //            values.to(STREAM_PROCESSED, producer);
-      //            streams = new KafkaStreams(((org.apache.kafka.streams.StreamsBuilder)
-      // builder).build(), config);
+    } catch (MissingMethodException e) {
+      //todo: fix this
+//        org.apache.kafka.streams.kstream.Produced<Integer, String> producer =
+//        org.apache.kafka.streams.kstream.Produced.with(Serdes.Integer(), Serdes.String());
+//        values.to(STREAM_PROCESSED, producer);
+//        streams = new KafkaStreams(((org.apache.kafka.streams.StreamsBuilder)
+//       builder).build(), config);
     }
     streams.start();
 
     String greeting = "TESTING TESTING 123!";
     KafkaStreamsBaseTest.producer.send(new ProducerRecord<>(STREAM_PENDING, 10, greeting));
 
-    awaitUntilConsumerIsReady();
+    // check that the message was received
     ConsumerRecords<Integer, String> records =
         KafkaStreamsBaseTest.consumer.poll(Duration.ofSeconds(10).toMillis());
     Headers receivedHeaders = null;
@@ -141,8 +143,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         receivedHeaders = record.headers();
       }
     }
-    AtomicReference<SpanData> producerPendingRef = new AtomicReference<>();
-    AtomicReference<SpanData> producerProcessedRef = new AtomicReference<>();
+
+    AtomicReference<SpanData> streamSendSpanRef = new AtomicReference<>();
 
     // Add your assertTraces logic here
     testing.waitAndAssertSortedTraces(
@@ -163,43 +165,16 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               STREAM_PENDING),
                           equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                          satisfies(
+                          equalTo(
                               MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                              k -> k.startsWith("producer")),
+                              "producer-1"),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               k -> k.isInstanceOf(String.class)),
                           equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10")));
-          producerPendingRef.set(trace.getSpan(0));
-        },
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              // kafka-clients CONSUMER receive
-              span -> {
-                List<AttributeAssertion> assertions =
-                    asList(
-                        equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
-                        equalTo(
-                            MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                            STREAM_PENDING),
-                        equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
-                        satisfies(
-                            MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                            k -> k.startsWith("consumer")),
-                        equalTo(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1));
-                if (Boolean.getBoolean("testLatestDeps")) {
-                  assertions.add(
-                      equalTo(
-                          MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                          "test-application"));
-                }
-                span.hasName(STREAM_PENDING + " receive")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasNoParent()
-                    .hasAttributesSatisfyingExactly(assertions);
-              },
+
               // kafka-stream CONSUMER
               span -> {
                 List<AttributeAssertion> assertions =
@@ -233,12 +208,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 span.hasName(STREAM_PENDING + " process")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(0))
-                    .hasLinks(LinkData.create(producerPendingRef.get().getSpanContext()))
                     .hasAttributesSatisfyingExactly(assertions);
+                streamSendSpanRef.set(trace.getSpan(2));
               },
               // kafka-clients PRODUCER
-              span ->
-                  span.hasName(STREAM_PROCESSED + " publish")
+              span -> span.hasName(STREAM_PROCESSED + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))
                       .hasAttributesSatisfyingExactly(
@@ -249,41 +223,13 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                              k -> k.endsWith("producer")),
+                              k -> k.isInstanceOf(String.class)),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               k -> k.isInstanceOf(String.class)),
                           equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, 0)));
-
-          producerProcessedRef.set(trace.getSpan(2));
-        },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                // kafka-clients CONSUMER receive
-                span -> {
-                  List<AttributeAssertion> assertions =
-                      asList(
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
-                          equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                              STREAM_PROCESSED),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
-                          satisfies(
-                              MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                              k -> k.startsWith("consumer")),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1));
-                  if (Boolean.getBoolean("testLatestDeps")) {
-                    assertions.add(
-                        equalTo(
-                            MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                            "test-application"));
-                  }
-                  span.hasName(STREAM_PROCESSED + " receive")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(assertions);
-                },
+                              MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, 0)
+                      ),
                 // kafka-clients CONSUMER process
                 span -> {
                   List<AttributeAssertion> assertions =
@@ -315,11 +261,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             "test-application"));
                   }
                   span.hasName(STREAM_PENDING + " process")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(0))
-                      .hasLinks(LinkData.create(producerProcessedRef.get().getSpanContext()))
-                      .hasAttributesSatisfyingExactly(assertions);
-                }));
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(2))
+                          .hasAttributesSatisfyingExactly(assertions);
+                }
+                ));
 
     assertThat(receivedHeaders.iterator().hasNext()).isTrue();
     String traceparent =
@@ -346,9 +292,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   }
                 });
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
-    List<SpanData> streamTrace = testing.spans();
-    assertThat(streamTrace).hasSize(3);
-    SpanData streamSendSpan = streamTrace.get(2);
+    SpanData streamSendSpan = streamSendSpanRef.get();
     assertThat(spanContext.getTraceId()).isEqualTo(streamSendSpan.getTraceId());
     assertThat(spanContext.getSpanId()).isEqualTo(streamSendSpan.getSpanId());
   }

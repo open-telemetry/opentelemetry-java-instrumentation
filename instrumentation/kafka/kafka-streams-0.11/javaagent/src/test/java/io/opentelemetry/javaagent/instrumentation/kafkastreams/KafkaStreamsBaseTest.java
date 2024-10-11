@@ -41,7 +41,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-class KafkaStreamsBaseTest {
+abstract class KafkaStreamsBaseTest {
   private static final Logger logger =
       LoggerFactory.getLogger("io.opentelemetry.KafkaStreamsBaseTest");
 
