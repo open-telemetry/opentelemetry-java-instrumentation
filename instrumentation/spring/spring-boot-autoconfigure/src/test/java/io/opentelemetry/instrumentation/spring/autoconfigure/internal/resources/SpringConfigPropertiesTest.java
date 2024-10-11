@@ -11,8 +11,8 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringOtelProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +51,7 @@ class SpringConfigPropertiesTest {
                       new SpelExpressionParser(),
                       context.getBean(OtlpExporterProperties.class),
                       context.getBean(OtelResourceProperties.class),
-                      context.getBean(PropagationProperties.class),
+                      context.getBean(SpringOtelProperties.class),
                       DefaultConfigProperties.createFromMap(fallback));
 
               assertThat(config.getMap("otel.resource.attributes"))

@@ -10,8 +10,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringOtelProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
@@ -68,7 +68,7 @@ public class SpringResourceProviderTest {
             context.getBean(Environment.class),
             new OtlpExporterProperties(),
             new OtelResourceProperties(),
-            new PropagationProperties(),
+            new SpringOtelProperties(),
             DefaultConfigProperties.createFromMap(Collections.emptyMap()));
 
     return assertThat(

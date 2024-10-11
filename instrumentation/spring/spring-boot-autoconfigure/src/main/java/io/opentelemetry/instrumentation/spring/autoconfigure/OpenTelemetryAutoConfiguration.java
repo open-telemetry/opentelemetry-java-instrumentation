@@ -11,8 +11,8 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConvert
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringOtelProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.DistroVersionResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -51,7 +51,7 @@ import org.springframework.core.env.Environment;
 @EnableConfigurationProperties({
   OtlpExporterProperties.class,
   OtelResourceProperties.class,
-  PropagationProperties.class
+  SpringOtelProperties.class
 })
 public class OpenTelemetryAutoConfiguration {
 
@@ -90,7 +90,7 @@ public class OpenTelemetryAutoConfiguration {
         Environment env,
         OtlpExporterProperties otlpExporterProperties,
         OtelResourceProperties resourceProperties,
-        PropagationProperties propagationProperties,
+        SpringOtelProperties springOtelProperties,
         OpenTelemetrySdkComponentLoader componentLoader) {
 
       return AutoConfigureUtil.setComponentLoader(
@@ -101,7 +101,7 @@ public class OpenTelemetryAutoConfiguration {
                           env,
                           otlpExporterProperties,
                           resourceProperties,
-                          propagationProperties,
+                          springOtelProperties,
                           c)),
               componentLoader)
           .build();
