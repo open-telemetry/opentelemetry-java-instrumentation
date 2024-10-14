@@ -44,7 +44,7 @@ abstract class MetricStructure {
 
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
-  private static final String STATE_MAPPING_WILDCARD = "*";
+  private static final String STATE_MAPPING_DEFAULT = "_";
   private String unit;
 
   private MetricInfo.Type metricType;
@@ -68,7 +68,7 @@ abstract class MetricStructure {
 
   private static void addMappedValue(
       StateMapping.Builder builder, String stateValue, String stateKey) {
-    if (stateValue.equals(STATE_MAPPING_WILDCARD)) {
+    if (stateValue.equals(STATE_MAPPING_DEFAULT)) {
       builder.withDefaultState(stateKey);
     } else {
       builder.withMappedValue(stateValue, stateKey);

@@ -239,7 +239,7 @@ rules:
           connector_state:
             ok: STARTED
             failed: [STOPPED,FAILED]
-            degraded: '*'
+            degraded: _
 ```
 
 For a given value of `port`, let's say `8080` This will capture the `tomcat.connector.state` metric of type `updowncounter` with value `0` or `1` and the `state` metric attribute will have a value in [`ok`,`failed`,`degraded`].
@@ -265,9 +265,22 @@ For other values of `stateName`, we have:
 
 Each state key can be mapped to one or more values of the MBean attribute using:
 - a string literal or a string array
-- a `*` wildcard to provide default option and avoid enumerating all values.
+- a `_` character to provide default option and avoid enumerating all values.
 
-Exactly one wildcard must be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
+Exactly one `_` value must be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
+
+The default value indicated by `_` does not require a dedicated state key. For example, if we want to have `connector_state` metric attribute with values `on` or `off`, we can use:
+```yaml
+          connector_state:
+            on: STARTED
+            off: [STOPPED,FAILED,_]
+```
+In the particular case where only two values are defined, we can simplify further by explicitly defining one state and rely on default for the other.
+```yaml
+          connector_state:
+            on: STARTED
+            off: _
+```
 
 ### General Syntax
 

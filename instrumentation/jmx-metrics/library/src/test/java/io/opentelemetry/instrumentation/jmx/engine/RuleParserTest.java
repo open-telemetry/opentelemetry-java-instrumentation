@@ -373,7 +373,7 @@ class RuleParserTest {
           + "          state_attribute: \n" // --> only one state attribute allowed
           + "            ok: STARTED\n" // as simple string
           + "            failed: [STOPPED,FAILED]\n" // as array of strings
-          + "            degraded: '*'\n" // wildcard value for default
+          + "            degraded: _\n" // degraded value for default
           + "";
 
   @Test
