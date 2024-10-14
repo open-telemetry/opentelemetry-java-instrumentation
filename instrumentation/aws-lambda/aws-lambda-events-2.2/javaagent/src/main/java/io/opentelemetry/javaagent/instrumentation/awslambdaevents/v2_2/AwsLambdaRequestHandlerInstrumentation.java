@@ -13,13 +13,16 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
+import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -60,7 +63,11 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         @Advice.Local("otelFunctionScope") Scope functionScope,
         @Advice.Local("otelMessageContext") io.opentelemetry.context.Context messageContext,
         @Advice.Local("otelMessageScope") Scope messageScope) {
-      input = AwsLambdaRequest.create(context, arg, Collections.emptyMap());
+      Map<String, String> headers = Collections.emptyMap();
+      if (arg instanceof APIGatewayProxyRequestEvent) {
+        headers = MapUtils.lowercaseMap(((APIGatewayProxyRequestEvent) arg).getHeaders());
+      }
+      input = AwsLambdaRequest.create(context, arg, headers);
       io.opentelemetry.context.Context parentContext =
           AwsLambdaInstrumentationHelper.functionInstrumenter().extract(input);
 
