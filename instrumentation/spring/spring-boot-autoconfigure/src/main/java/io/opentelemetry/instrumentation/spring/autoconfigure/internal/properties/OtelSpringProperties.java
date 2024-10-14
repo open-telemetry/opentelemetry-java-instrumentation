@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * any time.
  */
 @ConfigurationProperties(prefix = "otel")
-public final class SpringOtelProperties {
+public final class OtelSpringProperties {
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at

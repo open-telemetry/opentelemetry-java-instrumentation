@@ -31,26 +31,26 @@ public class SpringConfigProperties implements ConfigProperties {
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
   private final OtelResourceProperties resourceProperties;
-  private final SpringOtelProperties springOtelProperties;
+  private final OtelSpringProperties otelSpringProperties;
   private final ConfigProperties otelSdkProperties;
-  private final ConfigProperties customizedResourceProviderProperties;
+  private final ConfigProperties customizedListProperties;
 
-  private static final Map<String, Function<SpringOtelProperties, List<String>>> LIST_PROPERTIES =
+  private static final Map<String, Function<OtelSpringProperties, List<String>>> LIST_PROPERTIES =
       new HashMap<>();
 
   static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
   static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
 
   static {
-    LIST_PROPERTIES.put(ENABLED_KEY, SpringOtelProperties::getJavaEnabledResourceProviders);
-    LIST_PROPERTIES.put(DISABLED_KEY, SpringOtelProperties::getJavaDisabledResourceProviders);
+    LIST_PROPERTIES.put(ENABLED_KEY, OtelSpringProperties::getJavaEnabledResourceProviders);
+    LIST_PROPERTIES.put(DISABLED_KEY, OtelSpringProperties::getJavaDisabledResourceProviders);
     LIST_PROPERTIES.put(
         "otel.experimental.metrics.view.config",
-        SpringOtelProperties::getExperimentalMetricsViewConfig);
+        OtelSpringProperties::getExperimentalMetricsViewConfig);
     LIST_PROPERTIES.put(
         "otel.experimental.resource.disabled.keys",
-        SpringOtelProperties::getExperimentalResourceDisabledKeys);
-    LIST_PROPERTIES.put("otel.propagators", SpringOtelProperties::getPropagators);
+        OtelSpringProperties::getExperimentalResourceDisabledKeys);
+    LIST_PROPERTIES.put("otel.propagators", OtelSpringProperties::getPropagators);
   }
 
   public SpringConfigProperties(
@@ -58,41 +58,46 @@ public class SpringConfigProperties implements ConfigProperties {
       ExpressionParser parser,
       OtlpExporterProperties otlpExporterProperties,
       OtelResourceProperties resourceProperties,
-      SpringOtelProperties springOtelProperties,
+      OtelSpringProperties otelSpringProperties,
       ConfigProperties otelSdkProperties) {
     this.environment = environment;
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
-    this.springOtelProperties = springOtelProperties;
+    this.otelSpringProperties = otelSpringProperties;
     this.otelSdkProperties = otelSdkProperties;
-    this.customizedResourceProviderProperties =
-        createCustomizedProperties(otelSdkProperties, springOtelProperties);
+    this.customizedListProperties =
+        createCustomizedListProperties(otelSdkProperties, otelSpringProperties);
   }
 
-  private static void addList(
-      Map<String, String> map, String key, List<String> list, ConfigProperties configProperties) {
-    if (!list.isEmpty()) {
-      map.put(key, String.join(",", list));
+  private static Map<String, String> addList(
+      String key, List<String> springList, ConfigProperties configProperties) {
+    if (!springList.isEmpty()) {
+      return Collections.singletonMap(key, String.join(",", springList));
     } else {
-      String defaultValue = configProperties.getString(key);
-      if (defaultValue != null) {
-        map.put(key, defaultValue);
+      String otelList = configProperties.getString(key);
+      if (otelList != null) {
+        return Collections.singletonMap(key, otelList);
       }
     }
+    return Collections.emptyMap();
   }
 
-  private static ConfigProperties createCustomizedProperties(
-      ConfigProperties configProperties, SpringOtelProperties springOtelProperties) {
-    // find a better way to do this
-    Map<String, String> map = new HashMap<>();
-    addList(
-        map, ENABLED_KEY, springOtelProperties.getJavaEnabledResourceProviders(), configProperties);
-    addList(
-        map,
-        DISABLED_KEY,
-        springOtelProperties.getJavaDisabledResourceProviders(),
-        configProperties);
+  private static ConfigProperties createCustomizedListProperties(
+      ConfigProperties configProperties, OtelSpringProperties otelSpringProperties) {
+    // io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizer
+    // has already been applied before this point, so we have to apply the same logic here
+    Map<String, String> map =
+        new HashMap<>(
+            addList(
+                ENABLED_KEY,
+                otelSpringProperties.getJavaEnabledResourceProviders(),
+                configProperties));
+    map.putAll(
+        addList(
+            DISABLED_KEY,
+            otelSpringProperties.getJavaDisabledResourceProviders(),
+            configProperties));
 
     return DefaultConfigProperties.createFromMap(
         new ResourceProviderPropertiesCustomizer()
@@ -104,14 +109,14 @@ public class SpringConfigProperties implements ConfigProperties {
       Environment env,
       OtlpExporterProperties otlpExporterProperties,
       OtelResourceProperties resourceProperties,
-      SpringOtelProperties springOtelProperties,
+      OtelSpringProperties otelSpringProperties,
       ConfigProperties fallback) {
     return new SpringConfigProperties(
         env,
         new SpelExpressionParser(),
         otlpExporterProperties,
         resourceProperties,
-        springOtelProperties,
+        otelSpringProperties,
         fallback);
   }
 
@@ -166,13 +171,13 @@ public class SpringConfigProperties implements ConfigProperties {
 
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
 
-    Function<SpringOtelProperties, List<String>> get = LIST_PROPERTIES.get(normalizedName);
-    if (get != null) {
-      List<String> c = customizedResourceProviderProperties.getList(name);
+    Function<OtelSpringProperties, List<String>> getList = LIST_PROPERTIES.get(normalizedName);
+    if (getList != null) {
+      List<String> c = customizedListProperties.getList(name);
       if (!c.isEmpty()) {
         return c;
       }
-      return get.apply(springOtelProperties);
+      return getList.apply(otelSpringProperties);
     }
 
     return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));
