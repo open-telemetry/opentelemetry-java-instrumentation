@@ -8,11 +8,11 @@
   </Appenders>
   <Loggers>
     <Logger name="TestLogger" level="All">
-      <AppenderRef ref="ListAppender" level="All" />
-      <AppenderRef ref="Console" level="All" />
+      <AppenderRef ref="ListAppender" />
+      <AppenderRef ref="Console" />
     </Logger>
-    <Root>
-      <AppenderRef ref="Console" level="All" />
+    <Root level="All">
+      <AppenderRef ref="Console" />
     </Root>
   </Loggers>
 </Configuration>

@@ -18,6 +18,7 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
@@ -70,6 +71,8 @@ class AwsSpanAssertions {
                 val ->
                     val.satisfiesAnyOf(
                         v -> assertThat(v).isEqualTo(queueUrl), v -> assertThat(v).isNull())),
+            satisfies(
+                AwsIncubatingAttributes.AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(UrlAttributes.URL_FULL, val -> val.isInstanceOf(String.class)),
@@ -150,6 +153,8 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
+            satisfies(
+                AwsIncubatingAttributes.AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
             equalTo(RpcIncubatingAttributes.RPC_METHOD, spanName.substring(4)),
             equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSNS"),

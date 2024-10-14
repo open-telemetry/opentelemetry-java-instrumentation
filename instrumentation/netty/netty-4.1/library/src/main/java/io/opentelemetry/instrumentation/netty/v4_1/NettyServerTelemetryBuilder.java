@@ -32,7 +32,7 @@ public final class NettyServerTelemetryBuilder {
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpServerInstrumenterBuilder<>(
+        DefaultHttpServerInstrumenterBuilder.create(
             "io.opentelemetry.netty-4.1",
             openTelemetry,
             new NettyHttpServerAttributesGetter(),
