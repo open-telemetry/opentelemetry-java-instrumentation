@@ -84,7 +84,8 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
           ((BeanDefinitionRegistry) beanFactory)
               .registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
         } catch (ClassNotFoundException ignored) {
-          // Ignore
+          ignored.printStackTrace(System.out);
+          throw new IllegalStateException(ignored); // TODO: for debugging
         }
       }
     }
