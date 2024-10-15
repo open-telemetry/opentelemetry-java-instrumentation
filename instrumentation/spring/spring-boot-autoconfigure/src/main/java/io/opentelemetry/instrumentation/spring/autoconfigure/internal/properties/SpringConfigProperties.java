@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.ExpressionParser;
@@ -34,24 +33,10 @@ public class SpringConfigProperties implements ConfigProperties {
   private final OtelSpringProperties otelSpringProperties;
   private final ConfigProperties otelSdkProperties;
   private final ConfigProperties customizedListProperties;
-
-  private static final Map<String, Function<OtelSpringProperties, List<String>>> LIST_PROPERTIES =
-      new HashMap<>();
+  private final Map<String, List<String>> listPropertyValues = new HashMap<>();
 
   static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
   static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
-
-  static {
-    LIST_PROPERTIES.put(ENABLED_KEY, OtelSpringProperties::getJavaEnabledResourceProviders);
-    LIST_PROPERTIES.put(DISABLED_KEY, OtelSpringProperties::getJavaDisabledResourceProviders);
-    LIST_PROPERTIES.put(
-        "otel.experimental.metrics.view.config",
-        OtelSpringProperties::getExperimentalMetricsViewConfig);
-    LIST_PROPERTIES.put(
-        "otel.experimental.resource.disabled.keys",
-        OtelSpringProperties::getExperimentalResourceDisabledKeys);
-    LIST_PROPERTIES.put("otel.propagators", OtelSpringProperties::getPropagators);
-  }
 
   public SpringConfigProperties(
       Environment environment,
@@ -68,6 +53,16 @@ public class SpringConfigProperties implements ConfigProperties {
     this.otelSdkProperties = otelSdkProperties;
     this.customizedListProperties =
         createCustomizedListProperties(otelSdkProperties, otelSpringProperties);
+
+    listPropertyValues.put(ENABLED_KEY, otelSpringProperties.getJavaEnabledResourceProviders());
+    listPropertyValues.put(DISABLED_KEY, otelSpringProperties.getJavaDisabledResourceProviders());
+    listPropertyValues.put(
+        "otel.experimental.metrics.view.config",
+        otelSpringProperties.getExperimentalMetricsViewConfig());
+    listPropertyValues.put(
+        "otel.experimental.resource.disabled.keys",
+        otelSpringProperties.getExperimentalResourceDisabledKeys());
+    listPropertyValues.put("otel.propagators", otelSpringProperties.getPropagators());
   }
 
   private static Map<String, String> addList(
@@ -171,13 +166,13 @@ public class SpringConfigProperties implements ConfigProperties {
 
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
 
-    Function<OtelSpringProperties, List<String>> getList = LIST_PROPERTIES.get(normalizedName);
-    if (getList != null) {
+    List<String> list = listPropertyValues.get(normalizedName);
+    if (list != null) {
       List<String> c = customizedListProperties.getList(name);
       if (!c.isEmpty()) {
         return c;
       }
-      return getList.apply(otelSpringProperties);
+      return list;
     }
 
     return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));
