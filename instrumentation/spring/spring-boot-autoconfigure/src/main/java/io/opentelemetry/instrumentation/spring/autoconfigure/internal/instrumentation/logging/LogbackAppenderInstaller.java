@@ -115,6 +115,14 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes.booleanValue());
     }
 
+    Boolean captureArguments =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-arguments");
+    if (captureArguments != null) {
+      openTelemetryAppender.setCaptureArguments(captureArguments.booleanValue());
+    }
+
     String mdcAttributeProperty =
         applicationEnvironmentPreparedEvent
             .getEnvironment()
