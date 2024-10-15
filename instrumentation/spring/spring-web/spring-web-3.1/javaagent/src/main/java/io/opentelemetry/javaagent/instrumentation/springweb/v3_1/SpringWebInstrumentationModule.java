@@ -13,8 +13,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -31,17 +29,6 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     return hasClassesNamed("org.springframework.web.method.HandlerMethod")
         // class added in 6.0
         .and(not(hasClassesNamed("org.springframework.web.ErrorResponse")));
-  }
-
-  @Override
-  public void injectClasses(ClassInjector injector) {
-    // make the filter class file loadable by ClassPathResource - in some cases (e.g. spring-guice,
-    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7428) Spring
-    // might want to read the class file metadata; this line will make the filter class file visible
-    // to the bean class loader
-    injector
-        .proxyBuilder("org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter")
-        .inject(InjectionMode.CLASS_AND_RESOURCE);
   }
 
   @Override

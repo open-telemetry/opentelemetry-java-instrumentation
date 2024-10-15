@@ -12,6 +12,8 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -29,9 +31,10 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith(
-        "org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder("org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter")
+        .inject(InjectionMode.CLASS_AND_RESOURCE);
   }
 
   @Override
