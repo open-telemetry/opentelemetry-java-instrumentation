@@ -33,7 +33,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
-  private boolean captureArguments = true;
+  private boolean captureArguments = false;
   private List<String> captureMdcAttributes = emptyList();
 
   private volatile OpenTelemetry openTelemetry;
