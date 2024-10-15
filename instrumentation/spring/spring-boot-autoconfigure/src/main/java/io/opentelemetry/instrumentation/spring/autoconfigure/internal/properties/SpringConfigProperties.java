@@ -30,7 +30,6 @@ public class SpringConfigProperties implements ConfigProperties {
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
   private final OtelResourceProperties resourceProperties;
-  private final OtelSpringProperties otelSpringProperties;
   private final ConfigProperties otelSdkProperties;
   private final ConfigProperties customizedListProperties;
   private final Map<String, List<String>> listPropertyValues = new HashMap<>();
@@ -49,7 +48,6 @@ public class SpringConfigProperties implements ConfigProperties {
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
-    this.otelSpringProperties = otelSpringProperties;
     this.otelSdkProperties = otelSdkProperties;
     this.customizedListProperties =
         createCustomizedListProperties(otelSdkProperties, otelSpringProperties);
