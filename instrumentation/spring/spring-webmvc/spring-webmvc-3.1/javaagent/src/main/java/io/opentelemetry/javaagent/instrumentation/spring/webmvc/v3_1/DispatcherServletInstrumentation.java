@@ -62,7 +62,6 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
-
       if (springCtx.containsBean("otelAutoDispatcherFilter")) {
         Object bean = springCtx.getBean("otelAutoDispatcherFilter");
         try {
