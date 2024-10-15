@@ -16,8 +16,8 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JerseyInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class JerseyInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public JerseyInstrumentationModule() {
     super("jaxrs", "jaxrs-2.0", "jersey", "jersey-2.0");
   }
