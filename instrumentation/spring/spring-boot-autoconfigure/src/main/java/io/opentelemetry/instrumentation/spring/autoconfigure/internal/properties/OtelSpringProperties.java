@@ -13,6 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+// yaml lists only work if you create a @ConfigurationProperties object
 @ConfigurationProperties(prefix = "otel")
 public final class OtelSpringProperties {
 
