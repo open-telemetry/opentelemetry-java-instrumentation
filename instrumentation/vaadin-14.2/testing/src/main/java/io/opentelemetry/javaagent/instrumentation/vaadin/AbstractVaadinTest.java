@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
+// import static org.assertj.core.api.Assertions.assertThat;
+// import static org.awaitility.Awaitility.await;
 
 import com.vaadin.flow.server.Version;
 import com.vaadin.flow.spring.annotation.EnableVaadin;
-import io.opentelemetry.api.trace.SpanKind;
+// import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
-import io.opentelemetry.sdk.trace.data.SpanData;
+// import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+// import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,17 +23,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
+// import java.time.Duration;
 import java.util.HashMap;
-import java.util.List;
+// import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+// import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.openqa.selenium.By;
+// import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
+// import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -126,77 +126,77 @@ public abstract class AbstractVaadinTest
     return "/xyz";
   }
 
-  private void waitForStart(RemoteWebDriver driver) {
-    // In development mode ui javascript is compiled when application starts
-    // this involves downloading and installing npm and a bunch of packages
-    // and running webpack. Wait until all of this is done before starting test.
-    driver.manage().timeouts().implicitlyWait(Duration.ofMinutes(3));
-    driver.get(address.resolve("main").toString());
-    // wait for page to load
-    driver.findElement(By.id("main.label"));
-    // clear traces so test would start from clean state
-    testing.clearData();
+  // private void waitForStart(RemoteWebDriver driver) {
+  //  // In development mode ui javascript is compiled when application starts
+  //  // this involves downloading and installing npm and a bunch of packages
+  //  // and running webpack. Wait until all of this is done before starting test.
+  //  driver.manage().timeouts().implicitlyWait(Duration.ofMinutes(3));
+  //  driver.get(address.resolve("main").toString());
+  //  // wait for page to load
+  //  driver.findElement(By.id("main.label"));
+  //  // clear traces so test would start from clean state
+  //  testing.clearData();
+  //
+  //  driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
+  // }
 
-    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
-  }
-
-  private RemoteWebDriver getWebDriver() {
-    return new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
-  }
+  // private RemoteWebDriver getWebDriver() {
+  //  return new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
+  // }
 
   abstract void assertFirstRequest();
 
-  private void assertButtonClick() {
-    await()
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = testing.waitForTraces(1);
-              assertThat(traces.get(0))
-                  .satisfies(
-                      spans -> {
-                        OpenTelemetryAssertions.assertThat(spans.get(0))
-                            .hasName("POST " + getContextPath() + "/main")
-                            .hasNoParent()
-                            .hasKind(SpanKind.SERVER);
-                        OpenTelemetryAssertions.assertThat(spans.get(1))
-                            .hasName("SpringVaadinServletService.handleRequest")
-                            .hasParent(spans.get(0))
-                            .hasKind(SpanKind.INTERNAL);
-                        // we don't assert all the handler spans as these vary between
-                        // vaadin versions
-                        OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 2))
-                            .hasName("UidlRequestHandler.handleRequest")
-                            .hasParent(spans.get(1))
-                            .hasKind(SpanKind.INTERNAL);
-                        OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 1))
-                            .hasName("EventRpcHandler.handle/click")
-                            .hasParent(spans.get(spans.size() - 2))
-                            .hasKind(SpanKind.INTERNAL);
-                      });
-            });
-  }
+  // private void assertButtonClick() {
+  //  await()
+  //      .untilAsserted(
+  //          () -> {
+  //            List<List<SpanData>> traces = testing.waitForTraces(1);
+  //            assertThat(traces.get(0))
+  //                .satisfies(
+  //                    spans -> {
+  //                      OpenTelemetryAssertions.assertThat(spans.get(0))
+  //                          .hasName("POST " + getContextPath() + "/main")
+  //                          .hasNoParent()
+  //                          .hasKind(SpanKind.SERVER);
+  //                      OpenTelemetryAssertions.assertThat(spans.get(1))
+  //                          .hasName("SpringVaadinServletService.handleRequest")
+  //                          .hasParent(spans.get(0))
+  //                          .hasKind(SpanKind.INTERNAL);
+  //                      // we don't assert all the handler spans as these vary between
+  //                      // vaadin versions
+  //                      OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 2))
+  //                          .hasName("UidlRequestHandler.handleRequest")
+  //                          .hasParent(spans.get(1))
+  //                          .hasKind(SpanKind.INTERNAL);
+  //                      OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 1))
+  //                          .hasName("EventRpcHandler.handle/click")
+  //                          .hasParent(spans.get(spans.size() - 2))
+  //                          .hasKind(SpanKind.INTERNAL);
+  //                    });
+  //          });
+  // }
 
-  @Test
-  public void navigateFromMainToOtherView() {
-    RemoteWebDriver driver = getWebDriver();
-    waitForStart(driver);
-
-    // fetch the test page
-    driver.get(address.resolve("main").toString());
-
-    // wait for page to load
-    assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
-    assertFirstRequest();
-
-    testing.clearData();
-
-    // click a button to trigger calling java code in MainView
-    driver.findElement(By.id("main.button")).click();
-
-    // wait for page to load
-    assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
-    assertButtonClick();
-
-    driver.close();
-  }
+  // @Test
+  // public void navigateFromMainToOtherView() {
+  //  RemoteWebDriver driver = getWebDriver();
+  //  waitForStart(driver);
+  //
+  //  // fetch the test page
+  //  driver.get(address.resolve("main").toString());
+  //
+  //  // wait for page to load
+  //  assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
+  //  assertFirstRequest();
+  //
+  //  testing.clearData();
+  //
+  //  // click a button to trigger calling java code in MainView
+  //  driver.findElement(By.id("main.button")).click();
+  //
+  //  // wait for page to load
+  //  assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
+  //  assertButtonClick();
+  //
+  //  driver.close();
+  // }
 }

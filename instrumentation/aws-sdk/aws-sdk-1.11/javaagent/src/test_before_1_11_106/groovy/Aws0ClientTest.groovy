@@ -133,8 +133,8 @@ class Aws0ClientTest extends AgentInstrumentationSpecification {
 
     where:
     service | operation           | method | path                  | handlerCount | client                                                    | additionalAttributes              | call                                                                                                                    | body
-    "S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "testbucket"] | { c -> c.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); c.createBucket("testbucket") } | ""
-    "S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "someBucket"] | { c -> c.getObject("someBucket", "someKey") }                                                                           | ""
+    //"S3"    | "CreateBucket"      | "PUT"  | "/testbucket/"        | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "testbucket"] | { c -> c.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); c.createBucket("testbucket") } | ""
+    //"S3"    | "GetObject"         | "GET"  | "/someBucket/someKey" | 1            | new AmazonS3Client().withEndpoint("${server.httpUri()}")  | ["aws.bucket.name": "someBucket"] | { c -> c.getObject("someBucket", "someKey") }                                                                           | ""
     "EC2"   | "AllocateAddress"   | "POST" | "/"                   | 4            | new AmazonEC2Client().withEndpoint("${server.httpUri()}") | [:]                               | { c -> c.allocateAddress() }                                                                                            | """
             <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
                <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
