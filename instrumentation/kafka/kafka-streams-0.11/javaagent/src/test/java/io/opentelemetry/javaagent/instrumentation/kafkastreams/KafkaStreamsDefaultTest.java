@@ -336,9 +336,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   }
                 });
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
-    List<SpanData> streamTrace = testing.spans();
+    List<List<SpanData>> streamTrace = testing.waitForTraces(3);
     assertThat(streamTrace).hasSize(3);
-    SpanData streamSendSpan = streamTrace.get(2);
+    SpanData streamSendSpan = streamTrace.get(2).get(2);
     assertThat(spanContext.getTraceId()).isEqualTo(streamSendSpan.getTraceId());
     assertThat(spanContext.getSpanId()).isEqualTo(streamSendSpan.getSpanId());
   }
