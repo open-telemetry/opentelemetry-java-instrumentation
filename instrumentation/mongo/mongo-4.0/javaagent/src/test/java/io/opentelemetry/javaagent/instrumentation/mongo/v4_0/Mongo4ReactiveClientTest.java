@@ -62,16 +62,11 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public void createCollection(String dbName, String collectionName) {
+  public void createCollection(String dbName, String collectionName) throws InterruptedException {
     MongoDatabase db = client.getDatabase(dbName);
     CountDownLatch latch = new CountDownLatch(1);
     db.createCollection(collectionName).subscribe(toSubscriber(o -> latch.countDown()));
-
-    try {
-      latch.await(30, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    latch.await(30, TimeUnit.SECONDS);
   }
 
   @Override
@@ -107,14 +102,14 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public int getCollection(String dbName, String collectionName)
+  public long getCollection(String dbName, String collectionName)
       throws ExecutionException, InterruptedException, TimeoutException {
     MongoDatabase db = client.getDatabase(dbName);
     CompletableFuture<Long> count = new CompletableFuture<>();
     db.getCollection(collectionName)
         .estimatedDocumentCount()
         .subscribe(toSubscriber(o -> count.complete(((Long) o))));
-    return Math.toIntExact(count.get(30, TimeUnit.SECONDS));
+    return count.get(30, TimeUnit.SECONDS);
   }
 
   @Override
@@ -137,7 +132,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public int insert(MongoCollection<Document> collection) throws Exception {
+  public long insert(MongoCollection<Document> collection) throws Exception {
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection
         .insertOne(new Document("password", "SECRET"))
@@ -147,7 +142,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
                     collection
                         .estimatedDocumentCount()
                         .subscribe(toSubscriber(c -> count.complete(((Long) c))))));
-    return Math.toIntExact(count.get(30, TimeUnit.SECONDS));
+    return count.get(30, TimeUnit.SECONDS);
   }
 
   @Override
@@ -175,7 +170,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public int update(MongoCollection<Document> collection) throws Exception {
+  public long update(MongoCollection<Document> collection) throws Exception {
     CompletableFuture<UpdateResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection
@@ -190,7 +185,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
                       .estimatedDocumentCount()
                       .subscribe(toSubscriber(o -> count.complete(((Long) o))));
                 }));
-    return Math.toIntExact(result.get(30, TimeUnit.SECONDS).getModifiedCount());
+    return result.get(30, TimeUnit.SECONDS).getModifiedCount();
   }
 
   @Override
@@ -218,7 +213,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public int delete(MongoCollection<Document> collection)
+  public long delete(MongoCollection<Document> collection)
       throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<DeleteResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
@@ -232,7 +227,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
                       .estimatedDocumentCount()
                       .subscribe(toSubscriber(o -> count.complete(((Long) o))));
                 }));
-    return Math.toIntExact(result.get(30, TimeUnit.SECONDS).getDeletedCount());
+    return result.get(30, TimeUnit.SECONDS).getDeletedCount();
   }
 
   @Override

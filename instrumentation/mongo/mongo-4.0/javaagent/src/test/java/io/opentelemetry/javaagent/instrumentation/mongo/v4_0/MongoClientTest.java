@@ -81,9 +81,9 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public int getCollection(String dbName, String collectionName) {
+  public long getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
-    return Math.toIntExact(db.getCollection(collectionName).estimatedDocumentCount());
+    return db.getCollection(collectionName).estimatedDocumentCount();
   }
 
   @Override
@@ -102,9 +102,9 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public int insert(MongoCollection<Document> collection) {
+  public long insert(MongoCollection<Document> collection) {
     collection.insertOne(new Document("password", "SECRET"));
-    return Math.toIntExact(collection.estimatedDocumentCount());
+    return collection.estimatedDocumentCount();
   }
 
   @Override
@@ -125,13 +125,13 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public int update(MongoCollection<Document> collection) {
+  public long update(MongoCollection<Document> collection) {
     UpdateResult result =
         collection.updateOne(
             new BsonDocument("password", new BsonString("OLDPW")),
             new BsonDocument("$set", new BsonDocument("password", new BsonString("NEWPW"))));
     collection.estimatedDocumentCount();
-    return Math.toIntExact(result.getModifiedCount());
+    return result.getModifiedCount();
   }
 
   @Override
@@ -152,11 +152,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Override
-  public int delete(MongoCollection<Document> collection) {
+  public long delete(MongoCollection<Document> collection) {
     DeleteResult result =
         collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")));
     collection.estimatedDocumentCount();
-    return Math.toIntExact(result.getDeletedCount());
+    return result.getDeletedCount();
   }
 
   @Override

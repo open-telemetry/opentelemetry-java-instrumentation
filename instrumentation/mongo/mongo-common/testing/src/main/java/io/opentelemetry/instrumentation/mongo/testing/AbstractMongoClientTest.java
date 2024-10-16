@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -63,9 +62,9 @@ public abstract class AbstractMongoClientTest<T> {
   protected abstract InstrumentationExtension testing();
 
   // Different client versions have different APIs to do these operations. If adding a test for a
-  // new
-  // version, refer to existing ones on how to implement these operations.
-  protected abstract void createCollection(String dbName, String collectionName);
+  // new version, refer to existing ones on how to implement these operations.
+  protected abstract void createCollection(String dbName, String collectionName)
+      throws InterruptedException;
 
   protected abstract void createCollectionNoDescription(String dbName, String collectionName)
       throws InterruptedException;
@@ -81,22 +80,22 @@ public abstract class AbstractMongoClientTest<T> {
   protected abstract void createCollectionCallingBuildTwice(String dbName, String collectionName)
       throws InterruptedException;
 
-  protected abstract int getCollection(String dbName, String collectionName) throws Exception;
+  protected abstract long getCollection(String dbName, String collectionName) throws Exception;
 
   protected abstract T setupInsert(String dbName, String collectionName)
       throws InterruptedException;
 
-  protected abstract int insert(T collection) throws Exception;
+  protected abstract long insert(T collection) throws Exception;
 
   protected abstract T setupUpdate(String dbName, String collectionName)
       throws InterruptedException;
 
-  protected abstract int update(T collection) throws Exception;
+  protected abstract long update(T collection) throws Exception;
 
   protected abstract T setupDelete(String dbName, String collectionName)
       throws InterruptedException;
 
-  protected abstract int delete(T collection) throws Exception;
+  protected abstract long delete(T collection) throws Exception;
 
   protected abstract T setupGetMore(String dbName, String collectionName);
 
@@ -117,7 +116,7 @@ public abstract class AbstractMongoClientTest<T> {
 
   @Test
   @DisplayName("test create collection")
-  void testCreateCollection() {
+  void testCreateCollection() throws InterruptedException {
     String dbName = "test_db";
     String collectionName = createCollectionName();
 
@@ -129,8 +128,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "create",
                             collectionName,
                             dbName,
@@ -163,8 +161,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "create",
                             collectionName,
                             dbName,
@@ -198,8 +195,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "create",
                             collectionName,
                             dbName,
@@ -223,7 +219,7 @@ public abstract class AbstractMongoClientTest<T> {
     String dbName = "test_db";
     String collectionName = createCollectionName();
 
-    int count = testing().runWithSpan("parent", () -> getCollection(dbName, collectionName));
+    long count = testing().runWithSpan("parent", () -> getCollection(dbName, collectionName));
     assertThat(count).isEqualTo(0);
 
     testing()
@@ -233,8 +229,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "count",
                             collectionName,
                             dbName,
@@ -260,7 +255,7 @@ public abstract class AbstractMongoClientTest<T> {
     String collectionName = createCollectionName();
 
     T collection = setupInsert(dbName, collectionName);
-    int count = testing().runWithSpan("parent", () -> insert(collection));
+    long count = testing().runWithSpan("parent", () -> insert(collection));
 
     assertThat(count).isEqualTo(1);
 
@@ -271,8 +266,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "insert",
                             collectionName,
                             dbName,
@@ -289,8 +283,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")),
                     span ->
                         mongoSpan(
-                            trace,
-                            2,
+                            trace.element(2),
                             "count",
                             collectionName,
                             dbName,
@@ -316,7 +309,7 @@ public abstract class AbstractMongoClientTest<T> {
     String collectionName = createCollectionName();
 
     T collection = setupUpdate(dbName, collectionName);
-    int modifiedCount = testing().runWithSpan("parent", () -> update(collection));
+    long modifiedCount = testing().runWithSpan("parent", () -> update(collection));
 
     assertThat(modifiedCount).isEqualTo(1);
 
@@ -327,8 +320,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "update",
                             collectionName,
                             dbName,
@@ -345,8 +337,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")),
                     span ->
                         mongoSpan(
-                            trace,
-                            2,
+                            trace.element(2),
                             "count",
                             collectionName,
                             dbName,
@@ -372,7 +363,7 @@ public abstract class AbstractMongoClientTest<T> {
     String collectionName = createCollectionName();
 
     T collection = setupDelete(dbName, collectionName);
-    int deletedCount = testing().runWithSpan("parent", () -> delete(collection));
+    long deletedCount = testing().runWithSpan("parent", () -> delete(collection));
 
     assertThat(deletedCount).isEqualTo(1);
 
@@ -383,8 +374,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "delete",
                             collectionName,
                             dbName,
@@ -401,8 +391,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")),
                     span ->
                         mongoSpan(
-                            trace,
-                            2,
+                            trace.element(2),
                             "count",
                             collectionName,
                             dbName,
@@ -437,8 +426,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "find",
                             collectionName,
                             dbName,
@@ -458,8 +446,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")),
                     span ->
                         mongoSpan(
-                            trace,
-                            2,
+                            trace.element(2),
                             "getMore",
                             collectionName,
                             dbName,
@@ -476,7 +463,7 @@ public abstract class AbstractMongoClientTest<T> {
   void testError() {
     assertThatIllegalArgumentException().isThrownBy(() -> error("test_db", createCollectionName()));
     // Unfortunately not caught by our instrumentation.
-    assertThat(testing().spans().size()).isEqualTo(0);
+    assertThat(testing().spans()).isEmpty();
   }
 
   @Test
@@ -496,8 +483,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace,
-                            1,
+                            trace.element(1),
                             "create",
                             collectionName,
                             dbName,
@@ -516,15 +502,14 @@ public abstract class AbstractMongoClientTest<T> {
   @SuppressWarnings("deprecation")
   // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   void mongoSpan(
-      TraceAssert trace,
-      int index,
+      SpanDataAssert spanData,
       String operation,
       String collection,
       String dbName,
       Object parentSpan,
       List<String> statements) {
     SpanDataAssert span =
-        trace.element(index).hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
+        spanData.hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
     if (parentSpan == null) {
       span.hasNoParent();
     } else {
@@ -536,7 +521,9 @@ public abstract class AbstractMongoClientTest<T> {
         equalTo(ServerAttributes.SERVER_PORT, port),
         satisfies(
             DbIncubatingAttributes.DB_STATEMENT,
-            val -> val.matches(statement -> statements.contains(statement.replaceAll(" ", "")))),
+            val ->
+                val.satisfies(
+                    statement -> assertThat(statements).contains(statement.replaceAll(" ", "")))),
         equalTo(DbIncubatingAttributes.DB_SYSTEM, "mongodb"),
         equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "mongodb://localhost:" + port),
         equalTo(DbIncubatingAttributes.DB_NAME, dbName),

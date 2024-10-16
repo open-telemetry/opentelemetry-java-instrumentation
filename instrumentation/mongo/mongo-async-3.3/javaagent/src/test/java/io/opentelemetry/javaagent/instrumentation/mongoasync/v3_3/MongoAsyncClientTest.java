@@ -20,6 +20,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -97,11 +99,11 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  public int getCollection(String dbName, String collectionName) {
+  public long getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
     CompletableFuture<Long> count = new CompletableFuture<>();
     db.getCollection(collectionName).count(toCallback(o -> count.complete(((Long) o))));
-    return count.join().intValue();
+    return count.join();
   }
 
   @Override
@@ -115,7 +117,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch.countDown()));
-                  latch.await();
+                  latch.await(30, TimeUnit.SECONDS);
                   return db.getCollection(collectionName);
                 });
     ignoreTracesAndClear(1);
@@ -123,12 +125,13 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  public int insert(MongoCollection<Document> collection) {
+  public long insert(MongoCollection<Document> collection)
+      throws ExecutionException, InterruptedException {
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection.insertOne(
         new Document("password", "SECRET"),
         toCallback(result -> collection.count(toCallback(o -> count.complete(((Long) o))))));
-    return count.join().intValue();
+    return count.get();
   }
 
   @Override
@@ -142,12 +145,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch1 = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch1.countDown()));
-                  latch1.await();
+                  latch1.await(30, TimeUnit.SECONDS);
                   MongoCollection<Document> coll = db.getCollection(collectionName);
                   CountDownLatch latch2 = new CountDownLatch(1);
                   coll.insertOne(
                       new Document("password", "OLDPW"), toCallback(result -> latch2.countDown()));
-                  latch2.await();
+                  latch2.await(30, TimeUnit.SECONDS);
                   return coll;
                 });
     ignoreTracesAndClear(1);
@@ -155,7 +158,8 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  public int update(MongoCollection<Document> collection) {
+  public long update(MongoCollection<Document> collection)
+      throws ExecutionException, InterruptedException {
     CompletableFuture<UpdateResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection.updateOne(
@@ -166,7 +170,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
               result.complete(((UpdateResult) res));
               collection.count(toCallback(o -> count.complete(((Long) o))));
             }));
-    return Math.toIntExact(result.join().getModifiedCount());
+    return result.get().getModifiedCount();
   }
 
   @Override
@@ -180,12 +184,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch1 = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch1.countDown()));
-                  latch1.await();
+                  latch1.await(30, TimeUnit.SECONDS);
                   MongoCollection<Document> coll = db.getCollection(collectionName);
                   CountDownLatch latch2 = new CountDownLatch(1);
                   coll.insertOne(
                       new Document("password", "SECRET"), toCallback(result -> latch2.countDown()));
-                  latch2.await();
+                  latch2.await(30, TimeUnit.SECONDS);
                   return coll;
                 });
     ignoreTracesAndClear(1);
@@ -193,7 +197,8 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  public int delete(MongoCollection<Document> collection) {
+  public long delete(MongoCollection<Document> collection)
+      throws ExecutionException, InterruptedException {
     CompletableFuture<DeleteResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection.deleteOne(
@@ -203,7 +208,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
               result.complete((DeleteResult) res);
               collection.count(toCallback(value -> count.complete(((Long) value))));
             }));
-    return Math.toIntExact(result.join().getDeletedCount());
+    return result.get().getDeletedCount();
   }
 
   @Override
@@ -226,7 +231,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
                   MongoDatabase db = client.getDatabase(dbName);
                   CountDownLatch latch = new CountDownLatch(1);
                   db.createCollection(collectionName, toCallback(result -> latch.countDown()));
-                  latch.await();
+                  latch.await(30, TimeUnit.SECONDS);
                   return db.getCollection(collectionName);
                 });
     ignoreTracesAndClear(1);

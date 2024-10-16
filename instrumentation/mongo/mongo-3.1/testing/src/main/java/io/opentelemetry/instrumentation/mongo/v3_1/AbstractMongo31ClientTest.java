@@ -25,7 +25,6 @@ import org.bson.BsonString;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractMongo31ClientTest
@@ -87,9 +86,9 @@ public abstract class AbstractMongo31ClientTest
   }
 
   @Override
-  protected int getCollection(String dbName, String collectionName) {
+  protected long getCollection(String dbName, String collectionName) {
     MongoDatabase db = client.getDatabase(dbName);
-    return Math.toIntExact(db.getCollection(collectionName).count());
+    return db.getCollection(collectionName).count();
   }
 
   @Override
@@ -108,9 +107,9 @@ public abstract class AbstractMongo31ClientTest
   }
 
   @Override
-  protected int insert(MongoCollection<Document> collection) {
+  protected long insert(MongoCollection<Document> collection) {
     collection.insertOne(new Document("password", "SECRET"));
-    return Math.toIntExact(collection.count());
+    return collection.count();
   }
 
   @Override
@@ -131,13 +130,13 @@ public abstract class AbstractMongo31ClientTest
   }
 
   @Override
-  protected int update(MongoCollection<Document> collection) {
+  protected long update(MongoCollection<Document> collection) {
     UpdateResult result =
         collection.updateOne(
             new BsonDocument("password", new BsonString("OLDPW")),
             new BsonDocument("$set", new BsonDocument("password", new BsonString("NEWPW"))));
     collection.count();
-    return Math.toIntExact(result.getModifiedCount());
+    return result.getModifiedCount();
   }
 
   @Override
@@ -158,11 +157,11 @@ public abstract class AbstractMongo31ClientTest
   }
 
   @Override
-  protected int delete(MongoCollection<Document> collection) {
+  protected long delete(MongoCollection<Document> collection) {
     DeleteResult result =
         collection.deleteOne(new BsonDocument("password", new BsonString("SECRET")));
     collection.count();
-    return Math.toIntExact(result.getDeletedCount());
+    return result.getDeletedCount();
   }
 
   @Override
@@ -208,7 +207,6 @@ public abstract class AbstractMongo31ClientTest
   }
 
   @Test
-  @DisplayName("test client failure")
   void testClientFailure() {
     MongoClientOptions options = MongoClientOptions.builder().serverSelectionTimeout(10).build();
     MongoClient client = new MongoClient(new ServerAddress(host, PortUtils.UNUSABLE_PORT), options);
@@ -220,6 +218,6 @@ public abstract class AbstractMongo31ClientTest
               db.createCollection(createCollectionName());
             });
     // Unfortunately not caught by our instrumentation.
-    assertThat(testing().spans().size()).isEqualTo(0);
+    assertThat(testing().spans()).isEmpty();
   }
 }

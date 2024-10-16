@@ -72,7 +72,7 @@ class MongoDbAttributesGetterTest {
                 .append("f2", new BsonString("c2")));
 
     // This can vary because of different whitespace for different MongoDB versions
-    assertThat(normalized).containsAnyOf("{\"cmd\": \"c\", \"f1\": \"", "{\"cmd\": \"c\", \"f1\" ");
+    assertThat(normalized).isIn("{\"cmd\": \"c\", \"f1\": \"", "{\"cmd\": \"c\", \"f1\" ");
   }
 
   @Test
@@ -89,7 +89,7 @@ class MongoDbAttributesGetterTest {
 
     // This can vary because of different whitespace for different MongoDB versions
     assertThat(normalized)
-        .containsAnyOf("{\"cmd\": \"c\", \"f1\": [\"?\", \"?", "{\"cmd\": \"c\", \"f1\": [\"?\",");
+        .isIn("{\"cmd\": \"c\", \"f1\": [\"?\", \"?", "{\"cmd\": \"c\", \"f1\": [\"?\",");
   }
 
   static String sanitizeStatementAcrossVersions(
