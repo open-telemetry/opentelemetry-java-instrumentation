@@ -16,10 +16,9 @@ import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import io.opentelemetry.instrumentation.mongo.testing.AbstractMongoClientTest;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -41,9 +40,9 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private MongoClient client;
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private final List<AutoCloseable> cleanup = new ArrayList<>();
+  private MongoClient client;
 
   @BeforeAll
   void setup() {
@@ -51,12 +50,9 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @AfterAll
-  void cleanup() throws Exception {
+  void cleanup() {
     if (client != null) {
       client.close();
-    }
-    for (AutoCloseable resource : cleanup) {
-      resource.close();
     }
   }
 
@@ -82,7 +78,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   public void createCollectionNoDescription(String dbName, String collectionName)
       throws InterruptedException {
     MongoClient tmpClient = MongoClients.create("mongodb://" + host + ":" + port);
-    cleanup.add(tmpClient);
+    cleanup.deferCleanup(tmpClient);
     MongoDatabase db = tmpClient.getDatabase(dbName);
     CountDownLatch latch = new CountDownLatch(1);
     db.createCollection(collectionName).subscribe(toSubscriber(o -> latch.countDown()));
@@ -103,7 +99,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
                 builder -> builder.hosts(singletonList(new ServerAddress(host, port))));
     settings.build();
     MongoClient tmpClient = MongoClients.create(settings.build());
-    cleanup.add(tmpClient);
+    cleanup.deferCleanup(tmpClient);
     MongoDatabase db = tmpClient.getDatabase(dbName);
     CountDownLatch latch = new CountDownLatch(1);
     db.createCollection(collectionName).subscribe(toSubscriber(o -> latch.countDown()));

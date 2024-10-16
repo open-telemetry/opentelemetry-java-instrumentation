@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.mongo.testing;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -21,16 +22,13 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.Socket;
-import java.util.Objects;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.platform.commons.util.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -119,7 +117,7 @@ public abstract class AbstractMongoClientTest<T> {
 
   @Test
   @DisplayName("test create collection")
-  void testCreateCollection() throws InterruptedException {
+  void testCreateCollection() {
     String dbName = "test_db";
     String collectionName = createCollectionName();
 
@@ -137,25 +135,17 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -179,25 +169,17 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -222,25 +204,17 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -265,29 +239,18 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str, "{\"count\":\"" + collectionName + "\",\"query\":{}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -314,22 +277,16 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"insert\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"insert\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"$db\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"insert\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")),
+                            asList(
+                                "{\"insert\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}",
+                                "{\"insert\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}",
+                                "{\"insert\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")),
                     span ->
                         mongoSpan(
                             trace,
@@ -338,29 +295,18 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str, "{\"count\":\"" + collectionName + "\",\"query\":{}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -387,22 +333,16 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"update\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"update\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"$db\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"update\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")),
+                            asList(
+                                "{\"update\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}",
+                                "{\"update\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}",
+                                "{\"update\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")),
                     span ->
                         mongoSpan(
                             trace,
@@ -411,29 +351,18 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str, "{\"count\":\"" + collectionName + "\",\"query\":{}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -460,22 +389,16 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"delete\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"delete\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"$db\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"delete\":\""
-                                            + collectionName
-                                            + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")),
+                            asList(
+                                "{\"delete\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}",
+                                "{\"delete\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}",
+                                "{\"delete\":\""
+                                    + collectionName
+                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")),
                     span ->
                         mongoSpan(
                             trace,
@@ -484,29 +407,18 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str, "{\"count\":\"" + collectionName + "\",\"query\":{}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"count\":\""
-                                            + collectionName
-                                            + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -531,27 +443,19 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"find\":\""
-                                            + collectionName
-                                            + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"find\":\""
-                                            + collectionName
-                                            + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"find\":\""
-                                            + collectionName
-                                            + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"find\":\""
-                                            + collectionName
-                                            + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")),
+                            asList(
+                                "{\"find\":\""
+                                    + collectionName
+                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\"}",
+                                "{\"find\":\""
+                                    + collectionName
+                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\"}",
+                                "{\"find\":\""
+                                    + collectionName
+                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"find\":\""
+                                    + collectionName
+                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")),
                     span ->
                         mongoSpan(
                             trace,
@@ -560,19 +464,11 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\"}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}")
-                                    || Objects.equals(
-                                        str,
-                                        "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                            asList(
+                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\"}",
+                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\"}",
+                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -580,7 +476,7 @@ public abstract class AbstractMongoClientTest<T> {
   void testError() {
     assertThatIllegalArgumentException().isThrownBy(() -> error("test_db", createCollectionName()));
     // Unfortunately not caught by our instrumentation.
-    testing().waitAndAssertTraces();
+    assertThat(testing().spans().size()).isEqualTo(0);
   }
 
   @Test
@@ -606,14 +502,11 @@ public abstract class AbstractMongoClientTest<T> {
                             collectionName,
                             dbName,
                             trace.getSpan(0),
-                            str ->
-                                Objects.equals(
-                                        str,
-                                        "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}")
-                                    || StringUtils.isNotBlank(
-                                        "{\"create\":\""
-                                            + collectionName
-                                            + "\",\"capped\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}"))));
+                            asList(
+                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   protected String createCollectionName() {
@@ -629,7 +522,7 @@ public abstract class AbstractMongoClientTest<T> {
       String collection,
       String dbName,
       Object parentSpan,
-      Function<String, Boolean> statementEval) {
+      List<String> statements) {
     SpanDataAssert span =
         trace.element(index).hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
     if (parentSpan == null) {
@@ -643,10 +536,7 @@ public abstract class AbstractMongoClientTest<T> {
         equalTo(ServerAttributes.SERVER_PORT, port),
         satisfies(
             DbIncubatingAttributes.DB_STATEMENT,
-            val ->
-                val.is(
-                    new Condition<>(
-                        statement -> statementEval.apply(statement.replaceAll(" ", "")), ""))),
+            val -> val.matches(statement -> statements.contains(statement.replaceAll(" ", "")))),
         equalTo(DbIncubatingAttributes.DB_SYSTEM, "mongodb"),
         equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "mongodb://localhost:" + port),
         equalTo(DbIncubatingAttributes.DB_NAME, dbName),

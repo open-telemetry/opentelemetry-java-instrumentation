@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.mongodb.MongoClientSettings;
@@ -240,6 +241,6 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
             })
         .isInstanceOf(MongoTimeoutException.class);
     // Unfortunately not caught by our instrumentation.
-    testing().waitAndAssertTraces();
+    assertThat(testing().spans().size()).isEqualTo(0);
   }
 }

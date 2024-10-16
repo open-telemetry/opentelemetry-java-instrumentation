@@ -71,12 +71,12 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
 
   @Override
   public void createCollectionCallingBuildTwice(String dbName, String collectionName) {
-    MongoClientSettings settings =
+    MongoClientSettings.Builder settings =
         MongoClientSettings.builder()
             .applyToClusterSettings(
-                builder -> builder.hosts(singletonList(new ServerAddress(host, port))))
-            .build();
-    MongoDatabase db = MongoClients.create(settings).getDatabase(dbName);
+                builder -> builder.hosts(singletonList(new ServerAddress(host, port))));
+    settings.build();
+    MongoDatabase db = MongoClients.create(settings.build()).getDatabase(dbName);
     db.createCollection(collectionName);
   }
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.mongodb.MongoClient;
@@ -219,6 +220,6 @@ public abstract class AbstractMongo31ClientTest
               db.createCollection(createCollectionName());
             });
     // Unfortunately not caught by our instrumentation.
-    testing().waitAndAssertTraces();
+    assertThat(testing().spans().size()).isEqualTo(0);
   }
 }
