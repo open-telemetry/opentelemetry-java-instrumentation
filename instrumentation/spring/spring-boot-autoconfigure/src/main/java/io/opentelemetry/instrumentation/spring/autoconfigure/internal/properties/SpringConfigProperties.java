@@ -63,7 +63,7 @@ public class SpringConfigProperties implements ConfigProperties {
     listPropertyValues.put("otel.propagators", otelSpringProperties.getPropagators());
   }
 
-  private static Map<String, String> addList(
+  private static Map<String, String> createMapForListProperty(
       String key, List<String> springList, ConfigProperties configProperties) {
     if (!springList.isEmpty()) {
       return Collections.singletonMap(key, String.join(",", springList));
@@ -80,14 +80,18 @@ public class SpringConfigProperties implements ConfigProperties {
       ConfigProperties configProperties, OtelSpringProperties otelSpringProperties) {
     // io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizer
     // has already been applied before this point, so we have to apply the same logic here
+    // the logic is implemented here:
+    // https://github.com/open-telemetry/opentelemetry-java/blob/325822ce8527b83a09274c86a5123a214db80c1d/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/AutoConfiguredOpenTelemetrySdkBuilder.java#L634-L641
+    // ResourceProviderPropertiesCustomizer gets applied by "propertiesCustomizers"
+    // and spring properties by "configPropertiesCustomizer", which is later
     Map<String, String> map =
         new HashMap<>(
-            addList(
+            createMapForListProperty(
                 ENABLED_KEY,
                 otelSpringProperties.getJavaEnabledResourceProviders(),
                 configProperties));
     map.putAll(
-        addList(
+        createMapForListProperty(
             DISABLED_KEY,
             otelSpringProperties.getJavaDisabledResourceProviders(),
             configProperties));
