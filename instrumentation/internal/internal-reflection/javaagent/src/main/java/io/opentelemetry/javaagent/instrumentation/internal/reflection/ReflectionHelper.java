@@ -11,6 +11,8 @@ import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 public final class ReflectionHelper {
@@ -61,21 +63,23 @@ public final class ReflectionHelper {
       return interfaces;
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
+    Collection<String> virtualFieldClassNames = new HashSet<>();
     boolean hasVirtualFieldMarker = false;
     for (Class<?> interfaceClass : interfaces) {
       // filter out virtual field marker and accessor interfaces
-      if (interfaceClass == VirtualFieldInstalledMarker.class
-          || (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
-              && interfaceClass.isSynthetic()
-              && interfaceClass.getName().contains("VirtualFieldAccessor$"))) {
-        hasVirtualFieldMarker = true;
+      if (interfaceClass == VirtualFieldInstalledMarker.class) {
+        continue;
+      } else if (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
+          && interfaceClass.isSynthetic()
+          && interfaceClass.getName().contains("VirtualFieldAccessor$")) {
+        virtualFieldClassNames.add(interfaceClass.getName());
         continue;
       }
       result.add(interfaceClass);
     }
 
-    if (hasVirtualFieldMarker) {
-      VirtualFieldDetector.markVirtualFieldsPresent(containingClass);
+    if (!virtualFieldClassNames.isEmpty()) {
+      VirtualFieldDetector.markVirtualFields(containingClass, virtualFieldClassNames);
     }
 
     return result.toArray(new Class<?>[0]);
