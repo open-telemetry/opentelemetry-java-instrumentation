@@ -61,8 +61,12 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addListenerExit(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(0) Runnable task,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      VirtualField<Runnable, PropagatedContext> virtualField =
+          VirtualField.find(Runnable.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
     }
   }
 }

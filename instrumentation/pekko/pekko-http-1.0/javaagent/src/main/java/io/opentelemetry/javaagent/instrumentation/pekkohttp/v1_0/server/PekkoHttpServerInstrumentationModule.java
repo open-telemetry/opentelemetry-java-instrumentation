@@ -11,11 +11,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class PekkoHttpServerInstrumentationModule extends InstrumentationModule {
+public class PekkoHttpServerInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public PekkoHttpServerInstrumentationModule() {
     super("pekko-http", "pekko-http-1.0", "pekko-http-server");
   }
@@ -28,10 +30,8 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule 
   }
 
   @Override
-  public boolean isIndyModule() {
-    // PekkoHttpServerInstrumentationModule and PekkoHttpServerRouteInstrumentationModule share
-    // PekkoRouteHolder class
-    return false;
+  public String getModuleGroup() {
+    return "pekko-server";
   }
 
   @Override

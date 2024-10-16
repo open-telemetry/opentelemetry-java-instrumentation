@@ -47,6 +47,7 @@ class CouchbaseClient31Test {
             .withEnabledServices(CouchbaseService.KV)
             .withBucket(new BucketDefinition("test"))
             .withLogConsumer(new Slf4jLogConsumer(logger))
+            .withStartupAttempts(5)
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
 

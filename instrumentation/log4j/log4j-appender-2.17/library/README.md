@@ -33,7 +33,7 @@ runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:
 
 ### Usage
 
-The following demonstrates how you might configure the appender in your `log4j.xml` configuration:
+The following demonstrates how you might configure the appender in your `log4j2.xml` configuration:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -46,9 +46,9 @@ The following demonstrates how you might configure the appender in your `log4j.x
     <OpenTelemetry name="OpenTelemetryAppender"/>
   </Appenders>
   <Loggers>
-    <Root>
-      <AppenderRef ref="OpenTelemetryAppender" level="All"/>
-      <AppenderRef ref="Console" level="All"/>
+    <Root level="All">
+      <AppenderRef ref="OpenTelemetryAppender"/>
+      <AppenderRef ref="Console"/>
     </Root>
   </Loggers>
 </Configuration>
