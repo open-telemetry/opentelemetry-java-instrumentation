@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.lang.reflect.Field;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -61,11 +62,19 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
+
       if (springCtx.containsBean("otelAutoDispatcherFilter")) {
-        OpenTelemetryHandlerMappingFilter filter =
-            (OpenTelemetryHandlerMappingFilter) springCtx.getBean("otelAutoDispatcherFilter");
-        if (handlerMappings != null) {
-          filter.setHandlerMappings(handlerMappings);
+        Object bean = springCtx.getBean("otelAutoDispatcherFilter");
+        try {
+          // the bean is a proxy of OpenTelemetryHandlerMappingFilter, so we need to access the
+          // proxied object, trying to use reflection to invoke methods triggers stack overflows
+          Field delegate = bean.getClass().getField("delegate");
+          Object delegateObject = delegate.get(bean);
+          OpenTelemetryHandlerMappingFilter mappingFilter =
+              (OpenTelemetryHandlerMappingFilter) delegateObject;
+          mappingFilter.setHandlerMappings(handlerMappings);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+          throw new IllegalStateException(e);
         }
       }
     }
