@@ -492,7 +492,10 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   protected String createCollectionName() {
