@@ -71,15 +71,14 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
           ClassNotFoundException {
     Method streamMethod;
     try {
-      streamMethod =
-          Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder")
-              .getMethod("stream", String[].class);
+      Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder");
+      return ((org.apache.kafka.streams.kstream.KStreamBuilder) builder).stream(STREAM_PENDING);
     } catch (ClassNotFoundException e) {
       streamMethod =
           Class.forName("org.apache.kafka.streams.StreamsBuilder")
               .getMethod("stream", String.class);
+      return (KStream<Integer, String>) streamMethod.invoke(builder, STREAM_PENDING);
     }
-    return (KStream<Integer, String>) streamMethod.invoke(builder, STREAM_PENDING);
   }
 
   @DisplayName("test kafka produce and consume with streams in-between")
