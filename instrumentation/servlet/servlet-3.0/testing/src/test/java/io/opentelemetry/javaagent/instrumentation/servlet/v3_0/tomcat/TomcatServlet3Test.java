@@ -21,7 +21,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -58,6 +58,9 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
           ERROR.getBody(),
           false);
   private final TestAccessLogValve accessLogValue = new TestAccessLogValve();
+
+  @TempDir
+  private static File tempDir;
 
   @Override
   protected void configure(HttpServerTestOptions options) {
@@ -91,18 +94,14 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();
 
-    File baseDir = Files.createTempDirectory("tomcat").toFile();
-    baseDir.deleteOnExit();
+    File baseDir = tempDir;
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
 
     tomcatServer.setPort(port);
     tomcatServer.getConnector().setEnableLookups(true); // get localhost instead of 127.0.0.1
 
     File applicationDir = new File(baseDir, "/webapps/ROOT");
-    if (!applicationDir.exists()) {
-      applicationDir.mkdirs();
-      applicationDir.deleteOnExit();
-    }
+    applicationDir.mkdirs();
 
     Context servletContext =
         tomcatServer.addWebapp(getContextPath(), applicationDir.getAbsolutePath());
