@@ -86,7 +86,8 @@ public class AwsLambdaApiGatewayHandlerTest {
                             equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, "Clever Client"),
-                            equalTo(UrlAttributes.URL_FULL, "http://localhost:2024/hello/world"))));
+                            equalTo(UrlAttributes.URL_FULL, "http://localhost:2024/hello/world"),
+                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
   public static class TestRequestHandlerApiGateway

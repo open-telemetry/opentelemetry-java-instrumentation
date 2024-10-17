@@ -94,6 +94,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
+        @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelInput") AwsLambdaRequest input,
         @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,
@@ -110,7 +111,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       if (functionScope != null) {
         functionScope.close();
         AwsLambdaInstrumentationHelper.functionInstrumenter()
-            .end(functionContext, input, null, throwable);
+            .end(functionContext, input, result, throwable);
       }
 
       OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
