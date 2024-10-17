@@ -128,7 +128,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "create",
                             collectionName,
                             dbName,
@@ -161,7 +161,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "create",
                             collectionName,
                             dbName,
@@ -195,7 +195,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "create",
                             collectionName,
                             dbName,
@@ -229,7 +229,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "count",
                             collectionName,
                             dbName,
@@ -266,7 +266,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "insert",
                             collectionName,
                             dbName,
@@ -283,7 +283,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")),
                     span ->
                         mongoSpan(
-                            trace.element(2),
+                            span,
                             "count",
                             collectionName,
                             dbName,
@@ -320,7 +320,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "update",
                             collectionName,
                             dbName,
@@ -337,7 +337,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")),
                     span ->
                         mongoSpan(
-                            trace.element(2),
+                            span,
                             "count",
                             collectionName,
                             dbName,
@@ -374,7 +374,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "delete",
                             collectionName,
                             dbName,
@@ -391,7 +391,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")),
                     span ->
                         mongoSpan(
-                            trace.element(2),
+                            span,
                             "count",
                             collectionName,
                             dbName,
@@ -426,7 +426,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "find",
                             collectionName,
                             dbName,
@@ -446,7 +446,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")),
                     span ->
                         mongoSpan(
-                            trace.element(2),
+                            span,
                             "getMore",
                             collectionName,
                             dbName,
@@ -483,7 +483,7 @@ public abstract class AbstractMongoClientTest<T> {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         mongoSpan(
-                            trace.element(1),
+                            span,
                             "create",
                             collectionName,
                             dbName,
@@ -505,14 +505,13 @@ public abstract class AbstractMongoClientTest<T> {
   @SuppressWarnings("deprecation")
   // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   void mongoSpan(
-      SpanDataAssert spanData,
+      SpanDataAssert span,
       String operation,
       String collection,
       String dbName,
       Object parentSpan,
       List<String> statements) {
-    SpanDataAssert span =
-        spanData.hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
+    span.hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
     if (parentSpan == null) {
       span.hasNoParent();
     } else {
