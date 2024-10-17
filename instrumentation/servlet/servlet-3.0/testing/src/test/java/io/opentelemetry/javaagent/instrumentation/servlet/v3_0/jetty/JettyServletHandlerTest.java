@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TestServlet3;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.HttpAttributes;
@@ -30,7 +30,7 @@ import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
+class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandler> {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =
