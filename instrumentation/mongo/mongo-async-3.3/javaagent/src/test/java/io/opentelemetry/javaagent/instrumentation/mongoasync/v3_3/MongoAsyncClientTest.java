@@ -20,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import org.bson.BsonDocument;
@@ -125,13 +124,12 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  public long insert(MongoCollection<Document> collection)
-      throws ExecutionException, InterruptedException {
+  public long insert(MongoCollection<Document> collection) {
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection.insertOne(
         new Document("password", "SECRET"),
         toCallback(result -> collection.count(toCallback(o -> count.complete(((Long) o))))));
-    return count.get();
+    return count.join();
   }
 
   @Override
@@ -158,8 +156,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  public long update(MongoCollection<Document> collection)
-      throws ExecutionException, InterruptedException {
+  public long update(MongoCollection<Document> collection) {
     CompletableFuture<UpdateResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection.updateOne(
@@ -170,7 +167,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
               result.complete(((UpdateResult) res));
               collection.count(toCallback(o -> count.complete(((Long) o))));
             }));
-    return result.get().getModifiedCount();
+    return result.join().getModifiedCount();
   }
 
   @Override
@@ -197,8 +194,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
-  public long delete(MongoCollection<Document> collection)
-      throws ExecutionException, InterruptedException {
+  public long delete(MongoCollection<Document> collection) {
     CompletableFuture<DeleteResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection.deleteOne(
@@ -208,7 +204,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
               result.complete((DeleteResult) res);
               collection.count(toCallback(value -> count.complete(((Long) value))));
             }));
-    return result.get().getDeletedCount();
+    return result.join().getDeletedCount();
   }
 
   @Override
