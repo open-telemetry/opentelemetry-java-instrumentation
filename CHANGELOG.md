@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.9.0 (2024-10-17)
 
 ### 📈 Enhancements
 
