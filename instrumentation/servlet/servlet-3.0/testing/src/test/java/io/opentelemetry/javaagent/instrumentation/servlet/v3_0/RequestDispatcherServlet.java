@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
