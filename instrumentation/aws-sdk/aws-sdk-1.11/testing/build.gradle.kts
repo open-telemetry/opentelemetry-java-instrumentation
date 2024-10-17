@@ -15,7 +15,7 @@ dependencies {
   compileOnly("com.amazonaws:aws-java-sdk-sns:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-sqs:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-secretsmanager:1.11.309")
-  // compileOnly("com.amazonaws:aws-java-sdk-stepfunctions:1.11.230")
+  compileOnly("com.amazonaws:aws-java-sdk-stepfunctions:1.11.230")
   compileOnly("com.amazonaws:aws-java-sdk-lambda:1.11.678")
 
   compileOnly("com.amazonaws:aws-java-sdk-bedrock:1.12.744")

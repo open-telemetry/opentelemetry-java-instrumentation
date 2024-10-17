@@ -19,7 +19,7 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sqs:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-secretsmanager:1.11.309")
-  // testLibrary("com.amazonaws:aws-java-sdk-stepfunctions:1.11.230")
+  testLibrary("com.amazonaws:aws-java-sdk-stepfunctions:1.11.230")
   testLibrary("com.amazonaws:aws-java-sdk-lambda:1.11.678")
   testLibrary("com.amazonaws:aws-java-sdk-bedrock:1.12.744")
   testLibrary("com.amazonaws:aws-java-sdk-bedrockagent:1.12.744")
