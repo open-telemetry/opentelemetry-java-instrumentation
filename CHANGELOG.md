@@ -33,6 +33,10 @@
   ([#12438](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12438))
 - Extract `APIGatewayProxyRequestEvent` headers for context propagation in AWS Lambda instrumentation
   ([#12440](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12440))
+- Support JMX state metrics
+  ([#12369](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12369))
+- Allow method instrumentation module to trace methods in boot loader
+  ([#12454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12454))
 
 ### 🛠️ Bug fixes
 
