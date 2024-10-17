@@ -14,8 +14,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.Serializable;
@@ -115,12 +117,20 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))));
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "SET foo ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "SET"))));
   }
 
   @Test
@@ -148,12 +158,20 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "SADD set1 ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "SADD"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -222,33 +240,54 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET batch2 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "SET batch2 ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NetworkAttributes.NETWORK_TYPE,
+                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "EXEC"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EXEC"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "EXEC"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "EXEC"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }

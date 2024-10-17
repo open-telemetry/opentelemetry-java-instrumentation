@@ -10,3 +10,13 @@ dependencies {
 
   testImplementation(project(":instrumentation:cassandra:cassandra-4.4:testing"))
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
