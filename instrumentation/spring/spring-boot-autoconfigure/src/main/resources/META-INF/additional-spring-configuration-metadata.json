@@ -77,6 +77,11 @@
       "defaultValue": 2000
     },
     {
+      "name": "otel.experimental.metrics.view.config",
+      "type": "java.util.List<java.lang.String>",
+      "description": "View file configuration See https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/README.md#view-file-configuration."
+    },
+    {
       "name": "otel.experimental.resource.disabled.keys",
       "type": "java.util.List<java.lang.String>",
       "description": "Filter out resource entries with these keys."

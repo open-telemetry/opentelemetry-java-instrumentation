@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
-
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
@@ -135,7 +135,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
             "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" "$requestId"
             if (service == "S3") {
               "aws.bucket.name" "somebucket"
             } else if (service == "Sqs" && operation == "CreateQueue") {
@@ -295,7 +295,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
             "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" "$requestId"
             if (service == "S3") {
               "aws.bucket.name" "somebucket"
             } else if (service == "Sqs" && operation == "CreateQueue") {

@@ -64,14 +64,14 @@ dependencies {
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.15.3")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.15.4")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.0.1")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.0.0")
-  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.3")
+  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.4")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.26.3")
