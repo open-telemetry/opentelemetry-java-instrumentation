@@ -44,7 +44,7 @@ abstract class MetricStructure {
 
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
-  private static final String STATE_MAPPING_DEFAULT = "_";
+  private static final String STATE_MAPPING_DEFAULT = "*";
   private String unit;
 
   private MetricInfo.Type metricType;
