@@ -31,6 +31,8 @@
   ([#12265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12265))
 - Spring Boot Starter: Add auto configuration for spring scheduling instrumentation
   ([#12438](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12438))
+- Extract `APIGatewayProxyRequestEvent` headers for context propagation in AWS Lambda instrumentation
+  ([#12440](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12440))
 
 ### 🛠️ Bug fixes
 
