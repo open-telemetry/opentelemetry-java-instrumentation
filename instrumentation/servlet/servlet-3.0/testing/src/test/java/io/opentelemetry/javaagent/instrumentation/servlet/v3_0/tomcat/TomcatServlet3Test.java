@@ -59,8 +59,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
           false);
   private final TestAccessLogValve accessLogValue = new TestAccessLogValve();
 
-  @TempDir
-  private static File tempDir;
+  @TempDir private static File tempDir;
 
   @Override
   protected void configure(HttpServerTestOptions options) {

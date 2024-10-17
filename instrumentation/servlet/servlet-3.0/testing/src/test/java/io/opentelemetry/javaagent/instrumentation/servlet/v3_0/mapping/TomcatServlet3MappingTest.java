@@ -14,8 +14,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.io.TempDir;
 
 class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Context> {
-  @TempDir
-  private static File tempDir;
+  @TempDir private static File tempDir;
 
   @Override
   protected Tomcat setupServer() throws Exception {
