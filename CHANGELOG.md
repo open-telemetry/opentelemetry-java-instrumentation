@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.9.0 (2024-10-17)
+
 ### 📈 Enhancements
 
 - Allow JMX Insight reuse for remote connections
