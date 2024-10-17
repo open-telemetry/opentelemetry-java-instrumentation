@@ -23,7 +23,7 @@ version '1.0'
 ext {
   versions = [
     // this line is managed by .github/scripts/update-sdk-version.sh
-    opentelemetrySdk           : "1.42.1",
+    opentelemetrySdk           : "1.43.0",
 
     // these lines are managed by .github/scripts/update-version.sh
     opentelemetryJavaagent     : "2.9.0-SNAPSHOT",
@@ -108,7 +108,7 @@ dependencies {
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.8")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.11")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")

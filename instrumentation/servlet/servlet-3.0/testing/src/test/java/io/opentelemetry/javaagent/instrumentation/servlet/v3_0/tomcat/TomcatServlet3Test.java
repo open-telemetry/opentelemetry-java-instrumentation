@@ -12,6 +12,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
@@ -38,10 +40,15 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
+
+  @RegisterExtension
+  protected static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
   private static final ServerEndpoint ACCESS_LOG_SUCCESS =
       new ServerEndpoint(
