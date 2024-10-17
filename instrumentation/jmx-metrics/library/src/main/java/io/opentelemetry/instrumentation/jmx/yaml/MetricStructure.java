@@ -40,7 +40,7 @@ abstract class MetricStructure {
   //      state:
   //        state1: [a,b]
   //        state2: c
-  //        state3: _
+  //        state3: '*'
 
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
