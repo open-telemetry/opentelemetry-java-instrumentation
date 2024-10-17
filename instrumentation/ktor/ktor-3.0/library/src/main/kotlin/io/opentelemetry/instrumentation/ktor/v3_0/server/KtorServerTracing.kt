@@ -50,7 +50,9 @@ class KtorServerTracing private constructor(
     }
 
     @Deprecated("Please use method `spanStatusExtractor`")
-    fun setStatusExtractor(extractor: (SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) {
+    fun setStatusExtractor(
+      extractor: (SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
+    ) {
       spanStatusExtractor { prevStatusExtractor ->
         extractor(prevStatusExtractor).extract(spanStatusBuilder, request, response, error)
       }
@@ -194,7 +196,11 @@ class KtorServerTracing private constructor(
 
       require(configuration.isOpenTelemetryInitialized()) { "OpenTelemetry must be set" }
 
-      val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(configuration.serverBuilder.instrumenterBuilder(), ApplicationRequestGetter, configuration.spanKindExtractor(SpanKindExtractor.alwaysServer()))
+      val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
+        configuration.serverBuilder.instrumenterBuilder(),
+        ApplicationRequestGetter,
+        configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
+      )
 
       val feature = KtorServerTracing(instrumenter)
 
