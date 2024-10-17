@@ -48,7 +48,7 @@
   ([#12394](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12394))
 - Disable logback capture arguments by default
   ([#12445](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12445))
-- add support for missing list properties in spring starter
+- Add support for missing list properties in spring starter
   ([#12434](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12434))
 
 ## Version 2.8.0 (2024-09-13)
