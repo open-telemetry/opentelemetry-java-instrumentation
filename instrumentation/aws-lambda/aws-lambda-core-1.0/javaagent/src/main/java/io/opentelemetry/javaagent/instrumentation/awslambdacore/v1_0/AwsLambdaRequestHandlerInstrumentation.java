@@ -60,7 +60,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
-    private final static long flushTimeoutNanos = flushTimeout().toNanos();
+    private static final long flushTimeoutNanos = flushTimeout().toNanos();
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
