@@ -6,11 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.r2dbc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.logs.LoggerProvider;
-import io.opentelemetry.api.metrics.MeterProvider;
-import io.opentelemetry.api.trace.TracerBuilder;
-import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -36,43 +31,7 @@ class R2DbcInstrumentationAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(
                   R2dbcInstrumentationAutoConfiguration.class, R2dbcAutoConfiguration.class))
-          .withBean(
-              "openTelemetry",
-              OpenTelemetry.class,
-              R2DbcInstrumentationAutoConfigurationTest::openTelemetry);
-
-  private static OpenTelemetry openTelemetry() {
-    // Wrap OpenTelemetry instance so it wouldn't implement Closeable. Spring closing the
-    // OpenTelemetry instance used here will break the following tests that use the same
-    // OpenTelemetry instance.
-    OpenTelemetry delegate = testing.getOpenTelemetry();
-    return new OpenTelemetry() {
-      @Override
-      public TracerProvider getTracerProvider() {
-        return delegate.getTracerProvider();
-      }
-
-      @Override
-      public MeterProvider getMeterProvider() {
-        return delegate.getMeterProvider();
-      }
-
-      @Override
-      public LoggerProvider getLogsBridge() {
-        return delegate.getLogsBridge();
-      }
-
-      @Override
-      public ContextPropagators getPropagators() {
-        return delegate.getPropagators();
-      }
-
-      @Override
-      public TracerBuilder tracerBuilder(String instrumentationScopeName) {
-        return delegate.tracerBuilder(instrumentationScopeName);
-      }
-    };
-  }
+          .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry);
 
   @Test
   void statementSanitizerEnabledByDefault() {
