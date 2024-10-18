@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toSet
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20241014.11321808438"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20241014.11321808428"
   }
 
   @Override
