@@ -13,10 +13,11 @@ public enum VertxSqlClientAttributesGetter
   INSTANCE;
 
   @Override
-  public String getSystem(VertxSqlClientRequest request) {
+  public String getDbSystem(VertxSqlClientRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(VertxSqlClientRequest request) {
@@ -25,10 +26,11 @@ public enum VertxSqlClientAttributesGetter
 
   @Override
   @Nullable
-  public String getName(VertxSqlClientRequest request) {
+  public String getDbNamespace(VertxSqlClientRequest request) {
     return request.getDatabase();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(VertxSqlClientRequest request) {
@@ -37,7 +39,7 @@ public enum VertxSqlClientAttributesGetter
 
   @Override
   @Nullable
-  public String getRawStatement(VertxSqlClientRequest request) {
-    return request.getStatement();
+  public String getRawQueryText(VertxSqlClientRequest request) {
+    return request.getQueryText();
   }
 }
