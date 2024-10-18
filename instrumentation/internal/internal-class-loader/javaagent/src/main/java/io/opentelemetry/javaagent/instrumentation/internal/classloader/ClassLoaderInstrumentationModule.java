@@ -45,7 +45,7 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
     // 5. The loading calls ClassLoader.defineClass -> recursion, BOOM!
     // We avoid this recursion by ensuring that the DefineClassInstrumentation Advice class
     // is loaded eagerly before the corresponding invokedynamic is reached
-    return false;
+    return true;
   }
 
   @Override
