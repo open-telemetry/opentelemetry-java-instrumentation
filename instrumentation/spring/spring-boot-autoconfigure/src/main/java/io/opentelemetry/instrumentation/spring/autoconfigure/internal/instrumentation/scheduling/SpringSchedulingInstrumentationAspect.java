@@ -39,7 +39,7 @@ import org.springframework.aop.framework.AopProxyUtils;
  */
 @Aspect
 final class SpringSchedulingInstrumentationAspect {
-  public static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-scheduling-3.1";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-boot-autoconfigure";
   private final Instrumenter<ClassAndMethod, Object> instrumenter;
 
   public SpringSchedulingInstrumentationAspect(
