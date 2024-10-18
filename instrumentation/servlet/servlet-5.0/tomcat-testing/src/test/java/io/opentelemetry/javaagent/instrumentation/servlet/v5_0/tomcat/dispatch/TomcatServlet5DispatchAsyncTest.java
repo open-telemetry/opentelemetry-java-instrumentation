@@ -15,19 +15,12 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.apache.catalina.Context;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatServlet5DispatchAsyncTest extends TomcatDispatchTest {
-
-  @RegisterExtension
-  protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected void configure(HttpServerTestOptions options) {

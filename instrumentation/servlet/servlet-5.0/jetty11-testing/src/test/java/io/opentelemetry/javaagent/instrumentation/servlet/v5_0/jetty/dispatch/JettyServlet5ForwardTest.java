@@ -20,7 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class JettyServlet5ForwardTest extends JettyDispatchTest {
+class JettyServlet5ForwardTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet5.Sync.class; // dispatch to sync servlet

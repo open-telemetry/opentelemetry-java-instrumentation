@@ -25,7 +25,7 @@ import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
+class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandler> {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =

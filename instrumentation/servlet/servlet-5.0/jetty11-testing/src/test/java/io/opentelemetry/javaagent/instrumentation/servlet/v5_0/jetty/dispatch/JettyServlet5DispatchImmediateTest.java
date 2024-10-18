@@ -19,7 +19,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-public class JettyServlet5DispatchImmediateTest extends JettyDispatchTest {
+class JettyServlet5DispatchImmediateTest extends JettyDispatchTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet5.Async.class;

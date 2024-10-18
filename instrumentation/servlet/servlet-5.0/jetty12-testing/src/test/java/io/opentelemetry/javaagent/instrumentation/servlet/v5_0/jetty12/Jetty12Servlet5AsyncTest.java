@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty12;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 
-public class Jetty12Servlet5AsyncTest extends Jetty12Servlet5Test {
+class Jetty12Servlet5AsyncTest extends Jetty12Servlet5Test {
 
   @Override
   public Class<? extends Servlet> servlet() {
