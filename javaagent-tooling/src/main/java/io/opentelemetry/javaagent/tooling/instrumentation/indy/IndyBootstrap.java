@@ -178,11 +178,11 @@ public class IndyBootstrap {
         // instrumentation that also gets triggered during the bootstrap
         // for example, adding correlation ids to the thread context when executing logger.debug.
         logger.log(
-            Level.SEVERE,
+            Level.FINE,
             "Nested instrumented invokedynamic instruction linkage detected for instrumented class {0} and advice {1}.{2}, the instrumentation might not work correctly",
             new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
         logger.log(
-            Level.SEVERE,
+            Level.FINE,
             "Stacktrace for nested invokedynamic instruction linkage:",
             new Throwable());
         return null;
