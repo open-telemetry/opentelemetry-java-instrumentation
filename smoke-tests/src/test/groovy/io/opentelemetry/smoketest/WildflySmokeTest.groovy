@@ -163,3 +163,11 @@ class Wildfly30Jdk21 extends WildflySmokeTest {
 @AppServer(version = "30.0.1.Final", jdk = "21-openj9")
 class Wildfly30Jdk21Openj9 extends WildflySmokeTest {
 }
+
+@AppServer(version = "30.0.1.Final", jdk = "23")
+class Wildfly30Jdk23 extends WildflySmokeTest {
+}
+
+@AppServer(version = "30.0.1.Final", jdk = "23-openj9")
+class Wildfly30Jdk23Openj9 extends WildflySmokeTest {
+}
