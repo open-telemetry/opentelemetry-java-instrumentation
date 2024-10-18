@@ -8,13 +8,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
   testImplementation(project(":instrumentation:servlet:servlet-5.0:testing"))
 
-  // Jetty 11 requires Java 11
   testLibrary("org.eclipse.jetty:jetty-server:11.0.0")
   testLibrary("org.eclipse.jetty:jetty-servlet:11.0.0")
 
-  latestDepTestLibrary("org.eclipse.jetty:jetty-server:11.+")
+  latestDepTestLibrary("org.eclipse.jetty:jetty-server:11.+") // see jetty-12-testing module
 }
 
+// Jetty 11 requires Java 11
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }

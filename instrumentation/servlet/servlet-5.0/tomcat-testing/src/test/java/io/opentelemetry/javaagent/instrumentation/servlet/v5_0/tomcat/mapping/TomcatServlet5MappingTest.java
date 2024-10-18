@@ -13,10 +13,7 @@ import java.util.UUID;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
-@EnabledForJreRange(min = JRE.JAVA_11)
 class TomcatServlet5MappingTest extends AbstractServlet5MappingTest<Tomcat, Context> {
   @Override
   protected Tomcat setupServer() throws Exception {
