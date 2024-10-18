@@ -67,6 +67,9 @@ class AdviceTransformer {
             }));
 
     TransformationContext context = new TransformationContext();
+    if (justDelegateAdvice) {
+      context.disableReturnTypeChange();
+    }
     ClassVisitor cv =
         new ClassVisitor(AsmApi.VERSION, cw) {
 

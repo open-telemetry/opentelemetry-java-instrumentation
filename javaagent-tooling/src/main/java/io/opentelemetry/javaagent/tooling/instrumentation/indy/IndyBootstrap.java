@@ -92,6 +92,12 @@ public class IndyBootstrap {
 
       IndyBootstrapDispatcher.init(
           MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType));
+
+      // Ensure that CallDepth is already loaded in case of bootstrapAdvice recursions with
+      // ClassLoader.loadClass
+      // This is required because CallDepth is a bootstrap class and therefore triggers our
+      // ClassLoader.loadClass instrumentations
+      Class.forName(CallDepth.class.getName());
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
@@ -172,8 +178,12 @@ public class IndyBootstrap {
         // instrumentation that also gets triggered during the bootstrap
         // for example, adding correlation ids to the thread context when executing logger.debug.
         logger.log(
-            Level.WARNING,
-            "Nested instrumented invokedynamic instruction linkage detected",
+            Level.SEVERE,
+            "Nested instrumented invokedynamic instruction linkage detected for instrumented class {0} and advice {1}.{2}, the instrumentation might not work correctly",
+            new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
+        logger.log(
+            Level.SEVERE,
+            "Stacktrace for nested invokedynamic instruction linkage:",
             new Throwable());
         return null;
       }
