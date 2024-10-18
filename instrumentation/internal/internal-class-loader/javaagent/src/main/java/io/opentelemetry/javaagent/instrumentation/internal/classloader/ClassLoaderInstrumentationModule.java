@@ -53,6 +53,7 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
     return asList(
         new BootDelegationInstrumentation(),
         new LoadInjectedClassInstrumentation(),
-        new ResourceInjectionInstrumentation());
+        new ResourceInjectionInstrumentation(),
+        new DefineClassInstrumentation());
   }
 }
