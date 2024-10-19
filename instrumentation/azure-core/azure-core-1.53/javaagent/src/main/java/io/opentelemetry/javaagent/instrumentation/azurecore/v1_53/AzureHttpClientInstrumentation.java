@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
+package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanMono;
-import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanSync;
+import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.SuppressNestedClientHelper.disallowNestedClientSpanMono;
+import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.SuppressNestedClientHelper.disallowNestedClientSpanSync;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;

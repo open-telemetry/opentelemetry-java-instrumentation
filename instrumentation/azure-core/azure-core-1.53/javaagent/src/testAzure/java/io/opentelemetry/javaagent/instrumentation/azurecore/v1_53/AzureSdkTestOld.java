@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
+package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,7 +33,7 @@ class AzureSdkTestOld {
 
     assertThat(azTracer.getClass().getName())
         .isEqualTo(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.shaded"
+            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded"
                 + ".com.azure.core.tracing.opentelemetry.OpenTelemetryTracer");
   }
 
