@@ -32,12 +32,13 @@ public void doGet(HttpServletRequest request, HttpServletResponse response) {
 }
 ```
 
-In both cases request processing requires some potentially long operation and application developer
-wants to do them off the main thread. In the first case this hand-off between request accepting thread
-and request processing thread happens manually, by submitting work into some thread pool.
-In the second case it is the framework that handles separate thread pool and passing work to it.
+In both cases, the request processing requires some potentially long operation and the application 
+developer wants to do them off the main thread. In the first case this hand-off between the request
+accepting thread and the request processing thread happens manually by submitting work into some
+thread pool. In the second case it is the framework that handles the separate thread pool and
+passing work to it.
 
-In cases like this proper tracing solution should still combine into a single trace all the work
+In cases like this, a proper tracing solution should still combine into a single trace all the work
 required for request processing, regardless in what thread that work happened. With proper
 parent-child relationship between span: span representing shipping address query should be the child
 of the span which denotes accepting HTTP request.
