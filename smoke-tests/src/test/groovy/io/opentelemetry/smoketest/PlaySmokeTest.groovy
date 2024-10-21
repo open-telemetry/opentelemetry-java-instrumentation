@@ -17,7 +17,7 @@ import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContaine
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20241018.11404849345"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20241021.11443123992"
   }
 
   @Override
