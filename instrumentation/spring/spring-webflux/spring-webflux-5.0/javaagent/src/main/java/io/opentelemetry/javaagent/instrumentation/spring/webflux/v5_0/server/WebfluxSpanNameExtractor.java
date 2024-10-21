@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
+import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.springframework.web.method.HandlerMethod;
 
