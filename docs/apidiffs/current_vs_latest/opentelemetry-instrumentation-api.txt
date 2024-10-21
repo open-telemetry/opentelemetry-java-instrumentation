@@ -1,2 +1,6 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.10.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.9.0.jar
-No changes.
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.util.SpanNames  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) java.lang.String fromMethod(java.lang.reflect.Method)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) java.lang.String fromMethod(java.lang.Class<?>, java.lang.String)
