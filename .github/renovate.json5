@@ -150,6 +150,14 @@
       "enabled": false
     },
     {
+      // intentionally pinning specifically to guice 5 in the play smoke test
+      // until we are able to test against the latest version of play
+      "matchFileNames": ["smoke-tests/images/play/build.gradle.kts"],
+      "matchPackagePrefixes": ["com.google.inject:", "com.google.inject.extensions:"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       // intentionally aligning both netty 4.0 and 4.1 version in this convention
       "matchFileNames": ["conventions/src/main/kotlin/otel.java-conventions.gradle.kts"],
       "matchPackageNames": ["io.netty:netty-bom"],

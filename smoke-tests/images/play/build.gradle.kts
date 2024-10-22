@@ -27,8 +27,8 @@ dependencies {
   implementation("com.typesafe.play:play-guice_$scalaVer:$playVer")
   // Guice 5.1 is needed for Java 17 support on Play 2.8, see https://github.com/playframework/playframework/releases/tag/2.8.15
   // TODO (trask) remove these version overrides after updating to Play 2.9
-  implementation("com.google.inject:guice:7.0.0")
-  implementation("com.google.inject.extensions:guice-assistedinject:7.0.0")
+  implementation("com.google.inject:guice:5.1.0")
+  implementation("com.google.inject.extensions:guice-assistedinject:5.1.0")
   implementation("com.typesafe.play:play-logback_$scalaVer:$playVer")
   implementation("com.typesafe.play:filters-helpers_$scalaVer:$playVer")
 }
