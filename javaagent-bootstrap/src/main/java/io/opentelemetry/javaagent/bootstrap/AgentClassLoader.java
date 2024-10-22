@@ -167,7 +167,14 @@ public class AgentClassLoader extends URLClassLoader {
       }
       // search from parent and urls added to this loader
       if (clazz == null) {
-        clazz = super.loadClass(name, false);
+        try {
+          clazz = Class.forName(name, false, this.getParent());
+        } catch (ClassNotFoundException e) {
+          // ignore
+        }
+      }
+      if (clazz == null) {
+        clazz = super.findClass(name);
       }
       if (resolve) {
         resolveClass(clazz);
