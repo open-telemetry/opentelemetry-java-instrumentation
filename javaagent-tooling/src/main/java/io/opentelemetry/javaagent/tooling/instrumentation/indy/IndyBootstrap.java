@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.IndyBootstrapDispatcher;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.lang.invoke.CallSite;
@@ -13,6 +12,7 @@ import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.invoke.MutableCallSite;
 import java.lang.reflect.Method;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
@@ -84,7 +84,7 @@ public class IndyBootstrap {
 
       MethodType bootstrapMethodType =
           MethodType.methodType(
-              ConstantCallSite.class,
+              CallSite.class,
               MethodHandles.Lookup.class,
               String.class,
               MethodType.class,
@@ -92,12 +92,6 @@ public class IndyBootstrap {
 
       IndyBootstrapDispatcher.init(
           MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType));
-
-      // Ensure that CallDepth is already loaded in case of bootstrapAdvice recursions with
-      // ClassLoader.loadClass
-      // This is required because CallDepth is a bootstrap class and therefore triggers our
-      // ClassLoader.loadClass instrumentations
-      Class.forName(CallDepth.class.getName());
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
@@ -111,7 +105,7 @@ public class IndyBootstrap {
 
   @Nullable
   @SuppressWarnings({"unused", "removal"}) // SecurityManager and AccessController are deprecated
-  private static ConstantCallSite bootstrap(
+  private static CallSite bootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType adviceMethodType,
@@ -124,11 +118,11 @@ public class IndyBootstrap {
     // callsite resolution needs privileged access to call Class#getClassLoader() and
     // MethodHandles$Lookup#findStatic
     return java.security.AccessController.doPrivileged(
-        (PrivilegedAction<ConstantCallSite>)
+        (PrivilegedAction<CallSite>)
             () -> internalBootstrap(lookup, adviceMethodName, adviceMethodType, args));
   }
 
-  private static ConstantCallSite internalBootstrap(
+  private static CallSite internalBootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType adviceMethodType,
@@ -163,7 +157,7 @@ public class IndyBootstrap {
     }
   }
 
-  private static ConstantCallSite bootstrapAdvice(
+  private static CallSite bootstrapAdvice(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType invokedynamicMethodType,
@@ -171,21 +165,31 @@ public class IndyBootstrap {
       String adviceMethodDescriptor,
       String adviceClassName)
       throws NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
-    CallDepth callDepth = CallDepth.forClass(IndyBootstrap.class);
-    try {
-      if (callDepth.getAndIncrement() > 0) {
+    try (AdviceBootstrapState nestedState =
+        AdviceBootstrapState.enter(
+            lookup.lookupClass(),
+            moduleClassName,
+            adviceClassName,
+            adviceMethodName,
+            adviceMethodDescriptor)) {
+      if (nestedState.isNestedInvocation()) {
         // avoid re-entrancy and stack overflow errors, which may happen when bootstrapping an
         // instrumentation that also gets triggered during the bootstrap
         // for example, adding correlation ids to the thread context when executing logger.debug.
         logger.log(
-            Level.SEVERE,
-            "Nested instrumented invokedynamic instruction linkage detected for instrumented class {0} and advice {1}.{2}, the instrumentation might not work correctly",
+            Level.FINE,
+            "Nested instrumented invokedynamic instruction linkage detected for instrumented class {0} and advice {1}.{2}, this invocation won't be instrumented",
             new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
-        logger.log(
-            Level.SEVERE,
-            "Stacktrace for nested invokedynamic instruction linkage:",
-            new Throwable());
-        return null;
+        if (logger.isLoggable(Level.FINEST)) {
+          logger.log(
+              Level.FINEST,
+              "Stacktrace for nested invokedynamic instruction linkage:",
+              new Throwable());
+        }
+        return nestedState.getOrInitMutableCallSite(
+            () ->
+                new MutableCallSite(
+                    IndyBootstrapDispatcher.generateNoopMethodHandle(invokedynamicMethodType)));
       }
 
       InstrumentationModuleClassLoader instrumentationClassloader =
@@ -203,9 +207,17 @@ public class IndyBootstrap {
               .getLookup()
               .findStatic(adviceClass, adviceMethodName, actualAdviceMethodType)
               .asType(invokedynamicMethodType);
-      return new ConstantCallSite(methodHandle);
-    } finally {
-      callDepth.decrementAndGet();
+
+      MutableCallSite nestedBootstrapCallSite = nestedState.getMutableCallSite();
+      if (nestedBootstrapCallSite != null) {
+        // There have been nested bootstrapping attempts
+        // Update the callsite of those to run the actual instrumentation
+        nestedBootstrapCallSite.setTarget(methodHandle);
+        MutableCallSite.syncAll(new MutableCallSite[] {nestedBootstrapCallSite});
+        return nestedBootstrapCallSite;
+      } else {
+        return new ConstantCallSite(methodHandle);
+      }
     }
   }
 
