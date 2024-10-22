@@ -11,6 +11,10 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * This class has been stabilized and moved to {@link
+ * io.opentelemetry.instrumentation.api.semconv.util.SpanNames}
+ */
 @Deprecated
 public final class SpanNames {
 
