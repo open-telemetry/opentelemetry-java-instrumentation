@@ -180,7 +180,9 @@ public class IndyBootstrap {
         // for example, adding correlation ids to the thread context when executing logger.debug.
         MutableCallSite mutableCallSite = nestedState.getMutableCallSite();
         if (mutableCallSite == null) {
-          mutableCallSite = new MutableCallSite(IndyBootstrapDispatcher.generateNoopMethodHandle(invokedynamicMethodType));
+          mutableCallSite =
+              new MutableCallSite(
+                  IndyBootstrapDispatcher.generateNoopMethodHandle(invokedynamicMethodType));
           nestedState.initMutableCallSite(mutableCallSite);
         }
         return mutableCallSite;

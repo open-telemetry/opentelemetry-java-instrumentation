@@ -22,8 +22,8 @@ class AdviceBootstrapState implements AutoCloseable {
   @Nullable private MutableCallSite nestedCallSite;
 
   /**
-   * We have to eagerly initialize to not cause a lambda construction
-   * during {@link #enter(Class, String, String, String, String)}.
+   * We have to eagerly initialize to not cause a lambda construction during {@link #enter(Class,
+   * String, String, String, String)}.
    */
   private static final Function<Key, AdviceBootstrapState> CONSTRUCTOR = AdviceBootstrapState::new;
 
