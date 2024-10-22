@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import java.lang.invoke.MutableCallSite;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -20,13 +21,31 @@ class AdviceBootstrapState implements AutoCloseable {
   private int recursionDepth;
   @Nullable private MutableCallSite nestedCallSite;
 
+  /**
+   * We have to eagerly initialize to not cause a lambda construction
+   * during {@link #enter(Class, String, String, String, String)}.
+   */
+  private static final Function<Key, AdviceBootstrapState> CONSTRUCTOR = AdviceBootstrapState::new;
+
   private AdviceBootstrapState(Key key) {
     this.key = key;
     // enter will increment it by one, so 0 is the value for non-recursive calls
     recursionDepth = -1;
   }
 
-  public static AdviceBootstrapState enter(
+  static void initialize() {
+    // Eager initialize everything because we could run into recursions doing this during advice
+    // bootstrapping
+    stateForCurrentThread.get();
+    stateForCurrentThread.remove();
+    try {
+      Class.forName(Key.class.getName());
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  static AdviceBootstrapState enter(
       Class<?> instrumentedClass,
       String moduleClassName,
       String adviceClassName,
@@ -39,8 +58,7 @@ class AdviceBootstrapState implements AutoCloseable {
             adviceClassName,
             adviceMethodName,
             adviceMethodDescriptor);
-    AdviceBootstrapState state =
-        stateForCurrentThread.get().computeIfAbsent(key, k -> new AdviceBootstrapState(key));
+    AdviceBootstrapState state = stateForCurrentThread.get().computeIfAbsent(key, CONSTRUCTOR);
     state.recursionDepth++;
     return state;
   }
@@ -54,6 +72,13 @@ class AdviceBootstrapState implements AutoCloseable {
       nestedCallSite = initializer.get();
     }
     return nestedCallSite;
+  }
+
+  public void initMutableCallSite(MutableCallSite mutableCallSite) {
+    if (nestedCallSite != null) {
+      throw new IllegalStateException("callsite has already been initialized");
+    }
+    nestedCallSite = mutableCallSite;
   }
 
   @Nullable
@@ -99,8 +124,12 @@ class AdviceBootstrapState implements AutoCloseable {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || !(o instanceof Key)) {
+        return false;
+      }
 
       Key that = (Key) o;
       return instrumentedClass.equals(that.instrumentedClass)

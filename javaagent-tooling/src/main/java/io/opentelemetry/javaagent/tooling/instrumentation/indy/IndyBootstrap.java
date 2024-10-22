@@ -92,6 +92,8 @@ public class IndyBootstrap {
 
       IndyBootstrapDispatcher.init(
           MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType));
+
+      AdviceBootstrapState.initialize();
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
@@ -176,20 +178,12 @@ public class IndyBootstrap {
         // avoid re-entrancy and stack overflow errors, which may happen when bootstrapping an
         // instrumentation that also gets triggered during the bootstrap
         // for example, adding correlation ids to the thread context when executing logger.debug.
-        logger.log(
-            Level.FINE,
-            "Nested instrumented invokedynamic instruction linkage detected for instrumented class {0} and advice {1}.{2}, this invocation won't be instrumented",
-            new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
-        if (logger.isLoggable(Level.FINEST)) {
-          logger.log(
-              Level.FINEST,
-              "Stacktrace for nested invokedynamic instruction linkage:",
-              new Throwable());
+        MutableCallSite mutableCallSite = nestedState.getMutableCallSite();
+        if (mutableCallSite == null) {
+          mutableCallSite = new MutableCallSite(IndyBootstrapDispatcher.generateNoopMethodHandle(invokedynamicMethodType));
+          nestedState.initMutableCallSite(mutableCallSite);
         }
-        return nestedState.getOrInitMutableCallSite(
-            () ->
-                new MutableCallSite(
-                    IndyBootstrapDispatcher.generateNoopMethodHandle(invokedynamicMethodType)));
+        return mutableCallSite;
       }
 
       InstrumentationModuleClassLoader instrumentationClassloader =
@@ -212,6 +206,10 @@ public class IndyBootstrap {
       if (nestedBootstrapCallSite != null) {
         // There have been nested bootstrapping attempts
         // Update the callsite of those to run the actual instrumentation
+        logger.log(
+            Level.FINE,
+            "Fixing nested instrumentation invokedynamic instruction bootstrapping for instrumented class {0} and advice {1}.{2}, the instrumentaiton should be active now",
+            new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
         nestedBootstrapCallSite.setTarget(methodHandle);
         MutableCallSite.syncAll(new MutableCallSite[] {nestedBootstrapCallSite});
         return nestedBootstrapCallSite;

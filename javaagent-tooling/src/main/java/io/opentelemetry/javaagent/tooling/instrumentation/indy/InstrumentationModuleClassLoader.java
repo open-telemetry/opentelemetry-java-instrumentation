@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -52,9 +51,6 @@ import net.bytebuddy.matcher.StringMatcher;
  * follow the same delegation strategy, so that bytecode inspection tools work correctly.
  */
 public class InstrumentationModuleClassLoader extends ClassLoader {
-
-  private static final Logger logger =
-      Logger.getLogger(InstrumentationModuleClassLoader.class.getName());
 
   static {
     ClassLoader.registerAsParallelCapable();
