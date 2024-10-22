@@ -60,14 +60,6 @@ class Wildfly17Jdk21 extends WildflySmokeTest {
 class Wildfly17Jdk21Openj9 extends WildflySmokeTest {
 }
 
-@AppServer(version = "17.0.1.Final", jdk = "23")
-class Wildfly17Jdk23 extends WildflySmokeTest {
-}
-
-@AppServer(version = "17.0.1.Final", jdk = "23-openj9")
-class Wildfly17Jdk23Openj9 extends WildflySmokeTest {
-}
-
 @AppServer(version = "21.0.0.Final", jdk = "8")
 class Wildfly21Jdk8 extends WildflySmokeTest {
 }
@@ -98,14 +90,6 @@ class Wildfly21Jdk21 extends WildflySmokeTest {
 
 @AppServer(version = "21.0.0.Final", jdk = "21-openj9")
 class Wildfly21Jdk21Openj9 extends WildflySmokeTest {
-}
-
-@AppServer(version = "21.0.0.Final", jdk = "23")
-class Wildfly21Jdk23 extends WildflySmokeTest {
-}
-
-@AppServer(version = "21.0.0.Final", jdk = "23-openj9")
-class Wildfly21Jdk23Openj9 extends WildflySmokeTest {
 }
 
 @AppServer(version = "28.0.1.Final", jdk = "11")
