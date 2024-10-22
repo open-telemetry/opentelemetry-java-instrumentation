@@ -13,7 +13,6 @@ import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.security.ProtectionDomain;
 import org.apache.commons.compress.utils.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -63,7 +62,7 @@ class DefineClassInstrumentationTest {
     mockHandler.beforeDefineClass(cl, className, bytecode, 0, bytecode.length);
     Mockito.reset(mockHandler);
 
-    DefineClassHelper.Handler originalHandler = forceSetDefineClassHelper(mockHandler);
+    DefineClassHelper.Handler originalHandler = DefineClassHelper.internalSetHandlerForTests(mockHandler);
     String expectedClassName;
     try {
       switch (argCount) {
@@ -83,25 +82,12 @@ class DefineClassInstrumentationTest {
           throw new IllegalStateException();
       }
     } finally {
-      forceSetDefineClassHelper(originalHandler);
+      DefineClassHelper.internalSetHandlerForTests(originalHandler);
     }
 
     verify(mockHandler)
         .beforeDefineClass(
             same(cl), eq(expectedClassName), eq(bytecode), eq(0), eq(bytecode.length));
     verify(mockHandler).afterDefineClass(eq(null));
-  }
-
-  private static DefineClassHelper.Handler forceSetDefineClassHelper(
-      DefineClassHelper.Handler newHandler) {
-    try {
-      Field handler = DefineClassHelper.class.getDeclaredField("handler");
-      handler.setAccessible(true);
-      DefineClassHelper.Handler previous = (DefineClassHelper.Handler) handler.get(null);
-      handler.set(null, newHandler);
-      return previous;
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
-    }
   }
 }
