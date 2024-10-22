@@ -35,20 +35,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean loadAdviceClassesEagerly() {
-    // This is required due to DefineClassInstrumentation
-    // Without this, we would get an infinite recursion on bootstrapping of that instrumentation:
-    // 1. ClassLoader.defineClass is invoked somewhere
-    // 2. The inserted invokedynamic for the instrumentation is reached
-    // 3. To bootstrap the advice, IndyBootstrap is invoked
-    // 4. IndyBootstrap tries to load the DefineClassInstrumentation Advice class
-    // 5. The loading calls ClassLoader.defineClass -> recursion, BOOM!
-    // We avoid this recursion by ensuring that the DefineClassInstrumentation Advice class
-    // is loaded eagerly before the corresponding invokedynamic is reached
-    return true;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new BootDelegationInstrumentation(),

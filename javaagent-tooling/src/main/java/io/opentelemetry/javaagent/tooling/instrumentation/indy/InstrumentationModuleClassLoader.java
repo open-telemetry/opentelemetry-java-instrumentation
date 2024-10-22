@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -158,21 +157,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       ExperimentalInstrumentationModule experimentalModule =
           (ExperimentalInstrumentationModule) module;
       hiddenAgentPackages.addAll(experimentalModule.agentPackagesToHide());
-      if (experimentalModule.loadAdviceClassesEagerly()) {
-        for (String adviceClass : getModuleAdviceNames(module)) {
-          try {
-            this.loadClass(adviceClass, true);
-          } catch (ClassNotFoundException e) {
-            logger.log(
-                Level.SEVERE,
-                "Failed to eagerly load advice class {0}",
-                new Object[] {adviceClass, e});
-          }
-        }
-        // We also eagerly load the LookupExposer, because that is also required for invokedynamic
-        // bootstrapping
-        getLookup();
-      }
     }
   }
 

@@ -61,19 +61,4 @@ public interface ExperimentalInstrumentationModule {
   default List<String> agentPackagesToHide() {
     return Collections.emptyList();
   }
-
-  /**
-   * By default, Advice classes are loaded lazily the first time the corresponding instrumented
-   * method is invoked. This function allows to change the behaviour so that all Advice classes are
-   * loaded and initialized as soon as a matching type is instrumented.
-   *
-   * <p>Note: this functionality currently does not work together with the AdviceTransformer.
-   * Therefore you should make your Advices indy-compatible (use @Advice.AssignReturned) before
-   * using this feature.
-   *
-   * @return true, if Advice classes should be loaded on instrumentation instead of first execution
-   */
-  default boolean loadAdviceClassesEagerly() {
-    return false;
-  }
 }
