@@ -54,9 +54,7 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
 
     // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
     // not touch this advice
-    // this is done to ensure that ClassLoaderInstrumentationModule.loadAdviceClassesEagerly works
-    // correctly
-    // we can therefore remove it, as soon as the AdviceTransformer is not applied anymore
+    // this is done because we do not want the return values to be wrapped in array types
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Class<?> onExit(
@@ -78,9 +76,7 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
 
     // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
     // not touch this advice
-    // this is done to ensure that ClassLoaderInstrumentationModule.loadAdviceClassesEagerly works
-    // correctly
-    // we can therefore remove it, as soon as the AdviceTransformer is not applied anymore
+    // this is done because we do not want the return values to be wrapped in array types
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Class<?> onExit(
