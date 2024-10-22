@@ -54,7 +54,6 @@ public class IndyBootstrapDispatcher {
     return callSite;
   }
 
-  // package visibility for testing
   public static MethodHandle generateNoopMethodHandle(MethodType methodType) {
     Class<?> returnType = methodType.returnType();
     MethodHandle noopNoArg;
