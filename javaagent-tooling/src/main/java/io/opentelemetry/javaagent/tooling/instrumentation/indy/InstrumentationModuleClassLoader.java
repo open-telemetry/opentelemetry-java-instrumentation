@@ -327,12 +327,23 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   private Class<?> defineClassWithPackage(String name, byte[] bytecode) {
-    int lastDotIndex = name.lastIndexOf('.');
-    if (lastDotIndex != -1) {
-      String packageName = name.substring(0, lastDotIndex);
-      safeDefinePackage(packageName);
+    try {
+      int lastDotIndex = name.lastIndexOf('.');
+      if (lastDotIndex != -1) {
+        String packageName = name.substring(0, lastDotIndex);
+        safeDefinePackage(packageName);
+      }
+      return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
+    } catch (LinkageError error) {
+      // Pre-caution against linkage error due to nested instrumentations happening
+      // it might be possible that e.g. an advice class has already been defined
+      // during an instrumentation of defineClass
+      Class<?> clazz = findLoadedClass(name);
+      if (clazz != null) {
+        return clazz;
+      }
+      throw error;
     }
-    return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
   }
 
   private void safeDefinePackage(String packageName) {
