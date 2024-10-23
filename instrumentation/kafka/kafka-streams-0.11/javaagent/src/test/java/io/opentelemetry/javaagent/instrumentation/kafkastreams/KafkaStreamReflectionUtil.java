@@ -23,30 +23,36 @@ class KafkaStreamReflectionUtil {
 
   @SuppressWarnings("ClassNewInstance")
   static Object createBuilder()
-      throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
     try {
       // Different class names for test and latestDepTest.
       return Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder").newInstance();
-    } catch (ClassNotFoundException | NoClassDefFoundError e) {
+    } catch (ClassNotFoundException
+        | NoClassDefFoundError
+        | InstantiationException
+        | IllegalAccessException e) {
       return Class.forName("org.apache.kafka.streams.StreamsBuilder").newInstance();
     }
   }
 
   @SuppressWarnings("unchecked")
   static KStream<Integer, String> stream(Object builder, String topic)
-      throws IllegalAccessException,
-          InvocationTargetException,
+      throws ClassNotFoundException,
           NoSuchMethodException,
-          ClassNotFoundException {
+          InvocationTargetException,
+          IllegalAccessException {
     // Different api for test and latestDepTest.
     try {
       // equivalent to:
       // ((org.apache.kafka.streams.kstream.KStreamBuilder)builder).stream(STREAM_PENDING);
       return (KStream<Integer, String>)
           Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder")
-              .getMethod("stream", String.class)
+              .getMethod("stream", String[].class)
               .invoke(builder, topic);
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException
+        | NoSuchMethodException
+        | IllegalAccessException
+        | InvocationTargetException e) {
       // equivalent to:
       // ((org.apache.kafka.streams.StreamsBuilder)builder).stream(STREAM_PENDING);
       return (KStream<Integer, String>)
