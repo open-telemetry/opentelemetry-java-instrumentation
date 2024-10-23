@@ -150,9 +150,8 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);
     if (module instanceof ExperimentalInstrumentationModule) {
-      ExperimentalInstrumentationModule experimentalModule =
-          (ExperimentalInstrumentationModule) module;
-      hiddenAgentPackages.addAll(experimentalModule.agentPackagesToHide());
+      hiddenAgentPackages.addAll(
+          ((ExperimentalInstrumentationModule) module).agentPackagesToHide());
     }
   }
 

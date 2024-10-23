@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -34,12 +32,7 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("java.lang.ClassLoader"))
-        .and(
-            not(
-                namedOneOf(
-                    "io.opentelemetry.javaagent.bootstrap.AgentClassLoader",
-                    "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader")));
+    return extendsClass(named("java.lang.ClassLoader"));
   }
 
   @Override
