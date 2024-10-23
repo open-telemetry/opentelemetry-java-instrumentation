@@ -488,7 +488,7 @@ public class AgentClassLoader extends URLClassLoader {
       // prometheus exporter uses jdk http server, load it from the platform class loader
       // some custom extensions use java.sql classes, make these available to agent and extensions
       if (name != null
-          && (name.startsWith("com.sun.net.httpserver.") || name.startsWith("java.sql."))) {
+          && (name.startsWith("com.sun.net.httpserver.") || name.startsWith("java."))) {
         return platformClassLoader.loadClass(name);
       }
       return Class.forName(name, false, null);
