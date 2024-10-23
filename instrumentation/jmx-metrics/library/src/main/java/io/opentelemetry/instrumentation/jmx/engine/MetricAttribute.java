@@ -22,6 +22,10 @@ public class MetricAttribute {
     this.extractor = extractor;
   }
 
+  public boolean isStateAttribute() {
+    return extractor == null;
+  }
+
   public String getAttributeName() {
     return name;
   }

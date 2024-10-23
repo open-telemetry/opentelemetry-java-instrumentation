@@ -752,7 +752,12 @@ public enum JdbcConnectionUrlParser {
         builder.subtype("directory").host(null).port(null);
         String urlInstance = details.substring("directory:".length());
         if (!urlInstance.isEmpty()) {
-          instance = urlInstance;
+          int dbNameStartLocation = urlInstance.lastIndexOf('/');
+          if (dbNameStartLocation != -1) {
+            instance = urlInstance.substring(dbNameStartLocation + 1);
+          } else {
+            instance = urlInstance;
+          }
         }
       } else if (details.startsWith("classpath:")) {
         builder.subtype("classpath").host(null).port(null);

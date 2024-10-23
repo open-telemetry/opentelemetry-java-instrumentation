@@ -235,6 +235,9 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
     response.contentUtf8() == POST_STREAM.body
 
     def hasHandlerSpan = hasHandlerSpan(POST_STREAM)
+    // when using javaagent instrumentation the parent of reactive callbacks is the controller span
+    // where subscribe was called, for library instrumentation server span is the parent
+    def reactiveCallbackParent = hasHandlerSpan ? 2 : 0
     assertTraces(1) {
       trace(0, 5 + (hasHandlerSpan ? 1 : 0)) {
         span(0) {
@@ -255,15 +258,15 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
         }
         span(2 + offset) {
           name "onNext"
-          childOf span(0)
+          childOf span(reactiveCallbackParent)
         }
         span(3 + offset) {
           name "onNext"
-          childOf span(0)
+          childOf span(reactiveCallbackParent)
         }
         span(4 + offset) {
           name "onComplete"
-          childOf span(0)
+          childOf span(reactiveCallbackParent)
         }
       }
     }

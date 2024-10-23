@@ -151,7 +151,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
 
           // Verify correctness of configuration by attempting to extract the metric value.
           // The value will be discarded, but its type will be checked.
-          Object sampleValue = extractAttributeValue(connection, objectName, logger);
+          Object sampleValue = getSampleValue(connection, objectName);
 
           // Only numbers can be used to generate metric values
           if (sampleValue instanceof Number) {
@@ -194,6 +194,11 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     return null;
   }
 
+  @Nullable
+  protected Object getSampleValue(MBeanServerConnection connection, ObjectName objectName) {
+    return extractAttributeValue(connection, objectName, logger);
+  }
+
   /**
    * Extracts the specified attribute value. In case the value is a CompositeData, drills down into
    * it to find the correct singleton value (usually a Number or a String).
@@ -203,7 +208,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
    *     pattern
    * @param logger the logger to use, may be null. Typically we want to log any issues with the
    *     attributes during MBean discovery, but once the attribute is successfully detected and
-   *     confirmed to be eligble for metric evaluation, any further attribute extraction
+   *     confirmed to be eligible for metric evaluation, any further attribute extraction
    *     malfunctions will be silent to avoid flooding the log.
    * @return the attribute value, if found, or {@literal null} if an error occurred
    */
@@ -253,7 +258,8 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
   }
 
   @Nullable
-  Number extractNumericalAttribute(MBeanServerConnection connection, ObjectName objectName) {
+  protected Number extractNumericalAttribute(
+      MBeanServerConnection connection, ObjectName objectName) {
     Object value = extractAttributeValue(connection, objectName);
     if (value instanceof Number) {
       return (Number) value;

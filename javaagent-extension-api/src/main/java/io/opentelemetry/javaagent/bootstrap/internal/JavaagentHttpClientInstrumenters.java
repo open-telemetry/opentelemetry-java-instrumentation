@@ -24,7 +24,10 @@ public final class JavaagentHttpClientInstrumenters {
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
       String instrumentationName,
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
-    return create(instrumentationName, httpAttributesGetter, null);
+    return create(
+        DefaultHttpClientInstrumenterBuilder.create(
+            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter),
+        b -> {});
   }
 
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(
@@ -44,13 +47,10 @@ public final class JavaagentHttpClientInstrumenters {
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter,
       TextMapSetter<REQUEST> headerSetter,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> instrumenterBuilderConsumer) {
-    DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> defaultHttpClientTelemetryBuilder =
-        new DefaultHttpClientInstrumenterBuilder<>(
-            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter);
-    if (headerSetter != null) {
-      defaultHttpClientTelemetryBuilder.setHeaderSetter(headerSetter);
-    }
-    return create(defaultHttpClientTelemetryBuilder, instrumenterBuilderConsumer);
+    return create(
+        DefaultHttpClientInstrumenterBuilder.create(
+            instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, headerSetter),
+        instrumenterBuilderConsumer);
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> create(

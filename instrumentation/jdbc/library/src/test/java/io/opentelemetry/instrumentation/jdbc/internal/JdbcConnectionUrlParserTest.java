@@ -50,23 +50,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(JdbcConnectionUrlParser.parse(null, null)).isEqualTo(DbInfo.DEFAULT);
   }
 
-  @ParameterizedTest(name = "{index}: {0}")
-  @ArgumentsSource(ParsingProvider.class)
-  void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
-    DbInfo info = parse(argument.url, argument.properties);
-    DbInfo expected = argument.dbInfo;
-    assertThat(info.getShortUrl()).isEqualTo(expected.getShortUrl());
-    assertThat(info.getSystem()).isEqualTo(expected.getSystem());
-    assertThat(info.getHost()).isEqualTo(expected.getHost());
-    assertThat(info.getPort()).isEqualTo(expected.getPort());
-    assertThat(info.getUser()).isEqualTo(expected.getUser());
-    assertThat(info.getName()).isEqualTo(expected.getName());
-    assertThat(info.getDb()).isEqualTo(expected.getDb());
-    assertThat(info).isEqualTo(expected);
-  }
-
-  static final class ParsingProvider implements ArgumentsProvider {
-
+  static final class PostgresProvider implements ArgumentsProvider {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return args(
@@ -108,8 +92,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("pg.host")
               .setPort(11)
               .setDb("pgdb")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(MySqlProvider.class)
+  void testMySqlParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class MySqlProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html
           // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html
           arg("jdbc:mysql:///")
@@ -165,7 +161,62 @@ class JdbcConnectionUrlParserTest {
               .setPort(22)
               .setDb("mydb")
               .build(),
+          arg("jdbc:mysql:aurora://mdb.host/mdbdb")
+              .setShortUrl("mysql:aurora://mdb.host:3306")
+              .setSystem("mysql")
+              .setSubtype("aurora")
+              .setHost("mdb.host")
+              .setPort(3306)
+              .setDb("mdbdb")
+              .build(),
+          arg("jdbc:mysql:failover://localhost/mdbdb?autoReconnect=true")
+              .setShortUrl("mysql:failover://localhost:3306")
+              .setSystem("mysql")
+              .setSubtype("failover")
+              .setHost("localhost")
+              .setPort(3306)
+              .setDb("mdbdb")
+              .build(),
+          arg("jdbc:mysql:loadbalance://127.0.0.1,127.0.0.1:3306/mdbdb?user=mdbuser&password=PW")
+              .setShortUrl("mysql:loadbalance://127.0.0.1:3306")
+              .setSystem("mysql")
+              .setSubtype("loadbalance")
+              .setUser("mdbuser")
+              .setHost("127.0.0.1")
+              .setPort(3306)
+              .setDb("mdbdb")
+              .build(),
+          arg("jdbc:mysql:replication://address=(HOST=127.0.0.1)(port=33)(user=mdbuser)(password=PW),address=(host=mdb.host)(port=3306)(user=otheruser)(password=PW)/mdbdb?user=wrong&password=PW")
+              .setShortUrl("mysql:replication://127.0.0.1:33")
+              .setSystem("mysql")
+              .setSubtype("replication")
+              .setUser("mdbuser")
+              .setHost("127.0.0.1")
+              .setPort(33)
+              .setDb("mdbdb")
+              .build(),
+          arg("jdbc:mysql:replication://address=(HOST=mdb.host),address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW")
+              .setShortUrl("mysql:replication://mdb.host:3306")
+              .setSystem("mysql")
+              .setSubtype("replication")
+              .setUser("mdbuser")
+              .setHost("mdb.host")
+              .setPort(3306)
+              .setDb("mdbdb")
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(PostgresProvider.class)
+  void testPostgresParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class MariaDbProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://mariadb.com/kb/en/library/about-mariadb-connector-j/#connection-strings
           arg("jdbc:mariadb:127.0.0.1:33/mdbdb")
               .setShortUrl("mariadb://127.0.0.1:33")
@@ -215,22 +266,6 @@ class JdbcConnectionUrlParserTest {
               .setPort(3306)
               .setDb("mdbdb")
               .build(),
-          arg("jdbc:mysql:aurora://mdb.host/mdbdb")
-              .setShortUrl("mysql:aurora://mdb.host:3306")
-              .setSystem("mysql")
-              .setSubtype("aurora")
-              .setHost("mdb.host")
-              .setPort(3306)
-              .setDb("mdbdb")
-              .build(),
-          arg("jdbc:mysql:failover://localhost/mdbdb?autoReconnect=true")
-              .setShortUrl("mysql:failover://localhost:3306")
-              .setSystem("mysql")
-              .setSubtype("failover")
-              .setHost("localhost")
-              .setPort(3306)
-              .setDb("mdbdb")
-              .build(),
           arg("jdbc:mariadb:failover://mdb.host1:33,mdb.host/mdbdb?characterEncoding=utf8")
               .setShortUrl("mariadb:failover://mdb.host1:33")
               .setSystem("mariadb")
@@ -271,15 +306,6 @@ class JdbcConnectionUrlParserTest {
               .setPort(33)
               .setDb("mdbdb")
               .build(),
-          arg("jdbc:mysql:loadbalance://127.0.0.1,127.0.0.1:3306/mdbdb?user=mdbuser&password=PW")
-              .setShortUrl("mysql:loadbalance://127.0.0.1:3306")
-              .setSystem("mysql")
-              .setSubtype("loadbalance")
-              .setUser("mdbuser")
-              .setHost("127.0.0.1")
-              .setPort(3306)
-              .setDb("mdbdb")
-              .build(),
           arg("jdbc:mariadb:replication://localhost:33,anotherhost:3306/mdbdb")
               .setShortUrl("mariadb:replication://localhost:33")
               .setSystem("mariadb")
@@ -287,26 +313,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("localhost")
               .setPort(33)
               .setDb("mdbdb")
-              .build(),
-          arg("jdbc:mysql:replication://address=(HOST=127.0.0.1)(port=33)(user=mdbuser)(password=PW),address=(host=mdb.host)(port=3306)(user=otheruser)(password=PW)/mdbdb?user=wrong&password=PW")
-              .setShortUrl("mysql:replication://127.0.0.1:33")
-              .setSystem("mysql")
-              .setSubtype("replication")
-              .setUser("mdbuser")
-              .setHost("127.0.0.1")
-              .setPort(33)
-              .setDb("mdbdb")
-              .build(),
-          arg("jdbc:mysql:replication://address=(HOST=mdb.host),address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW")
-              .setShortUrl("mysql:replication://mdb.host:3306")
-              .setSystem("mysql")
-              .setSubtype("replication")
-              .setUser("mdbuser")
-              .setHost("mdb.host")
-              .setPort(3306)
-              .setDb("mdbdb")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(MariaDbProvider.class)
+  void testMariaDbParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class SqlServerProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url
           arg("jdbc:microsoft:sqlserver://;")
               .setShortUrl("microsoft:sqlserver://localhost:1433")
@@ -443,8 +463,20 @@ class JdbcConnectionUrlParserTest {
               .setPort(1433)
               .setName("ssinstance")
               .setDb("ssdb")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(SqlServerProvider.class)
+  void testSqlServerParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class OracleProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://docs.oracle.com/cd/B28359_01/java.111/b31224/urls.htm
           // https://docs.oracle.com/cd/B28359_01/java.111/b31224/jdbcthin.htm
           arg("jdbc:oracle:thin:orcluser/PW@localhost:55:orclsn")
@@ -527,6 +559,14 @@ class JdbcConnectionUrlParserTest {
               .setPort(666)
               .setName("orclsn")
               .build(),
+          arg("jdbc:oracle:thin:@(description = (connect_timeout=90)(retry_count=20)(retry_delay=3) (transport_connect_timeout=3000) (address_list = (load_balance = on) (failover = on) (address = (protocol = tcp)(host = orcl.host1)(port = 1521)) (address = (protocol = tcp)(host = orcl.host2)(port = 1521)) (address = (protocol = tcp)(host = orcl.host3)(port = 1521)) (address = (protocol = tcp)(host = orcl.host4)(port = 1521)) ) (connect_data = (server = dedicated) (service_name = orclsn)))")
+              .setShortUrl("oracle:thin://orcl.host1:1521")
+              .setSystem("oracle")
+              .setSubtype("thin")
+              .setHost("orcl.host1")
+              .setPort(1521)
+              .setName("orclsn")
+              .build(),
 
           // https://docs.oracle.com/cd/B28359_01/java.111/b31224/instclnt.htm
           arg("jdbc:oracle:drivertype:orcluser/PW@orcl.host:55/orclsn")
@@ -568,8 +608,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("orcl.host")
               .setPort(55)
               .setName("orclsn")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(OracleProvider.class)
+  void testOracleParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class Db2Provider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://www.ibm.com/support/knowledgecenter/en/SSEPEK_10.0.0/java/src/tpc/imjcc_tjvjcccn.html
           // https://www.ibm.com/support/knowledgecenter/en/SSEPGG_10.5.0/com.ibm.db2.luw.apdv.java.doc/src/tpc/imjcc_r0052342.html
           arg("jdbc:db2://db2.host")
@@ -612,8 +664,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("ashost")
               .setPort(66)
               .setName("asdb")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(Db2Provider.class)
+  void testDb2Parsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class SapProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.03/en-US/ff15928cf5594d78b841fbbe649f04b4.html
           arg("jdbc:sap://sap.host")
               .setShortUrl("sap://sap.host")
@@ -636,8 +700,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("sap.host")
               .setPort(88)
               .setDb("sapdb")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(SapProvider.class)
+  void testSapParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class InformixProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://www.ibm.com/support/pages/how-configure-informix-jdbc-connection-string-connect-group
           arg("jdbc:informix-sqli://infxhost:99/infxdb:INFORMIXSERVER=infxsn;user=infxuser;password=PW")
               .setSystem("informix-sqli")
@@ -693,8 +769,20 @@ class JdbcConnectionUrlParserTest {
           arg("jdbc:informix-direct:")
               .setSystem("informix-direct")
               .setShortUrl("informix-direct:")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(InformixProvider.class)
+  void testInformixParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class H2Provider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // http://www.h2database.com/html/features.html#database_url
           arg("jdbc:h2:mem:").setShortUrl("h2:mem:").setSystem("h2").setSubtype("mem").build(),
           arg("jdbc:h2:mem:")
@@ -758,8 +846,20 @@ class JdbcConnectionUrlParserTest {
               .setSystem("h2")
               .setSubtype("zip")
               .setName("~/db.zip!/h2zip")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(H2Provider.class)
+  void testH2Parsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class HsqlDbProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // http://hsqldb.org/doc/2.0/guide/dbproperties-chapt.html
           arg("jdbc:hsqldb:hsdb")
               .setShortUrl("hsqldb:mem:")
@@ -890,8 +990,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("127.0.0.1")
               .setPort(443)
               .setName("hsdb")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(HsqlDbProvider.class)
+  void testHsqlDbParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class DerbyProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://db.apache.org/derby/papers/DerbyClientSpec.html#Connection+URL+Format
           // https://db.apache.org/derby/docs/10.8/devguide/cdevdvlp34964.html
           arg("jdbc:derby:derbydb")
@@ -1001,7 +1113,26 @@ class JdbcConnectionUrlParserTest {
               .setUser("derbyuser")
               .setName("(~/path/to/db.jar)/other/derbydb")
               .build(),
+          arg("jdbc:derby:directory:/usr/ibm/pep/was9/ibm/websphere/appserver/profiles/my_profile/databases/ejbtimers/myhostname/ejbtimerdb")
+              .setShortUrl("derby:directory:")
+              .setSystem("derby")
+              .setSubtype("directory")
+              .setUser("APP")
+              .setName("ejbtimerdb")
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(DerbyProvider.class)
+  void testDerbyParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class DataDirectProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://docs.progress.com/bundle/datadirect-connect-jdbc-51/page/URL-Formats-DataDirect-Connect-for-JDBC-Drivers.html
           arg("jdbc:datadirect:sqlserver://server_name:1433;DatabaseName=dbname")
               .setShortUrl("datadirect:sqlserver://server_name:1433")
@@ -1040,8 +1171,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("server_name")
               .setPort(50000)
               .setDb("dbname")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(DataDirectProvider.class)
+  void testDataDirectParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class TibcoProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // "the TIBCO JDBC drivers are based on the Progress DataDirect Connect drivers"
           // https://community.jaspersoft.com/documentation/tibco-jasperreports-server-administrator-guide/v601/working-data-sources
           arg("jdbc:tibcosoftware:sqlserver://server_name:1433;DatabaseName=dbname")
@@ -1081,8 +1224,20 @@ class JdbcConnectionUrlParserTest {
               .setHost("server_name")
               .setPort(50000)
               .setDb("dbname")
-              .build(),
+              .build());
+    }
+  }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(TibcoProvider.class)
+  void testTibcoParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class SecretsManagerProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
           // https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_jdbc.html
           arg("jdbc-secretsmanager:mysql://example.com:50000")
               .setShortUrl("mysql://example.com:50000")
@@ -1112,6 +1267,25 @@ class JdbcConnectionUrlParserTest {
               .setPort(50000)
               .build());
     }
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(SecretsManagerProvider.class)
+  void testSecretsManagerParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
+    DbInfo info = parse(argument.url, argument.properties);
+    DbInfo expected = argument.dbInfo;
+    assertThat(info.getShortUrl()).isEqualTo(expected.getShortUrl());
+    assertThat(info.getSystem()).isEqualTo(expected.getSystem());
+    assertThat(info.getHost()).isEqualTo(expected.getHost());
+    assertThat(info.getPort()).isEqualTo(expected.getPort());
+    assertThat(info.getUser()).isEqualTo(expected.getUser());
+    assertThat(info.getName()).isEqualTo(expected.getName());
+    assertThat(info.getDb()).isEqualTo(expected.getDb());
+    assertThat(info).isEqualTo(expected);
   }
 
   static class ParseTestArgument {

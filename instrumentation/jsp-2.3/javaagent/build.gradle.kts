@@ -6,11 +6,22 @@ muzzle {
   pass {
     group.set("org.apache.tomcat")
     module.set("tomcat-jasper")
-    // version range [7.0.0,7.0.19) is missing from maven
     // tomcat 10 uses JSP 3.0
     versions.set("[7.0.19,10)")
     // version 8.0.9 depends on org.eclipse.jdt.core.compiler:ecj:4.4RC4 which does not exist
     skip("8.0.9")
+    // not using assertInverse.set(true) because org.eclipse.jdt.core.compiler:ecj:xxx dependency
+    // is missing for versions in range [7.0.0, 7.0.19)
+  }
+  fail {
+    group.set("org.apache.tomcat")
+    module.set("tomcat-jasper")
+    versions.set("[,7.0.0)")
+  }
+  fail {
+    group.set("org.apache.tomcat")
+    module.set("tomcat-jasper")
+    versions.set("[10,)")
   }
 }
 

@@ -22,7 +22,7 @@ dependencies {
   compileOnly("software.amazon.awssdk:ses:2.2.0")
 
   // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
-  implementation("org.elasticmq:elasticmq-rest-sqs_2.13:1.5.1")
+  implementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   implementation("com.google.guava:guava")
 
