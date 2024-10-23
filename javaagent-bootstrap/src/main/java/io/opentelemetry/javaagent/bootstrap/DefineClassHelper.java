@@ -71,8 +71,9 @@ public class DefineClassHelper {
   }
 
   /**
-   * Only for testing. In contrast to {@link #internalSetHandler(Handler)} allows replacing the handler
-   * if it already has been set.
+   * Only for testing. In contrast to {@link #internalSetHandler(Handler)} allows replacing the
+   * handler if it already has been set.
+   *
    * @param handler the handler to set
    * @return the previously active handler
    */

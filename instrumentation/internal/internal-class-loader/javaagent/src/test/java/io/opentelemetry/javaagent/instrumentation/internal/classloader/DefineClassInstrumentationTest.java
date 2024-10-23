@@ -62,7 +62,8 @@ class DefineClassInstrumentationTest {
     mockHandler.beforeDefineClass(cl, className, bytecode, 0, bytecode.length);
     Mockito.reset(mockHandler);
 
-    DefineClassHelper.Handler originalHandler = DefineClassHelper.internalSetHandlerForTests(mockHandler);
+    DefineClassHelper.Handler originalHandler =
+        DefineClassHelper.internalSetHandlerForTests(mockHandler);
     String expectedClassName;
     try {
       switch (argCount) {
