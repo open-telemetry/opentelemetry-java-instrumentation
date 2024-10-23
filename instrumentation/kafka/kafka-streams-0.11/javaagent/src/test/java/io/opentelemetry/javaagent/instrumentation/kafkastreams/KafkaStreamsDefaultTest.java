@@ -24,9 +24,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
@@ -40,48 +38,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Headers;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.processor.TopologyBuilder;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
-
-  @SuppressWarnings("ClassNewInstance")
-  private static @NotNull Object createBuilder()
-      throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-    Object builder;
-    try {
-      // Different class names for test and latestDepTest.
-      builder = Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder").newInstance();
-    } catch (ClassNotFoundException | NoClassDefFoundError e) {
-      builder = Class.forName("org.apache.kafka.streams.StreamsBuilder").newInstance();
-    }
-    return builder;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static KStream<Integer, String> stream(Object builder)
-      throws IllegalAccessException,
-          InvocationTargetException,
-          NoSuchMethodException,
-          ClassNotFoundException {
-    Method streamMethod;
-    try {
-      Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder");
-      return ((org.apache.kafka.streams.kstream.KStreamBuilder) builder).stream(STREAM_PENDING);
-    } catch (ClassNotFoundException e) {
-      streamMethod =
-          Class.forName("org.apache.kafka.streams.StreamsBuilder")
-              .getMethod("stream", String.class);
-      return (KStream<Integer, String>) streamMethod.invoke(builder, STREAM_PENDING);
-    }
-  }
 
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
@@ -102,8 +66,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 
     // CONFIGURE PROCESSOR
-    Object builder = createBuilder();
-    KStream<Integer, String> textLines = stream(builder);
+    Object builder = KafkaStreamReflectionUtil.createBuilder();
+    KStream<Integer, String> textLines = KafkaStreamReflectionUtil.stream(builder, STREAM_PENDING);
     KStream<Integer, String> values =
         textLines.mapValues(
             textLine -> {
@@ -111,7 +75,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               return textLine.toLowerCase(Locale.ROOT);
             });
 
-    KafkaStreams streams = createStreams(builder, values, config);
+    KafkaStreams streams =
+        KafkaStreamReflectionUtil.createStreams(builder, values, config, STREAM_PROCESSED);
     streams.start();
 
     String greeting = "TESTING TESTING 123!";
@@ -341,42 +306,5 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     SpanData streamSendSpan = streamTrace.get(2).get(2);
     assertThat(spanContext.getTraceId()).isEqualTo(streamSendSpan.getTraceId());
     assertThat(spanContext.getSpanId()).isEqualTo(streamSendSpan.getSpanId());
-  }
-
-  private static KafkaStreams createStreams(
-      Object builder, KStream<Integer, String> values, Properties config)
-      throws ClassNotFoundException,
-          NoSuchMethodException,
-          InvocationTargetException,
-          IllegalAccessException,
-          InstantiationException {
-    try {
-      // Different api for test and latestDepTest.
-      values.to(Serdes.Integer(), Serdes.String(), STREAM_PROCESSED);
-      return new KafkaStreams((TopologyBuilder) builder, config);
-    } catch (NoSuchMethodError e) {
-      // equivalent to:
-      //    Produced<Integer, String> produced = Produced.with(Serdes.Integer(), Serdes.String());
-      //    values.to(STREAM_PROCESSED, produced);
-      //
-      //    Topology topology = builder.build();
-      //    new KafkaStreams(topology, props);
-      Class<?> producedClass = Class.forName("org.apache.kafka.streams.kstream.Produced");
-      Method producedWith = producedClass.getMethod("with", Serde.class, Serde.class);
-      Object producer = producedWith.invoke(null, Serdes.Integer(), Serdes.String());
-
-      Class<?> ksteamClass = Class.forName("org.apache.kafka.streams.kstream.KStream");
-      ksteamClass
-          .getMethod("to", String.class, producedClass)
-          .invoke(values, STREAM_PROCESSED, producer);
-
-      Class<?> streamsBuilderClass = Class.forName("org.apache.kafka.streams.StreamsBuilder");
-      Object topology = streamsBuilderClass.getMethod("build").invoke(builder);
-
-      Class<?> ksteamsClass = Class.forName("org.apache.kafka.streams.KStreams");
-      Class<?> topologyClass = Class.forName("org.apache.kafka.streams.Topology");
-      Constructor<?> constructor = ksteamsClass.getConstructor(topologyClass, Properties.class);
-      return (KafkaStreams) constructor.newInstance(topology, config);
-    }
   }
 }
